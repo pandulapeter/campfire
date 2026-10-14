@@ -9,14 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -37,30 +33,22 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
@@ -73,32 +61,22 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
-import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
-import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * The same surface color for every sheet and any Material container drawn inside it, including the calendar, and so
@@ -327,199 +305,6 @@ internal fun CampfireBottomSheet(
                 }
             }
         }
-    }
-}
-
-/**
- * Grows and shrinks a sheet to its content's new height rather than in one frame, when rows are added to a list in it or
- * taken away, a field's error appears, or the content is swapped for another. The sheet's top edge follows the height,
- * since Material anchors the sheet by it.
- *
- * Only the content's own changes are animated. A change of the room offered (the keyboard sliding, which arrives as a
- * new maximum on every frame of its own animation, or the window being resized) is followed at once, or the sheet
- * would trail behind the keyboard and leave a gap over it. While the sheet is growing the content is already measured
- * at its new height and placed under the animated one, so the content is uncovered from the sheet's bottom edge, which
- * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.pendingGrowth].
- *
- * Content that fills the sheet at its tallest keeps filling the room offered at every offset, whether or not it would
- * still need all of it. Material anchors the expanded sheet at the window's height less the sheet's, and the sheet's
- * height includes the part of the top inset it is still padded by, which shrinks as the sheet is dragged down off the
- * status bar ([uncoveredTopInset]). Content that overflows by less than that inset comes to fit part of the way down;
- * measured at its own height there, it would make the sheet shorter than the window, move the expanded anchor with every
- * frame of the drag and put the sheet back at the top over and over while the finger is still pulling it.
- */
-@Composable
-private fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation, uncoveredTopInset: () -> Dp): Modifier {
-    val coroutineScope = rememberCoroutineScope()
-    val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-    return layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        val fillsTallestSheet = constraints.hasBoundedHeight && placeable.height >= constraints.maxHeight - uncoveredTopInset().roundToPx()
-        val targetHeight = if (fillsTallestSheet) constraints.maxHeight else placeable.height
-        val animatable = state.animatable
-        val snappedHeight = state.snappedHeight
-        val height = if (animatable == null || constraints.maxHeight != state.maxHeight) {
-            // The first measure opens the sheet at its full height, which Material slides in on its own.
-            if (animatable == null) {
-                state.animatable = Animatable(targetHeight.toFloat())
-            } else {
-                // A snap is a coroutine that only lands after this frame, so the height is held here until it has.
-                state.snappedHeight = targetHeight
-                coroutineScope.launch { animatable.snapTo(targetHeight.toFloat()) }
-            }
-            state.maxHeight = constraints.maxHeight
-            targetHeight
-        } else if (snappedHeight == targetHeight && animatable.value.roundToInt() != snappedHeight) {
-            snappedHeight
-        } else {
-            state.snappedHeight = null
-            if (animatable.targetValue != targetHeight.toFloat()) {
-                coroutineScope.launch { animatable.animateTo(targetHeight.toFloat(), spec) }
-            }
-            animatable.value.roundToInt().coerceIn(constraints.minHeight, constraints.maxHeight)
-        }
-        state.pendingGrowthState.intValue = (targetHeight - height).coerceAtLeast(0)
-        layout(placeable.width, height) { placeable.placeRelative(0, 0) }
-    }
-}
-
-/**
- * What [animateSheetContentHeight] animates, the maximum height it was offered last and the height it snapped to for
- * that, which is not state: it is only read and written by its measure pass. [pendingGrowth] is, since the content
- * reads it as it is placed ([followSheetGrowth]), in the same frame.
- */
-private class SheetHeightAnimation {
-    var animatable: Animatable<Float, AnimationVector1D>? = null
-    var maxHeight = 0
-    var snappedHeight: Int? = null
-    val pendingGrowthState = mutableIntStateOf(0)
-
-    fun pendingGrowth() = pendingGrowthState.intValue
-}
-
-/**
- * How many pixels the [CampfireBottomSheet] around it still has to grow to its content's height, 0 while it is not
- * growing.
- */
-private val LocalSheetPendingGrowth = staticCompositionLocalOf<() -> Int> { { 0 } }
-
-/**
- * Keeps the rows of a list in a growing [CampfireBottomSheet] where they are on screen. The sheet's top edge rises as it
- * grows, and the list, measured at its new height already and hanging from that edge, would carry the rows below a
- * newly inserted one a row lower than where they end up and bring them back up as the sheet grows - away from under the
- * finger that ticked the row and back. Shifted up by what the sheet still has to grow, inside the list's own bounds,
- * the rows stay put and what was inserted slides in from under the controls above the list, as it would in a list
- * already scrolled to its end.
- *
- * Goes after the list's edge fades, so that they stay at the edges of its bounds rather than travel with the rows.
- */
-@Composable
-internal fun Modifier.followSheetGrowth(): Modifier {
-    val pendingGrowth = LocalSheetPendingGrowth.current
-    return clipToBounds().offset { IntOffset(0, -pendingGrowth()) }
-}
-
-/**
- * Whether the [CampfireBottomSheet] around it has started closing - its close button, a Save that closes it, a swipe or
- * the scrim. The sheet stays on screen and live for the length of its slide, and a Save tapped in it would write the
- * draft the close button had just cancelled, so the actions that write ask this first. It is a function rather than a
- * value, read at the tap, so that nothing recomposes on the frames of the slide.
- */
-internal val LocalIsSheetClosing = compositionLocalOf<() -> Boolean> { { false } }
-
-/**
- * What Ctrl / Cmd + S presses in a [CampfireBottomSheet]: the [BottomSheetConfirmButton] in its header that writes
- * what the sheet is for, which sets itself here while it is there. Null where the sheet has no such button, or one the
- * key should not press.
- */
-internal class SheetSaveShortcut {
-    var action: (() -> Unit)? = null
-}
-
-/** Whether anything in a [CampfireBottomSheet] has the focus, read once from an effect rather than drawn from. */
-private class SheetFocusState {
-    var hasFocus = false
-}
-
-/**
- * Whether the dialog a [CampfireBottomSheet] is drawn for has been asked to close by the stack of open dialogs it is in,
- * which it does as if one of its own actions had closed it, see `DialogHost.closeRequest`.
- */
-internal val LocalIsSheetCloseRequested = staticCompositionLocalOf { false }
-
-/** The [SheetSaveShortcut] of the [CampfireBottomSheet] around it, null outside one. */
-internal val LocalSheetSaveShortcut = staticCompositionLocalOf<SheetSaveShortcut?> { null }
-
-/**
- * The column of a [CampfireBottomSheet], which its content can also close the sheet from.
- *
- * @param uncoveredTopInset How much of the top inset the sheet is not padded by at the moment: Material pads it by the
- *   part of the inset its top edge has come into, so the height its content is offered changes as it slides up and is
- *   dragged. Content that sizes itself to that height takes this off it to have the height of the sheet at its
- *   tallest, which does not move - or the sheet's height would decide its own offset, and the offset the height.
- */
-internal class BottomSheetContentScope(
-    columnScope: ColumnScope,
-    private val close: () -> Unit,
-    val uncoveredTopInset: () -> Dp,
-) : ColumnScope by columnScope {
-
-    fun close() = close.invoke()
-}
-
-/**
- * The top of every sheet: what it is about, and a close button. A sheet whose list grows past the screen covers the
- * whole of it once it is dragged up, and a sheet that fills the screen has no scrim left to tap and no edge that looks
- * like it could be dragged back down, so the button is on the short sheets too, where the next one opened may not be
- * short. A sheet about one song or one setlist names it in the subtitle ([songLabel], or the setlist's title), even
- * where the screen behind it is that very song: it is opened from rows of other lists as readily as from the thing
- * itself, and one that named what its boxes are about only some of the time would read as two different sheets.
- */
-@Composable
-private fun SheetHeader(
-    title: String,
-    subtitle: String,
-    actions: (@Composable RowScope.(close: () -> Unit) -> Unit)?,
-    onClose: () -> Unit,
-    onActionDone: () -> Unit,
-) = Row(
-    // An action at the end sits as far from the edge as the close button does from the start.
-    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = if (actions == null) 16.dp else 4.dp, top = 12.dp),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    IconButton(onClick = onClose) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_clear),
-            contentDescription = stringResource(Res.string.close),
-        )
-    }
-    Column(
-        modifier = Modifier.weight(1f),
-    ) {
-        Text(
-            modifier = Modifier.semantics { heading() },
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (subtitle.isNotBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-    if (actions != null) {
-        // Header actions need the same readable size as the title while retaining button label weight and spacing.
-        val typography = MaterialTheme.typography
-        val actionTypography = remember(typography) {
-            typography.copy(labelLarge = typography.labelLarge.copy(fontSize = 16.sp, lineHeight = 24.sp))
-        }
-        MaterialTheme(typography = actionTypography) { actions(onActionDone) }
     }
 }
 

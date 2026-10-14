@@ -13,7 +13,6 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SectionHeader.kt::SectionHeader": 139,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SongListItem.kt::SongListItem": 129,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CLAUDE.md": 2339,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CampfireBottomSheet.kt": 526,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CampfireBottomSheet.kt::CampfireBottomSheet": 186,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CampfireDialogs.kt::CampfireDialog": 281,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CoverArtResults.kt::CoverArtResults": 136,
