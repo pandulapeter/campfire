@@ -288,4 +288,19 @@ class SyncEngineConflictTest {
         assertEquals("r1", provider.files.getValue(song("x (2)")).second)
         assertContentEquals(THERE, provider.files.getValue(song("x (3)")).first)
     }
+
+    @Test
+    fun `a file edited elsewhere while this device deletes it is brought back rather than deleted`() = runTest {
+        val library = (1..10).associate { song(it) to ORIGINAL }
+        val local = FakeLibraryFileLocalSource(files = library - song(1))
+        val provider = FakeSyncProvider(files = library)
+        provider.onDelete = { provider.files[song(1)] = THERE to "r9" }
+
+        val first = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library)))
+        provider.onDelete = {}
+        synchronize(local, provider, first.index)
+
+        assertContentEquals(THERE, provider.files.getValue(song(1)).first)
+        assertContentEquals(THERE, local.files.getValue(song(1)))
+    }
 }

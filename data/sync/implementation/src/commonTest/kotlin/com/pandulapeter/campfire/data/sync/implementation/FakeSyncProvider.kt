@@ -33,7 +33,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
  * that differ only by case for one file, [listCount] is how many passes a run made, [downloadCounts] how many times
  * each file was fetched and [deleteCalls] what each deletion request asked for; the names in [refusedDeletions] are
- * answered as refused. [connected] says whether credentials
+ * answered as refused. A deletion whose expected revision is no longer the file's leaves the file and reports nothing,
+ * as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a file "elsewhere". [connected] says whether credentials
  * are stored, and [onDisconnect] runs once a disconnect has cleared them; [hasForgottenCredentials] says whether they
  * were dropped without one, which does not run it, and [onForgetStoredCredentials] runs before they are, which is where
  * a test makes that fail. [onCompleteAuthorization] is what finishing an authorization does, which is where a test
@@ -63,6 +64,8 @@ internal class FakeSyncProvider(
     val deleteCalls = mutableListOf<List<RemoteDeletion>>()
 
     var refusedDeletions = emptySet<String>()
+
+    var onDelete: () -> Unit = {}
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
@@ -155,8 +158,12 @@ internal class FakeSyncProvider(
 
     override suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> {
         deleteCalls += deletions
+        onDelete()
         val (refused, deleted) = deletions.partition { it.name in refusedDeletions }
-        deleted.forEach { files -= stored(SyncKey(kind = it.kind, name = it.name)) }
+        deleted.forEach { deletion ->
+            val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
+            if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) files -= target
+        }
         return refused.associateWith { "refused" }
     }
 
