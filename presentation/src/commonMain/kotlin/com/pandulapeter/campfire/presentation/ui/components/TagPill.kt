@@ -127,3 +127,6 @@ private val TAG_ICON_SIZE = 14.dp
 
 /** Wide enough for the longest tag the tag dialog lets through to be shown whole in most scripts, ellipsized past it. */
 private val TAG_MAX_WIDTH = 240.dp
+
+/** The gap between two tags, horizontally and between the rows they wrap onto. */
+internal val TAG_GAP = 4.dp

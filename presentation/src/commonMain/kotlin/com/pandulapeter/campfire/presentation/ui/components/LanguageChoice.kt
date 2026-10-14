@@ -38,7 +38,7 @@ internal fun LanguageChoice(
         UserPreferences.Language.HUNGARIAN,
     ).forEach { language ->
         val isSelected = selected == language
-        val localName = languageName(language)
+        val localName = appLanguageName(language)
         val ownName = if (language == UserPreferences.Language.SYSTEM_DEFAULT) {
             localName
         } else {

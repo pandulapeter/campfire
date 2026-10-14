@@ -19,9 +19,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 
 /** What [language] is called in the language the app is set to. */
 @Composable
-internal fun languageName(language: UserPreferences.Language) = stringResource(language.nameResource)
+internal fun appLanguageName(language: UserPreferences.Language) = stringResource(language.nameResource)
 
-/** The string [languageName] reads, which [LanguageChoice] also reads out of the language's own table. */
+/** The string [appLanguageName] reads, which [LanguageChoice] also reads out of the language's own table. */
 internal val UserPreferences.Language.nameResource
     get() = when (this) {
         UserPreferences.Language.SYSTEM_DEFAULT -> Res.string.settings_user_interface_language_system_default

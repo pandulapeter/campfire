@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -52,6 +51,3 @@ internal fun List<SongLanguage>.orderedBy(
 private fun alphabeticalKey(text: String) = buildString(text.length) {
     text.lowercase().forEach { character -> if (!character.isCombiningMark()) append(character.withoutAccent()) }
 }
-
-/** The gap between two tags, horizontally and between the rows they wrap onto. */
-internal val TAG_GAP = 4.dp

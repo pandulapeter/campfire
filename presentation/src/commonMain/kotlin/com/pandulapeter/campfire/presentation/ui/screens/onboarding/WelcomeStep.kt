@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_language
 import com.pandulapeter.campfire.presentation.resources.onboarding_settings_note
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_title
-import com.pandulapeter.campfire.presentation.ui.components.languageName
+import com.pandulapeter.campfire.presentation.ui.components.appLanguageName
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -73,7 +73,7 @@ internal fun WelcomeStep(
             )
             Text(
                 modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
-                text = stringResource(Res.string.onboarding_language, languageName(language ?: UserPreferences.Language.SYSTEM_DEFAULT)),
+                text = stringResource(Res.string.onboarding_language, appLanguageName(language ?: UserPreferences.Language.SYSTEM_DEFAULT)),
             )
         }
     }

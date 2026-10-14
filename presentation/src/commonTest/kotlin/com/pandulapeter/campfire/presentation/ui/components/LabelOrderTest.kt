@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class TagOrderTest {
+class LabelOrderTest {
 
     @Test
     fun `labels are ordered alphabetically without regard to case or accents`() {
