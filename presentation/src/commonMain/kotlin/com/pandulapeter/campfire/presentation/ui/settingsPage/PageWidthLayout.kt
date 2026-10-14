@@ -16,7 +16,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.preferences.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_CATEGORY_PANE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCategoryPane
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage

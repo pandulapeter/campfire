@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_language
 import com.pandulapeter.campfire.presentation.resources.onboarding_settings_note
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_title
-import com.pandulapeter.campfire.presentation.ui.components.appLanguageName
+import com.pandulapeter.campfire.presentation.ui.components.preferences.appLanguageName
 import org.jetbrains.compose.resources.painterResource
 
 /**

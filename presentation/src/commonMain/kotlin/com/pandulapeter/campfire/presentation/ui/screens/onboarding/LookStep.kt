@@ -18,10 +18,10 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_look_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_look_title
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
-import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
+import com.pandulapeter.campfire.presentation.ui.components.preferences.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
-import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
+import com.pandulapeter.campfire.presentation.ui.components.preferences.ThemeColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.preferences.UiModeChoice
 
 /**
  * "Pick a look", the first thing a newcomer gets to make their own: the theme, its color and how far it is turned towards

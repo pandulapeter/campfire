@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
-import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.preferences.THEME_COLOR_CHOICE_WIDTH
 
 /**
  * As wide as a page of the onboarding and its bar get: a comfortable line of text, or every theme color in one row where
