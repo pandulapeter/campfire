@@ -20,12 +20,9 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
-import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
 import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
-import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
-import com.pandulapeter.campfire.presentation.ui.songLayout.withNumber
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 import kotlin.math.roundToInt
 import kotlinx.coroutines.yield
@@ -362,19 +359,8 @@ private class PrintLayouter(
     private fun sectionRows(section: ChordProBlock.Section, width: Float, labelOverride: String?): List<Row> {
         val isChorus = section.type == SectionType.Chorus
         val lineWidth = if (isChorus) width - CHORUS_INDENT else width
-        val sectionLabel = section.label ?: when (val type = section.type) {
-            SectionType.Verse -> labels.sections.verse
-            SectionType.Chorus -> labels.sections.chorus
-            SectionType.Bridge -> labels.sections.bridge
-            is SectionType.Custom -> labels.sections.labelOf(type)
-            // A paragraph of nothing but tablature or a grid is a bare environment, which names itself, as on screen; one of
-            // lyrics is headed on screen by its fold toggle alone, which a page has no use for.
-            SectionType.Paragraph -> when {
-                section.lines.areAll<ChordProLine.Tab>() -> labels.sections.tab
-                section.lines.areAll<ChordProLine.Grid>() -> labels.sections.grid
-                else -> null
-            }
-        }?.withNumber(section.number)
+        // A paragraph of lyrics is headed on screen by its fold toggle alone, an empty header, which a page has no use for.
+        val sectionLabel = section.header(labels.sections).ifEmpty { null }
         val lines = section.lines.flatMapIndexed { lineIndex, line ->
             when (line) {
                 is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
