@@ -45,11 +45,13 @@ import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongsTakenOu
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
 /**
@@ -166,15 +168,18 @@ internal class SetlistsController(
 
     /**
      * Creating a setlist from a setlist picker - of one song, or of the songs ticked in the selection mode - where the
-     * only reason it is being created at that moment is that the songs should go into it. Both happen in the same
-     * library change, so the picker's tick is already there when the new setlist appears in it.
+     * only reason it is being created at that moment is that the songs should go into it. The setlist is written empty
+     * first and then with its songs, the two writes together once started, so that an app closing in between never
+     * leaves an empty setlist behind.
      */
     fun createSetlistWithSongs(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileNames: List<String>) =
         messageSink.launchLibraryChange {
-            saveSetlist(
-                createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
-                    .copy(entries = songFileNames.distinct().map { Setlist.Entry(songFileName = it) }),
-            )
+            withContext(NonCancellable) {
+                saveSetlist(
+                    createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
+                        .copy(entries = songFileNames.distinct().map { Setlist.Entry(songFileName = it) }),
+                )
+            }
         }
 
     /**
@@ -256,8 +261,11 @@ internal class SetlistsController(
         // the entries on, and the copy is made of the setlist as it is.
         val current = setlists.value.firstOrNull { it.fileName == setlist.fileName }
             ?: return@launchLibraryChange messageSink.sendMessage(Message.OperationFailed)
-        val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
-        saveSetlist(copy.copy(entries = current.entries))
+        // Both writes once started, as in createSetlistWithSongs, or an app closing in between leaves an empty copy.
+        withContext(NonCancellable) {
+            val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
+            saveSetlist(copy.copy(entries = current.entries))
+        }
     }
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
