@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.components.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
+import com.pandulapeter.campfire.presentation.ui.launch.LaunchState
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -154,6 +155,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -958,30 +960,39 @@ class CampfireViewModel(
         backStack = backStack,
         screenData = screenData,
         userPreferencesState = userPreferencesState,
-        isEditorDraftRecoveryPending = editorSession.isEditorDraftRecoveryPending,
-        editorDraftRecovery = editorSession.editorDraftRecovery,
         songFilter = _songFilter,
         getScreenData = getScreenData,
         updateUserPreferences = updateUserPreferences,
-        restoreNavigationState = { restoreNavigationState(it) },
         openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },
+        awaitAppOnScreen = { launchState.isAppOnScreen.first { it } },
     )
 
-    /** See [FirstRunController.isLaunchNavigationPending]. */
-    internal val isLaunchNavigationPending get() = firstRunController.isLaunchNavigationPending
+    private val launchState: LaunchState = LaunchState(
+        scope = viewModelScope,
+        screenData = screenData,
+        isDemoLibraryPending = firstRunController.isDemoLibraryPending,
+        isEditorDraftRecoveryPending = editorSession.isEditorDraftRecoveryPending,
+        editorDraftRecovery = editorSession.editorDraftRecovery,
+        userPreferencesState = userPreferencesState,
+        backStack = backStack,
+        restoreNavigationState = { restoreNavigationState(it) },
+    )
 
-    /** See [FirstRunController.hasLibraryToShow]. */
-    val hasLibraryToShow get() = firstRunController.hasLibraryToShow
+    /** See [LaunchState.isLaunchNavigationPending]. */
+    internal val isLaunchNavigationPending get() = launchState.isLaunchNavigationPending
 
-    /** See [FirstRunController.hasShownApp]. */
+    /** See [LaunchState.hasLibraryToShow]. */
+    val hasLibraryToShow get() = launchState.hasLibraryToShow
+
+    /** See [LaunchState.hasShownApp]. */
     internal var hasShownApp: Boolean
-        get() = firstRunController.hasShownApp
+        get() = launchState.hasShownApp
         set(value) {
-            firstRunController.hasShownApp = value
+            launchState.hasShownApp = value
         }
 
-    /** See [FirstRunController.isAppOnScreen]. */
-    internal val isAppOnScreen get() = firstRunController.isAppOnScreen
+    /** See [LaunchState.isAppOnScreen]. */
+    internal val isAppOnScreen get() = launchState.isAppOnScreen
 
     /** See [FirstRunController.demoLibraryOffer]. */
     val demoLibraryOffer get() = firstRunController.demoLibraryOffer
@@ -1045,8 +1056,9 @@ class CampfireViewModel(
 
     internal fun restoreNavigationState(state: NavigationState) = navigator.restoreNavigationState(state)
 
+    /** See [LaunchState.navigateOnLaunch]. */
     internal fun navigateOnLaunch(resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?) =
-        firstRunController.navigateOnLaunch(resolve)
+        launchState.navigateOnLaunch(resolve)
 
     /**
      * Shows the answer to a consent page the app was sent away to, which is where the user was when they left

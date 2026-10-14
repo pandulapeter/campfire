@@ -105,21 +105,6 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 - **Nothing is composed until preferences are read** (`arePreferencesLoaded`; read, not read successfully; only ever
   turns on), else the first frame shows the wrong palette and language.
 
-#### Launch screen
-
-- `LaunchScreen` (the mark, neutral color, no text) **covers** the app as an opaque `Surface` while it composes behind
-  it, and fades once preferences are in, the theme settled, `hasLibraryToShow` true, and any `navigateOnLaunch` place
-  found. It is Compose rather than a hidden desktop window because Compose Desktop has no frame clock with no window
-  shown, so it would deadlock.
-- Nothing on the back stack animates while it is up (`hasShownApp`).
-- Desktop app only: the mark grows as it fades (`isLaunchScreenWholeStartup`). Android's splash and the web loading page
-  are held until `onAppReady` (fires two frames after the launch screen goes, since `withFrameNanos` resumes before its
-  frame is drawn) and there it does not fade (`isStartupScreenHeldUntilAppReady`). Web: `window.campfireReady`;
-  Android: a pre-draw listener.
-- It belongs to the process, not the composition: after `hasShownApp`, a recreated activity composes none and releases
-  `onAppReady` at once. On the web it also waits up to five seconds for `areDrawablesLoaded`, since resources never
-  report a failed drawable.
-
 ### The Tools item
 
 - A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six screens on, Metronome, Tuner and
