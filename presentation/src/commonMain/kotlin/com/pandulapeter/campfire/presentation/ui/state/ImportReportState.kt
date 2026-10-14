@@ -1,0 +1,169 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.state
+
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.pandulapeter.campfire.data.model.domain.ImportChoices
+import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
+import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.withGroupResolution
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+/**
+ * What the import screen shows and whether it is up: the report from the files being read through the review to the
+ * result, its search field, the review's choices, and the screen being put on the back stack once nothing is in its
+ * way. The import work itself, which writes the report, is `ImportController`'s.
+ *
+ * @param updateBackStack Changes the back stack, see `CampfireViewModel.updateBackStack`.
+ * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which the import screen waits for.
+ */
+internal class ImportReportState(
+    private val scope: CoroutineScope,
+    private val dialogHost: DialogHost,
+    private val backStack: List<CampfireDestination>,
+    private val updateBackStack: (SnapshotStateList<CampfireDestination>.() -> Unit) -> Unit,
+    private val songTexts: StateFlow<Map<String, String>>,
+    private val editorDraft: StateFlow<SongContent?>,
+    private val hasUnsavedEditorText: () -> Boolean,
+) {
+
+    /**
+     * Open for good, since its field is part of the import screen's list rather than something the screen opens, and
+     * emptied whenever that screen is left. Not restored, since the screen it belongs to never is, see [backStack].
+     */
+    val search = SearchState(isInitiallyOpen = true)
+
+    /**
+     * What [CampfireDestination.ImportReport] shows: every import the user started, from the files being read through
+     * the review of what they hold to the import being written and what it came to, and of the rest whatever went
+     * anywhere but the one way that needs no more than a snackbar. Null while no import has anything to report, and an
+     * import that has one keeps the next batch waiting until the screen is left, see `ImportController.awaitImportSettled`.
+     */
+    private val _importReport = MutableStateFlow<ImportReport?>(null)
+    val importReport: StateFlow<ImportReport?> = _importReport.asStateFlow()
+
+    /** [importReport] as `ImportController` writes it. */
+    var report: ImportReport?
+        get() = _importReport.value
+        set(value) {
+            _importReport.value = value
+        }
+
+    /** Whether the last change to [backStack] left [CampfireDestination.ImportReport] on it, see [onBackStackChanged]. */
+    var isOnBackStack = false
+        private set
+
+    /**
+     * Counts the reports [show] has put up, so that a waiting one is pushed only if no later one replaced
+     * it. The value cannot be compared instead: [followReportedFileNames] rewrites a waiting report as the library moves.
+     */
+    private var request = 0
+
+    /**
+     * Sets [report] at once, which is what keeps the next batch waiting, and puts the import screen on top of whatever
+     * is on screen once nothing else is in its way: a dialog, whose input would otherwise be left under the screen, or
+     * an editor holding unsaved text, which is only ever asked about while it is on top (see `Navigator.navigateBack`) and
+     * would be one closed window away from being lost under it, or the onboarding, which a first run opens even while a
+     * file the app was opened with is read behind it, and which the import screen follows as it closes. Launched rather
+     * than awaited, so that the import that asked can finish meanwhile.
+     */
+    fun show(report: ImportReport) {
+        val request = ++request
+        _importReport.value = report
+        scope.launch {
+            combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
+                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
+                    stack.none { it is CampfireDestination.Onboarding }
+            }.first { it }
+            if (this@ImportReportState.request == request && _importReport.value != null && !isOnBackStack) {
+                updateBackStack { add(CampfireDestination.ImportReport) }
+            }
+        }
+    }
+
+    /** Takes the import screen off the back stack, with whatever is on top of it, see `ImportController.onImportReportLeft`. */
+    fun close() {
+        val index = backStack.indexOf(CampfireDestination.ImportReport)
+        if (index >= 0) updateBackStack { while (size > index) removeAt(lastIndex) }
+    }
+
+    /** A group's box, over the rows the screen shows, which is only the matching ones while a search narrows them. */
+    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = updateChoices { choices ->
+        choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
+    }
+
+    /** What a name already taken does: one row's choice for [key]. */
+    fun setImportConflictResolution(key: ImportEntryKey, resolution: ImportConflictResolution) = updateChoices { choices ->
+        choices.copy(conflictResolutions = choices.conflictResolutions + (key to resolution))
+    }
+
+    /**
+     * The group header's choice for all of them, over the rows the screen shows, which is only the matching ones while a
+     * search narrows them, as the group's box acts: see [withGroupResolution].
+     */
+    fun setImportGroupConflictResolution(
+        keys: Collection<ImportEntryKey>,
+        isFiltered: Boolean,
+        resolution: ImportConflictResolution,
+    ) = updateChoices { it.withGroupResolution(keys = keys, isFiltered = isFiltered, resolution = resolution) }
+
+    private fun updateChoices(update: (ImportChoices) -> ImportChoices) = _importReport.update { report ->
+        if (report is ImportReport.Review) report.copy(choices = update(report.choices)) else report
+    }
+
+    /**
+     * Keeps the import screen's result naming the files the library holds, so that coming back to it from a song opened
+     * from its list and deleted or renamed there shows the library as it now is rather than a row that no longer opens.
+     */
+    fun followReportedFileNames(fileName: (String) -> String?) = _importReport.update { report ->
+        if (report is ImportReport.Finished && report.result != null) ImportReport.Finished(report.result.followingLibraryFileNames(fileName)) else report
+    }
+
+    /**
+     * Says that a process ended behind an unwritten import, and keeps [savedStateStore] noting whether one is. The
+     * import screen is never restored, and its plan is far too large to be saved, so a process ended behind an
+     * unwritten import says so instead. Read before the collector writes the first report over it.
+     */
+    fun startReportingInterruption(savedStateStore: SavedStateStore, messageSink: MessageSink) {
+        val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
+        scope.launch { importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
+        if (wasImportInterrupted) messageSink.sendMessage(Message.ImportInterrupted)
+    }
+
+    /**
+     * Notes whether the import screen is still on the back stack, clears its search field once it is not, and answers
+     * whether it has just left, for `ImportController` to let go of what the screen asked.
+     */
+    fun onBackStackChanged(): Boolean {
+        val wasOnBackStack = isOnBackStack
+        isOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
+        val hasLeft = wasOnBackStack && !isOnBackStack
+        if (hasLeft) search.textFieldState.clearText()
+        return hasLeft
+    }
+}

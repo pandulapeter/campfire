@@ -59,6 +59,7 @@ internal class FirstRunController(
     private val dialogHost: DialogHost,
     private val messageSink: MessageSink,
     private val importController: ImportController,
+    private val importReport: StateFlow<ImportReport?>,
     private val backStack: List<CampfireDestination>,
     private val screenData: StateFlow<DataState<ScreenData>>,
     private val userPreferencesState: StateFlow<DataState<UserPreferences>>,
@@ -255,7 +256,7 @@ internal class FirstRunController(
         if (preferences.isOnboardingPending) return recordWhatsNewVersion()
         awaitAppOnScreen()
         if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
-            combine(dialogHost.visibleDialog, importController.isImporting, importController.importReport, importController.queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
+            combine(dialogHost.visibleDialog, importController.isImporting, importReport, importController.queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
                 canShowWhatsNew(
                     hasDialog = dialog != null,
                     isImporting = isImporting,

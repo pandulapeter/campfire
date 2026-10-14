@@ -9,24 +9,18 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportDownload
-import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
-import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
@@ -36,10 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.replaceCount
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.withGroupResolution
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -61,11 +52,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Every import: the queue the batches wait in, the download of a file from an address, the reading and comparing that
- * decides what an import would do, the review the import screen holds, the writing, and what is said about it
- * afterwards. Also the library's deletion, which the queue waits for.
+ * decides what an import would do, the writing, and what is said about it afterwards; what the import screen shows is
+ * [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each other
+ * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
- * @param updateBackStack Changes the back stack, see `CampfireViewModel.updateBackStack`.
- * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which the import screen waits for.
  * @param openImportedSong Opens the one song the system handed over, see `CampfireViewModel.openImportedSong`.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
@@ -75,10 +65,7 @@ internal class ImportController(
     private val dialogHost: DialogHost,
     private val messageSink: MessageSink,
     private val backStack: List<CampfireDestination>,
-    private val updateBackStack: (SnapshotStateList<CampfireDestination>.() -> Unit) -> Unit,
-    private val songTexts: StateFlow<Map<String, String>>,
-    private val editorDraft: StateFlow<SongContent?>,
-    private val hasUnsavedEditorText: () -> Boolean,
+    private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
@@ -88,12 +75,6 @@ internal class ImportController(
     private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
-
-    /**
-     * Open for good, since its field is part of the import screen's list rather than something the screen opens, and
-     * emptied whenever that screen is left. Not restored, since the screen it belongs to never is, see [backStack].
-     */
-    val importReportSearch = SearchState(isInitiallyOpen = true)
 
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
@@ -107,28 +88,10 @@ internal class ImportController(
     val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
 
     /**
-     * What [CampfireDestination.ImportReport] shows: every import the user started, from the files being read through
-     * the review of what they hold to the import being written and what it came to, and of the rest whatever went
-     * anywhere but the one way that needs no more than a snackbar. Null while no import has anything to report, and an
-     * import that has one keeps the next batch waiting until the screen is left, see [awaitImportSettled].
-     */
-    private val _importReport = MutableStateFlow<ImportReport?>(null)
-    val importReport: StateFlow<ImportReport?> = _importReport.asStateFlow()
-
-    /** Whether the last change to [backStack] left [CampfireDestination.ImportReport] on it, see [onImportReportLeft]. */
-    private var isImportReportOnBackStack = false
-
-    /**
-     * Counts the reports [showImportReport] has put up, so that a waiting one is pushed only if no later one replaced
-     * it. The value cannot be compared instead: [followReportedFileNames] rewrites a waiting report as the library moves.
-     */
-    private var importReportRequest = 0
-
-    /**
-     * The batch [importReport] is about from the moment it is put up until it is written: what [retryImport] reads
-     * again and what [resolveImport] writes the review's choices for. Not part of the screen, which holds only what it
-     * draws: this is the work, and it has to outlive whichever screen the import was started from. It never outlives
-     * the report, see [onImportReportLeft].
+     * The batch [ImportReportState.importReport] is about from the moment it is put up until it is written: what
+     * [retryImport] reads again and what [resolveImport] writes the review's choices for. Not part of the screen, which
+     * holds only what it draws: this is the work, and it has to outlive whichever screen the import was started from. It
+     * never outlives the report, see [onImportReportLeft].
      */
     private var activeRequest: ImportRequest? = null
 
@@ -231,7 +194,7 @@ internal class ImportController(
      * report the queue did not start.
      */
     suspend fun awaitImportSettled() {
-        combine(_importReport, _isImporting) { report, isImporting -> report != null || isImporting }.first { !it }
+        combine(reportState.importReport, _isImporting) { report, isImporting -> report != null || isImporting }.first { !it }
     }
 
     /**
@@ -249,7 +212,7 @@ internal class ImportController(
         if (isReviewed) {
             activeRequest = request
             // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
-            showImportReport(ImportReport.Loading(request.source.name))
+            reportState.show(ImportReport.Loading(request.source.name))
         }
         prepare(request = request, isReviewed = isReviewed)
     }
@@ -285,7 +248,7 @@ internal class ImportController(
                 _isImporting.value = false
                 if (isReviewed) {
                     // The source is kept, so that Try again has something to read.
-                    _importReport.value = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name)
+                    reportState.report = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name)
                 } else {
                     // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
                     if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
@@ -302,7 +265,7 @@ internal class ImportController(
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
                     val review = ImportReport.Review(plan = plan, choices = ImportChoices(), isDemoLibrary = request.isDemoLibrary)
-                    if (isReviewed) _importReport.value = review else showImportReport(review)
+                    if (isReviewed) reportState.report = review else reportState.show(review)
                     _isImporting.value = false
                 } else {
                     applyImportPlan(plan = plan, choices = ImportChoices(), request = request, isReported = false)
@@ -339,8 +302,8 @@ internal class ImportController(
         if (isReviewed) {
             activeRequest = null
             // Let go of first, so that the screen leaving finds nothing left to cancel.
-            if (_importReport.value is ImportReport.Loading) _importReport.value = null
-            closeImportReport()
+            if (reportState.report is ImportReport.Loading) reportState.report = null
+            reportState.close()
         }
     }
 
@@ -360,34 +323,10 @@ internal class ImportController(
     /** The failure stage's Try again: the same address downloaded again, or the same bytes read again. */
     fun retryImport() {
         val request = activeRequest ?: return
-        if (_importReport.value !is ImportReport.Failed) return
-        _importReport.value = ImportReport.Loading(request.source.name)
+        if (reportState.report !is ImportReport.Failed) return
+        reportState.report = ImportReport.Loading(request.source.name)
         _isImporting.update { true }
         scope.launch { prepare(request = request, isReviewed = true) }
-    }
-
-    /** A group's box, over the rows the screen shows, which is only the matching ones while a search narrows them. */
-    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = updateChoices { choices ->
-        choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
-    }
-
-    /** What a name already taken does: one row's choice for [key]. */
-    fun setImportConflictResolution(key: ImportEntryKey, resolution: ImportConflictResolution) = updateChoices { choices ->
-        choices.copy(conflictResolutions = choices.conflictResolutions + (key to resolution))
-    }
-
-    /**
-     * The group header's choice for all of them, over the rows the screen shows, which is only the matching ones while a
-     * search narrows them, as the group's box acts: see [withGroupResolution].
-     */
-    fun setImportGroupConflictResolution(
-        keys: Collection<ImportEntryKey>,
-        isFiltered: Boolean,
-        resolution: ImportConflictResolution,
-    ) = updateChoices { it.withGroupResolution(keys = keys, isFiltered = isFiltered, resolution = resolution) }
-
-    private fun updateChoices(update: (ImportChoices) -> ImportChoices) = _importReport.update { report ->
-        if (report is ImportReport.Review) report.copy(choices = update(report.choices)) else report
     }
 
     /**
@@ -395,7 +334,7 @@ internal class ImportController(
      * replace any, [DialogType.ConfirmImportReplace] asks first, and its confirmation is what calls [resolveImport].
      */
     fun confirmImport() {
-        val review = _importReport.value as? ImportReport.Review ?: return
+        val review = reportState.report as? ImportReport.Review ?: return
         val count = replaceCount(review.plan, review.choices)
         if (count > 0) dialogHost.showDialog(DialogType.ConfirmImportReplace(count)) else resolveImport()
     }
@@ -405,13 +344,13 @@ internal class ImportController(
      * stays where it is and shows the import being written, and then what it came to.
      */
     fun resolveImport() {
-        val review = _importReport.value as? ImportReport.Review ?: return
+        val review = reportState.report as? ImportReport.Review ?: return
         val request = activeRequest ?: return
         activeRequest = null
         // Claimed before the review goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
-        _importReport.value = ImportReport.Importing
+        reportState.report = ImportReport.Importing
         scope.launch { applyImportPlan(plan = review.plan, choices = review.choices, request = request, isReported = true) }
     }
 
@@ -449,14 +388,14 @@ internal class ImportController(
             }
             _importProgress.value = null
             val songToOpen = songToOpen(plan = plan, result = result, shouldOpenSong = request.shouldOpenSong)
-            val isReportShown = isReported && isImportReportOnBackStack
+            val isReportShown = isReported && reportState.isOnBackStack
             when {
                 // The one song the system handed over is what the user was after, and the review has been answered:
                 // the import screen gives way to it rather than reporting on one file.
                 songToOpen != null -> {
                     // Let go of first, since a report that still says it is being written outlives its screen.
-                    if (isReported) _importReport.value = null
-                    if (isReportShown) closeImportReport()
+                    if (isReported) reportState.report = null
+                    if (isReportShown) reportState.close()
                     // A first run opens the onboarding over a file the app was opened with; the song follows it, as an
                     // import screen would, rather than going on top of its pages.
                     scope.launch {
@@ -467,31 +406,31 @@ internal class ImportController(
                 }
 
                 isReportShown && result.isClean -> {
-                    _importReport.value = null
-                    closeImportReport()
+                    reportState.report = null
+                    reportState.close()
                     if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFinished(result, hasDetails = true))
                 }
 
-                isReportShown -> _importReport.value = ImportReport.Finished(result)
+                isReportShown -> reportState.report = ImportReport.Finished(result)
                 // Left while it was being written, which is a choice to hear about it the short way.
                 isReported -> {
-                    _importReport.value = null
+                    reportState.report = null
                     messageSink.sendMessage(Message.ImportFinished(result, hasDetails = true))
                 }
 
                 !request.shouldAnnounceResult -> Unit
                 result.isClean -> messageSink.sendMessage(Message.ImportFinished(result, hasDetails = plan.entryCount > 1))
-                else -> showImportReport(ImportReport.Finished(result))
+                else -> reportState.show(ImportReport.Finished(result))
             }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
             _importProgress.value = null
-            if (isReported && isImportReportOnBackStack) {
-                _importReport.value = ImportReport.Finished(null)
+            if (isReported && reportState.isOnBackStack) {
+                reportState.report = ImportReport.Finished(null)
             } else {
-                if (isReported) _importReport.value = null
+                if (isReported) reportState.report = null
                 if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
             }
         } finally {
@@ -500,46 +439,10 @@ internal class ImportController(
         }
     }
 
-    /**
-     * Sets [report] at once, which is what keeps the next batch waiting, and puts the import screen on top of whatever
-     * is on screen once nothing else is in its way: a dialog, whose input would otherwise be left under the screen, or
-     * an editor holding unsaved text, which is only ever asked about while it is on top (see [navigateBack]) and would
-     * be one closed window away from being lost under it, or the onboarding, which a first run opens even while a file
-     * the app was opened with is read behind it, and which the import screen follows as it closes. Launched rather than
-     * awaited, so that the import that asked can finish meanwhile.
-     */
-    private fun showImportReport(report: ImportReport) {
-        val request = ++importReportRequest
-        _importReport.value = report
-        scope.launch {
-            combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
-                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
-                    stack.none { it is CampfireDestination.Onboarding }
-            }.first { it }
-            if (importReportRequest == request && _importReport.value != null && !isImportReportOnBackStack) {
-                updateBackStack { add(CampfireDestination.ImportReport) }
-            }
-        }
-    }
-
     /** The snackbar's way into the import screen, for an outcome that did not need it but has more to it than one line. */
     fun openImportReport(result: ImportResult) {
-        if (_importReport.value != null || _isImporting.value) return
-        showImportReport(ImportReport.Finished(result))
-    }
-
-    /**
-     * Keeps the import screen's result naming the files the library holds, so that coming back to it from a song opened
-     * from its list and deleted or renamed there shows the library as it now is rather than a row that no longer opens.
-     */
-    fun followReportedFileNames(fileName: (String) -> String?) = _importReport.update { report ->
-        if (report is ImportReport.Finished && report.result != null) ImportReport.Finished(report.result.followingLibraryFileNames(fileName)) else report
-    }
-
-    /** Takes the import screen off the back stack, with whatever is on top of it, see [onImportReportLeft]. */
-    private fun closeImportReport() {
-        val index = backStack.indexOf(CampfireDestination.ImportReport)
-        if (index >= 0) updateBackStack { while (size > index) removeAt(lastIndex) }
+        if (reportState.report != null || _isImporting.value) return
+        reportState.show(ImportReport.Finished(result))
     }
 
     /**
@@ -549,20 +452,19 @@ internal class ImportController(
      * reported with a snackbar once it is done (see [applyImportPlan]); what a finished one came to has been seen.
      */
     private fun onImportReportLeft() {
-        importReportSearch.textFieldState.clearText()
-        when (_importReport.value) {
+        when (reportState.report) {
             is ImportReport.Loading -> {
-                _importReport.value = null
+                reportState.report = null
                 cancelImportPreparation()
             }
 
             is ImportReport.Failed, is ImportReport.Review -> {
                 activeRequest = null
-                _importReport.value = null
+                reportState.report = null
             }
 
             ImportReport.Importing -> Unit
-            is ImportReport.Finished, null -> _importReport.value = null
+            is ImportReport.Finished, null -> reportState.report = null
         }
     }
 
@@ -608,7 +510,7 @@ internal class ImportController(
                 do {
                     awaitImportSettled()
                     while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
-                } while (_importReport.value != null || _isImporting.value)
+                } while (reportState.report != null || _isImporting.value)
                 // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue
@@ -624,21 +526,8 @@ internal class ImportController(
         }
     }
 
-    /**
-     * Says that a process ended behind an unwritten import, and keeps [savedStateStore] noting whether one is. The
-     * import screen is never restored, and its plan is far too large to be saved, so a process ended behind an
-     * unwritten import says so instead. Read before the collector writes the first report over it.
-     */
-    fun startReportingInterruption(savedStateStore: SavedStateStore) {
-        val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
-        scope.launch { importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
-        if (wasImportInterrupted) messageSink.sendMessage(Message.ImportInterrupted)
-    }
-
     /** Notes whether the import screen is still on the back stack, and lets go of what it asked once it is not. */
     fun onBackStackChanged() {
-        val hadImportReport = isImportReportOnBackStack
-        isImportReportOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
-        if (hadImportReport && !isImportReportOnBackStack) onImportReportLeft()
+        if (reportState.onBackStackChanged()) onImportReportLeft()
     }
 }

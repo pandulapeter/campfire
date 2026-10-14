@@ -47,12 +47,13 @@ class ImportControllerQueueTest {
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
     private var prepareCount = 0
     private lateinit var controller: ImportController
+    private lateinit var reportState: ImportReportState
 
     private fun TestScope.startController() {
-        controller = ImportController(
+        val dialogHost = DialogHost(backgroundScope)
+        reportState = ImportReportState(
             scope = backgroundScope,
-            dialogHost = DialogHost(backgroundScope),
-            messageSink = MessageSink(backgroundScope),
+            dialogHost = dialogHost,
             backStack = backStack,
             updateBackStack = { update ->
                 backStack.update()
@@ -61,6 +62,13 @@ class ImportControllerQueueTest {
             songTexts = MutableStateFlow(emptyMap()),
             editorDraft = MutableStateFlow<SongContent?>(null),
             hasUnsavedEditorText = { false },
+        )
+        controller = ImportController(
+            scope = backgroundScope,
+            dialogHost = dialogHost,
+            messageSink = MessageSink(backgroundScope),
+            backStack = backStack,
+            reportState = reportState,
             openImportedSong = {},
             launchFileTransfer = { null },
             isLeaving = { false },
@@ -100,7 +108,7 @@ class ImportControllerQueueTest {
         controller.openImportReport(ImportResult(importedSongFileNames = listOf("a.cho")))
         Snapshot.sendApplyNotifications()
         runCurrent()
-        assertIs<ImportReport.Finished>(controller.importReport.value)
+        assertIs<ImportReport.Finished>(reportState.importReport.value)
         assertTrue(CampfireDestination.ImportReport in backStack)
     }
 
@@ -119,10 +127,10 @@ class ImportControllerQueueTest {
         reopenResult()
         enqueue()
         runCurrent()
-        assertIs<ImportReport.Finished>(controller.importReport.value)
+        assertIs<ImportReport.Finished>(reportState.importReport.value)
         assertEquals(0, prepareCount)
         leaveImportReport()
-        val report = controller.importReport.value
+        val report = reportState.importReport.value
         assertTrue(report is ImportReport.Loading || report is ImportReport.Review)
         assertEquals(1, prepareCount)
     }
@@ -135,7 +143,7 @@ class ImportControllerQueueTest {
         runCurrent()
         leaveImportReport()
         assertFalse(settled.isCompleted)
-        assertIs<ImportReport.Review>(controller.importReport.value)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
         assertTrue(CampfireDestination.ImportReport in backStack)
         leaveImportReport()
         assertTrue(settled.isCompleted)

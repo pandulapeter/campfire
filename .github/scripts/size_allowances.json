@@ -3,7 +3,7 @@
   "data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/SyncEngine.kt": 596,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CLAUDE.md": 2777,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireScreens.kt::CampfireScreens": 326,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1574,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1583,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/chords/CLAUDE.md": 1003,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/CLAUDE.md": 2429,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/FastScroller.kt::FastScroller": 155,
@@ -54,7 +54,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongList.kt::SongList": 290,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongsScreen.kt::SongsScreen": 172,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/tuner/TunerScreen.kt::TunerScreen": 128,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/ImportController.kt": 644,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/ImportController.kt": 533,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/theme/CLAUDE.md": 885,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md": 793,
   "tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Render.kt::render": 130

@@ -136,6 +136,7 @@ import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.ImportReportState
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -322,7 +323,7 @@ class CampfireViewModel(
         dialogHost = dialogHost,
         songsSearch = { songsSearch },
         setlistsSearch = { setlistsSearch },
-        importReportSearch = { importReportSearch },
+        importReportSearch = { importReportState.search },
         // The view model's copy of the preferences, which is what the onboarding's pages draw their dots from.
         onboardingSteps = { onboardingSteps(userPreferences.value) },
         topLevelDestinations = { topLevelDestinations.value },
@@ -680,15 +681,22 @@ class CampfireViewModel(
         loadSongCredits = loadSongCredits,
     )
 
-    private val importController: ImportController = ImportController(
+    private val importReportState: ImportReportState = ImportReportState(
         scope = viewModelScope,
         dialogHost = dialogHost,
-        messageSink = messageSink,
         backStack = backStack,
         updateBackStack = { updateBackStack(update = it) },
         songTexts = songTexts,
         editorDraft = editorSession.editorDraft,
         hasUnsavedEditorText = { hasUnsavedEditorText() },
+    )
+
+    private val importController: ImportController = ImportController(
+        scope = viewModelScope,
+        dialogHost = dialogHost,
+        messageSink = messageSink,
+        backStack = backStack,
+        reportState = importReportState,
         openImportedSong = { openImportedSong(it) },
         launchFileTransfer = { launchFileTransfer(it) },
         isLeaving = { isLeaving },
@@ -709,7 +717,7 @@ class CampfireViewModel(
         followMetronomeRename = metronomeController::followSongRename,
         followScreensRename = navigator::followSongRename,
         closeScreensShowing = { navigator.closeScreensShowing(it) },
-        followReportedFileNames = importController::followReportedFileNames,
+        followReportedFileNames = importReportState::followReportedFileNames,
         getSongContent = getSongContent,
         createSongFile = createSong,
         duplicateSongFile = duplicateSong,
@@ -737,11 +745,11 @@ class CampfireViewModel(
     /** See [ImportController.importProgress]. */
     val importProgress: StateFlow<ImportProgress?> get() = importController.importProgress
 
-    /** See [ImportController.importReport]. */
-    val importReport: StateFlow<ImportReport?> get() = importController.importReport
+    /** See [ImportReportState.importReport]. */
+    val importReport: StateFlow<ImportReport?> get() = importReportState.importReport
 
-    /** See [ImportController.importReportSearch]. */
-    internal val importReportSearch get() = importController.importReportSearch
+    /** See [ImportReportState.search]. */
+    internal val importReportSearch get() = importReportState.search
 
     private val songListState: SongListState = SongListState(
         scope = viewModelScope,
@@ -957,6 +965,7 @@ class CampfireViewModel(
         dialogHost = dialogHost,
         messageSink = messageSink,
         importController = importController,
+        importReport = importReportState.importReport,
         backStack = backStack,
         screenData = screenData,
         userPreferencesState = userPreferencesState,
@@ -1004,7 +1013,7 @@ class CampfireViewModel(
         syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::showSyncConsentAnswer)
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
-        importController.startReportingInterruption(savedStateStore)
+        importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         editorSession.startRecovery()
@@ -1374,13 +1383,13 @@ class CampfireViewModel(
 
     fun retryImport() = importController.retryImport()
 
-    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = importController.setImportEntriesChosen(keys, isChosen)
+    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = importReportState.setImportEntriesChosen(keys, isChosen)
 
     fun setImportConflictResolution(key: ImportEntryKey, resolution: ImportConflictResolution) =
-        importController.setImportConflictResolution(key, resolution)
+        importReportState.setImportConflictResolution(key, resolution)
 
     fun setImportGroupConflictResolution(keys: Collection<ImportEntryKey>, isFiltered: Boolean, resolution: ImportConflictResolution) =
-        importController.setImportGroupConflictResolution(keys = keys, isFiltered = isFiltered, resolution = resolution)
+        importReportState.setImportGroupConflictResolution(keys = keys, isFiltered = isFiltered, resolution = resolution)
 
     fun confirmImport() = importController.confirmImport()
 
@@ -1388,7 +1397,7 @@ class CampfireViewModel(
 
     internal fun openImportReport(result: ImportResult) = importController.openImportReport(result)
 
-    private fun followReportedFileNames(fileName: (String) -> String?) = importController.followReportedFileNames(fileName)
+    private fun followReportedFileNames(fileName: (String) -> String?) = importReportState.followReportedFileNames(fileName)
 
     internal suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels) = exportController.preparePrintSource(dialog, tabNoticeLabels)
 
