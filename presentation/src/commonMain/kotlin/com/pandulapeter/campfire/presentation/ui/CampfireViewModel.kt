@@ -144,11 +144,11 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
-import com.pandulapeter.campfire.presentation.ui.state.SongMetadataEditing
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
-import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async

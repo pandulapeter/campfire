@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
-import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow

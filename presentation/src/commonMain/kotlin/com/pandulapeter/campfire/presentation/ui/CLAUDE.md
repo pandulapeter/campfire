@@ -47,14 +47,6 @@ The view model facade, the composition root and navigation chrome, and the produ
   references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a
   playing click's changes until its context names the new file (`metronomeRenames`). A state, not a wait: no emission
   says it is the last.
-- **Song texts**: `songTexts` holds only the texts of screens on the back stack, pruned once a navigation transition
-  ends (a popped screen is still drawn while sliding, `pruneSongTexts`). A sync run or rescan re-reads them all in one
-  update (`rereadSongTexts`). An untouched editor follows its file (`FollowFileWhileUntouched`, so saving it never
-  writes the old version back); an editor with its own text whose file changed or vanished has unsaved changes, keeps
-  its text, and saving writes it back under its own name (`Message.EditedSongFileGone`). `onEditorClosed` leaves the
-  draft alone while the editor is still on the stack, so a configuration change never loses it.
-- **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,
-  and passes `expectedText`: a file changed before the view model heard of it is re-read and the edit applied to it.
 - Tags and languages are written into the file (`SetChordProTagUseCase`). Save in the tag sheet writes the whole set in
   one rewrite, removing only tags it offered and left unticked. The tag/language *filter* (`songFilter`) is neither a
   file nor a preference: it lives in the view model and saved state only, gone on next launch. `isSongFilterActive` is

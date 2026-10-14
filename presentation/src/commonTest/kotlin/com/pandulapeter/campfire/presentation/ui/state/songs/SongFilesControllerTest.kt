@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.songs
 
-import com.pandulapeter.campfire.presentation.ui.state.FakeSongFiles
-import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.state.songText.FakeSongFiles
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongFileRename
