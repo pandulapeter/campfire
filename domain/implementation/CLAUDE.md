@@ -119,7 +119,7 @@ split exists so a whole archive can be put to the user as one review before anyt
   is offered where name and metadata drift apart beyond case or Unicode form (`Song.canUpdateFileName`). Old names
   stay until one of those happens.
 - `RenameSongFileUseCaseImpl` and `DeleteSongUseCaseImpl` share one walk (`useCases/SongReferences.kt`) over what
-  names a song by file: setlists, saved transposition and tempo, folded sections. Rename moves the file first, then
+  names a song by file: setlists and the per-song preference maps (`UserPreferences.withSongRenamed`). Rename moves the file first, then
   follows every reference; delete drops them. Every reference is attempted even after one fails; failure is returned,
   not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are found from the files
   (`loadSetlistFileNamesNaming`), not the cache, and changed through `updateSetlist`. A setlist already naming the new
