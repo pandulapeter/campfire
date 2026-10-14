@@ -14,10 +14,10 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationDigitsOf
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.domain.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.data.model.domain.SongCredits
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongCredits
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

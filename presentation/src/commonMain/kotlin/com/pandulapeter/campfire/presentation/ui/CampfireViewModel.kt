@@ -17,7 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
@@ -32,8 +32,8 @@ import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

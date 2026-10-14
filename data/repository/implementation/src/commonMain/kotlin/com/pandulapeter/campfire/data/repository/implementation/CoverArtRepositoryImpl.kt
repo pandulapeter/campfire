@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository

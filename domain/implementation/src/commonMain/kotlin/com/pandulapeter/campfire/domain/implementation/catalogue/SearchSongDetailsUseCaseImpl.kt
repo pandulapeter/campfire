@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.data.repository.api.SongDetailsRepository
 import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import org.koin.core.annotation.Factory

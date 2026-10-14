@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.data.source.remote.api.catalogue
 
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
-import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtCandidate
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
 
 /**
  * Finds the records a song may have come out on in one catalogue, [catalogue], each with the address of its front cover,

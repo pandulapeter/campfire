@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.catalogue
 
 /**
  * What the song details lookup is asked: a song by its [title], narrowed down by its [artist] and the [album] it is on

@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.state.online
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost

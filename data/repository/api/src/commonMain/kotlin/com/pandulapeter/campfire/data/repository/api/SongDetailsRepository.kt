@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
-import com.pandulapeter.campfire.data.model.domain.SongCreditsState
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.CatalogueSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import kotlinx.coroutines.flow.Flow
 
 /**

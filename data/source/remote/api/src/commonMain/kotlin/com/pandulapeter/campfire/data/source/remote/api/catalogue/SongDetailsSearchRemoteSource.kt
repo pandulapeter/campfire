@@ -10,10 +10,10 @@
 package com.pandulapeter.campfire.data.source.remote.api.catalogue
 
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
-import com.pandulapeter.campfire.data.model.domain.Catalogue
-import com.pandulapeter.campfire.data.model.domain.SongCredits
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.SongCredits
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 
 /**
  * Finds the recordings of a song in one catalogue, [catalogue], each with what it would fill the song's header with,

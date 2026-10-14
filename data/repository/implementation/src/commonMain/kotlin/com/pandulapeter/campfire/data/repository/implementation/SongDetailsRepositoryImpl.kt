@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Catalogue
-import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
-import com.pandulapeter.campfire.data.model.domain.SongCreditsState
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.CatalogueSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.SongDetailsRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment

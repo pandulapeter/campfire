@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationTextOf
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.domain.SongCredits
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongCredits
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 
 /**
  * One value a recording the song details lookup found would fill into the Edit song details form: what the form holds

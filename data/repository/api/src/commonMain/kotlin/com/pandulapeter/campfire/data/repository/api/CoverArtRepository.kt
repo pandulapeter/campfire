@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import kotlinx.coroutines.flow.Flow
 
 /**

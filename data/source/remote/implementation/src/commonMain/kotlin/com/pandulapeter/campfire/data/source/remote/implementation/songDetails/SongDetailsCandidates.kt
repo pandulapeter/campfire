@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.songDetails
 
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 
 /**
  * [this] with only the first of the candidates that would fill the song's header with the same values, the duration

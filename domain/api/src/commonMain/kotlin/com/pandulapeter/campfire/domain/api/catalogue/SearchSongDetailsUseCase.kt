@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.api.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.CatalogueSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import kotlinx.coroutines.flow.Flow
 
 interface SearchSongDetailsUseCase {

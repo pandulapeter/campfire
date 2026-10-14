@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.online
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

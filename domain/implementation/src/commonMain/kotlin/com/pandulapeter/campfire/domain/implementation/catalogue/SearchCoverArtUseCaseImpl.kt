@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.domain.api.catalogue.SearchCoverArtUseCase
 import org.koin.core.annotation.Factory

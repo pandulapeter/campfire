@@ -9,12 +9,12 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
-import com.pandulapeter.campfire.data.model.domain.Catalogue
-import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.SongCredits
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtCandidate
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.SongCredits
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
 import com.pandulapeter.campfire.data.source.remote.implementation.songDetails.withoutRepeats
 import kotlinx.serialization.json.Json

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Catalogue
-import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
+import com.pandulapeter.campfire.data.model.catalogue.Catalogue
+import com.pandulapeter.campfire.data.model.catalogue.CatalogueSearchResults
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.recovering
 import kotlinx.coroutines.flow.Flow

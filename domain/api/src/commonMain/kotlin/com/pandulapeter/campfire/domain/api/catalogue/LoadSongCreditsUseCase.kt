@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.domain.api.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.SongCreditsState
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
+import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import kotlinx.coroutines.flow.Flow
 
 interface LoadSongCreditsUseCase {
