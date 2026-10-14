@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens
+package com.pandulapeter.campfire.presentation.ui.metronome
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -17,10 +17,6 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
-import com.pandulapeter.campfire.presentation.ui.metronome.barBeingLeft
-import com.pandulapeter.campfire.presentation.ui.metronome.beatLevelsOf
-import com.pandulapeter.campfire.presentation.ui.metronome.metronomeTimeSignatureOf
 
 /**
  * What [com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel] shows, for the two screens that have one.

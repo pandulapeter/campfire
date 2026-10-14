@@ -86,7 +86,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
-import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
+import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

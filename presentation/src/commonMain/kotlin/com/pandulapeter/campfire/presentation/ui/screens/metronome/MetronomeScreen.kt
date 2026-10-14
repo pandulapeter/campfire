@@ -51,7 +51,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
-import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
+import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage

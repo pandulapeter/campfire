@@ -61,7 +61,7 @@ haptics).
 - It holds only the `BeatRow` and play / stop (`PlayStopMark`), at the end because the phone is held there. The tempo
   is in the song's first section; sound, subdivision, and volume are the tab's. A lit beat also swells, since in the
   light theme an accent at rest is already half the lit color.
-- The panel takes `screens/MetronomePanelState.kt` and two callbacks, not the view model. It reads no tempo, only the
+- The panel takes `MetronomePanelState.kt` and two callbacks, not the view model. It reads no tempo, only the
   signature (`metronomeTimeSignatureOf`, tested).
 - **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`), written by the song's `MetronomeButton`
   and by a click started there, left alone when the screen is left, so the next song and the next launch keep it.
