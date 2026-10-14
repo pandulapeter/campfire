@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Logger
-import com.pandulapeter.campfire.data.model.domain.recovering
+import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.recovering
 
 /** The files a [deleteEach] could not delete, and why. */
 internal class RemainingFiles(

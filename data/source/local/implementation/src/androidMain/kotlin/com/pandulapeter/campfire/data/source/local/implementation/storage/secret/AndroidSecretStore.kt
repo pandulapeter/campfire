@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.secre
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory

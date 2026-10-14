@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

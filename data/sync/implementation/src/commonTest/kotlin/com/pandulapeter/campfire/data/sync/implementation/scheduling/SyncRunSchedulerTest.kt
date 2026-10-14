@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges

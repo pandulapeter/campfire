@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope

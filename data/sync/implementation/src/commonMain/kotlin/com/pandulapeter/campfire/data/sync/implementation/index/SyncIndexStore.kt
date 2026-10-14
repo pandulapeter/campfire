@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.index
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
-import com.pandulapeter.campfire.data.model.domain.recovering
+import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.repository.implementation.base
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

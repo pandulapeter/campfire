@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song

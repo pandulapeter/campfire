@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.DocumentLocalSource
 import com.pandulapeter.campfire.data.formats.document.DocxTextExtractor
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor

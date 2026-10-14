@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters

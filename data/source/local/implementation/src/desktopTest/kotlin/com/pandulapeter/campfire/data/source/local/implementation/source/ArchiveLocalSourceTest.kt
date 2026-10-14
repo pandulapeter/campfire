@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.runBlocking

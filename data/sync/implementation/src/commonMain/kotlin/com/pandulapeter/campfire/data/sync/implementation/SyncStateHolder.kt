@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import com.pandulapeter.campfire.data.sync.implementation.run.plus
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder

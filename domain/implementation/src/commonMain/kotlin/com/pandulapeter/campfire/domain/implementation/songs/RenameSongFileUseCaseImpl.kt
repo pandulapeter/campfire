@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository

@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy

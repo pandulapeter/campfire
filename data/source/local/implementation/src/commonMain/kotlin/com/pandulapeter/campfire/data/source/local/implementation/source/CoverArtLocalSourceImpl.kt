@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory

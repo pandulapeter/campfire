@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource

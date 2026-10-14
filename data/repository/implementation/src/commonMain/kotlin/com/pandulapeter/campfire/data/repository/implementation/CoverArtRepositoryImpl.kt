@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.recovering
+import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment

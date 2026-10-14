@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
 import com.pandulapeter.campfire.data.model.domain.SongCreditsState
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
-import com.pandulapeter.campfire.data.model.domain.recovering
+import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.SongDetailsRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSources

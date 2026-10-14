@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import java.io.File
 import java.nio.file.Files

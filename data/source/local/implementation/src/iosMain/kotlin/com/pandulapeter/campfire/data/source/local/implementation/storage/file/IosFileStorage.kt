@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi

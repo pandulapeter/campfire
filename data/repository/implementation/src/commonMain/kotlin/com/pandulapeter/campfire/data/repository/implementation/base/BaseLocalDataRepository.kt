@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

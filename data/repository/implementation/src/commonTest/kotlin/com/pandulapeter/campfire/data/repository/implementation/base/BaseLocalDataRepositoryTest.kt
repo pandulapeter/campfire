@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

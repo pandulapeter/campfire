@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibrary
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState

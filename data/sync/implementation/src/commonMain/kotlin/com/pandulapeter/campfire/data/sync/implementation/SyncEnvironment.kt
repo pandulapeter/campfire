@@ -12,7 +12,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.plus
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

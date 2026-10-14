@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.base
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 
 /** Keeps every line instead of printing it, so that a test can check what a failure that was not thrown said. */
 internal class RecordingLogger : Logger {

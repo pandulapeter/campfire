@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
-import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import kotlinx.coroutines.CancellationException
