@@ -53,6 +53,17 @@ class ChordVoicingsTest {
     }
 
     @Test
+    fun `preparing a tuning's table changes no shape it answers`() {
+        val chord = assertNotNull(ChordProChords.parse("C"))
+        val before = ChordVoicings.all(chord, ChordTuning.UKULELE)
+        ChordVoicings.prepare(ChordTuning.UKULELE)
+        ChordVoicings.resetCache()
+        assertEquals("0 0 0 3", ChordVoicings.default(chord, ChordTuning.UKULELE)?.let(ChordVoicings::write))
+        assertEquals(before.first(), ChordVoicings.default(chord, ChordTuning.UKULELE))
+        assertEquals(before, ChordVoicings.all(chord, ChordTuning.UKULELE))
+    }
+
+    @Test
     fun `the banjo plays the shapes its charts show, its fifth string open only where its note is the chord's`() {
         mapOf(
             "G" to "0 0 0 0 0", "C" to "0 2 0 1 2", "D" to "x 0 2 3 4", "Em" to "0 2 0 0 2", "Am" to "x 2 2 1 2", "D7" to "x 0 2 1 4",

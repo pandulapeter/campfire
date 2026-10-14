@@ -52,6 +52,11 @@ internal object ChordVoicingSearch {
         else -> Table.EMPTY
     }
 
+    /** Reads [tuning]'s table now, if it has not been read yet, so that its first lookup finds it ready. */
+    fun prepare(tuning: ChordTuning) {
+        table(tuning)
+    }
+
     private class TableShape(val chord: Chord, val voicing: ChordVoicing.Fretted)
 
     /**

@@ -10,11 +10,13 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
+import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.withInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.withTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -22,11 +24,15 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The user's preferences as the app reads them and every switch that writes one. Each write is applied to what the
@@ -89,6 +95,21 @@ internal class PreferencesController(
      * middle of the transition the screen is entering with.
      */
     val libraryPersistence = flow<LibraryPersistence?> { emit(requestPersistence()) }.asState(scope, null)
+
+    init {
+        // The chord table of the player's tuning is read off the main thread as soon as the preferences name it, and
+        // again for each tuning picked later. The first song opened builds its first page during composition, on the
+        // main thread, and would otherwise read the table there: thousands of shapes, frames dropped in its opening
+        // transition on a slow phone. On the web the default dispatcher is the page's one thread, so there it only
+        // moves the read to while the library is still being read, before any song can be opened.
+        scope.launch {
+            userPreferences
+                .map { preferences -> preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning() }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collect { withContext(Dispatchers.Default) { ChordVoicings.prepare(it) } }
+        }
+    }
 
     fun setPerformanceModeEnabled(value: Boolean) = changeUserPreferences { copy(isPerformanceModeEnabled = value) }
 

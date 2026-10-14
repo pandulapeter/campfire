@@ -12,7 +12,8 @@
 - The tables (sources and notices in each file's KDoc): every shape
   must sound exactly the chord it is filed under, below the twelfth fret, holdable (`ChordVoicingTablesTest`). **Table
   order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`
-  is tolerant.
+  is tolerant. A table is read on its first use (a `lazy`, which a second thread waits for); `ChordVoicings.prepare`
+  reads it ahead, off the main thread.
 - `ChordTuning`: its `id` must match `:tuner:api`'s `InstrumentTuning` ids. **A chord name names the chord that
   sounds.** A tuning has its own table or shifts one by a single interval. `drawsDefinitions` (standard and ukulele low
   G) is where a `{define}`, which has no tuning, is drawn.

@@ -68,6 +68,16 @@ public object ChordVoicings {
         return shape
     }
 
+    /**
+     * Reads and indexes the table [tuning] uses, so that its first lookup costs nothing: reading one is thousands of
+     * shapes, more than a frame on a slow device, and the first page of a song is built in one. Safe to call from any
+     * thread and as often as wanted; a lookup made while it runs waits for it rather than reading the table a second
+     * time, and nothing any function here answers changes.
+     */
+    public fun prepare(tuning: ChordTuning) {
+        ChordVoicingSearch.prepare(tuning)
+    }
+
     /** Forgets every default worked out so far, so that a test asking [needsSearch] does not depend on the ones before it. */
     internal fun resetCache() {
         defaults = emptyMap()
