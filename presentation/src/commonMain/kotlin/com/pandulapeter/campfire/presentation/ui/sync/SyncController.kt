@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.domain.api.sync.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase

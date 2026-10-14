@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.sync
 
 /** The cloud services the library can be kept in step with. One is connected at a time, see `SyncRepository`. */
 enum class SyncProviderId(val id: String) {

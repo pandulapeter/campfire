@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.domain.implementation.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase

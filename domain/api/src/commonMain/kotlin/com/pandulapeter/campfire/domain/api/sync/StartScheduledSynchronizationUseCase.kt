@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
 
 interface StartScheduledSynchronizationUseCase {
 

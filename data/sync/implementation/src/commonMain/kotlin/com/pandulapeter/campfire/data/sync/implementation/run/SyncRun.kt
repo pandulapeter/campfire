@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import kotlinx.serialization.json.JsonObject
 

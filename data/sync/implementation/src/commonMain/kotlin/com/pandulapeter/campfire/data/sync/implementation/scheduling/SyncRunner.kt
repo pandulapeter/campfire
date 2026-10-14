@@ -19,11 +19,11 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
-import com.pandulapeter.campfire.data.model.domain.SyncOutcome
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncOutcome
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
@@ -217,7 +217,7 @@ internal class SyncRunner(
     /**
      * Settles `preferences.json` once the library files have been, and answers the document to remember, or null where
      * it could not be settled. Only the failures that end a run end this one too: anything else is the one document's
-     * problem, reported as [com.pandulapeter.campfire.data.model.domain.SyncSummary.havePreferencesFailed], and the
+     * problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
      * next run tries again.
      */
     private suspend fun synchronizePreferences(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {

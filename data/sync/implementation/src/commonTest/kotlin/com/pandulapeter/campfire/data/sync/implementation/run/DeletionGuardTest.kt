@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

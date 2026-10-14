@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive

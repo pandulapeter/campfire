@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest

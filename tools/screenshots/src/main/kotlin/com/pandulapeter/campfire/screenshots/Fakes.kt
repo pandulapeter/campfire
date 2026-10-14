@@ -11,15 +11,15 @@ package com.pandulapeter.campfire.screenshots
 
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncOutcome
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.data.model.domain.SyncSummary
+import com.pandulapeter.campfire.data.model.sync.SyncAccount
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncOutcome
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat

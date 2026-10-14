@@ -16,8 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel

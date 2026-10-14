@@ -15,11 +15,11 @@ import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnect
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibraryRefresher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncAccount
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders

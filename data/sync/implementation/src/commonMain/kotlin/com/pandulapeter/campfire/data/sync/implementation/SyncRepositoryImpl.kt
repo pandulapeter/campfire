@@ -12,12 +12,12 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnectionManager
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import org.koin.core.annotation.Single
 
 /**

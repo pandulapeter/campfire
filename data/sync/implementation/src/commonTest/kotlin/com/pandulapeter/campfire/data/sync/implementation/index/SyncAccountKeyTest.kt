@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.index
 
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncAccount
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

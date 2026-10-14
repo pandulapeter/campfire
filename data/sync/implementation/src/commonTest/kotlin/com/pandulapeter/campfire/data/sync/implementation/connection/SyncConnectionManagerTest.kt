@@ -24,11 +24,11 @@ import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
-import com.pandulapeter.campfire.data.model.domain.SyncOutcome
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncOutcome
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization

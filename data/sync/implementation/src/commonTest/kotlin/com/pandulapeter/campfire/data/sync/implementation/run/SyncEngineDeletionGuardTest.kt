@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.data.sync.implementation.librarySongs
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncedIndexOf
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive

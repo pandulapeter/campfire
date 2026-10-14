@@ -14,8 +14,8 @@ import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison

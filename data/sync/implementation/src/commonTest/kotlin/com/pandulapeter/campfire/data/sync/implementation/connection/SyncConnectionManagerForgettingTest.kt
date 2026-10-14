@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.TEST_COMPLETION_PAGE
 import com.pandulapeter.campfire.data.sync.implementation.TEST_REDIRECT
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator

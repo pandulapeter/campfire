@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 
 interface GetSyncProvidersUseCase {
 

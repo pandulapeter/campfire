@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.tooLarge
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

@@ -17,7 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async

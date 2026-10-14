@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 
 /** The one thing between a vanished library or cloud folder and a run that would carry its absence out faithfully. */
 internal object DeletionGuard {

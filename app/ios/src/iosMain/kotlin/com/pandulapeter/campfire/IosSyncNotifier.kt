@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire
 
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
 
 /**
  * Keeps a sync run alive and visible while the app is not the thing the user is looking at.

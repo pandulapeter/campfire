@@ -16,10 +16,10 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncSummary
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource

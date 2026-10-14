@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.index
 
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.sync.SyncAccount
 
 /**
  * What `sync-index.json` is filed under: the provider and the id the service itself gives the account. Nothing the

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync
 
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 
 /**
  * How a platform gets the user through the service's consent page and back.

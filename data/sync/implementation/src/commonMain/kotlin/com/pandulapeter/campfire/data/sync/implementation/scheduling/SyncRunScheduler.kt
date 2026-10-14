@@ -15,9 +15,9 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job

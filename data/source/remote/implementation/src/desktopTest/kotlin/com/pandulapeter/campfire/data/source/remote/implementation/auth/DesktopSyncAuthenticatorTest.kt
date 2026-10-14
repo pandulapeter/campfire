@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import java.io.PrintWriter
 import java.net.ConnectException
 import java.net.Socket
@@ -32,7 +32,7 @@ import kotlin.test.assertTrue
  * to close the socket underneath it. Getting that wrong leaves the port held and the user unable to try again, and
  * it is invisible until somebody actually cancels - which is what these cover.
  *
- * No browser is opened: the [com.pandulapeter.campfire.data.model.domain.SystemBrowser] is injected, which is the
+ * No browser is opened: the [com.pandulapeter.campfire.data.model.sync.SystemBrowser] is injected, which is the
  * reason this seam exists.
  */
 class DesktopSyncAuthenticatorTest {

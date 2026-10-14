@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.domain.SyncSummary
+import com.pandulapeter.campfire.data.model.sync.SyncSummary
 
 internal operator fun SyncSummary.plus(other: SyncSummary) = SyncSummary(
     downloaded = downloaded + other.downloaded,

@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.domain.implementation.sync
 
 import com.pandulapeter.campfire.domain.implementation.SyncRepositoryStub
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

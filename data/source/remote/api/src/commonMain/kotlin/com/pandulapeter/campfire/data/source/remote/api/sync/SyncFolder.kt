@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.api.sync
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing

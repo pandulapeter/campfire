@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
 import org.koin.core.annotation.Factory

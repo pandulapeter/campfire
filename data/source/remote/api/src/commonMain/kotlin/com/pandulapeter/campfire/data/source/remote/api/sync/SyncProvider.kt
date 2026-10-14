@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 
 /**
  * One cloud service: its account ([SyncConnection]) and its folder ([SyncFolder]). Everything a provider does

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync
 
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

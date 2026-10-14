@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.sync
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization

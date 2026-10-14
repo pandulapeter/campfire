@@ -17,10 +17,10 @@ import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.toFailureReason
-import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
-import com.pandulapeter.campfire.data.model.domain.SyncOutcome
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncOutcome
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizatio
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters
 import kotlinx.coroutines.CancellationException

@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
