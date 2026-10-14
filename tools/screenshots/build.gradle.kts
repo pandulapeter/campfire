@@ -33,6 +33,9 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.kotlin.coroutines.swing)
     implementation(libs.kotlin.serialization.json)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.compose.ui.test)
+    testRuntimeOnly(libs.junit.platformLauncher)
 }
 
 kotlin {
@@ -41,7 +44,7 @@ kotlin {
 
 // The tool is a friend of :presentation, so a shot can reach the state the screens keep internal (a list's scroll
 // position, the filter's codes) rather than the app's API being widened for a tool no build ships.
-tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>("compileKotlin") {
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
     val presentation = configurations.compileClasspath.map { classpath -> classpath.files.filter { it.absolutePath.contains("/presentation/build/") } }
     compilerOptions.freeCompilerArgs.addAll(presentation.map { files -> files.map { "-Xfriend-paths=${it.absolutePath}" } })
 }
@@ -90,6 +93,12 @@ val downloadFonts by tasks.registering {
             File(directory, name).writeBytes(bytes)
         }
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    systemProperty("java.awt.headless", "true")
+    systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
 }
 
 tasks.named<JavaExec>("run") {

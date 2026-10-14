@@ -181,12 +181,13 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 
 ## Tests
 
-Only pure logic is tested, in `commonTest`, run on the desktop target; the UI is untested by code and a release is
-checked by hand. Add or update tests with every change to tested logic.
+Pure logic is tested in `commonTest`, run on the desktop target; a few UI tests drive the whole app offscreen on the
+desktop JVM, and a release is still checked by hand. Add or update tests with every change to tested logic.
 
 ```
 ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest
 ./gradlew -p gradle :build-logic:test      # packaging helpers
+./gradlew :tools:screenshots:test          # UI tests: the whole app driven offscreen (tools/screenshots/CLAUDE.md)
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s

@@ -55,6 +55,5 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/grid/SectionGrid.kt::flowIntoRows": 143,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/importing/ImportController.kt": 533,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/theme/CLAUDE.md": 885,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md": 793,
-  "tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Render.kt::render": 130
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md": 793
 }

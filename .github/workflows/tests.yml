@@ -6,10 +6,10 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Every test the repository has: the unit tests of every module, run on the desktop target, the Node tests of the
-# web build's storage worker and offline support and the Python test of the release description's parser — and a
-# compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the desktop
-# target's. Run on every pull request, every night on the default branch, which catches what was pushed there
+# Every test the repository has: the unit tests of every module, run on the desktop target, the UI tests, the Node
+# tests of the web build's storage worker and offline support and the Python test of the release description's parser
+# — and a compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the
+# desktop target's. Run on every pull request, every night on the default branch, which catches what was pushed there
 # directly, and by publish-all.yml before it starts a single store build, so a failing test or a platform that does
 # not compile stops every store's release rather than one of them.
 
@@ -54,9 +54,10 @@ jobs:
         run: python3 .github/scripts/check_sizes.py
       # The unqualified tasks run in every module that has them, so a module that gains tests is covered without a
       # change here. --continue reports the failures of every module rather than only the first, and a ktlint violation
-      # (spotlessCheck) together with them.
+      # (spotlessCheck) together with them. The UI tests drive the whole desktop app offscreen from the screenshot tool's
+      # module, a plain JVM one with no desktopTest of its own.
       - name: Run the unit tests
-        run: ./gradlew spotlessCheck desktopTest --continue
+        run: ./gradlew spotlessCheck desktopTest :tools:screenshots:test --continue
       # The build logic is a build of its own (gradle/), whose tests the unqualified task above does not reach.
       - name: Run the build logic's tests
         run: ./gradlew -p gradle :build-logic:test
@@ -68,6 +69,8 @@ jobs:
           path: |
             **/build/reports/tests/desktopTest/**
             **/build/test-results/desktopTest/*.xml
+            tools/screenshots/build/reports/tests/test/**
+            tools/screenshots/build/test-results/test/*.xml
             gradle/build-logic/build/reports/tests/test/**
           retention-days: 7
       # The web build's storage worker and what keeps the build in the browser are JavaScript, tested by Node rather

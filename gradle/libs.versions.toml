@@ -59,6 +59,7 @@ compose-reorderable = { module = "sh.calvin.reorderable:reorderable", version.re
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "jetbrains-compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "jetbrains-compose" }
 compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "jetbrains-compose" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "jetbrains-compose" }
 google-playAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-playAppUpdate" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr-api" }
