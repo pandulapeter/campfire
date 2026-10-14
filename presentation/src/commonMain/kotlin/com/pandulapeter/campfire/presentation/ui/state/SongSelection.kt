@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
@@ -77,6 +78,35 @@ internal class SongSelection(
         selectedSongFileNames = null
     }
 
+    /** The selection's Choose setlists sheet, or the naming sheet straight away where there is no setlist to list. */
+    fun showSetlists(sortedSongs: List<Song>, showDialog: (DialogType) -> Unit) {
+        inListOrder(sortedSongs).takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionSetlists(it)) }
+    }
+
+    fun showTags(sortedSongs: List<Song>, showDialog: (DialogType) -> Unit) {
+        inListOrder(sortedSongs).takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionTags(it)) }
+    }
+
+    fun showLanguages(sortedSongs: List<Song>, showDialog: (DialogType) -> Unit) {
+        inListOrder(sortedSongs).takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionLanguages(it)) }
+    }
+
+    /**
+     * The export screen over what is ticked: one song is exactly the row's own Export, several are a third kind of
+     * source next to a song and a setlist, printed in the order the screen sorts by and in the keys the library plays
+     * them in.
+     */
+    fun export(sortedSongs: List<Song>, songsByFileName: Map<String, Song>, showDialog: (DialogType) -> Unit) {
+        val songs = inListOrder(sortedSongs).mapNotNull { songsByFileName[it] }
+        when (songs.size) {
+            0 -> Unit
+            1 -> showDialog(DialogType.Export(song = songs.single()))
+            else -> showDialog(DialogType.Export(songs = songs))
+        }
+    }
+
+    private fun inListOrder(sortedSongs: List<Song>) = selectedSongFileNames?.inListOrder(sortedSongs).orEmpty()
+
     /**
      * Unticks the songs that leave the library, so that the count follows a sync run deleting a ticked song. Only a
      * library that was read whole prunes: a rescan publishes in batches, and one that had not reached a ticked song yet
@@ -99,4 +129,13 @@ internal class SongSelection(
             if (selected.any { it !in fileNames }) selectedSongFileNames = selected.filterTo(mutableSetOf()) { it in fileNames }
         }
     }
+}
+
+/**
+ * What is ticked in the selection mode, in the order the songs screen sorts by rather than the order it was ticked
+ * in, which is the order its sheets list and write the songs in and its export prints them in.
+ */
+internal fun Set<String>.inListOrder(sortedSongs: List<Song>): List<String> {
+    val sorted = sortedSongs.mapNotNull { song -> song.fileName.takeIf { it in this } }
+    return sorted + (this - sorted.toSet())
 }

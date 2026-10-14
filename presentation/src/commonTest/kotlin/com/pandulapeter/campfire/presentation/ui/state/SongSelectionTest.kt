@@ -69,6 +69,20 @@ class SongSelectionTest {
         assertEquals(setOf("a.cho", "gone.cho"), selection.selectedSongFileNames)
     }
 
+    @Test
+    fun `the selection is listed in the order the songs are sorted in, whatever order it was ticked in`() {
+        val sorted = listOf(song("c"), song("a"), song("b"))
+
+        assertEquals(listOf("c.cho", "a.cho"), setOf("a.cho", "c.cho").inListOrder(sorted))
+    }
+
+    @Test
+    fun `a ticked song the sorted list does not hold comes after the listed ones`() {
+        val sorted = listOf(song("b"), song("a"))
+
+        assertEquals(listOf("b.cho", "a.cho", "hidden.cho"), setOf("hidden.cho", "a.cho", "b.cho").inListOrder(sorted))
+    }
+
     private fun TestScope.selectionOf(vararg names: String) = SongSelection(scope = backgroundScope, backStack = listOf(CampfireDestination.Songs)).apply {
         start(names.first() + ".cho")
         names.drop(1).forEach { toggle("$it.cho") }

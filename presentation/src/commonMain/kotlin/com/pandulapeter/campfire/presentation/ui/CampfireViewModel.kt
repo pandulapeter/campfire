@@ -1182,42 +1182,17 @@ class CampfireViewModel(
 
     // Songs
 
-    /**
-     * What is ticked in the selection mode, in the order the songs screen sorts by rather than the order it was ticked
-     * in, which is the order its sheets list and write the songs in and its export prints them in.
-     */
-    private fun selectionInListOrder(): List<String> {
-        val selected = selectedSongFileNames ?: return emptyList()
-        val sorted = screenData.value.data?.sortedSongs.orEmpty().mapNotNull { song -> song.fileName.takeIf { it in selected } }
-        return sorted + (selected - sorted.toSet())
-    }
+    /** See [SongSelection.showSetlists]. */
+    internal fun showSelectionSetlists() = songSelection.showSetlists(sortedSongs(), ::showDialog)
 
-    /** The selection's Choose setlists sheet, or the naming sheet straight away where there is no setlist to list. */
-    internal fun showSelectionSetlists() {
-        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionSetlists(it)) }
-    }
+    internal fun showSelectionTags() = songSelection.showTags(sortedSongs(), ::showDialog)
 
-    internal fun showSelectionTags() {
-        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionTags(it)) }
-    }
+    internal fun showSelectionLanguages() = songSelection.showLanguages(sortedSongs(), ::showDialog)
 
-    internal fun showSelectionLanguages() {
-        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionLanguages(it)) }
-    }
+    /** See [SongSelection.export]. */
+    internal fun exportSelection() = songSelection.export(sortedSongs(), songsByFileName.value, ::showDialog)
 
-    /**
-     * The export screen over what is ticked: one song is exactly the row's own Export, several are a third kind of
-     * source next to a song and a setlist, printed in the order the screen sorts by and in the keys the library plays
-     * them in.
-     */
-    internal fun exportSelection() {
-        val songs = selectionInListOrder().mapNotNull { songsByFileName.value[it] }
-        when (songs.size) {
-            0 -> Unit
-            1 -> showDialog(DialogType.Export(song = songs.single()))
-            else -> showDialog(DialogType.Export(songs = songs))
-        }
-    }
+    private fun sortedSongs() = screenData.value.data?.sortedSongs.orEmpty()
 
     fun refresh() = libraryState.refresh()
 
