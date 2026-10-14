@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.dialogs.sheet
 
 /** A field whose value becomes one line of a song file: a pasted line break is the space between two words. */
 internal fun String.asSingleLine() = replace(lineBreakRegex, " ")

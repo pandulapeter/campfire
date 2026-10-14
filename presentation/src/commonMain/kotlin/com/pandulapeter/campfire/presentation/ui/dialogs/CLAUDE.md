@@ -40,38 +40,6 @@ away and uncovers the one under it as it was (its sheet, draft and scroll positi
   `SavedDialogRestorer` saves) is kept by `DialogHost.addOpenDialogsChange`.
 - Nested setlist naming and calendar sheets are local state of the sheet under them, not stack entries.
 
-### `CampfireBottomSheet`
-
-Every sheet goes through it. Rules a change must keep:
-
-- Drawn edge to edge, background `sheetContainerColor()`; the date picker passes the same color to
-  `DatePickerDefaults.colors(containerColor = …)`.
-- `ModalBottomSheet`'s own bottom-inset padding is replaced: the sheet keeps the top inset, centers between the
-  horizontal safe-drawing edges, and hands content a `contentPadding` of the remaining bottom inset + 16dp, which
-  scrolling content applies inside its scroll so rows pass under the navigation bar. The keyboard pads the sheet's
-  column outside the content's scroll, so bringing a focused field into view clears it. Insets are read during layout,
-  so padding follows each keyboard animation frame.
-- **In a short window** (`SHORT_WINDOW_HEIGHT`) the header and pinned controls scroll with the content in one column
-  above the keyboard; the content is given the window's height inside that scroll (bounding lazy lists), and its bottom
-  padding excludes insets the column already consumed.
-- Every sheet has a close button in its `SheetHeader`, tall or not: a picker dragged to full height leaves no scrim to
-  tap.
-- **Content height changes animate** (`animateSheetContentHeight`), but a change of the room offered (keyboard, window
-  resize) is followed in the same frame so the sheet never trails the keyboard. Checklists shift rows by what the sheet
-  still has to grow (`followSheetGrowth`) so a ticked row stays under the finger. Content that fills the sheet keeps
-  filling the room at every drag offset (`uncoveredTopInset`); otherwise a grid overflowing by less than the status bar
-  oscillates the anchor and snaps the sheet back under the finger.
-- The close button runs `sheetState.hide()` and then clears the dialog itself: Material only calls `onDismissRequest`
-  for a swipe, scrim, or back, and a hidden sheet whose state is still set leaves an invisible modal layer that
-  swallows the next tap.
-- From the moment a sheet starts closing, its header actions do nothing (`LocalIsSheetClosing`, which keyboard Done
-  actions read too), so a Save during the slide never writes a cancelled draft.
-- A close-button hide counts only if it ran to its end; a close after a header action or the content's own button
-  (`BottomSheetContentScope.close`) is final — drag off, a cut-short hide finished from where it is, after Material's
-  own hide — so a double tap never leaves an answered sheet up.
-- Every `visibleDialog`-hosted sheet dismisses through `dismissSheet(itsOwnDialog)`, a no-op once another dialog took
-  its place: a sheet replaced while hiding reports the cancelled animation as a dismissal.
-
 ### Forms
 
 Root `CLAUDE.md` owns the rules that every typed modal is a `TextFieldBottomSheet` with its actions in the header.

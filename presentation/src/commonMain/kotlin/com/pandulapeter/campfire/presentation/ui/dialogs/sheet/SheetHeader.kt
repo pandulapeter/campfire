@@ -7,8 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.dialogs.sheet
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.label
+import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope

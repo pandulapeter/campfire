@@ -61,8 +61,8 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearc
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
-import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireBottomSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheetContainerColor
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import org.jetbrains.compose.resources.painterResource
 
