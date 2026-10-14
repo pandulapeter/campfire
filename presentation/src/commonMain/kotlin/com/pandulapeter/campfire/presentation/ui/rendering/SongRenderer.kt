@@ -9,51 +9,43 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTabs
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
+import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import org.koin.core.annotation.Single
 
 /**
  * What a song and its key look like on the screen, in the editor and in the PDF, and the folded text the pickers search:
- * pure functions of their arguments over stateless use cases, so that a screen needs this rather than the whole view
- * model to draw a key. Everything that depends on the notation the editor's field is written in takes it as a
- * parameter; the view model's `editorNotation` is where it comes from.
+ * pure functions of their arguments over `:chordpro` and two text use cases, so that a screen needs this rather than
+ * the whole view model to draw a key. Everything that depends on the notation the editor's field is written in takes it
+ * as a parameter; the view model's `editorNotation` is where it comes from.
  *
  * Public because the public view model's constructor takes it.
  */
 @Single
 class SongRenderer(
-    private val parseChordPro: ParseChordProUseCase,
-    private val transposeChordPro: TransposeChordProUseCase,
-    private val transposeChordProText: TransposeChordProTextUseCase,
-    private val convertChordProNotation: ConvertChordProNotationUseCase,
-    private val convertChordProTextNotation: ConvertChordProTextNotationUseCase,
-    private val prettifyChordPro: PrettifyChordProUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
-    private val normalizeLanguageCode: NormalizeLanguageCodeUseCase,
 ) {
 
     /**
      * Parses a song file and applies the file's own `{transpose}` — the one it opens with and the ones further down
      * it — the transposition the user picked and the spelling they prefer, which is what the viewer renders. Build it
      * once for each set of the three rather than on every recomposition, which for a long song would be wasteful. It
-     * touches nothing but its arguments and stateless use cases, so it may run on a background thread, and it does:
+     * touches nothing but its arguments and stateless functions, so it may run on a background thread, and it does:
      * see `rememberSongLyricsModel`.
      */
     internal fun renderSong(
@@ -81,17 +73,17 @@ class SongRenderer(
         writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
         tabs: TabReading? = null,
     ): ChordProSong {
-        val parsed = parseChordPro(text, writtenIn)
+        val parsed = ChordProParser.parse(text, writtenIn.toChordNotation())
         val selected = tabs?.takeIf { it.selects }?.let { ChordProTabs.select(parsed, it.player.selectors) } ?: parsed
         // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
         // three are the transposition's to apply, and it leaves a song none of them move exactly as it is. The tabs of
         // an instrument they are hidden from are not worth moving.
-        val transposed = transposeChordPro(selected, parsed.metadata.transpose + transposition, spelling.accidentals, tabs?.player?.takeUnless { it.hidesTabs })
+        val transposed = ChordProTransposer.transpose(selected, parsed.metadata.transpose + transposition, spelling.accidentals.toPreferFlats(), tabs?.player?.takeUnless { it.hidesTabs })
         return tabs?.let { ChordProTabs.withNotices(transposed, it.player, it.labels::describe) } ?: transposed
     }
 
     /** The last step of [renderSong], and on the model only: the file stays in the standard notation, which the transposition works in. */
-    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) = convertChordProNotation(song, spelling)
+    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) = ChordProNotation.toNotation(song, spelling.notation.toChordNotation())
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
@@ -100,7 +92,7 @@ class SongRenderer(
      *
      * It is what [renderSong] arrives at, worked out without the song's text: the library's metadata is read at
      * startup and its lyrics are not, so a list that had to parse a file to name its key would be reading the whole
-     * library a second time to fill in one line of each row. Both use cases rewrite the key of whatever song they
+     * library a second time to fill in one line of each row. Both steps rewrite the key of whatever song they
      * are handed, so what they are handed here is a song that is nothing but that key.
      *
      * @param capo The fret the song is capoed at, which raises everything fretted above it by that many semitones.
@@ -116,11 +108,14 @@ class SongRenderer(
      */
     fun renderKey(key: String?, transpose: Int, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
         val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
-        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition + capo, spelling.accidentals, null), spelling).metadata.key
+        ChordProNotation.toNotation(
+            ChordProTransposer.transpose(keyOnly, transpose + transposition + capo, spelling.accidentals.toPreferFlats(), null),
+            spelling.notation.toChordNotation(),
+        ).metadata.key
     }
 
     /** Formats the current editor draft without saving it or changing its chord notation. */
-    fun prettifyText(text: String) = prettifyChordPro(text)
+    fun prettifyText(text: String) = ChordProPrettifier.prettify(text)
 
     /**
      * Transposes the chords of the editor's text in place, leaving everything else exactly as it was. Unlike the
@@ -128,10 +123,10 @@ class SongRenderer(
      * editor's [notation], and is transposed in the standard one, which is the only one a semitone means anything in.
      */
     fun transposeText(text: String, semitones: Int, accidentals: UserPreferences.Accidentals, notation: UserPreferences.Notation) =
-        convertChordProTextNotation(
-            text = transposeChordProText(fileTextOf(text, notation), semitones, accidentals),
-            from = UserPreferences.Notation.STANDARD,
-            to = notation,
+        ChordProNotation.convertText(
+            ChordProTransposer.transposeText(fileTextOf(text, notation), semitones, accidentals.toPreferFlats()),
+            UserPreferences.Notation.STANDARD.toChordNotation(),
+            notation.toChordNotation(),
         )
 
     /**
@@ -142,7 +137,7 @@ class SongRenderer(
      */
     fun editorTextOf(fileText: String, notation: UserPreferences.Notation): String {
         lastEditorText?.takeIf { it.fileText == fileText && it.notation == notation }?.let { return it.text }
-        return convertChordProTextNotation(text = fileText, from = UserPreferences.Notation.STANDARD, to = notation).also { text ->
+        return ChordProNotation.convertText(fileText, UserPreferences.Notation.STANDARD.toChordNotation(), notation.toChordNotation()).also { text ->
             lastEditorText = EditorText(fileText = fileText, notation = notation, text = text)
         }
     }
@@ -153,14 +148,14 @@ class SongRenderer(
     fun editorSummaryCache(notation: UserPreferences.Notation) = ChordProSummaryCache(notation.toChordNotation())
 
     /** A key in the standard notation, as the editor's field written in [notation] would write it. */
-    fun editorKeyOf(key: String, notation: UserPreferences.Notation) = convertChordProNotation(
+    fun editorKeyOf(key: String, notation: UserPreferences.Notation) = ChordProNotation.toNotation(
         song = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList()),
-        spelling = UserPreferences.ChordSpelling.Default.copy(notation = notation),
+        notation = notation.toChordNotation(),
     ).metadata.key
 
     /** The editor's text, written in [notation], as the file is to hold it: in the standard notation. */
     fun fileTextOf(editorText: String, notation: UserPreferences.Notation) =
-        convertChordProTextNotation(text = editorText, from = notation, to = UserPreferences.Notation.STANDARD)
+        ChordProNotation.convertText(editorText, notation.toChordNotation(), UserPreferences.Notation.STANDARD.toChordNotation())
 
     /**
      * Accent and case insensitive text, for a screen that has to sort or search through something the library did
@@ -177,7 +172,7 @@ class SongRenderer(
      * may well type `hun` or `HU` rather than the word the app would show them, and either has to find the one row
      * the library files that language under.
      */
-    fun languageCode(value: String) = normalizeLanguageCode(value)
+    fun languageCode(value: String) = ChordProLanguages.code(value)
 
     /** [text] is [fileText] as an editor showing [notation] shows it, see [editorTextOf]. */
     private class EditorText(val fileText: String, val notation: UserPreferences.Notation, val text: String)
