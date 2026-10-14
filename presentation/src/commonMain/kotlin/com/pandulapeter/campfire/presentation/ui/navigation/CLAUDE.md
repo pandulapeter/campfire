@@ -22,7 +22,7 @@ The destinations and the back stack.
 - `ImportReport` carries nothing (one import at a time) and is never restored (the report dies with the process);
   `Message.ImportInterrupted` says so where the import had not been written yet (a flag saved beside the back stack).
 - Top level selection resets the stack to `[Songs, tab?]`, so Back always returns to Songs. The tools behind one Tools
-  item: see `ui/CLAUDE.md`. Feature switches: `isEnabled` with `FeatureSwitches`.
+  item: see `ui/chrome/CLAUDE.md`. Feature switches: `isEnabled` with `FeatureSwitches`.
 
 ### Saved state and process death
 

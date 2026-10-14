@@ -19,8 +19,8 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   `Flow` of files the OS handed over ("open with", share, drop). Notes: `src/androidMain/CLAUDE.md`,
   `src/desktopMain/CLAUDE.md`, `src/iosMain/CLAUDE.md`, `src/wasmJsMain/CLAUDE.md`.
 - **Everything else** is `commonMain`, with notes in the `CLAUDE.md` of each package under
-  `src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`; `ui/CLAUDE.md` holds the view model, the chrome,
-  and the cross-screen product rules.
+  `src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`; `ui/CLAUDE.md` holds the view model and the
+  cross-screen product rules; the chrome is `ui/chrome/`.
 
 ## Document imports
 

@@ -10,7 +10,7 @@
 
 # :presentation — ui
 
-The view model facade, the composition root and navigation chrome, and the product rules every screen follows.
+The view model facade, the composition root, and the product rules every screen follows.
 
 ### `ui/CampfireViewModel.kt`
 
@@ -59,8 +59,6 @@ The view model facade, the composition root and navigation chrome, and the produ
   stack.
 
 ### `ui/CampfireApp.kt`
-
-Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`; the navigation chrome is `ui/chrome/`.
 
 - Snackbars are queued in the view model with a running number (two identical messages are the same object, and the
   Android activity is recreated on rotation); a message leaves on `onMessageShown`. A share is not confirmed (the
