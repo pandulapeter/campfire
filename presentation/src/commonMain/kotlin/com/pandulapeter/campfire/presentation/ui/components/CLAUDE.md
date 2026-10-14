@@ -16,12 +16,6 @@ The shared building blocks of the screens.
 
 #### Menus and actions
 
-- **An overflow menu expands into buttons wherever there is room** (`ActionsMenu`), one at a time in menu order, the
-  overflow button going last. Neighboring icon buttons overlap touch targets by 12dp (`ActionOverlap.kt`'s
-  `overlappingAction`).
-- **Some entries stay in the menu whatever the room** (`ActionsMenuItem.isAlwaysInMenu`): a setlist's Edit details,
-  Reorder, Archive, Duplicate, Export, and Delete; a song's Update file name and Duplicate; the editor's Revert. A song
-  card never expands (`isExpandable = false`).
 - `SongActions`: edit, Update file name (only where `Song.canUpdateFileName`), Duplicate song (songs screen cards only,
   `isDuplicable`), Export song, delete — **delete never from a setlist row or a details screen opened from a setlist**
   (`isDeletable`).
@@ -29,14 +23,7 @@ The shared building blocks of the screens.
   menu as `setlistAssignmentsAction` when out of room); in a setlist row's menu after "Remove from setlist" (not on an
   archived setlist). From a details screen opened from a setlist, that setlist's box is disabled
   (`DialogType.SetlistPicker.setlistFileName`), since unticking it would pull the screen from under the reader.
-- **Every overflow button opens a dropdown**, touch included. Long press (touch) and right click (`ContextClick.kt`,
-  which beats the row's clickable since Android clickables answer a right click like a left) open the same dropdown from
-  the row's button (`OverflowMenuState`); the button is always there, since a gesture announces itself to nobody.
 - `SetlistActions`: only Choose songs ever becomes a header button.
-- `OverflowMenu` counts open menus (the desktop Escape handler is outside the composition) and acts through
-  `OverflowMenuState.select`, which runs an entry once per opening: a `DropdownMenu` stays tappable during its exit, and
-  a double tap on Export would export twice.
-- `SortMenu` (`SongSortMenu`, `SetlistSortMenu`) is shared by each screen and its picker sheet.
 - `SongFilters` is a side panel or a sheet, and neither when there is nothing to filter by (`hasSongFilters`).
   `ControlsSidePanel`: only the list feeds the bar's nested scroll.
 

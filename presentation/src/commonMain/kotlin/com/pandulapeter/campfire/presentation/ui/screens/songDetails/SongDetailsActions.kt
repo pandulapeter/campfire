@@ -30,13 +30,13 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
-import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 

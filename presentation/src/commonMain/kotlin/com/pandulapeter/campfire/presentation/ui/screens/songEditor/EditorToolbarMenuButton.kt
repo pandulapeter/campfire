@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
-import com.pandulapeter.campfire.presentation.ui.components.OverflowMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
 
 /**
  * A button of the [EditorToolbar] that asks which of several things to write before it writes any of them, as a popup

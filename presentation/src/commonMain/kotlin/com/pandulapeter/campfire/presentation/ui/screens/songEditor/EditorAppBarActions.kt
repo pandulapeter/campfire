@@ -32,8 +32,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_undo
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
-import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import org.jetbrains.compose.resources.painterResource
 
 /** The editor's title row actions: the Shortcuts chevron where the control row has given way, undo, redo, Save and the menu. */

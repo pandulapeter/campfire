@@ -25,8 +25,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_find_and_rep
 import com.pandulapeter.campfire.presentation.resources.song_editor_prettify
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_chordpro_reference
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import org.jetbrains.compose.resources.painterResource
 
 /**

@@ -18,9 +18,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.OverflowMenuState
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only

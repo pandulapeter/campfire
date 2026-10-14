@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.ChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
-import com.pandulapeter.campfire.presentation.ui.components.SongSortMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation

@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_mixed
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace_description
 import com.pandulapeter.campfire.presentation.resources.import_review_show_library_song
-import com.pandulapeter.campfire.presentation.ui.components.OverflowMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
 import org.jetbrains.compose.resources.painterResource
 
 /**

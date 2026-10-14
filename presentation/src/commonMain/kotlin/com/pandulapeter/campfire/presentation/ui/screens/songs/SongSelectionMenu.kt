@@ -28,8 +28,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_export_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_actions
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
-import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import org.jetbrains.compose.resources.painterResource
 
 /**

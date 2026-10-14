@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
 

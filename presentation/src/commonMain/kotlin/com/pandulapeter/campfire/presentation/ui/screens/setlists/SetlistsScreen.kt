@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
+import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
@@ -34,14 +34,14 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
-import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
+import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
-import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.localization.stringResource

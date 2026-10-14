@@ -31,7 +31,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalWindowInfo
-import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
+import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import kotlinx.coroutines.launch
 
 /**

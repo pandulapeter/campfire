@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.presentation.ui.components.OverlayState
+import com.pandulapeter.campfire.presentation.ui.components.menu.OverlayState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
