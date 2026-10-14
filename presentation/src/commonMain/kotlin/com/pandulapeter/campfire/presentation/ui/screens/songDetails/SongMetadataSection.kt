@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoCard
+import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut

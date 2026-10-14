@@ -28,9 +28,9 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDefaults
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
+import com.pandulapeter.campfire.presentation.ui.songInfo.SongDefaults
+import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoBody
+import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditing
 
 /**
  * What a song says about itself, read from its text as it is now — the file's, or over the editor ([DialogType.SongInfo]'s

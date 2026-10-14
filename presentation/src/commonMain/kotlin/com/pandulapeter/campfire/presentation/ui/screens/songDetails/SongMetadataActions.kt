@@ -110,33 +110,3 @@ internal fun rememberSongPlayingControls(
         )
     }
 }
-
-/**
- * What the tiles of the About the song sheet open: the dialog of each group. Over the editor (a
- * [SongEditTarget.EditorDraft] [target]) they edit the text being typed rather than the file, see [DialogType.SongEdit],
- * and the latest [song] is what a tile opens its dialog on; [setlistFileName] is the setlist it is read through, whose
- * overrides the Song defaults sheet names.
- */
-@Composable
-internal fun rememberSongInfoEditing(
-    viewModel: CampfireViewModel,
-    song: Song,
-    setlistFileName: String?,
-    target: SongEditTarget,
-): SongInfoEditing {
-    val latestSong by rememberUpdatedState(song)
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    return remember(viewModel, setlistFileName, target, isCoverArtEnabled) {
-        SongInfoEditing(
-            onEditCoverArt = if (isCoverArtEnabled) {
-                { viewModel.showSongCoverArtDialog(song = latestSong, target = target) }
-            } else null,
-            onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, target = target) },
-            onEditDefaults = { viewModel.showSongPlayingDialog(song = latestSong, setlistFileName = setlistFileName, target = target) },
-            onEditTags = { viewModel.showSongTagsDialog(song = latestSong, target = target) },
-            onEditLanguages = { viewModel.showSongLanguagesDialog(song = latestSong, target = target) },
-            onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, target = target) },
-        )
-    }
-}

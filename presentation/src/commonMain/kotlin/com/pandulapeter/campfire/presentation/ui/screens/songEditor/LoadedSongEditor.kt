@@ -72,7 +72,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
+import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffFor
 import kotlinx.coroutines.flow.first

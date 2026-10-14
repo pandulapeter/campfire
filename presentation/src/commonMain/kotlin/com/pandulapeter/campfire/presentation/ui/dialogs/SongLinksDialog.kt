@@ -65,7 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.linkLabel
+import com.pandulapeter.campfire.presentation.ui.songInfo.linkLabel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
