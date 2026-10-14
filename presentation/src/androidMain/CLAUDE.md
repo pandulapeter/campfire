@@ -22,3 +22,8 @@ The Android shell, called by `:app:android`.
   the run alive but silently drops its notification, so the run can't be followed or stopped from outside. The answer is
   ignored (a refusal costs only the notification); asked once per launch while connected and missing, and Android stops
   showing it after a second refusal. The metronome's media session notification is exempt.
+- **File picker**: a singleton the launchers of every composition attach to, so a result survives Activity recreation
+  under the picker. Launchers are taken at launch time, not when the pick / export began (a recreated Activity has
+  unregistered the old ones). A result after *process* recreation is still acted on: picks join `filesToImport` in
+  `CampfireAndroidApp`, exports are filled from `cacheDir/pending_export`. A song is exported as
+  `application/octet-stream`: storage providers append `.txt` to a `.cho` saved as text.

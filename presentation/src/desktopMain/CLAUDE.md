@@ -22,6 +22,7 @@ The desktop shell, called by `:app:desktop`.
   (the microphone and sound settings pages) always uses the system command, since `browse` hands every address to the
   default browser. A link nothing opens shows `Message.LinkNotOpened`. The same opener is the Koin
   `DesktopSystemBrowser` the sync authorizer opens the consent page with.
+- File picker: a name typed without extension gets the offered one back, unless a file already has that name.
 
 ## Keys (`CampfireViewModel.handleKeyEvent`, wired by `:app:desktop`)
 

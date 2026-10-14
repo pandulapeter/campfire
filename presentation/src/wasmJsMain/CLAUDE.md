@@ -56,10 +56,7 @@ fire it on tab close.
   `song/{song}/edit`, `setlist/{setlist}/{song}`, and `import`. A dialog, sheet, or menu, the reorder mode, the selection
   mode, and the onboarding each get an entry repeating the address under it. The unsaved changes question gets none
   (it answers a Back). An address naming nothing in the library opens the songs, resolved behind the launch screen.
-- `BrowserRoutes` (`commonMain/ui/navigation/`, pure, tested) maps `RouteInputs` to the paths of every entry, and a path
-  back to a `NavigationState`. Song = file name without `.cho` (other extensions kept), setlist without
-  `.setlist.json`, percent-encoded as `encodeURIComponent` (`PercentEncoding.kt`) with `~` escaped too, since the site's
-  404 page carries `&` as `~and~`.
+- `BrowserRoutes` maps entries to paths and back: `ui/navigation/CLAUDE.md`.
 - `BrowserHistoryEffect` (`wasmJsMain/.../navigation/BrowserHistory.kt`): the app decides, the history follows via
   `pushState`, `replaceState` (settings tab to tab, setlist paging, renamed file), or `history.go`. Each entry is
   stamped with its depth, which is how `popstate` tells where the browser went.

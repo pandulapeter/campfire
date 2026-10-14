@@ -218,8 +218,7 @@ the plain indicator (the launch screen covers their first read).
   focusable**: a lazy grid keeps a focused item placed after scrolling away, which stops it drawing later pinned headers.
 - The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it, keeping its pinned
   width. The row extends behind the fast scroller so pill and app bar reach measure from one edge.
-- A setlist header's second line: countdown, then total duration (`SetlistTotalDuration.kt`, `+` where some are
-  unknown). Clicking a header scrolls to its section start.
+- Clicking a header scrolls to its section start.
 
 ## Scrolling performance
 
@@ -232,4 +231,3 @@ the plain indicator (the launch screen covers their first read).
   rebuilding a shader per card.
 - `FastScroller` consumes a conflated channel once per frame so pointer events can't cancel the frame wait or a scroll;
   animation values are read while drawing.
-- `SongStepper` scans offsets without sorting or allocating per scroll update.

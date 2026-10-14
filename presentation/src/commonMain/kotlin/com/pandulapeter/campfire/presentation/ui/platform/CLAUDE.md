@@ -30,8 +30,6 @@ The `expect` declarations and the interfaces the platform shells provide.
 ### `Platform.kt`
 
 - `isDesktopPlatform`: a long press on a song row opens nothing; also decides the interface scale.
-- `isStartupScreenHeldUntilAppReady`: Android and the web hold their startup screen until `onAppReady`; iOS's
-  storyboard goes at the first frame.
 - `canAskForDonations` is false on Apple platforms: guideline 3.1.1 allows only in-app purchase.
 - The desktop actuals of these, the fonts, and `dynamicColorSchemePair` read `PlatformImpersonation` (desktopMain) on
   every access: `tools/screenshots` sets it to draw other platforms; the desktop app never does.
@@ -65,17 +63,11 @@ The `expect` declarations and the interfaces the platform shells provide.
 ### `FilePicker.kt`
 
 - `saveFile` returns false for a dismissed dialog and throws for a failed write (the view model reports it).
-- Android: a singleton the launchers of every composition attach to, so a result survives Activity recreation under
-  the picker. Launchers are taken at launch time, not when the pick / export began (a recreated Activity has
-  unregistered the old ones). A result after *process* recreation is still acted on: picks join `filesToImport` in
-  `CampfireAndroidApp`, exports are filled from `cacheDir/pending_export`.
 - A `CreateDocument` that cannot be filled is deleted (it is created empty). Unreadable handed-over documents
   (`toImportedFiles`, desktop `readAsImportedFiles`) are passed on empty so the import reports them as skipped.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):
   `CampfireViewModel.launchFileTransfer` runs one transfer at a time and ignores others, so one that never answers
   blocks import and export for good.
-- Android exports a song as `application/octet-stream`: storage providers append `.txt` to a `.cho` saved as text.
-  Desktop: a name typed without extension gets the offered one back, unless a file already has that name.
 
 ### `SharedTextImport.kt`
 

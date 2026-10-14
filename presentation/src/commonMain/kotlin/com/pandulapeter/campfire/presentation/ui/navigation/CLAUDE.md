@@ -47,3 +47,10 @@ The destinations and the back stack.
 - `NavigationState` is where the user is beyond the stack (searches, settings tab, each details screen's page as
   `initialIndex` via `onSongDetailsPageSettled`); `restoreNavigationState` applies it in one step and refuses while the
   editor holds unsaved text.
+
+### `BrowserRoutes.kt`
+
+- The web's addresses (see `src/wasmJsMain`), pure and tested: `BrowserRoutes` maps `RouteInputs` to the paths of
+  every entry, and a path back to a `NavigationState`. Song = file name without `.cho` (other extensions kept),
+  setlist without `.setlist.json`, percent-encoded as `encodeURIComponent` (`PercentEncoding.kt`) with `~` escaped
+  too, since the site's 404 page carries `&` as `~and~`.

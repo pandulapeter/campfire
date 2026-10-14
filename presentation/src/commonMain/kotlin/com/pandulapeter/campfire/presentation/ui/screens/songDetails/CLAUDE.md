@@ -229,7 +229,8 @@ Product side in `ui/metronome/CLAUDE.md`.
   is given; never in the preview), the last too (`minLastRowHeight`), so a rest shows one row. Only where the song
   scrolls anyway.
 - **Step buttons** (`StepButtons`, one pair over the whole pager, answering the current page's `SongStepper`): stops are
-  rows or pages, or sections in an unpaged single column, each stop `EDGE_FADE_SIZE` above its section.
+  rows or pages, or sections in an unpaged single column, each stop `EDGE_FADE_SIZE` above its section. `SongStepper`
+  scans offsets without sorting or allocating per scroll update.
 - Inside a stop taller than the screen a step pages (`nextStepTarget`, `previousStepTarget`, `ReadingWindow`): the screen
   less the top fade, the bars, and two lines (at most a third), adjusted to start at a line (`lineTops`); it moves on only
   once the stop's end is in view. Buttons read "Scroll down" / "Scroll up" while paging.

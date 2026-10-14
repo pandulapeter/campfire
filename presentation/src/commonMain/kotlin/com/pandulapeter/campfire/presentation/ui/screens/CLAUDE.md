@@ -44,21 +44,6 @@ What every screen shares; each destination's package has its own notes.
 - A setlist matches by its title or description, or by holding a matching song, and **is then shown whole**: three of
   twelve songs is not the list somebody wrote down.
 
-## Setlists screen
-
-Setlist rules (whole setlists regardless of filters, archiving, description, date, countdown) are in `setlists/CLAUDE.md`.
-Screen-level points:
-
-- Setlists are listed whenever any exist, an empty library included; the library's empty state belongs to the songs
-  screen. A screen whose every setlist is archived says so, rather than claiming there are none.
-- The include-archived toggle sits at the end of the list, only while at least one is archived, off by default.
-- The countdown subtitle turns over at midnight on a screen left open (`rememberToday`).
-- The description is the first thing under the header row. In a short window (under 480dp, a search's keyboard counted)
-  it starts at two lines and opens on a tap, or four lines push the first song out of sight.
-- The archived icon fades with the archiving (the menu that archives hangs from the same row).
-- "New setlist" opens the song picker right after creating (`CampfireViewModel.createSetlist`), only if nothing else
-  was opened meanwhile and the library has songs.
-
 ## List animation and scroll position
 
 - Every lazy list animates items through `listItemAnimation` (`components/ListItemAnimation.kt`), never
