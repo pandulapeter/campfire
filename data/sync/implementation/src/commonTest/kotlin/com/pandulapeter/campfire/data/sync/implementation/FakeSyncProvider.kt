@@ -30,16 +30,16 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  *
  * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
  * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
- * report a large file without the test allocating it. [account] is who the service says is connected, which is what
- * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
- * that differ only by case or Unicode form for one file, [listCount] is how many passes a run made, [downloadCounts] how many times
- * each file was fetched and [deleteCalls] what each deletion request asked for; the names in [refusedDeletions] are
- * answered as refused. A deletion whose expected revision is no longer the file's leaves the file and reports nothing,
- * as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a file "elsewhere". [connected] says whether credentials
- * are stored, and [onDisconnect] runs once a disconnect has cleared them; [hasForgottenCredentials] says whether they
- * were dropped without one, which does not run it, and [onForgetStoredCredentials] runs before they are, which is where
- * a test makes that fail. [onCompleteAuthorization] is what finishing an authorization does, which is where a test
- * stores credentials and then gives up or fails.
+ * report a large file without the test allocating it. [account] is who the service says is connected, which is what a
+ * repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
+ * that differ only by case or Unicode form for one file, [listCount] is how many passes a run made, [downloadCounts]
+ * how many times each file was fetched and [deleteCalls] what each deletion request asked for; the names in
+ * [refusedDeletions] are answered as refused. A deletion whose expected revision is no longer the file's leaves the
+ * file and reports nothing, as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a
+ * file "elsewhere". [connected] says whether credentials are stored, and [onDisconnect] runs once a disconnect has
+ * cleared them; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
+ * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
+ * what finishing an authorization does, which is where a test stores credentials and then gives up or fails.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -133,7 +133,10 @@ internal class FakeSyncProvider(
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)
 
-    /** Where a request lands: on a service that ignores case and form, the stored spelling of the name, as Dropbox keeps it. */
+    /**
+     * Where a request lands: on a service that ignores case and Unicode form, the stored spelling of the name, as
+     * Dropbox keeps it.
+     */
     private fun stored(key: SyncKey) = if (ignoresCase) {
         files.keys.firstOrNull { it.kind == key.kind && LibraryFiles.isSameLibraryName(it.name, key.name) } ?: key
     } else {
