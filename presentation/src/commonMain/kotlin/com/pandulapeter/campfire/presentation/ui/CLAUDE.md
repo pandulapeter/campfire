@@ -76,8 +76,8 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 - Snackbars are queued in the view model with a running number (two identical messages are the same object, and the
   Android activity is recreated on rotation); a message leaves on `onMessageShown`. A share is not confirmed (the
   platform sheet answers); a saved export is, unless a warning already says so.
-- `rememberSyncNotifications` only reports "nothing to show" after it has shown something; otherwise opening the app
-  onto a background run would stop the Android service.
+- `rememberSyncNotifications` (`ui/sync/SyncNotifications.kt`) only reports "nothing to show" after showing something;
+  otherwise opening the app onto a background run would stop the Android service.
 - **Rescans** happen only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus
   if the last rescan is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where
   the library can change outside the app (`isLibraryEditableOutsideApp`: iOS, desktop). **No pull to refresh or refresh
