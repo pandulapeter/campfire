@@ -14,7 +14,10 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
 
 ## `ui/CampfireWebApp.kt` and its effects
 
-- `ProvideKeyboardInsets` supplies the IME inset (see `app/web`).
+- Compose reports no IME inset on the web, so `ProvideKeyboardInsets` uses the VirtualKeyboard API's `overlaysContent`
+  (Chrome, Edge, Samsung Internet), reads `geometrychange`, animates it, and provides it as the `ime` of
+  `LocalPlatformWindowInsets`; the window keeps its size. Firefox falls back on the viewport's
+  `interactive-widget=resizes-content` (the canvas shrinks). Safari ignores both and pans.
 - The browser's media session is cleared from the engine's own playback state, not only from the composition, since a
   hidden tab's composition stops collecting.
 - Dropped files are imported; a dropped folder stands for the files directly inside it. An unreadable file arrives
