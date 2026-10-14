@@ -56,10 +56,9 @@ tuner; `android.hardware.microphone` is not required, so Play still offers the a
 
 ## Sync sign-in
 
-- `campfire://oauth`. Consent opens in the user's browser, **never a WebView** (a password page needs a visible address
-  bar). `CampfireMainActivity.handle` tells the redirect from a file and forwards it to `onSyncRedirectReceived`.
-- `handle(intent)` runs before `setContent`, so a redirect that started a killed process is waiting for the view model.
-- Nothing reports a closed browser, so returning to the foreground without a redirect counts as cancellation.
+- `CampfireMainActivity.handle` tells the `campfire://oauth` redirect from a file and forwards it to
+  `onSyncRedirectReceived`. It runs before `setContent`, so a redirect that started a killed process is waiting for the
+  view model. The rest of sign-in is `data/source/remote/implementation/CLAUDE.md`'s OAuth section.
 
 ## `sync/CampfireSyncService`
 

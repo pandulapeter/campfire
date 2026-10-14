@@ -151,11 +151,7 @@ the pure, golden-tested `webBuildManifest`):
 
 ## Sync authorization
 
-- Consent navigates away from the app, so `WebSyncAuthenticator.authorize` reports `Redirected`, the PKCE verifier is
-  written to OPFS first, and the code is read from the query string at next start and removed (no replay on reload).
-- The redirect URI is the `<base>` folder (not the address bar), ending in `/`, without `index.html` — matched
-  character for character. Registered: `https://campfire-songbook.com/app/` (the custom domain, not the
-  `github.io` address that redirects to it) and `http://localhost:8080/`.
+- The authorization itself is `data/source/remote/implementation/CLAUDE.md`'s OAuth section.
 - The answer lands on the songs address; `restore` reports the return and `CampfireViewModel` reopens where the button
   was pressed (`SyncConsentOrigin` in session storage): Settings' Library tab (pushing `settings/general` then
   `settings/library`) or the onboarding's Dropbox page. App history handling leaves the query string alone until the

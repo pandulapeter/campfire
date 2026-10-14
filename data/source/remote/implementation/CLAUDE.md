@@ -15,11 +15,8 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 
 ## What reaches the network, and when
 
-- Sync requests, only once the user has connected a Dropbox account.
-- The cover download: a GET of the address a song's `{meta: cover …}` names, once; the copy is kept by
+- The list is the root `CLAUDE.md`'s; add to it before adding a request. Cover copies are kept by
   `:data:repository:implementation`.
-- The cover search and the song details lookup (MusicBrainz and the iTunes Search API), only from the sheets the user
-  opens for them.
 - The import download (`ImportDownloadRemoteSourceImpl`), one GET of an address the user opened, keeping nothing;
   reached by nothing in the app yet.
 - The "Cover art" switch in Settings → Features (`UserPreferences.isCoverArtEnabled`) turns off cover fetching, drawing,
@@ -92,8 +89,11 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
     cancelling closes the socket from a sibling coroutine (`DesktopSyncAuthenticatorTest`; getting it wrong holds the
     port for five minutes). Each connection is read with a timeout and non-redirect requests (speculative connections,
     favicon) get a 404 while listening continues.
-  - **Web**: navigates away; the answer is read from the query string at the next start and removed from the address
-    bar so a reload cannot replay the code. `error=access_denied` is a refusal.
+  - **Web**: navigates away (`Redirected`), the PKCE verifier written to OPFS first; the answer is read from the query
+    string at the next start and removed from the address bar so a reload cannot replay the code.
+    `error=access_denied` is a refusal. The redirect URI is the `<base>` folder (not the address bar), ending in `/`,
+    without `index.html`; registered: `https://campfire-songbook.com/app/` (the custom domain, not the `github.io`
+    address that redirects to it) and `http://localhost:8080/`.
 
 ## Downloads
 

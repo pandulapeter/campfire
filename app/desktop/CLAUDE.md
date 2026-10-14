@@ -107,9 +107,8 @@ belongs to the process); the view model is obtained outside `Window` so resizing
 
 ## Sync authorization
 
-`DesktopSyncAuthenticator` listens on the fixed `127.0.0.1:53682` for one authorization, since a redirect URI must be
-registered exactly. The browser tab can't be closed by script, so `main` brings the window forward (`bringForward`) once
-the sync state leaves `Connecting`.
+The browser tab can't be closed by script, so `main` brings the window forward (`bringForward`) once the sync state
+leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s OAuth section.
 
 ## Packaging
 
