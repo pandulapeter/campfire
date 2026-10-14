@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.CatalogueSearchResults
 import com.pandulapeter.campfire.data.model.domain.Logger
-import com.pandulapeter.campfire.data.repository.implementation.base.recovering
+import com.pandulapeter.campfire.data.model.domain.recovering
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch

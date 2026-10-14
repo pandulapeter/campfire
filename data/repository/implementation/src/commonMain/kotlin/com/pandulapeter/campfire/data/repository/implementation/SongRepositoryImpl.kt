@@ -13,10 +13,10 @@ import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.domain.recovering
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
-import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.domain.recovering
 import com.pandulapeter.campfire.data.repository.api.DemoLibraryRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource

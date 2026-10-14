@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.domain.recovering
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource

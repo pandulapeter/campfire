@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.model.domain
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -19,6 +19,14 @@ import kotlin.test.assertFailsWith
 class RecoveringTest {
 
     private val logger = RecordingLogger()
+
+    private class RecordingLogger : Logger {
+        val lines = mutableListOf<String>()
+
+        override fun log(message: String) {
+            lines += message
+        }
+    }
 
     @Test
     fun `the block's value is answered`() = runTest {

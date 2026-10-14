@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.recovering
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
-import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
