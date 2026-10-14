@@ -23,8 +23,8 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
 - **Directories**: `library/songs`, `library/setlists`, `preferences`, `covers`. Android's backup rules in `:app:android`
   name `library/` and `preferences/preferences.json` by path: moving a directory or renaming the file means changing
   those XML files. iOS backs up whole directories, so `SyncIndexLocalSourceImpl` (index, forget-pending note),
-  `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl` call `keepOutOfDeviceBackup` after **every** write: the exclusion is a file attribute and
-  the atomic write replaces the file.
+  `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl` call `keepOutOfDeviceBackup` after **every** write: the
+  exclusion is a file attribute and the atomic write replaces the file.
 - **Text**: written as UTF-8, read through `:data:model`'s `decodeLibraryText` (UTF-8, else Windows-1250/1252, BOM
   stripped); a fallback-read file is written back as UTF-8. The web decodes valid NUL-free UTF-8 with `TextDecoder`, else
   `decodeLibraryText`; bytes cross the Wasm boundary as a one-char-per-byte string (typed array copies are per byte).
@@ -67,9 +67,8 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
 
 ## `FileNames.kt`
 
-- `uniqueName` suffixes `_2`, `_3`…; it probes `exists` for the name and `_2`, and lists the directory only when `_2`
-  is taken (one listing for a far-numbered family). A name the listing lacks is still asked of `exists`, which knows the
-  file system's folding.
+- `uniqueName` suffixes `_2`, `_3`…, listing the directory only when `_2` is taken; a name the listing lacks is still
+  asked of `exists`, which knows the file system's folding.
 - ` (2)` (`arrivingCollisionSuffix`) is only for sync's conflict copy, whose name another device chose.
 - `isNamed` (via `LibraryFiles.withoutCollisionSuffix`, ignoring case and Unicode form) keeps "Update file name" from
   offering itself to a song that was numbered aside.
@@ -87,9 +86,9 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
   (bounding concurrency), reads the next batch while parsing, and publishes after the first batch and then each time
   the list doubles. Unreadable or oversized (`ImportLimits.MAX_TEXT_FILE_SIZE`) files are skipped; an unlistable
   *directory* throws, so an unreachable library never looks empty.
-- `DocumentLocalSourceImpl` / `ArchiveLocalSourceImpl` wrap `:data:formats`. Documents: 16 MiB limit, dispatch by
-  extension, null for unreadable input, cancellation rethrown. `desktopTest/resources/document` holds third-party
-  fixtures with goldens (provenance in its README) read by `DocumentGoldenTest`.
+- `DocumentLocalSourceImpl` / `ArchiveLocalSourceImpl` wrap `:data:formats`. Documents: 16 MiB limit, null for
+  unreadable input, cancellation rethrown. `desktopTest/resources/document` holds third-party fixtures with goldens
+  (provenance in its README).
 
 ## Documents (`model/`, `mapper/`)
 
@@ -97,17 +96,15 @@ No document type leaves this module.
 
 - Every field is defaulted and `null` reads as missing (`coerceInputValues`), so old or hand-edited files keep what
   they carry.
-- `UserPreferencesDocumentFormat` falls back to field-by-field reading: a bad entry costs that entry (one
-  transposition, tempo, capo, beat signature, folded section key, tag color, or tuning), not the map. Such a file is
-  copied to `preferences.json.bad` before anything can save over it. Text size, metronome volume and tempo, tuner
-  reference pitch, and stored tempos and capos are clamped or dropped to range on read.
-- A document with no `instrument` key is migrated once from `tunerSettings.instrument` (preferred), then
-  `chordInstrument`, `chordTunings`, and the tuner's tuning; chromatic only where the tuner was `chromatic`. Old keys
-  are read, never written; a document with an `instrument` key (even an unknown one, read as guitar with its tunings
-  kept) never reads them.
+- `UserPreferencesDocumentFormat` falls back to field-by-field reading: a bad entry costs that entry, not the map. Such
+  a file is copied to `preferences.json.bad` before anything can save over it. Text size, metronome volume and tempo,
+  tuner reference pitch, and stored tempos and capos are clamped or dropped to range on read.
+- A document with no `instrument` key is migrated once from the older tuner and chord keys, which are read, never
+  written; a document with an `instrument` key (even an unknown one, read as guitar with its tunings kept) never reads
+  them.
 - Setlists: `tempo` and `capo` have their own serializers (invalid → null rather than failing the setlist; `capo` 0 is a
-  value, removing the song's capo). Null tempo is omitted so untouched setlists stay byte-identical. `date` is text
-  read as `LocalDate` (ISO date-time's day too); a bad date costs only the date. Unknown members are kept in
+  value, removing the song's capo). Null tempo is omitted so untouched setlists stay byte-identical. A bad `date`
+  costs only the date. Unknown members are kept in
   `unknownFields` and written back after known ones; the old `priority` is declared so it is read and dropped. A
   setlist naming a song twice keeps the first mention, also in what a save returns (screens key rows by file name).
   A setlist that does not decode is skipped and left alone.
@@ -127,8 +124,8 @@ them. None is registered as an Open with type.
 `ImportLimits.MAX_IMPORT_SIZE`) into `.cho` songs and `*.setlist.json` setlists, then the ordinary import:
 
 - Lenient: the format is unpublished and writes numbers and booleans as strings.
-- Header values (title, artist, key, capo, tempo, time, duration, copyright, link, folders as tags) are written only
-  where the text does not declare them, flattened to one line with braces turned into parentheses.
+- Header values (folders as tags) are written only where the text does not declare them, flattened to one line with
+  braces turned into parentheses.
 - Songs are named by title, numbered within the batch, which is what the setlists point at. A set's per-song capo is
   kept where it differs. Transpositions are not carried over.
 - A recognised backup whose document cannot be read is reported as one unread `dataFile.txt`; the rest of the archive
@@ -140,5 +137,3 @@ A song is named by its own `{artist}`, `{title}`, and `{subtitle}` (the subtitle
 in the editor, imported (`importFileName`, see `:data:source:local:api`), or exported (`ExportFileNames.kt`). **A file
 name is reproducible from its header alone**; `Song.canUpdateFileName` notices where that stopped being true. Inside an
 exported archive entries keep their library names, since setlists point at songs by file name.
-
-Tests: `./gradlew :data:source:local:implementation:desktopTest`.

@@ -102,29 +102,26 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
   `Unreachable`; any other refusal → `Missing`.
 - Import (`importDownload/`): declared length over the ceiling → `TooLarge` before the body; otherwise read one byte
   past it. 408, 429, 5xx, transport failure, or refused CORS → `Unreachable`; other refusals or an empty body →
-  `Missing`. Content type is not checked. `importDownloadFileName`: `filename*` (UTF-8, percent-decoded), `filename`,
-  the final URL's last path segment, then `download`, always only the last segment.
+  `Missing`. Content type is not checked.
 
 ## Catalogues
 
 - `network/CatalogueTransport.kt`: any transport `Throwable` → `CatalogueSearchException`; answers decoded on
   `Dispatchers.Default` (a recording search is large).
 - **MusicBrainz** (`musicBrainz/`, pure part `MusicBrainzSearch`): values are Lucene phrases (escape only `"` and `\`).
-  - Cover search: with an album, release groups of that name; with only a title, recordings and their release groups
-    (each once, dated by earliest release, in recording rank order); both narrowed by artist. Each candidate's address
-    is the Cover Art Archive's `front-250` of its release group; a missing cover shows as the thumbnail's 404.
+  - Cover search: release groups (by album, else through the title's recordings), narrowed by artist; each address is
+    the Cover Art Archive's `front-250`, so a missing cover shows as the thumbnail's 404.
   - Details lookup (`recordingQuery`: title, artist, album): keep scores ≥ 70; within a score, studio albums (`Album`, no
     secondary type) first, then singles and EPs, since live bootlegs and compilations also score 100. The album filled
     in is the earliest studio album, else earliest EP, else none.
-  - Songwriters: one recording lookup with `artist-rels+work-rels+work-level-rels`; composer = `composer` else `writer`;
-    lyricist = `lyricist` or `librettist`, else `writer` unless the work's language is `zxx`.
+  - Songwriters: one recording lookup with its work relations (`MusicBrainzSearch`, tested).
   - Pace: `MusicBrainzRateLimiter`, one per app, 1.1 s between request starts (MusicBrainz refuses everything while a
     client averages over 1/s). 503 / 429 wait for `Retry-After`, else 2 s doubling to 32 s, at most five retries,
     calling `onBusy` before each.
 - **iTunes** (`iTunes/`, pure part `ITunesSearch`): no key, CORS headers on search and artwork.
   - Cover search: searches *songs* with artist plus album (or title) as one term (the album search matches the album
-    name only); candidates are their albums, each once, in song order; ` - Single` / ` - EP` suffixes become the type.
-    Artwork is the 100 px address rewritten to `250x250bb.jpg`; any other form is left out, not guessed.
+    name only); candidates are their albums. Artwork is the 100 px address rewritten to `250x250bb.jpg`; any other form
+    is left out, not guessed.
   - Details lookup: songs by artist and title; album is the collection unless ` - Single`. No songwriters:
     `loadSongCredits` answers null without a request.
   - ~20 requests/minute, so no pace of its own; a refusal is a failure.
@@ -136,5 +133,3 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 `crypto/`: `Pkce` and `dropboxContentHash` (SHA-256 per 4 MB block, concatenated, hashed again), on `Sha256` from
 `:data:source:remote:api`. The authorization URL is tested because a wrong parameter shows an error page on the
 service's site with nothing in the app to explain it.
-
-Tests: `./gradlew :data:source:remote:implementation:desktopTest`.

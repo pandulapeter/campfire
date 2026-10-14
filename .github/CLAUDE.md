@@ -30,23 +30,21 @@ The workflows that test and publish Campfire, and the scripts and actions they s
   commit's `campfire.versionName` and that `campfire.buildNumber` is higher than the last published release's (stores
   would refuse a reused one only after the other builds went out), runs every test, then calls the six workflows below
   in parallel.
-- Each workflow is the local build command plus secrets, and can be dispatched by hand (to publish without a release, or
-  redo one store). It builds the tag's code, but `.github/scripts` and `.github/actions` come from the commit the
-  workflow runs from — dispatching from a branch with `release_tag` set is how a script fix reaches an existing tag.
+- Each workflow can be dispatched by hand (to publish without a release, or redo one store). It builds the tag's code,
+  but `.github/scripts` and `.github/actions` come from the commit the workflow runs from — dispatching from a branch
+  with `release_tag` set is how a script fix reaches an existing tag.
 - JDK and Gradle come from `.github/actions/setup-jdk`, shared with `tests.yml`.
 - **A release carries only what no official channel offers**: just the Linux `.deb`. The Mac App Store build is the Mac
   build (Apple silicon only), the Microsoft Store build the Windows one; `packageReleaseMsi` and `packageDmg` still build
   but nothing publishes them.
 - Every desktop leg starts the built app image before publishing (ProGuard breaks things only a start shows, see
-  `app/desktop`) via `.github/scripts/start_release_build.sh`: empty data directory, the demo library must appear, the
-  process must survive, the log must name no exception, and ≥80% of loaded classes must come from the CDS archives.
+  `app/desktop`) via `.github/scripts/start_release_build.sh`, in an empty data directory.
 
 ### Release notes and per-store switches
 
 `publish-all.yml` reads hidden comments in the release description with `.github/scripts/release_description.py`
-(format in `publish-all.yml`'s header): `<!-- whats-new en-US … -->` (every store), `<!-- play-store update-priority: 0 -->`, and
-`<!-- <store> submit: true -->` for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`false` passes
-`submit` off, leaving that store a draft).
+(format in `publish-all.yml`'s header): the `whats-new` notes for every store, Play's `update-priority`, and a `submit`
+switch for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`false` leaves that store a draft).
 
 - Anything unreadable is not taken as absent, since every default is the stronger action: an unknown store, a `submit`
   other than `true`/`false`, a priority outside 0–5, or notes over App Store Connect's 4 000 or Partner Center's 1 500
@@ -62,26 +60,23 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 ### `publish-web.yml`
 
 Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-website` repository
-(https://campfire-songbook.com/app/) with `CAMPFIRE_WEBSITE_DEPLOY_KEY`. That folder holds only the distribution; the
-rest of the site lives elsewhere there.
+(https://campfire-songbook.com/app/), a folder that holds only the distribution.
 
 ### `publish-linux.yml`
 
 - `packageReleaseDeb` on amd64 and arm64 (jpackage only packages for its own machine), attached to the release — the
   only way Linux is distributed (website and README link to the latest release). The legs don't cancel each other.
 - Runs on the **oldest** supported Ubuntu: a `.deb` depends on the system libraries it was built against.
-- Also builds `createReleaseDistributable` for the start check (the plugin leaves no image behind otherwise). Packaging
-  and the start run under Xvfb; packaging starts the image once to record the app's CDS archive (see `app/desktop`).
+- Also builds `createReleaseDistributable` for the start check (the plugin leaves no image behind otherwise), both under
+  Xvfb.
 
 ### `publish-windows.yml`
 
-- `packageReleaseMsix` on a Windows runner (makeappx), checks the manifest's identity and version against
-  `gradle.properties`, runs the start check (reading `campfire.log` in the data directory, and requiring the training
-  start's CDS archive be used), keeps the `.msix` as a run artifact, and submits with
+- `packageReleaseMsix` on a Windows runner, checks the manifest's identity and version against `gradle.properties`, runs
+  the start check, keeps the `.msix` as a run artifact, and submits with
   `.github/scripts/microsoft_store_submission.py`. Unsigned: the Store signs it. Nothing is attached to the release.
-- The script finds the app by package identity name (no Store ID kept), copies the last published submission, swaps the
-  package, writes the `whats-new` notes, sets publish-on-certification, uploads, commits, and waits for the commit to be
-  accepted. Green means submitted, not certified.
+- The script finds the app by package identity name (no Store ID kept) and builds on the last published submission.
+  Green means submitted, not certified.
 - **A draft the script made whose commit failed** is reused: only package and "What's new" replaced, the rest (publish
   mode included) kept.
 - **A draft started in Partner Center stops the run**, untouched: the API cannot change a submission it did not create.
@@ -102,8 +97,7 @@ rest of the site lives elsewhere there.
   signing key, written into `local.properties` as on a developer's machine.
 - A store-signed build only starts under TestFlight, so the start check runs on an ad-hoc-signed copy with the same
   entitlements minus the two naming the App ID; the demo library must appear in the fresh sandbox container.
-- Uploads with `altool` and the iOS App Store Connect API key, then submits like iOS. `build_number` input re-uploads a
-  release under a new number.
+- Uploads with `altool`, then submits like iOS. The `build_number` input re-uploads a release under a new number.
 
 ### `publish-ios.yml`
 
@@ -114,10 +108,9 @@ the `build_number` input works without a commit. The archived `Info.plist` versi
 
 ### Apple submission (both Apple workflows)
 
-- `.github/scripts/app_store_submission.py` waits for processing, takes the platform version for
-  `campfire.versionName` (existing, the editable one renamed, or a new one released on approval), attaches the build,
-  writes "What's New" (not on a platform's first version), and submits. With `submit` off it stops before submitting,
-  for screenshots to be added in App Store Connect.
+- `.github/scripts/app_store_submission.py` puts the build and "What's New" (not on a platform's first version) on the
+  version for `campfire.versionName` and submits; with `submit` off it stops before submitting, for screenshots to be
+  added in App Store Connect.
 - An existing **draft** (prepared with new screenshots, in a review submission or not, or rejected) is used as is: only
   build and "What's New" replaced, release option kept, submitted in its existing review submission.
 - Already in review with this build: left alone (reruns succeed). Another version still waiting for Apple (in review,
@@ -143,9 +136,8 @@ the `build_number` input works without a commit. The archived `Info.plist` versi
 
 ### `publish-android.yml`
 
-- Writes the keystore from `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` with the other `ANDROID_*` secrets, and
-  uploads it and its mapping file to the production track with `PLAY_SERVICE_ACCOUNT_JSON` (a draft with `submit` off).
-  Nothing is attached to the release.
+- Builds `assembleRelease` with the `ANDROID_*` secrets and uploads it and its mapping file to the production track (a
+  draft with `submit` off).
 - **An APK, not a bundle**: the Play listing predates the bundle requirement and was never migrated; `bundleRelease`
   would be rejected.
 - Notes come from the `release_notes` input, which `publish-all.yml` fills from the release description.

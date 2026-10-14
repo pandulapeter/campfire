@@ -14,29 +14,25 @@ Implements `:domain:api` over `:data:repository:api`. Every use case is a `@Fact
 
 ## Screen data (`GetScreenDataUseCaseImpl`)
 
-- Built on `Dispatchers.Default` (the view model collects on main), in two halves (songs, setlists) combined at the
-  end, so a setlist write does not re-filter and re-sort the library.
-- The whole library is sorted once per change of library or sorting mode (`sortMemo`); filters only narrow that order
-  (`ScreenData.sortedSongs` is it, for the song picker). Sort key through `NormalizeTextUseCase` (accents ignored); one
-  key decides both order and sections; text starting with no letter comes first.
+- Built on `Dispatchers.Default` in two halves (songs, setlists) combined at the end, so a setlist write does not
+  re-filter and re-sort the library.
+- The library is sorted once per change of library or sorting mode (`sortMemo`); filters only narrow that order. One
+  key (`NormalizeTextUseCase`, accents ignored) decides both order and sections.
 - `cache` lets `Loading` / `Failure` still carry the last good data. With none yet, a part whose first read failed
   stands in empty (songs, setlists) or at defaults (preferences), flagged by `ScreenData.isWholeLibrary = false`, and is
   never cached. A part merely still loading is never filled in.
-- Setlists: by date (latest day first, one day's by title) or by title, archived last; never narrowed by the song
-  filters. **Every order ends in the file name**: repository lists are unordered (a write moves its item to the end).
+- Setlists are never narrowed by the song filters. **Every order ends in the file name**: repository lists are
+  unordered (a write moves its item to the end).
 - `ScreenData` carries the filter and the three preferences it was built for, so two equal lists built for different
   filters are distinct values to the final `distinctUntilChanged`.
 - Tags and languages (`SongLanguage.UNKNOWN` = declares none) are each counted over the songs the *other* group
   leaves. Neither can empty the other: what counts as a tag/language is decided before either filter runs; a selected
   value no song carries any more is ignored (not emptying the list); a value the other group narrowed to nothing stays
-  with count zero, sorted last, drawn disabled, so chips hold still. "Any" vs "all" per group (`tagMatchMode`,
-  `languageMatchMode`).
-- `LoadScreenDataUseCaseImpl` loads all repositories in parallel and waits for all, failures included.
+  with count zero, sorted last, drawn disabled, so chips hold still.
 
 ## Import
 
-`PrepareImportUseCaseImpl` + `ImportPlanner` work out what would happen; `ImportFilesUseCaseImpl` carries it out. The
-split exists so a whole archive can be put to the user as one review before anything is written.
+`PrepareImportUseCaseImpl` + `ImportPlanner` work out what would happen; `ImportFilesUseCaseImpl` carries it out.
 
 ### Review (product rule)
 
@@ -54,9 +50,8 @@ split exists so a whole archive can be put to the user as one review before anyt
 
 ### Preparing
 
-- Unpacks archives recursively (paths stripped, the archiver's hidden files skipped). An archive is known by name
-  (`LibraryFiles.isArchiveFileName`) or, for an unknown name, by bytes (`isZipArchive`) — never a `.docx`. An archive
-  holding nothing importable is reported as unsupported under its own name.
+- Unpacks archives recursively. An archive is known by name or, for an unknown name, by bytes (`isZipArchive`) —
+  never a `.docx`.
 - Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.
   The arrival name is only a fallback *title*, and is used to recognise a library file of exactly that name holding
   the same text (exports carry library names, possibly from an older naming rule).
@@ -68,14 +63,11 @@ split exists so a whole archive can be put to the user as one review before anyt
   replacement keeps the library's) — so re-importing the demo setlist finds it unchanged. Setlist entries compare as
   they will be written (pointing where each song lands), resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
-- Runs on `Dispatchers.Default`, yielding between songs (web painting, cancellation). Reads the library files of every
-  touched family up front, 64 at a time in parallel. Owns the size budget: archives share one budget; an oversized
-  file goes to `ImportPlan.oversizedFileNames`.
-- Documents go through `DocumentRepository`, `mapper/DocumentMappers.kt`, and `ChordSheetConverter`; plain text uses
-  the converter too, but ChordPro extensions are untouched. Caps: 16 MiB document input, 8 MiB converted text.
-  Extracted prose is a valid import; no readable text is `unreadableDocumentFileNames`, not unsupported. All incoming
-  songs are prettified after conversion, splitting, and notation normalization. No origin info survives in the
-  library.
+- Runs on `Dispatchers.Default`, yielding between songs (web painting, cancellation). Owns the size budget: archives
+  share one.
+- Documents and plain text go through `ChordSheetConverter`; ChordPro extensions never do. No readable text is
+  `unreadableDocumentFileNames`, not unsupported. All incoming songs are prettified after conversion, splitting, and
+  notation normalization. No origin info survives in the library.
 
 ### Applying
 
@@ -92,19 +84,14 @@ split exists so a whole archive can be put to the user as one review before anyt
   cancellation propagates. What was written is adopted in one change (`adoptImported`, also after failure or
   cancellation), from the models built, not by rescanning.
 - Result lists: duplicates name each library file once, and a repeat of a song this import wrote is not "already in
-  the library"; `leftOutFileNames` one per unticked row; `convertedSongFileNames` counts only actual writes;
-  `convertedSongToOpen` only for a lone converted song with no other entries or errors.
-- `ImportProgress`: unpacking and conversion count input files; applying counts all entries (duplicates and left-out
-  included); comparison and adoption are indeterminate.
-- `DownloadImportFileUseCaseImpl` feeds a download through preparation as one picked file.
+  the library"; `convertedSongToOpen` only for a lone converted song with no other entries or errors.
 
 ## Export
 
 - A single song exported alone is the `.cho` as on disk; anything else (several songs, a setlist, the library) is a
   zip. Transposition is never baked in.
-- `ExportFileNames.kt` names what leaves: a single song by the import's rule (`SongRepository.importFileName`), so it
-  comes back under the same name; a setlist by its title through `LibraryFiles.normalizedName`. Inside an archive,
-  library names are kept, since setlists point at songs by file name.
+- `ExportFileNames.kt` names a single song by the import's rule (`SongRepository.importFileName`), so it comes back
+  under the same name. Inside an archive, library names are kept, since setlists point at songs by file name.
 - A setlist exported with some songs (`songFileNames`) packs and names only those (the rest of the document kept); a
   ticked song missing from the library is still named. Exported whole, the document is the stored file unchanged.
 - A library export whose song or setlist scan failed returns null, never a partial archive. Files are taken from the
@@ -119,20 +106,17 @@ split exists so a whole archive can be put to the user as one review before anyt
   is offered where name and metadata drift apart beyond case or Unicode form (`Song.canUpdateFileName`). Old names
   stay until one of those happens.
 - `RenameSongFileUseCaseImpl` and `DeleteSongUseCaseImpl` share one walk (`useCases/SongReferences.kt`) over what
-  names a song by file: setlists and the per-song preference maps (`UserPreferences.withSongRenamed`). Rename moves the file first, then
-  follows every reference; delete drops them. Every reference is attempted even after one fails; failure is returned,
-  not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are found from the files
-  (`loadSetlistFileNamesNaming`), not the cache, and changed through `updateSetlist`. A setlist already naming the new
-  name keeps one entry.
+  names a song by file: setlists and the per-song preference maps (`UserPreferences.withSongRenamed`). Rename moves
+  the file first, then follows every reference; delete drops them. Every reference is attempted even after one fails;
+  failure is returned, not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are
+  found from the files, not the cache, and changed through `updateSetlist`.
 
 ## Others with logic
 
-- `CreateSongUseCaseImpl`: template with `{title}`, `{artist}`, empty `{key}`, `{capo: 0}`, `{tempo: 120}`, `{time: 4/4}`
-  (the values a song declaring none plays by), and an empty verse; nonblank optional fields via
-  `ChordProMetadataFields`.
+- `CreateSongUseCaseImpl`'s template carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`: the values
+  a song declaring none plays by.
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.
-- `EditSongsUseCaseImpl`: `SongRepository.editSongs`, many files, one announcement.
 - `DeleteLibraryUseCase` (Settings → Library, after typing `DELETE`) deletes every song and setlist: it stops any
   running sync, then runs one with deletions allowed (the typed word answering the guard), emptying the cloud folder and
   every synced device too.
@@ -140,7 +124,7 @@ split exists so a whole archive can be put to the user as one review before anyt
   preference is translated for `:chordpro` (which knows none): `mapper/AccidentalsMappers.kt` (nullable `preferFlats`)
   and `mapper/NotationMappers.kt` (`ChordNotation`) are the whole translation.
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
-  marks. `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols (`acdc` finds `AC/DC`); it is
-  not used for sorting, which it would break (`a b` after `ab c`).
+  marks. `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols; it would break sorting
+  (`a b` after `ab c`).
 - `SyncUseCaseImpls.kt`: connecting, and restoring at startup when credentials come back connected, start a sync run
   at once (not debounced) and do not wait for it.
