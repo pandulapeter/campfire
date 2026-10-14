@@ -47,7 +47,7 @@ A second sync provider must be one new class, not an engine change; the rules ar
 `Sha256` is hand-written (avoids a dependency on four targets). `localContentHash` is Campfire's own fingerprint and
 decides whether a file changed; it is never compared with a service hash and is never a timestamp.
 
-## Other contracts
+## Cover art, import download, and catalogue searches
 
 - `CoverArtRemoteSource`: never throws but cancellation; returns the image, `Missing` (asking again won't help), or
   `Unreachable` (may change soon), so the caller can choose how long to remember a failure.

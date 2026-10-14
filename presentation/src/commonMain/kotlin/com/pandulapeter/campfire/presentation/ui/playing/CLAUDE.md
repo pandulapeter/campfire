@@ -20,7 +20,7 @@ The values a song is played with and where each is kept.
 - **Overrides mirror the transposition** (`SongOverrides<Int>`, keyed by a `SongPlace`; `Tempos`, `Capos`, and
   `Transpositions` are all one): a song opened from a setlist reads that setlist's entry (`Setlist.Entry.tempo`, left out
   of the `*.setlist.json` where null, so it travels through export, import, and sync), one opened from the library
-  `UserPreferences.tempos` (never exported, but synced, see `data/sync/implementation/CLAUDE.md`). **Neither reads the
+  `UserPreferences.tempos` (never exported, but synced, see `data/sync/implementation/.../preferences/CLAUDE.md`). **Neither reads the
   other.** The file's `{tempo}` is changed only in the editor and the Song defaults sheet.
 - `effectiveTempo` (`SongTempo.kt`): entry, then override, then `Song.tempo` (30–300), then 120. An override equal to the
   song's own counts as none. The tempo counts the bar's clicks (6/8 at 120 is six clicks a bar at 120 a minute).
