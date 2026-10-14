@@ -285,7 +285,7 @@ song's are; the text is the `DialogType`'s, which lives in the view model throug
 under the sheet loses it, as it loses any open sheet — nothing was written, and the clipboard still holds the text.
 
 The song from the clipboard often has no artist and a title guessed from its first line. Once it is in the editor, the
-lookup of `documentation/plans/song-details-lookup.md` is offered there the normal way; this plan adds nothing for it.
+song details lookup (`ui/dialogs/lookup`) is offered there the normal way; this plan adds nothing for it.
 
 ### 5.2 Messages (`Message`, rendered by `messages/Messages.kt`)
 
@@ -376,5 +376,5 @@ Each step builds and tests green on its own, one commit each.
 - Reading the HTML a page puts on the clipboard (its `<b>` chords, its tables), where the plain text loses positions.
 - An editor overflow action that converts the whole text, or a selection, after the fact.
 - The iOS share extension and the Android share audit (`documentation/plans/share-extension.md`), which call
-  `newSongFromText`; and the song details lookup (`documentation/plans/song-details-lookup.md`).
+  `newSongFromText`; and the song details lookup, which has shipped (`ui/dialogs/lookup`).
 - Following a copied link to the page it names, which would be the app reaching the network on its own.
