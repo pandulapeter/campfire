@@ -30,7 +30,6 @@ The export formats, the options, and the PDF pipeline behind the export screen (
   entry's key. Missing or unreadable songs keep a visibly marked slot.
 - **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
   excluded metadata. No platform print service: the file is saved or shared and printed from there.
-- New PDF controls and text are localized in both languages.
 
 ## Pipeline
 

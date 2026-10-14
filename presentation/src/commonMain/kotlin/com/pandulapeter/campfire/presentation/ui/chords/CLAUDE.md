@@ -17,8 +17,7 @@ Chord diagrams (`ui/chords/`, `screens/songDetails/SongChordsSection.kt`, `compo
 ## Which instruments
 
 Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams. Seven- and
-eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off; the editor's Chord shape
-button then writes a guitar's. The instrument and tuning chips head the song's first section for every song with
+eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning chips head the song's first section for every song with
 chords, even an instrument without shapes, so the diagrams can be brought back
 (`RenderSection.Metadata.instrumentChips`). On the keyboard the page is already in the sounding chords (see
 `ui/CLAUDE.md`), so diagrams count no capo.
@@ -47,11 +46,8 @@ Definitions:
   transpose action) in whichever octave a hand can hold; one left needing a fifth finger gives way to the player's
   shape.
 - **A definition is a standard tuning shape**: ChordPro gives `{define}` no tuning, so it is drawn only where a standard
-  shape sounds right (`ChordTuning.drawsDefinitions`), else kept as
-  `SongChord.undrawnDefinition` and offered behind a button in the chord's sheet. The editor's Chord shape button
-  always writes the standard-tuning shape (player's choice under the instrument key, else the app's first), with a
-  snackbar where the diagrams are in a tuning that doesn't draw definitions
-  (`Message.ChordShapeWrittenForStandardTuning`).
+  shape sounds right (`ChordTuning.drawsDefinitions`), else kept as `SongChord.undrawnDefinition` and offered behind a
+  button in the chord's sheet.
 
 ## Tunings
 
@@ -63,8 +59,7 @@ Definitions:
   against the tuning's own strings. Player choices made in a tuning are kept under its own key.
 - On a tuning change the page keeps its cells until chords are re-collected for the new tuning off the main thread, so
   it crossfades once, never drawing old shapes on new strings.
-- The PDF prints a line above each song's diagrams naming the instrument where not guitar or keyboard, and the tuning
-  where not standard; the chord sheet names a non-standard tuning under its title.
+- The chord sheet names a non-standard tuning under its title.
 
 ## The Chords section
 
@@ -101,7 +96,8 @@ in the song as the page plays it, and closes if it is gone.
 ## The editor
 
 Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row: writes a `{define}` for the chord at the
-caret into the header with the shape the player would see, frets selected, or moves the caret to an existing line's
-frets. The preview's Chords section shows every definition in the text, each on its own instrument, whatever the
-switches. The PDF prints diagrams per song when the export screen's box is ticked (only with chords printed), their
-names kept out of the selectable text.
+caret into the header with the standard-tuning shape the player would see (their choice under the instrument key, else
+the app's first; a guitar's for an instrument without shapes), frets selected, or moves the caret to an existing line's
+frets. Where the diagrams are in a tuning that doesn't draw definitions it says so
+(`Message.ChordShapeWrittenForStandardTuning`). The preview's Chords section shows every definition in the text, each
+on its own instrument, whatever the switches.

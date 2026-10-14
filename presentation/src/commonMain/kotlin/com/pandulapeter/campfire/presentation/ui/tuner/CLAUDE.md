@@ -71,8 +71,6 @@ share.
 - **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
   note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
   spoken form for screen readers (`spokenNoteName`).
-- `TunerButton` sits in the song's first section, read only mode included; `tunerAction` is the overflow menu entry
-  instead only where that section is absent (chords and metronome both off).
 
 ## Layout
 
