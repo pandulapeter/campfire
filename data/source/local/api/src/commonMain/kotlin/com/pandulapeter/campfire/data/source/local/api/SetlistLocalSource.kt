@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
-import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlinx.datetime.LocalDate
 
 interface SetlistLocalSource {

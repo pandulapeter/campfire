@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.songs_export_song

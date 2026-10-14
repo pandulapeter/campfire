@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 

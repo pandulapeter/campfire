@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.pickers
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * Whether the setlist picker for [songFileNames] - one song, or the songs ticked in the selection mode - would list any

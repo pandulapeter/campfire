@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActionHandler
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

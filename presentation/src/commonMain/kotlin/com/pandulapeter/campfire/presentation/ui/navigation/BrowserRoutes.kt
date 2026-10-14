@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.navigation
 
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 
 /**

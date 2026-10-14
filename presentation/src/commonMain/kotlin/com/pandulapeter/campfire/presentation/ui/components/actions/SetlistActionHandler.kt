@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.actions
 
 import androidx.compose.runtime.Stable
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /** What [SetlistActions] does with its setlist, one per screen and remembered, as [SongActionHandler] is. */
 @Stable

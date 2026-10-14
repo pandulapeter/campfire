@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.setlists
 
 import androidx.compose.ui.state.ToggleableState
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * The setlist with [songFileName] ticked in or out, as one tick of the song picker asks: a song ticked in goes to the

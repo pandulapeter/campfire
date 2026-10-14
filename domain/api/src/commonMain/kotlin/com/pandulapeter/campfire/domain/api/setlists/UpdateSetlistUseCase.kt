@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.setlists
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 interface UpdateSetlistUseCase {
 

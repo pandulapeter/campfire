@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository

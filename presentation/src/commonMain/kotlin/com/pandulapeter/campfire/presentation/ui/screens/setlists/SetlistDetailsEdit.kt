@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlinx.datetime.LocalDate
 
 /** What the setlist details sheet says about a setlist: the four things a user writes about it. */

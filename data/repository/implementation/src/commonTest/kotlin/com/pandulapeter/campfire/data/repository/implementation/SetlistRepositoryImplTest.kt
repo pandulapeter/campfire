@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.foundation.layout.size
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /** Where each page of a setlist's pager sits in the setlist, see [SongPagerControls]. */
 internal data class SetlistSlots(

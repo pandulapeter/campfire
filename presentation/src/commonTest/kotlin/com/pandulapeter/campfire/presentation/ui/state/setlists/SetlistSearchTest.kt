@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.setlists
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong

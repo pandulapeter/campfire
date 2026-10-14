@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind

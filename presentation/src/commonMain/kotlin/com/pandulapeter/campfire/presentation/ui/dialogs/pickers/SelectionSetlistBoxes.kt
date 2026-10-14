@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.pickers
 
 import androidx.compose.ui.state.ToggleableState
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * What [setlist] holds of [selection] for the selection's Choose setlists sheet: what it held when the sheet was first

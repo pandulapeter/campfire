@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy

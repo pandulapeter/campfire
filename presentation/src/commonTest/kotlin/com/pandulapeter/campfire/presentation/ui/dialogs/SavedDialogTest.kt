@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import androidx.lifecycle.SavedStateHandle
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import kotlinx.coroutines.test.runTest

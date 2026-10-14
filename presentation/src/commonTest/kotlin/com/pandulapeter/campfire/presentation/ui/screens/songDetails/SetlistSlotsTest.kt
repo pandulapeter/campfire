@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

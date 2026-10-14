@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
+
 /**
  * What an import would do to the library, worked out before a single file is written.
  *

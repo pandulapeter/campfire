@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase

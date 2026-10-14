@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage

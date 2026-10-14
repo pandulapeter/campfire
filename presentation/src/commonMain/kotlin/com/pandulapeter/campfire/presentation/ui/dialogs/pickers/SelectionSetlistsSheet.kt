@@ -31,7 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_search_resul
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem

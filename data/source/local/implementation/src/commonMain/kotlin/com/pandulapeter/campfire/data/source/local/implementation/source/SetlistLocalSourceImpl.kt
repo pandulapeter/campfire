@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.isDated

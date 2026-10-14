@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.implementation.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.UserPreferences

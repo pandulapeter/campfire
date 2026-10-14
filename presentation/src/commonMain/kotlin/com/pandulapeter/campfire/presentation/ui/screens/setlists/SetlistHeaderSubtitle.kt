@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.chordpro.ChordProDuration
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_days_ago
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_days

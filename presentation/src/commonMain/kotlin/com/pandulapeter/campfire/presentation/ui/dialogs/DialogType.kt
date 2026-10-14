@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord

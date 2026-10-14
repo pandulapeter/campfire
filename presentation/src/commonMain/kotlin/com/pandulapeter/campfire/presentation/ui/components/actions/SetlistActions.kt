@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_archive

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * The setlist with [change] applied to the entry of [songFileName], or null where it has none: a song a sync run took

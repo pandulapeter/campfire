@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /** A song as it is opened: from the library, or from one setlist. */
 internal data class SongPlace(

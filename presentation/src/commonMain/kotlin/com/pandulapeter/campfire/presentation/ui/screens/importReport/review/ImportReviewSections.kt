@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 
 /**

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
