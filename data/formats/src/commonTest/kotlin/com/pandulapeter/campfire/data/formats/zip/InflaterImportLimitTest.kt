@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

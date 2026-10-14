@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor

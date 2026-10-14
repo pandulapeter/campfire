@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

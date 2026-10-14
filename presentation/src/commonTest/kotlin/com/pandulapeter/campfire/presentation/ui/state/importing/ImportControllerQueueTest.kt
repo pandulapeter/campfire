@@ -11,12 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportDownload
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
-import com.pandulapeter.campfire.data.model.domain.ImportResult
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
  * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE. A ZIP64 archive is rejected with a

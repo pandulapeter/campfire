@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.domain.implementation
 import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song

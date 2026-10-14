@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /** Where the files of one import come from. */
 internal sealed interface ImportSource {

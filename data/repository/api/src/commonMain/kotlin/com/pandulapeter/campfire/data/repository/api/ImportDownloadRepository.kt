@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.ImportDownload
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
  * Downloads a file to import from an address the user opened. Nothing is kept: not the file, not the address, not

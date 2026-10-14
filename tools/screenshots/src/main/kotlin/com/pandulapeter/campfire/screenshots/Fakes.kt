@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.screenshots
 
 import com.pandulapeter.campfire.data.model.library.ExportedFile
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome

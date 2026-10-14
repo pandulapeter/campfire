@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocumen
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy

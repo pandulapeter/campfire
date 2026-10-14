@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /** Stateless offline extraction. No document bytes or source format are retained after importing its text. */
 interface DocumentRepository {

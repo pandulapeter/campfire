@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.pandulapeter.campfire.data.model.library.ExportedFile
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /**
  * The platform's own file dialogs. Every shell provides one, because a picker is a piece of the host application (an

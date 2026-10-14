@@ -9,12 +9,12 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.Setlist

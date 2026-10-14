@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals

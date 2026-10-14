@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.api.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /**
  * Works out what importing [files] would do, without writing anything: archives are unpacked, collections are split

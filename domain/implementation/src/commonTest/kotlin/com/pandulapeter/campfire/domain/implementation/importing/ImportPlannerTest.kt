@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner.withSongFileNames

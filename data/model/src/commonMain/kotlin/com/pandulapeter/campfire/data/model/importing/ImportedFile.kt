@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.importing
 
 /**
  * A file on its way into the library: what a file picker, a drop or an archive hands over, before anything has been

@@ -13,9 +13,9 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost

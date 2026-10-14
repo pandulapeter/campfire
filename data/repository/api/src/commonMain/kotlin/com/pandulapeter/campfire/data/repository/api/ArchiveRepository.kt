@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /**
  * Zip handling, which has no state to cache: this exists so that the use cases can reach it without the domain layer

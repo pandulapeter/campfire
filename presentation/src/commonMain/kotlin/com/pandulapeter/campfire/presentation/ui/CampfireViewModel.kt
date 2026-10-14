@@ -18,11 +18,11 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
-import com.pandulapeter.campfire.data.model.domain.ImportResult
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings

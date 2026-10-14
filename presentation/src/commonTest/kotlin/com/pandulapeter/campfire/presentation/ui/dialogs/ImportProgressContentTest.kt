@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

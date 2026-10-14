@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire
 
-import com.pandulapeter.campfire.data.model.domain.ImportBudget
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportBudget
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope

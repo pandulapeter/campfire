@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.importing
 
 /** Text only: document bytes and document-specific structures never enter the library. */
 data class ExtractedDocument(val pages: List<Page>) {

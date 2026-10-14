@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.domain.api.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportProgress
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 
 interface ImportFilesUseCase {
 

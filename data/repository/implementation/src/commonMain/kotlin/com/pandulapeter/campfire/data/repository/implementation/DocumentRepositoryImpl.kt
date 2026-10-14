@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.data.source.local.api.DocumentLocalSource
 import org.koin.core.annotation.Single

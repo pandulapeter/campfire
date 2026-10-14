@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportDownload
 
 interface DownloadImportFileUseCase {
 

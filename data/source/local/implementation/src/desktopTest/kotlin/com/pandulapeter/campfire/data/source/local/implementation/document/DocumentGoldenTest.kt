@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.document
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.firstRun
 
-import com.pandulapeter.campfire.data.model.domain.ImportResult
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.resources.Res

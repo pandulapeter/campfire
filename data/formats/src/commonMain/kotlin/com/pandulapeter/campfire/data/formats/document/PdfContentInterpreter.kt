@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.Positioned
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.yield

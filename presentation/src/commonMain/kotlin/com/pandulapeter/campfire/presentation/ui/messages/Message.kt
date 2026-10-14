@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.messages
 
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 

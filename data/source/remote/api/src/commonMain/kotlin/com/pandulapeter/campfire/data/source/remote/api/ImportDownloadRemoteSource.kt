@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api
 
-import com.pandulapeter.campfire.data.model.domain.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportDownload
 
 /**
  * Downloads a file the user asked to import from an address. The address may point at any host, and its answer is

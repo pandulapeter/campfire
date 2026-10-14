@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.repository.api.ImportDownloadRepository
 import com.pandulapeter.campfire.data.source.remote.api.ImportDownloadRemoteSource
 import org.koin.core.annotation.Single

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 
 /**
  * The song an import of [plan] that ended in [result] opens, or null where it opens none: only one asked to open

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**

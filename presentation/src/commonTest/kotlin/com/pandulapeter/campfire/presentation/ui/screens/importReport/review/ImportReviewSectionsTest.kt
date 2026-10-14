@@ -12,10 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
 import androidx.compose.ui.state.ToggleableState
-import com.pandulapeter.campfire.data.model.domain.ImportChoices
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.ImportReviewSection.Kind

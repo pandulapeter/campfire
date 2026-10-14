@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.finished
 
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
-import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.ImportReportSection.Kind

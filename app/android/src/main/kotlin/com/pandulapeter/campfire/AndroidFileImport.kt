@@ -12,7 +12,7 @@ package com.pandulapeter.campfire
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
 import kotlinx.coroutines.CoroutineScope

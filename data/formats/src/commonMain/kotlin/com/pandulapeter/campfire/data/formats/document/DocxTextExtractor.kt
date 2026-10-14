@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.formats.document
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import kotlinx.coroutines.yield
 

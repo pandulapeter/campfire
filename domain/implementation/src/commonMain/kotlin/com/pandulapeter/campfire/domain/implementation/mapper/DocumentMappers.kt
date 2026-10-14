@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.mapper
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 
 internal fun ExtractedDocument.toChordSheet() = ChordSheet(pages.map { page ->
     ChordSheet.Page(page.lines.map { line ->

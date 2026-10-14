@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.importDownload
 
-import com.pandulapeter.campfire.data.model.domain.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.source.remote.api.ImportDownloadRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.request.prepareGet

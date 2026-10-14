@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
-import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /** Extracts positioned text on the computation dispatcher, with the same bounds and result on every platform. */
 interface DocumentLocalSource {
