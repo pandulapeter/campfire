@@ -55,7 +55,8 @@ language, theme, and system text size.
 - **Assert what a user sees or what lands on disk**: semantics found by text read from the resources (`string`,
   `pluralString`, never typed English) or the library folder (`songsFolder`), or pixels where semantics cannot tell
   (`PedalCoverageTest` reads the song's faded top edge from them). Never the view model's fields; a test that
-  would fail after a correct rewrite of the screen is the wrong test. Tests sit in the package of the screen they cover.
+  would fail after a correct rewrite of the screen is the wrong test. Tests sit in the package of the screen they cover;
+  the ways to a screen or sheet that several of them take are `AppTestNavigation.kt`'s.
 - The library is the demo songs plus the `src/test/resources/songs` and `setlists` files a test names; never the tool's
   own `library/`. A preferences document is written, so no onboarding and no planted demo; covers are off unless asked
   for, and the song text size is `runAppTest`'s `fontScale`.

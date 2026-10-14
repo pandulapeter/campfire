@@ -12,24 +12,7 @@ package com.pandulapeter.campfire.screenshots
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.click
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.setlists
-import com.pandulapeter.campfire.presentation.resources.setlists_actions
-import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
-import com.pandulapeter.campfire.presentation.resources.song_details_duration
-import com.pandulapeter.campfire.presentation.resources.songs_actions
-import com.pandulapeter.campfire.presentation.resources.songs_create_song
-import com.pandulapeter.campfire.presentation.resources.songs_edit_song
-import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
@@ -197,55 +180,6 @@ private fun AppTestScope.settledWindow(): BufferedImage {
     }
 }
 
-/** Taps the node [matcher] finds as a finger does, which leaves no pointer hovering over the screen to draw a highlight. */
-private fun AppTestScope.tap(matcher: SemanticsMatcher) {
-    onNode(matcher).performTouchInput { click() }
-    waitForIdle()
-}
-
-private fun AppTestScope.openSong() = tap(hasText(RISING_SUN_TITLE) and hasClickAction())
-
-private fun AppTestScope.openEditor() {
-    openSong()
-    tap(hasContentDescription(string(Res.string.songs_actions)))
-    tap(hasText(string(Res.string.songs_edit_song)) and hasClickAction())
-}
-
-private fun AppTestScope.openAboutTheSong() {
-    openSong()
-    tap(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
-}
-
-private fun AppTestScope.openSongMetadata() {
-    openAboutTheSong()
-    tap(hasText(string(Res.string.song_details_duration), substring = true) and hasClickAction())
-    keyboardHeight = KEYBOARD_HEIGHT
-}
-
-private fun AppTestScope.openCoverSearch() {
-    openAboutTheSong()
-    tap(hasClickAction() and hasAnyAncestor(hasText(string(Res.string.song_details_duration), substring = true)))
-    keyboardHeight = KEYBOARD_HEIGHT
-}
-
-private fun AppTestScope.openNewSong() {
-    tap(hasContentDescription(string(Res.string.songs_new_song)))
-    tap(hasText(string(Res.string.songs_create_song)))
-    keyboardHeight = KEYBOARD_HEIGHT
-}
-
-private fun AppTestScope.openSetlistDetails() {
-    tap(hasText(string(Res.string.setlists)) and hasClickAction())
-    tap(hasContentDescription(string(Res.string.setlists_actions)))
-    tap(hasText(string(Res.string.setlists_edit_details)) and hasClickAction())
-    keyboardHeight = KEYBOARD_HEIGHT
-}
-
-private const val RISING_SUN_TITLE = "House of the Rising Sun"
-private const val DATED_SETLIST = "campfire_tests-an_evening_by_the_fire.setlist.json"
-
-/** A phone keyboard's height, which leaves a 360 by 640 dp phone the 330 dp the sheets' pinned height is budgeted for. */
-private val KEYBOARD_HEIGHT = 310.dp
 private val KEYBOARD_COLOR = Color(0x9E9E9E)
 private const val SETTLE_TIMEOUT_MILLIS = 10_000L
 
