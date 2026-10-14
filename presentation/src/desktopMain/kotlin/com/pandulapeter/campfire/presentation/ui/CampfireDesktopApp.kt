@@ -30,6 +30,8 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.navigation.EscapeStep
+import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
@@ -131,20 +133,19 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
         if (visibleDialog.value != null || overlayState.isAnyMenuOpen) return false
-        // The search of whichever list screen is up comes before the back stack, and not only because closing it
-        // is the smaller step: selecting a tab rebuilds the stack around it, so the setlists screen is reached with
-        // the songs screen still under it and every Escape there would otherwise leave the tab with the search
-        // still open behind it. It is closed from here rather than by the back handler the field registers, since
-        // this handler sees the key first and would consume it either way.
+        // The search is closed from here rather than by the back handler the field registers, since this handler sees
+        // the key first and would consume it either way.
         val search = currentSearch
-        when {
-            isSetlistReordering -> navigateBack()
-            search?.isOpen?.value == true -> search.close()
-            // After the search rather than before it, unlike the reorder mode: the selection is put together through
-            // the search, and ending the mode is the step that loses something.
-            isSongSelecting -> navigateBack()
-            backStack.size > 1 -> navigateBack()
-            else -> confirmExit(onExit)
+        val step = escapeStepOf(
+            isReordering = isSetlistReordering,
+            isSearchOpen = search?.isOpen?.value == true,
+            isSelecting = isSongSelecting,
+            stackSize = backStack.size,
+        )
+        when (step) {
+            EscapeStep.CLOSE_SEARCH -> search?.close()
+            EscapeStep.END_REORDERING, EscapeStep.END_SELECTION, EscapeStep.GO_BACK -> navigateBack()
+            EscapeStep.EXIT -> confirmExit(onExit)
         }
         return true
     }
