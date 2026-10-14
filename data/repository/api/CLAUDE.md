@@ -21,8 +21,9 @@ Repository interfaces only; consumed by `:domain:implementation`, implemented by
   for title and description (may move the file) and takes the setlist's name. `saveSetlist` is for a setlist the caller
   owns whole (just created or copied).
 - `SongContentRepository` is a recent-texts lookup, deliberately not a `DataState` flow.
-- `UserPreferencesRepository.hasStoredUserPreferences` is deliberately uncached: the first save makes it false, and the
-  demo library uses it to detect a fresh installation.
+- `UserPreferencesRepository.hasStoredUserPreferences` asks whether the preferences document exists, whose absence is
+  what a never-used installation looks like (`IsFirstRunUseCase`). It is deliberately uncached: the first save would make
+  a cached `false` wrong.
 - `CoverArtRepository.getCoverArt` answers bytes or nothing, never a failure; searches (`searchCoverArt`,
   `searchSongDetails`) emit progress as each catalogue answers, a failing one recorded in `failed`, not thrown.
   `loadSongCredits` never throws. Nothing from the details lookup or `ImportDownloadRepository` is kept.

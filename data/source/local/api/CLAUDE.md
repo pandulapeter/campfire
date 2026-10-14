@@ -24,7 +24,6 @@ platform types. One multiplatform implementation, with platform differences in `
   index would undo every deletion since the last run. `loadUserPreferences()` never returns null (missing means
   defaults) and throws for an unreadable document, since defaults would be saved over it; a document that does not
   decode loses only its bad fields. Unreadable credentials and an unreadable editor draft count as none.
-- `hasStoredUserPreferences()` asks about the *document*: its absence is what a never-used installation looks like.
 
 ## Sources
 
