@@ -67,6 +67,23 @@ class SongItemIndexTest {
         assertEquals(7, selected.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
     }
 
+    @Test
+    fun `the first card follows the first header`() = assertEquals(1, groups.firstCardIndex(hasPlaceholder = false))
+
+    @Test
+    fun `a placeholder comes before the first card`() = assertEquals(2, groups.firstCardIndex(hasPlaceholder = true))
+
+    @Test
+    fun `an empty section's header is counted before the first card`() {
+        val leadingEmpty = listOf(SongGroup(header = SongGroupHeader.Selection, songs = emptyList())) + groups
+
+        assertEquals(2, leadingEmpty.firstCardIndex(hasPlaceholder = false))
+    }
+
+    @Test
+    fun `a list without headers starts with its first card`() =
+        assertEquals(0, listOf(SongGroup(header = null, songs = listOf(song("a1")))).firstCardIndex(hasPlaceholder = false))
+
     private fun song(name: String) = Song(
         fileName = "$name.cho",
         title = name,

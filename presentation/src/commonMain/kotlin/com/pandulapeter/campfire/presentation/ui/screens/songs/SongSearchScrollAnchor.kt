@@ -12,6 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
+import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
+import kotlin.math.roundToInt
 
 /**
  * Holds a visible card in screen coordinates only while the search owns the scroll position. A scroll takes the position
@@ -115,4 +120,27 @@ internal class SongSearchScrollAnchor(private var isOpen: Boolean) {
         trailingHeaderCount = 0
         trailingSpaceContents = null
     }
+}
+
+/** The key of the spacer that keeps the room the search anchor needs at the end of the list. */
+internal const val SEARCH_ANCHOR_SPACE_KEY = "search_anchor_space"
+
+/** Measures a header at its normal height, then gives its row back on the very same frames the bar takes it. */
+internal fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds().layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    // Subtract the exact rounded bar inset; independently rounding both halves can move the first row by a pixel.
+    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - fraction().coerceIn(0f, 1f))).roundToInt()
+    val height = (placeable.height - removedHeight).coerceAtLeast(0)
+    layout(placeable.width, height) { placeable.placeRelative(0, 0) }
+}
+
+/**
+ * The room [anchor] keeps at the end of the list: the height of the headers after the card it holds, as much of each as
+ * the bar takes away at [coverage].
+ */
+internal fun Modifier.searchAnchorSpace(anchor: SongSearchScrollAnchor, coverage: () -> Float) = layout { measurable, constraints ->
+    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - coverage())).roundToInt()
+    val height = anchor.trailingHeaderCount * removedHeight
+    val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+    layout(placeable.width, height) { placeable.placeRelative(0, 0) }
 }
