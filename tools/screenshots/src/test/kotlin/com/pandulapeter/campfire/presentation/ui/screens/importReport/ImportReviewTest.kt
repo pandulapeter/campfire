@@ -22,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_files
@@ -81,13 +82,36 @@ internal class ImportReviewTest {
         onNodeWithText(pluralString(Res.plurals.import_review_replacing, 1)).assertExists()
         onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).performClick()
         onNodeWithText(pluralString(Res.plurals.import_replace_title, 1)).assertExists()
-        assertEquals(before, libraryContents())
         onNode(hasText(string(Res.string.import_conflicts_replace)) and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
         waitForLibrary { NEW_SONG in songFileNames() && libraryContents()[HOUSE_OF_THE_RISING_SUN] == resourceText("songs/$COLLISION") }
         assertEquals(
             before + mapOf(
                 NEW_SONG to resourceText("songs/$NEW_SONG"),
                 HOUSE_OF_THE_RISING_SUN to resourceText("songs/$COLLISION"),
+            ),
+            libraryContents(),
+        )
+    }
+
+    @Test
+    fun `nothing is written before the replace question is answered`() = runAppTest(pickedFiles = listOf(archive)) {
+        val before = libraryContents()
+        startImport()
+        onAllNodesWithText(string(Res.string.import_conflicts_keep_both)).onFirst().performClick()
+        onNodeWithText(string(Res.string.import_conflicts_replace)).performClick()
+        onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).performClick()
+        onNode(hasText(string(Res.string.cancel)) and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
+        onAllNodesWithText(string(Res.string.import_conflicts_replace)).onFirst().performClick()
+        onNodeWithText(string(Res.string.import_conflicts_keep_both)).performClick()
+        onNodeWithText(pluralString(Res.plurals.import_review_numbered, 1)).assertExists()
+        onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).performClick()
+        // Library writes land on IO threads, so only the end state of a second, unquestioned import can show that the
+        // first Import wrote nothing: a write before the answer would have replaced the demo song or numbered the new one.
+        waitForLibrary { songFileNames().size == before.size + 2 }
+        assertEquals(
+            before + mapOf(
+                NEW_SONG to resourceText("songs/$NEW_SONG"),
+                NUMBERED_COLLISION to resourceText("songs/$COLLISION"),
             ),
             libraryContents(),
         )
