@@ -46,7 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrd
 import com.pandulapeter.campfire.presentation.ui.components.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
-import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.tagColor
 import com.pandulapeter.campfire.presentation.ui.components.SearchField

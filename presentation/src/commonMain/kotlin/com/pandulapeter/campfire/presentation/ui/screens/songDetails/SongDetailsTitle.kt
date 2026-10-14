@@ -61,7 +61,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
-import com.pandulapeter.campfire.presentation.ui.components.PRESSED_HEADING_ALPHA
+import com.pandulapeter.campfire.presentation.ui.components.list.PRESSED_HEADING_ALPHA
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf

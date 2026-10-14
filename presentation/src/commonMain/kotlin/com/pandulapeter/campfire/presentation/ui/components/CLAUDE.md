@@ -162,20 +162,6 @@ the plain indicator (the launch screen covers their first read).
   `LookaheadScope`.
 - The language group appears only with more than one language (no-language songs counting as one).
 
-### `ui/components/FastScroller.kt`
-
-- The only scrollbar, on both lists; the letter bubble only on the song list. The `FAST_SCROLLER_WIDTH` column overlays
-  the grid's end padding, so cards end before it while sticky headers run under it. The column stays whether or not the
-  list scrolls, so rows never reflow.
-- A press centers the thumb: at once for a mouse, but **for touch only after a long press or a mostly vertical move past
-  slop** (`awaitThumbPress`), because the column is on Android's back-gesture edge. A tap jumps only on lift, and a lift
-  the system consumed for back is ignored.
-- Thumb and track fade by draw alpha, not a `graphicsLayer`: a layer would clip the bubble, and the web build doesn't
-  redraw a `ModulateAlpha` layer whose alpha alone changed.
-- Position is estimated from average item size, excluding the pinned sticky header (listed out of order).
-- Haptics (touch only): a tick per row, a notch per section letter and at the ends (`FastScrollerDetent.kt`,
-  `detentNotch`), the end decided by where the finger asked the thumb to be; read once a frame.
-
 ### `ui/components/CampfireTopAppBar.kt`
 
 - Song details and editor bar: flat, background color, never tints or lifts. In a short window the details screen gives
@@ -190,14 +176,6 @@ the plain indicator (the launch screen covers their first read).
   sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
 - `fadingVerticalEdges`: lists inside a dialog; never a sheet's content.
 
-#### Sticky section headers
-
-- No background or divider; only the content takes touches, and **neither the header nor its menu button is
-  focusable**: a lazy grid keeps a focused item placed after scrolling away, which stops it drawing later pinned headers.
-- The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it, keeping its pinned
-  width. The row extends behind the fast scroller so pill and app bar reach measure from one edge.
-- Clicking a header scrolls to its section start.
-
 ## Scrolling performance
 
 - Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use
@@ -205,7 +183,3 @@ the plain indicator (the launch screen covers their first read).
   offering drags to parents first so a fitting sheet still drags down. The vertical form draws its own top fade while
   pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
   `OverscrollPull` instead.
-- `ListTopFade` caches an inverse gradient and draws with `DstOut` in its existing layer, translating rather than
-  rebuilding a shader per card.
-- `FastScroller` consumes a conflated channel once per frame so pointer events can't cancel the frame wait or a scroll;
-  animation values are read while drawing.

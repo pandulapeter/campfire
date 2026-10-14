@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.print_zip_song_descripti
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
-import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent

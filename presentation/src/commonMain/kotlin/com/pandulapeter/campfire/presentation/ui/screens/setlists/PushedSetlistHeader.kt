@@ -20,13 +20,13 @@ import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
 import com.pandulapeter.campfire.presentation.ui.components.rememberToday
 import org.jetbrains.compose.resources.painterResource
 

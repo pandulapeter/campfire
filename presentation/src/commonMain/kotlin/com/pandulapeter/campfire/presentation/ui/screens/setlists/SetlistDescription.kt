@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_VERTICAL_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
+import com.pandulapeter.campfire.presentation.ui.components.list.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTextKeyline
 
 /**

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.Modifier

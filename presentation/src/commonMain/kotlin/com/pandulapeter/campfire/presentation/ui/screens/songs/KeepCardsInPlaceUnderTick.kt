@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
+import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 
 /**
  * Holds the cards of the song list where they are on screen while the Selection section above them changes: a tick
@@ -29,11 +29,11 @@ import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
  * copy that joins the section, and the header and the divider the first tick brings, would simply be there, and the
  * rows of the section above the held card would snap up rather than slide. So the change is narrated by [anchor]
  * instead, as a tag tapped on a row narrates its filter
- * ([com.pandulapeter.campfire.presentation.ui.components.anchoredTransition]): what was on screen slides from where it
+ * ([com.pandulapeter.campfire.presentation.ui.components.list.anchoredTransition]): what was on screen slides from where it
  * was, and what was not fades in. A request for the position the grid is already at resets nothing, and the grid's own
  * item animation is left to it.
  *
- * Called after [com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged], so that its request is
+ * Called after [com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged], so that its request is
  * the one the grid measures with. A change of the search, the sorting or a filter is that one's to answer, and a list
  * being scrolled is left alone, since a request would cancel the scroll.
  */

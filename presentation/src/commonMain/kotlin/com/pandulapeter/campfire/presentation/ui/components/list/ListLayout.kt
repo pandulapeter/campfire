@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.list
 
+import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding

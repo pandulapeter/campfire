@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.list
 
+import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
+import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut

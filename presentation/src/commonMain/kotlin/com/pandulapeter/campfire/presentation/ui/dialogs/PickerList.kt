@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ChecklistLayout
 import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 

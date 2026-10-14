@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.list.SIDE_PANEL_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn

@@ -18,11 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
 
 /**
  * The outgoing header of the song list, drawn over the grid while the next one pushes it up. A composable of its own,

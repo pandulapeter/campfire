@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
-import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
 
 /**
  * The three shapes the navigation chrome takes: the bar under 600dp, the rail above, and the expanded rail - the one
@@ -42,7 +42,7 @@ internal data class NavigationChromeSize(
 
 /**
  * Whether a window this wide has the room for the expanded navigation rail, with the Songs screen's cards
- * [songColumnWidth] wide (its own [com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth], the one
+ * [songColumnWidth] wide (its own [com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth], the one
  * `ListLayout` decides its side panel from). Deciding it from anything but the list screens' own side panel would have
  * the panel come, go and come again as a window is widened past both thresholds.
  *

@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
-import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
+import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

@@ -49,8 +49,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
-import com.pandulapeter.campfire.presentation.ui.components.ListLayout
-import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
+import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
+import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost

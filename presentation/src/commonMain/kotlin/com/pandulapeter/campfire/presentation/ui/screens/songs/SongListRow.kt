@@ -37,14 +37,14 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
-import com.pandulapeter.campfire.presentation.ui.components.ListTopFade
+import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.OverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
+import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSongCardKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget

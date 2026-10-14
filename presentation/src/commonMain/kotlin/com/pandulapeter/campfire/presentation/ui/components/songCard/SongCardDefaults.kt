@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
-import com.pandulapeter.campfire.presentation.ui.components.FastScroller
-import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalWindowInfo

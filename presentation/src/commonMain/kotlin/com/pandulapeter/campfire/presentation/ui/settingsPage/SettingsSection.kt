@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 
 /**
  * One group of settings. Every one on the settings screen has a [title]: each tab is a column of these, so the pages read

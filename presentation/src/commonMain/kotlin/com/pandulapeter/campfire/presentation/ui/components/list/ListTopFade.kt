@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.list
 
+import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.lazy.grid.LazyGridState
