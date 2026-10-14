@@ -12,7 +12,6 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SearchableTopAppBar.kt": 512,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SearchableTopAppBar.kt::SearchableTopAppBar": 177,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SectionHeader.kt::SectionHeader": 139,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SongFilters.kt": 522,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/SongListItem.kt::SongListItem": 129,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CLAUDE.md": 2339,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CampfireBottomSheet.kt": 526,
