@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 /**
  * A round button of the song's own first section, opening a tool the song is played with — the metronome panel, the
  * tuner sheet — next to the values that tool is about. It is the tonal circle the steppers beside it are pills of, and
- * as tall as they are ([songControlHeight]), so that it reads as one more control of the same row rather than as a bar
+ * as tall as they are (`songControlHeight`), so that it reads as one more control of the same row rather than as a bar
  * button that wandered into the song; its icon grows with the song's text as theirs do, its padding does not.
  *
  * As with the steppers, the drawn size is not the touch target: Compose still extends the press to the minimum touch

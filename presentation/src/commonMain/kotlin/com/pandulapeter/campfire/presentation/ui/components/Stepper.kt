@@ -44,18 +44,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.HEADER_VERTICAL_PADDING
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongPlayingControls
 import kotlinx.coroutines.delay
 
 /**
@@ -70,9 +66,9 @@ import kotlinx.coroutines.delay
  * drawn size shrinks.
  *
  * @param fontScale Grows what is written in the pill - the value and the icons - with the text it sits among, for the
- * steppers that are part of a song rather than of a bar or a menu (see [SongPlayingControls]). The padding around them
+ * steppers that are part of a song rather than of a bar or a menu (the song's playing controls). The padding around them
  * does not grow with it, exactly as a section's header pill keeps its own while its title scales.
- * @param height The pill's height, which the caller that scales its content gives as [songControlHeight].
+ * @param height The pill's height, which the caller that scales its content gives as `songControlHeight`.
  * @param valueDescription How a screen reader says [value], where its written form reads badly aloud — `1 / 24`, a bare
  * number of BPM; the value itself when left out.
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
@@ -283,16 +279,6 @@ private const val HOLD_REPEAT_ACCELERATION = 0.85f
  * the rows of the overflow menu, none of which is scaled by anything.
  */
 internal val STEPPER_HEIGHT = 40.dp
-
-/**
- * How tall those same controls are drawn in a song's own first section, where they stand among its sections: exactly a
- * section's header pill, which is built the other way round from a bar's button — the [titleStyle] of its name grows
- * with the song while the padding around it stays as it is (`SectionHeaderPill` in `SectionHeaderPill.kt`). Scaling a whole
- * 40dp pill instead left the four controls towering over the page they are part of at a large text size.
- */
-@Composable
-internal fun songControlHeight(titleStyle: TextStyle) = with(LocalDensity.current) { titleStyle.lineHeight.toDp() } +
-    HEADER_VERTICAL_PADDING * 2
 
 /**
  * How far along the pill one of a stepper's two buttons reaches: its icon, which grows with the song's text, and a

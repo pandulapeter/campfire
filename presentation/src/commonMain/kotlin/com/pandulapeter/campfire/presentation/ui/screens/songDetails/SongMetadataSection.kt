@@ -32,7 +32,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
-import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**

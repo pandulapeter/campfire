@@ -17,10 +17,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 
 /**
  * The raised pill a section is headed by, which folds the section where it has anything to fold ([toggle]). It is laid
@@ -76,3 +76,13 @@ internal val HEADER_HORIZONTAL_PADDING = 12.dp
  * what the controls of the song's own first section are drawn at (see [songControlHeight]).
  */
 internal val HEADER_VERTICAL_PADDING = 6.dp
+
+/**
+ * How tall those same controls are drawn in a song's own first section, where they stand among its sections: exactly a
+ * section's header pill, which is built the other way round from a bar's button — the [titleStyle] of its name grows
+ * with the song while the padding around it stays as it is ([SectionHeaderPill]). Scaling a whole
+ * 40dp pill instead left the four controls towering over the page they are part of at a large text size.
+ */
+@Composable
+internal fun songControlHeight(titleStyle: TextStyle) = with(LocalDensity.current) { titleStyle.lineHeight.toDp() } +
+    HEADER_VERTICAL_PADDING * 2
