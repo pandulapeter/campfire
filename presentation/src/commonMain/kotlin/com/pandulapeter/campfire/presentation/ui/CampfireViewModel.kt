@@ -15,14 +15,11 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
@@ -31,18 +28,12 @@ import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
-import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
-import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -59,8 +50,6 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
@@ -90,7 +79,6 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
-import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
@@ -118,7 +106,6 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
-import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
@@ -130,7 +117,6 @@ import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapsho
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
-import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
@@ -145,8 +131,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.syncConsentAnswerOf
 import com.pandulapeter.campfire.presentation.ui.platform.syncConsentOriginOf
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
-import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
@@ -154,14 +138,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinish
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
-import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
-import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.playing.SongOverrides
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_STEP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLookup
-import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
-import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.AppExitController
@@ -181,31 +159,8 @@ import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
-import com.pandulapeter.campfire.presentation.ui.state.asState
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
-import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
-import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
-import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
-import com.pandulapeter.campfire.presentation.ui.state.emptyPlaceholder
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -218,10 +173,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.Json
 import org.koin.core.annotation.KoinViewModel
 
-@OptIn(FlowPreview::class)
 @KoinViewModel
 class CampfireViewModel(
     private val getScreenData: GetScreenDataUseCase,
@@ -644,8 +597,6 @@ class CampfireViewModel(
     /** See [SongTextStore.songsBeingRenamed]. */
     val songsBeingRenamed: StateFlow<Map<String, Song>> get() = songTextStore.songsBeingRenamed
 
-    private val songWriteMutex get() = songTextStore.songWriteMutex
-
     /** See [SongTextStore.failedSongFileNames]. */
     val failedSongFileNames: StateFlow<Set<String>> get() = songTextStore.failedSongFileNames
 
@@ -911,6 +862,14 @@ class CampfireViewModel(
     val pendingPrintSettings get() = exportController.pendingPrintSettings
 
     /** See [ExportController.isFileTransferActive]. */
+    val isFileTransferActive get() = exportController.isFileTransferActive
+
+    /** See [ExportController.pdfExportProgress]. */
+    val pdfExportProgress get() = exportController.pdfExportProgress
+
+    /** See [ExportController.launchFileTransfer]. */
+    private fun launchFileTransfer(block: suspend () -> Unit) = exportController.launchFileTransfer(block)
+
     // Tuner
 
     private val tunerController: TunerController = TunerController(
@@ -935,14 +894,6 @@ class CampfireViewModel(
 
     /** See [TunerController.tunedNotes]. */
     val tunedNotes get() = tunerController.tunedNotes
-
-    val isFileTransferActive get() = exportController.isFileTransferActive
-
-    /** See [ExportController.pdfExportProgress]. */
-    val pdfExportProgress get() = exportController.pdfExportProgress
-
-    /** See [ExportController.launchFileTransfer]. */
-    private fun launchFileTransfer(block: suspend () -> Unit) = exportController.launchFileTransfer(block)
 
     private val appExitController: AppExitController = AppExitController(
         scope = viewModelScope,
@@ -1419,8 +1370,6 @@ class CampfireViewModel(
 
     private fun songTextOf(target: SongEditTarget) = songMetadataEditing.songTextOf(target)
 
-    private suspend fun editSongText(fileName: String, edit: (String) -> String) = songTextStore.editSongText(fileName, edit)
-
     // The editor
 
     fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) = editorSession.openEditor(fileName, shouldStartInsideFirstSection)
@@ -1454,10 +1403,6 @@ class CampfireViewModel(
 
     fun onAppStarted() = metronomeController.onAppStarted()
 
-    private fun currentEditorDraftToStore() = editorSession.currentEditorDraftToStore()
-
-    private suspend fun storeEditorDraft(draft: SongContent?) = editorSession.storeEditorDraft(draft)
-
     fun saveEditorChangesAndLeave() = editorSession.saveEditorChangesAndLeave()
 
     fun leaveEditorWithoutSaving() = editorSession.leaveEditorWithoutSaving()
@@ -1465,9 +1410,6 @@ class CampfireViewModel(
     fun revertEditorChanges() = editorSession.revertEditorChanges()
 
     fun saveSongContent(fileName: String, text: String) = editorSession.saveSongContent(fileName, text)
-
-    private suspend fun writeSongContent(fileName: String, text: String, expectedText: String? = null) =
-        songTextStore.writeSongContent(fileName, text, expectedText)
 
     fun loadSongContent(fileName: String) = songTextStore.loadSongContent(fileName)
 
@@ -1509,7 +1451,7 @@ class CampfireViewModel(
     /** See [TunerController.toggleTunerTone]. */
     fun toggleTunerTone(note: Int) = tunerController.toggleTunerTone(note)
 
-    fun stopTuner() = tunerController.stopTuner()
+    private fun stopTuner() = tunerController.stopTuner()
 
     fun updateTunerSettings(change: TunerSettings.() -> TunerSettings) = tunerController.updateTunerSettings(change)
 
@@ -1553,8 +1495,6 @@ class CampfireViewModel(
     fun cancelImportPreparation() = importController.cancelImportPreparation()
 
     fun retryImport() = importController.retryImport()
-
-    fun setImportEntryChosen(key: ImportEntryKey, isChosen: Boolean) = importController.setImportEntryChosen(key, isChosen)
 
     fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = importController.setImportEntriesChosen(keys, isChosen)
 
@@ -1736,9 +1676,6 @@ class CampfireViewModel(
 
     // Dialogs
 
-    /** See [DialogHost.setVisibleDialog]. */
-    private fun setVisibleDialog(dialogType: DialogType?) = dialogHost.setVisibleDialog(dialogType)
-
     fun showDialog(dialogType: DialogType) = dialogHost.showDialog(dialogType)
 
     fun dismissDialog() = dialogHost.dismissDialog()
@@ -1814,15 +1751,10 @@ class CampfireViewModel(
 
     // Helpers
 
-    private fun restoreSearch(key: String) = savedStateStore.restoreSearch(key)
-
     private inline fun <reified T> restore(key: String): T? = savedStateStore.restore(key)
 
     /** See [MessageSink.launchLibraryChange]. */
     private fun launchLibraryChange(block: suspend () -> Unit) = messageSink.launchLibraryChange(block)
-
-    /** See the top-level [asState], in [viewModelScope]. */
-    private fun <T> Flow<T>.asState(initialValue: T) = asState(viewModelScope, initialValue)
 
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L

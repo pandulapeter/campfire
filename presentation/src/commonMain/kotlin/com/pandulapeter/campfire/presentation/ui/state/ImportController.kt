@@ -366,9 +366,6 @@ internal class ImportController(
         scope.launch { prepare(request = request, isReviewed = true) }
     }
 
-    /** Ticks or unticks one entry of the review. */
-    fun setImportEntryChosen(key: ImportEntryKey, isChosen: Boolean) = setImportEntriesChosen(listOf(key), isChosen)
-
     /** A group's box, over the rows the screen shows, which is only the matching ones while a search narrows them. */
     fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = updateChoices { choices ->
         choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
