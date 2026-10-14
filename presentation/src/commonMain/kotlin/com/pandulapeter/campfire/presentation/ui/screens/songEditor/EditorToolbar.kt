@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -32,11 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -262,7 +258,7 @@ private fun contentInsertions(tabStaff: (UserPreferences.Instrument?) -> List<St
  * What the song says about itself: every metadata directive the parser reads and the app then shows somewhere, in
  * the order the header of a file tends to list them.
  *
- * None of these goes to the caret: they belong to the header and are put there, see [insertIntoHeader]. The directives
+ * None of these goes to the caret: they belong to the header and are put there, see `insertIntoHeader`. The directives
  * that can only be true once — a song has one title and came out in one year — come first, each offered until the file
  * carries it and then no longer, so the start of the row empties as the header fills in. The tags, the languages and
  * the links of a song, which can be added again and again, are a group of their own after them. The tempo and the time
@@ -298,210 +294,9 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
     ),
 )
 
-/**
- * One thing a toolbar button writes around the selection, or around the caret where there is none.
- *
- * @param isOwnLine True for everything in braces, since ChordPro only reads a directive as one when it is alone on
- *   its line; the two bracketed insertions belong inside a line of lyrics instead.
- * @param metadataName The kind of metadata this describes the song with, for the insertions that go into the header
- *   instead of to the caret, under the name `:chordpro` knows it by. Null for everything that is part of the song.
- * @param emptyPrefix What is written in front of the caret in place of [prefix] where nothing is selected.
- * @param emptySuffix What is written after the caret in place of [suffix] where nothing is selected.
- * @param choices What a button that opens a menu offers, each written as an insertion of its own once it is picked;
- *   empty for a button that writes itself.
- */
-private data class EditorInsertion(
-    val label: String,
-    val prefix: String,
-    val suffix: String,
-    val isOwnLine: Boolean,
-    val metadataName: String? = null,
-    val emptyPrefix: String = prefix,
-    val emptySuffix: String = suffix,
-    val choices: List<EditorInsertion> = emptyList(),
-) {
-
-    companion object {
-
-        /** A button that writes nothing itself and asks which of [choices] to write instead. */
-        fun menu(label: String, choices: List<EditorInsertion>) = EditorInsertion(
-            label = label,
-            prefix = "",
-            suffix = "",
-            isOwnLine = true,
-            choices = choices,
-        )
-
-        /**
-         * A `{start_of_tab}` … `{end_of_tab}` environment around what is selected, or around an empty [staff] with the
-         * caret after the name of its top string where nothing is.
-         *
-         * @param selector The instrument the tab is for, written after its opening directive's name
-         *   (`{start_of_tab-guitar}`), or null for one for every instrument. The closing directive carries none, as
-         *   ChordPro writes it.
-         */
-        fun tab(label: String, selector: String?, staff: List<String>): EditorInsertion {
-            val section = section(label, name = TAB)
-            val prefix = if (selector == null) section.prefix else "{start_of_$TAB-$selector}\n"
-            val firstLine = staff.firstOrNull().orEmpty()
-            val caret = firstLine.indexOf('|') + 1
-            return section.copy(
-                prefix = prefix,
-                emptyPrefix = prefix + firstLine.take(caret),
-                emptySuffix = (listOf(firstLine.drop(caret)) + staff.drop(1)).joinToString("\n") + section.suffix,
-            )
-        }
-
-        /** A `{start_of_x}` … `{end_of_x}` environment around what is selected, which becomes its first lines. */
-        fun section(label: String, name: String) = EditorInsertion(
-            label = label,
-            prefix = "{start_of_$name}\n",
-            suffix = "\n{end_of_$name}",
-            isOwnLine = true,
-        )
-
-        /**
-         * @param hasValue False for the directives that are a word on their own (`{chorus}`), which leave nothing
-         *   to type after them and so have no closing half to put the caret in front of.
-         */
-        fun directive(label: String, name: String, hasValue: Boolean = true) = EditorInsertion(
-            label = label,
-            prefix = if (hasValue) "{$name: " else "{$name}",
-            suffix = if (hasValue) "}" else "",
-            isOwnLine = true,
-        )
-
-        /** A directive that says what the song *is*, and so belongs in its header rather than at the caret. */
-        fun metadata(label: String, name: String) = EditorInsertion(
-            label = label,
-            prefix = "{$name: ",
-            suffix = "}",
-            isOwnLine = true,
-            metadataName = name,
-        )
-
-        /**
-         * A custom metadata item, which is how ChordPro carries what it has no directive of its own for — the
-         * language of a song, its cover and its links being the three Campfire reads, see `ChordProMetaItems.language`,
-         * `ChordProMetaItems.cover` and `ChordProMetaItems.link`. Part of the header like every other [metadata] item, whatever it is spelled as.
-         */
-        fun meta(label: String, key: String) = EditorInsertion(
-            label = label,
-            prefix = "{meta: $key ",
-            suffix = "}",
-            isOwnLine = true,
-            metadataName = key,
-        )
-    }
-}
-
-/**
- * Whether an insertion still has anything to write: a song is only ever in one key and only came out in one year,
- * so the button that says so is offered until the file says it, and then no longer. The ones a song may repeat
- * ([ChordProHeader.repeatableMetadata]) or change further down ([ChordProHeader.changeableMetadata]) and everything
- * that is part of the song rather than about it stay.
- */
-private fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) = metadataName == null ||
-    metadataName in ChordProHeader.repeatableMetadata ||
-    metadataName in ChordProHeader.changeableMetadata ||
-    metadataName !in declaredMetadata
-
 @Composable
 private fun EditorToolbarDivider() = VerticalDivider(modifier = Modifier.height(DIVIDER_HEIGHT).padding(horizontal = TOOLBAR_GAP))
 
-/** Writes [insertion] where it belongs: into the song's header when it describes the song, at the caret otherwise. */
-private fun TextFieldState.insert(insertion: EditorInsertion) {
-    val metadataName = insertion.metadataName
-    if (metadataName == null) insertAtSelection(insertion) else insertIntoHeader(insertion, metadataName)
-}
-
-/**
- * Writes a directive that describes the song into its header, wherever the caret happens to be at the time.
- *
- * ChordPro reads a `{title}` as the title of the song from anywhere in the file, so the one thing the caret cannot
- * decide here is where the directive goes: a title written into the middle of a verse is valid, invisible in the
- * rendered song, and nowhere near the rest of what the file says about itself. `:chordpro` picks the line, keeping
- * the header in the order it lists metadata in and leaving one the user has arranged otherwise alone; the caret
- * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into. A tempo or
- * a time signature the header already names is the one exception, see [ChordProHeader.insertChangeable].
- */
-private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadataName: String) = edit {
-    val header = if (metadataName in ChordProHeader.changeableMetadata) {
-        // The header holds the song's own value and the body its changes, so here the caret does say where it goes.
-        ChordProHeader.insertChangeable(
-            text = originalText.toString(),
-            name = metadataName,
-            caretOffset = minOf(selection.start, selection.end),
-            prefix = insertion.prefix,
-            suffix = insertion.suffix,
-        )
-    } else {
-        ChordProHeader.insert(
-            text = originalText.toString(),
-            name = metadataName,
-            prefix = insertion.prefix,
-            suffix = insertion.suffix,
-        )
-    }
-    replace(header.offset, header.offset + header.replacedLength, header.text)
-    selection = TextRange(header.caretOffset, header.selectionEnd)
-}
-
-/**
- * What the Chord shape button needs besides the text: the notation the field is written in, the tuning the diagrams are
- * drawn in and the player's own standard tuning shapes the line is filled in from, and what says that a line was
- * written for standard tuning where the diagrams are drawn in another one (see [chordShapeInsertion]).
- */
-internal class EditorChordShapes(
-    val notation: ChordNotation,
-    val tuning: ChordTuning,
-    val storedShapes: Map<String, String>,
-    val onWrittenForStandardTuning: () -> Unit,
-)
-
-/** Writes the definition [chordShapeInsertion] decides on as one step of the undo history, and selects what it says. */
-private fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes) {
-    var isForStandardTuning = false
-    edit {
-        val insertion = chordShapeInsertion(
-            text = originalText.toString(),
-            caret = minOf(selection.start, selection.end),
-            notation = chordShapes.notation,
-            tuning = chordShapes.tuning,
-            storedShapes = chordShapes.storedShapes,
-        )
-        if (insertion.text.isNotEmpty()) insert(insertion.offset, insertion.text)
-        selection = TextRange(insertion.selectionStart, insertion.selectionEnd)
-        isForStandardTuning = insertion.text.isNotEmpty() && insertion.isForStandardTuning
-    }
-    if (isForStandardTuning) chordShapes.onWrittenForStandardTuning()
-}
-
-/**
- * Puts the two halves of [insertion] around the selection, or around the caret when there is none.
- *
- * A directive only counts as one when nothing shares its line, so the halves grow a line break of their own where
- * the text on either side would otherwise run into them.
- */
-private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit {
-    val start = minOf(selection.start, selection.end)
-    val end = maxOf(selection.start, selection.end)
-    val selected = originalText.substring(start, end)
-    val prefix = if (selected.isEmpty()) insertion.emptyPrefix else insertion.prefix
-    val suffix = if (selected.isEmpty()) insertion.emptySuffix else insertion.suffix
-    val opening = if (insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n') "\n$prefix" else prefix
-    val closing = if (insertion.isOwnLine && end < originalText.length && originalText[end] != '\n') "$suffix\n" else suffix
-    delete(start, end)
-    insert(start, opening + selected + closing)
-    // With nothing selected the caret lands between the two halves, which is where the next thing typed belongs.
-    selection = if (selected.isEmpty()) {
-        TextRange(start + opening.length)
-    } else {
-        TextRange(start + opening.length, start + opening.length + selected.length)
-    }
-}
-
-private const val TAB = "tab"
 private val TOOLBAR_PADDING = 16.dp
 private val TOOLBAR_GAP = 4.dp
 private val DIVIDER_HEIGHT = 24.dp
