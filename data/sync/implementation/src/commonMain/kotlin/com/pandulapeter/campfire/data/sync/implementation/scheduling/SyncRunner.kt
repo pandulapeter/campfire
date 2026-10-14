@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
 import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -148,7 +149,12 @@ internal class SyncRunner(
                     }
 
                     is SyncEngine.Result.Completed -> {
-                        val syncedPreferences = synchronizePreferences(provider, result)
+                        // From here on a Stop must never write an index older than the one the engine returned, nor,
+                        // once the preferences are written here, one whose preferences base predates them.
+                        latestIndex = { result.index }
+                        val syncedPreferences = synchronizePreferences(provider, result) { base ->
+                            latestIndex = { result.index.copy(syncedPreferences = base) }
+                        }
                         val summary = result.summary.copy(havePreferencesFailed = syncedPreferences == null)
                         // Only a run that moved everything it set out to move is one the two sides were in step after.
                         // One with failures keeps the time of the last run that was, which is also what "Last synced
@@ -158,12 +164,12 @@ internal class SyncRunner(
                         } else {
                             result.index.lastSyncedAt
                         }
-                        indexStore.save(
-                            result.index.copy(
-                                lastSyncedAt = syncedAt,
-                                syncedPreferences = syncedPreferences ?: result.index.syncedPreferences,
-                            ),
+                        val completed = result.index.copy(
+                            lastSyncedAt = syncedAt,
+                            syncedPreferences = syncedPreferences ?: result.index.syncedPreferences,
                         )
+                        latestIndex = { completed }
+                        indexStore.save(completed)
                         // Reads only what the run changed, which for most runs is nothing.
                         libraryRefresher.refreshAfterRun()
                         stateHolder.updateConnected {
@@ -220,11 +226,16 @@ internal class SyncRunner(
      * problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
      * next run tries again.
      */
-    private suspend fun synchronizePreferences(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {
+    private suspend fun synchronizePreferences(
+        provider: SyncProvider,
+        result: SyncEngine.Result.Completed,
+        onLocalSettled: (JsonObject?) -> Unit,
+    ) = try {
         syncedPreferencesSync.synchronize(
             provider = provider,
             base = result.index.syncedPreferences,
             keptFileNames = result.summary.failed,
+            onLocalSettled = onLocalSettled,
         )
     } catch (exception: CancellationException) {
         throw exception

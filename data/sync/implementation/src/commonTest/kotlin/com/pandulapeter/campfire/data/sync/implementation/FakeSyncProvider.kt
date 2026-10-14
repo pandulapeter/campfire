@@ -173,7 +173,7 @@ internal class FakeSyncProvider(
     val documents = mutableMapOf<String, Pair<ByteArray, String>>()
 
     /** Runs before a document upload answers, which is where a test writes the document "elsewhere" under it. */
-    var onUploadDocument: (String) -> Unit = {}
+    var onUploadDocument: suspend (String) -> Unit = {}
 
     override suspend fun downloadDocument(name: String) = documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
 

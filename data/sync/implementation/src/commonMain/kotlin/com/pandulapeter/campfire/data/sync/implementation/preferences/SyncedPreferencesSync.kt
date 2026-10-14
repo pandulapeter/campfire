@@ -85,8 +85,17 @@ internal class SyncedPreferencesSync(
      * @param base The document the last run left behind, or null where no run has synced it with this account yet.
      * @param keptFileNames The files this run could not move, whose songs keep their preferences although they are not
      *   in the library on this device.
+     * @param onLocalSettled Told the base a run stopped from here on has to remember, once the preferences hold what the
+     *   folder's document says: that document, not the merged one, since a value only this device changed is not in the
+     *   folder until the upload lands, and against a merged base the next run would read the folder's older value as a
+     *   change made elsewhere and revert the user's edit everywhere.
      */
-    suspend fun synchronize(provider: SyncFolder, base: JsonObject?, keptFileNames: Collection<String>): JsonObject? {
+    suspend fun synchronize(
+        provider: SyncFolder,
+        base: JsonObject?,
+        keptFileNames: Collection<String>,
+        onLocalSettled: (JsonObject?) -> Unit,
+    ): JsonObject? {
         if (userPreferencesRepository.loadUserPreferencesIfNeeded() == null) return null
         // Folded name to this device's spelling, which is the one its screens read the preferences under. Two names of
         // one song only exist on a file system that tells case apart, and the service refuses one of them anyway; the
@@ -159,6 +168,7 @@ internal class SyncedPreferencesSync(
                     }
                 }
             }
+            onLocalSettled(effectiveRemote)
             if (merged == remoteDocument) return merged
             val result = provider.uploadDocument(
                 name = SyncedPreferencesDocument.FILE_NAME,

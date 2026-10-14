@@ -41,6 +41,7 @@ internal class Device(
             provider = cloud,
             base = completed.index.syncedPreferences,
             keptFileNames = completed.summary.failed,
+            onLocalSettled = {},
         )
         index = completed.index.copy(syncedPreferences = syncedPreferences ?: completed.index.syncedPreferences)
     }
