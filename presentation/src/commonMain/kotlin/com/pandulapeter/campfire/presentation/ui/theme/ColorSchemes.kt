@@ -13,7 +13,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * The two halves of one color scheme. They travel together because the light and the dark theme are not a choice

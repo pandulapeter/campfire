@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals

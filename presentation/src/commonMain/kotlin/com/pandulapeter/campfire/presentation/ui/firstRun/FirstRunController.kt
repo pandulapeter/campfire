@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.firstRun
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase

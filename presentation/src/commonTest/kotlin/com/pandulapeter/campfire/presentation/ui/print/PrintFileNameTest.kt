@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

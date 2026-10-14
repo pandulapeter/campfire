@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.tuner
 
 import androidx.compose.runtime.snapshotFlow
-import com.pandulapeter.campfire.data.model.domain.TunerSettings
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.TunerSettings
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning

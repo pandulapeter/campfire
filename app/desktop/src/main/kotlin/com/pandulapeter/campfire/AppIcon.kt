@@ -12,7 +12,7 @@ package com.pandulapeter.campfire
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.painter.Painter
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor

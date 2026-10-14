@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * The Features switches that take a screen out of the app, see [CampfireDestination.isEnabled].

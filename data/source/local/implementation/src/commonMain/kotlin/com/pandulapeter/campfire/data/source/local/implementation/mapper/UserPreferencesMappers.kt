@@ -9,14 +9,14 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
-import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
-import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.data.model.domain.TunerSettings
+import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
 internal fun UserPreferencesDocument.toModel() = UserPreferences(

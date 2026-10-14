@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.preferences
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english

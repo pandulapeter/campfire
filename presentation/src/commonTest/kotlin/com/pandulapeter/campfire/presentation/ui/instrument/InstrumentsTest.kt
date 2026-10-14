@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.instrument
 
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.data.model.domain.UserPreferences.Instrument
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrument
 import com.pandulapeter.campfire.presentation.ui.chords.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning

@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.labels
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.song.Tag
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.library.isCombiningMark
 import com.pandulapeter.campfire.data.model.library.withoutAccent
 

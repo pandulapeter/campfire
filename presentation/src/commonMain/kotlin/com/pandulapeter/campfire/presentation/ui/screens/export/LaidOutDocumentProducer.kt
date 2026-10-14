@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
-import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource

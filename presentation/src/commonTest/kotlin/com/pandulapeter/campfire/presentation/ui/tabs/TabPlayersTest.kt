@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.tabs
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.TabNotice
-import com.pandulapeter.campfire.data.model.domain.UserPreferences.Instrument
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrument
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals

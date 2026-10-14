@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.screenshots
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * A Screenshot Bro row that shows several of the listing's shots at once, each on another device, in the order its

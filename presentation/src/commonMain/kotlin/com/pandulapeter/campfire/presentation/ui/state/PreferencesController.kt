@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase

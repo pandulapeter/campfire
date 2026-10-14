@@ -8,7 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

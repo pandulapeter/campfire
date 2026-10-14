@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.songFilters
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.song.Tag
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** Everything [SongFilters] shows: what the library can be filtered by, what is selected, and how. */
 @Immutable

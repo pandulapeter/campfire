@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * The part of [UserPreferences] every device connected to one cloud folder shares: how each song of the library is

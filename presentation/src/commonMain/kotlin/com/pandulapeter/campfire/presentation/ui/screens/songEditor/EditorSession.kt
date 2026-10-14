@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pandulapeter.campfire.data.model.song.SongContent
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase

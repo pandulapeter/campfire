@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 interface UserPreferencesLocalSource {
 

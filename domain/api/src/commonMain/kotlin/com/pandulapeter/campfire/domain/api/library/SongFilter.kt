@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.api.library
 
 import com.pandulapeter.campfire.data.model.song.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * What the song list is narrowed to right now, as opposed to how it is read: the tags and the languages picked in the

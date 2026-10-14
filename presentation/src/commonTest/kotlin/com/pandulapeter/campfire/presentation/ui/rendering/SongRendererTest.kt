@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.model.domain.UserPreferences.Notation
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Notation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

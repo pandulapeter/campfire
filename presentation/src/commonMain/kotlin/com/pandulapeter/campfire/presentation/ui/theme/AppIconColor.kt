@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.theme
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * The theme color the app icon is to be in: the one the user chose, unless they asked to keep the app's own icon

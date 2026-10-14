@@ -12,9 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
-import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase

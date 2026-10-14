@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.math.PI
 import kotlin.math.cbrt
 import kotlin.math.cos

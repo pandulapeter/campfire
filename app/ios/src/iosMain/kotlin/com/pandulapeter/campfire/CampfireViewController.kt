@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.ui.window.ComposeUIViewController
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase

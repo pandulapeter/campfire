@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument

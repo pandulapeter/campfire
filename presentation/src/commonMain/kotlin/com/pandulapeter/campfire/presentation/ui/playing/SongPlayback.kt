@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.playing
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** Every override of how a song is played, as one value the screens that read all three collect once. */
 @Immutable

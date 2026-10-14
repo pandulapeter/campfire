@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
-import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer

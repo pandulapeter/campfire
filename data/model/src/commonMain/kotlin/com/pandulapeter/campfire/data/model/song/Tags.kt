@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.model.song
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 
 /**

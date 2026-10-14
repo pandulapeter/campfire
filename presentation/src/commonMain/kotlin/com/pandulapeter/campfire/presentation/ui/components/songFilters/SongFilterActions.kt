@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
 import androidx.compose.runtime.Stable
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** What the controls of [SongFilters] change, remembered once where the filters are shown. */
 @Stable

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.preferences
 
 /**
  * The tuner's own preferences; the instrument it listens for is [UserPreferences.instrument], shared with the chord

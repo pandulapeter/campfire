@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import kotlin.test.Test

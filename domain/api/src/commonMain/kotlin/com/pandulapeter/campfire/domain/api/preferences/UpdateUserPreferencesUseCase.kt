@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.preferences
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 interface UpdateUserPreferencesUseCase {
 

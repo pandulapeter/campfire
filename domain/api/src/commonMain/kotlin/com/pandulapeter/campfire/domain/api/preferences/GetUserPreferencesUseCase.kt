@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.domain.api.preferences
 
 import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.coroutines.flow.Flow
 
 interface GetUserPreferencesUseCase {

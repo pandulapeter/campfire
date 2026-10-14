@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.normalizedTags
 import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase

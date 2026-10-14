@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** Preferences with every feature on and nothing set, for the tests of this package to copy what they are about into. */
 internal fun testPreferences() = UserPreferences(

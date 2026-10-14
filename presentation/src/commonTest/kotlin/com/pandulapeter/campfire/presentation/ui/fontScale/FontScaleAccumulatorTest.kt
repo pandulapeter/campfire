@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.fontScale
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.localization
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.intl.Locale
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * Keeps the language of the generated string tables in sync with the user preference. The tables are switched at

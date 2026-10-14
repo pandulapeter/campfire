@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.datetime.LocalDate
 
 /** A song as the scan lists it, titled after its file name unless the test cares about the title. */

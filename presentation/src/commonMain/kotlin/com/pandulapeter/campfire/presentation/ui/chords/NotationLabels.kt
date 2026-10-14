@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chords
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_notation_german
 import com.pandulapeter.campfire.presentation.resources.settings_notation_german_description

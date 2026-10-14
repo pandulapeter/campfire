@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel

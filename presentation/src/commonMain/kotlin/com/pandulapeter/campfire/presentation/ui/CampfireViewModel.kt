@@ -23,9 +23,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
-import com.pandulapeter.campfire.data.model.domain.TunerSettings
-import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.TunerSettings
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.domain.api.sync.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase

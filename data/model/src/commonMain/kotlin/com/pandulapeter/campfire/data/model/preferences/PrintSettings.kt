@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.preferences
 
 /**
  * The export screen's choices, local preferences independent of how a song is read on screen: the [format] the file is

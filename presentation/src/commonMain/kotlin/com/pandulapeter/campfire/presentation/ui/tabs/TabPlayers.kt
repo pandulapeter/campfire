@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabs
 import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.chordpro.model.TabTuning
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.instrument.isTwelveString
 import com.pandulapeter.campfire.presentation.ui.instrument.tunings
 import com.pandulapeter.campfire.presentation.ui.tuner.noteName

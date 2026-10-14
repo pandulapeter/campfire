@@ -17,7 +17,7 @@ import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp

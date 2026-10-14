@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.metronome
 
 import com.pandulapeter.campfire.chordpro.ChordProTime
-import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern

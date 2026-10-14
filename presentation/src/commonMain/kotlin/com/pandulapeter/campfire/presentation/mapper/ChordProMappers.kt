@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.mapper
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** The preference as `:chordpro` takes it, which depends on nothing and so knows no preferences. */
 internal fun UserPreferences.Notation.toChordNotation() = when (this) {

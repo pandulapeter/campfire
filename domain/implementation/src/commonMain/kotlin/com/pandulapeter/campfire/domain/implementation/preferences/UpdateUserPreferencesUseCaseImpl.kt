@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.preferences
 
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import org.koin.core.annotation.Factory
