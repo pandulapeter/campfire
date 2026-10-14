@@ -400,15 +400,29 @@ internal class Navigator(
      */
     fun openOnboarding(isOpenedFromSettings: Boolean, step: OnboardingStep = OnboardingStep.entries.first()) {
         if (backStack.any { it is CampfireDestination.Onboarding }) return
+        isOnboardingFinishCelebrated = false
         showOnboardingStep(step)
         updateBackStack { add(CampfireDestination.Onboarding(isOpenedFromSettings = isOpenedFromSettings)) }
     }
 
-    /** Moves the onboarding on to its next page, or finishes it on its last one. */
-    fun showNextOnboardingStep() {
+    /**
+     * Moves the onboarding on to its next page, or finishes it on its last one, celebrated there if [isFinishCelebrated]:
+     * not when the button still reads Next because an import waits behind the onboarding, whose screen is what comes next.
+     */
+    fun showNextOnboardingStep(isFinishCelebrated: Boolean) {
         if (backStack.lastOrNull() !is CampfireDestination.Onboarding) return
-        nextOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) } ?: closeOnboarding()
+        val next = nextOnboardingStep(onboardingStep, onboardingSteps())
+        if (next != null) return showOnboardingStep(next)
+        isOnboardingFinishCelebrated = isFinishCelebrated
+        closeOnboarding()
     }
+
+    /**
+     * Whether the onboarding was left by finishing it (Start playing, or Done from Settings) rather than by Skip, Close,
+     * or a back: the transition reads it to zoom the onboarding away instead of sliding it off, and
+     * `OnboardingCelebration` to send its embers up, clearing it once they have burnt out so that nothing replays them.
+     */
+    var isOnboardingFinishCelebrated by mutableStateOf(false)
 
     /** Moves the onboarding to [step] where it is the screen on top, and does nothing otherwise. */
     fun showOnboardingStepIfOpen(step: OnboardingStep) {

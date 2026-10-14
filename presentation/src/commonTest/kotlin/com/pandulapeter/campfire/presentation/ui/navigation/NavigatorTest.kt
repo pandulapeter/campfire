@@ -130,8 +130,8 @@ class NavigatorTest {
         val navigator = navigator(backgroundScope)
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         navigator.openOnboarding(isOpenedFromSettings = true)
-        navigator.showNextOnboardingStep()
-        navigator.showNextOnboardingStep()
+        navigator.showNextOnboardingStep(isFinishCelebrated = true)
+        navigator.showNextOnboardingStep(isFinishCelebrated = true)
         assertEquals(OnboardingStep.SYNC, navigator.onboardingStep)
         navigator.navigateBack()
         assertEquals(OnboardingStep.FEATURES, navigator.onboardingStep)
@@ -145,17 +145,35 @@ class NavigatorTest {
     fun `next on the onboarding's last page finishes it, and it opens again on its first`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.openOnboarding(isOpenedFromSettings = false)
-        repeat(3) { navigator.showNextOnboardingStep() }
+        repeat(3) { navigator.showNextOnboardingStep(isFinishCelebrated = true) }
         assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
         navigator.openOnboarding(isOpenedFromSettings = true)
         assertEquals(OnboardingStep.WELCOME, navigator.onboardingStep)
     }
 
     @Test
+    fun `only finishing the onboarding celebrates, and opening it again forgets the celebration`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.openOnboarding(isOpenedFromSettings = false)
+        navigator.closeOnboarding()
+        assertFalse(navigator.isOnboardingFinishCelebrated)
+        navigator.openOnboarding(isOpenedFromSettings = false)
+        navigator.showNextOnboardingStep(isFinishCelebrated = true)
+        assertFalse(navigator.isOnboardingFinishCelebrated)
+        repeat(2) { navigator.showNextOnboardingStep(isFinishCelebrated = true) }
+        assertTrue(navigator.isOnboardingFinishCelebrated)
+        navigator.openOnboarding(isOpenedFromSettings = true)
+        assertFalse(navigator.isOnboardingFinishCelebrated)
+        repeat(3) { navigator.showNextOnboardingStep(isFinishCelebrated = false) }
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
+        assertFalse(navigator.isOnboardingFinishCelebrated)
+    }
+
+    @Test
     fun `the onboarding is opened once and closed in one step`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.openOnboarding(isOpenedFromSettings = false)
-        navigator.showNextOnboardingStep()
+        navigator.showNextOnboardingStep(isFinishCelebrated = true)
         navigator.openOnboarding(isOpenedFromSettings = false)
         assertEquals(2, navigator.backStack.size)
         assertEquals(OnboardingStep.FEATURES, navigator.onboardingStep)

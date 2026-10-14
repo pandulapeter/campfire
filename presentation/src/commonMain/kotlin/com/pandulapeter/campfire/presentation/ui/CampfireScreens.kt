@@ -23,7 +23,6 @@ import com.pandulapeter.campfire.presentation.ui.chrome.areToolsGrouped
 import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrim
-import com.pandulapeter.campfire.presentation.ui.chrome.instantTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.predictivePopTransition
 import androidx.compose.foundation.layout.Box
@@ -276,8 +275,8 @@ internal fun CampfireScreens(
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
             // the launch screen fades would be the app arriving twice.
-            transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme, navigationScrim) else instantTransition(navigationScrim) },
-            popTransitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme, navigationScrim) else instantTransition(navigationScrim) },
+            transitionSpec = { navigationTransition(viewModel.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
+            popTransitionSpec = { navigationTransition(viewModel.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
             predictivePopTransitionSpec = { predictivePopTransition(navigationScrim) },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {

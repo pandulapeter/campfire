@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingCelebration
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -108,19 +110,25 @@ internal fun CampfireContent(
             )
         },
     ) { windowWidth, windowSize, chromeKind, chromeSize ->
-        CampfireScreens(
-            viewModel = viewModel,
-            urlOpener = urlOpener,
-            windowWidth = windowWidth,
-            windowSize = windowSize,
-            chromeKind = chromeKind,
-            chromeSize = chromeSize,
-            isShortWindow = isShortWindow,
-            songColumnWidth = songColumnWidth,
-            chromeInScreens = chromeInScreens,
-            exportTransition = exportTransition,
-            metronomeBeat = metronomeBeat,
-            onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
-        )
+        Box {
+            CampfireScreens(
+                viewModel = viewModel,
+                urlOpener = urlOpener,
+                windowWidth = windowWidth,
+                windowSize = windowSize,
+                chromeKind = chromeKind,
+                chromeSize = chromeSize,
+                isShortWindow = isShortWindow,
+                songColumnWidth = songColumnWidth,
+                chromeInScreens = chromeInScreens,
+                exportTransition = exportTransition,
+                metronomeBeat = metronomeBeat,
+                onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
+            )
+            OnboardingCelebration(
+                isCelebrating = viewModel.navigator.isOnboardingFinishCelebrated,
+                onFinished = { viewModel.navigator.isOnboardingFinishCelebrated = false },
+            )
+        }
     }
 }

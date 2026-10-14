@@ -22,7 +22,7 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
   the gesture). `predictivePopTransitionSpec` uses linear specs; going back from Setlists/Settings to Songs is a cross
   fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs. pop from scene
   depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an invisible screen
-  swallowing clicks.
+  swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim (`ui/screens/onboarding`).
 - Cards covering the chrome (`ScreenSurface`) take no touches while moving (lifecycle below `RESUMED` in a `RESUMED`
   host): a double tap on the editor's Close otherwise hit the song's Back.
 - **Chrome kind changes hand over rather than switch** (`NavigationChromeTransition`), the room interpolated so screens

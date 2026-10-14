@@ -11,8 +11,6 @@
 ## Short-term (in this version)
 ### Improvements
 - Find a way to allow entering tempo using the keyboard
-- Onboarding: increment horizontal padding of the pages
-- Onboarding: the screen transition when the onboarding is Done should be improved
 - Search: highlight matched substrings
 - Simplify adding chord diagrams in the editor
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library

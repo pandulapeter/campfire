@@ -18,15 +18,14 @@ Campfire again") opens it again.
 `OnboardingStep` order: Welcome (language, plus the one note that everything can be changed in Settings — no later page
 repeats it), Pick a look, What do you play?, What do you need?, How do you write chords?, Your songs, everywhere.
 
-- **Instrument is asked before features**, since which features are worth offering depends on it. Uses the app-wide
-  chips (`InstrumentChipRow`) so the control is learnt once.
-- **Features** cards are the Features switches, in their order. The chord diagrams card exists only while chords are on
-  and the instrument has diagrams. No roles (singer / player) are asked: the page asks about features, not people.
+- **Instrument is asked before features**, which depend on it. Uses the app-wide chips (`InstrumentChipRow`).
+- **Features** cards are the Features switches, in order; chord diagrams only with chords on and an instrument that has
+  them. No roles (singer / player) are asked: the page asks about features, not people.
 - **Notation**: only with chords on. The preview (Amazing Grace) is in E so German turns B into H and a C#m shows the
   accidentals; accidentals aren't asked, but the preview uses Settings' (`onboardingPreviewChordNames`).
 - **Sync**: only where the build can connect Dropbox.
-- Song card details are not asked; their defaults already follow the features picked.
-- Keep pages about equally long, each fitting the desktop's default window: split or use columns rather than scroll.
+- Song card details are not asked; their defaults follow the features.
+- Pages are about equally long, each fitting the desktop's default window (split or use columns).
 
 ## Every answer is written as it is given
 
@@ -40,8 +39,10 @@ kept: drop D stays drop D).
   dot at once); `nextOnboardingStep` / `previousOnboardingStep` count by step order so removed pages still lead on.
 - Every step has a dot, shown or not, so dots shrink out / grow in between neighbours. The pill follows the pager
   position (`pagerSelection`), so swipes and predictive back move it continuously.
-- No summary page. Last page's Next is Start playing (Done from Settings), or still Next while an import waits
-  (`isImportWaiting`), since the import screen is pushed as the onboarding leaves.
+- No summary page. Last page's Next is Start playing (Done from Settings), or Next while an import waits
+  (`isImportWaiting`), whose screen is pushed as the onboarding leaves.
+- **Finishing is celebrated** (Start playing, Done): `Navigator.isOnboardingFinishCelebrated` zooms the
+  onboarding away (`onboardingFinishTransition`) under rising embers (`OnboardingCelebration`); other ways out slide.
 - The way out (Skip on a first run, Close from Settings) is only in the first page's footer, in Back's slot. Back and the
   way out share a slot so the dots and Next never move. Slots are as wide as their widest label on any page; dots are
   shifted toward the narrower slot (`onboardingDotsStart`) so Start playing stays on one line on a 360dp phone.

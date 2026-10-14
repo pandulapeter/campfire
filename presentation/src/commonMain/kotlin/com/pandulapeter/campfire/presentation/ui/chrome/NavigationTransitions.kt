@@ -23,6 +23,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
@@ -49,32 +51,37 @@ import kotlin.math.roundToInt
  * animation ends. The same specs are used on every platform (the desktop default would be no animation at all).
  *
  * The decision is also handed to [scrim], which darkens the screen underneath for as long as a card covers any of it.
+ *
+ * Nothing moves while the launch screen still covers the app ([isAppShown]), and a finished onboarding
+ * ([isOnboardingFinishCelebrated]) is not taken off the deck but zoomed away, see [onboardingFinishTransition].
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigationTransition(
+    isAppShown: Boolean,
+    isOnboardingFinishCelebrated: Boolean,
     motionScheme: MotionScheme,
     scrim: NavigationScrim,
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
+    val isOnboardingFinishing = isOnboardingFinishCelebrated &&
+        initialState.entries.lastOrNull()?.contentKey == ONBOARDING_CONTENT_KEY &&
+        targetState.entries.none { it.contentKey == ONBOARDING_CONTENT_KEY }
     scrim.isPredictiveBack = false
     scrim.motion = when {
-        from != null && to != null -> DeckMotion.None
+        !isAppShown || isOnboardingFinishing || (from != null && to != null) -> DeckMotion.None
         targetState.zIndex < initialState.zIndex -> DeckMotion.Pop
         else -> DeckMotion.Push
     }
-    return when (scrim.motion) {
-        DeckMotion.None -> tabTransition()
-        DeckMotion.Pop, DeckMotion.PredictivePop -> popTransition(motionScheme)
-        DeckMotion.Push -> pushTransition(motionScheme)
+    return when {
+        !isAppShown -> ContentTransform(EnterTransition.None, ExitTransition.None)
+        isOnboardingFinishing -> onboardingFinishTransition(motionScheme)
+        else -> when (scrim.motion) {
+            DeckMotion.None -> tabTransition()
+            DeckMotion.Pop, DeckMotion.PredictivePop -> popTransition(motionScheme)
+            DeckMotion.Push -> pushTransition(motionScheme)
+        }
     }
-}
-
-/** What the back stack changes with while the launch screen still covers the app: nothing moves, nothing is darkened. */
-internal fun instantTransition(scrim: NavigationScrim): ContentTransform {
-    scrim.isPredictiveBack = false
-    scrim.motion = DeckMotion.None
-    return ContentTransform(EnterTransition.None, ExitTransition.None)
 }
 
 /**
@@ -118,6 +125,23 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransi
         targetContentZIndex = targetState.zIndex,
     )
 }
+
+/**
+ * Finishing the onboarding is an arrival rather than a step back, so instead of sliding off towards where it came from,
+ * the onboarding grows past the window as it fades, as if walked through, and the app grows into place under it from a
+ * little smaller on the theme's slow spring, whose overshoot gives it a bounce. Nothing is darkened: neither screen
+ * covers the other for long enough to read as a card. `OnboardingCelebration` sends embers up over both meanwhile.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.onboardingFinishTransition(
+    motionScheme: MotionScheme,
+) = ContentTransform(
+    targetContentEnter = scaleIn(motionScheme.slowSpatialSpec(), initialScale = ONBOARDING_FINISH_APP_SCALE) +
+        fadeIn(motionScheme.slowEffectsSpec()),
+    initialContentExit = scaleOut(motionScheme.slowSpatialSpec(), targetScale = ONBOARDING_FINISH_ONBOARDING_SCALE) +
+        fadeOut(motionScheme.defaultEffectsSpec()),
+    targetContentZIndex = targetState.zIndex,
+)
 
 /** The underlying screen travels a small fraction of the card's full slide, using the same animation progress. */
 internal fun backgroundSlideOffset(fullSlideOffset: Int) = (fullSlideOffset * BACKGROUND_SLIDE_FRACTION).roundToInt()
@@ -201,5 +225,8 @@ private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
 internal const val PREDICTIVE_BACK_DURATION = 350
 private const val BACKGROUND_SLIDE_FRACTION = 0.12f
+private const val ONBOARDING_FINISH_APP_SCALE = 0.9f
+private const val ONBOARDING_FINISH_ONBOARDING_SCALE = 1.15f
+private val ONBOARDING_CONTENT_KEY = CampfireDestination.Onboarding(isOpenedFromSettings = false).contentKey
 
 private const val SLIDE_FRACTION_THRESHOLD = 0.001f
