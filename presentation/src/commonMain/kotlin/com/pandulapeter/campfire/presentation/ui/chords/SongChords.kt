@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
  * A chord of a song as its Chords section lists it.
@@ -121,15 +120,6 @@ internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none 
 internal fun hasSongChords(song: ChordProSong, notation: ChordNotation): Boolean {
     val chords = ChordProNotation.shownNames(song, notation).keys.mapNotNull { ChordProChords.parse(it) }.distinct()
     return chords.isNotEmpty() && chords.size <= MAX_SONG_CHORDS
-}
-
-/** `:chordpro`'s notation for the one the preferences name. */
-internal fun UserPreferences.Notation.toChordNotation() = when (this) {
-    UserPreferences.Notation.STANDARD -> ChordNotation.STANDARD
-    UserPreferences.Notation.GERMAN -> ChordNotation.GERMAN
-    UserPreferences.Notation.LATIN -> ChordNotation.LATIN
-    UserPreferences.Notation.NASHVILLE -> ChordNotation.NASHVILLE
-    UserPreferences.Notation.ROMAN -> ChordNotation.ROMAN
 }
 
 internal const val MAX_SONG_CHORDS = 48

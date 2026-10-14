@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 

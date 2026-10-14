@@ -28,7 +28,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.label
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.PickerChip

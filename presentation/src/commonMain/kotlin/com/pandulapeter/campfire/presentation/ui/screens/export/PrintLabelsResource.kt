@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel

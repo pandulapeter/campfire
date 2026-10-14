@@ -25,7 +25,8 @@ import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 
 /** A [SongRenderer] whose use cases are stood in for by the `:chordpro` objects their implementations delegate to, which this module sees. */
 internal fun testSongRenderer() = SongRenderer(
@@ -34,11 +35,11 @@ internal fun testSongRenderer() = SongRenderer(
     },
     transposeChordPro = object : TransposeChordProUseCase {
         override fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals, tabPlayer: TabPlayer?) =
-            ChordProTransposer.transpose(song, semitones, accidentals.preferFlats, tabPlayer)
+            ChordProTransposer.transpose(song, semitones, accidentals.toPreferFlats(), tabPlayer)
     },
     transposeChordProText = object : TransposeChordProTextUseCase {
         override fun invoke(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
-            ChordProTransposer.transposeText(text, semitones, accidentals.preferFlats)
+            ChordProTransposer.transposeText(text, semitones, accidentals.toPreferFlats())
     },
     convertChordProNotation = object : ConvertChordProNotationUseCase {
         override fun invoke(song: ChordProSong, spelling: UserPreferences.ChordSpelling) =
@@ -61,10 +62,3 @@ internal fun testSongRenderer() = SongRenderer(
         override fun invoke(value: String) = value.lowercase()
     },
 )
-
-private val UserPreferences.Accidentals.preferFlats
-    get() = when (this) {
-        UserPreferences.Accidentals.ORIGINAL -> null
-        UserPreferences.Accidentals.FLATS -> true
-        UserPreferences.Accidentals.SHARPS -> false
-    }

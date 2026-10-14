@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController

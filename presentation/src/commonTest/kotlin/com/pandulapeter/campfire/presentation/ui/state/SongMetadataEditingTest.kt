@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProMetadataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
