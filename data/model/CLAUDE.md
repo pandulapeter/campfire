@@ -11,6 +11,8 @@
 
 Pure Kotlin domain models, no dependencies; the layer-crossing currency (stored documents and bytes never leak past
 their own module). The one platform difference is `normalizedToNfc` (`library/Normalization.kt`, expect/actual).
+`DataState` and `Logger` are at the root, everything else in a feature package; `library` and `preferences` have a
+`CLAUDE.md` of their own.
 `DataState<T>` (`Idle` with its data; `Loading` / `Failure` with the last data, if any) wraps everything out of a
 repository.
 
