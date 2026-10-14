@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongPlayingTools
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.domain.Song

@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongRows
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionsLayout
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionSizesPool
 import androidx.compose.foundation.layout.size
 

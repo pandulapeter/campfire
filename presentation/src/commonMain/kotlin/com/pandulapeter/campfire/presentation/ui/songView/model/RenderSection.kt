@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongChordsSection
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionContent
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation

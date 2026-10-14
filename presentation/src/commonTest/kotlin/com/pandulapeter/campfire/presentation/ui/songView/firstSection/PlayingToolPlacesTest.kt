@@ -7,11 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PlayingToolPlace.AFTER_CHORD_VALUES
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PlayingToolPlace.AFTER_CLICK_VALUES
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PlayingToolPlace.ALONE
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.PlayingToolPlace.AFTER_CHORD_VALUES
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.PlayingToolPlace.AFTER_CLICK_VALUES
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.PlayingToolPlace.ALONE
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

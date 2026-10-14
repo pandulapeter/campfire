@@ -34,7 +34,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/SetlistList.kt::SetlistList": 294,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/CLAUDE.md": 823,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/SettingsScreen.kt::SettingsScreen": 136,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/CLAUDE.md": 2811,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/CLAUDE.md": 2553,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SongChordsSection.kt::ChordRowsBlock": 156,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SongDetailsPage.kt::SongDetailsPage": 215,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SongDetailsScreen.kt::SongDetailsScreen": 230,

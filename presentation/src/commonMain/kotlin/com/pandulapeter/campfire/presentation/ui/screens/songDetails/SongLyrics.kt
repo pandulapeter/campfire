@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
 import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentChipsContent

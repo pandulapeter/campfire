@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.grid
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ColumnCenteringHold
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionsLayout
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.snappedScrollTarget
 import kotlin.math.ceil

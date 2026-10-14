@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.PLAYING_VALUE_SEPARATOR
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingValues
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

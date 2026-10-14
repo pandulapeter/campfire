@@ -73,25 +73,6 @@ Product side in `ui/metronome/CLAUDE.md`.
 - Folds are part of `UnitContent.foldedKeys`, so a fold re-measures only its own section (the grid is still
   re-searched). An unfolding run animates only opacity: a height still animating would be measured halfway.
 
-### The first section (`SongMetadataSection.kt`)
-
-- Flows through the same rows and columns, never cut. Controls are `SongPlayingControls` (`SongPlayingControlsRow.kt`)
-  in `BalancedRows`: one line, two and two, or one per line, never three over one; a moved control springs on the
-  sections' spring via its `layoutId`.
-- **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
-  is exactly `songControlHeight` (the pill's `titleStyle` plus `HEADER_VERTICAL_PADDING`). Scaling a pill whole towered
-  over the page. `UserPreferences.MIN_FONT_SCALE` is what keeps them big enough to hit.
-- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the capo (or the transposition), the metronome
-  after the time signature; a button whose group is absent goes after the other (`playingToolPlaces`, tested). With
-  chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
-- Whether the section holds either button is part of `RenderSection.Metadata`, since measured sizes are keyed by it.
-- Read only line (performance mode, archived setlist): always names capo, tempo, and time, since an absent value would
-  read as unknown (`readsDefaults`: "Capo 0", 120, 4/4); the editor's preview names a capo only where the text writes
-  one. It reads values as the click and the steppers do (tempo clamped to the click's range, `C` as 4/4, capo within
-  the neck); split around the tools.
-- In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under one
-  key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
-
 ### Layout (`SongSectionsLayout`; the search and placement rules are in `ui/songView/grid/CLAUDE.md`)
 
 - **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just

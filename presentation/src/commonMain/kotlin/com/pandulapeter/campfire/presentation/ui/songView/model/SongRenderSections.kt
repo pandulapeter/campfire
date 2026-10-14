@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.foundation.layout.size
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
