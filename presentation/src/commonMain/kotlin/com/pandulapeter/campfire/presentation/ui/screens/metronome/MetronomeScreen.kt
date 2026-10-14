@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
@@ -41,6 +40,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_vibrate
 import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
@@ -59,7 +59,6 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
-import kotlinx.coroutines.flow.collectLatest
 
 /**
  * The whole instrument: the song details screen's own metronome panel ([MetronomePanel]) pinned at the top - the bar as
@@ -84,14 +83,12 @@ internal fun MetronomeScreen(
     val isPlaying = playback is MetronomePlayback.Playing
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
-    LaunchedEffect(viewModel, scrollState) {
-        // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest {
-            if (it.destination == CampfireDestination.Metronome) {
-                if (scrollState.canScrollBackward) scrollState.animateScrollTo(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
-            }
-        }
-    }
+    ScrollToTopOnRequest(
+        requests = viewModel.scrollToTopRequests,
+        destination = CampfireDestination.Metronome,
+        scrollState = scrollState,
+        onSelectDestination = viewModel::selectTopLevelDestination,
+    )
     Column(
         // A metronome is practised with both hands on the instrument, and a screen that dims and locks takes the beat row
         // with it.

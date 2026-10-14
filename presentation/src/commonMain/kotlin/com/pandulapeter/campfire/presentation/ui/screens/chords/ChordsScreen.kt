@@ -57,6 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -127,14 +128,12 @@ internal fun ChordsScreen(
         }
     }
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
-    LaunchedEffect(viewModel, gridState) {
-        // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest {
-            if (it.destination == CampfireDestination.Chords) {
-                if (gridState.canScrollBackward) gridState.animateScrollToItem(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
-            }
-        }
-    }
+    ScrollToTopOnRequest(
+        requests = viewModel.scrollToTopRequests,
+        destination = CampfireDestination.Chords,
+        gridState = gridState,
+        onSelectDestination = viewModel::selectTopLevelDestination,
+    )
     var isSearchFocused by remember { mutableStateOf(false) }
     var searchFieldTop by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current

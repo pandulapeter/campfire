@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
@@ -61,7 +61,6 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
-import kotlinx.coroutines.flow.collectLatest
 
 /**
  * The Tuner tab: what is heard ([TunerDisplay]) pinned at the top, as wide as a page of two sections like the Metronome
@@ -119,14 +118,12 @@ internal fun TunerScreen(
     val isWide = layout.sectionColumns >= 2
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
-    LaunchedEffect(viewModel, scrollState) {
-        // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest {
-            if (it.destination == CampfireDestination.Tuner) {
-                if (scrollState.canScrollBackward) scrollState.animateScrollTo(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
-            }
-        }
-    }
+    ScrollToTopOnRequest(
+        requests = viewModel.scrollToTopRequests,
+        destination = CampfireDestination.Tuner,
+        scrollState = scrollState,
+        onSelectDestination = viewModel::selectTopLevelDestination,
+    )
     Column(
         // A tuner is used with both hands on the instrument, and a screen that dims and locks stops the listening.
         modifier = modifier.fillMaxSize().then(if (isHearing) Modifier.keepScreenOn() else Modifier),
