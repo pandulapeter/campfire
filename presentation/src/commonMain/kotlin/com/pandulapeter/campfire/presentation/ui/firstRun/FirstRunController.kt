@@ -87,9 +87,9 @@ internal class FirstRunController(
 
     /**
      * Completed once the first run has planted the demo library or found no reason to, which the consumer of
-     * [importQueue] waits for before it takes its first batch: a file opened with the app as it starts for the first
-     * time is queued long before that decision, and it belongs in a library that already has the demo in it rather
-     * than the other way round - where the file has a demo song's name, the question about it is then asked of the
+     * `ImportController`'s queue waits for before it takes its first batch: a file opened with the app as it starts for
+     * the first time is queued long before that decision, and it belongs in a library that already has the demo in it
+     * rather than the other way round - where the file has a demo song's name, the question about it is then asked of the
      * file the user opened, and not of songs they never asked for.
      */
     val demoLibraryDecision = CompletableDeferred<Unit>()
@@ -113,8 +113,8 @@ internal class FirstRunController(
      * neither is it while the screen the app was asked to open on is still being looked for ([isLaunchNavigationPending]),
      * nor while a draft a previous run left is being reopened ([isEditorDraftRecoveryPending]).
      *
-     * Latched like [arePreferencesLoaded]: a rescan reads the library again and says so, and none of that is a reason
-     * to put the launch screen back up over an app the user is already using.
+     * Latched like `PreferencesController.arePreferencesLoaded`: a rescan reads the library again and says so, and none
+     * of that is a reason to put the launch screen back up over an app the user is already using.
      */
     val hasLibraryToShow = combine(
         screenData,
@@ -155,7 +155,7 @@ internal class FirstRunController(
 
     /**
      * The settings screen's offer to add the demo library, null for as long as there is nothing to offer: while the
-     * library holds all of it, and until the library has been read, like [librarySummary] and for the same reason -
+     * library holds all of it, and until the library has been read, like `LibraryState.librarySummary` and for the same reason -
      * the offer must not appear for a moment over a library that turns out to hold it.
      *
      * Whether it is there is answered by what is on disk rather than by anything the app remembers doing, so deleting
@@ -180,8 +180,8 @@ internal class FirstRunController(
      * answered, and the answer is only taken while the app is still where every start opens: coming back from a
      * consent page opens Settings or the onboarding on its own, and that is the screen the user is waiting for.
      * [resolve] is told whether performance mode is on as the preferences were read rather than as
-     * [isPerformanceModeEnabled] says, since that state may not have caught up with the read yet, and the mode decides
-     * whether an editor may be opened at all.
+     * `PreferencesController.isPerformanceModeEnabled` says, since that state may not have caught up with the read yet,
+     * and the mode decides whether an editor may be opened at all.
      *
      * Called by the shell while it is first composed, which is before the read it waits for can possibly have ended:
      * that read resumes on the main thread, and the composition is holding it.

@@ -352,7 +352,7 @@ private fun CampfireDialog(
         DialogType.WhatsNew -> {
             // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the
             // dialog with the update required screen, which takes it out of the composition and cancels this, and whose
-            // flow ends the process (see CampfireViewModel.showWhatsNewOnVersionChange).
+            // flow ends the process (see FirstRunController.showWhatsNewOnVersionChange).
             LaunchedEffect(Unit) {
                 delay(WHATS_NEW_SEEN_DELAY)
                 viewModel.onWhatsNewShown()

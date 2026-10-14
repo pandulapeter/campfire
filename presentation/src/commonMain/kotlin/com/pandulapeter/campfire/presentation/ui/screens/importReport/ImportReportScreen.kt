@@ -62,7 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
  * and a dialog that asks for one confirmation goes over it.
  *
  * Leaving it before the import is written drops the import, and needs no confirmation since nothing has been written
- * yet; leaving it while the import is written lets that finish on its own, see `CampfireViewModel.onImportReportLeft`.
+ * yet; leaving it while the import is written lets that finish on its own, see `ImportController.onImportReportLeft`.
  */
 @Composable
 internal fun ImportReportScreen(

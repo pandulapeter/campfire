@@ -593,7 +593,7 @@ internal class ImportController(
 
     /**
      * Takes the batches of [importQueue] one at a time, once [demoLibraryDecision] has completed, see
-     * `CampfireViewModel.demoLibraryDecision`.
+     * `FirstRunController.demoLibraryDecision`.
      */
     fun startQueue(demoLibraryDecision: Deferred<Unit>) = scope.launch {
         demoLibraryDecision.await()

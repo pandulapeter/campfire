@@ -122,7 +122,7 @@ internal class PreferencesController(
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
      * setlist, since it is how one reader reads the song rather than how the band plays it. It toggles what the
-     * preferences hold when the change runs, which already has the previous tap in it (see `CampfireViewModel.changeTransposition`).
+     * preferences hold when the change runs, which already has the previous tap in it (see `PlayingOverrides.changeTransposition`).
      */
     fun toggleSectionFold(songFileName: String, key: String) = changeUserPreferences {
         val folded = foldedSections[songFileName].orEmpty().let { if (key in it) it - key else it + key }

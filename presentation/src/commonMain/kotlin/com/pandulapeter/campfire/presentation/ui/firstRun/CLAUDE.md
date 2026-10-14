@@ -20,7 +20,7 @@
 - Each file is named exactly as the library would name it, so `isPresentIn` answers from the library's own file names,
   not from anything remembered: Settings offers to add them back while any is missing (adding only what is missing),
   and the empty library state offers it as its last button with no condition of its own.
-- **Planted once**, by `CampfireViewModel.plantDemoLibraryOnFirstRun`, only when `IsFirstRunUseCase` (no preferences
+- **Planted once**, by `FirstRunController.plantDemoLibraryOnFirstRun`, only when `IsFirstRunUseCase` (no preferences
   document) and an empty *whole* library (`ScreenData.isWholeLibrary`, not an unreadable folder) agree. It announces
   nothing. Preferences are written afterwards whether or not anything was planted, so a library emptied later is not
   taken for fresh — unless the preferences read failed, which saves nothing. The launch screen is released before that
