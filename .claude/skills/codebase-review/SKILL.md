@@ -152,9 +152,8 @@ same-named helper scripts and committed into the wrong worktree:
 2. Implement exactly the plan, taking the recommended option. Re-locate moved code by the quoted snippet. If the plan
    is wrong, impossible, or its own "drop this plan if" condition holds, **do not improvise another fix**: revert the
    working tree, leave the plan file, note why, move on.
-3. Add the tests it asks for; update the `CLAUDE.md` files and strings it names. A plan whose faithful execution
-   grows a file past its `size_allowances.json` entry raises that entry by the net lines it adds, in the same commit,
-   and the lane report says so.
+3. Add the tests it asks for; update the `CLAUDE.md` files and strings it names. Growing a file that is
+   already past its size limit is fine; only pushing one past it is refused (code-style).
 4. Verify with the commands in the last section — the tests, and a compile of every platform the change touches.
    A check that needs a device, an account, a store or a network condition is skipped, and named in the lane
    report only if a mistake there would hurt.

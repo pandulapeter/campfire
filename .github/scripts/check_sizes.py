@@ -7,17 +7,23 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Keeps files, functions and CLAUDE.md files from growing past the sizes the code-style skill sets, for tests.yml.
+Keeps a change from pushing a file, a function or a CLAUDE.md past the sizes the code-style skill sets.
 
-Main Kotlin sources (tests are left out) may be at most FILE_LINES lines long, and a top-level function — a Composable
-above all — at most FUNCTION_LINES. A CLAUDE.md may be at most ROOT_WORDS words at the root, MODULE_WORDS in a module,
-`.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
+Main Kotlin sources (tests are left out) should be at most FILE_LINES lines long, and a top-level function — a
+Composable above all — at most FUNCTION_LINES. A CLAUDE.md should be at most ROOT_WORDS words at the root,
+MODULE_WORDS in a module, `.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
 
-What was over a limit when the check came in is listed in size_allowances.json at its size then: it may shrink but
-never grow, and an allowance larger than what it allows fails too, so that what a change gained is not spent again.
-`--update` lowers every allowance to the current size and drops the ones no longer needed; it never raises one.
-`--hook` is the Claude Code edit hook (.claude/settings.json): it reads the hook's JSON from stdin and judges only the
-file the edit wrote, so that a file is split while it is being written rather than when a commit or CI refuses it.
+Only crossing a limit fails: a Kotlin file or function within it before the change and past it after. What was already
+past it may grow or shrink, since splitting it is a refactor of its own that a review sweep plans, so no list of
+exceptions is kept and nothing is to be updated when a file moves or shrinks. A file git sees as renamed is judged
+against its old path, and a function against its old self wherever in the change it was. A CLAUDE.md never fails:
+a word count cannot tell a needed rule from narration.
+
+With no arguments it judges the staged change against HEAD (.githooks/pre-commit); `--base <rev>` judges the working
+tree against that revision (tests.yml, on a pull request). `--hook` is the Claude Code edit hook
+(.claude/settings.json): it reads the hook's JSON from stdin and judges the file the edit wrote against HEAD, so that a
+file is split while it is being written; an edit that grows what is already past its limit, or a CLAUDE.md past its
+budget, gets a note instead.
 """
 
 import fnmatch
@@ -40,7 +46,6 @@ EXEMPT = (
     "*/MaterialColorSchemes.kt",
 )
 
-ALLOWANCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "size_allowances.json")
 
 DECLARATION = re.compile(
     r"^(?:(?:public|internal|private|protected|inline|suspend|operator|infix|override|actual|expect|tailrec|external)\s+)*fun\s"
@@ -156,37 +161,55 @@ def measure(paths, read, is_module):
     return sizes
 
 
-def problems(sizes, allowances):
-    """What fails the check: a size over its limit and its allowance, and an allowance that is stale or too large."""
-    found = []
-    for key, (size, limit, unit) in sorted(sizes.items()):
-        allowed = allowances.get(key)
-        if size > max(limit, allowed or 0):
-            if allowed:
-                found.append(f"{key} is {size} {unit}, over its allowance of {allowed}; split it rather than raise it.")
-            else:
-                found.append(f"{key} is {size} {unit}, over the limit of {limit}; split it (see the code-style skill).")
-    for key, allowed in sorted(allowances.items()):
-        size, limit, unit = sizes.get(key, (None, None, None))
-        if size is None or size <= limit:
-            found.append(f"{key} no longer needs an allowance; run check_sizes.py --update.")
-        elif size < allowed:
-            found.append(f"{key} shrank to {size} {unit}; run check_sizes.py --update to lower its allowance.")
-    return found
+def judged(before, after):
+    """(failures, notes) of a change, from what measure() gives for the files it touched before and after it."""
+    failures = []
+    notes = []
+    for key, (size, limit, unit) in sorted(after.items()):
+        if size <= limit:
+            continue
+        previous = before.get(key)
+        if previous is None and "::" in key:
+            # A function moved to another file in the same change is still the function it was.
+            name = key.split("::", 1)[1]
+            previous = next((value for other, value in before.items() if other.endswith(f"::{name}")), None)
+        if unit == "words":
+            notes.append(f"{key} is {size} words, past the {limit} the code-style skill sets; cut narration, not "
+                         "rules.")
+        elif previous is not None and previous[0] > limit:
+            notes.append(f"{key} is {size} {unit}, past the limit of {limit}; if the change added a responsibility, "
+                         "give it a file or function of its own.")
+        else:
+            failures.append(f"{key} is {size} {unit}, past the limit of {limit}; split it by cohesion (see the "
+                            "code-style skill).")
+    return failures, notes
 
 
-def updated(sizes, allowances):
-    """The allowances lowered to the current sizes, without the ones no longer needed; none is ever raised."""
-    return {
-        key: min(allowed, sizes[key][0])
-        for key, allowed in sorted(allowances.items())
-        if key in sizes and sizes[key][0] > sizes[key][1]
-    }
+def git(*arguments):
+    return subprocess.run(["git", *arguments], check=True, capture_output=True).stdout.decode("utf-8", "replace")
 
 
-def tracked_files():
-    output = subprocess.run(["git", "ls-files", "-z"], check=True, capture_output=True).stdout
-    return [path for path in output.decode("utf-8").split("\0") if path and os.path.isfile(path)]
+def shown(revision, path):
+    """The content of a path at a revision ("" for the index), or "" when it did not exist there."""
+    result = subprocess.run(["git", "show", f"{revision}:{path}"], capture_output=True)
+    return result.stdout.decode("utf-8", "replace") if result.returncode == 0 else ""
+
+
+def changed(base, staged):
+    """{new path: old path or None} of every file added, modified or renamed since a revision."""
+    fields = git("diff", "--name-status", "-M", "-z", *(["--cached"] if staged else []), base).split("\0")
+    paths = {}
+    index = 0
+    while index < len(fields) and fields[index]:
+        status = fields[index]
+        if status[0] in "RC":
+            paths[fields[index + 2]] = fields[index + 1] if status[0] == "R" else None
+            index += 3
+        else:
+            if status[0] in "AM":
+                paths[fields[index + 1]] = fields[index + 1] if status[0] == "M" else None
+            index += 2
+    return paths
 
 
 def read_file(path):
@@ -198,44 +221,54 @@ def is_gradle_module(directory):
     return os.path.isfile(os.path.join(directory, "build.gradle.kts"))
 
 
+def judged_change(paths, base, read_after):
+    """judged() for {new path: old path or None}, the old content read at the base revision."""
+    before = measure(list(paths), lambda path: shown(base, paths[path]) if paths[path] else "", is_gradle_module)
+    return judged(before, measure(list(paths), read_after, is_gradle_module))
+
+
 def checked_edit(hook_input):
-    """For the Claude Code hook: the problems of the one file an edit wrote, judged in the checkout it belongs to."""
-    path = (hook_input.get("tool_input") or {}).get("file_path") or ""
+    """For the Claude Code hook: (failures, notes) of the one file an edit wrote, against HEAD in its own checkout."""
+    tool_input = hook_input.get("tool_input") or {}
+    path = tool_input.get("file_path") or ""
     if not path or not os.path.isfile(path):
-        return []
+        return [], []
     top = subprocess.run(
         ["git", "-C", os.path.dirname(path), "rev-parse", "--show-toplevel"], capture_output=True, text=True,
     ).stdout.strip()
-    allowances_path = os.path.join(top, ".github", "scripts", "size_allowances.json")
-    if not top or not os.path.isfile(allowances_path):
-        return []
+    if not top:
+        return [], []
+    os.chdir(top)
     relative = os.path.relpath(os.path.realpath(path), os.path.realpath(top))
-    with open(allowances_path, encoding="utf-8") as file:
-        allowances = json.load(file)
-    sizes = measure([relative], lambda name: read_file(os.path.join(top, name)),
-                    lambda directory: is_gradle_module(os.path.join(top, directory)))
-    return [problem for problem in problems(sizes, {key: allowances[key] for key in allowances if key in sizes})
-            if "allowance;" not in problem and "shrank" not in problem]
+    # A file the edit left as HEAD has it is not in the diff, and one HEAD lacks reads as empty there.
+    failures, notes = judged_change({relative: changed("HEAD", False).get(relative, relative)}, "HEAD", read_file)
+    # Every edit of a file already past its limit would repeat the note; only one that adds lines earns it.
+    if "old_string" in tool_input or "edits" in tool_input:
+        edits = tool_input.get("edits") or [tool_input]
+        if sum(edit.get("new_string", "").count("\n") - edit.get("old_string", "").count("\n") for edit in edits) <= 0:
+            notes = []
+    return failures, notes
 
 
 def main(arguments):
     if "--hook" in arguments:
-        found = checked_edit(json.load(sys.stdin))
-        for problem in found:
-            print(problem, file=sys.stderr)
-        return 2 if found else 0
-    sizes = measure(tracked_files(), read_file, is_gradle_module)
-    with open(ALLOWANCES, encoding="utf-8") as file:
-        allowances = json.load(file)
-    if "--update" in arguments:
-        with open(ALLOWANCES, "w", encoding="utf-8") as file:
-            json.dump(updated(sizes, allowances), file, indent=2, ensure_ascii=False)
-            file.write("\n")
+        failures, notes = checked_edit(json.load(sys.stdin))
+        if failures:
+            print("\n".join(failures + notes), file=sys.stderr)
+            return 2
+        if notes:
+            print(json.dumps({"hookSpecificOutput": {
+                "hookEventName": "PostToolUse", "additionalContext": "\n".join(notes),
+            }}))
         return 0
-    found = problems(sizes, allowances)
-    for problem in found:
-        print(f"::error::{problem}", file=sys.stderr)
-    return 1 if found else 0
+    if "--base" in arguments:
+        base = arguments[arguments.index("--base") + 1]
+        failures, _ = judged_change(changed(base, False), base, read_file)
+    else:
+        failures, _ = judged_change(changed("HEAD", True), "HEAD", lambda path: shown("", path))
+    for problem in failures:
+        print(f"::error::{problem}" if "--base" in arguments else problem, file=sys.stderr)
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

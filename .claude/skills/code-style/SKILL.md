@@ -100,18 +100,17 @@ wrong or undo it".
   small private helpers used only by it stay with it. Shared non-UI helpers (constants, state classes,
   `Modifier` extensions, `remember…` functions) go into a file named for what they are
   (`SongCardDefaults.kt`, `ListItemMetrics.kt`, `SearchBarMotion.kt`) — never `Utils.kt` / `Helpers.kt`.
-- **Files stay small, and it is checked** by `.github/scripts/check_sizes.py` — after every edit (the Claude Code hook in
-  `.claude/settings.json`), before every commit (`.githooks/pre-commit`) and in CI: a main source file is at most
-  500 lines, a top-level function — a Composable above all — at most 120, a `CLAUDE.md` at most 2,500 words at
-  the root, 1,500 in a module, `.github` or a source set, and 600 in a package. Split by cohesion in the change
-  that would cross a limit, never after: private state classes become `internal` top-level classes in files of
-  their own, a pure algorithm moves next to its users in a file named for it, a Composable's visual groups become
-  named children. What was already over when the check came in is listed in `size_allowances.json` and may only
-  shrink; never add an allowance, and never raise one outside a review plan's execution (codebase-review) — split
-  instead, then run `check_sizes.py --update`.
-  Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph names, the color
-  schemes; `strings.xml` and tests are never measured): a new data file is added there in a commit of its own,
-  never split for the check and never given an allowance.
+- **Files stay small, and a change may not push one past a limit.** A main source file is at most 500 lines, a
+  top-level function — a Composable above all — at most 120, a `CLAUDE.md` at most 2,500 words at the root, 1,500 in
+  a module, `.github` or a source set, and 600 in a package. Split by cohesion in the change that would cross a limit:
+  private state classes become `internal` top-level classes in files of their own, a pure algorithm moves next to its
+  users in a file named for it, a Composable's visual groups become named children. `.github/scripts/check_sizes.py`
+  fails only such a crossing — after every edit (the Claude Code hook in `.claude/settings.json`), before every commit
+  (`.githooks/pre-commit`) and on a pull request. What is already past a limit may change freely; when a change adds
+  a new responsibility to it, give that a file of its own, but splitting the rest is a review sweep's plan, not a side
+  task. A `CLAUDE.md` past its budget only gets a note: cut narration, never a rule. Moves and renames are judged
+  against the old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph
+  names, the color schemes; `strings.xml` and tests are never measured), added there in a commit of its own.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the

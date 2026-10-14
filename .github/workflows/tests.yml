@@ -48,10 +48,15 @@ jobs:
       # Every source file, script, workflow, XML resource and CLAUDE.md carries the MPL-2.0 header.
       - name: Check the license headers
         run: python3 .github/scripts/check_license_headers.py
-      # No file, top-level function or CLAUDE.md grows past the code-style skill's limits; what was over them when the
-      # check came in may only shrink (size_allowances.json).
-      - name: Check the file, function and CLAUDE.md sizes
-        run: python3 .github/scripts/check_sizes.py
+      # A pull request pushes no Kotlin file or top-level function past the code-style skill's limits; what was past
+      # them already may change. The pre-commit hook judges every commit the same way; this is the backstop.
+      - name: Check the file and function sizes
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE"
+          python3 .github/scripts/check_sizes.py --base "$BASE"
       # The unqualified tasks run in every module that has them, so a module that gains tests is covered without a
       # change here. --continue reports the failures of every module rather than only the first, and a ktlint violation
       # (spotlessCheck) together with them. The UI tests drive the whole desktop app offscreen from the screenshot tool's

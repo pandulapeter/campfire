@@ -6,9 +6,12 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
+import os
+import subprocess
+import tempfile
 import unittest
 
-from check_sizes import FUNCTION_LINES, measure, problems, top_level_functions, updated
+from check_sizes import FILE_LINES, FUNCTION_LINES, changed, judged, measure, top_level_functions
 
 COMPOSABLE = """@Composable
 internal fun SongCard(
@@ -73,24 +76,57 @@ class SizesTest(unittest.TestCase):
         self.assertEqual(2, sizes["CLAUDE.md"][0])
 
 
-class ProblemsTest(unittest.TestCase):
+class JudgedTest(unittest.TestCase):
 
-    def test_a_long_function_fails(self):
-        sizes = {"A.kt::f": (FUNCTION_LINES + 1, FUNCTION_LINES, "lines")}
-        self.assertEqual(1, len(problems(sizes, {})))
+    def test_crossing_a_limit_fails(self):
+        before = {"A.kt": (FILE_LINES, FILE_LINES, "lines")}
+        failures, _ = judged(before, {"A.kt": (FILE_LINES + 1, FILE_LINES, "lines")})
+        self.assertEqual(1, len(failures))
 
-    def test_an_allowance_lets_a_size_stay_but_not_grow(self):
-        self.assertEqual([], problems({"A.kt": (600, 500, "lines")}, {"A.kt": 600}))
-        self.assertEqual(1, len(problems({"A.kt": (601, 500, "lines")}, {"A.kt": 600})))
+    def test_a_new_file_past_a_limit_fails(self):
+        failures, _ = judged({}, {"A.kt::f": (FUNCTION_LINES + 1, FUNCTION_LINES, "lines")})
+        self.assertEqual(1, len(failures))
 
-    def test_an_allowance_larger_than_needed_fails(self):
-        self.assertEqual(1, len(problems({"A.kt": (550, 500, "lines")}, {"A.kt": 600})))
-        self.assertEqual(1, len(problems({"A.kt": (400, 500, "lines")}, {"A.kt": 600})))
-        self.assertEqual(1, len(problems({}, {"Gone.kt": 600})))
+    def test_what_was_already_past_a_limit_may_grow_with_a_note(self):
+        failures, notes = judged({"A.kt": (600, 500, "lines")}, {"A.kt": (650, 500, "lines")})
+        self.assertEqual(([], 1), (failures, len(notes)))
 
-    def test_an_update_lowers_allowances_and_never_raises_one(self):
-        sizes = {"A.kt": (550, 500, "lines"), "B.kt": (700, 500, "lines"), "C.kt": (400, 500, "lines")}
-        self.assertEqual({"A.kt": 550, "B.kt": 600}, updated(sizes, {"A.kt": 600, "B.kt": 600, "C.kt": 600}))
+    def test_a_function_moved_to_another_file_keeps_its_past(self):
+        failures, _ = judged({"A.kt::f": (200, 120, "lines")}, {"B.kt::f": (200, 120, "lines")})
+        self.assertEqual([], failures)
+
+    def test_a_claude_md_past_its_budget_only_gets_a_note(self):
+        failures, notes = judged({}, {"CLAUDE.md": (3000, 2500, "words")})
+        self.assertEqual(([], 1), (failures, len(notes)))
+
+
+class ChangedTest(unittest.TestCase):
+
+    def test_a_renamed_file_is_judged_against_its_old_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            def run(*arguments):
+                subprocess.run(["git", "-C", directory, *arguments], check=True, capture_output=True)
+
+            run("init", "-q")
+            with open(os.path.join(directory, "Old.kt"), "w") as file:
+                file.write("x\n" * 600)
+            with open(os.path.join(directory, "Edited.kt"), "w") as file:
+                file.write("y\n")
+            run("add", ".")
+            run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")
+            run("mv", "Old.kt", "New.kt")
+            with open(os.path.join(directory, "Edited.kt"), "a") as file:
+                file.write("z\n")
+            with open(os.path.join(directory, "Added.kt"), "w") as file:
+                file.write("w\n")
+            run("add", ".")
+            working_directory = os.getcwd()
+            os.chdir(directory)
+            try:
+                paths = changed("HEAD", True)
+            finally:
+                os.chdir(working_directory)
+            self.assertEqual({"New.kt": "Old.kt", "Edited.kt": "Edited.kt", "Added.kt": None}, paths)
 
 
 if __name__ == "__main__":
