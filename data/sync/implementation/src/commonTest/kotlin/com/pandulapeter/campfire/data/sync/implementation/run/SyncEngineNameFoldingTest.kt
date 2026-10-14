@@ -7,8 +7,22 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.ACCOUNT_ID
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
+import com.pandulapeter.campfire.data.sync.implementation.ORIGINAL
+import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
+import com.pandulapeter.campfire.data.sync.implementation.SyncKey
+import com.pandulapeter.campfire.data.sync.implementation.THERE
+import com.pandulapeter.campfire.data.sync.implementation.renamedIndexOf
+import com.pandulapeter.campfire.data.sync.implementation.song
+import com.pandulapeter.campfire.data.sync.implementation.syncedIndexOf
+import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash

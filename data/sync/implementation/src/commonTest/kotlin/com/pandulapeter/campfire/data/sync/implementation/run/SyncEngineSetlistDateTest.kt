@@ -7,8 +7,18 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.DayBlindSetlistComparison
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.GIG
+import com.pandulapeter.campfire.data.sync.implementation.GIG_COPY
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.SyncKey
+import com.pandulapeter.campfire.data.sync.implementation.indexOf
+import com.pandulapeter.campfire.data.sync.implementation.song
+import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest

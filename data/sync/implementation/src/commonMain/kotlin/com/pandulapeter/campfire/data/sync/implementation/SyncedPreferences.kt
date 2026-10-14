@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
