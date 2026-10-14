@@ -196,7 +196,7 @@ compiles every platform (iOS on macOS) on every PR, nightly, and before `publish
 ## Build
 
 - **A shipped dependency is credited in the same change**, transitive ones included: an entry in
-  `ui/dialogs/OpenSourceComponents.kt`, its license and NOTICE under `composeResources/files/licenses` of the source
+  `ui/dialogs/about/OpenSourceComponents.kt`, its license and NOTICE under `composeResources/files/licenses` of the source
   sets that ship it, and a row in the README's Third-party software table.
 - Versions in `gradle/libs.versions.toml`. `campfire.versionName` / `campfire.buildNumber` serve every platform (the
   Xcode build phase writes them into `Info.plist`).

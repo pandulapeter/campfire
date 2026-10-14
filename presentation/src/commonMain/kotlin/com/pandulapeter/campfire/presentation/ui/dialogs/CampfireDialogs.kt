@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
