@@ -54,7 +54,7 @@ The view model facade, the composition root and navigation chrome, and the produ
   draft alone while the editor is still on the stack, so a configuration change never loses it.
 - **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,
   and passes `expectedText`: a file changed before the view model heard of it is re-read and the edit applied to it.
-- Tags and languages are written into the file (`SetChordProTagUseCase`). Done in the tag sheet writes the whole set in
+- Tags and languages are written into the file (`SetChordProTagUseCase`). Save in the tag sheet writes the whole set in
   one rewrite, removing only tags it offered and left unticked. The tag/language *filter* (`songFilter`) is neither a
   file nor a preference: it lives in the view model and saved state only, gone on next launch. `isSongFilterActive` is
   asked of the chips shown, not the raw selection (which may hold a tag the library lost).
@@ -153,7 +153,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 
 - `UserPreferences.tagColors`, keyed by `tagKey` (case and Unicode form share one). Synced, never exported, **never
   pruned** when the last song loses the tag. Picked from the tag sheet's popup (`dialogs/TagColorButton.kt`) and written
-  at once, not on Done. Drawn by `TagIcon` (see `components/CLAUDE.md`).
+  at once, not on Save. Drawn by `TagIcon` (see `components/CLAUDE.md`).
 
 ### The language of a song is carried the same way, and is its own category rather than one more tag
 
