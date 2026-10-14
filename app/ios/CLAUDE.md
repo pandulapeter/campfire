@@ -58,7 +58,7 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - `CFBundleLocalizations` (`en`, `hu`) tells UIKit which languages the app speaks (Compose resources are invisible to
   iOS); without it system UI stays English and Settings offers no per-app language. Keep in step with `:presentation`'s
   `values-*`. Each language also needs `<lang>.lproj/InfoPlist.strings` (the microphone prompt; Hungarian is
-  `iosApp/hu.lproj/InfoPlist.strings`, a variant group).
+  `iosApp/iosApp/hu.lproj/InfoPlist.strings`, a variant group).
 - `UIBackgroundModes` `audio` is for the metronome; the session is active only while a click plays (what App Review
   checks). The tuner adds only `NSMicrophoneUsageDescription`, never listening out of sight.
 - `LaunchScreen.storyboard` is just the catalog's `LaunchBackground` color, matching the first frame.
