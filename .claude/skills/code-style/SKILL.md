@@ -100,7 +100,8 @@ wrong or undo it".
   small private helpers used only by it stay with it. Shared non-UI helpers (constants, state classes,
   `Modifier` extensions, `remember…` functions) go into a file named for what they are
   (`SongCardDefaults.kt`, `ListItemMetrics.kt`, `SearchBarMotion.kt`) — never `Utils.kt` / `Helpers.kt`.
-- **Files stay small, and CI enforces it** (`.github/scripts/check_sizes.py`): a main source file is at most
+- **Files stay small, and it is checked** by `.github/scripts/check_sizes.py` — after every edit (the Claude Code hook in
+  `.claude/settings.json`), before every commit (`.githooks/pre-commit`) and in CI: a main source file is at most
   500 lines, a top-level function — a Composable above all — at most 120, a `CLAUDE.md` at most 2,500 words at
   the root, 1,500 in a module, `.github` or a source set, and 600 in a package. Split by cohesion in the change
   that would cross a limit, never after: private state classes become `internal` top-level classes in files of

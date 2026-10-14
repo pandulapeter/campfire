@@ -43,11 +43,15 @@ jobs:
         uses: ./.github/actions/setup-jdk
       # Before Gradle, whose failure would skip every later step. The parser of a release's description is what
       # publish-all.yml stops a release with, before a build starts.
-      - name: Run the release description parser's tests
+      - name: Run the Python scripts' tests
         run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       # Every source file, script, workflow, XML resource and CLAUDE.md carries the MPL-2.0 header.
       - name: Check the license headers
         run: python3 .github/scripts/check_license_headers.py
+      # No file, top-level function or CLAUDE.md grows past the code-style skill's limits; what was over them when the
+      # check came in may only shrink (size_allowances.json).
+      - name: Check the file, function and CLAUDE.md sizes
+        run: python3 .github/scripts/check_sizes.py
       # The unqualified tasks run in every module that has them, so a module that gains tests is covered without a
       # change here. --continue reports the failures of every module rather than only the first, and a ktlint violation
       # (spotlessCheck) together with them.
