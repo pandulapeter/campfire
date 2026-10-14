@@ -36,3 +36,11 @@ internal fun CampfireDestination.followingSongRename(from: String, to: String): 
 /** Whether this destination shows the song file [fileName]: the editor open on it, or a details screen paging through it. */
 internal fun CampfireDestination?.isShowingSong(fileName: String) =
     this is CampfireDestination.SongEditor && this.fileName == fileName || this is CampfireDestination.SongDetails && fileName in songFileNames
+
+/**
+ * Closes the screens showing the song file [fileName] that has just gone, top first: the editor goes before the details
+ * screen underneath it, so both are checked rather than only the top one.
+ */
+internal fun Navigator.closeScreensShowing(fileName: String) {
+    while (backStack.lastOrNull().isShowingSong(fileName)) popBackStack()
+}

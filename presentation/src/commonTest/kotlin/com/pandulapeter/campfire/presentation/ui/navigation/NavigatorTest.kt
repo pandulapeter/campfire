@@ -278,6 +278,58 @@ class NavigatorTest {
         assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Setlists), saved)
     }
 
+    @Test
+    fun `a renamed song's screens are rewritten in place on the page they were on`() = runTest {
+        val navigator = navigator(backgroundScope)
+        val pager = CampfireDestination.SongDetails(songFileNames = listOf("a.cho", "b.cho"), setlistFileName = null, initialIndex = 0)
+        navigator.updateBackStack { add(pager) }
+        navigator.onSongDetailsPageSettled(pager, "b.cho")
+        var listenerCalls = 0
+        navigator.addOnBackStackChanged { _, _ -> listenerCalls++ }
+        val generation = navigator.navigationGeneration
+        navigator.followSongRename(from = "b.cho", to = "c.cho")
+        val renamed = navigator.backStack.last() as CampfireDestination.SongDetails
+        assertEquals(pager.id, renamed.id)
+        assertEquals(listOf("a.cho", "c.cho"), renamed.songFileNames)
+        assertEquals("c.cho", navigator.currentSongFileName(renamed))
+        assertEquals(0, listenerCalls)
+        assertEquals(generation, navigator.navigationGeneration)
+    }
+
+    @Test
+    fun `a renamed song open in the editor is rewritten too`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.updateBackStack { add(CampfireDestination.SongEditor(fileName = "b.cho")) }
+        navigator.followSongRename(from = "b.cho", to = "c.cho")
+        assertEquals(CampfireDestination.SongEditor(fileName = "c.cho"), navigator.backStack.last())
+    }
+
+    @Test
+    fun `deleting a song closes the editor and the details screen under it, and nothing else`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.updateBackStack {
+            add(CampfireDestination.SongDetails(songFileNames = listOf("x.cho"), setlistFileName = null, initialIndex = 0))
+            add(CampfireDestination.SongEditor(fileName = "x.cho"))
+        }
+        navigator.closeScreensShowing("x.cho")
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
+        val other = CampfireDestination.SongDetails(songFileNames = listOf("y.cho"), setlistFileName = null, initialIndex = 0)
+        navigator.updateBackStack { add(other) }
+        navigator.closeScreensShowing("x.cho")
+        assertEquals(listOf(CampfireDestination.Songs, other), navigator.backStack.toList())
+    }
+
+    @Test
+    fun `a page of a screen that left the stack is forgotten`() = runTest {
+        val navigator = navigator(backgroundScope)
+        val pager = CampfireDestination.SongDetails(songFileNames = listOf("a.cho", "b.cho"), setlistFileName = null, initialIndex = 0)
+        navigator.updateBackStack { add(pager) }
+        navigator.onSongDetailsPageSettled(pager, "b.cho")
+        navigator.popBackStack()
+        navigator.updateBackStack { add(pager) }
+        assertEquals("a.cho", navigator.currentSongFileName(pager))
+    }
+
     private fun song(fileName: String) = Song(
         fileName = fileName, title = fileName, artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
         coverArtUrl = null, hasChords = true, canUpdateFileName = false, lastModified = 0, size = 0,

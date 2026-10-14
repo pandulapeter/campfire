@@ -119,8 +119,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
-import com.pandulapeter.campfire.presentation.ui.navigation.followingSongRename
-import com.pandulapeter.campfire.presentation.ui.navigation.isShowingSong
+import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.SyncConsentAnswer
@@ -381,7 +380,6 @@ class CampfireViewModel(
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
         addOnBackStackChanged { _, stack ->
             stack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
-                songDetailsCurrentSongs.keys.retainAll(ids)
                 songDetailsTargetSongs.keys.retainAll(ids)
                 songDetailsTargetTimings.keys.retainAll(ids)
             }
@@ -443,8 +441,6 @@ class CampfireViewModel(
 
     /** See [Navigator.isSettingsBackToGeneral]. */
     internal val isSettingsBackToGeneral get() = navigator.isSettingsBackToGeneral
-
-    private val songDetailsCurrentSongs get() = navigator.songDetailsCurrentSongs
 
     /** See [Navigator.currentSearch]. */
     internal val currentSearch: SearchState? get() = navigator.currentSearch
@@ -1046,8 +1042,6 @@ class CampfireViewModel(
         update: SnapshotStateList<CampfireDestination>.() -> Unit,
     ) = navigator.updateBackStack(isPredictiveBackCompleted, update)
 
-    private fun persistBackStack() = navigator.persistBackStack()
-
     internal fun onSongDetailsPageSettled(destination: CampfireDestination.SongDetails, songFileName: String) =
         navigator.onSongDetailsPageSettled(destination, songFileName)
 
@@ -1231,14 +1225,9 @@ class CampfireViewModel(
             // the old name and the entry is taken out again.
             if ((metronomeContext as? MetronomeContext.Song)?.songFileName == song.fileName) metronomeRenames[song.fileName] = fileName
             songTextStore.updateSongTexts { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
-            backStack.forEachIndexed { index, destination ->
-                val renamed = destination.followingSongRename(from = song.fileName, to = fileName)
-                if (renamed !== destination) backStack[index] = renamed
-            }
-            songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
+            navigator.followSongRename(from = song.fileName, to = fileName)
             songDetailsTargetSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsTargetSongs[it.key] = fileName }
             followReportedFileNames { if (it == song.fileName) fileName else it }
-            persistBackStack()
             // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
             if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
         } finally {
@@ -1252,11 +1241,8 @@ class CampfireViewModel(
         val haveReferencesBeenRemoved = deleteSong.invoke(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
         editorSession.clearEditorDraft()
-        // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
-        // goes before the details screen underneath it, so both have to be checked rather than only the top one.
-        while (backStack.lastOrNull().isShowingSong(fileName)) {
-            popBackStack()
-        }
+        // A screen showing the file that has just gone is closed first, or it would sit there on nothing.
+        navigator.closeScreensShowing(fileName)
         songTextStore.updateSongTexts { it - fileName }
         followReportedFileNames { it.takeUnless { it == fileName } }
         // Said once the screens have let go of the file, which is gone whatever else could not be rewritten.

@@ -147,7 +147,7 @@ internal class Navigator(
      * pager is the screen's own, and its page is the one thing about where the user is that the destination does not
      * say. Reported by the screen, see [onSongDetailsPageSettled], and read by [navigationState].
      */
-    val songDetailsCurrentSongs = mutableStateMapOf<String, String>()
+    private val songDetailsCurrentSongs = mutableStateMapOf<String, String>()
 
     /**
      * The search a back gesture is about, which is the one belonging to the screen that is on top. Only the two list
@@ -203,6 +203,7 @@ internal class Navigator(
         if (isNavigationTransitionRunning && !isPredictiveBackCompleted) navigationGeneration++
         val previousTop = backStack.lastOrNull()
         backStack.update()
+        backStack.songDetailsIds().let { ids -> songDetailsCurrentSongs.keys.retainAll(ids) }
         backStack.lastTool()?.let { lastTool = it }
         backStackListeners.forEach { it(previousTop, backStack) }
         persistBackStack()
@@ -243,6 +244,20 @@ internal class Navigator(
         if (backStack.any { it is CampfireDestination.SongDetails && it.id == destination.id }) {
             songDetailsCurrentSongs[destination.id] = songFileName
         }
+    }
+
+    /**
+     * Rewrites every screen open on the song file [from] to name [to] instead, in place: an entry is rewritten rather
+     * than popped (see `followingSongRename`), and its pager stays on the song, so this goes past [updateBackStack] -
+     * nothing has been navigated, and no listener may take it for a navigation. Saved at once, like any other change.
+     */
+    fun followSongRename(from: String, to: String) {
+        backStack.forEachIndexed { index, destination ->
+            val renamed = destination.followingSongRename(from = from, to = to)
+            if (renamed !== destination) backStack[index] = renamed
+        }
+        songDetailsCurrentSongs.entries.filter { it.value == from }.forEach { songDetailsCurrentSongs[it.key] = to }
+        persistBackStack()
     }
 
     /** The file name of the song the given details screen is showing, which is where it was opened until it is paged. */
@@ -448,6 +463,8 @@ internal class Navigator(
             updateBackStack(isPredictiveBackCompleted = isPredictiveBackCompleted) { removeAt(lastIndex) }
         }
     }
+
+    private fun List<CampfireDestination>.songDetailsIds() = mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }
 
     private fun List<CampfireDestination>.lastTool() = (lastOrNull() as? CampfireDestination.TopLevel)?.takeIf { it in CampfireDestination.TopLevel.tools }
 
