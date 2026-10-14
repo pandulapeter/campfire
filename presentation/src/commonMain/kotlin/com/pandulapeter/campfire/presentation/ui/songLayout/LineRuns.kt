@@ -7,12 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songLayout
 
-import androidx.compose.foundation.layout.size
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
-import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
-import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
 
 internal fun ChordProLine.foldableKind() = when (this) {
     is ChordProLine.Tab -> FoldableKind.TAB
@@ -22,7 +19,7 @@ internal fun ChordProLine.foldableKind() = when (this) {
 
 /**
  * How many pieces a run of tablature or grid lines is drawn as, which the section may be cut between: a line of a grid
- * each, and for tablature as many as the rows it could wrap into (see [SongTabBlock]), which are only known once the
+ * each, and for tablature as many as the rows it could wrap into (see `SongTabBlock`), which are only known once the
  * width is - a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the longest, which no real width
  * wraps it into more rows than, and never more than [MAX_TAB_SLOTS], the last one holding whatever rows are left. A slot
  * with no row at a width has no height there, and nothing is cut in front of it.

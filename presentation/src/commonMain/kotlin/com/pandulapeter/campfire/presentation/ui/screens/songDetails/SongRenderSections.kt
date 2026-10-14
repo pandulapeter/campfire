@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
-import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
@@ -23,7 +22,9 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
 import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
+import com.pandulapeter.campfire.presentation.ui.songLayout.firstSection
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
+import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 
 /**
@@ -168,48 +169,6 @@ internal fun ChordProSong.toRenderSections(
     return sections
 }
 
-/**
- * Groups the blocks so that a section comes with the comments it opens with, every continuation of it that follows
- * and the comments, breaks and transpositions that cut it there, and the comments it ends with, in their order. Every
- * other block is a group of its own, and so is a comment written between two sections, or a break or a transposition
- * that no continuation follows.
- */
-private fun List<ChordProBlock>.joinCutSections(joinsTimings: Boolean = true): List<List<ChordProBlock>> {
-    fun ChordProBlock.isJoinedCut() = isSectionCut() || (joinsTimings && this is ChordProBlock.Timing)
-    val groups = mutableListOf<List<ChordProBlock>>()
-    var start = 0
-    while (start < size) {
-        var end = start
-        while (end < lastIndex && this[end].isCommentPlaced(CommentPlacement.START_OF_SECTION)) end++
-        if (this[end] !is ChordProBlock.Section) end = start
-        if (this[end] is ChordProBlock.Section) {
-            while (true) {
-                var next = end + 1
-                while (next < size && this[next].isJoinedCut()) next++
-                val continuation = getOrNull(next) as? ChordProBlock.Section
-                if (continuation?.isContinuation != true) break
-                end = next
-            }
-            // A break or a transposition between the section and a comment it ends with is joined over, as it would be
-            // between two of its halves.
-            var next = end + 1
-            while (next < size && (this[next] is ChordProBlock.Break || this[next] is ChordProBlock.Transpose ||
-                    (joinsTimings && this[next] is ChordProBlock.Timing) || this[next].isCommentPlaced(CommentPlacement.IN_SECTION))) {
-                if (this[next] is ChordProBlock.Comment) end = next
-                next++
-            }
-        }
-        groups += subList(start, end + 1)
-        start = end + 1
-    }
-    return groups
-}
-
-/** The section a group of [joinCutSections] is of, or its only block where it is not one. */
-private fun List<ChordProBlock>.firstSection() = firstOrNull { it is ChordProBlock.Section } ?: first()
-
-private fun ChordProBlock.isCommentPlaced(placement: CommentPlacement) = this is ChordProBlock.Comment && this.placement == placement
-
 /** What a comment is drawn as, or null where lyrics-only mode leaves out the tab or grid it is a note about. */
 private fun ChordProBlock.Comment.toRenderSection(shouldShowChords: Boolean) =
     if (isInTabOrGrid && !shouldShowChords) null else RenderSection.Comment(text = text, style = style)
@@ -223,12 +182,6 @@ private fun ChordProBlock.Timing.toRenderSection() = RenderSection.Timing(
     tempo = ChordProTempo.parse(tempo)?.let(MetronomePattern::coerceBpm)?.toString(),
     time = (timeSignatureOf(time) ?: TimeSignature.COMMON_TIME).toString(),
 )
-
-/**
- * Whether the block is one that cuts a section in two without being a section itself (see `ChordProParser`), and is
- * always joined over; a [ChordProBlock.Timing] is one too, joined over only where it is not shown.
- */
-private fun ChordProBlock.isSectionCut() = this is ChordProBlock.Comment || this is ChordProBlock.Break || this is ChordProBlock.Transpose
 
 /**
  * What a section's fold is keyed by: its label as the file writes it, or what kind of section it is where it has

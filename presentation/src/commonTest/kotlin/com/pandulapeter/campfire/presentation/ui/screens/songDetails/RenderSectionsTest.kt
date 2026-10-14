@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals

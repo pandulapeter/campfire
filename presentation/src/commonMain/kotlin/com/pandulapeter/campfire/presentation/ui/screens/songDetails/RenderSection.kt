@@ -19,6 +19,11 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotCount
+import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
+import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
+import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
+import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
+import com.pandulapeter.campfire.presentation.ui.songLayout.wholeFoldableKind
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**

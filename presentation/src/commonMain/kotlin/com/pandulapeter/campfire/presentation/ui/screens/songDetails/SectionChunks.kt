@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
+
 /** What one of the things a section is drawn as, one under the other, is to where the section may be cut. */
 internal enum class SectionItemKind {
 
