@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.contentEdges
+import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll

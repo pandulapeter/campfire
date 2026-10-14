@@ -73,7 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
-import com.pandulapeter.campfire.presentation.ui.contentEdges
+import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker

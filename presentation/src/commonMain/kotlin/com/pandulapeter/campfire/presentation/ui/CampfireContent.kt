@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui
 
+import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
+import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme

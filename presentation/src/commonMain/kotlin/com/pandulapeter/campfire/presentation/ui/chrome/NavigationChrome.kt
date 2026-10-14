@@ -7,8 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui
+package com.pandulapeter.campfire.presentation.ui.chrome
 
+import com.pandulapeter.campfire.presentation.ui.CampfireScreens
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.TextAutoSize
@@ -38,9 +40,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_tools
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.tools
-import com.pandulapeter.campfire.presentation.ui.components.NavigationItemPresence
+import com.pandulapeter.campfire.presentation.ui.chrome.NavigationItemPresence
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.components.collapsingNavigationItem
+import com.pandulapeter.campfire.presentation.ui.chrome.collapsingNavigationItem
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
 

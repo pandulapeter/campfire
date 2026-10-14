@@ -66,13 +66,10 @@ The view model facade, the composition root and navigation chrome, and the produ
   `rememberRetainedScrollState`), since Navigation 3 drops an entry's remembered state and tab selection rebuilds the
   stack.
 
-### `ui/CampfireApp.kt` and the navigation chrome
+### `ui/CampfireApp.kt`
 
-Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `NavigationChrome*.kt`, `NavigationTransitions.kt`.
+Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`; the navigation chrome is `ui/chrome/`.
 
-- Chrome kind (`navigationChromeKind`): bar under 600dp, rail above, expanded `WideNavigationRail` where the window also
-  fits the Songs filter side panel (decided from `minSongColumnWidth`), so the wide rail's own collapsed state is never
-  used.
 - Snackbars are queued in the view model with a running number (two identical messages are the same object, and the
   Android activity is recreated on rotation); a message leaves on `onMessageShown`. A share is not confirmed (the
   platform sheet answers); a saved export is, unless a warning already says so.
@@ -80,40 +77,8 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
   if the last rescan is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where
   the library can change outside the app (`isLibraryEditableOutsideApp`: iOS, desktop). **No pull to refresh or refresh
   button anywhere.** `isLoading` latches off after the first completed read.
-- **Transitions** (all in `NavigationTransitions.kt`, shared by every platform): tabs fade through in place, no slide;
-  cards (`SongDetails`, `SongEditor`) enter and leave to the right regardless of the predictive gesture's edge, the
-  screen beneath moving 12% with a scrim (theme `scrim` at 32%, via `NavigationScrim`, animated per entry so it follows
-  the gesture). `predictivePopTransitionSpec` uses linear specs; going back from Setlists/Settings to Songs is a cross
-  fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs. pop from scene
-  depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an invisible
-  screen swallowing clicks.
-- Cards covering the chrome (`ScreenSurface`) take no touches while moving (lifecycle below `RESUMED` in a `RESUMED`
-  host): a double tap on the editor's Close otherwise hit the song's Back.
-- **Chrome kind changes hand over rather than switch** (`NavigationChromeTransition`), the room interpolated so screens
-  travel with it. Screens *decide* from the settled width (`settledRailWidth`), passed down as `ListLayout` /
-  `PageWidthLayout`, not the raw width, so they recompose only when a breakpoint flips.
-- `NavigationChromeScaffold` is a `SubcomposeLayout` that measures the chrome before composing the screens: reporting
-  its size back as state is one pass late and the first frame would be laid out without chrome.
-- **The chrome moves with the screen under a card**: while a card is dealt (until its pop has settled, two frames on),
-  each top level screen draws its own chrome copy (`TopLevelScreenSurface`'s `chrome`) so it rides the 12% parallax;
-  tabs share the one chrome so its selection animates. The export screen does the same until its `ExportTransition`
-  is back at zero.
-- **No top level screen has a title bar**; the rail reaches the top of the window. `TopLevelScreenSurface` is opaque,
-  inset by the chrome and at least `MIN_TOP_EDGE` below the top.
 - **Nothing is composed until preferences are read** (`arePreferencesLoaded`; read, not read successfully; only ever
   turns on), else the first frame shows the wrong palette and language.
-
-### The Tools item
-
-- A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six screens on, Metronome, Tuner and
-  Chords go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, and on a rail in a
-  short window (`SHORT_WINDOW_HEIGHT`). Five or fewer screens never group.
-- The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool
-  on top, else `Navigator.lastTool`, else the first enabled (`toolsItemDestination`); pressed again it scrolls to top,
-  then goes to the first tool (`ScrollToTopRequest.destinationWhenAtTop`).
-- One `SharedToolsTabRow` is laid over all tool screens (each keeps room via `ToolScreenFrame`) so its indicator slides;
-  while a card or the export screen is over them each draws its own copy, like the chrome copies. **Tabs switch, never
-  page**, so a swipe never brings the tuner (and its microphone) on screen in passing.
 
 ### Performance mode
 
@@ -240,7 +205,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
   - **Cover art** (`isCoverArtEnabled`): cover fetching, drawing, and search.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
   neither named nor reset.
-- A disabled tab leaves the chrome (`topLevelDestinations`, animated by `components/NavigationItemPresence.kt`); a restored
+- A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored
   stack or opened address is cut at the first screen belonging to a disabled feature
   (`NavigationState.withoutDisabledFeatures`), so `/metronome` with the metronome off opens the songs and rewrites the
   address.

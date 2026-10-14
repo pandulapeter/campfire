@@ -30,7 +30,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.slideFractionSpec
+import com.pandulapeter.campfire.presentation.ui.chrome.slideFractionSpec
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
 
