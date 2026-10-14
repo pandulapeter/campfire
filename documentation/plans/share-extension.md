@@ -44,7 +44,7 @@ Android, which already has most of it. Campfire makes no request for any of it: 
   `SEND_MULTIPLE` for `text/plain`, `application/octet-stream`, both zip types, PDF and Word; shared text becomes a
   `.txt` `ImportedFile` named after `EXTRA_SUBJECT` or its first plain line; a stream beats a caption; a text that is
   only links is passed on empty and reported as skipped. The audit is §6.
-- `CampfireViewModel.importFiles(files)` is the one entry for files the system hands over, with
+- `ImportController.importFiles(files)` is the one entry for files the system hands over, with
   `shouldOpenSong = true`, queued behind any running import by `importQueue` and behind the first run's demo planting
   by `demoLibraryDecision`. Performance mode leaves it alone ("not a tap that can happen by accident",
   `presentation/CLAUDE.md`).

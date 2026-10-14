@@ -40,7 +40,7 @@ import. There is no server, no upload and no new request: the page the link open
   floating action button (`SaveButton`) and Share in its app bar on the phones (`PrintTopAppBar`, `canShare`).
 - The bytes a link carries already exist: `ExportSongsUseCase` hands a song out as the `.cho` file it is, and
   `ExportSetlistUseCase` a setlist as a stored Zip of its manifest and the chosen songs.
-- The way in already exists: `CampfireViewModel.importFiles(files)` is what every "Open with", share and drop goes
+- The way in already exists: `ImportController.importFiles(files)` is what every "Open with", share and drop goes
   through, with `shouldOpenSong`, and an archive goes through `ArchiveLocalSource.unpack` with every limit an untrusted
   zip needs.
 - **The two halves of zlib are in two modules that cannot see each other.** `PrintDeflater` (fixed Huffman codes,
