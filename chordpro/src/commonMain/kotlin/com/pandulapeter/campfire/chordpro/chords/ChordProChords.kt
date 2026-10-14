@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.chordpro.chords
 
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine

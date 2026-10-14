@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation

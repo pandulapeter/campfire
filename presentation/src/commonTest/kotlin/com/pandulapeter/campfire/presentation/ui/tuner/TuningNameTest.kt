@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.tuner
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals

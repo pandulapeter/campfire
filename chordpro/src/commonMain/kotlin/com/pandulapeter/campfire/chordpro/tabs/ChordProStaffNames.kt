@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.chordpro.tabs
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer.SEMITONES_IN_OCTAVE
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals

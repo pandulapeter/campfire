@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.mapper
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /** The preference as `:chordpro` takes it, which depends on nothing and so knows no preferences. */

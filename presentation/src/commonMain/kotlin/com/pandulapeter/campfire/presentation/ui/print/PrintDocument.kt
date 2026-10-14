@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry

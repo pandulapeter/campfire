@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import androidx.compose.runtime.Immutable
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.model.ChordTuning

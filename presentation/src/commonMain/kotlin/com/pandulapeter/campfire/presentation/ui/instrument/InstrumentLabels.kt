@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.instrument
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.chordpro.voicings
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSerializer

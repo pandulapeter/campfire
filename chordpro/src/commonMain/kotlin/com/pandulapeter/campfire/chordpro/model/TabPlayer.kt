@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 
 /**
  * The reader a song's tablature is shown to, which [com.pandulapeter.campfire.chordpro.tabs.ChordProTabs] and the

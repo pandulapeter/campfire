@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongSectionContent
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Immutable
-import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
