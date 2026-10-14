@@ -79,5 +79,5 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
   the view; turning the page opens the next one whole.
 - Turning: swipe, buttons, arrows, Page Up / Down, Home, and End. Zoom: pinch, double tap, double-tap-and-drag
   (`doubleTapZoom`, second press consumed so pager and pan don't move), touchpad pinch (`magnifyByTouchpad`). Ctrl / Cmd
-  plus wheel zooms only in the desktop app (`isLaunchScreenWholeStartup`), since in a browser that is the page's zoom.
+  plus wheel zooms only in the desktop app (`isCtrlWheelZoomOwnedByApp`), since in a browser that is the page's zoom.
 - A page is described to screen readers by its number.
