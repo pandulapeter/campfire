@@ -7,7 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songView.grid
+
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongUnits
 
 /**
  * The units of a song as lists of line widths in pixels, measured the way text is: every line a lyric line of

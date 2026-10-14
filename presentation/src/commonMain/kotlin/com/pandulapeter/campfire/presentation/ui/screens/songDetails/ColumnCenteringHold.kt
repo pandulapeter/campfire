@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.grid.ColumnSpreads
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -17,21 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
-
-/**
- * Where a column of a page spread out over it starts ([top], below the top of its page) and how much its section gaps
- * grew by ([extraGap]), see [SectionGrid.arrange].
- */
-internal class ColumnSpread(
-    val top: Int,
-    val extraGap: Int,
-)
-
-/** The [ColumnSpread] of every column of a song, by [columnKey]. */
-internal typealias ColumnSpreads = Map<Long, ColumnSpread>
-
-/** The key a column is found by in [ColumnSpreads]: its row and its place in it. */
-internal fun columnKey(row: Int, column: Int) = row.toLong() shl Int.SIZE_BITS or column.toLong()
 
 /**
  * Keeps every column where it was for a moment after a fold is toggled, rather than centering it in its page again at

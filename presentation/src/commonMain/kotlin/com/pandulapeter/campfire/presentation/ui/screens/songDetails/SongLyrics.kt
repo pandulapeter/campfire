@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements
+import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionSizesPool
+import com.pandulapeter.campfire.presentation.ui.songView.grid.fitScalesFor
+import com.pandulapeter.campfire.presentation.ui.songView.grid.fitsNarrowColumns
+import com.pandulapeter.campfire.presentation.ui.songView.grid.flowLikeAMagazine
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds

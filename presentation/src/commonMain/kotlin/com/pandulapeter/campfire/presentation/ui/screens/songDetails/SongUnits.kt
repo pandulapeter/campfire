@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionSizesPool
 import androidx.compose.foundation.layout.size
 
 /** The key a section is emitted under in [SongLyrics]: its content's hash, and which of the sections equal to it it is. */

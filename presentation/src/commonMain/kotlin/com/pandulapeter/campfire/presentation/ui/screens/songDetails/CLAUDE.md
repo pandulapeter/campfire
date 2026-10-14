@@ -71,8 +71,6 @@ Product side in `ui/metronome/CLAUDE.md`.
   rest of the section is headed by its fold toggle alone and folded under the section's key plus `~n`, so switching the
   Metronome feature does not renumber later folds. With the feature off it is joined over like a `{transpose}`.
 - A timing line with no song line after it is dropped (`withoutEmptyTimings`, after `LayoutBudget`).
-- Each stretch between changes is searched as a song of its own (`SongUnits.timingStarts`, `searchSegment`,
-  `SectionGrid.concatenated`), each starting a page, never half of a side-by-side pair; such a song is always stepped.
 - A change before the first line starts no page (`timingStretchesOf`); `SongRows.timingSections` reports it at section 0.
 - Unpaged layouts (the editor's preview, a songbook) show changes as lines; a songbook with changes is one column
   whatever the width (`widthColumnCountFor`).
@@ -131,59 +129,14 @@ Product side in `ui/metronome/CLAUDE.md`.
   killed it). The model stops after the last section that fits (or inside an oversized first one) and says so; the file
   is untouched and the header is built from all of it.
 
-### Layout (`SongSectionsLayout`, `SongGridSearch`, `SectionPlacement`, `SectionGrid`, `SectionCutting`, `LayoutScore`, `TextFitting`)
+### Layout (`SongSectionsLayout`; the search and placement rules are in `ui/songView/grid/CLAUDE.md`)
 
-- The search and the placement are pure (`SongGridSearch` over `SectionMetrics`, `placeSections`); the layout only
-  measures and places.
-- **Fewest (widest) columns that fit the song in one row**, else the fewest that fit it in several (`searchColumnCount`),
-  from intrinsic heights; a failing candidate jumps to the smallest count that could fit. A single-column window skips
-  the search.
-- Column width 384–560dp scaled by `fontScale` (288dp narrow, below). Each column narrows to its widest
-  content and each row's leftover width is shared evenly before, between, and after its columns, clear of the step
-  buttons where needed.
-- **Several counts fit one row → the most even fill** (`balancedAmong`): width filled against height filled; more columns
-  only by a margin and wrapping no more lines.
-- **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): each column of a single-row page is
-  centered vertically, the room widening section gaps first (by at most a chorded line), the rest 45% above, since exact
-  centering reads low. A multi-row page moves down whole. The room is that the grid was decided for, so it never
-  scrolls.
 - **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just
   tapped would move and a second tap miss. Armed in a `SideEffect` ahead of the frame's measure, released only by the
   delay; `SongSectionsLayout` records spreads and page shifts on unheld lookahead passes, `arrange`'s `heldSpreads` /
   `heldPageShifts` place them. `SongLyrics` passing no hold turns it off.
-- Rows are read across like systems of sheet music, never column by column, which would send the reader back up. **A
-  section taller than the screen gets a row of its own**: a pedal reader cannot go back up to a column beside it.
-- `flowIntoRows`: a dynamic program over row ends and column counts, fewest pages first (a tall row counts its pages,
-  `pagesOf`), then the one reaching furthest (`isBetterRow`), leaving slack on the last page. Columns within a row are
-  balanced by a DP over squared deviation from the ideal height; greedy fill dumps all slack on the last column.
-- A section wider than a column (a tab staff) may take a wider row, up to the full width, where that saves a page or
-  lowers the row; neighbours may stack in that row's single column (`forEachWideRow`), so a short section beside a tab
-  gets no screen of its own.
-- **A song not read whole in one row is set like a magazine** (`flowLikeAMagazine`): columns filled to the screen,
-  sections running on into the next column or row, since every page ending early is an extra page turn. Fewest pages
-  first, then `LayoutScoring` (`ColumnFlow.program`) prices cuts (more inside a section of four lines or fewer, almost
-  nothing after an empty line or before a comment), pieces of one or two lyric lines, and the squared empty space at the
-  end of non-last columns. Diagram rows, tab systems, comments, and the first section are never "stranded lines". Each
-  page is then evened out (`ColumnFlow.evenOut`); the last takes the fewest columns that hold it. Compared against the
-  whole-section layout by `SectionGrid.pageCount`, then `score`; a full tie keeps sections whole.
-- **Narrow columns** (`NARROW_COLUMN_WIDTH`, 288dp): counts where at most a quarter of lyric lines wrap
-  (`fitsNarrowColumns`), taken only for strictly fewer pages (`withNarrowColumns`).
-- **Text fitting** (`TextFitting.kt`): 97.5%, then 95%, never below `MIN_FONT_SCALE`, the first that saves a page
-  (`chooseFitScale`), only searched where a lower bound says it could. Measured wider and drawn through a scaled layer
-  (hit testing scales with it), so nothing recomposes and the first frame is fitted (`DecidedGrid.fitScale`). Deferred
-  while the inputs keep changing (`isFitDeferred`: pinch, resize), since it costs two or three more layouts a frame.
-- **A single-column width is paged** (`flowIntoPages`) with the same scoring. Two neighbours that fit half the column
-  unwrapped may sit side by side (`SectionGrid.joinsPrevious`); such a pair is never cut. Something uncuttable may move
-  to the next page only if this one is at least half full; otherwise the page runs past the screen. Rows share a start
-  edge (`sharesKeyline`).
 - The editor's preview and a songbook (over `MAX_CUT_SECTION_COUNT`, 200 sections) keep a plain, unmeasured single
   column, neither cut, narrowed, nor fitted: the search would rerun on every pinch frame, and typing would move pieces.
-- **Chunks** (`SongUnits`): a cuttable section is composed per line (a line, comment, grid line, tab system, or diagram
-  row), so `SongRows.lineTops` is known. Tab runs are drawn as slots (`runSlotCount`, `SongTabBlock`'s `slot`): slot *i*
-  holds row *i* at the measured width; an empty slot has no height and no cut before it; **every slot's intrinsic width
-  is the whole run's**, or narrowing the column to one slot would rewrap the run. Cuts only where `sectionChunkStarts`
-  allows: a line each side, never after a comment or before an empty line. A folded section is one chunk; the preview
-  never cuts (`canCutSections`).
 - A continuation piece shows no header. Chorus cards are drawn by the layout behind the chunks, one per piece, padding
   inside the first and last chunk and added at a cut, so an uncut card is unchanged.
 - **Motion** (`SectionMotion`): a single change springs with `animateBounds` in a `LookaheadScope`; continuous changes

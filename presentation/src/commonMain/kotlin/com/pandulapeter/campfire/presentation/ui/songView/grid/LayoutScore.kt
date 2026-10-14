@@ -7,7 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songView.grid
+
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongUnits
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
 
 /**
  * What a layout of a song is judged by besides its pages, in points: one point is what a column pays for ending one

@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.grid.DecidedGrid
+import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements
+import com.pandulapeter.campfire.presentation.ui.songView.grid.hasSameCellsAs
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
