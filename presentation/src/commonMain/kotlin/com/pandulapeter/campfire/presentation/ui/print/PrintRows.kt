@@ -12,13 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.print
 import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
-import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.songLayout.firstSection
+import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
+import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
+import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import kotlin.math.roundToInt
 
@@ -64,45 +68,96 @@ internal class PrintRows(
         emptyList()
     }
 
-    fun blockRows(
-        block: ChordProBlock,
-        width: Float,
-        labelOverride: String? = null,
-        isInChorus: Boolean = false,
-    ): List<Row> = when (block) {
-        is ChordProBlock.Section -> sectionRows(block, width, labelOverride)
-        is ChordProBlock.Comment -> commentRows(block, width, isInChorus)
-        is ChordProBlock.ChorusRecall -> recallRows(block, width)
-        is ChordProBlock.Transpose -> keyChangeRows(block, width)
-        is ChordProBlock.Timing -> timingRows(block, width)
-        ChordProBlock.Break -> emptyList()
+    /**
+     * The rows of a group of `joinCutSections`, in the segments the breaks inside it cut it into, a segment that prints
+     * nothing being empty, so that the layout still sees every break: a page has columns to break, which the screen does
+     * not. Every other cut of a section is joined over as the screen joins it, so that a section is one unit to place.
+     */
+    fun groupSegments(group: List<ChordProBlock>, width: Float): List<List<Row>> = when (val first = group.firstSection()) {
+        is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = null).segments
+        is ChordProBlock.Comment -> listOf(commentRows(first, width))
+        is ChordProBlock.ChorusRecall -> listOf(recallRows(first, width))
+        is ChordProBlock.Transpose -> listOf(keyChangeRows(first, width))
+        is ChordProBlock.Timing -> listOf(timingRows(first, width))
+        ChordProBlock.Break -> listOf(emptyList())
     }
 
-    private fun sectionRows(section: ChordProBlock.Section, width: Float, labelOverride: String?): List<Row> {
-        val isChorus = section.type == SectionType.Chorus
+    /**
+     * A section's group as the screen's `addSection` builds it: its lines, joined into one run of lines again over a cut
+     * that prints nothing, and the comments and key changes that cut it or open or end it, with a gap between two, all
+     * of a chorus indented behind its bar. The label goes on the first segment that prints anything, so that it is never
+     * left at the bottom of a column with what it names in the next.
+     */
+    private fun sectionSegments(
+        group: List<ChordProBlock>,
+        first: ChordProBlock.Section,
+        width: Float,
+        labelOverride: String?,
+    ): SectionSegments {
+        val isChorus = first.type == SectionType.Chorus
         val lineWidth = if (isChorus) width - CHORUS_INDENT else width
         // A paragraph of lyrics is headed on screen by its fold toggle alone, an empty header, which a page has no use for.
-        val sectionLabel = section.header(labels.sections).ifEmpty { null }
-        val lines = section.lines.flatMapIndexed { lineIndex, line ->
-            when (line) {
-                is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
-                is ChordProLine.Tab -> {
-                    val startsRun = lineIndex == 0 || section.lines[lineIndex - 1] !is ChordProLine.Tab || !line.continuesEnvironment
-                    if (options.showChords && startsRun) tabRows(section.lines, lineIndex, sectionLabel, lineWidth) else emptyList()
+        val sectionLabel = first.header(labels.sections).ifEmpty { null }
+        val segments = mutableListOf(mutableListOf<SectionPart>())
+        group.forEach { block ->
+            val parts = segments.last()
+            when (block) {
+                is ChordProBlock.Section -> if (block.lines.isNotEmpty()) {
+                    val previous = parts.lastOrNull()
+                    if (previous is SectionPart.Lines) parts[parts.lastIndex] = SectionPart.Lines(previous.lines + block.lines) else parts += SectionPart.Lines(block.lines)
                 }
-                is ChordProLine.Grid -> {
-                    val previous = section.lines.getOrNull(lineIndex - 1)
-                    val startsRun = previous !is ChordProLine.Grid || previous.label != line.label
-                    if (options.showChords && startsRun) gridRows(section.lines, lineIndex, lineWidth) else emptyList()
-                }
-                ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
+                is ChordProBlock.Comment -> if (commentRows(block, lineWidth).isNotEmpty()) parts += SectionPart.Comment(block)
+                is ChordProBlock.Transpose -> if (keyChangeRows(block, lineWidth).isNotEmpty()) parts += SectionPart.KeyChange(block)
+                ChordProBlock.Break -> segments += mutableListOf<SectionPart>()
+                is ChordProBlock.Timing, is ChordProBlock.ChorusRecall -> Unit
             }
         }
+        val printed = segments.map { parts -> parts.map { partRows(it, sectionLabel, lineWidth) } }
+        val printsLines = segments.zip(printed).any { (parts, rows) -> parts.indices.any { parts[it] is SectionPart.Lines && rows[it].isNotEmpty() } }
         // A section whose every line the options hide leaves out its label too, rather than printing a heading with
-        // nothing under it; one written with no lines at all keeps it, since there the label is the cue.
-        if (section.lines.isNotEmpty() && lines.none { row -> row.parts.any { !it.text.isPrintBlank() } }) return emptyList()
-        val labelRows = (labelOverride ?: sectionLabel?.takeUnless { section.isContinuation })?.let { labelRows(it, lineWidth) }.orEmpty()
-        return if (isChorus) chorusBar(labelRows + lines, startsWithLabel = labelRows.isNotEmpty()) else labelRows + lines
+        // nothing under it, and keeps only its comments, outside it as the screen keeps them; one written with no lines
+        // at all keeps its label, since there the label is the cue.
+        if (!printsLines && group.any { it is ChordProBlock.Section && it.lines.isNotEmpty() }) {
+            return SectionSegments(
+                segments = segments.map { parts -> parts.filterIsInstance<SectionPart.Comment>().map { commentRows(it.comment, width) }.joinedWithGaps() },
+                isLabelled = false,
+            )
+        }
+        val label = labelOverride ?: sectionLabel?.takeUnless { first.isContinuation }
+        val rows = printed.map { it.joinedWithGaps() }
+        val labelledIndex = if (label == null) -1 else rows.indexOfFirst { it.isNotEmpty() }.coerceAtLeast(0)
+        return SectionSegments(
+            segments = rows.mapIndexed { index, segment ->
+                val labelRows = if (index == labelledIndex && label != null) labelRows(label, lineWidth) else emptyList()
+                val all = labelRows + segment
+                if (isChorus && all.isNotEmpty()) chorusBar(all, startsWithLabel = labelRows.isNotEmpty()) else all
+            },
+            isLabelled = labelledIndex >= 0,
+        )
+    }
+
+    /** What a part of a section prints, nothing for lines that print only blank rows. */
+    private fun partRows(part: SectionPart, sectionLabel: String?, lineWidth: Float): List<Row> = when (part) {
+        is SectionPart.Lines -> part.lines.groupIntoRuns().flatMap { run ->
+            when (run.first().foldableKind()) {
+                FoldableKind.TAB -> if (options.showChords) tabRows(run, sectionLabel, lineWidth) else emptyList()
+                FoldableKind.GRID -> if (options.showChords) gridRows(run, lineWidth) else emptyList()
+                null -> run.flatMap { line ->
+                    when (line) {
+                        is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
+                        ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
+                        is ChordProLine.Tab, is ChordProLine.Grid -> emptyList()
+                    }
+                }
+            }
+        }.takeIf { rows -> rows.any { row -> row.parts.any { !it.text.isPrintBlank() } } }.orEmpty()
+        is SectionPart.Comment -> commentRows(part.comment, lineWidth)
+        is SectionPart.KeyChange -> keyChangeRows(part.keyChange, lineWidth)
+    }
+
+    /** The parts that print anything, one under the other, with the gap between them that the layout leaves between two units. */
+    private fun List<List<Row>>.joinedWithGaps(): List<Row> = filter { it.isNotEmpty() }.flatMapIndexed { index, rows ->
+        if (index > 0) listOf(Row(emptyList(), options.fontSize * 0.65f)) + rows else rows
     }
 
     private fun lyricsRows(line: ChordProLine.Lyrics, lineWidth: Float): List<Row> {
@@ -178,14 +233,11 @@ internal class PrintRows(
         }
     }
 
-    /** The run of tab lines that starts at [lineIndex], wrapped into systems of the column's width. */
-    private fun tabRows(lines: List<ChordProLine>, lineIndex: Int, sectionLabel: String?, lineWidth: Float): List<Row> {
-        val line = lines[lineIndex] as ChordProLine.Tab
-        val run = lines.drop(lineIndex)
-            .takeWhile { it is ChordProLine.Tab && (it === line || it.continuesEnvironment) }
-            .map { (it as ChordProLine.Tab).text }
+    /** A run of tab lines (`groupIntoRuns`), wrapped into systems of the column's width. */
+    private fun tabRows(lines: List<ChordProLine>, sectionLabel: String?, lineWidth: Float): List<Row> {
+        val run = lines.map { (it as ChordProLine.Tab).text }
         return buildList {
-            line.label?.takeUnless { it == sectionLabel }?.let { addAll(labelRows(it, lineWidth)) }
+            (lines.first() as ChordProLine.Tab).label?.takeUnless { it == sectionLabel }?.let { addAll(labelRows(it, lineWidth)) }
             val characters = (lineWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
             val isTablature = ChordProTabWrapper.isTablature(run)
             val systems = if (isTablature) {
@@ -210,15 +262,12 @@ internal class PrintRows(
     }
 
     /**
-     * The run of grid lines starting at [lineIndex], aligned into columns as the viewer aligns them, each line broken
+     * A run of grid lines (`groupIntoRuns`), aligned into columns as the viewer aligns them, each line broken
      * between bars as the viewer breaks it, a row taking as many whole bars as fit; only a bar wider than the column is
      * wrapped inside itself.
      */
-    private fun gridRows(lines: List<ChordProLine>, lineIndex: Int, lineWidth: Float): List<Row> {
-        val first = lines[lineIndex] as ChordProLine.Grid
-        val run = lines.subList(lineIndex, lines.size)
-            .takeWhile { it is ChordProLine.Grid && it.label == first.label }
-            .map { (it as ChordProLine.Grid).tokens }
+    private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> {
+        val run = lines.map { (it as ChordProLine.Grid).tokens }
         return run.alignedGridBars { it.printText() }.flatMap { bars -> gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, lineWidth) }
     }
 
@@ -252,28 +301,31 @@ internal class PrintRows(
     private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> =
         tempoDetails(timing.tempo, timing.time).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
 
-    private fun commentRows(comment: ChordProBlock.Comment, width: Float, isInChorus: Boolean): List<Row> = when {
+    private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()
-        isInChorus -> chorusBar(commentRows(comment, width - CHORUS_INDENT, isInChorus = false), startsWithLabel = false)
         comment.style == CommentStyle.BOX -> boxedRows(comment.text, width)
         else -> wrapped(comment.text, commentStyle, width)
     }
 
     /**
-     * As in the viewer, the recall's own heading goes on the first recalled piece that prints anything, and is printed on
-     * its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
+     * As in the viewer, the recall's own heading goes on the first recalled section that prints its lines, and is printed
+     * on the chorus's bar after whatever else of it prints when none does: a recall says where the chorus is sung, even
+     * with nothing under it. A recall is one unit, the breaks the parser copied into it included.
      */
     private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
         val recalled = recall.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
         var header: String? = recall.label ?: recalled?.header(labels.sections) ?: labels.sections.chorus
-        return recall.blocks.flatMapIndexed { index, piece ->
-            val isPieceInChorus = recall.blocks.isInChorus(index)
-            if (piece is ChordProBlock.Section && header != null) {
-                blockRows(piece, width, labelOverride = header).also { if (it.isNotEmpty()) header = null }
-            } else {
-                blockRows(piece, width, isInChorus = isPieceInChorus)
+        val rows = recall.blocks.joinCutSections().flatMap { group ->
+            when (val first = group.firstSection()) {
+                is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = header).let {
+                    if (it.isLabelled) header = null
+                    it.segments.flatten()
+                }
+                is ChordProBlock.Comment -> commentRows(first, width)
+                else -> emptyList()
             }
-        }.ifEmpty { header?.let { labelRows(it, width) }.orEmpty() }
+        }
+        return rows + header?.let { chorusBar(labelRows(it, width - CHORUS_INDENT), startsWithLabel = true) }.orEmpty()
     }
 
     /**
@@ -355,29 +407,18 @@ internal data class Row(
 internal const val METADATA_SEPARATOR = "   "
 
 private const val CHORUS_INDENT = 8f
-internal const val CHORUS_BAR_WIDTH = 1.5f
+private const val CHORUS_BAR_WIDTH = 1.5f
 private const val FRAME_WIDTH = 0.75f
 
-private fun ChordProBlock?.isChorus() = this is ChordProBlock.Section && type == SectionType.Chorus
-
-/** A chorus section, or a comment written inside one or at the start of one, which is printed as part of it. */
-internal fun List<ChordProBlock>.isInChorus(index: Int): Boolean = when (val block = this[index]) {
-    is ChordProBlock.Section -> block.isChorus()
-    is ChordProBlock.Comment -> (block.placement == CommentPlacement.IN_SECTION && getOrNull(index - 1).isChorus()) ||
-        (block.placement == CommentPlacement.START_OF_SECTION && getOrNull(index + 1).isChorus())
-    else -> false
+/** What a section's group prints, in order, as the screen's `SectionPart`s are. */
+private sealed interface SectionPart {
+    data class Lines(val lines: List<ChordProLine>) : SectionPart
+    data class Comment(val comment: ChordProBlock.Comment) : SectionPart
+    data class KeyChange(val keyChange: ChordProBlock.Transpose) : SectionPart
 }
 
-/** Whether the block after [index] is the same chorus going on: its continuation, or a comment inside or at the start of it. */
-internal fun List<ChordProBlock>.continuesChorusAfter(index: Int): Boolean {
-    if (!isInChorus(index) || index + 1 > lastIndex || !isInChorus(index + 1)) return false
-    return when (val next = this[index + 1]) {
-        is ChordProBlock.Section -> next.isContinuation ||
-            (this[index] as? ChordProBlock.Comment)?.placement == CommentPlacement.START_OF_SECTION
-        is ChordProBlock.Comment -> next.placement == CommentPlacement.IN_SECTION
-        else -> false
-    }
-}
+/** The segments of a section's group, and whether one of them carries its label. */
+private class SectionSegments(val segments: List<List<Row>>, val isLabelled: Boolean)
 
 private fun GridToken.printText() = when (this) {
     is GridToken.Bar -> text

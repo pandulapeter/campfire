@@ -515,6 +515,99 @@ internal class PrintLayoutTest {
         bars.zipWithNext().forEach { (upper, lower) -> assertEquals(upper.y + upper.height, lower.y, 0.01f) }
     }
 
+    @Test fun `a chorus cut by a key change keeps one bar under its key line`() = runTest {
+        val page = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Chorus, null, lyrics(2, "Before")),
+            ChordProBlock.Transpose(2, key = "E"),
+            ChordProBlock.Section(SectionType.Chorus, null, lyrics(2, "After"), isContinuation = true),
+        )))).pages.single()
+        val keyChange = page.texts.single { it.text == "Key: E" }
+        assertTrue(keyChange.x >= PrintSettings().marginMm * 72f / 25.4f + 8 - 0.01f)
+        assertTrue(page.rules.any { it.y <= keyChange.y && it.y + it.height >= keyChange.y + keyChange.style.size * 1.45f })
+        page.rules.sortedBy { it.y }.zipWithNext().forEach { (upper, lower) -> assertEquals(upper.y + upper.height, lower.y, 0.01f) }
+    }
+
+    @Test fun `a section cut by a comment stays in one column where it fits`() = runTest {
+        (1..60).forEach { count ->
+            val document = layout(source(song(emptyList(), listOf(
+                ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(count)),
+                ChordProBlock.Section(SectionType.Verse, "Second", lyrics(2, "Before")),
+                ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION),
+                ChordProBlock.Section(SectionType.Verse, "Second", lyrics(2, "After"), isContinuation = true),
+            ))), PrintSettings(columns = 2))
+            assertEquals(document.placeOf("Before 1"), document.placeOf("After 2"), "after $count lines")
+        }
+    }
+
+    @Test fun `a cut that prints nothing leaves no gap`() = runTest {
+        val texts = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2)),
+            ChordProBlock.Transpose(0),
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2, "End"), isContinuation = true),
+        )))).pages.single().texts
+        assertEquals(12 * 1.45f, texts.single { it.text == "End 1" }.y - texts.single { it.text == "Line 2" }.y, 0.01f)
+    }
+
+    @Test fun `a comment opening a section is printed under its heading`() = runTest {
+        val texts = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.START_OF_SECTION),
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),
+        )))).pages.single().texts
+        assertTrue(texts.single { it.text == "Softly" }.y > texts.single { it.text == "Verse" }.y)
+    }
+
+    @Test fun `a section keeps its heading where only its first piece is hidden`() = runTest {
+        val texts = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Custom("intro"), "Intro", listOf(ChordProLine.Tab("e|--0--2--|"))),
+            ChordProBlock.Transpose(0),
+            ChordProBlock.Section(SectionType.Custom("intro"), "Intro", lyrics(1), isContinuation = true),
+        ))), PrintSettings(showChords = false)).pages.single().texts.map { it.text }
+        assertTrue("Intro" in texts)
+        assertTrue("Line 1" in texts)
+    }
+
+    @Test fun `back to back tab environments under one label are one run`() = runTest {
+        val solo = ChordProBlock.Section(SectionType.Custom("solo"), "Solo", listOf(
+            ChordProLine.Tab("e|--0--|", label = "Riff"),
+            ChordProLine.Tab("B|--1--|", continuesEnvironment = true, label = "Riff"),
+            ChordProLine.Tab("e|--3--|", continuesEnvironment = false, label = "Riff"),
+        ))
+        val texts = layout(source(song(emptyList(), listOf(solo)))).pages.single().texts.map { it.text }
+        assertEquals(1, texts.count { it == "Riff" })
+    }
+
+    @Test fun `a break inside a section still starts a new column`() = runTest {
+        val document = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2)),
+            ChordProBlock.Break,
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2, "End"), isContinuation = true),
+        ))), PrintSettings(columns = 2))
+        val (page, x) = document.placeOf("Line 1")
+        val (endPage, endX) = document.placeOf("End 1")
+        assertEquals(page, endPage)
+        assertTrue(endX > x)
+    }
+
+    @Test fun `a section's label goes with its first printed piece across a break`() = runTest {
+        val document = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(3)),
+            ChordProBlock.Section(SectionType.Custom("intro"), "Intro", listOf(ChordProLine.Tab("e|--0--2--|"))),
+            ChordProBlock.Break,
+            ChordProBlock.Section(SectionType.Custom("intro"), "Intro", lyrics(1, "Sung"), isContinuation = true),
+        ))), PrintSettings(showChords = false, columns = 2))
+        assertEquals(document.placeOf("Sung 1"), document.placeOf("Intro"))
+    }
+
+    @Test fun `a recall whose chorus prints only a comment keeps its heading`() = runTest {
+        val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Tab("e|--0--2--|")))
+        val comment = ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION)
+        val texts = layout(source(song(emptyList(), listOf(chorus, comment, ChordProBlock.ChorusRecall(null, listOf(chorus, comment))))), PrintSettings(showChords = false))
+            .pages.single().texts.map { it.text }
+        assertEquals(2, texts.count { it == "Softly" })
+        assertEquals(1, texts.count { it == "Chorus" })
+        assertTrue(texts.indexOf("Chorus") > texts.lastIndexOf("Softly"))
+    }
+
     private fun guitarChord(name: String) = PrintChord(name, geometry = ChordDiagramGeometry.Fretted(6, 1, 4, List(6) { null }, emptyList(), emptyList()))
 
     @Test fun `chord diagrams are printed under the heading only when asked for and with the chords`() = runTest {

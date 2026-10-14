@@ -219,6 +219,44 @@ internal class PrintRendererTest {
         Unit
     }
 
+    @Test fun `exports a song of cut sections for visual QA`() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val parsed = ChordProParser.parse("""
+            {title: Cut sections}
+            {key: D}
+            {start_of_chorus: Chorus}
+            [D]Sing along [G]under the stars,
+            {comment: Softly}
+            [A]hum it [D]low,
+            {transpose: 2}
+            [D]sing it once [G]again.
+            {end_of_chorus}
+            {start_of_verse: Verse 1}
+            [D]Words before the break,
+            {column_break}
+            [G]words after it.
+            {end_of_verse}
+            {start_of_tab: Riff}
+            e|--0--2--3--|
+            B|--3--3--3--|
+            {end_of_tab}
+            {start_of_tab: Riff}
+            e|--5--7--8--|
+            B|--5--5--5--|
+            {end_of_tab}
+        """.trimIndent())
+        val document = layoutPrintDocument(PrintSource("Cut sections", songs = listOf(PrintSong("cut.cho", "Cut sections", null, song = parsed))),
+            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+        assertTrue(document.pages.isNotEmpty())
+        val bytes = renderer.pdf(document, "Cut sections")
+        // Opt-in output for manual visual QA. Ordinary test runs leave no files behind.
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "cut-sections.pdf").writeBytes(bytes)
+        }
+        Unit
+    }
+
     @Test fun `converts pixels to gray by luminance`() {
         assertEquals(76, printGray(0xFFFF0000.toInt()))
         assertEquals(149, printGray(0xFF00FF00.toInt()))

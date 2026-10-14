@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
+import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 import kotlinx.coroutines.yield
 
@@ -77,7 +78,7 @@ private class PrintLayouter(
     private val pages = mutableListOf<PageContent>()
     private var column = 0
     private var y = margin
-    private var placedBlocks = 0
+    private var placedGroups = 0
 
     suspend fun layout(source: PrintSource): PrintDocument {
         page()
@@ -165,20 +166,24 @@ private class PrintLayouter(
         val heading = printRows.wrapped(title, printRows.titleStyle).toMutableList()
         if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += printRows.wrapped(it) }
         entry.song?.let { playingDetails(entry, it).takeIf(String::isNotBlank)?.let { heading += printRows.wrapped(it, printRows.detailStyle) } }
-        // The heading travels with the first block that prints anything (a missing song's notice standing in for it), or
-        // with the chord diagrams where the song has them: that block whole where heading and block fit a column
-        // together, otherwise its first two rows, after which the block flows on from under its heading. A break before
-        // the first block is ignored, since the heading has just started the song where it is.
-        val blocks = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections)
+        // The heading travels with the first segment that prints anything (a missing song's notice standing in for it),
+        // or with the chord diagrams where the song has them: that segment whole where heading and segment fit a column
+        // together, otherwise its first two rows, after which it flows on from under its heading. A break before the
+        // first segment is ignored, since the heading has just started the song where it is. The blocks are grouped as
+        // the screen groups them, which joins a change of tempo or time over exactly where it is not shown.
+        val groups = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections).joinCutSections(joinsTimings = !options.showTempo)
         val diagramRows = entry.song?.let { chordDiagramRows(entry.chords) }.orEmpty()
-        var firstIndex = -1
+        var firstGroup = -1
+        var firstSegment = -1
         var firstBlockRows = if (entry.song == null) printRows.wrapped(labels.missing) else emptyList()
-        blocks.forEachIndexed { index, block ->
-            if (firstIndex < 0 && block != ChordProBlock.Break) {
-                blockRowsAt(blocks, index).takeIf { it.isNotEmpty() }?.let {
-                    firstIndex = index
-                    firstBlockRows = it
-                }
+        for ((index, group) in groups.withIndex()) {
+            if (group.isBreak()) continue
+            val segments = printRows.groupSegments(group, columnWidth)
+            firstSegment = segments.indexOfFirst { it.isNotEmpty() }
+            if (firstSegment >= 0) {
+                firstGroup = index
+                firstBlockRows = segments[firstSegment]
+                break
             }
         }
         val firstRows = diagramRows.ifEmpty { firstBlockRows }
@@ -194,27 +199,32 @@ private class PrintLayouter(
         }
         if (entry.song == null) {
             place(firstRows, keepWhole = keepFirstWhole)
-        } else if (firstIndex >= 0) {
+        } else if (firstGroup >= 0) {
             var timingRows = emptyList<Row>()
-            blocks.forEachIndexed { index, block ->
-                if (++placedBlocks % 50 == 0) yield()
+            groups.forEachIndexed { index, group ->
+                if (++placedGroups % 50 == 0) yield()
                 when {
-                    index < firstIndex -> Unit
-                    index == firstIndex -> {
-                        if (diagramRows.isEmpty()) place(firstBlockRows, keepWhole = keepFirstWhole) else place(firstBlockRows)
-                        spaceAfter(blocks, index)
-                    }
-                    block == ChordProBlock.Break -> if (y > margin) nextColumn()
+                    index < firstGroup -> Unit
+                    group.isBreak() -> if (y > margin) nextColumn()
                     // A change of tempo or time is kept with what it is written above, the way a heading is; one with
                     // nothing printed after it says nothing and is left out.
-                    block is ChordProBlock.Timing -> timingRows = blockRowsAt(blocks, index)
+                    index > firstGroup && group.singleOrNull() is ChordProBlock.Timing -> timingRows = printRows.groupSegments(group, columnWidth).single()
                     else -> {
-                        val rows = blockRowsAt(blocks, index)
-                        if (rows.isNotEmpty()) {
-                            place(timingRows + rows)
-                            timingRows = emptyList()
-                            spaceAfter(blocks, index)
+                        val segments = printRows.groupSegments(group, columnWidth).let { if (index == firstGroup) it.drop(firstSegment) else it }
+                        var hasPlaced = false
+                        segments.forEachIndexed { segmentIndex, rows ->
+                            // A break inside a section starts a new column whether or not anything after it prints.
+                            if (segmentIndex > 0 && y > margin) nextColumn()
+                            if (index == firstGroup && segmentIndex == 0) {
+                                if (diagramRows.isEmpty()) place(rows, keepWhole = keepFirstWhole) else place(rows)
+                                hasPlaced = true
+                            } else if (rows.isNotEmpty()) {
+                                place(timingRows + rows)
+                                timingRows = emptyList()
+                                hasPlaced = true
+                            }
                         }
+                        if (hasPlaced) space(options.fontSize * 0.65f)
                     }
                 }
             }
@@ -296,21 +306,6 @@ private class PrintLayouter(
         song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { "${labels.capo}: $it" },
     ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time)).joinToString(METADATA_SEPARATOR)
 
-    /** Between two blocks of one chorus the gap carries the chorus's bar, so that a comment does not cut it in two. */
-    private fun blockRowsAt(blocks: List<ChordProBlock>, index: Int): List<Row> {
-        val rows = printRows.blockRows(blocks[index], columnWidth, isInChorus = blocks.isInChorus(index))
-        return if (rows.isNotEmpty() && blocks.continuesChorusAfter(index)) {
-            val gap = options.fontSize * 0.65f
-            rows + Row(emptyList(), gap, listOf(PrintRule(x = 0f, y = 0f, width = CHORUS_BAR_WIDTH, height = gap)))
-        } else {
-            rows
-        }
-    }
-
-    private fun spaceAfter(blocks: List<ChordProBlock>, index: Int) {
-        if (!blocks.continuesChorusAfter(index)) space(options.fontSize * 0.65f)
-    }
-
     /**
      * The page number sits centred in the band the layout keeps free above the bottom margin (a 9 pt line is about 11 pt
      * tall), so it never reaches into the margin the user chose, where printers may not print.
@@ -361,6 +356,9 @@ private class PageContent {
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+/** Whether a group of `joinCutSections` is a break of its own, which the layout makes rather than prints. */
+private fun List<ChordProBlock>.isBreak() = singleOrNull() == ChordProBlock.Break
 
 // The sizes of a diagram and the gap between two, in multiples of the text size: at 12 pt a guitar diagram is about the
 // one the song details screen draws at its own text size, and the cells keep that proportion as the text grows.

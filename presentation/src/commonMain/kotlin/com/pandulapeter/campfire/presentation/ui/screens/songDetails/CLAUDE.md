@@ -25,12 +25,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ### Rendering (`SongLyrics.kt` and its siblings)
 
-- Tabs and grids are monospace: they are columns of characters that must line up.
+- Tabs and grids are monospace: columns of characters that must line up.
 - A comment's bracketed chords are transposed and colored (`ChordProHighlighter.chordsOfShownText`, shared with the
   editor). A chorus recall draws everything `ChordProBlock.ChorusRecall` carries, headed once.
-- **A section cut by a comment, break, or `{transpose}` is drawn whole again** (`joinCutSections`, over
-  `Section.isContinuation`), so the comment stays between its lines rather than becoming a unit that could land in
-  another column. Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section
+- **A section cut by a comment, break, or `{transpose}` is drawn whole again** (`joinCutSections` (shared with the PDF), over
+  `Section.isContinuation`), so the comment stays between its lines rather than becoming a unit that could land
+  elsewhere. Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section
   folds with it; one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
 - A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
   the capo left out as in the Transposition control; omitted where the song has no `{key}` or the chords are off.
