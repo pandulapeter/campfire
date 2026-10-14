@@ -23,7 +23,7 @@ a no-op actual elsewhere. The gate wraps the whole app inside `CampfireApp`, so 
 - The blocking screen is drawn **over** the app, so a required update that fails to install leaves the user where they
   were. Back on it closes the app (the gesture must be taken, not passed through).
 - Dialogs, sheets, and menus are separate windows on Android that the screen cannot cover, so none is composed while
-  it is up (`LocalIsCoveredByRequiredUpdate`, read by `CampfireContent`, `OverflowMenu`, and `TunerListeningEffect`);
+  it is up (`LocalIsCoveredByRequiredUpdate`, read by `CampfireScreens`, `OverflowMenu`, and `TunerListeningEffect`);
   their state survives and they return if the screen goes.
 - The gate decides when to act: the blocking screen (and the immediate flow started with it) and the flexible update's
   Restart wait for an editor with unsaved text (`hasUnsavedEditorChanges`). Restart also waits for a sync run and a
