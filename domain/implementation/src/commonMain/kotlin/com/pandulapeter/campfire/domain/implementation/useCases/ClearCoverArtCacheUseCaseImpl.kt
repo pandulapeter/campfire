@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class ClearCoverArtCacheUseCaseImpl internal constructor(
+internal class ClearCoverArtCacheUseCaseImpl(
     private val coverArtRepository: CoverArtRepository,
 ) : ClearCoverArtCacheUseCase {
 

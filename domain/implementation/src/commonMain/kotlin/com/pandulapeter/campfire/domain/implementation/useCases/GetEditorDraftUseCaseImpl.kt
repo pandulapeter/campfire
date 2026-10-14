@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetEditorDraftUseCaseImpl internal constructor(
+internal class GetEditorDraftUseCaseImpl(
     private val editorDraftRepository: EditorDraftRepository,
 ) : GetEditorDraftUseCase {
 

@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.domain.implementation.songExportFileName
 import org.koin.core.annotation.Factory
 
 @Factory
-class ExportSongsUseCaseImpl internal constructor(
+internal class ExportSongsUseCaseImpl(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,

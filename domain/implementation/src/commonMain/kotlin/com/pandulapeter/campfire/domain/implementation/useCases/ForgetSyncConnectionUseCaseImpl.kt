@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ForgetSyncConnectionUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class ForgetSyncConnectionUseCaseImpl internal constructor(
+internal class ForgetSyncConnectionUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : ForgetSyncConnectionUseCase {
 

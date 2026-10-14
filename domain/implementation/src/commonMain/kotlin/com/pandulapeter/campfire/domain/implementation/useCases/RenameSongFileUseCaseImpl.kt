@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class RenameSongFileUseCaseImpl internal constructor(
+internal class RenameSongFileUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,

@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class UpdateSetlistUseCaseImpl internal constructor(
+internal class UpdateSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
 ) : UpdateSetlistUseCase {
 

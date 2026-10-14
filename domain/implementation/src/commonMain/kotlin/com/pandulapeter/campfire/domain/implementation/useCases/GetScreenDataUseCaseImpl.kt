@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetScreenDataUseCaseImpl internal constructor(
+internal class GetScreenDataUseCaseImpl(
     private val normalizeText: NormalizeTextUseCase,
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,

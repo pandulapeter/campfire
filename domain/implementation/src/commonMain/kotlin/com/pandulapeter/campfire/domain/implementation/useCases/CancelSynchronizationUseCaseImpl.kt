@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCas
 import org.koin.core.annotation.Factory
 
 @Factory
-class CancelSynchronizationUseCaseImpl internal constructor(
+internal class CancelSynchronizationUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : CancelSynchronizationUseCase {
 

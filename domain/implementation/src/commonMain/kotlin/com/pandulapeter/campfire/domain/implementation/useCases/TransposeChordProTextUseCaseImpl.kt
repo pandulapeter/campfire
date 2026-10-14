@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.implementation.mapper.toPreferFlats
 import org.koin.core.annotation.Factory
 
 @Factory
-class TransposeChordProTextUseCaseImpl internal constructor() : TransposeChordProTextUseCase {
+internal class TransposeChordProTextUseCaseImpl : TransposeChordProTextUseCase {
 
     override operator fun invoke(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
         ChordProTransposer.transposeText(text, semitones, accidentals.toPreferFlats())

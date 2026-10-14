@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.withoutAccent
 import org.koin.core.annotation.Factory
 
 @Factory
-class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
+internal class NormalizeTextUseCaseImpl : NormalizeTextUseCase {
 
     /**
      * Sorting, grouping and searching all run this over every song, so it walks the text once and only allocates a

@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SearchSongDetailsUseCaseImpl internal constructor(
+internal class SearchSongDetailsUseCaseImpl(
     private val songDetailsRepository: SongDetailsRepository,
 ) : SearchSongDetailsUseCase {
 

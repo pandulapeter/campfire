@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class DeleteSetlistUseCaseImpl internal constructor(
+internal class DeleteSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
 ) : DeleteSetlistUseCase {
 

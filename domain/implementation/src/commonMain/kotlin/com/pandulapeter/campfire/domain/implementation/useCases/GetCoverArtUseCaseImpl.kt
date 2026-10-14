@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetCoverArtUseCaseImpl internal constructor(
+internal class GetCoverArtUseCaseImpl(
     private val coverArtRepository: CoverArtRepository,
 ) : GetCoverArtUseCase {
 

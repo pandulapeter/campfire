@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProTagUseCaseImpl internal constructor() : SetChordProTagUseCase {
+internal class SetChordProTagUseCaseImpl : SetChordProTagUseCase {
 
     override operator fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
         ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)

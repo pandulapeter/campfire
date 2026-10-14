@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProLinksUseCaseImpl internal constructor() : SetChordProLinksUseCase {
+internal class SetChordProLinksUseCaseImpl : SetChordProLinksUseCase {
 
     override operator fun invoke(text: String, links: List<ChordProLink>) = ChordProLinks.setLinks(text = text, links = links)
 }

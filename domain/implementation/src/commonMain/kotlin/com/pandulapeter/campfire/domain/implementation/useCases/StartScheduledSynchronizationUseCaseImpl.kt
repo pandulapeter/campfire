@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizati
 import org.koin.core.annotation.Factory
 
 @Factory
-class StartScheduledSynchronizationUseCaseImpl internal constructor(
+internal class StartScheduledSynchronizationUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : StartScheduledSynchronizationUseCase {
 

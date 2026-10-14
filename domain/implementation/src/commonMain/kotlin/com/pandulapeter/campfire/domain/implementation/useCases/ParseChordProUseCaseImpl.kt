@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.implementation.mapper.toChordNotation
 import org.koin.core.annotation.Factory
 
 @Factory
-class ParseChordProUseCaseImpl internal constructor() : ParseChordProUseCase {
+internal class ParseChordProUseCaseImpl : ParseChordProUseCase {
 
     override operator fun invoke(text: String, notation: UserPreferences.Notation) = ChordProParser.parse(text, notation.toChordNotation())
 }

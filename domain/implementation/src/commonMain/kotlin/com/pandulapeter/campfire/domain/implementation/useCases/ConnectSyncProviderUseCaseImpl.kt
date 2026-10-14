@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class ConnectSyncProviderUseCaseImpl internal constructor(
+internal class ConnectSyncProviderUseCaseImpl(
     private val syncRepository: SyncRepository,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
 ) : ConnectSyncProviderUseCase {

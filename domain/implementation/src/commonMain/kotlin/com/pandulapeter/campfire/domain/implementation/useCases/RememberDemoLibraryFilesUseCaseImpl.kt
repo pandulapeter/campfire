@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUse
 import org.koin.core.annotation.Factory
 
 @Factory
-class RememberDemoLibraryFilesUseCaseImpl internal constructor(
+internal class RememberDemoLibraryFilesUseCaseImpl(
     private val demoLibraryRepository: DemoLibraryRepository,
 ) : RememberDemoLibraryFilesUseCase {
 

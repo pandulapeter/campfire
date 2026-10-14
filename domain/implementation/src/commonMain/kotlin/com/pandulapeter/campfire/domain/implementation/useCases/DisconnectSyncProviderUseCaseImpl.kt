@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCa
 import org.koin.core.annotation.Factory
 
 @Factory
-class DisconnectSyncProviderUseCaseImpl internal constructor(
+internal class DisconnectSyncProviderUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : DisconnectSyncProviderUseCase {
 

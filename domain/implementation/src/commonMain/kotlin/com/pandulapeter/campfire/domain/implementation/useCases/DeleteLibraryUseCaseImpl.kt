@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class DeleteLibraryUseCaseImpl internal constructor(
+internal class DeleteLibraryUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,

@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class DeleteSongUseCaseImpl internal constructor(
+internal class DeleteSongUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,

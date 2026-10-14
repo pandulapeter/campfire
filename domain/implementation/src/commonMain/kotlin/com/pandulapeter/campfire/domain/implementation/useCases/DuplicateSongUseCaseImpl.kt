@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DuplicateSongUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class DuplicateSongUseCaseImpl internal constructor(
+internal class DuplicateSongUseCaseImpl(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
 ) : DuplicateSongUseCase {

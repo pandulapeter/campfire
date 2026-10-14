@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.domain.implementation.exportFileName
 import org.koin.core.annotation.Factory
 
 @Factory
-class ExportSetlistUseCaseImpl internal constructor(
+internal class ExportSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,

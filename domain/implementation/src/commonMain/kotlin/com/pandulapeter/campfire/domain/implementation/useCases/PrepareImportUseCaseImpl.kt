@@ -40,7 +40,7 @@ import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 
 @Factory
-class PrepareImportUseCaseImpl internal constructor(
+internal class PrepareImportUseCaseImpl(
     private val archiveRepository: ArchiveRepository,
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,

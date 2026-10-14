@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class CreateSongUseCaseImpl internal constructor(
+internal class CreateSongUseCaseImpl(
     private val songRepository: SongRepository,
 ) : CreateSongUseCase {
 

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProMetadataUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProMetadataUseCaseImpl internal constructor() : SetChordProMetadataUseCase {
+internal class SetChordProMetadataUseCaseImpl : SetChordProMetadataUseCase {
 
     override operator fun invoke(text: String, values: Map<ChordProMetadataFields.Field, String?>) = ChordProMetadataFields.set(text = text, values = values)
 }

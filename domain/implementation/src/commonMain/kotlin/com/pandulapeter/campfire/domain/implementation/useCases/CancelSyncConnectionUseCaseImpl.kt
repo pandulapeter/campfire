@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class CancelSyncConnectionUseCaseImpl internal constructor(
+internal class CancelSyncConnectionUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : CancelSyncConnectionUseCase {
 

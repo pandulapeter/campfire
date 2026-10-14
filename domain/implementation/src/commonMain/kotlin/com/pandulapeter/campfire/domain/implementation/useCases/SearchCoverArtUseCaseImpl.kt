@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SearchCoverArtUseCaseImpl internal constructor(
+internal class SearchCoverArtUseCaseImpl(
     private val coverArtRepository: CoverArtRepository,
 ) : SearchCoverArtUseCase {
 

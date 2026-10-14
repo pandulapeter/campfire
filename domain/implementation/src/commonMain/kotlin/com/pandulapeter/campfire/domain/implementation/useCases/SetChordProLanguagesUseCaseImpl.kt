@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProLanguagesUseCaseImpl internal constructor() : SetChordProLanguagesUseCase {
+internal class SetChordProLanguagesUseCaseImpl : SetChordProLanguagesUseCase {
 
     override operator fun invoke(text: String, codes: List<String>) = ChordProLanguages.setLanguages(text, codes)
 }

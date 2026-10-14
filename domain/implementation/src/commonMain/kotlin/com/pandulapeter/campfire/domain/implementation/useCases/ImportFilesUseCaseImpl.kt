@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class ImportFilesUseCaseImpl internal constructor(
+internal class ImportFilesUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val logger: Logger,

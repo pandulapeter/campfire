@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class ExportLibraryUseCaseImpl internal constructor(
+internal class ExportLibraryUseCaseImpl(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,

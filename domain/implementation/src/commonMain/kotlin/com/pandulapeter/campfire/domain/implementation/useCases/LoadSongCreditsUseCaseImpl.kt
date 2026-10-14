@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class LoadSongCreditsUseCaseImpl internal constructor(
+internal class LoadSongCreditsUseCaseImpl(
     private val songDetailsRepository: SongDetailsRepository,
 ) : LoadSongCreditsUseCase {
 

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class DownloadImportFileUseCaseImpl internal constructor(
+internal class DownloadImportFileUseCaseImpl(
     private val importDownloadRepository: ImportDownloadRepository,
 ) : DownloadImportFileUseCase {
 

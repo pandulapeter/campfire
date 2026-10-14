@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCas
 import org.koin.core.annotation.Factory
 
 @Factory
-class UpdateUserPreferencesUseCaseImpl internal constructor(
+internal class UpdateUserPreferencesUseCaseImpl(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : UpdateUserPreferencesUseCase {
 

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetSyncStateUseCaseImpl internal constructor(
+internal class GetSyncStateUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : GetSyncStateUseCase {
 

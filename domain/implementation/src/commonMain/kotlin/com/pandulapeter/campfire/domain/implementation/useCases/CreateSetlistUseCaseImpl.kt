@@ -15,7 +15,7 @@ import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Factory
 
 @Factory
-class CreateSetlistUseCaseImpl internal constructor(
+internal class CreateSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
 ) : CreateSetlistUseCase {
 

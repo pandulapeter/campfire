@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class PrettifyChordProUseCaseImpl internal constructor() : PrettifyChordProUseCase {
+internal class PrettifyChordProUseCaseImpl : PrettifyChordProUseCase {
 
     override operator fun invoke(text: String) = ChordProPrettifier.prettify(text)
 }

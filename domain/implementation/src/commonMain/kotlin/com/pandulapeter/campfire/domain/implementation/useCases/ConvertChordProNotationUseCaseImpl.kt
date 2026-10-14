@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.domain.implementation.mapper.toChordNotation
 import org.koin.core.annotation.Factory
 
 @Factory
-class ConvertChordProNotationUseCaseImpl internal constructor() : ConvertChordProNotationUseCase {
+internal class ConvertChordProNotationUseCaseImpl : ConvertChordProNotationUseCase {
 
     override operator fun invoke(song: ChordProSong, spelling: UserPreferences.ChordSpelling): ChordProSong =
         ChordProNotation.toNotation(song, spelling.notation.toChordNotation())

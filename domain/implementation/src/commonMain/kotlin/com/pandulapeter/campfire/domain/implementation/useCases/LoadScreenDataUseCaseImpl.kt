@@ -19,7 +19,7 @@ import kotlinx.coroutines.coroutineScope
 import org.koin.core.annotation.Factory
 
 @Factory
-class LoadScreenDataUseCaseImpl internal constructor(
+internal class LoadScreenDataUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,
     private val userPreferencesRepository: UserPreferencesRepository,

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProCoverArtUseCaseImpl internal constructor() : SetChordProCoverArtUseCase {
+internal class SetChordProCoverArtUseCaseImpl : SetChordProCoverArtUseCase {
 
     override operator fun invoke(text: String, url: String?) = ChordProCoverArt.set(text, url)
 }

@@ -9,8 +9,8 @@
 -->
 # :domain:implementation
 
-Implements `:domain:api` over `:data:repository:api`. Every use case is a `@Factory`; impl classes are public with an
-`internal constructor`. A failure a use case notes but does not throw goes to the injected `Logger` (`:data:model`).
+Implements `:domain:api` over `:data:repository:api`. Every use case is an `internal` `@Factory` class, as the root's
+conventions have it. A failure a use case notes but does not throw goes to the injected `Logger` (`:data:model`).
 
 ## Screen data (`GetScreenDataUseCaseImpl`)
 

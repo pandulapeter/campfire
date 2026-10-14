@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetSongContentUseCaseImpl internal constructor(
+internal class GetSongContentUseCaseImpl(
     private val songContentRepository: SongContentRepository,
 ) : GetSongContentUseCase {
 

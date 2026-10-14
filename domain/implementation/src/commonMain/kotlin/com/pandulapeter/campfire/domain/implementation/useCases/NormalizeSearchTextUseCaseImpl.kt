@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class NormalizeSearchTextUseCaseImpl internal constructor(
+internal class NormalizeSearchTextUseCaseImpl(
     private val normalizeText: NormalizeTextUseCase,
 ) : NormalizeSearchTextUseCase {
 

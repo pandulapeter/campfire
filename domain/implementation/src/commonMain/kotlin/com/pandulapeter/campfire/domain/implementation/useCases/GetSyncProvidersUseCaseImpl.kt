@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class GetSyncProvidersUseCaseImpl internal constructor(
+internal class GetSyncProvidersUseCaseImpl(
     private val syncRepository: SyncRepository,
 ) : GetSyncProvidersUseCase {
 

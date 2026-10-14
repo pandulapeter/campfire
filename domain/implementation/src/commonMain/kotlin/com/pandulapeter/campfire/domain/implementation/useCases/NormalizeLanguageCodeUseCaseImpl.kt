@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCas
 import org.koin.core.annotation.Factory
 
 @Factory
-class NormalizeLanguageCodeUseCaseImpl internal constructor() : NormalizeLanguageCodeUseCase {
+internal class NormalizeLanguageCodeUseCaseImpl : NormalizeLanguageCodeUseCase {
 
     override operator fun invoke(value: String) = ChordProLanguages.code(value)
 }
