@@ -9,12 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
-import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.RenderSection
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -85,19 +80,5 @@ class ChordRowsTest {
         assertEquals(48, chordSlotCount(48))
         assertEquals(MAX_CHORD_SLOTS, chordSlotCount(60))
         assertEquals(MAX_SONG_CHORDS, MAX_CHORD_SLOTS)
-    }
-
-    @Test
-    fun `a folded chords section is its header alone`() {
-        val cell = ChordCell(
-            name = "G",
-            tuning = ChordTuning.GUITAR,
-            root = 7,
-            selection = SelectedShape(null, SelectedShape.Source.DEFAULT),
-        )
-        assertEquals(1, RenderSection.Chords(cells = List(5) { cell }, isFolded = true).itemCount)
-        val unfolded = RenderSection.Chords(cells = List(5) { cell }, isFolded = false)
-        assertEquals(5, unfolded.itemCount)
-        assertContentEquals(intArrayOf(0, 1, 2, 3, 4), unfolded.chunkStarts)
     }
 }

@@ -854,7 +854,7 @@ class CampfireViewModel(
     val isFileTransferActive get() = exportController.isFileTransferActive
 
     /** See [ExportController.pdfExportProgress]. */
-    val pdfExportProgress get() = exportController.pdfExportProgress
+    internal val pdfExportProgress get() = exportController.pdfExportProgress
 
     /** See [ExportController.launchFileTransfer]. */
     private fun launchFileTransfer(block: suspend () -> Unit) = exportController.launchFileTransfer(block)

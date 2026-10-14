@@ -9,10 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-
-/** How many of the [total] pages of a PDF have been drawn, see [CampfireViewModel.pdfExportProgress]. */
-data class PdfExportProgress(
+/** How many of the [total] pages of a PDF have been drawn, see `CampfireViewModel.pdfExportProgress`. */
+internal data class PdfExportProgress(
     val done: Int,
     val total: Int,
 )
