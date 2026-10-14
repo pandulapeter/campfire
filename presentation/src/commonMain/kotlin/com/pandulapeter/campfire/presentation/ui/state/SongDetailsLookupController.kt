@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
@@ -17,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongCreditsLookup
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongDetailsLookupState
+import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,6 +82,18 @@ internal class SongDetailsLookupController(
         _songCredits.value = null
     }
 
+    /**
+     * Follows the dialogs as they change, as [CoverArtSearchController.onOpenDialogsChanged] does: cleared once no
+     * lookup sheet is open, and asked as one is put up, from the form's draft, so that its first frame already says
+     * that the search is running.
+     */
+    fun onOpenDialogsChanged(before: List<DialogType>, after: List<DialogType>) {
+        if (after.none { it is DialogType.SongDetailsLookup }) clear()
+        after.filter { dialog -> before.none { it.slotKey == dialog.slotKey } }
+            .filterIsInstance<DialogType.SongDetailsLookup>()
+            .forEach { searchSongDetails(songDetailsQueryOf(it.draft)) }
+    }
+
     fun clear() {
         searchJob?.cancel()
         searchJob = null
@@ -87,3 +101,10 @@ internal class SongDetailsLookupController(
         clearSongCredits()
     }
 }
+
+/** What the lookup is first asked from a form holding [draft]: the title, artist and album typed into it. */
+internal fun songDetailsQueryOf(draft: Map<ChordProMetadataFields.Field, String>) = SongDetailsQuery(
+    title = draft[ChordProMetadataFields.Field.TITLE].orEmpty().trim(),
+    artist = draft[ChordProMetadataFields.Field.ARTIST].orEmpty().trim(),
+    album = draft[ChordProMetadataFields.Field.ALBUM].orEmpty().trim(),
+)

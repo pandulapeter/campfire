@@ -108,7 +108,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
-import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.toSavedDialog
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -332,16 +331,8 @@ class CampfireViewModel(
             // Every change is written, so that a sheet that goes takes its entry with it. The topmost one worth reopening
             // rather than the one on top, so that a sheet with a question over it is what a restored process opens.
             savedStateStore.persist(SavedStateStore.VISIBLE_DIALOG_KEY, after.asReversed().firstNotNullOfOrNull { it.toSavedDialog() })
-            // Nothing but the sheets read them, and a search nobody is waiting for any more still counts against the
-            // catalogue's one request a second - but a sheet with a question over it is still open, and still wants
-            // its results when the question goes.
-            if (after.none { it is DialogType.CoverArtSearch }) clearCoverArtSearch()
-            if (after.none { it is DialogType.SongDetailsLookup }) songDetailsLookupController.clear()
-            // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
-            // says that the search is running instead of crossfading from the hint to it while it slides up.
-            val opened = after.filter { dialog -> before.none { it.slotKey == dialog.slotKey } }
-            opened.filterIsInstance<DialogType.CoverArtSearch>().forEach { searchCoverArt(coverArtQueryOf(song = it.song, target = it.target)) }
-            opened.filterIsInstance<DialogType.SongDetailsLookup>().forEach { searchSongDetails(songDetailsQueryOf(it.draft)) }
+            coverArtSearchController.onOpenDialogsChanged(before = before, after = after)
+            songDetailsLookupController.onOpenDialogsChanged(before = before, after = after)
         }
     }
 
@@ -1316,8 +1307,6 @@ class CampfireViewModel(
 
     fun searchCoverArt(query: CoverArtQuery) = coverArtSearchController.searchCoverArt(query)
 
-    private fun clearCoverArtSearch() = coverArtSearchController.clearCoverArtSearch()
-
     /** Puts the song details lookup up over [dialog], the metadata form, which holds [draft] at the moment. */
     fun showSongDetailsLookup(dialog: DialogType.SongMetadata, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.showDialog(
         DialogType.SongDetailsLookup(song = dialog.song, target = dialog.target, values = dialog.values, draft = draft, formFillCount = dialog.fillCount),
@@ -1329,13 +1318,6 @@ class CampfireViewModel(
      */
     fun fillSongMetadata(dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) =
         dialogHost.updateUnderlyingDialog(dialog.filledForm(draft))
-
-    /** What the lookup is first asked from a form holding [draft]: the title, artist and album typed into it. */
-    fun songDetailsQueryOf(draft: Map<ChordProMetadataFields.Field, String>) = SongDetailsQuery(
-        title = draft[ChordProMetadataFields.Field.TITLE].orEmpty().trim(),
-        artist = draft[ChordProMetadataFields.Field.ARTIST].orEmpty().trim(),
-        album = draft[ChordProMetadataFields.Field.ALBUM].orEmpty().trim(),
-    )
 
     fun searchSongDetails(query: SongDetailsQuery) = songDetailsLookupController.searchSongDetails(query)
 

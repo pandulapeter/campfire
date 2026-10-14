@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
+import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -82,6 +83,20 @@ internal class CoverArtSearchController(
                 _coverArtSearch.value = CoverArtSearchState.Active(query = query, results = results)
             }
         }
+    }
+
+    /**
+     * Follows the dialogs as they change. Nothing but the sheet reads the search, and one nobody is waiting for any more
+     * still counts against the catalogue's one request a second - but a sheet with a question over it is still open, and
+     * still wants its results when the question goes. The search is asked as the sheet is put up rather than by the
+     * sheet once it is composed, so that its first frame already says that the search is running instead of
+     * crossfading from the hint to it while it slides up.
+     */
+    fun onOpenDialogsChanged(before: List<DialogType>, after: List<DialogType>) {
+        if (after.none { it is DialogType.CoverArtSearch }) clearCoverArtSearch()
+        after.filter { dialog -> before.none { it.slotKey == dialog.slotKey } }
+            .filterIsInstance<DialogType.CoverArtSearch>()
+            .forEach { searchCoverArt(coverArtQueryOf(song = it.song, target = it.target)) }
     }
 
     fun clearCoverArtSearch() {

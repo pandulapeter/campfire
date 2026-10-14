@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.state.songDetailsQueryOf
 
 /**
  * "Find song details online", put up over the Edit song details form: the form's title, artist and album as fields,
@@ -73,7 +74,7 @@ internal fun SongDetailsLookupSheet(
 ) {
     val searchState by viewModel.songDetailsLookup.collectAsStateWithLifecycle()
     val creditsLookup by viewModel.songCredits.collectAsStateWithLifecycle()
-    val initialQuery = remember(dialog.song.fileName) { viewModel.songDetailsQueryOf(dialog.draft) }
+    val initialQuery = remember(dialog.song.fileName) { songDetailsQueryOf(dialog.draft) }
     var title by rememberSaveable { mutableStateOf(initialQuery.title) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
