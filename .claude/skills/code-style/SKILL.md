@@ -207,10 +207,10 @@ wrong or undo it".
 - **After a significant change, update the relevant `CLAUDE.md`** — the nearest directory-scoped one: the
   module's own, or inside `:presentation` the one of the package or source set the change is in (a screen's
   behavior goes into `ui/screens/<screen>/CLAUDE.md`, a shared component's into `ui/components/CLAUDE.md`,
-  a rule several modules enforce into `ui/CLAUDE.md`). The root `CLAUDE.md` changes only for a coding
+  a rule several `:presentation` packages share into `ui/CLAUDE.md`). The root `CLAUDE.md` changes only for a coding
   convention, the architecture, the library layout, the build, or a line of its `## Product rules` index;
-  the release pipeline and the workflows are `.github/CLAUDE.md`'s. These files are unusually detailed here,
-  and their value is that they are true.
+  the release pipeline and the workflows are `.github/CLAUDE.md`'s. Each holds only what the code
+  cannot show; budgets and what to cut are in codebase-review §6.
 - **No paragraph runs past ~1,500 characters**, and lines are hard-wrapped at ~120 columns: a topic that
   outgrows that is cut at sentence boundaries into paragraphs or bullets under `###` headings, so `grep -n`
   and a diff still point at something readable.

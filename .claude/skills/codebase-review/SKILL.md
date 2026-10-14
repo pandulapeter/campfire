@@ -242,9 +242,7 @@ they found them.
 - Known false alarms: `DesktopSyncAuthenticatorTest` holds port 53682, so rerun it alone before calling a lane red;
   a corrupt incremental cache is retried with `-Pkotlin.incremental=false`.
 - `local.properties` is not in a worktree; copy it in only for lanes whose manual check needs the Dropbox key.
-- Strings go into both `values/strings.xml` and `values-hu/strings.xml`. A changed behaviour updates the nearest
-  directory-scoped `CLAUDE.md` (the module's, or the `:presentation` package's or source set's), and the root one only
-  for a convention or a product-rule line; the release pipeline is `.github/CLAUDE.md`'s.
+- Strings and the `CLAUDE.md` file a changed behaviour updates follow the `code-style` skill.
 - A refactor that renames or moves classes leaves the Android Baseline Profile stale; prepare-release regenerates
   it before the next release.
 - Commit examples in this repo's voice: `Stop a sync run that would empty the cloud folder, and ask which way to
