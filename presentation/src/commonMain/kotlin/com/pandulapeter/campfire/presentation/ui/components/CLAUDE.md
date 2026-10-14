@@ -45,7 +45,7 @@ The shared building blocks of the screens.
   edge only travels one way.
 - The pinned header's pill narrows to the room the buttons leave (`onReachChanged`, measured before the list via
   `ListUnderAppBar` so the first frame is right) and along `AppBarOverlap.coverage` as the search opens and closes.
-- Cards fade out under the header row and back in over 24dp (`ListTopFade` in `EdgeFade.kt`): each card masks itself,
+- Cards fade out under the header row and back in over 24dp (`ListTopFade.kt`): each card masks itself,
   since an overlay would fade the sticky headers (items of the same list). Strength grows with scroll, so a list at rest
   shows its first cards whole. A card takes no press inside the gradient, but a drag there still scrolls.
 - The fast scroller starts below `AppBarOverlap`'s reach so its thumb is never under a button.
