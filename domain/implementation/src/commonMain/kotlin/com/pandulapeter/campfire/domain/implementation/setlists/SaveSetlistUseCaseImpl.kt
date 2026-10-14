@@ -7,19 +7,17 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.setlists
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
-import kotlinx.datetime.LocalDate
+import com.pandulapeter.campfire.domain.api.setlists.SaveSetlistUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-internal class EditSetlistUseCaseImpl(
+internal class SaveSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
-) : EditSetlistUseCase {
+) : SaveSetlistUseCase {
 
-    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? =
-        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date, isCountdownShown = isCountdownShown)
+    override suspend operator fun invoke(setlist: Setlist) = setlistRepository.saveSetlist(setlist)
 }

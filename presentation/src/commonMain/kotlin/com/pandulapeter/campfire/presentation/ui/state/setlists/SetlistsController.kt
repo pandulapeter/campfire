@@ -22,12 +22,12 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
-import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
+import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
+import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.setlists.SaveSetlistUseCase
+import com.pandulapeter.campfire.domain.api.setlists.UpdateSetlistUseCase
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
