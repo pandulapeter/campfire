@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop

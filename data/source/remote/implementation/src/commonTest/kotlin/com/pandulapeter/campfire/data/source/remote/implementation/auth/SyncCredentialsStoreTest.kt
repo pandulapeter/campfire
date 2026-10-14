@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json

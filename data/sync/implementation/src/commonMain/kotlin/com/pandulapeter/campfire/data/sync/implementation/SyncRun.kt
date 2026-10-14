@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
-import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import kotlinx.serialization.json.JsonObject
 
 /** What stays the same for the whole of one [SyncEngine.synchronize] call, handed to everything a run does. */

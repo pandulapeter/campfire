@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSources
-import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.DropboxSyncProvider
 import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesRemoteSource

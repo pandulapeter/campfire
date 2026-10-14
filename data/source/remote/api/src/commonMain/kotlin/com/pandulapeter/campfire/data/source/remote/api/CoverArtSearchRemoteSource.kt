@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api
 
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.Catalogue

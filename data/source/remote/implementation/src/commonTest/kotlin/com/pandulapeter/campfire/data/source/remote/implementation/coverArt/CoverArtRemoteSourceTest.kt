@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 
-import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
+import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine

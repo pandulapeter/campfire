@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
-import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
-import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
-import com.pandulapeter.campfire.data.source.remote.api.SyncRunEndingException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import io.ktor.client.network.sockets.ConnectTimeoutException

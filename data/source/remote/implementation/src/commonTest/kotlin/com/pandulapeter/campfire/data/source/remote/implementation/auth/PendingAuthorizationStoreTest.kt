@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
-import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
+import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

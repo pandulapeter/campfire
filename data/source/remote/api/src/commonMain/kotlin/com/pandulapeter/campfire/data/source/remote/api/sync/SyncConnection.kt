@@ -7,12 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api
+package com.pandulapeter.campfire.data.source.remote.api.sync
 
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 
 /**
  * The account half of a [SyncProvider]: who is connected, and the credentials that say so. Nothing a run does is here -

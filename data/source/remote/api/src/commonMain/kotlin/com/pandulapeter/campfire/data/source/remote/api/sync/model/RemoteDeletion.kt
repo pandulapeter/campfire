@@ -7,11 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api.model
+package com.pandulapeter.campfire.data.source.remote.api.sync.model
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 
-/** One file [com.pandulapeter.campfire.data.source.remote.api.SyncProvider.delete] is asked to remove. */
+/** One file [com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider.delete] is asked to remove. */
 data class RemoteDeletion(
     val kind: LibraryFileKind,
     val name: String,

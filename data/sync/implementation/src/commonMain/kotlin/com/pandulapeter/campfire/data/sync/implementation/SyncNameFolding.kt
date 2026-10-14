@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 
 /**
  * Gives a remote file the local spelling of its name where the two differ only by case.

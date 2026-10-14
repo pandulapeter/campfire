@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin

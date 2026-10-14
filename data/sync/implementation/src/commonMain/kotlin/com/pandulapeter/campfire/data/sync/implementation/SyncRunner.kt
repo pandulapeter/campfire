@@ -17,10 +17,10 @@ import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
-import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
-import com.pandulapeter.campfire.data.source.remote.api.SyncRunEndingException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable

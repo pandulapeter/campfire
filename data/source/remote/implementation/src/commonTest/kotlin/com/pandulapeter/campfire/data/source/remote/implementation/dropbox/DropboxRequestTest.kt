@@ -12,10 +12,10 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
-import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException

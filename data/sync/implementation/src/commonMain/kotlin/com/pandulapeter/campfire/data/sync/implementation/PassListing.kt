@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import kotlinx.serialization.json.JsonObject
 
 /**

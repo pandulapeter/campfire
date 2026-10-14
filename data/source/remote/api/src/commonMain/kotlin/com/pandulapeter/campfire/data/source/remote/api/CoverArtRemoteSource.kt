@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api
 
-import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
+import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 
 /**
  * Downloads the image a song's `{meta: cover …}` directive names. The address is the user's, so it may point at any

@@ -7,14 +7,14 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api
+package com.pandulapeter.campfire.data.source.remote.api.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 
 /**
  * The files half of a [SyncProvider]: one cloud folder, flat, addressed by (kind, name) - exactly the shape the library

@@ -14,8 +14,8 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
-import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged

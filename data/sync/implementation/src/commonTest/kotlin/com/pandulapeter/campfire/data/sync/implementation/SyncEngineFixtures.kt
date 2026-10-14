@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
-import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 
 /** The account the engine tests' indexes belong to, as [SyncIndexDocument.accountId] files it. */

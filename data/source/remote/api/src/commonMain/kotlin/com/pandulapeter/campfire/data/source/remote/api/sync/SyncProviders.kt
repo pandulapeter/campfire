@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api
+package com.pandulapeter.campfire.data.source.remote.api.sync
 
 /**
  * Every provider the build has credentials for, as one dependency. A provider the build cannot use is not in [all]

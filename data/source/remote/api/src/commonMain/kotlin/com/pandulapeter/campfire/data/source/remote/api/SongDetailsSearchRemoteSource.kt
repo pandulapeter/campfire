@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api
 
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.SongCredits
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate

@@ -12,15 +12,15 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 
 /**
  * A remote folder held in memory, for running [SyncEngine] against. Revisions are a counter per write, which is all

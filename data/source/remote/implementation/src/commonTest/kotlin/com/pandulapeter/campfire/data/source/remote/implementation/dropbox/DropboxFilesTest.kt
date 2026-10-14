@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
-import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api.model
+package com.pandulapeter.campfire.data.source.remote.api.sync.model
 
 /**
  * The content of a remote file and the revision it is at: a library file as `SyncProvider.download` fetched it, or a
