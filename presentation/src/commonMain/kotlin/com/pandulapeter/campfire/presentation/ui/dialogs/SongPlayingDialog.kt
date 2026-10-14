@@ -73,7 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.transpositionLabel
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import kotlin.math.absoluteValue
 
 /**

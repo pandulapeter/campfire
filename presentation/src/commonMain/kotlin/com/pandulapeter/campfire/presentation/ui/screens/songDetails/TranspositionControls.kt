@@ -20,9 +20,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_down
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
-import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
 import com.pandulapeter.campfire.presentation.ui.components.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -53,7 +53,3 @@ internal fun TranspositionControls(
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
     onReset = onReset,
 )
-
-/** What the transposition stepper reads for [transposition], with the [key] it takes the song to where there is one. */
-internal fun transpositionLabel(transposition: Int, key: String?) = (if (transposition > 0) "+$transposition" else transposition.toString())
-    .let { if (key.isNullOrBlank()) it else "$it $KEY_SEPARATOR $key" }
