@@ -58,7 +58,7 @@ internal class SongTextStore(
      *
      * A rename moves the file - and with it the song in the library - before the screens that were opened on the old
      * name have been rewritten, since every setlist naming the song and its saved transposition are written in
-     * between (see [updateSongFileName]). For those few writes the details screen's destination names a song the
+     * between (see `SongFilesController.updateSongFileName`). For those few writes the details screen's destination names a song the
      * library no longer holds, and a screen that resolved that as "gone" closed itself, or dropped a page and left a
      * setlist on the next song. Resolved through rather than waited out: the song is here from before the file moves
      * until after the back stack names it by its new name, so there is no window to miss and no delay to tune.

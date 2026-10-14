@@ -151,6 +151,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSong
 import com.pandulapeter.campfire.presentation.ui.state.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.SongMetadataEditing
+import com.pandulapeter.campfire.presentation.ui.state.SongFilesController
 import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
@@ -182,10 +183,10 @@ class CampfireViewModel(
     private val getEditorDraft: GetEditorDraftUseCase,
     private val saveEditorDraft: SaveEditorDraftUseCase,
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
-    private val createSong: CreateSongUseCase,
-    private val duplicateSong: DuplicateSongUseCase,
+    createSong: CreateSongUseCase,
+    duplicateSong: DuplicateSongUseCase,
     private val editSongs: EditSongsUseCase,
-    private val deleteSong: DeleteSongUseCase,
+    deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
     downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
@@ -197,7 +198,7 @@ class CampfireViewModel(
     private val saveSetlist: SaveSetlistUseCase,
     private val editSetlist: EditSetlistUseCase,
     private val updateSetlist: UpdateSetlistUseCase,
-    private val renameSongFile: RenameSongFileUseCase,
+    renameSongFile: RenameSongFileUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
@@ -723,6 +724,24 @@ class CampfireViewModel(
         deleteLibrary = deleteLibrary,
     )
 
+    private val songFilesController: SongFilesController = SongFilesController(
+        messageSink = messageSink,
+        songTextStore = songTextStore,
+        showDialog = { showDialog(it) },
+        duplicateSongDialog = songMetadataEditing::duplicateSongDialog,
+        openEditor = { fileName, shouldStartInsideFirstSection -> openEditor(fileName, shouldStartInsideFirstSection) },
+        clearEditorDraft = editorSession::clearEditorDraft,
+        followMetronomeRename = metronomeController::followSongRename,
+        followScreensRename = navigator::followSongRename,
+        closeScreensShowing = { navigator.closeScreensShowing(it) },
+        followReportedFileNames = importController::followReportedFileNames,
+        getSongContent = getSongContent,
+        createSongFile = createSong,
+        duplicateSongFile = duplicateSong,
+        renameSongFile = renameSongFile,
+        deleteSongFile = deleteSong,
+    )
+
     /** See [ImportController.isImporting]. */
     val isImporting: StateFlow<Boolean> get() = importController.isImporting
 
@@ -1159,82 +1178,24 @@ class CampfireViewModel(
 
     fun refreshIfStale() = libraryState.refreshIfStale()
 
-    /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
-    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = launchLibraryChange {
-        val song = createSong.invoke(
-            title = values[ChordProMetadataFields.Field.TITLE].orEmpty(),
-            artist = values[ChordProMetadataFields.Field.ARTIST].orEmpty(),
-            metadata = values,
-        )
-        openEditor(fileName = song.fileName, shouldStartInsideFirstSection = true)
-    }
+    /** See [SongFilesController.createSong]. */
+    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = songFilesController.createSong(values)
 
-    /**
-     * Opens the New song form filled in with what [song] says about itself, read from its file, since the subtitle,
-     * the album and the rest are not part of the song list's lighter metadata. The file is read here rather than into
-     * the texts the open screens hold, which are all read again on every sync run.
-     */
-    fun showDuplicateSongDialog(song: Song) = launchLibraryChange {
-        showDialog(duplicateSongDialogOf(song) ?: return@launchLibraryChange sendMessage(Message.OperationFailed))
-    }
+    /** See [SongFilesController.showDuplicateSongDialog]. */
+    fun showDuplicateSongDialog(song: Song) = songFilesController.showDuplicateSongDialog(song)
 
-    private suspend fun duplicateSongDialogOf(song: Song) = getSongContent(song.fileName)?.let { songMetadataEditing.duplicateSongDialog(song, it.text) }
-
-    /**
-     * Writes a copy of [song] with the fields of the form that were changed there written over it, as
-     * [setSongMetadata] writes them, and opens the copy in the editor: a copy is made to be changed, a "Live" or an
-     * "Acoustic" version of the song, and what makes it one is rarely in its header alone.
-     */
+    /** See [SongFilesController.duplicateSong]. */
     fun duplicateSong(
         song: Song,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
-    ) = launchLibraryChange {
-        val changes = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
-        val copy = duplicateSong.invoke(fileName = song.fileName, changes = changes) ?: return@launchLibraryChange sendMessage(Message.OperationFailed)
-        openEditor(fileName = copy.fileName)
-    }
+    ) = songFilesController.duplicateSong(song, values, offeredValues)
 
-    /**
-     * Renames the song's file to the one its own metadata gives it, offered by the song's menu wherever the two have
-     * drifted apart (`Song.canUpdateFileName`). The use case follows the references that are on disk - the setlists
-     * holding the song, its saved transposition - and what is left here is the two places the old name lives in
-     * memory: the text read from the file, and the screens that were opened on it. Where a setlist or the
-     * transposition could not follow, the rename still stands and the screens still follow it; that is said
-     * afterwards (`Message.SongFileRenamedPartly`).
-     */
-    fun updateSongFileName(song: Song) = launchLibraryChange {
-        // Before the file moves, so that the moment the library drops the old name is already covered.
-        songTextStore.updateSongsBeingRenamed { it + (song.fileName to song) }
-        try {
-            val rename = renameSongFile(song) ?: return@launchLibraryChange
-            val fileName = rename.fileName
-            // Only while the screen being rewritten is the one on top, which is what makes sure the context moves off
-            // the old name and the entry is taken out again.
-            metronomeController.followSongRename(from = song.fileName, to = fileName)
-            songTextStore.updateSongTexts { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
-            navigator.followSongRename(from = song.fileName, to = fileName)
-            followReportedFileNames { if (it == song.fileName) fileName else it }
-            // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
-            if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
-        } finally {
-            // Cleared once the screens name the new file - and on the paths that never got that far: a rename that
-            // found nothing to do, one that threw, and a view model going away mid-rename.
-            songTextStore.updateSongsBeingRenamed { it - song.fileName }
-        }
-    }
+    /** See [SongFilesController.updateSongFileName]. */
+    fun updateSongFileName(song: Song) = songFilesController.updateSongFileName(song)
 
-    fun deleteSong(fileName: String) = launchLibraryChange {
-        val haveReferencesBeenRemoved = deleteSong.invoke(fileName)
-        // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
-        editorSession.clearEditorDraft()
-        // A screen showing the file that has just gone is closed first, or it would sit there on nothing.
-        navigator.closeScreensShowing(fileName)
-        songTextStore.updateSongTexts { it - fileName }
-        followReportedFileNames { it.takeUnless { it == fileName } }
-        // Said once the screens have let go of the file, which is gone whatever else could not be rewritten.
-        if (!haveReferencesBeenRemoved) sendMessage(Message.SongDeletedPartly)
-    }
+    /** See [SongFilesController.deleteSong]. */
+    fun deleteSong(fileName: String) = songFilesController.deleteSong(fileName)
 
     fun setSongTags(target: SongEditTarget, tags: List<String>, offeredTags: List<String>) = songMetadataEditing.setSongTags(target, tags, offeredTags)
 
@@ -1643,7 +1604,7 @@ class CampfireViewModel(
         if (dialogHost.visibleDialog.value != null) return false
         when (saved) {
             SavedDialog.NewSong -> showDialog(DialogType.NewSong)
-            is SavedDialog.DuplicateSong -> showDialog(duplicateSongDialogOf(songOf(saved.songFileName) ?: return false) ?: return false)
+            is SavedDialog.DuplicateSong -> showDialog(songFilesController.duplicateSongDialogOf(songOf(saved.songFileName) ?: return false) ?: return false)
             SavedDialog.NewSetlist -> showDialog(DialogType.NewSetlist)
             is SavedDialog.EditSetlist -> showDialog(DialogType.EditSetlist(setlistOf(saved.setlistFileName) ?: return false))
             is SavedDialog.DuplicateSetlist -> showDialog(DialogType.DuplicateSetlist(setlistOf(saved.setlistFileName) ?: return false))
@@ -1670,9 +1631,6 @@ class CampfireViewModel(
     // Helpers
 
     private inline fun <reified T> restore(key: String): T? = savedStateStore.restore(key)
-
-    /** See [MessageSink.launchLibraryChange]. */
-    private fun launchLibraryChange(block: suspend () -> Unit) = messageSink.launchLibraryChange(block)
 
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
