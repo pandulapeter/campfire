@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
@@ -20,10 +22,28 @@ import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_W
 internal val ONBOARDING_CONTENT_WIDTH = max(560.dp, THEME_COLOR_CHOICE_WIDTH)
 
 /**
+ * Room kept beside a page and its bar on top of the margin each answer keeps for itself, since the pages hold little and
+ * read better with air around them than with cards reaching for the window's edges. It grows with the room [width]
+ * leaves beyond the smallest supported phone, which gives none of it up: there the chord preview's first line would
+ * wrap. Kept outside [ONBOARDING_CONTENT_WIDTH], so the widest the content gets is unchanged.
+ */
+internal fun onboardingSideMargin(width: Dp) = ((width - SMALLEST_WIDTH) / 5).coerceIn(0.dp, MAX_SIDE_MARGIN)
+
+private val SMALLEST_WIDTH = 360.dp
+private val MAX_SIDE_MARGIN = 8.dp
+
+/**
  * The least height a page keeps its mark at. Higher than the app's short window, since the mark is decoration, and the
  * pages are better scrolled for their answers than for it.
  */
 internal val ONBOARDING_MARK_MIN_HEIGHT = 640.dp
+
+/**
+ * The least room a page gets its wider gaps in: a tall phone held upright, a tablet, or a tall desktop window, where the
+ * standard gaps leave the page looking packed in the middle of empty space. Changing between the two is animated with
+ * the mark's own change ([ONBOARDING_MARK_RESIZE_MILLIS]), since only a resized window crosses it.
+ */
+internal val ONBOARDING_ROOMY_MIN_HEIGHT = 720.dp
 
 /**
  * How long the mark and its place take to leave or come back as a window crosses [ONBOARDING_MARK_MIN_HEIGHT]. Slower

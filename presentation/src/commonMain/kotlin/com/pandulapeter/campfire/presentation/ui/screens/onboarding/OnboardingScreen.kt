@@ -123,6 +123,7 @@ internal fun OnboardingScreen(
         modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.contentEdges.withMinTopEdge),
     ) {
         val isCompact = maxHeight < ONBOARDING_MARK_MIN_HEIGHT
+        val sideMargin = onboardingSideMargin(maxWidth)
         val isLast = nextOnboardingStep(currentStep, steps) == null
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -173,6 +174,7 @@ internal fun OnboardingScreen(
                 isLast = isLast,
                 isOpenedFromSettings = destination.isOpenedFromSettings,
                 isImportWaiting = importReport != null,
+                sideMargin = sideMargin,
                 onBack = viewModel::navigateBack,
                 onClose = viewModel::closeOnboarding,
                 onNext = viewModel::showNextOnboardingStep,

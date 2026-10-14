@@ -51,7 +51,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_other
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_without_diagrams
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
-import com.pandulapeter.campfire.presentation.resources.chords_search_no_shape
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
@@ -224,13 +223,6 @@ internal fun ChordsScreen(
                         ChordLibraryMessage(
                             modifier = listItemAnimation(gridState),
                             text = textResource(Res.string.chords_search_no_chord, results.query),
-                        )
-                    }
-
-                    is ChordLibraryResults.NoShape -> item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
-                        ChordLibraryMessage(
-                            modifier = listItemAnimation(gridState),
-                            text = textResource(Res.string.chords_search_no_shape, results.name),
                         )
                     }
 

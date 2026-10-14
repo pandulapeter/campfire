@@ -573,10 +573,8 @@
     <string name="chords_search">Find a chord</string>
     <string name="chords_instrument_other">Choose an instrument to see how its chords are played.</string>
     <string name="chords_instrument_without_diagrams">%1$s: no chord diagrams. Choose another instrument to see how its chords are played.</string>
-    <!-- A search that names no chord, e.g. "No chord is called “Hmaj”." -->
-    <string name="chords_search_no_chord">No chord is called “%1$s”.</string>
-    <!-- A search that names a chord that has no shape on the instrument, e.g. "C13 has no shape on this instrument." -->
-    <string name="chords_search_no_shape">%1$s has no shape on this instrument.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">No chord in this key matches “%1$s”.</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Edit</string>

@@ -41,5 +41,5 @@ Nothing depends on it and no workflow runs it; the `store-screenshots` skill dri
 - **Promo video footage** is `Promo.kt`, rendered only with `--only promo` into `Promo/`: stills and clips. `record`
   draws a frame every 1/60 s of the scene's clock as JPEGs, so animations play at their own speed however slow drawing
   is. A drag moves a finger a frame at a time (`touch`); a tap within a clip is press and release on separate frames at
-  the label's middle (`centerOf`), since `tap` settles between them. The metronome runs at the video's 160 BPM. The video
-  is composed outside the repository.
+  the label's middle (`centerOf`; `centersOf` where several share a label), since `tap` settles between them. The
+  metronome runs at the video's 160 BPM. The video is composed outside the repository.

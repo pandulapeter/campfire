@@ -47,11 +47,8 @@ internal sealed interface ChordLibraryResults {
     /** The chords to draw, each with the shape the app shows it with where nothing else says how it is played. */
     data class Chords(val chords: List<SongChord>) : ChordLibraryResults
 
-    /** A search that names no chord, nor is part of the name of one the key lists. */
+    /** A search that is part of the name of none of the chords the key lists. */
     data class NoChord(val query: String) : ChordLibraryResults
-
-    /** A search that names a chord with no shape on the instrument in its tuning: one of more notes than strings. */
-    data class NoShape(val name: String) : ChordLibraryResults
 }
 
 /** What the Chords tab's results are found for: the arguments of [chordLibraryResults]. */
@@ -93,10 +90,11 @@ internal fun initialChordLibraryShown(
 
 /**
  * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
- * [notation], narrowed by [query]: a search that names a chord in the reader's notation (`F#m7b5`, `a`) is that chord
- * alone, whatever key is picked, and any other narrows the key's chords to those whose name holds it (`m7`, `sus`). A
- * chord with no shape on the instrument is left out of a key, since every cell is there to be played. A numbering names
- * the chords by their letters, as it names a chord with no song around it everywhere.
+ * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`): the key is picked
+ * first and the search only narrows it, so a chord of another key is never found. Every name is the one the key row
+ * writes, its root in capitals (in title case in the Latin notation), whatever case the search was typed in. A chord
+ * with no shape on the instrument is left out of a key, since every cell is there to be played. A numbering names the
+ * chords by their letters, as it names a chord with no song around it everywhere.
  *
  * This looks shapes up, and runs the search for the ones the tables lack, so it is called on the main thread only
  * without [searchesShapes], where it answers null for anything the tables cannot answer alone: what the tab opens on is
@@ -111,24 +109,15 @@ internal fun chordLibraryResults(
     searchesShapes: Boolean = true,
 ): ChordLibraryResults? {
     val typed = query.trim()
-    if (typed.isNotEmpty()) {
-        ChordProChords.parse(typed, notation)?.let { chord ->
-            if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
-            // Named as the key row names its chords rather than as it was typed, which may be `c7` or `LAm`.
-            val name = ChordProNotation.canonicalName(typed, notation) ?: typed
-            val shape = ChordVoicings.default(chord, tuning) ?: return ChordLibraryResults.NoShape(name)
-            // The standard notation's spelling is what spells the notes; a name typed in another one is spelled by them.
-            return ChordLibraryResults.Chords(listOf(SongChord(name = name, chord = chord, spelling = name.takeIf { notation == ChordNotation.STANDARD }, defaultShape = shape)))
-        }
-    }
     val key = keys[keyIndex.coerceIn(keys.indices)]
     val chords = CHORD_LIBRARY_QUALITIES.mapNotNull { quality ->
         val name = key + quality
+        val shownName = ChordProNotation.shownName(name, notation)
+        if (!shownName.contains(typed, ignoreCase = true)) return@mapNotNull null
         val chord = ChordProChords.parse(name) ?: return@mapNotNull null
         if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
         val shape = ChordVoicings.default(chord, tuning) ?: return@mapNotNull null
-        SongChord(name = ChordProNotation.shownName(name, notation), chord = chord, spelling = name, defaultShape = shape)
+        SongChord(name = shownName, chord = chord, spelling = name, defaultShape = shape)
     }
-    if (typed.isEmpty()) return ChordLibraryResults.Chords(chords)
-    return chords.filter { typed in it.name }.takeIf { it.isNotEmpty() }?.let { ChordLibraryResults.Chords(it) } ?: ChordLibraryResults.NoChord(typed)
+    return if (chords.isEmpty() && typed.isNotEmpty()) ChordLibraryResults.NoChord(typed) else ChordLibraryResults.Chords(chords)
 }

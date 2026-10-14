@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -42,7 +43,8 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
  * Back, where there is a page to go back to, how far along the pages are, and the way on: Next, and on the last page
  * Start playing (Done where the onboarding was opened from Settings), which finishes it - or Next still while an import
  * waits behind the onboarding ([isImportWaiting]), since what finishing it leads to is that import's screen. Pinned under the page, since it is
- * what every page is finished with, and as wide as it is, so that the buttons stay near the content on a wide window.
+ * what every page is finished with, and as wide as it is, so that the buttons stay near the content on a wide window;
+ * [sideMargin] is the pages' own ([onboardingSideMargin]), so its edges line up with theirs.
  *
  * On the first page, which has nothing to go back to, Back's place holds the way out of the whole onboarding instead
  * ([onClose]): Skip on a first run, Close where it was opened from Settings. It is a tonal pill rather than a text
@@ -63,6 +65,7 @@ internal fun OnboardingBottomBar(
     isLast: Boolean,
     isOpenedFromSettings: Boolean,
     isImportWaiting: Boolean,
+    sideMargin: Dp,
     onBack: () -> Unit,
     onClose: () -> Unit,
     onNext: () -> Unit,
@@ -78,7 +81,11 @@ internal fun OnboardingBottomBar(
         },
     )
     SubcomposeLayout(
-        modifier = modifier.widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier = modifier
+            .padding(horizontal = sideMargin)
+            .widthIn(max = ONBOARDING_CONTENT_WIDTH)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) { constraints ->
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
         // Measured and never placed, so they are neither drawn nor touched; their semantics are cleared all the same.

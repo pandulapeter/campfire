@@ -573,10 +573,8 @@
     <string name="chords_search">Akkord keresése</string>
     <string name="chords_instrument_other">Válassz hangszert, hogy lásd, hogyan kell lefogni az akkordjait.</string>
     <string name="chords_instrument_without_diagrams">%1$s: nincsenek akkordábrák. Válassz másik hangszert, hogy lásd, hogyan kell lefogni az akkordjait.</string>
-    <!-- A search that names no chord, e.g. "No chord is called “Hmaj”." -->
-    <string name="chords_search_no_chord">Nincs „%1$s” nevű akkord.</string>
-    <!-- A search that names a chord that has no shape on the instrument, e.g. "C13 has no shape on this instrument." -->
-    <string name="chords_search_no_shape">A(z) %1$s akkordnak nincs fogása ezen a hangszeren.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">Ebben a hangnemben egy akkord sem felel meg ennek: „%1$s”.</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>

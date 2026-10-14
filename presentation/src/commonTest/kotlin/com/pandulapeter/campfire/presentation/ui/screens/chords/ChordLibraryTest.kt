@@ -64,43 +64,27 @@ internal class ChordLibraryTest {
     }
 
     @Test
-    fun `a search naming a chord finds that chord alone, whatever the key`() {
-        val chords = assertIs<ChordLibraryResults.Chords>(results(query = " F#m7b5 ")).chords
-        assertEquals(listOf("F#m7b5"), chords.map { it.name })
-        assertEquals(ChordProChords.parse("Gbm7b5"), chords.single().chord)
-        val latin = assertIs<ChordLibraryResults.Chords>(results(query = "Lam", notation = ChordNotation.LATIN)).chords.single()
-        assertEquals(ChordProChords.parse("Am"), latin.chord)
+    fun `a search narrows the key's chords to the names that hold it, ignoring case`() {
+        assertEquals(listOf("Csus2", "Csus4", "C7sus4"), assertIs<ChordLibraryResults.Chords>(results(query = " sus ")).chords.map { it.name })
+        assertEquals(listOf("Cmaj7", "Cmaj9", "Cmaj13", "Cmaj7b5", "Cmaj7#5"), assertIs<ChordLibraryResults.Chords>(results(query = "cMAJ")).chords.map { it.name })
     }
 
     @Test
-    fun `a chord found by a search is named with its root in capitals, or in title case in Latin`() {
-        val standard = assertIs<ChordLibraryResults.Chords>(results(query = "c7")).chords.single()
-        assertEquals("Cm7", standard.name)
-        assertEquals("Cm7", standard.spelling)
-        assertEquals("Lam7", assertIs<ChordLibraryResults.Chords>(results(query = "LAm7", notation = ChordNotation.LATIN)).chords.single().name)
+    fun `a found chord keeps the name the key row gives it, whatever case was typed`() {
+        assertEquals("Lam7", assertIs<ChordLibraryResults.Chords>(results(query = "LAM7", keyIndex = 9, notation = ChordNotation.LATIN)).chords.first().name)
+        assertEquals("F#m7b5", assertIs<ChordLibraryResults.Chords>(results(query = "f#m7b5", keyIndex = 6)).chords.single().name)
     }
 
     @Test
-    fun `any other search narrows the key's chords to the names that hold it`() {
-        val chords = assertIs<ChordLibraryResults.Chords>(results(query = "sus")).chords
-        assertEquals(listOf("Csus2", "Csus4", "C7sus4"), chords.map { it.name })
-    }
-
-    @Test
-    fun `a search that is no chord says so`() {
+    fun `a search never finds a chord of another key`() {
+        assertEquals(ChordLibraryResults.NoChord("Emaj7"), results(query = "Emaj7"))
         assertEquals(ChordLibraryResults.NoChord("xyz"), results(query = "xyz"))
     }
 
     @Test
-    fun `a chord with no shape on the instrument says so`() {
-        val crowded = "C(b9,9,#9,11,#11,b13,13,#13,maj7)"
-        assertEquals(ChordLibraryResults.NoShape(crowded), results(query = crowded, tuning = ChordTuning.UKULELE))
-    }
-
-    @Test
     fun `without the search, a chord only the search finds leaves the answer to it`() {
-        assertNull(chordLibraryResults(keys, 0, "Dbmaj9#11/Ab", ChordNotation.STANDARD, ChordTuning.MANDOLIN_AEAE, searchesShapes = false))
-        assertNotNull(chordLibraryResults(keys, 0, "G", ChordNotation.STANDARD, ChordTuning.GUITAR, searchesShapes = false))
+        assertNull(chordLibraryResults(keys, 1, "", ChordNotation.STANDARD, ChordTuning.MANDOLIN_AEAE, searchesShapes = false))
+        assertNotNull(chordLibraryResults(keys, 7, "sus2", ChordNotation.STANDARD, ChordTuning.GUITAR, searchesShapes = false))
     }
 
     @Test

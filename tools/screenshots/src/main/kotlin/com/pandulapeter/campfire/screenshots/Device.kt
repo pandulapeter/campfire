@@ -96,6 +96,17 @@ internal enum class Device(
         density = 2f,
         chrome = SystemChrome.IPad,
     ),
+
+    /** The same iPad held upright, for the promotional video, where it stands beside the laptop at its real size. */
+    IPAD_PORTRAIT(
+        folder = "Promo",
+        platform = ImpersonatedPlatform.IOS,
+        widthPx = 2064,
+        heightPx = 2752,
+        density = 2f,
+        chrome = SystemChrome.IPad,
+        isInListing = false,
+    ),
     MAC(
         folder = "Mac App Store - Mac",
         platform = ImpersonatedPlatform.MACOS,

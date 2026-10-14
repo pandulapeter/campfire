@@ -174,8 +174,27 @@ internal class ShotScope(
         ?.boundsInRoot
         ?.center
 
+    /**
+     * The middles of everything on screen whose label starts with [prefix], from the top of the screen down, for a label
+     * several things share (every row's drag handle) or one that goes on past what a shot knows (a chord's name before
+     * its shape is read out).
+     */
+    @OptIn(ExperimentalComposeUiApi::class)
+    fun centersOf(prefix: String): List<Offset> = scene.semanticsOwners
+        .flatMap { owner -> owner.unmergedRootSemanticsNode.findAll { node -> node.labels().any { it.startsWith(prefix) } } }
+        // A node that takes no room (one a screen reader announces) is nothing a finger could touch.
+        .filterNot { it.boundsInRoot.isEmpty }
+        .map { it.boundsInRoot.center }
+        .sortedWith(compareBy({ it.y }, { it.x }))
+
     private fun SemanticsNode.find(predicate: (SemanticsNode) -> Boolean): SemanticsNode? =
         if (predicate(this)) this else children.firstNotNullOfOrNull { it.find(predicate) }
+
+    private fun SemanticsNode.findAll(predicate: (SemanticsNode) -> Boolean): List<SemanticsNode> =
+        (if (predicate(this)) listOf(this) else emptyList()) + children.flatMap { it.findAll(predicate) }
+
+    private fun SemanticsNode.labels() =
+        config.getOrNull(SemanticsProperties.ContentDescription).orEmpty() + config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
 
     private fun SemanticsNode.isLabelled(label: String) =
         config.getOrNull(SemanticsProperties.ContentDescription)?.contains(label) == true ||

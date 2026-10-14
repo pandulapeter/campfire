@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +41,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_defin
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
@@ -96,6 +98,17 @@ internal fun ChordShapeSheet(
     // may leave nothing by that name: the diagram that was tapped is gone, and with it the sheet.
     if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
+    // Kept per chord, like the grid's own state: a chord that takes this one's place under the open sheet starts over.
+    var showsDefinition by rememberSaveable(chord?.chord?.id, chord?.name) { mutableStateOf(false) }
+    val definition = chord?.undrawnDefinition?.takeIf { showsDefinition }
+    val shownChord = chord?.let { if (definition == null) it else it.copy(definition = definition) }
+    val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
+    val selection = shownChord?.let { selectShape(it, shownTuning, storedShapes) }
+    val shapes = rememberChordShapes(shownChord?.chord, shownTuning, isDefined = selection?.source == SelectedShape.Source.DEFINED)
+    // Put up once the song's chords and this one's shapes are worked out (see rememberChordShapes), and kept up after.
+    val shapesArrival = remember { ShapesArrival() }
+    if (shapes != null) shapesArrival.value = true
+    if (!shapesArrival.value || shownChord == null) return
     CampfireBottomSheet(
         // A numbering names the chord by its step, which reads as another chord in letters (`b7`), so it stays as it is.
         title = textResource(
@@ -104,58 +117,40 @@ internal fun ChordShapeSheet(
         ),
         // The notes rather than the song: the sheet is only ever opened from that song's page, and the notes say what the
         // shapes below have in common, which a line scrolled away with them would stop saying.
-        subtitle = chord?.let { chordNoteNames(it, notation) }.orEmpty(),
+        subtitle = chordNoteNames(shownChord, notation),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        val gridModifier = Modifier.weight(1f, fill = false)
-        if (chord == null) {
-            // The chords are worked out off the main thread, which is over before the sheet has slid up: the frame of a
-            // diagram holds the place of the shapes meanwhile.
+        // The grid's own state (the marked shape, the scroll) is never handed to another chord, nor kept between the
+        // tuning's shapes and the song's definition.
+        key(shownChord.chord.id, shownChord.name, showsDefinition) {
             ChordShapeGrid(
-                modifier = gridModifier,
-                chord = null,
-                chordName = dialog.chordName,
-                tuning = tuning,
+                modifier = Modifier.weight(1f, fill = false),
+                chord = shownChord,
+                shapes = shapes,
+                tuning = shownTuning,
                 notation = notation,
-                selection = null,
-                tuningLine = tuningLine(tuning, notation),
+                selection = selection,
+                tuningLine = tuningLine(shownTuning, notation),
                 contentPadding = contentPadding,
-                onShapeSelected = {},
+                onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
+                footer = if (chord?.undrawnDefinition == null) {
+                    null
+                } else {
+                    {
+                        UndrawnDefinitionNote(
+                            isShown = showsDefinition,
+                            onToggled = { showsDefinition = !showsDefinition },
+                        )
+                    }
+                },
             )
-        } else {
-            // The grid holds its chord's shapes while a new list of chords is worked out under the open sheet, so it is
-            // keyed on the chord: its shapes are never handed to another one.
-            key(chord.chord.id, chord.name) {
-                var showsDefinition by rememberSaveable { mutableStateOf(false) }
-                val definition = chord.undrawnDefinition?.takeIf { showsDefinition }
-                val shownChord = if (definition == null) chord else chord.copy(definition = definition)
-                val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
-                key(showsDefinition) {
-                    ChordShapeGrid(
-                        modifier = gridModifier,
-                        chord = shownChord,
-                        chordName = shownChord.name,
-                        tuning = shownTuning,
-                        notation = notation,
-                        selection = selectShape(shownChord, shownTuning, storedShapes),
-                        tuningLine = tuningLine(shownTuning, notation),
-                        contentPadding = contentPadding,
-                        onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },
-                        footer = if (chord.undrawnDefinition == null) {
-                            null
-                        } else {
-                            {
-                                UndrawnDefinitionNote(
-                                    isShown = showsDefinition,
-                                    onToggled = { showsDefinition = !showsDefinition },
-                                )
-                            }
-                        },
-                    )
-                }
-            }
         }
     }
+}
+
+/** Whether a chord's sheet has had shapes to show, after which it stays up whatever comes. */
+private class ShapesArrival {
+    var value = false
 }
 
 /** The tuning the shapes are drawn for, named under the title where it is not the standard one. */

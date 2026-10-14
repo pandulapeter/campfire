@@ -54,11 +54,12 @@ internal val promoShots: List<PromoShot> by lazy {
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id)) },
                 prepare = { englishOnly() },
-                drive = { recordDrag(frames = 180, from = 0.85f, to = 0.15f) },
+                drive = { recordDrag(frames = 160, from = 0.85f, to = 0.15f) },
             ),
         ),
-        // House of the Rising Sun opened from the library on the iPad, its picking pattern unfolded so that the song takes a
-        // second page, and that page turned with the step button on the beat the video shows "Pedal & tap to turn pages".
+        // House of the Rising Sun open on the iPad from the first frame, its picking pattern unfolded so that the song takes
+        // a second page, and that page turned with the step button on the clip's fifth beat, where the video shows
+        // "Pedal & tap to turn pages".
         PromoShot(
             name = "open-song",
             device = Device.IPAD,
@@ -66,25 +67,43 @@ internal val promoShots: List<PromoShot> by lazy {
             shot = Shot(
                 id = "open-song",
                 uiMode = UserPreferences.UiMode.DARK,
-                preferences = {
-                    mapOf(
-                        "sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id),
-                        "fontScale" to JsonPrimitive(1.2f),
-                    )
-                },
-                prepare = {
-                    englishOnly()
-                    scrollSongsTo(artist = "Traditional American")
-                },
+                preferences = { mapOf("fontScale" to JsonPrimitive(1.2f)) },
                 drive = {
-                    val song = song(HOUSE_OF_THE_RISING_SUN)
+                    openSong(HOUSE_OF_THE_RISING_SUN)
                     val nextPage = string("song_details_next_page")
-                    record(frames = 270) { frame ->
+                    record(frames = 200) { frame ->
                         when (frame) {
-                            20 -> viewModel.openSong(song)
                             PAGE_TURN_FRAME -> touch(PointerEventType.Press, checkNotNull(centerOf(nextPage)) { "The song has a single page." })
                             PAGE_TURN_FRAME + 4 -> touch(PointerEventType.Release, checkNotNull(centerOf(nextPage)))
                         }
+                    }
+                },
+            ),
+        ),
+        // Take Me Home, Country Roads, in A, transposed up a semitone on each of the four beats after the first, as the
+        // soundtrack's A, A♯, B, C, and C♯ hits are, and then read in one notation after another on the next three: every
+        // chord and diagram on the page follows.
+        PromoShot(
+            name = "transpose",
+            device = Device.IPHONE,
+            isClip = true,
+            shot = Shot(
+                id = "transpose",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("fontScale" to JsonPrimitive(1f)) },
+                drive = {
+                    // Sharps, so that the fourth step is the C♯ the soundtrack plays rather than a D♭.
+                    viewModel.setAccidentals(UserPreferences.Accidentals.SHARPS)
+                    viewModel.setNotation(UserPreferences.Notation.STANDARD)
+                    openSong(COUNTRY_ROADS)
+                    val up = checkNotNull(centerOf(string("song_details_transpose_up"))) { "The song has no transposition stepper." }
+                    record(frames = 200) { frame ->
+                        // A tap lands on its release, so the press comes a few frames before the beat.
+                        when (frame) {
+                            in TRANSPOSE_FRAMES.map { it - 4 } -> touch(PointerEventType.Press, up)
+                            in TRANSPOSE_FRAMES -> touch(PointerEventType.Release, up)
+                        }
+                        NOTATION_CHANGES[frame]?.let(viewModel::setNotation)
                     }
                 },
             ),
@@ -160,18 +179,72 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
             ),
         ),
-        // A song on the iPad in both themes, for the video to turn one into the other.
-        ipadSong(UserPreferences.UiMode.DARK),
-        ipadSong(UserPreferences.UiMode.LIGHT),
+        // The Chords tab in A, its diagrams redrawn for the ukulele and then the guitar after two beats on the keyboard,
+        // then its first chord tapped half a beat later and a shape other than the app's first picked on the sixth beat.
         PromoShot(
-            name = "setlists",
+            name = "chords",
             device = Device.IPHONE,
-            isClip = false,
+            isClip = true,
             shot = Shot(
-                id = "setlists",
+                id = "chords",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.KEYBOARD.id)) },
+                prepare = { viewModel.chordLibrary.keyIndex = KEY_A },
+                drive = {
+                    // Where the guitar's A is drawn, read before the keyboard's wider cells move it.
+                    viewModel.setInstrument(UserPreferences.Instrument.GUITAR)
+                    viewModel.selectTopLevelDestination(CampfireDestination.Chords)
+                    settle()
+                    val cell = centersOf("A: ").first()
+                    viewModel.setInstrument(UserPreferences.Instrument.KEYBOARD)
+                    settle()
+                    var shape = cell
+                    record(frames = 160) { frame ->
+                        INSTRUMENT_CHANGES[frame]?.let(viewModel::setInstrument)
+                        when (frame) {
+                            SHAPE_SHEET_FRAME - 4 -> touch(PointerEventType.Press, cell)
+                            SHAPE_SHEET_FRAME -> touch(PointerEventType.Release, cell)
+                            SHAPE_PICK_FRAME - 4 -> {
+                                // The cell under the sheet is labelled as its shapes are, so it is told apart by place.
+                                shape = centersOf("A: ").filter { (it - cell).getDistance() > 10f }[1]
+                                touch(PointerEventType.Press, shape)
+                            }
+                            SHAPE_PICK_FRAME -> touch(PointerEventType.Release, shape)
+                        }
+                    }
+                },
+            ),
+        ),
+        // Friday Night by the Lake in its reorder mode, Ring of Fire dragged by its grip from fifth to second place over
+        // three beats, dropped on the sixth.
+        PromoShot(
+            name = "setlist-reorder",
+            device = Device.IPHONE,
+            isClip = true,
+            shot = Shot(
+                id = "setlist-reorder",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("setlistSortingMode" to JsonPrimitive(UserPreferences.SetlistSortingMode.BY_DATE.id)) },
-                drive = { viewModel.selectTopLevelDestination(CampfireDestination.Setlists) },
+                drive = {
+                    viewModel.selectTopLevelDestination(CampfireDestination.Setlists)
+                    settle()
+                    viewModel.reorderingSetlistFileName = FRIDAY_NIGHT_BY_THE_LAKE
+                    settle(3_000)
+                    val handles = centersOf(string("setlists_reorder"))
+                    check(handles.size > 4) { "The setlist shows ${handles.size} rows to reorder." }
+                    val from = handles[4]
+                    val to = handles[1]
+                    record(frames = 160) { frame ->
+                        val progress = ((frame - REORDER_START_FRAME) / (REORDER_END_FRAME - REORDER_START_FRAME).toFloat()).coerceIn(0f, 1f)
+                        val eased = progress * progress * (3 - 2 * progress)
+                        val position = Offset(from.x, from.y + (to.y - from.y) * eased)
+                        when {
+                            frame == REORDER_PRESS_FRAME -> touch(PointerEventType.Press, from)
+                            frame in REORDER_PRESS_FRAME + 1..REORDER_END_FRAME + 8 -> touch(PointerEventType.Move, position)
+                            frame == REORDER_END_FRAME + 9 -> touch(PointerEventType.Release, position)
+                        }
+                    }
+                },
             ),
         ),
         PromoShot(
@@ -185,31 +258,21 @@ internal val promoShots: List<PromoShot> by lazy {
                 drive = { viewModel.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
             ),
         ),
+        // A song on the iPad held upright, in the light theme the laptop beside it turns to.
         PromoShot(
-            name = "editor",
-            device = Device.IPHONE,
+            name = "ipad-portrait-song-light",
+            device = Device.IPAD_PORTRAIT,
             isClip = false,
             shot = Shot(
-                id = "editor",
-                uiMode = UserPreferences.UiMode.DARK,
-                drive = {
-                    viewModel.openEditor(HOME_ON_THE_RANGE)
-                    settle()
-                    tapIfPresent(string("song_editor_show_shortcuts"))
-                },
-            ),
-        ),
-        PromoShot(
-            name = "laptop-song-light",
-            device = Device.LAPTOP,
-            isClip = false,
-            shot = Shot(
-                id = "laptop-song-light",
+                id = "ipad-portrait-song-light",
                 uiMode = UserPreferences.UiMode.LIGHT,
-                preferences = { mapOf("fontScale" to JsonPrimitive(1.05f)) },
-                drive = { openSong("the_rembrandts-ill_be_there_for_you.cho") },
+                preferences = { mapOf("fontScale" to JsonPrimitive(0.9f)) },
+                drive = { openSong("jonathan_coulton-still_alive.cho") },
             ),
         ),
+        // A song on the laptop in both themes, for the video to turn one into the other.
+        laptopSong(UserPreferences.UiMode.DARK),
+        laptopSong(UserPreferences.UiMode.LIGHT),
         PromoShot(
             name = "android-songs-light",
             device = Device.ANDROID_PHONE,
@@ -227,15 +290,15 @@ internal val promoShots: List<PromoShot> by lazy {
     )
 }
 
-private fun ipadSong(uiMode: UserPreferences.UiMode) = PromoShot(
-    name = "ipad-song-${uiMode.id}",
-    device = Device.IPAD,
+private fun laptopSong(uiMode: UserPreferences.UiMode) = PromoShot(
+    name = "laptop-song-${uiMode.id}",
+    device = Device.LAPTOP,
     isClip = false,
     shot = Shot(
-        id = "ipad-song-${uiMode.id}",
+        id = "laptop-song-${uiMode.id}",
         uiMode = uiMode,
-        preferences = { mapOf("fontScale" to JsonPrimitive(0.9f)) },
-        drive = { openSong("jonathan_coulton-still_alive.cho") },
+        preferences = { mapOf("fontScale" to JsonPrimitive(1.05f)) },
+        drive = { openSong("the_rembrandts-ill_be_there_for_you.cho") },
     ),
 )
 
@@ -282,7 +345,39 @@ private const val VIDEO_BPM = 160
 private const val FRAMES_PER_BEAT = 60 * 60f / VIDEO_BPM
 private const val IN_TUNE_CENTS = 3f
 
-/** The song scene's seventh beat, 22.5 frames each, where the video shows its "Pedal & tap to turn pages" chip. */
-private const val PAGE_TURN_FRAME = 157
+/** The song scene's fifth beat, 22.5 frames each, where the video shows its "Pedal & tap to turn pages" chip. */
+private const val PAGE_TURN_FRAME = 90
+/**
+ * The beats the stepper's + is released on: the second to the fourth of the transposition's bar and the first of the
+ * next, 22.5 frames each, rounded.
+ */
+private val TRANSPOSE_FRAMES = listOf(23, 45, 68, 90)
+
+/** The notations the song is read in on the second to the fourth beats of the transposition's second bar. */
+private val NOTATION_CHANGES = mapOf(
+    113 to UserPreferences.Notation.LATIN,
+    135 to UserPreferences.Notation.ROMAN,
+    158 to UserPreferences.Notation.NASHVILLE,
+)
+
+/** Where A is among the Chords tab's keys, from C, in every spelling of the accidentals. */
+private const val KEY_A = 9
+
+/** The instruments the Chords tab is switched to on its third and fourth beats, after two on the keyboard's. */
+private val INSTRUMENT_CHANGES = mapOf(
+    45 to UserPreferences.Instrument.UKULELE,
+    68 to UserPreferences.Instrument.GUITAR,
+)
+
+/** The sheet takes a pick only once it has slid into place, about half a second after the tap that opens it. */
+private const val SHAPE_SHEET_FRAME = 79
+private const val SHAPE_PICK_FRAME = 113
+
+private const val REORDER_PRESS_FRAME = 20
+private const val REORDER_START_FRAME = 26
+private const val REORDER_END_FRAME = 104
+
 private const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
+private const val COUNTRY_ROADS = "john_denver-take_me_home_country_roads.cho"
+private const val FRIDAY_NIGHT_BY_THE_LAKE = "friday_night_by_the_lake.setlist.json"

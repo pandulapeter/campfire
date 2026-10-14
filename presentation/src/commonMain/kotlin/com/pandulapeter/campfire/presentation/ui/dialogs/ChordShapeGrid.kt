@@ -29,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,7 +42,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
@@ -64,23 +62,21 @@ import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import kotlin.math.abs
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * The scrolling content of a chord's sheet, whose subtitle names the chord's notes ([chordNoteNames]): [tuningLine] where
  * the tuning is not the standard one, the chord's letters where the page counts it, and under them every shape of it as a
  * grid of diagrams, the one the songs draw it with marked. A tap on another marks that one and hands it to [onShapeSelected] at once; the marked shape is never
  * reset, since which shape is the app's first says nothing to a player who only picks the one their hands play. A chord
- * the song defines has its definition alone, and says so under it. [footer] closes the grid. While [chord] is null (the
- * song's chords are still being worked out) and while its shapes are searched for, one empty frame stands where the first
- * shape will be.
+ * the song defines has its definition alone, and says so under it. [footer] closes the grid. [shapes] are the chord's,
+ * searched for by the sheet before it is put up ([rememberChordShapes]); while a chord that took another's place under
+ * the open sheet has none yet, one empty frame stands where the first shape will be.
  */
 @Composable
 internal fun ChordShapeGrid(
     modifier: Modifier = Modifier,
-    chord: SongChord?,
-    chordName: String,
+    chord: SongChord,
+    shapes: List<ChordVoicing>?,
     tuning: ChordTuning,
     notation: ChordNotation,
     selection: SelectedShape?,
@@ -90,14 +86,6 @@ internal fun ChordShapeGrid(
     footer: (@Composable () -> Unit)? = null,
 ) {
     val isDefined = selection?.source == SelectedShape.Source.DEFINED
-    // The search for every shape of a chord is quick, but not quick enough for the frame the sheet opens on.
-    val shapes by produceState<List<ChordVoicing>?>(null, chord?.chord, tuning, isDefined) {
-        value = when {
-            chord == null -> null
-            isDefined -> emptyList()
-            else -> withContext(Dispatchers.Default) { ChordVoicings.all(chord.chord, tuning) }
-        }
-    }
     // The options are decided once the shapes are there and kept while the sheet is up, so that picking another shape
     // than a stored one the app does not list never takes the stored one out from under the finger.
     val options = remember(shapes) { shapes?.let { all -> selection?.let { shapeGridOptions(it, all) } } }
@@ -135,11 +123,11 @@ internal fun ChordShapeGrid(
     ) {
         chordHeader(
             tuningLine = tuningLine,
-            letterName = chord?.letterName,
+            letterName = chord.letterName,
         )
-        if (chord == null || options == null) {
+        if (options == null) {
             item(key = PLACEHOLDER_KEY, contentType = OPTION_CONTENT_TYPE) {
-                ChordShapePlaceholder(instrument = tuning.instrument, chordName = chordName)
+                ChordShapePlaceholder(instrument = tuning.instrument, chordName = chord.name)
             }
         } else {
             itemsIndexed(items = options, key = { index, _ -> index }, contentType = { _, _ -> OPTION_CONTENT_TYPE }) { index, shape ->

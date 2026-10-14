@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_tunin
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
+import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -46,6 +47,9 @@ internal fun ChordReferenceSheet(
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     val chord = dialog.chord
+    val selection = selectShape(chord, tuning, storedShapes)
+    // Put up once its shapes are found, see rememberChordShapes.
+    val shapes = rememberChordShapes(chord.chord, tuning, isDefined = selection.source == SelectedShape.Source.DEFINED) ?: return
     CampfireBottomSheet(
         title = textResource(Res.string.song_details_chord_shape_choose, chord.name),
         subtitle = chordNoteNames(chord, notation),
@@ -55,10 +59,10 @@ internal fun ChordReferenceSheet(
             ChordShapeGrid(
                 modifier = Modifier.weight(1f, fill = false),
                 chord = chord,
-                chordName = chord.name,
+                shapes = shapes,
                 tuning = tuning,
                 notation = notation,
-                selection = selectShape(chord, tuning, storedShapes),
+                selection = selection,
                 tuningLine = if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
                 contentPadding = contentPadding,
                 onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },

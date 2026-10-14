@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -31,18 +32,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * One step of the onboarding: a place for the mark, a question and a line saying why it is asked, centered, and the
- * answers under them. The mark itself is the screen's, drawn over the place the page keeps for it ([OnboardingMark]). The page is centered in the room the screen's bars leave it while it fits there, and scrolls while it does not -
+ * answers under them. The mark itself is the screen's, drawn over the place the page keeps for it ([OnboardingMark]).
+ * While the page fits the room the screen's bars leave it, it sits a little above the middle of it, and the room it has
+ * to spare goes into wider gaps where there is plenty ([ONBOARDING_ROOMY_MIN_HEIGHT]); it scrolls while it does not fit -
  * a phone on its side, the smallest phone, or a large font - its edges fading into the bars as everywhere else. It is
  * never wider than a comfortable line of text, or than every theme color in one row, so that a tablet or a desktop
  * window shows a column in the middle rather than cards stretched across the screen. While the pages turn, the question
@@ -65,6 +70,10 @@ internal fun OnboardingPage(
     BoxWithConstraints(
         modifier = modifier.fillMaxSize().fadingVerticalEdges(scrollState),
     ) {
+        val isRoomy = maxHeight >= ONBOARDING_ROOMY_MIN_HEIGHT
+        val sideMargin = onboardingSideMargin(maxWidth)
+        val gap by animateDpAsState(if (isRoomy) ROOMY_GAP else GAP, tween(ONBOARDING_MARK_RESIZE_MILLIS))
+        val headerGap by animateDpAsState(if (isRoomy) ROOMY_HEADER_GAP else HEADER_GAP, tween(ONBOARDING_MARK_RESIZE_MILLIS))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,11 +81,13 @@ internal fun OnboardingPage(
                 .heightIn(min = maxHeight)
                 .padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
+            // Centered, a page in a tall window reads as sinking toward the bar under it, so the spare room above it is
+            // the smaller share. The weights split only what the minimum height leaves, so a page that scrolls has none.
+            Spacer(modifier = Modifier.weight(2f))
             Column(
-                modifier = Modifier.widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(horizontal = sideMargin).widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(gap),
             ) {
                 OnboardingPageHeader(
                     modifier = Modifier.onboardingLayerMotion(::onboardingHeaderMotion),
@@ -84,15 +95,17 @@ internal fun OnboardingPage(
                     title = title,
                     message = message,
                     isCompact = isCompact,
+                    gap = headerGap,
                 )
                 // The answers are a layer of their own, so that a turn moves them apart from the question; spaced as the
                 // page's column spaces them, which is what they were laid out by before they had one.
                 Column(
                     modifier = Modifier.fillMaxWidth().onboardingLayerMotion(::onboardingAnswersMotion),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(gap),
                     content = content,
                 )
             }
+            Spacer(modifier = Modifier.weight(3f))
         }
     }
 }
@@ -104,6 +117,7 @@ private fun OnboardingPageHeader(
     title: String,
     message: String,
     isCompact: Boolean,
+    gap: Dp,
 ) = Column(
     modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,7 +129,7 @@ private fun OnboardingPageHeader(
         enter = fadeIn(tween(ONBOARDING_MARK_RESIZE_MILLIS)) + expandVertically(tween(ONBOARDING_MARK_RESIZE_MILLIS), expandFrom = Alignment.Top),
         exit = fadeOut(tween(ONBOARDING_MARK_RESIZE_MILLIS)) + shrinkVertically(tween(ONBOARDING_MARK_RESIZE_MILLIS), shrinkTowards = Alignment.Top),
     ) {
-        Spacer(modifier = markModifier.padding(bottom = HEADER_GAP).size(ONBOARDING_MARK_SIZE))
+        Spacer(modifier = markModifier.padding(bottom = gap).size(ONBOARDING_MARK_SIZE))
     }
     Text(
         modifier = Modifier.semantics { heading() },
@@ -123,7 +137,7 @@ private fun OnboardingPageHeader(
         style = MaterialTheme.typography.headlineMedium,
         textAlign = TextAlign.Center,
     )
-    Spacer(modifier = Modifier.height(HEADER_GAP))
+    Spacer(modifier = Modifier.height(gap))
     Text(
         text = message,
         style = MaterialTheme.typography.bodyLarge,
@@ -132,4 +146,7 @@ private fun OnboardingPageHeader(
     )
 }
 
+private val GAP = 16.dp
+private val ROOMY_GAP = 24.dp
 private val HEADER_GAP = 12.dp
+private val ROOMY_HEADER_GAP = 16.dp

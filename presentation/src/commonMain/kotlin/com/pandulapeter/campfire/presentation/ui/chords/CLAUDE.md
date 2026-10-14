@@ -59,7 +59,6 @@ Definitions:
   against the tuning's own strings. Player choices made in a tuning are kept under its own key.
 - On a tuning change the page keeps its cells until chords are re-collected for the new tuning off the main thread, so
   it crossfades once, never drawing old shapes on new strings.
-- The chord sheet names a non-standard tuning under its title.
 
 ## The Chords section
 
@@ -88,7 +87,8 @@ Definitions:
 the canonical name (`ChordProNotation.canonicalName`), subtitled with the pinned chord notes. It finds the chord by name
 in the song as the page plays it, and closes if it is gone.
 
-- All shapes via `ChordVoicings.all`, searched off the main thread; a stored shape the app doesn't list goes first.
+- All shapes via `ChordVoicings.all`, searched off the main thread before the sheet opens, so it slides up whole
+  (`rememberChordShapes`); a stored shape the app doesn't list goes first.
 - A tap writes the player's choice at once (`setChordVoicing`); picking the app's first shape removes the entry. No
   reset button.
 - A chord the song defines shows its definition alone, not pickable.

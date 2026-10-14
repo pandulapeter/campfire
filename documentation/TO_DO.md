@@ -9,24 +9,23 @@
 -->
 # To do
 ## Short-term (in this version)
-### Bugs / issues
-- Chord library search - chord name should always be all-caps, but the search itself should not be case sensitive
-- Chord library search - display partial matches but only within the selected key
 
 ### Improvements
 - Find a way to allow entering tempo using the keyboard
 - Onboarding: increment horizontal padding of the pages
-- Onboarding: unbalanced vertical use of space, move contents a bit towards the top
 - Onboarding: the screen transition when the onboarding is Done should be improved
 - Search: highlight matched substrings
 - Simplify adding chord diagrams in the editor
-- Update website + promo video + store screenshots + store descriptions to include the chord diagram library
+- Update website + store screenshots + store descriptions to include the chord diagram library
 
-### Testing
+### Refactor + testing
+- Follow documentation/issues/EXECUTION.md.
+- Verify the current unit test coverage, extend it if needed 
 - UI tests on the desktop JVM: documentation/plans/ui-test-harness.md (first; the pedal walk and the goldens build on it)
 - Two-device sync scenarios: documentation/plans/sync-scenario-tests.md
 - Pedal coverage walk: documentation/plans/pedal-coverage-test.md
 - Golden renders: documentation/plans/golden-renders.md
+- Review for performance issues.
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
