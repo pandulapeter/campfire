@@ -53,7 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.ControlsSidePanel
-import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
+import com.pandulapeter.campfire.presentation.ui.screens.songs.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout

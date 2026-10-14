@@ -58,8 +58,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
 import com.pandulapeter.campfire.presentation.resources.songs_selection_updated
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * The one line of text the app has to say after something it was asked to do has finished. It sits above the

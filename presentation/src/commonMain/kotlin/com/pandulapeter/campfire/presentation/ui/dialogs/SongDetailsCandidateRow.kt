@@ -53,7 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_lookup_musi
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_nothing_new
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_now
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * One recording the song details lookup found: its title, then on one line its artist, album, year and duration and

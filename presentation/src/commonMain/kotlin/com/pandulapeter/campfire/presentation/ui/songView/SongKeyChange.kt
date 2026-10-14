@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**

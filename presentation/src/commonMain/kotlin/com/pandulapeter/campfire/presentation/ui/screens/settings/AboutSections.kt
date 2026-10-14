@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_support_descrip
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations

@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.tab_notice_octave_down
 import com.pandulapeter.campfire.presentation.resources.tab_notice_octave_up
 import com.pandulapeter.campfire.presentation.resources.tab_notice_other_instrument
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 

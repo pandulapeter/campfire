@@ -61,7 +61,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel

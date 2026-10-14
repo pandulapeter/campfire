@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_status_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * Every import the user started, on one screen that goes through the import's stages in place rather than as a run of

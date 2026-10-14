@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * The first section of the song: the key, capo, tempo and time, which are always on the page, since they are what is

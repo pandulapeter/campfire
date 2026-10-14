@@ -73,7 +73,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Job

@@ -184,7 +184,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
   Diagrams, tuner, and the keyboard capo rule read it.
 - `ui/instrument/` is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
-- Picked by two `PickerChip`s (`components/InstrumentChips.kt`; the tuning chip only for an instrument with more than one)
+- Picked by two `PickerChip`s (`instrument/InstrumentChips.kt`; the tuning chip only for an instrument with more than one)
   opening `InstrumentSheet` / `TuningSheet`. They stand on the song details first section (read only included, since
   they change a device preference), the Tuner tab (only while Chromatic is off), the Chords tab, Settings → Songs, and the
   onboarding. Chromatic is the tuner's own switch (`TunerSettings.isChromatic`), not an instrument.

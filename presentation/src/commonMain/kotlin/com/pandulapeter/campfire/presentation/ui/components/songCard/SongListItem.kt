@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.labels.SongLabels
 import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState

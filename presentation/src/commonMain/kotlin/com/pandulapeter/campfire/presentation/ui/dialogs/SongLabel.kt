@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * How a dialog, a sheet or a screen about one song names it under its title: `Artist - Title (Subtitle)`, the subtitle

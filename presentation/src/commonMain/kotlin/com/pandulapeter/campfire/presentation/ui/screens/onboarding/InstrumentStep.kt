@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_strings
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_title
-import com.pandulapeter.campfire.presentation.ui.components.InstrumentChipRow
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentChipRow
 import com.pandulapeter.campfire.presentation.ui.instrument.tuningStringsLabel
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 

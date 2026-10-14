@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_sync_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
 import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.sync.stage

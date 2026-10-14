@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.InstrumentList
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentList
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 

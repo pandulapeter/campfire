@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_descri
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.InstrumentSetting
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice

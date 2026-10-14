@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.shownFor

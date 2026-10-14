@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.resources.import_review_setlist_so
 import com.pandulapeter.campfire.presentation.resources.import_review_will_be_numbered
 import com.pandulapeter.campfire.presentation.resources.import_review_will_replace
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * One entry of the review. A row with a box is ticked or unticked by a tap anywhere on it, and a name already taken

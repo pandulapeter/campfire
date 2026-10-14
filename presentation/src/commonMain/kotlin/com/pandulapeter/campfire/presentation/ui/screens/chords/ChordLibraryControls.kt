@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.chords_search
 import com.pandulapeter.campfire.presentation.resources.instrument
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.InstrumentChipRow
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentChipRow
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning

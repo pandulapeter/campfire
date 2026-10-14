@@ -28,7 +28,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_song_cards
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards_description
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CardDetailsChoice
+import com.pandulapeter.campfire.presentation.ui.screens.settings.CardDetailsChoice
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection

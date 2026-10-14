@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.presentation.resources.import_failed_not_found
 import com.pandulapeter.campfire.presentation.resources.import_failed_too_large
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreadable
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /** Why nothing could be read, in one sentence, centered where the progress was; Try again is the floating button. */
 @Composable

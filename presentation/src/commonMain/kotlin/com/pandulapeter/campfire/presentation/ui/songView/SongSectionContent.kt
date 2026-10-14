@@ -39,7 +39,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse_starting
 import com.pandulapeter.campfire.presentation.resources.song_details_section_expand_starting
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER

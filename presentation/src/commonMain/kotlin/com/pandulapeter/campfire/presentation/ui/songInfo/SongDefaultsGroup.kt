@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.ui.components.scaled
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * What the song's file declares for the four values it is played by, for the "About the song" sheet and the editor

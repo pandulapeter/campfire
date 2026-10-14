@@ -50,7 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagIcon
 import com.pandulapeter.campfire.presentation.ui.components.controls.colorChoiceWidth
 import com.pandulapeter.campfire.presentation.ui.components.isDarkerMoreLegible
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import org.jetbrains.compose.resources.painterResource
 
 /**

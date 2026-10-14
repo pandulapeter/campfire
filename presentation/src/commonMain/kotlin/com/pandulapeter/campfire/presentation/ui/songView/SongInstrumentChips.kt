@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
-import com.pandulapeter.campfire.presentation.ui.components.InstrumentChips
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentChips
 import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_START_PADDING
 
 /**

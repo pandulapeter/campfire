@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
-import com.pandulapeter.campfire.presentation.ui.components.ChordsIcon
+import com.pandulapeter.campfire.presentation.ui.chords.ChordsIcon
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination

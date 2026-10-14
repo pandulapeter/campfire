@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_letters
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * How a chord is read out: its name, its letters where the page counts it, and its shape as it would be dictated.

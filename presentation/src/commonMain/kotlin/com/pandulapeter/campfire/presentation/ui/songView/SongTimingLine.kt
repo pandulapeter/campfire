@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_timing
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * How the song is played from a change of tempo or time signature on, set as the line of the song's first section is

@@ -58,7 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import org.jetbrains.compose.resources.painterResource
 

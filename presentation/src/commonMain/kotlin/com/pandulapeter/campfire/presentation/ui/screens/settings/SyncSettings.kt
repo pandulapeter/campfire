@@ -81,9 +81,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.Elapsed
-import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.rememberElapsed
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
