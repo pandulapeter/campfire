@@ -11,7 +11,8 @@
 
 Pure Kotlin domain models, no dependencies; the layer-crossing currency (stored documents and bytes never leak past
 their own module). The one platform difference is `normalizedToNfc` (`domain/Normalization.kt`, expect/actual).
-`DataState<T>` (`Idle` / `Loading` / `Failure`, each with nullable cached `data`) wraps everything out of a repository.
+`DataState<T>` (`Idle` with its data; `Loading` / `Failure` with the last data, if any) wraps everything out of a
+repository.
 
 ## Identity and names (`domain/LibraryFiles.kt`)
 
@@ -73,7 +74,7 @@ dropped (a mid-file one is `ChordProSplitter`'s).
 
 ## Import
 
-`ImportBudget` is the one function every platform reads incoming files through: a file the import would not look inside
+`ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside
 is never kept (an unknown type is read only to check for a zip signature), and an oversized one is reported rather than
 loaded. Limits are in `ImportLimits` (sized for an Android heap). `ImportPlan` is computed before anything is written;
 `ImportChoices` answers it (unticked `ImportEntryKey`s, Keep both or Replace for all and per row; changing the for-all
