@@ -20,8 +20,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading

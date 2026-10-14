@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

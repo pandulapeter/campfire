@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.models.SongSection
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState

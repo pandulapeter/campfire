@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 
 internal fun testSongRenderer() = SongRenderer(
     normalizeText = object : NormalizeTextUseCase {

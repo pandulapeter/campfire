@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.domain.implementation.text.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag

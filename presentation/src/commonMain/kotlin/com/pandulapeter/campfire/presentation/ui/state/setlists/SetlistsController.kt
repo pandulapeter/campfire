@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder

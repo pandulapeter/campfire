@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.labels.labelsOnEverySongOf
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary

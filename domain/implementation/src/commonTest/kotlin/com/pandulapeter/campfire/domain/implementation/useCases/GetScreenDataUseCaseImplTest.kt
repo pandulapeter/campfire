@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first

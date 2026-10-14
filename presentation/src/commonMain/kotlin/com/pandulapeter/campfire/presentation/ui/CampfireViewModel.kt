@@ -77,7 +77,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
