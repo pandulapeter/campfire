@@ -21,12 +21,12 @@ The setlists screen.
 - The description is the first thing under the header row. In a short window (under 480dp, a search's keyboard counted)
   it starts at two lines and opens on a tap, or four lines push the first song out of sight.
 - The archived icon fades with the archiving (the menu that archives hangs from the same row).
-- "New setlist" opens the song picker right after creating (`CampfireViewModel.createSetlist`), only if nothing else
+- "New setlist" opens the song picker right after creating (`SetlistsController.createSetlist`), only if nothing else
   was opened meanwhile and the library has songs.
 
 ### A setlist's rows are dragged only in its reorder mode
 
-- `CampfireViewModel.reorderingSetlistFileName`, for a non-archived setlist of 2+ songs. While on, the screen shows
+- `SetlistsController.reorderingSetlistFileName`, for a non-archived setlist of 2+ songs. While on, the screen shows
   that setlist alone (scrolled to its header first, with temporary room after the list so one near the end gets there).
 - It ends on Done, Back / Escape / web Back (its own history entry there), leaving the screen, performance mode, the
   setlist dropping below two songs or being archived / deleted, and opening Edit, Duplicate, or Export — editing may

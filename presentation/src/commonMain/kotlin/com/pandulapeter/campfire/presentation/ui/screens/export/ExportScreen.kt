@@ -126,7 +126,7 @@ internal fun ExportScreen(
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false
         try {
-            state.source = viewModel.preparePrintSource(dialog, tabNoticeLabels)
+            state.source = viewModel.exportController.preparePrintSource(dialog, tabNoticeLabels)
             if (state.selected == null) state.selected = state.source!!.songs.indices.toSet()
         } catch (exception: CancellationException) {
             throw exception

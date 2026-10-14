@@ -56,7 +56,7 @@ internal fun LaunchScreenGate(
     // Read once: the composition that took the launch screen away is not always the one drawing the app
     // (Android recreates its activity on the configuration changes it does not handle itself, see the
     // manifest, and when the system reclaims it), and one that starts after it has nothing to cover.
-    val hasShownAppBefore = remember { viewModel.hasShownApp }
+    val hasShownAppBefore = remember { viewModel.launchState.hasShownApp }
     var isAppReady by remember { mutableStateOf(hasShownAppBefore) }
     if (hasShownAppBefore) {
         // The shell still holds a startup screen of its own until it is told, the Android activity's pre-draw
@@ -102,14 +102,14 @@ internal fun LaunchScreenGate(
                     // Nothing under the shell's own startup screen is seen, so the fade would only hold the
                     // app back: the app is uncovered at once, and the effect below lets the shell go.
                     isAppReady = true
-                    viewModel.hasShownApp = true
+                    viewModel.launchState.hasShownApp = true
                 } else {
                     // Two frames rather than one, because withFrameNanos resumes while the frame it belongs
                     // to is still being assembled: the frame after it is the first one that is certainly drawn.
                     repeat(2) { withFrameNanos { } }
                     opacity.animateTo(0f, fadeSpec)
                     isAppReady = true
-                    viewModel.hasShownApp = true
+                    viewModel.launchState.hasShownApp = true
                     // Only now, so that the shells holding a startup screen of their own hand over to the app
                     // itself rather than to the last frames of a mark fading off it.
                     onAppReady()

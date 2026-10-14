@@ -49,8 +49,8 @@ internal fun rememberSyncNotifications(viewModel: CampfireViewModel): (SyncProgr
     // for nothing. The count of the moment is read as the notification is handed over, which is what the Android
     // service starts with.
     val isRunning by remember(viewModel) {
-        viewModel.syncState.map { it.progress != null }.distinctUntilChanged()
-    }.collectAsStateWithLifecycle(viewModel.syncState.value.progress != null)
+        viewModel.syncController.syncState.map { it.progress != null }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(viewModel.syncController.syncState.value.progress != null)
     val channelName = stringResource(Res.string.settings_sync_notification_channel)
     val title = stringResource(Res.string.settings_sync_notification_title)
     val stopLabel = stringResource(Res.string.settings_sync_cancel)
@@ -76,7 +76,7 @@ internal fun rememberSyncNotifications(viewModel: CampfireViewModel): (SyncProgr
         }
     }
     LaunchedEffect(isRunning, show) {
-        val progress = viewModel.syncState.value.progress
+        val progress = viewModel.syncController.syncState.value.progress
         if (isRunning && progress != null) {
             show(progress)
         } else if (hasShownNotification) {

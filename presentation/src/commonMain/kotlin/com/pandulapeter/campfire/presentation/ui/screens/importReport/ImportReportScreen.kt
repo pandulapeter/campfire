@@ -87,7 +87,7 @@ internal fun ImportReportScreen(
     val shown = report ?: return
     val progress by viewModel.importController.importProgress.collectAsStateWithLifecycle()
     val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val searchState = viewModel.importReportState.search
     val query by searchState.activeQuery.collectAsStateWithLifecycle("")
@@ -190,7 +190,7 @@ internal fun ImportReportScreen(
                             isFiltered = query.isNotBlank(),
                             isPerformanceModeEnabled = isPerformanceModeEnabled,
                             onOpenSong = viewModel.navigator::openReportedSong,
-                            onEditSong = { viewModel.openEditor(it) },
+                            onEditSong = { viewModel.editorSession.openEditor(it) },
                         )
                     }
                 }

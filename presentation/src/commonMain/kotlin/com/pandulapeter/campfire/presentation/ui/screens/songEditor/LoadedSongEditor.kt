@@ -161,13 +161,15 @@ internal fun LoadedSongEditor(
     val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
     val latestEditorSong by rememberUpdatedState(editorSong)
     val onOpenSongInfo = remember(viewModel) {
-        { viewModel.showDialog(DialogType.SongInfo(song = latestEditorSong, target = SongEditTarget.EditorDraft(latestEditorSong.fileName))) }
+        {
+            viewModel.dialogHost.showDialog(DialogType.SongInfo(song = latestEditorSong, target = SongEditTarget.EditorDraft(latestEditorSong.fileName)))
+        }
     }
     FollowFileWhileUntouched(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
         if (hasUnsavedChanges) {
-            viewModel.saveSongContent(destination.fileName, textFieldState.text.toString())
+            viewModel.editorSession.saveSongContent(destination.fileName, textFieldState.text.toString())
         }
         Unit
     }
@@ -272,7 +274,7 @@ internal fun LoadedSongEditor(
                         if (prettified != text.value) textFieldState.replaceWithPrettification(prettified)
                     },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
-                    onRevert = { viewModel.showDialog(DialogType.RevertChanges) },
+                    onRevert = { viewModel.dialogHost.showDialog(DialogType.RevertChanges) },
                     onOpenChordProReference = { urlOpener(CHORDPRO_REFERENCE_URL) },
                 )
             },

@@ -186,7 +186,7 @@ private class BrowserHistory(
     private suspend fun goForward(to: Int, path: String?) {
         val entry = entries.getOrNull(to)
         val songs = viewModel.libraryState.allSongs.value
-        val setlists = viewModel.setlists.value
+        val setlists = viewModel.libraryState.setlists.value
         val isPerformanceModeEnabled = viewModel.preferencesController.isPerformanceModeEnabled.value
         val openOnboarding = viewModel.navigator.backStack.lastOrNull { it is CampfireDestination.Onboarding } as? CampfireDestination.Onboarding
         val state = entry?.state

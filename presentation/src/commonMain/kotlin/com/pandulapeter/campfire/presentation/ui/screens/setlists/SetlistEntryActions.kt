@@ -50,7 +50,7 @@ internal fun SetlistEntryActions(
     onMoveDown: (() -> Unit)?,
 ) {
     val onRemove: () -> Unit = {
-        viewModel.showDialog(
+        viewModel.dialogHost.showDialog(
             DialogType.RemoveSongFromSetlist(
                 songFileName = entry.songFileName,
                 songTitle = (entry as? SetlistWithSongs.Entry.Present)?.song?.title ?: entry.songFileName,

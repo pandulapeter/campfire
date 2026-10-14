@@ -145,7 +145,7 @@ internal fun SongDetailsAppBar(
                 beats = viewModel.metronomeController.metronomeBeats,
                 isFlashEnabled = panel.isFlashEnabled,
                 onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
-                onPlayStop = viewModel::toggleMetronome,
+                onPlayStop = viewModel.metronomeController::toggleMetronome,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,
                 visibleState = metronomePanelState,

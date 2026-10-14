@@ -37,7 +37,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 preferences = { byArtist },
                 prepare = {
                     val unfiltered = awaitSongGroups { it.groups.isNotEmpty() }.filterKey
-                    viewModel.toggleLanguageFilter("en")
+                    viewModel.songListState.toggleLanguageFilter("en")
                     awaitSongGroups { it.filterKey != unfiltered }
                     scrollSongsTo("Poison")
                 },
@@ -82,7 +82,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 preferences = { tuner + ("fontScale" to JsonPrimitive(0.9f)) },
                 drive = {
                     openSong("the_proclaimers-im_gonna_be_500_miles.cho")
-                    viewModel.showDialog(DialogType.Tuner)
+                    viewModel.dialogHost.showDialog(DialogType.Tuner)
                     settle()
                     hear(reading(note = 40, cents = 1.2f))
                 },
@@ -103,7 +103,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 id = "tablet-export",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("printSettings" to printSettings(isLandscape = false)) },
-                drive = { viewModel.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
+                drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
         // One song at three text sizes, which the page crossfades between to show that the columns follow the text size:
@@ -168,7 +168,7 @@ private fun editor(id: String, fileName: String) = Shot(
     id = id,
     uiMode = UserPreferences.UiMode.DARK,
     drive = {
-        viewModel.openEditor(fileName)
+        viewModel.editorSession.openEditor(fileName)
         settle()
         tapIfPresent(string("song_editor_show_shortcuts"))
     },

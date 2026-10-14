@@ -24,7 +24,7 @@ internal fun LiveFontScaleControls(
     viewModel: CampfireViewModel,
 ) = FontScaleControls(
     modifier = modifier,
-    fontScale = viewModel.fontScale,
+    fontScale = viewModel.fontScaleController.fontScale,
     onFontScaleAdjusted = viewModel.fontScaleController::adjustFontScale,
     onFontScaleReset = { viewModel.fontScaleController.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
 )

@@ -87,7 +87,7 @@ fun CampfireDesktopApp(
                             }
                             val paths = files.orEmpty().filterIsInstance<File>().map { it.absolutePath }
                             // Only the paths are taken here: this is the AWT event thread, and the files are read off it.
-                            scope.launch { viewModel.importFiles(withContext(Dispatchers.IO) { paths.readAsImportedFiles() }) }
+                            scope.launch { viewModel.importController.importFiles(withContext(Dispatchers.IO) { paths.readAsImportedFiles() }) }
                             return true
                         }
                     }

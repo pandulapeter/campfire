@@ -60,16 +60,16 @@ internal fun SetlistsScreen(
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     // Not saveable: returning to this screen always starts in browsing mode.
-    val reorderingSetlistFileName = viewModel.reorderingSetlistFileName
+    val reorderingSetlistFileName = viewModel.setlistsController.reorderingSetlistFileName
     val isScreenActive = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Setlists
     val isReordering = reorderingSetlistFileName != null && isScreenActive && !isPerformanceModeEnabled
     val isSearchOpen by viewModel.setlistsController.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     LaunchedEffect(isSearchOpen) {
-        if (isSearchOpen) viewModel.reorderingSetlistFileName = null
+        if (isSearchOpen) viewModel.setlistsController.reorderingSetlistFileName = null
     }
     LaunchedEffect(userPreferences?.setlistSortingMode) {
-        viewModel.reorderingSetlistFileName = null
+        viewModel.setlistsController.reorderingSetlistFileName = null
     }
     val columnCount = layout.setlistColumnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
@@ -102,7 +102,7 @@ internal fun SetlistsScreen(
                 isReordering = isReordering,
                 isScreenActive = isScreenActive,
                 onReorderingSetlistChanged = {
-                    viewModel.reorderingSetlistFileName = it
+                    viewModel.setlistsController.reorderingSetlistFileName = it
                     if (it != null) {
                         keyboardController?.hide()
                         viewModel.setlistsController.setlistsSearch.close()
@@ -123,9 +123,9 @@ internal fun SetlistsScreen(
                 NewItemMenu(
                     contentDescription = stringResource(Res.string.setlists_new_setlist),
                     createLabel = stringResource(Res.string.setlists_create_setlist),
-                    onCreate = { viewModel.showDialog(DialogType.NewSetlist) },
-                    onImport = viewModel::importFiles,
-                    onItemSelected = { viewModel.reorderingSetlistFileName = null },
+                    onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSetlist) },
+                    onImport = viewModel.importController::importFiles,
+                    onItemSelected = { viewModel.setlistsController.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )
             },
@@ -134,7 +134,7 @@ internal fun SetlistsScreen(
                     modifier = Modifier.overlappingAction(),
                     selected = userPreferences?.setlistSortingMode,
                     onSelected = viewModel.setlistsController::setSetlistSortingMode,
-                    onSortingModeChanged = { viewModel.reorderingSetlistFileName = null },
+                    onSortingModeChanged = { viewModel.setlistsController.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )
             },
@@ -144,6 +144,6 @@ internal fun SetlistsScreen(
     NavigationBackHandler(
         state = backGesture,
         isBackEnabled = isReordering && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
-        onBackCompleted = { viewModel.reorderingSetlistFileName = null },
+        onBackCompleted = { viewModel.setlistsController.reorderingSetlistFileName = null },
     )
 }

@@ -108,7 +108,7 @@ internal fun MetronomeScreen(
             beats = viewModel.metronomeController.metronomeBeats,
             isFlashEnabled = panel.isFlashEnabled,
             onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
-            onPlayStop = viewModel::toggleMetronome,
+            onPlayStop = viewModel.metronomeController::toggleMetronome,
             isVisible = true,
             isProminent = true,
             contentPadding = contentPadding.only(start = true, end = true),
@@ -139,7 +139,7 @@ private fun MetronomeBarOptions(
     viewModel: CampfireViewModel,
     playback: MetronomePlayback,
 ) = SettingsSection {
-    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     AnimatedSettingsRow(value = (playback as? MetronomePlayback.Playing)?.audioIssue) { issue ->
         SettingsMessage(
             text = stringResource(
@@ -184,7 +184,7 @@ private fun MetronomeBarOptions(
 private fun MetronomeSoundOptions(
     viewModel: CampfireViewModel,
 ) = SettingsCard {
-    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     SettingsSubsection(title = stringResource(Res.string.metronome_sound)) {
         SoundChoice(
             selected = settings.sound,

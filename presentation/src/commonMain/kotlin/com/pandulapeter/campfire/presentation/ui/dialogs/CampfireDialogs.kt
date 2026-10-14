@@ -123,7 +123,12 @@ private fun CampfireDialog(
             // picker for it, and a dismissal arriving after that would close the picker instead.
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.dialogHost.dismissDialog()
-                viewModel.createSetlist(title = setlistTitle, description = description, date = date, isCountdownShown = isCountdownShown)
+                viewModel.setlistsController.createSetlist(
+                    title = setlistTitle,
+                    description = description,
+                    date = date,
+                    isCountdownShown = isCountdownShown,
+                )
             },
         )
 
@@ -139,7 +144,7 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.save),
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.editSetlist(
+                viewModel.setlistsController.editSetlist(
                     offered = dialog.setlist,
                     title = setlistTitle,
                     description = description,
@@ -172,7 +177,7 @@ private fun CampfireDialog(
 
         DialogType.NewSong -> NewSongDialog(
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-            onCreate = { values, _ -> viewModel.createSong(values = values) },
+            onCreate = { values, _ -> viewModel.songFilesController.createSong(values = values) },
         )
 
         is DialogType.DuplicateSong -> NewSongDialog(
@@ -182,7 +187,9 @@ private fun CampfireDialog(
             offeredValues = dialog.values,
             confirmLabel = stringResource(Res.string.duplicate),
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-            onCreate = { values, offeredValues -> viewModel.duplicateSong(song = dialog.song, values = values, offeredValues = offeredValues) },
+            onCreate = { values, offeredValues ->
+                viewModel.songFilesController.duplicateSong(song = dialog.song, values = values, offeredValues = offeredValues)
+            },
         )
 
         DialogType.SongFilters -> CampfireBottomSheet(
@@ -240,7 +247,7 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.delete),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.deleteSong(dialog.song.fileName)
+                viewModel.songFilesController.deleteSong(dialog.song.fileName)
                 viewModel.dialogHost.dismissDialog()
             },
         )
@@ -310,7 +317,7 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.delete),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.deleteSetlist(dialog.setlist.fileName)
+                viewModel.setlistsController.deleteSetlist(dialog.setlist.fileName)
                 viewModel.dialogHost.dismissDialog()
             },
         )
@@ -321,7 +328,7 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.disconnectSyncProvider()
+                viewModel.syncController.disconnectSyncProvider()
                 viewModel.dialogHost.dismissDialog()
             },
         )
@@ -332,7 +339,7 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.settings_library_cover_art_cache_clear_action),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.clearCoverArtCache()
+                viewModel.coverArtSearchController.clearCoverArtCache()
                 viewModel.dialogHost.dismissDialog()
             },
         )

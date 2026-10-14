@@ -147,11 +147,11 @@ internal fun SetlistList(
         bringToTopPadding = 0.dp
         if (!isSetlistAtTop) listState.requestScrollToItem(0)
     }
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isLoading by viewModel.libraryState.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     val topFade = rememberListTopFade(listState, sectionHeaderContentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
@@ -215,10 +215,10 @@ internal fun SetlistList(
                         placeholder = placeholder,
                         onRetry = viewModel.libraryState::refresh,
                         onNewSetlist = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(DialogType.NewSetlist) }
+                            { viewModel.dialogHost.showDialog(DialogType.NewSetlist) }
                         },
                         onImport = if (isPerformanceModeEnabled) null else {
-                            { viewModel.importFiles(filePicker) }
+                            { viewModel.importController.importFiles(filePicker) }
                         },
                     )
                 }
@@ -331,7 +331,7 @@ internal fun SetlistList(
                                     modifier = Modifier.fadingUnderListTop(topFade),
                                     title = stringResource(Res.string.setlists_choose_songs),
                                     icon = painterResource(Res.drawable.ic_add),
-                                    onClick = { viewModel.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                    onClick = { viewModel.dialogHost.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
                                 )
                             }
                         }

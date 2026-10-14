@@ -100,7 +100,7 @@ internal open class PrepareScope(
 
     /** Opens the song whose file is called [fileName] from the library, as a tap on its row does. */
     suspend fun openSong(fileName: String) {
-        viewModel.openSong(song(fileName))
+        viewModel.navigator.openSong(song(fileName))
         settle()
     }
 
@@ -110,16 +110,16 @@ internal open class PrepareScope(
         val section = groups.indexOfFirst { ((it.header as? SongGroupHeader.Section)?.header as? SongSection.Header.Artist)?.name == artist }
         check(section >= 0) { "The song list has no section for $artist." }
         // Every group is its header's item followed by one item per song.
-        viewModel.songsScrollPosition.index = groups.take(section).sumOf { (if (it.header == null) 0 else 1) + it.songs.size }
-        viewModel.songsScrollPosition.offset = 0
+        viewModel.songListState.songsScrollPosition.index = groups.take(section).sumOf { (if (it.header == null) 0 else 1) + it.songs.size }
+        viewModel.songListState.songsScrollPosition.offset = 0
     }
 
     /** Waits until the song list the Songs screen would show answers [predicate], which the view model works out off the main thread. */
     suspend fun awaitSongGroups(predicate: (SongGroups) -> Boolean): SongGroups {
         withTimeoutOrNull(WAIT_TIMEOUT_MILLIS) {
-            while (!predicate(viewModel.songGroups.value)) settle(FRAME_MILLIS)
+            while (!predicate(viewModel.songListState.songGroups.value)) settle(FRAME_MILLIS)
         } ?: error("The song list never became what the shot waits for.")
-        return viewModel.songGroups.value
+        return viewModel.songListState.songGroups.value
     }
 }
 
@@ -211,7 +211,7 @@ internal val shots = listOf(
         preferences = { mapOf("sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id)) },
         prepare = {
             val unfiltered = awaitSongGroups { it.groups.isNotEmpty() }.filterKey
-            viewModel.toggleLanguageFilter("en")
+            viewModel.songListState.toggleLanguageFilter("en")
             awaitSongGroups { it.filterKey != unfiltered }
             scrollSongsTo(artist = "Bob Dylan")
         },
@@ -253,7 +253,7 @@ internal val shots = listOf(
         drive = {
             viewModel.selectTopLevelDestination(CampfireDestination.Metronome)
             settle()
-            viewModel.toggleMetronome()
+            viewModel.metronomeController.toggleMetronome()
         },
         beat = 0,
     ),
@@ -295,7 +295,7 @@ internal val shots = listOf(
         id = "06-editor",
         uiMode = UserPreferences.UiMode.DARK,
         drive = {
-            viewModel.openEditor(HOME_ON_THE_RANGE)
+            viewModel.editorSession.openEditor(HOME_ON_THE_RANGE)
             settle()
             tapIfPresent(string("song_editor_show_shortcuts"))
         },
@@ -312,14 +312,14 @@ internal val shots = listOf(
                 "printSettings" to printSettings(isLandscape = device != Device.ANDROID_SMALL_TABLET),
             )
         },
-        drive = { viewModel.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
+        drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
     ),
     // Sync and the library: Settings' Library tab, the Dropbox account connected and synchronized a few minutes ago,
     // what the library holds, the covers it keeps and the ways in and out of it.
     Shot(
         id = "08-sync",
         uiMode = UserPreferences.UiMode.LIGHT,
-        prepare = { viewModel.settingsTab = SettingsTab.LIBRARY },
+        prepare = { viewModel.navigator.settingsTab = SettingsTab.LIBRARY },
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Settings) },
     ),
 )

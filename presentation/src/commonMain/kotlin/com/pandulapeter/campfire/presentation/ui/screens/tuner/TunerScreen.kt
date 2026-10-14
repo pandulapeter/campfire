@@ -86,10 +86,10 @@ internal fun TunerScreen(
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
     val state = viewModel.tunerController.tunerState.collectAsStateWithLifecycle()
-    val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
+    val settings by viewModel.tunerController.tunerSettings.collectAsStateWithLifecycle()
     val config by viewModel.tunerController.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
+    val hasRequested by viewModel.tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val permission = rememberMicrophonePermission()
     val status = permission.status
@@ -188,8 +188,8 @@ internal fun TunerScreen(
                             tuning = preferences.instrumentTuning,
                             notation = notation,
                             isChromatic = settings.isChromatic,
-                            onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
-                            onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+                            onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+                            onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                             onChromaticChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(isChromatic = value) } },
                         )
                     }

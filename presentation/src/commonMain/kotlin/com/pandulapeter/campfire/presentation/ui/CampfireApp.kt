@@ -67,7 +67,7 @@ fun CampfireApp(
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
-    LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
+    LaunchedEffect(filesToImport) { filesToImport.collect(viewModel.importController::importFiles) }
     val showSyncNotification = rememberSyncNotifications(viewModel)
     MetronomeNotificationEffect(viewModel)
     MetronomeHapticsEffect(viewModel)

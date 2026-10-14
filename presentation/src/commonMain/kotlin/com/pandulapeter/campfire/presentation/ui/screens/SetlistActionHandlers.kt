@@ -21,15 +21,15 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 internal fun rememberSetlistActionHandler(viewModel: CampfireViewModel): SetlistActionHandler = remember(viewModel) {
     object : SetlistActionHandler {
         override fun edit(setlist: Setlist) {
-            viewModel.showDialog(DialogType.EditSetlist(setlist))
+            viewModel.dialogHost.showDialog(DialogType.EditSetlist(setlist))
         }
 
         override fun chooseSongs(setlist: Setlist) {
-            viewModel.showDialog(DialogType.SongPicker(setlist))
+            viewModel.dialogHost.showDialog(DialogType.SongPicker(setlist))
         }
 
         override fun duplicate(setlist: Setlist) {
-            viewModel.showDialog(DialogType.DuplicateSetlist(setlist))
+            viewModel.dialogHost.showDialog(DialogType.DuplicateSetlist(setlist))
         }
 
         override fun setArchived(setlist: Setlist, isArchived: Boolean) {
@@ -37,11 +37,11 @@ internal fun rememberSetlistActionHandler(viewModel: CampfireViewModel): Setlist
         }
 
         override fun export(setlist: Setlist) {
-            viewModel.showDialog(DialogType.Export(setlist = setlist))
+            viewModel.dialogHost.showDialog(DialogType.Export(setlist = setlist))
         }
 
         override fun delete(setlist: Setlist) {
-            viewModel.showDialog(DialogType.DeleteSetlist(setlist))
+            viewModel.dialogHost.showDialog(DialogType.DeleteSetlist(setlist))
         }
     }
 }

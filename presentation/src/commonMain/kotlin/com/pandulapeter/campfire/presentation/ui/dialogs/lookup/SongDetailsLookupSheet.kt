@@ -93,7 +93,7 @@ internal fun SongDetailsLookupSheet(
         keyboardController?.hide()
         selectedKey = null
         toggledFields = emptySet()
-        viewModel.searchSongDetails(query)
+        viewModel.songDetailsLookupController.searchSongDetails(query)
     }
     val results = (searchState as? SongDetailsLookupState.Active)?.results
     val candidates = results?.candidates.orEmpty()
@@ -105,7 +105,7 @@ internal fun SongDetailsLookupSheet(
     // Asked for whenever a row is open rather than from the tap, so that what is open is the one thing deciding it; an
     // Android activity recreated with a row open finds the answer the view model kept, which asks nothing again for the
     // row it already holds.
-    LaunchedEffect(selected) { selected?.let(viewModel::loadSongCredits) }
+    LaunchedEffect(selected) { selected?.let(viewModel.songDetailsLookupController::loadSongCredits) }
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_lookup),
         subtitle = songLabel(dialog.song),
@@ -169,7 +169,7 @@ internal fun SongDetailsLookupSheet(
                         onToggle = { field -> toggledFields = if (field.name in toggledFields) toggledFields - field.name else toggledFields + field.name },
                         onRetryCredits = {
                             viewModel.songDetailsLookupController.clearSongCredits()
-                            viewModel.loadSongCredits(candidate)
+                            viewModel.songDetailsLookupController.loadSongCredits(candidate)
                         },
                     )
                 }

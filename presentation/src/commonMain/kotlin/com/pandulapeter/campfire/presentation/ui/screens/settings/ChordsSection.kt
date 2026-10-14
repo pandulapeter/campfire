@@ -65,14 +65,14 @@ internal fun ChordsSection(
             notation = notation,
             description = stringResource(Res.string.instrument_description),
             isEnabled = isInstrumentEnabled,
-            onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
-            onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+            onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+            onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
         )
     }
     NotationChoice(
         selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation,
         isEnabled = areChordsEnabled,
-        onClicked = { viewModel.showDialog(DialogType.Notation) },
+        onClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),
@@ -91,7 +91,7 @@ internal fun ChordsSection(
             ),
             selected = userPreferences?.chordSpelling?.accidentals,
             isEnabled = areChordsEnabled,
-            onSelected = viewModel::setAccidentals,
+            onSelected = viewModel.preferencesController::setAccidentals,
         )
     }
 }

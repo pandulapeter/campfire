@@ -100,7 +100,7 @@ internal fun TagsSheet(
     onDismiss: () -> Unit,
     onSave: (draft: BulkLabelDraft, spellings: Map<String, String>) -> Unit,
 ) {
-    val libraryTags by viewModel.tags.collectAsStateWithLifecycle()
+    val libraryTags by viewModel.libraryState.tags.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     val tagColors = userPreferences?.tagColors.orEmpty()

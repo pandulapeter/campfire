@@ -79,7 +79,7 @@ internal fun AboutSections(
 ) {
     AppSection(urlOpener = urlOpener)
     HelpSection(urlOpener = urlOpener, onOnboardingClicked = viewModel::openOnboarding)
-    LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.showDialog(DialogType.OpenSourceLicenses) })
+    LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.dialogHost.showDialog(DialogType.OpenSourceLicenses) })
 }
 
 @Composable

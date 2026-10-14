@@ -275,8 +275,8 @@ internal fun CampfireScreens(
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
             // the launch screen fades would be the app arriving twice.
-            transitionSpec = { navigationTransition(viewModel.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
-            popTransitionSpec = { navigationTransition(viewModel.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
+            transitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
+            popTransitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
             predictivePopTransitionSpec = { predictivePopTransition(navigationScrim) },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {

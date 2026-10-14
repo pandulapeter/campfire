@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 internal fun rememberSongActionHandler(viewModel: CampfireViewModel): SongActionHandler = remember(viewModel) {
     object : SongActionHandler {
         override fun edit(song: Song) {
-            viewModel.openEditor(song.fileName)
+            viewModel.editorSession.openEditor(song.fileName)
         }
 
         override fun updateFileName(song: Song) {
@@ -33,15 +33,15 @@ internal fun rememberSongActionHandler(viewModel: CampfireViewModel): SongAction
         }
 
         override fun export(song: Song, setlistFileName: String?) {
-            viewModel.showDialog(DialogType.Export(song = song, songSetlistFileName = setlistFileName))
+            viewModel.dialogHost.showDialog(DialogType.Export(song = song, songSetlistFileName = setlistFileName))
         }
 
         override fun delete(song: Song) {
-            viewModel.showDialog(DialogType.DeleteSong(song))
+            viewModel.dialogHost.showDialog(DialogType.DeleteSong(song))
         }
 
         override fun chooseSetlists(song: Song, setlistFileName: String?) {
-            viewModel.showDialog(DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName))
+            viewModel.dialogHost.showDialog(DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName))
         }
     }
 }

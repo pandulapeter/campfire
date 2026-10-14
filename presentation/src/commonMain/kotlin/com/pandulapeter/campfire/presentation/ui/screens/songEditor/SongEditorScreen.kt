@@ -96,7 +96,7 @@ internal fun SongEditorScreen(
     }
     LaunchedEffect(destination.fileName) {
         viewModel.songTextStore.loadSongContent(destination.fileName).join()
-        viewModel.awaitEditorDraftRecovery()
+        viewModel.editorSession.editorDraftRecovery.await()
         if (initialText == null && hasOpened) initialText = viewModel.songTextStore.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
         initialText = initialText ?: viewModel.songTextStore.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true

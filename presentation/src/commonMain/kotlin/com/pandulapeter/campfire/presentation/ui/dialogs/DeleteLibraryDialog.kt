@@ -69,7 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 internal fun DeleteLibraryDialog(
     viewModel: CampfireViewModel,
 ) {
-    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
@@ -83,7 +83,7 @@ internal fun DeleteLibraryDialog(
     val confirmOnce = rememberSingleConfirmation()
     val deleteLibrary = { close: () -> Unit ->
         confirmOnce {
-            viewModel.deleteLibrary()
+            viewModel.importController.deleteLibrary()
             close()
         }
     }

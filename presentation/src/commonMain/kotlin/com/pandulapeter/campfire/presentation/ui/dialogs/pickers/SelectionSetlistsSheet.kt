@@ -63,7 +63,7 @@ internal fun SelectionSetlistsSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.SelectionSetlists,
 ) {
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val selection = dialog.songFileNames
     val selectionSet = remember(selection) { selection.toHashSet() }
     var query by rememberSaveable { mutableStateOf("") }

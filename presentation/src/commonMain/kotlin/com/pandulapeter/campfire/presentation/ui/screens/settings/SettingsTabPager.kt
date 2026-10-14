@@ -61,18 +61,18 @@ internal fun SettingsTabPager(
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
-    val pagerState = rememberPagerState(initialPage = viewModel.settingsTab.ordinal) { SettingsTab.entries.size }
+    val pagerState = rememberPagerState(initialPage = viewModel.navigator.settingsTab.ordinal) { SettingsTab.entries.size }
     val coroutineScope = rememberCoroutineScope()
     // Every time the pages come to rest rather than once as the screen is left, because the web build's address names
     // the tab that is open. The settled page, so that a swipe is one change of address rather than two.
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { viewModel.settingsTab = SettingsTab.entries[it] }
+        snapshotFlow { pagerState.settledPage }.collect { viewModel.navigator.settingsTab = SettingsTab.entries[it] }
     }
     // The other direction: the wide layout's pane and the web build's address set the tab from outside, and the pager
     // has to follow it, which it only does for a value it did not settle on itself. Latest, so that a swipe interrupting
     // the animation ends that animation rather than the collector (see the settings screen's scroll to top requests).
     LaunchedEffect(pagerState) {
-        snapshotFlow { viewModel.settingsTab }.collectLatest {
+        snapshotFlow { viewModel.navigator.settingsTab }.collectLatest {
             if (it.ordinal != pagerState.targetPage) pagerState.animateScrollToPage(it.ordinal)
         }
     }
@@ -83,7 +83,7 @@ internal fun SettingsTabPager(
     // has just made the tab, or back to the tab the gesture started on when it was cancelled.
     LaunchedEffect(pagerState) {
         snapshotFlow { backProgress() != null }.collectLatest { isGestureInProgress ->
-            val tabPage = viewModel.settingsTab.ordinal
+            val tabPage = viewModel.navigator.settingsTab.ordinal
             if (isGestureInProgress) {
                 pagerState.scroll {
                     snapshotFlow { backProgress() }.filterNotNull().collect { progress ->

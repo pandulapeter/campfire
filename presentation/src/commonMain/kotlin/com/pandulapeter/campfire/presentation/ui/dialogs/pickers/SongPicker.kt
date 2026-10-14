@@ -78,7 +78,7 @@ internal fun SongPicker(
     viewModel: CampfireViewModel,
     dialog: DialogType.SongPicker,
 ) {
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val setlist = setlists.firstOrNull { it.fileName == dialog.setlist.fileName } ?: dialog.setlist
     // Seeded from the setlist as the library has it and saved, rather than from the snapshot the dialog was opened

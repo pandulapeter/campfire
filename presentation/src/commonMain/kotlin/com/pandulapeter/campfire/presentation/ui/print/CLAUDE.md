@@ -35,7 +35,7 @@ The export formats, the options, and the PDF pipeline behind the export screen (
 
 ### Source
 
-`CampfireViewModel.preparePrintSource` reads a `PrintSource` once, when the screen opens: each song rendered as the
+`ExportController.preparePrintSource` reads a `PrintSource` once, when the screen opens: each song rendered as the
 viewer shows it (transposition, chord spelling); a missing/unreadable file is a `PrintSong` with no song, keeping its
 slot. `PrintSong.chords` (`printChordsOf`, the reader's instrument) is collected whether or not diagrams are asked for,
 so toggling them re-lays out rather than re-reads; none while chords or diagrams are off in the app (which also hides

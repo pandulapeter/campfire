@@ -101,7 +101,7 @@ internal fun SongDetailsScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
 ) {
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
     val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -165,12 +165,12 @@ internal fun SongDetailsScreen(
         isReadOnly && currentSongText?.let(viewModel.songMetadataEditing::hasSongInfo) == true
     }
     val openCurrentSongInfo = currentSong?.let { song ->
-        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
+        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.dialogHost.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
     val metronomePlayback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
-    val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
     // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
     // beside it anyway, since a click stopped from the panel leaves it where it was, see

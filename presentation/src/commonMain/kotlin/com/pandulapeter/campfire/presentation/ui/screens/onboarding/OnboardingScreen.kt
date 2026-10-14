@@ -259,7 +259,7 @@ private fun OnboardingStepPage(
             markModifier = markModifier,
             language = userPreferences?.language,
             isCompact = isCompact,
-            onLanguageClicked = { viewModel.showDialog(DialogType.AppLanguage) },
+            onLanguageClicked = { viewModel.dialogHost.showDialog(DialogType.AppLanguage) },
         )
 
         OnboardingStep.LOOK -> LookStep(
@@ -280,8 +280,8 @@ private fun OnboardingStepPage(
             chordTuning = userPreferences?.chordTuning(),
             notation = (notation ?: UserPreferences.Notation.STANDARD).toChordNotation(),
             isCompact = isCompact,
-            onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
-            onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+            onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+            onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
         )
 
         OnboardingStep.FEATURES -> FeaturesStep(
@@ -301,17 +301,17 @@ private fun OnboardingStepPage(
             selected = notation,
             accidentals = userPreferences?.chordSpelling?.accidentals,
             isCompact = isCompact,
-            onSelected = viewModel::setNotation,
+            onSelected = viewModel.preferencesController::setNotation,
         )
 
         OnboardingStep.SYNC -> {
-            val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+            val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
             SyncStep(
                 markModifier = markModifier,
                 syncState = syncState,
                 isCompact = isCompact,
                 onConnect = { completionPage -> viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
-                onCancel = viewModel::cancelSyncConnection,
+                onCancel = viewModel.syncController::cancelSyncConnection,
             )
         }
     }

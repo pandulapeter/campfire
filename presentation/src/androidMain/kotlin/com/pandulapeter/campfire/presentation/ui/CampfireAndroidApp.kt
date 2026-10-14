@@ -77,8 +77,8 @@ fun CampfireAndroidApp(
     // changes with every file a run moves and the shell's root would otherwise recompose with it; it starts from the
     // state of the moment, so that a composition starting in the middle of a run does not ask a frame late.
     val isSyncConnected by remember(viewModel) {
-        viewModel.syncState.map { it is SyncState.Connected }.distinctUntilChanged()
-    }.collectAsStateWithLifecycle(viewModel.syncState.value is SyncState.Connected)
+        viewModel.syncController.syncState.map { it is SyncState.Connected }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(viewModel.syncController.syncState.value is SyncState.Connected)
     SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
     val activity = LocalActivity.current as? ComponentActivity
     // Android clears the view model with every activity that is destroyed outside a configuration change, finishing

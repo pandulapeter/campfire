@@ -183,7 +183,7 @@ internal fun SongList(
     val onLanguageClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
         { itemKey, language ->
             filterAnchor.set(listState, itemKey)
-            viewModel.toggleLanguageFilter(language)
+            viewModel.songListState.toggleLanguageFilter(language)
         }
     }
     ScrollToTopWhenChanged(
@@ -250,13 +250,13 @@ internal fun SongList(
                         placeholder = it,
                         onRetry = viewModel.libraryState::refresh,
                         onNewSong = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(DialogType.NewSong) }
+                            { viewModel.dialogHost.showDialog(DialogType.NewSong) }
                         },
                         onDemoLibrary = if (isPerformanceModeEnabled) null else {
                             { viewModel.firstRunController.importDemoLibrary() }
                         },
                         onImport = if (isPerformanceModeEnabled) null else {
-                            { viewModel.importFiles(filePicker) }
+                            { viewModel.importController.importFiles(filePicker) }
                         },
                     )
                 }

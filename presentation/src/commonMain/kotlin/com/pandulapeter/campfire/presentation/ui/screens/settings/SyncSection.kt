@@ -26,6 +26,6 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 internal fun SyncSection(
     viewModel: CampfireViewModel,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_sync)) {
-    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
     SyncSettings(viewModel = viewModel, syncState = syncState)
 }

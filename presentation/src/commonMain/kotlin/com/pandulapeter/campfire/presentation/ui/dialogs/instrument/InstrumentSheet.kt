@@ -60,7 +60,7 @@ internal fun InstrumentSheet(
             InstrumentList(
                 selected = preferences.instrument,
                 onSelected = { instrument ->
-                    viewModel.setInstrument(instrument)
+                    viewModel.preferencesController.setInstrument(instrument)
                     closeSheet()
                 },
             )

@@ -196,8 +196,8 @@ internal fun ChordsScreen(
                     searchFieldModifier = Modifier
                         .onFocusChanged { isSearchFocused = it.hasFocus }
                         .onPlaced { searchFieldTop = it.positionInParent().y.roundToInt() },
-                    onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+                    onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+                    onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                     onKeySelected = { state.keyIndex = it },
                     onQueryChanged = { state.query = it },
                 )
@@ -237,7 +237,7 @@ internal fun ChordsScreen(
                                 chord = chord,
                                 tuning = heldTuning,
                                 selection = selectShape(chord, heldTuning, storedShapes),
-                                onClick = { if (isCurrent) viewModel.showDialog(DialogType.ChordReference(chord)) },
+                                onClick = { if (isCurrent) viewModel.dialogHost.showDialog(DialogType.ChordReference(chord)) },
                             )
                         }
                     }

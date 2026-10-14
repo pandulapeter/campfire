@@ -42,7 +42,7 @@ internal data class MetronomePanelState(
 @Composable
 internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): MetronomePanelState {
     val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
-    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
     val songBeatLevels by viewModel.metronomeController.songBeatLevels.collectAsStateWithLifecycle()

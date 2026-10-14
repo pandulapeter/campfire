@@ -67,7 +67,7 @@ internal fun NotationSheet(
                     description = stringResource(notation.description),
                     isSelected = notation == selected,
                     onSelected = {
-                        viewModel.setNotation(notation)
+                        viewModel.preferencesController.setNotation(notation)
                         closeSheet()
                     },
                 )

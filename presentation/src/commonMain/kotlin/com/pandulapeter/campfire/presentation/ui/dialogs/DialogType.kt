@@ -16,7 +16,10 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchController
+import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 
 sealed interface DialogType {
@@ -35,7 +38,7 @@ sealed interface DialogType {
     /**
      * The New song form filled in with what [song] says about itself ([values], a snapshot of each field the form
      * offers, blank for nothing), which makes a copy of the song with whatever the user changed there written over it,
-     * see [CampfireViewModel.duplicateSong].
+     * see [SongFilesController.duplicateSong].
      */
     data class DuplicateSong(val song: Song, val values: Map<ChordProMetadataFields.Field, String>) : DialogType
     data object SongFilters : DialogType
@@ -48,7 +51,7 @@ sealed interface DialogType {
     /**
      * Every song of the library with a box each, which is how a setlist is filled from its own side rather than
      * one song at a time from the menu of each. [setlist] is the setlist the sheet was opened on, and only stands
-     * in for the one in [CampfireViewModel.setlists] until the library has caught up with it, which a setlist created a
+     * in for the one in [LibraryState.setlists] until the library has caught up with it, which a setlist created a
      * moment ago may not have.
      */
     data class SongPicker(val setlist: Setlist) : DialogType
@@ -141,7 +144,7 @@ sealed interface DialogType {
     ) : SongEdit
     /**
      * The records the song may have come out on, whose front cover can be made the song's, see
-     * [CampfireViewModel.searchCoverArt].
+     * [CoverArtSearchController.searchCoverArt].
      */
     data class CoverArtSearch(override val song: Song, override val target: SongEditTarget) : SongEdit
     /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */
@@ -149,7 +152,7 @@ sealed interface DialogType {
     /**
      * The recordings the song's title names in the music catalogues, put up over the metadata editor, whose [values]
      * and [draft] it carries so that it can put the form back as it was — or with what the user picked filled into the
-     * draft, see [CampfireViewModel.searchSongDetails]. [formFillCount] is that form's [SongMetadata.fillCount].
+     * draft, see [SongDetailsLookupController.searchSongDetails]. [formFillCount] is that form's [SongMetadata.fillCount].
      */
     data class SongDetailsLookup(
         override val song: Song,

@@ -17,23 +17,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
-import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
-import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
-import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
-import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
-import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -97,7 +89,6 @@ import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -114,7 +105,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialogRestorer
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
-import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
@@ -127,7 +117,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
-import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
@@ -158,7 +147,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -242,21 +230,12 @@ class CampfireViewModel(
         normalizeSearchText = normalizeSearchText,
     )
 
-    /** See [LibraryState.isLoading]. */
-    val isLoading: StateFlow<Boolean> get() = libraryState.isLoading
-
-    /** See [LibraryState.setlists]. */
-    val setlists: StateFlow<List<Setlist>> get() = libraryState.setlists
-
-    /** See [LibraryState.tags]. */
-    val tags get() = libraryState.tags
-
     internal val dialogHost: DialogHost = DialogHost(viewModelScope).apply {
         addBeforeDialogChange { _, dialogType ->
             // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
             // ways of leaving the rows do rather than losing it to a name that has stopped existing.
             if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist || dialogType is DialogType.EditSetlist) {
-                reorderingSetlistFileName = null
+                setlistsController.reorderingSetlistFileName = null
             }
         }
         addBeforeDialogChange { _, dialogType ->
@@ -304,13 +283,13 @@ class CampfireViewModel(
         hasUnsavedEditorText = { editorSession.hasUnsavedEditorText() },
         hasUnsavedEditorChanges = { editorSession.hasUnsavedEditorChanges.value },
         isSetlistReordering = { setlistsController.isSetlistReordering },
-        endSetlistReordering = { reorderingSetlistFileName = null },
+        endSetlistReordering = { setlistsController.reorderingSetlistFileName = null },
         isSongSelecting = { songSelection.isSongSelecting },
         endSongSelection = { songSelection.end() },
         onTransitionEnded = { songTextStore.pruneSongTexts() },
     ).apply {
         addOnBackStackChanged { _, stack ->
-            if (stack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
+            if (stack.lastOrNull() != CampfireDestination.Setlists) setlistsController.reorderingSetlistFileName = null
         }
         addOnBackStackChanged { _, stack ->
             // A tab tapped, a song opened by an import, the import screen: none of them may stand over a mode nobody can
@@ -344,13 +323,6 @@ class CampfireViewModel(
     /** Where the Chords tab was left, see [ChordLibraryState]. */
     internal val chordLibrary = ChordLibraryState()
 
-    /** See [Navigator.settingsTab]. */
-    internal var settingsTab: SettingsTab
-        get() = navigator.settingsTab
-        set(value) {
-            navigator.settingsTab = value
-        }
-
     internal val fontScaleController: FontScaleController = FontScaleController(
         scope = viewModelScope,
         backStack = navigator.backStack,
@@ -361,9 +333,6 @@ class CampfireViewModel(
 
     /** See [FontScaleController.magnifyByTouchpad]. */
     fun magnifyByTouchpad(factor: Float) = fontScaleController.magnifyByTouchpad(factor)
-
-    /** See [FontScaleController.fontScale]. */
-    val fontScale: Float get() = fontScaleController.fontScale
 
     internal val preferencesController: PreferencesController = PreferencesController(
         scope = viewModelScope,
@@ -388,9 +357,6 @@ class CampfireViewModel(
         synchronizeLibrary = synchronizeLibrary,
         cancelSynchronization = cancelSynchronization,
     )
-
-    /** See [SyncController.syncState]. */
-    val syncState get() = syncController.syncState
 
     internal val songTextStore: SongTextStore = SongTextStore(
         scope = viewModelScope,
@@ -442,7 +408,7 @@ class CampfireViewModel(
     internal val overrides: PlayingOverrides = PlayingOverrides(
         scope = viewModelScope,
         userPreferences = userPreferences,
-        setlists = setlists,
+        setlists = libraryState.setlists,
         songsByFileName = { libraryState.songsByFileName.value },
         updateUserPreferences = updateUserPreferences,
         updateEditableSetlist = { fileName, transform -> updateEditableSetlist(fileName, transform) },
@@ -466,9 +432,6 @@ class CampfireViewModel(
         updateUserPreferences = updateUserPreferences,
         writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
     )
-
-    /** See [MetronomeController.metronomeSettings]. */
-    val metronomeSettings: StateFlow<MetronomeSettings> get() = metronomeController.metronomeSettings
 
     internal val songPickerState: SongPickerState = SongPickerState(
         scope = viewModelScope,
@@ -520,9 +483,9 @@ class CampfireViewModel(
     internal val songFilesController: SongFilesController = SongFilesController(
         messageSink = messageSink,
         songTextStore = songTextStore,
-        showDialog = { showDialog(it) },
+        showDialog = { dialogHost.showDialog(it) },
         duplicateSongDialog = songMetadataEditing::duplicateSongDialog,
-        openEditor = { fileName, shouldStartInsideFirstSection -> openEditor(fileName, shouldStartInsideFirstSection) },
+        openEditor = { fileName, shouldStartInsideFirstSection -> editorSession.openEditor(fileName, shouldStartInsideFirstSection) },
         clearEditorDraft = editorSession::clearEditorDraft,
         followMetronomeRename = metronomeController::followSongRename,
         followScreensRename = navigator::followSongRename,
@@ -541,7 +504,7 @@ class CampfireViewModel(
         dialogHost = dialogHost,
         backStack = navigator.backStack,
         songLookup = libraryState.songLookup,
-        setlists = setlists,
+        setlists = libraryState.setlists,
         editorDraft = editorSession.editorDraft,
         songTexts = songTextStore.songTexts,
         loadSongContent = { songTextStore.loadSongContent(it) },
@@ -555,25 +518,19 @@ class CampfireViewModel(
         mutableSongFilter = _songFilter,
         screenData = libraryState.screenData,
         indexedSongs = libraryState.indexedSongs,
-        tags = tags,
+        tags = libraryState.tags,
         languages = libraryState.languages,
         isImporting = importController.isImporting,
         normalizeSearchText = normalizeSearchText,
         changeUserPreferences = { preferencesController.changeUserPreferences(it) },
     )
 
-    /** See [SongListState.songsScrollPosition]. */
-    internal val songsScrollPosition get() = songListState.songsScrollPosition
-
-    /** See [SongListState.songGroups]. */
-    val songGroups get() = songListState.songGroups
-
     internal val setlistsController: SetlistsController = SetlistsController(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         backStack = navigator.backStack,
         userPreferences = userPreferences,
-        setlists = setlists,
+        setlists = libraryState.setlists,
         allSongs = libraryState.allSongs,
         indexedSongs = libraryState.indexedSongs,
         screenData = libraryState.screenData,
@@ -589,13 +546,6 @@ class CampfireViewModel(
         followReportedFileNames = { importReportState.followReportedFileNames(it) },
         changeUserPreferences = { preferencesController.changeUserPreferences(it) },
     )
-
-    /** See [SetlistsController.reorderingSetlistFileName]. */
-    internal var reorderingSetlistFileName: String?
-        get() = setlistsController.reorderingSetlistFileName
-        set(value) {
-            setlistsController.reorderingSetlistFileName = value
-        }
 
     internal val exportController: ExportController = ExportController(
         scope = viewModelScope,
@@ -624,12 +574,6 @@ class CampfireViewModel(
         updateUserPreferences = updateUserPreferences,
         writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
     )
-
-    /** See [TunerController.tunerSettings]. */
-    val tunerSettings: StateFlow<TunerSettings> get() = tunerController.tunerSettings
-
-    /** See [TunerController.hasTurnedOnMicrophone]. */
-    val hasTurnedOnMicrophone get() = tunerController.hasTurnedOnMicrophone
 
     internal val appExitController: AppExitController = AppExitController(
         scope = viewModelScope,
@@ -707,13 +651,6 @@ class CampfireViewModel(
         restoreNavigationState = { navigator.restoreNavigationState(it) },
     )
 
-    /** See [LaunchState.hasShownApp]. */
-    internal var hasShownApp: Boolean
-        get() = launchState.hasShownApp
-        set(value) {
-            launchState.hasShownApp = value
-        }
-
     init {
         libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
@@ -724,7 +661,11 @@ class CampfireViewModel(
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
-        dialogHost.startClosingWithSong(allSongs = libraryState.allSongs, isLoading = isLoading, songsBeingRenamed = songTextStore.songsBeingRenamed)
+        dialogHost.startClosingWithSong(
+            allSongs = libraryState.allSongs,
+            isLoading = libraryState.isLoading,
+            songsBeingRenamed = songTextStore.songsBeingRenamed,
+        )
         editorSession.startRecovery()
         savedDialogRestorer.start()
         songSelection.startPruning(libraryState.screenData)
@@ -775,12 +716,9 @@ class CampfireViewModel(
         if (!wasTunerShown && navigator.backStack.lastOrNull() == CampfireDestination.Tuner) tunerController.markOpenedByTap()
     }
 
-    fun openSong(song: Song) = navigator.openSong(song)
-
     /** See [Navigator.openOnboarding]; the settings screen's way into it, a first run's being [FirstRunController]'s. */
     fun openOnboarding() = navigator.openOnboarding(isOpenedFromSettings = true)
 
-    /** See [Navigator.showOnboardingStepIfOpen]: the page a swipe settled on. */
     /** The pages the onboarding shows with the features as they are now, see [onboardingSteps]. */
     internal fun onboardingSteps(preferences: UserPreferences?) = onboardingSteps(
         canConnectDropbox = SyncProviderId.DROPBOX in syncController.syncProviders,
@@ -795,31 +733,16 @@ class CampfireViewModel(
     // Songs
 
     /** See [SongSelection.showSetlists]. */
-    internal fun showSelectionSetlists() = songSelection.showSetlists(sortedSongs(), ::showDialog)
+    internal fun showSelectionSetlists() = songSelection.showSetlists(sortedSongs(), dialogHost::showDialog)
 
-    internal fun showSelectionTags() = songSelection.showTags(sortedSongs(), ::showDialog)
+    internal fun showSelectionTags() = songSelection.showTags(sortedSongs(), dialogHost::showDialog)
 
-    internal fun showSelectionLanguages() = songSelection.showLanguages(sortedSongs(), ::showDialog)
+    internal fun showSelectionLanguages() = songSelection.showLanguages(sortedSongs(), dialogHost::showDialog)
 
     /** See [SongSelection.export]. */
-    internal fun exportSelection() = songSelection.export(sortedSongs(), libraryState.songsByFileName.value, ::showDialog)
+    internal fun exportSelection() = songSelection.export(sortedSongs(), libraryState.songsByFileName.value, dialogHost::showDialog)
 
     private fun sortedSongs() = libraryState.screenData.value.data?.sortedSongs.orEmpty()
-
-    /** See [SongFilesController.createSong]. */
-    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = songFilesController.createSong(values)
-
-    /** See [SongFilesController.duplicateSong]. */
-    fun duplicateSong(
-        song: Song,
-        values: Map<ChordProMetadataFields.Field, String>,
-        offeredValues: Map<ChordProMetadataFields.Field, String>,
-    ) = songFilesController.duplicateSong(song, values, offeredValues)
-
-    /** See [SongFilesController.deleteSong]. */
-    fun deleteSong(fileName: String) = songFilesController.deleteSong(fileName)
-
-    fun searchCoverArt(query: CoverArtQuery) = coverArtSearchController.searchCoverArt(query)
 
     /** Puts the song details lookup up over [dialog], the metadata form, which holds [draft] at the moment. */
     fun showSongDetailsLookup(dialog: DialogType.SongMetadata, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.showDialog(
@@ -833,66 +756,21 @@ class CampfireViewModel(
     fun fillSongMetadata(dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) =
         dialogHost.updateUnderlyingDialog(dialog.filledForm(draft))
 
-    fun searchSongDetails(query: SongDetailsQuery) = songDetailsLookupController.searchSongDetails(query)
-
-    fun loadSongCredits(candidate: SongDetailsCandidate) = songDetailsLookupController.loadSongCredits(candidate)
-
-    // The editor
-
-    fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) = editorSession.openEditor(fileName, shouldStartInsideFirstSection)
-
-    /** The editor's text as it last reported it, which the About the song sheet opened over it reads. */
-    internal suspend fun awaitEditorDraftRecovery() = editorSession.editorDraftRecovery.await()
-
-    fun saveSongContent(fileName: String, text: String) = editorSession.saveSongContent(fileName, text)
-
-    fun toggleMetronome() = metronomeController.toggleMetronome()
-
     /** Opens the tuner sheet over the song from its tuner button or menu entry, see [TunerController.markOpenedByTap]. */
     fun openTunerSheet() {
-        showDialog(DialogType.Tuner)
+        dialogHost.showDialog(DialogType.Tuner)
         if (dialogHost.visibleDialog.value is DialogType.Tuner) tunerController.markOpenedByTap()
     }
 
     /** See [AppExitController.onCleared]. */
     override fun onCleared() = appExitController.onCleared()
 
-    // Import and export
-
-    fun importFiles(filePicker: FilePicker) = importController.importFiles(filePicker)
-
-    fun importFiles(files: List<ImportedFile>) = importController.importFiles(files)
-
-    internal suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels) = exportController.preparePrintSource(dialog, tabNoticeLabels)
-
-    fun exportLibrary(filePicker: FilePicker) = exportController.exportLibrary(filePicker)
-
-    // Setlists
-
-    fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = setlistsController.createSetlist(title, description, date, isCountdownShown)
-
-    fun editSetlist(offered: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = setlistsController.editSetlist(offered, title, description, date, isCountdownShown)
-
-    fun deleteSetlist(setlistFileName: String) = setlistsController.deleteSetlist(setlistFileName)
-
-    fun deleteLibrary() = importController.deleteLibrary()
-
-    fun clearCoverArtCache() = coverArtSearchController.clearCoverArtCache()
-
     private suspend fun updateEditableSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
         setlistsController.updateEditableSetlist(fileName, transform)
 
     // User preferences
 
-    fun setInstrument(value: UserPreferences.Instrument) = preferencesController.setInstrument(value)
-
     internal fun setTagColor(tag: String, color: TagColor?) = preferencesController.setTagColor(tag, color?.id)
-
-    fun toggleLanguageFilter(code: String) = songListState.toggleLanguageFilter(code)
-
-    fun setAccidentals(value: UserPreferences.Accidentals) = preferencesController.setAccidentals(value)
-
-    fun setNotation(notation: UserPreferences.Notation) = preferencesController.setNotation(notation)
 
     // Sync
 
@@ -900,18 +778,6 @@ class CampfireViewModel(
         navigator.rememberSyncConsentOrigin()
         syncController.connectSyncProvider(providerId, completionPage)
     }
-
-    fun cancelSyncConnection() = syncController.cancelSyncConnection()
-
-    fun disconnectSyncProvider() = syncController.disconnectSyncProvider()
-
-    fun synchronizeLibrary(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) = syncController.synchronizeLibrary(deletionPolicy)
-
-    fun cancelSynchronization() = syncController.cancelSynchronization()
-
-    // Dialogs
-
-    fun showDialog(dialogType: DialogType) = dialogHost.showDialog(dialogType)
 
     // Helpers
 

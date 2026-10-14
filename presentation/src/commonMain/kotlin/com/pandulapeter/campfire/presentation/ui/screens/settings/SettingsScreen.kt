@@ -91,11 +91,11 @@ internal fun SettingsScreen(
         // A tab scrolled down is first taken to its top, and only a tab already there goes on to General.
         viewModel.navigator.scrollToTopRequests.collectLatest {
             if (it.destination == CampfireDestination.Settings) {
-                val currentScrollState = scrollStates[viewModel.settingsTab.ordinal]
+                val currentScrollState = scrollStates[viewModel.navigator.settingsTab.ordinal]
                 if (currentScrollState.canScrollBackward) {
                     currentScrollState.animateScrollTo(0)
-                } else if (viewModel.settingsTab != SettingsTab.GENERAL) {
-                    viewModel.settingsTab = SettingsTab.GENERAL
+                } else if (viewModel.navigator.settingsTab != SettingsTab.GENERAL) {
+                    viewModel.navigator.settingsTab = SettingsTab.GENERAL
                     scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)
                 }
             }
@@ -126,7 +126,7 @@ internal fun SettingsScreen(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Read through a derived state, so that a run reporting every file it moves recomposes the sync section alone
     // rather than the whole screen for the one thing the tabs want to know about it.
-    val syncState = viewModel.syncState.collectAsStateWithLifecycle()
+    val syncState = viewModel.syncController.syncState.collectAsStateWithLifecycle()
     val isSyncAnswerPending by remember(syncState) {
         derivedStateOf { (syncState.value as? SyncState.Connected)?.lastOutcome is SyncOutcome.DeletionsNeedConfirmation }
     }
@@ -149,16 +149,16 @@ internal fun SettingsScreen(
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     SettingsCategoryPane(
                         modifier = Modifier.padding(start = startPadding),
-                        selectedTab = viewModel.settingsTab,
+                        selectedTab = viewModel.navigator.settingsTab,
                         badgedTab = badgedTab,
                         label = { it.label() },
-                        onTabSelected = { if (it == viewModel.settingsTab) scrollTabToTop(it) else viewModel.settingsTab = it },
+                        onTabSelected = { if (it == viewModel.navigator.settingsTab) scrollTabToTop(it) else viewModel.navigator.settingsTab = it },
                     )
                     // Seekable, so that a back gesture can hold the fade to General at the fraction the finger has
                     // reached; letting go carries it on to General, and a cancelled gesture fades back from there.
-                    val pageTransition = remember { SeekableTransitionState(viewModel.settingsTab) }
+                    val pageTransition = remember { SeekableTransitionState(viewModel.navigator.settingsTab) }
                     LaunchedEffect(pageTransition) {
-                        snapshotFlow { viewModel.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
+                        snapshotFlow { viewModel.navigator.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
                             if (progress != null && tab != SettingsTab.GENERAL) {
                                 pageTransition.seekTo(fraction = progress, targetState = SettingsTab.GENERAL)
                             } else {

@@ -92,7 +92,7 @@ private fun ImportExportSection(
         icon = painterResource(Res.drawable.ic_import),
         isEnabled = !isImporting && !isPerformanceModeEnabled,
         isEmphasized = false,
-        onClick = { viewModel.importFiles(filePicker) },
+        onClick = { viewModel.importController.importFiles(filePicker) },
     )
     // Only until they are all in the library, which is also what brings it back for the ones a user who wanted none
     // of them has deleted. Null while the library is still being read, so the offer never appears for a moment over
@@ -111,7 +111,7 @@ private fun ImportExportSection(
         icon = painterResource(Res.drawable.ic_export),
         isEnabled = !isPerformanceModeEnabled,
         isEmphasized = false,
-        onClick = { viewModel.exportLibrary(filePicker) },
+        onClick = { viewModel.exportController.exportLibrary(filePicker) },
     )
 }
 
@@ -131,7 +131,7 @@ private fun OnThisDeviceSection(
             description = stringResource(Res.string.settings_library_size, formattedSize(summary.size)),
             deleteLabel = stringResource(Res.string.settings_library_delete),
             isEnabled = summary.songCount + summary.setlistCount > 0 && !isImporting && !isPerformanceModeEnabled,
-            onClick = { viewModel.showDialog(DialogType.DeleteLibrary) },
+            onClick = { viewModel.dialogHost.showDialog(DialogType.DeleteLibrary) },
         )
     }
     // Not while there is nothing in it: an empty cache says nothing a library without covers does not.
@@ -141,7 +141,7 @@ private fun OnThisDeviceSection(
             description = stringResource(Res.string.settings_library_size, formattedSize(size)),
             deleteLabel = stringResource(Res.string.settings_library_cover_art_cache_clear),
             isEnabled = !isPerformanceModeEnabled,
-            onClick = { viewModel.showDialog(DialogType.ClearCoverArtCache) },
+            onClick = { viewModel.dialogHost.showDialog(DialogType.ClearCoverArtCache) },
         )
     }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the

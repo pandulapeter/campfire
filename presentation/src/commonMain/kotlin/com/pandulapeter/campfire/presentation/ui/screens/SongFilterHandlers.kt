@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilt
 internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilterUiState {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
-    val tags by viewModel.tags.collectAsStateWithLifecycle()
+    val tags by viewModel.libraryState.tags.collectAsStateWithLifecycle()
     val languages by viewModel.libraryState.languages.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
     return remember(userPreferences, songFilter, tags, languages, isSongFilterActive) {
@@ -65,7 +65,7 @@ internal fun rememberSongFilterActions(viewModel: CampfireViewModel): SongFilter
         }
 
         override fun toggleLanguageFilter(code: String) {
-            viewModel.toggleLanguageFilter(code)
+            viewModel.songListState.toggleLanguageFilter(code)
         }
 
         override fun clearLanguageFilter() {

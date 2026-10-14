@@ -68,7 +68,7 @@ internal fun CampfireContent(
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isExportMovingDeck by remember { derivedStateOf { exportTransition.progress.value > 0f } }
     val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || visibleDialog is DialogType.Export || isExportMovingDeck
-    val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     val metronomeBeat = rememberMetronomeIconBeat(
         playback = viewModel.metronomeController.metronomePlayback,
         beats = viewModel.metronomeController.metronomeBeats,

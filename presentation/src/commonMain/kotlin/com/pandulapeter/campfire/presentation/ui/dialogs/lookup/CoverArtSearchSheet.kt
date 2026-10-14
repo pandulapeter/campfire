@@ -95,7 +95,7 @@ internal fun CoverArtSearchSheet(
         // A record that is really without a cover is answered at once from the repository's memory of the failure and
         // drops out again, while one that only failed for the moment — a timeout, a busy archive — gets another chance.
         unavailableKeys = emptySet()
-        viewModel.searchCoverArt(query)
+        viewModel.coverArtSearchController.searchCoverArt(query)
     }
     val usableAddress = ChordProCoverArt.usableUrl(address)
     CampfireBottomSheet(
@@ -111,7 +111,7 @@ internal fun CoverArtSearchSheet(
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
                 onRemove = {
-                    viewModel.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target))
+                    viewModel.dialogHost.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target))
                 },
                 onSave = {
                     viewModel.songMetadataEditing.setSongCoverArt(

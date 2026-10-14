@@ -93,8 +93,8 @@ internal val promoShots: List<PromoShot> by lazy {
                 preferences = { mapOf("fontScale" to JsonPrimitive(1f)) },
                 drive = {
                     // Sharps, so that the fourth step is the C♯ the soundtrack plays rather than a D♭.
-                    viewModel.setAccidentals(UserPreferences.Accidentals.SHARPS)
-                    viewModel.setNotation(UserPreferences.Notation.STANDARD)
+                    viewModel.preferencesController.setAccidentals(UserPreferences.Accidentals.SHARPS)
+                    viewModel.preferencesController.setNotation(UserPreferences.Notation.STANDARD)
                     openSong(COUNTRY_ROADS)
                     val up = checkNotNull(centerOf(string("song_details_transpose_up"))) { "The song has no transposition stepper." }
                     record(frames = 200) { frame ->
@@ -103,7 +103,7 @@ internal val promoShots: List<PromoShot> by lazy {
                             in TRANSPOSE_FRAMES.map { it - 4 } -> touch(PointerEventType.Press, up)
                             in TRANSPOSE_FRAMES -> touch(PointerEventType.Release, up)
                         }
-                        NOTATION_CHANGES[frame]?.let(viewModel::setNotation)
+                        NOTATION_CHANGES[frame]?.let(viewModel.preferencesController::setNotation)
                     }
                 },
             ),
@@ -128,7 +128,7 @@ internal val promoShots: List<PromoShot> by lazy {
                 drive = {
                     viewModel.selectTopLevelDestination(CampfireDestination.Metronome)
                     settle()
-                    viewModel.toggleMetronome()
+                    viewModel.metronomeController.toggleMetronome()
                     settle()
                     val metronome = KoinPlatform.getKoin().get<Metronome>() as SilentMetronome
                     var lastBeat = -1
@@ -192,15 +192,15 @@ internal val promoShots: List<PromoShot> by lazy {
                 prepare = { viewModel.chordLibrary.keyIndex = KEY_A },
                 drive = {
                     // Where the guitar's A is drawn, read before the keyboard's wider cells move it.
-                    viewModel.setInstrument(UserPreferences.Instrument.GUITAR)
+                    viewModel.preferencesController.setInstrument(UserPreferences.Instrument.GUITAR)
                     viewModel.selectTopLevelDestination(CampfireDestination.Chords)
                     settle()
                     val cell = centersOf("A: ").first()
-                    viewModel.setInstrument(UserPreferences.Instrument.KEYBOARD)
+                    viewModel.preferencesController.setInstrument(UserPreferences.Instrument.KEYBOARD)
                     settle()
                     var shape = cell
                     record(frames = 160) { frame ->
-                        INSTRUMENT_CHANGES[frame]?.let(viewModel::setInstrument)
+                        INSTRUMENT_CHANGES[frame]?.let(viewModel.preferencesController::setInstrument)
                         when (frame) {
                             SHAPE_SHEET_FRAME - 4 -> touch(PointerEventType.Press, cell)
                             SHAPE_SHEET_FRAME -> touch(PointerEventType.Release, cell)
@@ -228,7 +228,7 @@ internal val promoShots: List<PromoShot> by lazy {
                 drive = {
                     viewModel.selectTopLevelDestination(CampfireDestination.Setlists)
                     settle()
-                    viewModel.reorderingSetlistFileName = FRIDAY_NIGHT_BY_THE_LAKE
+                    viewModel.setlistsController.reorderingSetlistFileName = FRIDAY_NIGHT_BY_THE_LAKE
                     settle(3_000)
                     val handles = centersOf(string("setlists_reorder"))
                     check(handles.size > 4) { "The setlist shows ${handles.size} rows to reorder." }
@@ -255,7 +255,7 @@ internal val promoShots: List<PromoShot> by lazy {
                 id = "export",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("printSettings" to printSettings(isLandscape = false)) },
-                drive = { viewModel.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
+                drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
             ),
         ),
         // A song on the iPad held upright, in the light theme the laptop beside it turns to.
@@ -304,7 +304,7 @@ private fun laptopSong(uiMode: UserPreferences.UiMode) = PromoShot(
 
 private suspend fun PrepareScope.englishOnly() {
     val unfiltered = awaitSongGroups { it.groups.isNotEmpty() }.filterKey
-    viewModel.toggleLanguageFilter("en")
+    viewModel.songListState.toggleLanguageFilter("en")
     awaitSongGroups { it.filterKey != unfiltered }
 }
 

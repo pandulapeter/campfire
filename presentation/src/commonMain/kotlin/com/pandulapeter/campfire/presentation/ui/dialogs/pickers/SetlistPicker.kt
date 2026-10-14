@@ -56,7 +56,7 @@ internal fun SetlistPicker(
     viewModel: CampfireViewModel,
     dialog: DialogType.SetlistPicker,
 ) {
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val checkedSetlistKeys = setlists.filter { setlist -> setlist.entries.any { it.songFileName == dialog.song.fileName } }

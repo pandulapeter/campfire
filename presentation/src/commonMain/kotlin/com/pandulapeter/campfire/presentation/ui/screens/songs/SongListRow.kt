@@ -105,7 +105,7 @@ internal fun SongListRow(
         } else {
             {
                 keyboardController?.hide()
-                viewModel.openSong(song)
+                viewModel.navigator.openSong(song)
             }
         },
         // A shortcut to the row's own overflow menu, for a right click and, where holding a row is a

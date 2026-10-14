@@ -96,7 +96,7 @@ internal fun SongPages(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
             .fillMaxSize()
             .fontScaleGestures(
-                fontScale = { viewModel.fontScale },
+                fontScale = { viewModel.fontScaleController.fontScale },
                 onFontScaleChanged = viewModel.fontScaleController::setFontScale,
             ),
         state = pagerState,
@@ -188,7 +188,11 @@ internal fun SongPages(
             shouldShowCapo = !readsCapoAsTransposition,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
-            fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.fontScaleController.settledFontScale }),
+            fontScale = if (isFollowingGesture) {
+                { viewModel.fontScaleController.fontScale }
+            } else {
+                { viewModel.fontScaleController.settledFontScale }
+            },
             // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
             keepsStepButtonInset = canPage,
             // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
@@ -206,11 +210,11 @@ internal fun SongPages(
             chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
                 chordDiagrams?.copy(
                     onChordClicked = if (isReadOnly) null else {
-                        { chordName -> viewModel.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
+                        { chordName -> viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
                     },
                     // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
-                    onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+                    onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+                    onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                 )
             },
             tabs = tabs,

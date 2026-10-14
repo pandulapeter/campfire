@@ -57,7 +57,7 @@ internal fun SongInfoSheet(
     val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
     val editorDraft by viewModel.editorSession.editorDraft.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     // The editor's own song is the text being typed, which neither has the overrides of a setlist nor is read only.
     val setlistFileName = if (isDraft) null else (viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
     val isReadOnly = !isDraft && (isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived })

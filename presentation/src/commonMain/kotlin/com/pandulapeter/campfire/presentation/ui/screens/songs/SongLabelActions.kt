@@ -38,12 +38,12 @@ internal fun songLabelActions(
         title = stringResource(Res.string.song_details_tags_manage),
         icon = painterResource(Res.drawable.ic_label),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(DialogType.SongTags(song = song, target = target)) },
+        onClick = { viewModel.dialogHost.showDialog(DialogType.SongTags(song = song, target = target)) },
     ),
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_languages_edit),
         icon = painterResource(Res.drawable.ic_language),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(DialogType.SongLanguages(song = song, target = target)) },
+        onClick = { viewModel.dialogHost.showDialog(DialogType.SongLanguages(song = song, target = target)) },
     ),
 )

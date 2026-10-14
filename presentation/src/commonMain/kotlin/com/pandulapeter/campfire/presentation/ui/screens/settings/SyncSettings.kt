@@ -163,7 +163,7 @@ private fun ConnectingSyncSettings(viewModel: CampfireViewModel) {
         title = stringResource(Res.string.cancel),
         icon = painterResource(Res.drawable.ic_clear),
         isEmphasized = false,
-        onClick = viewModel::cancelSyncConnection,
+        onClick = viewModel.syncController::cancelSyncConnection,
     )
 }
 
@@ -184,12 +184,12 @@ private fun ColumnScope.ConnectedSyncSettings(
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_delete_locally),
                         icon = painterResource(Res.drawable.ic_delete),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
+                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
                     )
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_keep_and_upload),
                         icon = painterResource(Res.drawable.ic_cloud),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
+                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
                     )
                 }
 
@@ -197,12 +197,12 @@ private fun ColumnScope.ConnectedSyncSettings(
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_delete_remotely),
                         icon = painterResource(Res.drawable.ic_delete),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_REMOTELY) },
+                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_REMOTELY) },
                     )
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_keep_and_download),
                         icon = painterResource(Res.drawable.ic_cloud),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_DOWNLOAD) },
+                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_DOWNLOAD) },
                     )
                 }
             }
@@ -217,7 +217,7 @@ private fun ColumnScope.ConnectedSyncSettings(
         icon = painterResource(Res.drawable.ic_sync),
         isEnabled = !syncState.isSyncing,
         isEmphasized = false,
-        onClick = { viewModel.synchronizeLibrary() },
+        onClick = { viewModel.syncController.synchronizeLibrary() },
     )
     AnimatedSettingsRow(value = syncState.progress) { progress ->
         Column {
@@ -226,7 +226,7 @@ private fun ColumnScope.ConnectedSyncSettings(
                 title = stringResource(Res.string.settings_sync_cancel),
                 icon = painterResource(Res.drawable.ic_clear),
                 isEmphasized = false,
-                onClick = viewModel::cancelSynchronization,
+                onClick = viewModel.syncController::cancelSynchronization,
             )
         }
     }
@@ -234,7 +234,7 @@ private fun ColumnScope.ConnectedSyncSettings(
         title = stringResource(Res.string.settings_sync_disconnect),
         icon = painterResource(Res.drawable.ic_cloud_off),
         isEmphasized = false,
-        onClick = { viewModel.showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
+        onClick = { viewModel.dialogHost.showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
     )
 }
 

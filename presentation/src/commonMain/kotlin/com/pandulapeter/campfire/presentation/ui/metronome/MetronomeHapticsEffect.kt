@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
     val haptics = rememberBeatHaptics() ?: return
-    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     if (!settings.isHapticBeatEnabled) return
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(haptics, lifecycleOwner) {

@@ -117,7 +117,7 @@ internal suspend fun render(
         // The view model is created before the app is composed, and reads the library on its own, so the shot is
         // prepared against the whole library rather than against whatever the first frames had of it.
         withTimeoutOrNull(LAUNCH_TIMEOUT_MILLIS) {
-            while (viewModel?.isLoading?.value != false) settle(FRAME_MILLIS)
+            while (viewModel?.libraryState?.isLoading?.value != false) settle(FRAME_MILLIS)
         } ?: error("The library was not read within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
         val currentViewModel = checkNotNull(viewModel)
         PrepareScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle).apply { shot.prepare(this) }

@@ -85,15 +85,15 @@ internal fun SongsScreen(
     contentPadding: PaddingValues,
 ) {
     val isSearchOpen by viewModel.songListState.songsSearch.isOpen.collectAsStateWithLifecycle()
-    val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val songGroups by viewModel.songListState.songGroups.collectAsStateWithLifecycle()
+    val isLoading by viewModel.libraryState.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songListState.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
     val hasSongFilters by viewModel.songListState.hasSongFilters.collectAsStateWithLifecycle()
-    val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
+    val listState = rememberRetainedLazyGridState(viewModel.songListState.songsScrollPosition)
     val isEditingSongs by viewModel.selectionEditing.isEditingSongs.collectAsStateWithLifecycle()
     // Snapshot state, read here so that a tick recomposes the screen it changes and nothing above it.
     val selection = viewModel.songSelection.selectedSongFileNames
@@ -200,8 +200,8 @@ internal fun SongsScreen(
                                 NewItemMenu(
                                     contentDescription = stringResource(Res.string.songs_new_song),
                                     createLabel = stringResource(Res.string.songs_create_song),
-                                    onCreate = { viewModel.showDialog(DialogType.NewSong) },
-                                    onImport = viewModel::importFiles,
+                                    onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
+                                    onImport = viewModel.importController::importFiles,
                                 )
                             }
                         }
@@ -222,7 +222,7 @@ internal fun SongsScreen(
                         ) {
                             SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
-                                onClick = { viewModel.showDialog(DialogType.SongFilters) },
+                                onClick = { viewModel.dialogHost.showDialog(DialogType.SongFilters) },
                             )
                         }
                     },

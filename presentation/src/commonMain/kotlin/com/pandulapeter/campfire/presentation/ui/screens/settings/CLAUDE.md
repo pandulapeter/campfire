@@ -45,7 +45,7 @@ breakpoint, as do the wide layout's pages.
 
 ## Navigation and scroll
 
-- `CampfireViewModel.settingsTab` (a state, since the web address names it) lasts the session;
+- `Navigator.settingsTab` (a state, since the web address names it) lasts the session;
   `settingsScrollPositions` are reset whenever Settings is entered from another top level screen.
 - Back from any other tab goes to General first (`isSettingsBackToGeneral`): via `navigateBack` for Escape and a
   screen-owned `NavigationBackHandler` for gestures/browser Back, so predictive back previews General (one pager scroll
