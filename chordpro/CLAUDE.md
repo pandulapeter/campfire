@@ -10,8 +10,8 @@
 # :chordpro
 
 The [ChordPro](https://www.chordpro.org) format and the conversion of positioned chord sheets into it. **No dependencies
-at all**, not even Koin: stateless `object`s reached through `:domain:*` use cases (`:data:source:local:implementation`
-uses it directly for the song list's metadata). Explicit API mode.
+at all**, not even Koin: stateless `object`s called directly by `:presentation`, `:domain:*`, `:data:formats`, and
+`:data:source:local:implementation`. Explicit API mode.
 
 ## Rules that span the module
 

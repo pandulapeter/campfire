@@ -135,9 +135,9 @@ split exists so a whole archive can be put to the user as one review before anyt
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.
 - `EditSongsUseCaseImpl`: `SongRepository.editSongs`, many files, one announcement.
-- `:chordpro` wrappers (`Transpose*`, `Parse*`, `Convert*Notation`, `Prettify*`, `SetChordPro*`) exist so the
-  presentation never calls the parser. `:chordpro` knows no preferences: `mapper/AccidentalsMappers.kt` (nullable
-  `preferFlats`) and `mapper/NotationMappers.kt` (`ChordNotation`) are the whole translation.
+- `:chordpro` use cases (`Transpose*`, `Parse*`, `Convert*Notation`, `Prettify*`, `SetChordPro*`) are kept where a
+  preference is translated for `:chordpro` (which knows none): `mapper/AccidentalsMappers.kt` (nullable `preferFlats`)
+  and `mapper/NotationMappers.kt` (`ChordNotation`) are the whole translation.
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
   marks. `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols (`acdc` finds `AC/DC`); it is
   not used for sorting, which it would break (`a b` after `ab c`).
