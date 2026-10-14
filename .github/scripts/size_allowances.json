@@ -5,7 +5,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireScreens.kt::CampfireScreens": 326,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1549,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/chords/CLAUDE.md": 1003,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/CLAUDE.md": 1009,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/CLAUDE.md": 793,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/appBar/SearchableTopAppBar.kt": 519,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/appBar/SearchableTopAppBar.kt::SearchableTopAppBar": 177,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/list/FastScroller.kt": 503,

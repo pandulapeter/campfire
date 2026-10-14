@@ -16,8 +16,6 @@ The shared building blocks of the screens.
 
 #### Menus and actions
 
-- `SongFilters` is a side panel or a sheet, and neither when there is nothing to filter by (`hasSongFilters`).
-  `ControlsSidePanel`: only the list feeds the bar's nested scroll.
 
 #### Other choices
 
@@ -88,23 +86,7 @@ the plain indicator (the launch screen covers their first read).
 - `TagIcon` fills the mark with the tag's color under an outline in the content color, so color never stands alone;
   from `LocalTagColors`, provided once by `CampfireApp`. `TagColor`'s ids are what devices store; an unknown id draws as
   no color. Light/dark tones are chosen by surface luminance.
-- Filter chips are `CountedFilterChip` on `SelectableChip`, not Material's `FilterChip` (its state layer hugs the label);
-  the `indication` sits outside the padding under a `clip`. No chip in the app is a Material `FilterChip`.
 - `LabelSortingToggle` sorts tags and languages on one preference; "Unknown" stays last.
-
-#### `FilterGroupsLayout.kt`
-
-- **The fold is decided by room, not a count**: groups report whole and fully collapsed heights as intrinsics, and
-  `chipBudgets` shares the height like vessels. Selected chips are always visible; "Show all" opens the rest. Below the
-  minimum the content scrolls.
-- In a sheet, use the sheet's tallest height (`BottomSheetContentScope.uncoveredTopInset`): Material's offset-dependent
-  top padding would otherwise make the layout oscillate every frame.
-- The "any / every" choice (only with two selected) and "Reset all filters" are `FilterSlot.TRANSIENT`, out of the
-  sharing, so selecting a chip never hides chips under the finger. The clear action sits in `FilterSectionTitle`, built
-  to keep the plain title's height, so the sheet never resizes on a selection.
-- Room is shared in the lookahead pass only; the approach pass animates bounds. Moving chips use `animateBounds` in one
-  `LookaheadScope`.
-- The language group appears only with more than one language (no-language songs counting as one).
 
 #### Edge fades (`EdgeFade.kt`)
 

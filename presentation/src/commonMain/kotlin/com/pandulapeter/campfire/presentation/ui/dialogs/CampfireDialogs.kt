@@ -50,7 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confir
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.SongFilters
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState

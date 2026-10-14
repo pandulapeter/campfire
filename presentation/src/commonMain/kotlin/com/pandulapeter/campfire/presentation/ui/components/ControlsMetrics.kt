@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.CountedFilterChip
 import androidx.compose.ui.unit.dp
 
 internal val CONTROLS_PADDING = 16.dp

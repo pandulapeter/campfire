@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.list
 
-import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
-import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.ControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding

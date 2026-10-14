@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
+import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.CONTROLS_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn

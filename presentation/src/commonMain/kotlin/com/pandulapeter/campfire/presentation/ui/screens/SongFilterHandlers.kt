@@ -15,11 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.SongFilterActions
-import com.pandulapeter.campfire.presentation.ui.components.SongFilterUiState
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterActions
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterUiState
 
 /**
- * What [com.pandulapeter.campfire.presentation.ui.components.SongFilters] shows, as [viewModel] holds it, for the two
+ * What [com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters] shows, as [viewModel] holds it, for the two
  * places that show it: the songs screen's side panel and the filters sheet.
  */
 @Composable

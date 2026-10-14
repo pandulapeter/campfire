@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
@@ -61,11 +61,11 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.SongFilters
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
-import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState

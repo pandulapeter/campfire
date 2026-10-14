@@ -7,8 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
+import com.pandulapeter.campfire.presentation.ui.components.orderedBy
+import com.pandulapeter.campfire.presentation.ui.components.tagColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
