@@ -14,6 +14,7 @@
 - Onboarding animation: make it use the theme colors
 - Redo onboarding: find a better place for it in the Settings menu.
 - Review Settings menu structure
+- Amazing Grace demo song?
 - Run the tests after every push / merge to master
 - Search: highlight matched substrings
 - Simplify adding chord diagrams in the editor
