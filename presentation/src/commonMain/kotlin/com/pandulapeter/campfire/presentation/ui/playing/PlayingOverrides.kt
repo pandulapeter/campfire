@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink

@@ -72,7 +72,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidations
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -91,7 +91,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel

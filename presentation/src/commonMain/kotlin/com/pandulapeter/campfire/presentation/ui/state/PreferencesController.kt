@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.tagKey
-import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.instrument.withInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.withTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination

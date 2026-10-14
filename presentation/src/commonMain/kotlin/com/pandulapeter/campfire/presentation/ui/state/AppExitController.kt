@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost

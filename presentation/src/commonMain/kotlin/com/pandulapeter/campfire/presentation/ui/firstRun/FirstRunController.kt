@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
