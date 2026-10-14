@@ -126,5 +126,5 @@ Implements `:domain:api` over `:data:repository:api`. Every use case is a `@Fact
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
   marks. `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols; it would break sorting
   (`a b` after `ab c`).
-- `SyncUseCaseImpls.kt`: connecting, and restoring at startup when credentials come back connected, start a sync run
-  at once (not debounced) and do not wait for it.
+- Connecting (`ConnectSyncProviderUseCaseImpl`), and restoring at startup when credentials come back connected
+  (`RestoreSyncUseCaseImpl`), start a sync run at once (not debounced) and do not wait for it.
