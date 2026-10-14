@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.tagKey
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
+import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SONG_METADATA_FIELDS

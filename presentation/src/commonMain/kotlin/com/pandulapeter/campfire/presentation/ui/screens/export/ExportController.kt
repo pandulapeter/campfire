@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation

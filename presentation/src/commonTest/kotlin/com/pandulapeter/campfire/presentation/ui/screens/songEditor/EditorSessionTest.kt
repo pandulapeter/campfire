@@ -12,11 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import androidx.compose.runtime.mutableStateListOf
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message

@@ -7,11 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
+import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import org.koin.core.annotation.Factory
 
 @Factory

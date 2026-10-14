@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
-import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import org.koin.core.annotation.Factory
 
 @Factory

@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.state.songText
 
 import com.pandulapeter.campfire.data.model.domain.SongContent
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow

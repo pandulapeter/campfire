@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.useCases
+package com.pandulapeter.campfire.domain.api.songs
 
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.domain.api.models.SongFileRename
+import com.pandulapeter.campfire.domain.api.songs.SongFileRename
 
 interface RenameSongFileUseCase {
 

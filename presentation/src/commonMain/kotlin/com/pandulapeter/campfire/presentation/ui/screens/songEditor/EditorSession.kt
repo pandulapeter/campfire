@@ -13,9 +13,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message

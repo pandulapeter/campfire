@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
-import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
+import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
+import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope

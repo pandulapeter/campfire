@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.models
+package com.pandulapeter.campfire.domain.api.songs
 
 /**
- * What [com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase] did: the file is under [fileName] from
+ * What [com.pandulapeter.campfire.domain.api.songs.RenameSongFileUseCase] did: the file is under [fileName] from
  * now on either way, since a move is not undone.
  *
  * @param haveReferencesFollowed False where a setlist or the saved transposition could not be rewritten to the new

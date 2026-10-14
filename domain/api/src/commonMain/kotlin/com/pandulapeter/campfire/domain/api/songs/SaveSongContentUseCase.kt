@@ -7,12 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.useCases
+package com.pandulapeter.campfire.domain.api.songs
 
 import com.pandulapeter.campfire.data.model.domain.SongContent
 
-interface GetEditorDraftUseCase {
+interface SaveSongContentUseCase {
 
-    /** The editor's unsaved text a previous run left behind, or null when there is none or it cannot be read. */
-    suspend operator fun invoke(): SongContent?
+    /** See `SongRepository.saveSong`: false when the file no longer holds [expectedText], and nothing was written. */
+    suspend operator fun invoke(content: SongContent, expectedText: String? = null): Boolean
 }
