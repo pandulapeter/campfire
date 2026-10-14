@@ -23,10 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
-import com.pandulapeter.campfire.presentation.ui.components.rememberSettledCoverArtUrl
-import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
-import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.rememberSettledCoverArtUrl
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_SIZE
 
 /**
  * The song as the text being typed names it, with its cover in front of the title the way the song details screen

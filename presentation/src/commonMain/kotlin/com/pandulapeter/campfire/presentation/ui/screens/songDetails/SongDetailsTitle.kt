@@ -58,9 +58,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.songs_key
-import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
-import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
-import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.list.PRESSED_HEADING_ALPHA
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot

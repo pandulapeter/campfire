@@ -21,18 +21,6 @@ The shared building blocks of the screens.
 
 Fretboard for fretted instruments and Other, `ic_piano` for the keyboard, crossfading on change.
 
-### `ui/components/CoverArtImage.kt` / `ProvideCoverArtImageLoader.kt`
-
-- Coil 3 with no network artifact and **no disk cache of its own**: bytes come from `GetCoverArtUseCase` (the offline
-  copy, through `:data:source:remote`'s one HTTP client). `ProvideCoverArtImageLoader` is called once by `CampfireApp`
-  and resolves the use case there.
-- `CoverArtImage` reserves its room from the first frame with a placeholder, so arrival moves nothing; never on a
-  missing entry's row.
-- In the details bar it is part of the title (tap scrolls to top / opens About the song, no press drawn). The editor's
-  bar follows typed text only after 500 ms of no typing (`rememberSettledCoverArtUrl`), since each valid half-typed URL
-  would be a download.
-- Follows `isCoverArtEnabled` (off: nothing fetched or drawn); performance mode keeps covers.
-
 ### `ui/components/SaveShortcut.kt`
 
 - `Modifier.saveShortcut`: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt). In a `CampfireBottomSheet` it presses

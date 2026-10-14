@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cover_art_address
 import com.pandulapeter.campfire.presentation.resources.cover_art_address_failed
 import com.pandulapeter.campfire.presentation.resources.cover_art_address_hint
-import com.pandulapeter.campfire.presentation.ui.components.CoverArt
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import kotlin.time.Duration.Companion.milliseconds

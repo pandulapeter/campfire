@@ -57,7 +57,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_loading
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_results
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.ui.components.CoverArt
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import org.jetbrains.compose.resources.painterResource

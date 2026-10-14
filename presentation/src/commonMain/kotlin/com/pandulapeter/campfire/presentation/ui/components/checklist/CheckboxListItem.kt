@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.checklist
 
-import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size

@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBa
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.labels.LocalTagColors
-import com.pandulapeter.campfire.presentation.ui.components.ProvideCoverArtImageLoader
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.localization.ApplyLanguagePreference

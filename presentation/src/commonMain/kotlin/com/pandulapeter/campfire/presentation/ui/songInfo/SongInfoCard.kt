@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.components.rememberSettledCoverArtUrl
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.rememberSettledCoverArtUrl
 
 /**
  * What the song is, in the editor's preview: the About the song sheet's grouped tiles, as wide as their column whatever

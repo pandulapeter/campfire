@@ -60,7 +60,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_a
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_add
 import com.pandulapeter.campfire.presentation.resources.song_details_year
-import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.labels.languageLabel
