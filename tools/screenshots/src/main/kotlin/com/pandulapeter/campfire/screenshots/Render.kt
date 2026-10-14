@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -88,6 +89,7 @@ internal suspend fun render(
         host.Content(
             filePicker = ScreenshotFilePicker(canShare = device.platform.canShare),
             isPrepared = isPrepared,
+            keyboardHeight = 0.dp,
             onViewModel = { viewModel = it },
             onAppReady = { isAppReady = true },
             overlay = { device.chrome.Overlay(appearance) },

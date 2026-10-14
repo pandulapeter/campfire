@@ -1,0 +1,12 @@
+{
+    "title": "An Evening by the Fire",
+    "description": "A setlist with a date of its own, so that its details read the same on any day.",
+    "date": "2026-10-07",
+    "isArchived": false,
+    "songs": [
+        {
+            "file": "traditional_american-house_of_the_rising_sun.cho",
+            "transposition": 0
+        }
+    ]
+}

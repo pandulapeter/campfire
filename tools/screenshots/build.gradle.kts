@@ -97,8 +97,17 @@ val downloadFonts by tasks.registering {
 
 tasks.test {
     useJUnitPlatform()
+    // The golden renders are set in the pinned fonts, so that a render does not depend on the fonts a machine has.
+    dependsOn(downloadFonts)
+    val isUpdatingGoldens = project.property("campfire.updateGoldens").toString().toBoolean()
+    // Rewriting the goldens is asked for with a property, which a run that changed nothing else would not repeat.
+    outputs.upToDateWhen { !isUpdatingGoldens }
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
+    systemProperty("campfire.screenshots.fonts", fonts.get().asFile.absolutePath)
+    systemProperty("campfire.screenshots.goldens", file("src/test/resources/goldens").absolutePath)
+    systemProperty("campfire.screenshots.goldenOutput", layout.buildDirectory.dir("goldens").get().asFile.absolutePath)
+    systemProperty("campfire.screenshots.updateGoldens", isUpdatingGoldens.toString())
 }
 
 tasks.named<JavaExec>("run") {

@@ -48,18 +48,34 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 
 `./gradlew :tools:screenshots:test` (`src/test`), run by `tests.yml`. Each test starts the whole app with `runAppTest`
 (`AppTest.kt`) — real view model, use cases, repositories, and files in a temporary home — and drives it like a user,
-through Compose's `runSkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp.
+through Compose's `SkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp. `TestAppearance` sets the
+language, theme, system text size, and fonts.
 
 - **Assert what a user sees or what lands on disk**: semantics found by text read from the resources (`string`,
   `pluralString`, never typed English) or the library folder (`songsFolder`), or pixels where semantics cannot tell
   (`PedalCoverageTest` reads the song's faded top edge from them). Never the view model's fields; a test that
   would fail after a correct rewrite of the screen is the wrong test. Tests sit in the package of the screen they cover.
-- The library is the demo songs plus `src/test/resources/songs` files a test names; never the tool's own `library/`.
-  A preferences document is written, so no onboarding and no planted demo; covers are off (they would download), and
-  the song text size is `runAppTest`'s `fontScale`.
-- **What may be faked** is only what reaches outside or picks files: `Fakes.kt` and the test's file picker
-  (`pickedFiles`). A new fake comes with the test that needs it.
+- The library is the demo songs plus the `src/test/resources/songs` and `setlists` files a test names; never the tool's
+  own `library/`. A preferences document is written, so no onboarding and no planted demo; covers are off unless asked
+  for, and the song text size is `runAppTest`'s `fontScale`.
+- **What may be faked** is only what reaches outside or picks files: `Fakes.kt`, `TestFakes.kt` (the cover search finds
+  nothing, no cover downloads), and the test's file picker (`pickedFiles`). A new fake comes with the test that needs it.
+- **The keyboard** is the test's to raise (`keyboardHeight`): the desktop has none. It reaches the app twice, through
+  `LocalPlatformWindowInsets` and through the scene's own insets, since a dialog (every bottom sheet) is a layer of the
+  scene and `imePadding` reads its root's insets, not the composition's.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait for them with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or
   deleted the same day, never retried.
-- Tests use Compose's default font; the font download is the `run` task's only.
+- Tests use Compose's default font, except the golden renders, which are set in the downloaded Android fonts.
+
+### Golden renders
+
+`GoldenRendersTest` renders a short list of cases (smallest phone, Hungarian at text sizes 1.3 and 2, sheets with the
+keyboard up, the rail on a phone on its side, one dark case per screen type) and compares each with
+`src/test/resources/goldens/<name>.png`, allowing a few pixels of anti-aliasing (`Goldens.kt`). Each case names the bug
+it would have caught; keep the set small, so an intended change's rewritten goldens are quick to review. A run leaves
+what it drew in `build/goldens/actual` and, for a changed golden, a diff in `build/goldens/diff` (CI uploads both when
+it fails). Goldens are recorded and compared on Linux only, since each system rasterizes text its own way; elsewhere
+the cases are drawn and not compared. To update them after an intended change, run
+`./gradlew :tools:screenshots:test -Pcampfire.updateGoldens=true` on Linux, or copy a failed CI run's
+`goldens/actual` over the folder, then review the PNG diff in the commit.

@@ -120,13 +120,15 @@ internal class CampfireAppHost(
     /**
      * The app as a window shows it, inside [chrome]'s bars, with the window owners the view model is created from. The
      * view model is created (and handed to [onViewModel]) as soon as this is composed, but the app is composed only
-     * once [isPrepared], so a state a screen reads as it is first composed can be set before.
+     * once [isPrepared], so a state a screen reads as it is first composed can be set before. [keyboardHeight] is the
+     * on-screen keyboard's, reported to the app as the platform would while it is up; nothing draws it.
      */
     @OptIn(InternalComposeUiApi::class)
     @Composable
     fun Content(
         filePicker: FilePicker,
         isPrepared: Boolean,
+        keyboardHeight: Dp,
         onViewModel: (CampfireViewModel) -> Unit,
         onAppReady: () -> Unit,
         overlay: @Composable () -> Unit,
@@ -138,7 +140,7 @@ internal class CampfireAppHost(
     ) {
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().padding(top = chrome.windowTop, bottom = chrome.windowBottom)) {
-                CompositionLocalProvider(LocalPlatformWindowInsets provides DeviceInsets(chrome, density)) {
+                CompositionLocalProvider(LocalPlatformWindowInsets provides DeviceInsets(chrome, density, keyboardHeight)) {
                     val viewModel = koinViewModel<CampfireViewModel>()
                     SideEffect { onViewModel(viewModel) }
                     if (isPrepared) {
@@ -155,14 +157,18 @@ internal class CampfireAppHost(
     }
 }
 
-/** The edges of the app's window that [chrome] draws over, as the platform would report them to the app. */
+/**
+ * The edges of the app's window that [chrome] draws over, and the keyboard [keyboardHeight] tall where one is up, as the
+ * platform would report them to the app.
+ */
 @OptIn(InternalComposeUiApi::class)
-private class DeviceInsets(chrome: SystemChrome, private val density: Float) : PlatformWindowInsets {
+private class DeviceInsets(chrome: SystemChrome, private val density: Float, keyboardHeight: Dp) : PlatformWindowInsets {
     private fun Dp.toPx() = (value * density).toInt()
 
     override val statusBars = PlatformInsets(top = chrome.statusBar.toPx())
     override val navigationBars = PlatformInsets(bottom = chrome.navigationBar.toPx())
     override val captionBar = PlatformInsets(top = chrome.captionBar.toPx())
+    override val ime = PlatformInsets(bottom = keyboardHeight.toPx())
     // Compose on iOS reports a safe area at the side both as the system bars and, in landscape, as the display cutout.
     override val displayCutout = PlatformInsets(right = chrome.trailingBar.toPx())
     override val systemBars = PlatformInsets(

@@ -73,7 +73,7 @@ internal class PedalCoverageTest {
     fun `every line of House of the Rising Sun is read with the pedal on a phone`() = walkAtEveryTextSize(TestWindow.PHONE, RISING_SUN)
 
     @Test
-    fun `every line of House of the Rising Sun is read with the pedal on a phone on its side`() = walkAtEveryTextSize(PHONE_ON_ITS_SIDE, RISING_SUN)
+    fun `every line of House of the Rising Sun is read with the pedal on a phone on its side`() = walkAtEveryTextSize(TestWindow.PHONE_ON_ITS_SIDE, RISING_SUN)
 
     @Test
     fun `every line of House of the Rising Sun is read with the pedal on a desktop`() = walkAtEveryTextSize(DESKTOP, RISING_SUN)
@@ -82,7 +82,7 @@ internal class PedalCoverageTest {
     fun `every line of a long song with tabs and a grid is read with the pedal on a phone`() = walkAtEveryTextSize(TestWindow.PHONE, LONG_SONG)
 
     @Test
-    fun `every line of a long song with tabs and a grid is read with the pedal on a phone on its side`() = walkAtEveryTextSize(PHONE_ON_ITS_SIDE, LONG_SONG)
+    fun `every line of a long song with tabs and a grid is read with the pedal on a phone on its side`() = walkAtEveryTextSize(TestWindow.PHONE_ON_ITS_SIDE, LONG_SONG)
 
     @Test
     fun `every line of a long song with tabs and a grid is read with the pedal on a desktop`() = walkAtEveryTextSize(DESKTOP, LONG_SONG)
@@ -415,7 +415,6 @@ private fun Color.isCloseTo(other: Color, tolerance: Float) = abs(red - other.re
 
 private val RISING_SUN = TestSong(title = "House of the Rising Sun", file = null)
 private val LONG_SONG = TestSong(title = "The Long Road North", file = "campfire_tests-the_long_road_north.cho")
-private val PHONE_ON_ITS_SIDE = TestWindow(width = 640.dp, height = 360.dp)
 private val DESKTOP = TestWindow(width = 1280.dp, height = 800.dp)
 private val EDGE_ROWS = EDGE_FADE_SIZE.value.toInt()
 private const val MAX_STEPS = 500

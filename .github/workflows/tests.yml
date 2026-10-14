@@ -61,6 +61,8 @@ jobs:
       # The build logic is a build of its own (gradle/), whose tests the unqualified task above does not reach.
       - name: Run the build logic's tests
         run: ./gradlew -p gradle :build-logic:test
+      # With the golden renders' images (build/goldens: actual/ is what this run drew, diff/ where a golden changed),
+      # which is how a golden is recorded from a Mac: actual/ is copied over src/test/resources/goldens.
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
@@ -71,6 +73,7 @@ jobs:
             **/build/test-results/desktopTest/*.xml
             tools/screenshots/build/reports/tests/test/**
             tools/screenshots/build/test-results/test/*.xml
+            tools/screenshots/build/goldens/**
             gradle/build-logic/build/reports/tests/test/**
           retention-days: 7
       # The web build's storage worker and what keeps the build in the browser are JavaScript, tested by Node rather
