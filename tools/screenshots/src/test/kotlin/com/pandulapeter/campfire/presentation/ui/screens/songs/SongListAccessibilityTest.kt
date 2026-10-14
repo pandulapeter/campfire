@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertAll
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isOff
@@ -37,8 +38,8 @@ internal class SongListAccessibilityTest {
         onNode(hasText(RISING_SUN) and hasClickAction()).performTouchInput { longClick() }
         onNodeWithText(string(Res.string.songs_select_multiple)).performClick()
         // The ticked song is also listed again at the top, in the group of the selected ones.
-        onAllNodes(hasText(RISING_SUN) and hasClickAction()).assertAll(isOn())
-        onAllNodes(hasText(HOME_ON_THE_RANGE) and hasClickAction()).assertAll(isOff())
+        onAllNodes(hasText(RISING_SUN) and hasClickAction()).assertCountEquals(2).assertAll(isOn())
+        onAllNodes(hasText(HOME_ON_THE_RANGE, substring = true) and hasClickAction()).assertCountEquals(1).assertAll(isOff())
     }
 }
 
