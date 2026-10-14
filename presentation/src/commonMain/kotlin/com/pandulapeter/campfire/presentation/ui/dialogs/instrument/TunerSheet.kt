@@ -68,8 +68,8 @@ internal fun TunerSheet(
 ) {
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
-    val state = viewModel.tunerState.collectAsStateWithLifecycle()
-    val config by viewModel.tunerConfig.collectAsStateWithLifecycle()
+    val state = viewModel.tunerController.tunerState.collectAsStateWithLifecycle()
+    val config by viewModel.tunerController.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
@@ -82,19 +82,19 @@ internal fun TunerSheet(
     val tone by remember { derivedStateOf { state.value.tone } }
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
-    val tunedNotes by viewModel.tunedNotes.collectAsStateWithLifecycle()
+    val tunedNotes by viewModel.tunerController.tunedNotes.collectAsStateWithLifecycle()
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
-        onListeningChanged = viewModel::setTunerListening,
+        onListeningChanged = viewModel.tunerController::setTunerListening,
     )
     TunerAskOnOpenEffect(
         notice = notice,
-        consumeOpenedByTap = viewModel::consumeTunerOpenedByTap,
-        ask = permission.request ?: viewModel::requestMicrophone,
+        consumeOpenedByTap = viewModel.tunerController::consumeOpenedByTap,
+        ask = permission.request ?: viewModel.tunerController::requestMicrophone,
     )
     CampfireBottomSheet(
         title = stringResource(Res.string.tuner),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         Column(
@@ -122,7 +122,7 @@ internal fun TunerSheet(
                 TunerNoticeCard(
                     notice = shownNotice,
                     permission = permission,
-                    onListen = viewModel::requestMicrophone,
+                    onListen = viewModel.tunerController::requestMicrophone,
                 )
             }
             TunerInputIssueMessage(issue = issue, permission = permission)
@@ -132,7 +132,7 @@ internal fun TunerSheet(
                 tone = tone,
                 heardNote = heardNote,
                 tunedNotes = tunedNotes,
-                onToggleTone = viewModel::toggleTunerTone,
+                onToggleTone = viewModel.tunerController::toggleTunerTone,
             )
         }
     }

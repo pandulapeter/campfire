@@ -110,7 +110,7 @@ internal fun SongLinksDialog(
         coroutineScope.launch { listState.reveal(key = row.id, index = rows.lastIndex + ROWS_START_INDEX, size = size) }
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_links_edit),
         subtitle = songLabel(dialog.song),
         retainHeight = true,
@@ -164,7 +164,7 @@ internal fun SongLinksDialog(
                 enabled = linksToSave != null,
                 onClick = {
                     if (linksToSave != null) {
-                        viewModel.setSongLinks(target = dialog.target, links = linksToSave, offeredLinks = dialog.links)
+                        viewModel.songMetadataEditing.setSongLinks(target = dialog.target, links = linksToSave, offeredLinks = dialog.links)
                         close()
                     }
                 },

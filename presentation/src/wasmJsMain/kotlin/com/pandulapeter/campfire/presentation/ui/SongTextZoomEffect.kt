@@ -24,7 +24,7 @@ import kotlin.math.exp
 
 /**
  * Turns the browser's zoom shortcuts into the text size of the song details screen while it is on top
- * ([CampfireViewModel.isSongTextZoomable]): Ctrl / Cmd + plus, minus and zero step it the way the app bar's buttons
+ * (`FontScaleController.isSongTextZoomable`): Ctrl / Cmd + plus, minus and zero step it the way the app bar's buttons
  * do, and a Ctrl + scroll is kept from the browser so that the screen's own gesture handler can have it (see
  * fontScaleGestures). A zoomed page is the whole app grown around a song that stayed the same size, which is not what
  * anybody reading one asked for. Everywhere else the browser zooms the page as it always does, which is how the rest of
@@ -68,7 +68,7 @@ internal fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect
     val wheelListener: (Event) -> Unit = { event ->
         val wheelEvent = event.unsafeCast<WheelEvent>()
         if (wheelEvent.ctrlKey) {
-            if (viewModel.isSongTextZoomable) event.preventDefault()
+            if (viewModel.fontScaleController.isSongTextZoomable) event.preventDefault()
             val isPinch = !isControlKeyDown && wheelEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL
             if (isPinch && viewModel.magnifyByTouchpad(exp(-wheelEvent.deltaY / PIXELS_PER_PINCH_E).toFloat())) {
                 event.preventDefault()

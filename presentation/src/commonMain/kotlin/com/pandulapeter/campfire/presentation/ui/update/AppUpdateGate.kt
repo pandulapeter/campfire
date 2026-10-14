@@ -82,13 +82,13 @@ internal fun AppUpdateGate(
     viewModel: CampfireViewModel,
     content: @Composable () -> Unit,
 ) {
-    val isAppOnScreen by viewModel.isAppOnScreen.collectAsStateWithLifecycle()
+    val isAppOnScreen by viewModel.launchState.isAppOnScreen.collectAsStateWithLifecycle()
     val controller = rememberAppUpdateController(isAppOnScreen = isAppOnScreen)
     val state = controller.state
-    val hasUnsavedEditorChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
-    val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+    val hasUnsavedEditorChanges by viewModel.editorSession.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
+    val isSyncing by viewModel.syncController.isSyncing.collectAsStateWithLifecycle()
     // A restart in the middle of a song being played along to cuts the click off, so it waits like it waits for a run.
-    val isMetronomePlaying = viewModel.metronomePlayback.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
+    val isMetronomePlaying = viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
     // A required update ends with the process being replaced, and the screen it puts up leaves no way back to
     // the app, so neither is allowed near an editor holding text that has not been written: both wait until it
     // has been saved or let go of. Once the screen is up it stays up - the text can only become unsaved behind

@@ -129,7 +129,7 @@ internal fun ChordsScreen(
     }
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
     ScrollToTopOnRequest(
-        requests = viewModel.scrollToTopRequests,
+        requests = viewModel.navigator.scrollToTopRequests,
         destination = CampfireDestination.Chords,
         gridState = gridState,
         onSelectDestination = viewModel::selectTopLevelDestination,

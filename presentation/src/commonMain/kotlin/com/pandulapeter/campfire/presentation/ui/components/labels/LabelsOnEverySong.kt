@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**
- * What every song in the library is filed under, see [CampfireViewModel.labelsOnEverySong]. The tags are lowercase,
+ * What every song in the library is filed under, see `LibraryState.labelsOnEverySong`. The tags are lowercase,
  * so a song's own has to be folded before it is looked up here.
  */
 data class LabelsOnEverySong(
@@ -21,7 +21,7 @@ data class LabelsOnEverySong(
     val languages: Set<String> = emptySet(),
 )
 
-/** The labels every one of [songs] carries, see [CampfireViewModel.labelsOnEverySong]: tags folded to lowercase, languages as they are. */
+/** The labels every one of [songs] carries, see `LibraryState.labelsOnEverySong`: tags folded to lowercase, languages as they are. */
 internal fun labelsOnEverySongOf(songs: List<Song>): LabelsOnEverySong {
     // Folded one song at a time, stopping at the first song that leaves both empty, which in most libraries is the
     // second one.

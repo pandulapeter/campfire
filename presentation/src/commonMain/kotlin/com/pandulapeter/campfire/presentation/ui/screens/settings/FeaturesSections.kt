@@ -62,13 +62,13 @@ private fun PlayingSection(
         title = stringResource(Res.string.settings_read_only_mode),
         description = stringResource(Res.string.settings_read_only_mode_description),
         isChecked = isPerformanceModeEnabled,
-        onCheckedChange = viewModel::setPerformanceModeEnabled,
+        onCheckedChange = viewModel.preferencesController::setPerformanceModeEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.settings_chords),
         description = stringResource(Res.string.settings_chords_description),
         isChecked = userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel::setChordsEnabled,
+        onCheckedChange = viewModel.preferencesController::setChordsEnabled,
     )
     // Disabled rather than hidden with the chords off, like the chord spelling: there is nothing to finger then, and
     // what it is set to is still what the songs will open with once the chords are back.
@@ -77,26 +77,26 @@ private fun PlayingSection(
         description = stringResource(Res.string.settings_chord_diagrams_description),
         isChecked = userPreferences?.areChordDiagramsEnabled != false,
         isEnabled = userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel::setChordDiagramsEnabled,
+        onCheckedChange = viewModel.preferencesController::setChordDiagramsEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.metronome),
         description = stringResource(Res.string.settings_metronome_description),
         isChecked = userPreferences?.isMetronomeEnabled != false,
-        onCheckedChange = viewModel::setMetronomeEnabled,
+        onCheckedChange = viewModel.preferencesController::setMetronomeEnabled,
     )
     // Off, nothing in the app can ask for the microphone.
     SwitchListItem(
         title = stringResource(Res.string.tuner),
         description = stringResource(Res.string.settings_tuner_description),
         isChecked = userPreferences?.isTunerEnabled != false,
-        onCheckedChange = viewModel::setTunerEnabled,
+        onCheckedChange = viewModel.preferencesController::setTunerEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.setlists),
         description = stringResource(Res.string.settings_setlists_description),
         isChecked = userPreferences?.areSetlistsEnabled != false,
-        onCheckedChange = viewModel::setSetlistsEnabled,
+        onCheckedChange = viewModel.preferencesController::setSetlistsEnabled,
     )
 }
 
@@ -110,7 +110,7 @@ private fun OnlineSection(
         title = stringResource(Res.string.settings_song_details_lookup),
         description = stringResource(Res.string.settings_song_details_lookup_description),
         isChecked = userPreferences?.isSongDetailsLookupEnabled == true,
-        onCheckedChange = viewModel::setSongDetailsLookupEnabled,
+        onCheckedChange = viewModel.preferencesController::setSongDetailsLookupEnabled,
     )
     // Off, no cover is fetched from anywhere, which is what somebody who does not want a song file to make the app
     // contact a host turns it off for.
@@ -118,6 +118,6 @@ private fun OnlineSection(
         title = stringResource(Res.string.settings_cover_art),
         description = stringResource(Res.string.settings_cover_art_description),
         isChecked = userPreferences?.isCoverArtEnabled == true,
-        onCheckedChange = viewModel::setCoverArtEnabled,
+        onCheckedChange = viewModel.preferencesController::setCoverArtEnabled,
     )
 }

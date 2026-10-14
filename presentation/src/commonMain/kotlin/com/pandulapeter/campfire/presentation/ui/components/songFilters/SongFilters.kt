@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
  * The filters of the song list, shown in a side panel on wide enough screens and in a bottom sheet otherwise, and
- * neither where there is nothing to filter by (`CampfireViewModel.hasSongFilters`). The order of the list is not among
+ * neither where there is nothing to filter by (`SongListState.hasSongFilters`). The order of the list is not among
  * them: it is a [SortMenu] in the app bar, as on the setlists screen, since it changes how the library is laid out
  * rather than which songs are in it.
  *

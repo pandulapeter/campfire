@@ -91,7 +91,7 @@ import org.jetbrains.compose.resources.painterResource
  * One line on a tonal pill, as the list screens' search field is, with the magnifier in front of it and a button that
  * empties it once there is something to empty. It never takes the focus by itself, since it is there whether or not
  * anybody means to search and a keyboard coming up over the result on a phone would hide what the screen is for;
- * Ctrl / Cmd + F gives it the caret through `CampfireViewModel.openCurrentSearch`, with what it holds selected.
+ * Ctrl / Cmd + F gives it the caret through `Navigator.openCurrentSearch`, with what it holds selected.
  */
 @Composable
 internal fun ImportReportSearchField(

@@ -76,15 +76,15 @@ internal fun ChordShapeSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.ChordShape,
 ) {
-    val songs by viewModel.allSongs.collectAsStateWithLifecycle()
+    val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
+    val capos by viewModel.overrides.capos.collectAsStateWithLifecycle()
     // The sheet is opened from a song's Chords section, which an instrument without shapes leaves out, so only an
     // instrument changed while it was open gets here without a tuning; there are no shapes to offer then.
-    val tuning = userPreferences.let { if (it == null) ChordTuning.GUITAR else it.chordTuning() } ?: return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
+    val tuning = userPreferences.let { if (it == null) ChordTuning.GUITAR else it.chordTuning() } ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
     val text = songTexts[song.fileName]
@@ -99,7 +99,7 @@ internal fun ChordShapeSheet(
     val chord = chords?.firstOrNull { it.name == dialog.chordName }
     // The page names the chord as the song is played there, so a transposition or an edit synced in while the sheet is up
     // may leave nothing by that name: the diagram that was tapped is gone, and with it the sheet.
-    if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
+    if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
     val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     // Kept per chord, like the grid's own state: a chord that takes this one's place under the open sheet starts over.
     var showsDefinition by rememberSaveable(chord?.chord?.id, chord?.name) { mutableStateOf(false) }
@@ -121,7 +121,7 @@ internal fun ChordShapeSheet(
         // The notes rather than the song: the sheet is only ever opened from that song's page, and the notes say what the
         // shapes below have in common, which a line scrolled away with them would stop saying.
         subtitle = chordNoteNames(shownChord, notation),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         // The grid's own state (the marked shape, the scroll) is never handed to another chord, nor kept between the
         // tuning's shapes and the song's definition.
@@ -135,7 +135,7 @@ internal fun ChordShapeSheet(
                 selection = selection,
                 tuningLine = tuningLine(shownTuning, notation),
                 contentPadding = contentPadding,
-                onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
+                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
                 footer = if (chord?.undrawnDefinition == null) {
                     null
                 } else {

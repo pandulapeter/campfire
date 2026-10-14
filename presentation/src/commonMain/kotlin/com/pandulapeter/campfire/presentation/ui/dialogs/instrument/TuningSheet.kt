@@ -51,14 +51,14 @@ internal fun TuningSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val preferences = userPreferences ?: return
     // Only an instrument with a choice of tunings has the chip that opens this, so any other has nothing to list here.
-    if (preferences.instrument.tunings.size <= 1) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
+    if (preferences.instrument.tunings.size <= 1) return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
     val notation = preferences.chordSpelling.notation.toChordNotation()
     val selected = preferences.instrumentTuning
     CampfireBottomSheet(
         title = stringResource(Res.string.instrument_tuning_choose),
         // Named under the title, since the tunings are that instrument's and its chip is behind the sheet.
         subtitle = instrumentLabel(preferences.instrument),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }
@@ -78,7 +78,7 @@ internal fun TuningSheet(
                     description = tuningStringsLabel(tuning, notation),
                     isSelected = tuning == selected,
                     onSelected = {
-                        viewModel.setTuning(tuning)
+                        viewModel.preferencesController.setTuning(tuning)
                         closeSheet()
                     },
                 )

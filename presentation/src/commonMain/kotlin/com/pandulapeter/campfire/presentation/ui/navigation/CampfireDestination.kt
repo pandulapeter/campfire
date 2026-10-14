@@ -149,7 +149,7 @@ sealed interface CampfireDestination : NavKey {
 
     /**
      * What an import that went anywhere but the one way a snackbar is enough for has to say, see
-     * `CampfireViewModel.importReport`: a screen rather than a run of dialogs, so that it has a place on the back stack
+     * `ImportReportState.importReport`: a screen rather than a run of dialogs, so that it has a place on the back stack
      * that a song opened from it returns to, and room for every file a large import is about. There is only ever one,
      * and it is about whatever import the view model holds a report of, so it carries nothing of its own.
      */

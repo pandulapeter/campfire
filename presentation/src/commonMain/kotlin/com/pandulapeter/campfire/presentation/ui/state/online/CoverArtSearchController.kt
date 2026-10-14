@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 /**
  * The cover search sheet's search, and the copies of the covers the app keeps.
  *
- * @param songTextOf The text a metadata edit is built on, see `CampfireViewModel.songTextOf`.
+ * @param songTextOf The text a metadata edit is built on, see `SongMetadataEditing.songTextOf`.
  */
 internal class CoverArtSearchController(
     private val scope: CoroutineScope,

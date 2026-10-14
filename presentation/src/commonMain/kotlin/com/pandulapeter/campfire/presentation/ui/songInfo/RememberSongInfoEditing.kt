@@ -43,13 +43,13 @@ internal fun rememberSongInfoEditing(
     return remember(viewModel, setlistFileName, target, isCoverArtEnabled) {
         SongInfoEditing(
             onEditCoverArt = if (isCoverArtEnabled) {
-                { viewModel.showSongCoverArtDialog(song = latestSong, target = target) }
+                { viewModel.songMetadataEditing.showSongCoverArtDialog(song = latestSong, target = target) }
             } else null,
-            onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, target = target) },
-            onEditDefaults = { viewModel.showSongPlayingDialog(song = latestSong, setlistFileName = setlistFileName, target = target) },
-            onEditTags = { viewModel.showSongTagsDialog(song = latestSong, target = target) },
-            onEditLanguages = { viewModel.showSongLanguagesDialog(song = latestSong, target = target) },
-            onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, target = target) },
+            onEditMetadata = { viewModel.songMetadataEditing.showSongMetadataDialog(song = latestSong, target = target) },
+            onEditDefaults = { viewModel.songMetadataEditing.showSongPlayingDialog(song = latestSong, setlistFileName = setlistFileName, target = target) },
+            onEditTags = { viewModel.songMetadataEditing.showSongTagsDialog(song = latestSong, target = target) },
+            onEditLanguages = { viewModel.songMetadataEditing.showSongLanguagesDialog(song = latestSong, target = target) },
+            onEditLinks = { viewModel.songMetadataEditing.showSongLinksDialog(song = latestSong, target = target) },
         )
     }
 }

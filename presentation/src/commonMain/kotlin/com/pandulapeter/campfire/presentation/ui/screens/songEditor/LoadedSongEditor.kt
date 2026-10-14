@@ -105,9 +105,9 @@ internal fun LoadedSongEditor(
         destination.fileName,
         saver = remember(viewModel, destination.fileName) {
             EditorFieldSaver(
-                retain = { viewModel.retainEditorField(destination.fileName, it) },
-                retained = { viewModel.retainedEditorField(destination.fileName) },
-                recovered = { viewModel.recoveredEditorField(destination.fileName) },
+                retain = { viewModel.editorSession.retainEditorField(destination.fileName, it) },
+                retained = { viewModel.editorSession.retainedEditorField(destination.fileName) },
+                recovered = { viewModel.editorSession.recoveredEditorField(destination.fileName) },
                 fileText = { fileText },
             )
         },
@@ -115,7 +115,7 @@ internal fun LoadedSongEditor(
         // A field the view model already holds for this file is taken as it is: the draft a previous run left, reopened
         // on launch. Otherwise a new one over the file's text.
         EditorField(
-            viewModel.retainedEditorField(destination.fileName) ?: TextFieldState(
+            viewModel.editorSession.retainedEditorField(destination.fileName) ?: TextFieldState(
                 initialText = initialText,
                 initialSelection = if (destination.shouldStartInsideFirstSection) {
                     TextRange(initialText.caretInsideFirstSection())
@@ -133,13 +133,13 @@ internal fun LoadedSongEditor(
     val fieldHorizontalScrollState = rememberScrollState()
     val previewScrollState = rememberScrollState()
     LaunchedEffect(editorField) {
-        if (editorField.isDraftLost) viewModel.onEditorDraftLost()
+        if (editorField.isDraftLost) viewModel.editorSession.onEditorDraftLost()
     }
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
     val songRenderer = viewModel.songRenderer
-    val notation = viewModel.editorNotation
+    val notation = viewModel.editorSession.editorNotation
     // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert. Only the
     // open menu reads it (ActionsMenuItem.isEnabledInMenu), so typing never prettifies the whole song.
     val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { songRenderer.prettifyText(text.value) } }
@@ -147,14 +147,14 @@ internal fun LoadedSongEditor(
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isSaving by viewModel.isSavingSong.collectAsStateWithLifecycle()
+    val isSaving by viewModel.editorSession.isSavingSong.collectAsStateWithLifecycle()
     // The bar above the text follows the text as it is typed, so retitling a song shows up there right away. It
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
     // summary rather than a parse per field: it also answers whether there is anything left to transpose.
     val summaryCache = remember(textFieldState) { songRenderer.editorSummaryCache(notation) }
     val summary by remember(textFieldState) { derivedStateOf { summaryCache.summaryOf(text.value) } }
-    val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
+    val hasUnsavedChanges by viewModel.editorSession.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     val editorSong = summary.toEditorSong(destination.fileName)

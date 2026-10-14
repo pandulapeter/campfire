@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 /**
  * An item of the navigation chrome that comes and goes with the feature it belongs to, see
- * `CampfireViewModel.topLevelDestinations`. It is composed for as long as it is shown or still leaving, and [content]
+ * `PreferencesController.topLevelDestinations`. It is composed for as long as it is shown or still leaving, and [content]
  * is handed how much of it is there, from 0 to 1, to give its slot with [collapsingNavigationItem]. One the chrome is
  * first composed without is never composed at all, and one it is first composed with is there from the first frame,
  * since only a switch flipped is a change the user caused.

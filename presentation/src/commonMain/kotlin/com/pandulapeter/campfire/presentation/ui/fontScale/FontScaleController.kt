@@ -50,7 +50,7 @@ internal class FontScaleController(
     /**
      * Whether the song details screen is on top with nothing over it, which is where Ctrl / Cmd + plus, minus and zero
      * change the text size and where the web page keeps the browser from zooming itself instead. It is asked from the
-     * desktop window and the web page rather than from a key handler on the screen for the reason `CampfireViewModel.openCurrentSearch`
+     * desktop window and the web page rather than from a key handler on the screen for the reason `Navigator.openCurrentSearch`
      * is: the browser acts on a key pressed anywhere but the canvas before Compose hears of it, and a zoomed page is
      * not something Compose can undo. A dialog, a sheet or an overflow menu keeps the shortcuts from the screen under it.
      */

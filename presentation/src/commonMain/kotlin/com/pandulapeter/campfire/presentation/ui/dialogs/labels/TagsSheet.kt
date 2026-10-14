@@ -159,7 +159,7 @@ internal fun TagsSheet(
         startButton = {
             LabelSortingToggle(
                 sortingMode = sortingMode,
-                onSortingModeSelected = viewModel::setTagSortingMode,
+                onSortingModeSelected = viewModel.preferencesController::setTagSortingMode,
             )
         },
         text = { contentPadding ->

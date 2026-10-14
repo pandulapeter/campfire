@@ -139,11 +139,11 @@ internal fun SongList(
     }
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
-    val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
+    val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault)
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -177,7 +177,7 @@ internal fun SongList(
     val onTagClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
         { itemKey, tag ->
             filterAnchor.set(listState, itemKey)
-            viewModel.toggleTagFilter(tag)
+            viewModel.songListState.toggleTagFilter(tag)
         }
     }
     val onLanguageClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
@@ -248,12 +248,12 @@ internal fun SongList(
                     ListPlaceholder(
                         modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec).fillMaxWidth(),
                         placeholder = it,
-                        onRetry = viewModel::refresh,
+                        onRetry = viewModel.libraryState::refresh,
                         onNewSong = if (isPerformanceModeEnabled) null else {
                             { viewModel.showDialog(DialogType.NewSong) }
                         },
                         onDemoLibrary = if (isPerformanceModeEnabled) null else {
-                            { viewModel.importDemoLibrary() }
+                            { viewModel.firstRunController.importDemoLibrary() }
                         },
                         onImport = if (isPerformanceModeEnabled) null else {
                             { viewModel.importFiles(filePicker) }
@@ -363,7 +363,7 @@ internal fun SongList(
         ) {
             SongSelectionDoneButton(
                 count = selection.size,
-                onClick = viewModel::endSongSelection,
+                onClick = viewModel.songSelection::end,
             )
         }
         FastScroller(

@@ -75,9 +75,9 @@ internal fun rememberSongPlayingTools(
                     isPanelShown = isMetronomePanelShown,
                     bpm = bpm,
                     isFlashEnabled = isBeatFlashEnabled,
-                    playback = viewModel.metronomePlayback,
-                    beats = viewModel.metronomeBeats,
-                    onClick = viewModel::toggleMetronomePanel,
+                    playback = viewModel.metronomeController.metronomePlayback,
+                    beats = viewModel.metronomeController.metronomeBeats,
+                    onClick = viewModel.metronomeController::toggleMetronomePanel,
                 )
             } else {
                 null

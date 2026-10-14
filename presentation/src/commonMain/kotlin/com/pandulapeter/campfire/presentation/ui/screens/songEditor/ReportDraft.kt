@@ -30,12 +30,12 @@ internal fun ReportDraft(
     textFieldState: TextFieldState,
 ) {
     LaunchedEffect(text, fileName) {
-        snapshotFlow { text.value }.collect { viewModel.onEditorTextChanged(fileName, it) }
+        snapshotFlow { text.value }.collect { viewModel.editorSession.onEditorTextChanged(fileName, it) }
     }
     // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
     DisposableEffect(fileName, textFieldState) {
         // Metadata sheets read this field at the moment they open, including edits not yet reported as a draft.
-        viewModel.retainEditorField(fileName, textFieldState)
-        onDispose { viewModel.onEditorClosed(fileName) }
+        viewModel.editorSession.retainEditorField(fileName, textFieldState)
+        onDispose { viewModel.editorSession.onEditorClosed(fileName) }
     }
 }

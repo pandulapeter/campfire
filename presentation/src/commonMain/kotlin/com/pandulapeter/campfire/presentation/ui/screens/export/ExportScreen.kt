@@ -107,9 +107,9 @@ internal fun ExportScreen(
 ) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return
-    val state = rememberExportState(dialog) { viewModel.pendingPrintSettings.value ?: initialSettings }
-    val exportProgress by viewModel.pdfExportProgress.collectAsStateWithLifecycle()
-    val isFileTransferActive by viewModel.isFileTransferActive.collectAsStateWithLifecycle()
+    val state = rememberExportState(dialog) { viewModel.exportController.pendingPrintSettings.value ?: initialSettings }
+    val exportProgress by viewModel.exportController.pdfExportProgress.collectAsStateWithLifecycle()
+    val isFileTransferActive by viewModel.exportController.isFileTransferActive.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     val fontResolver = LocalFontFamilyResolver.current
     val fontFamily = LocalMonospaceFontFamily.current
@@ -168,14 +168,14 @@ internal fun ExportScreen(
     // The screen stays composed while it slides away, after its settings were flushed and its drawing cancelled, so
     // nothing tapped in that moment may change an option or start an export. Equality, since an equal export opened
     // again during the slide is this one.
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isOpen = visibleDialog == dialog
     val update: (PrintSettings) -> Unit = update@{
         if (!isOpen) return@update
         val normalized = it.normalized()
         if (normalized != state.settings) {
             state.settings = normalized
-            viewModel.setPrintSettings(normalized)
+            viewModel.exportController.setPrintSettings(normalized)
         }
     }
     val isFiles = state.settings.format == PrintSettings.Format.FILES
@@ -225,7 +225,7 @@ internal fun ExportScreen(
             requestedExport = null
             laidOut?.document?.let { snapshot ->
                 // From the screen's own settings, which the saved preferences may not have caught up with yet.
-                viewModel.exportPdf(
+                viewModel.exportController.exportPdf(
                     filePicker = filePicker,
                     fileName = pdfFileName(state.source!!, state.settings),
                     dialog = dialog,
@@ -240,10 +240,10 @@ internal fun ExportScreen(
     // Any import or export running would make the view model ignore the tap, so it is not even asked.
     val requestExport = { request: ExportRequest ->
         if (isOpen && !isFileTransferActive) {
-            if (isFiles) viewModel.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE) else requestedExport = request
+            if (isFiles) viewModel.exportController.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE) else requestedExport = request
         }
     }
-    val close = { viewModel.dismissSheet(dialog) }
+    val close = { viewModel.dialogHost.dismissSheet(dialog) }
     val content = exportContentOf(isFailed = state.failed, isLayoutFailed = state.layoutFailed, isFiles = isFiles, hasSource = state.source != null)
     val canSaveNow = content == PrintScreenContent.LOADED && if (isFiles) canExportFiles else hasPages
     // Drawn in the same window as the screen under it, so it does not take the focus by being there, and a key would
@@ -333,7 +333,7 @@ internal fun ExportScreen(
                                         renderer = renderer,
                                         pageFit = pageFit,
                                         pagerState = pagerState,
-                                        magnifications = viewModel.printPreviewMagnifications,
+                                        magnifications = viewModel.fontScaleController.printPreviewMagnifications,
                                         onPageViewChanged = {
                                             // A new zoom or pan gesture takes over from the automatic reset.
                                             pageResetAnimation?.cancel()
@@ -386,7 +386,7 @@ internal fun ExportScreen(
                 isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow,
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
-                onCancel = viewModel::cancelPdfExport,
+                onCancel = viewModel.exportController::cancelPdfExport,
             )
         }
     }

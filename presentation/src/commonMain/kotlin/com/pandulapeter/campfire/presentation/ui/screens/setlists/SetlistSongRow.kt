@@ -117,10 +117,10 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
     // no step that way.
     val onMoveUp: (() -> Unit)? = if (canMove && rowIndex > 0) {
-        { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = -1)) }
+        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = -1)) }
     } else null
     val onMoveDown: (() -> Unit)? = if (canMove && !isLastRow) {
-        { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = 1)) }
+        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = 1)) }
     } else null
     val moveActions = moveActionsSemantics(onMoveUp = onMoveUp, onMoveDown = onMoveDown)
     val onDragStarted: (Offset) -> Unit = { reorder.onDragStarted(setlistWithSongs.setlist.fileName) }
@@ -352,7 +352,7 @@ private fun SetlistEntryCard(
             shouldShowLabels = false,
             containerColor = containerColor,
             shadowElevation = elevation,
-            onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
+            onClick = { viewModel.navigator.openSongInSetlist(setlistWithSongs, entry.song) },
             onContextClick = onContextClick,
             actions = actions,
         )

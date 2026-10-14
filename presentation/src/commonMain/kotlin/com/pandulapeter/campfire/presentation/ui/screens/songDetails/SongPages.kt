@@ -82,22 +82,22 @@ internal fun SongPages(
     isViewportSettled: () -> Boolean,
     onCurrentPage: (ScrollState, SongStepper) -> Unit,
 ) {
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
+    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tabs = rememberTabReading(userPreferences)
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
         // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
-        snapshotFlow { pagerState.isScrollInProgress }.collect { if (it) viewModel.settleFontScale() }
+        snapshotFlow { pagerState.isScrollInProgress }.collect { if (it) viewModel.fontScaleController.settleFontScale() }
     }
     HorizontalPager(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
             .fillMaxSize()
             .fontScaleGestures(
                 fontScale = { viewModel.fontScale },
-                onFontScaleChanged = viewModel::setFontScale,
+                onFontScaleChanged = viewModel.fontScaleController::setFontScale,
             ),
         state = pagerState,
         key = { songs[it].fileName },
@@ -188,19 +188,19 @@ internal fun SongPages(
             shouldShowCapo = !readsCapoAsTransposition,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
-            fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
+            fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.fontScaleController.settledFontScale }),
             // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
             keepsStepButtonInset = canPage,
             // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
             // setlist has the band play it.
             foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
-            onFoldToggled = { key -> viewModel.toggleSectionFold(songFileName = song.fileName, key = key) },
+            onFoldToggled = { key -> viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = key) },
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
             contentPadding = pageContentPadding,
             transposeSong = { text, transposition, spelling, tabs -> viewModel.songRenderer.transposedSong(text, transposition, spelling, tabs = tabs) },
             notateSong = viewModel.songRenderer::notatedSong,
-            onRetry = { viewModel.loadSongContent(song.fileName) },
+            onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
             chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {

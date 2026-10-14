@@ -60,7 +60,7 @@ import org.jetbrains.compose.resources.painterResource
  * puts one song into any number of setlists, and this puts any number of songs into one setlist.
  *
  * What is ticked is held here rather than read back from the setlist, and each tick writes that one song in or out
- * ([CampfireViewModel.setSetlistSong]): a list of songs is ticked faster than a write comes back through the
+ * (`SetlistsController.setSetlistSong`): a list of songs is ticked faster than a write comes back through the
  * library, and boxes that followed the library would each flick back for the length of a round trip. A song ticked
  * here goes to the end of the setlist, so a setlist built from nothing is in the order its songs were picked, and an
  * entry whose file has gone missing stays in it, since it is not listed here to be unticked.
@@ -79,7 +79,7 @@ internal fun SongPicker(
     dialog: DialogType.SongPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val songs by viewModel.allSongs.collectAsStateWithLifecycle()
+    val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val setlist = setlists.firstOrNull { it.fileName == dialog.setlist.fileName } ?: dialog.setlist
     // Seeded from the setlist as the library has it and saved, rather than from the snapshot the dialog was opened
     // with: the dialog outlives a recreated Activity, and a selection seeded again from that snapshot would show every
@@ -87,14 +87,14 @@ internal fun SongPicker(
     val initialSongFileNames = rememberSaveable(setlist.fileName) { setlist.entries.map { it.songFileName } }
     var selectedSongFileNames by rememberSaveable(setlist.fileName) { mutableStateOf(initialSongFileNames) }
     var query by rememberSaveable { mutableStateOf("") }
-    val selectedTags by viewModel.songPickerSelectedTags.collectAsStateWithLifecycle()
-    val selectedLanguages by viewModel.songPickerSelectedLanguages.collectAsStateWithLifecycle()
+    val selectedTags by viewModel.songPickerState.songPickerSelectedTags.collectAsStateWithLifecycle()
+    val selectedLanguages by viewModel.songPickerState.songPickerSelectedLanguages.collectAsStateWithLifecycle()
     // Sorted, normalized for the search and counted for the chips by the view model, once per library rather than as
     // the sheet opens or on every keystroke, since the search runs over every song on every character typed and the
     // sheet's first frames are its slide up.
-    val pickerSongs by viewModel.pickerSongs.collectAsStateWithLifecycle()
+    val pickerSongs by viewModel.songPickerState.pickerSongs.collectAsStateWithLifecycle()
     val pickableSongs = pickerSongs.list
-    val filters by viewModel.songPickerFilters.collectAsStateWithLifecycle()
+    val filters by viewModel.songPickerState.songPickerFilters.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
     // otherwise keep hiding every song with no chip left to turn it off.
@@ -131,8 +131,8 @@ internal fun SongPicker(
     CampfireBottomSheet(
         title = stringResource(Res.string.setlists_choose_songs),
         subtitle = setlist.title,
-        actions = { SongSortMenu(selected = userPreferences?.sortingMode, onSelected = viewModel::setSortingMode) },
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        actions = { SongSortMenu(selected = userPreferences?.sortingMode, onSelected = viewModel.preferencesController::setSortingMode) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         SearchField(
             query = query,
@@ -162,10 +162,10 @@ internal fun SongPicker(
                         refreshKey = chipRefreshKey,
                         tagSortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
                         languageSortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-                        onTagClicked = viewModel::toggleSongPickerTag,
-                        onLanguageClicked = viewModel::toggleSongPickerLanguage,
-                        onTagSortingModeSelected = viewModel::setTagSortingMode,
-                        onLanguageSortingModeSelected = viewModel::setLanguageSortingMode,
+                        onTagClicked = viewModel.songPickerState::toggleSongPickerTag,
+                        onLanguageClicked = viewModel.songPickerState::toggleSongPickerLanguage,
+                        onTagSortingModeSelected = viewModel.preferencesController::setTagSortingMode,
+                        onLanguageSortingModeSelected = viewModel.preferencesController::setLanguageSortingMode,
                     )
                 }
             },
@@ -185,7 +185,7 @@ internal fun SongPicker(
                     coverArtUrl = pickableSong.song.coverArtUrl?.takeIf { userPreferences?.isCoverArtEnabled == true },
                     onCheckedChange = { isChecked ->
                         selectedSongFileNames = if (isChecked) selectedSongFileNames + fileName else selectedSongFileNames - fileName
-                        viewModel.setSetlistSong(setlistFileName = setlist.fileName, songFileName = fileName, isTicked = isChecked)
+                        viewModel.setlistsController.setSetlistSong(setlistFileName = setlist.fileName, songFileName = fileName, isTicked = isChecked)
                     },
                 )
             }

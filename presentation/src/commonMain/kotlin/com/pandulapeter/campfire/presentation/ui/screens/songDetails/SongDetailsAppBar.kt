@@ -80,7 +80,7 @@ internal fun SongDetailsAppBar(
     onBack: () -> Unit,
 ) {
     val songActions = rememberSongActionHandler(viewModel)
-    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
@@ -142,9 +142,9 @@ internal fun SongDetailsAppBar(
             MetronomePanel(
                 isPlaying = panel.isPlaying,
                 beatLevels = panel.beatLevels,
-                beats = viewModel.metronomeBeats,
+                beats = viewModel.metronomeController.metronomeBeats,
                 isFlashEnabled = panel.isFlashEnabled,
-                onBeatLevelsChanged = { levels -> viewModel.setBeatLevels(panel.timeSignature, levels) },
+                onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
                 onPlayStop = viewModel::toggleMetronome,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,

@@ -41,12 +41,12 @@ internal data class MetronomePanelState(
  */
 @Composable
 internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): MetronomePanelState {
-    val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
-    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
-    val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    val songBeatLevels by viewModel.songBeatLevels.collectAsStateWithLifecycle()
-    val context = viewModel.metronomeContext
+    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
+    val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songBeatLevels by viewModel.metronomeController.songBeatLevels.collectAsStateWithLifecycle()
+    val context = viewModel.metronomeController.metronomeContext
     val timeSignature = (playback as? MetronomePlayback.Playing)?.pattern?.timeSignature
         ?: metronomeTimeSignatureOf(context, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
     val barBeingLeft = playback.barBeingLeft

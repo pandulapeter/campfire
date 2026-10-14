@@ -35,9 +35,9 @@ internal fun SongTagsDialog(
     sheetKey = dialog.song.fileName,
     subtitle = songLabel(dialog.song),
     confirmLabel = stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save),
-    onDismiss = { viewModel.dismissSheet(dialog) },
+    onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     onSave = { draft, spellings ->
-        viewModel.setSongTags(
+        viewModel.songMetadataEditing.setSongTags(
             target = dialog.target,
             tags = draft.onKeys.mapNotNull(spellings::get),
             offeredTags = spellings.values.toList(),

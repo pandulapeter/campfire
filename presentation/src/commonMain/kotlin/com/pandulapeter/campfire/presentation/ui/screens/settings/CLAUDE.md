@@ -51,7 +51,7 @@ breakpoint, as do the wide layout's pages.
   screen-owned `NavigationBackHandler` for gestures/browser Back, so predictive back previews General (one pager scroll
   for the whole gesture; the wide layout uses a `SeekableTransitionState` at the gesture's fraction).
 - Pressing the open Settings item scrolls to top, then goes to General. Top level items and the open tab scroll to top
-  through `CampfireViewModel.scrollToTopRequests`, collected with **`collectLatest`**: a touch interrupting the scroll
+  through `Navigator.scrollToTopRequests`, collected with **`collectLatest`**: a touch interrupting the scroll
   throws `CancellationException`, which would end a plain `collect` and every later press.
 
 ## `SyncSettings.kt`
@@ -61,7 +61,7 @@ breakpoint, as do the wide layout's pages.
   a connection failure's reason sits under Connect.
 - `ConnectionFailed` is drawn as the invitation with the reason; pressing again goes to `Connecting`, which clears it.
   `Connecting` is left through Cancel whether or not the attempt still runs (on the web it never does).
-- Empty `viewModel.syncProviders` (no key in the build) says so instead of offering a button that can't work.
+- Empty `viewModel.syncController.syncProviders` (no key in the build) says so instead of offering a button that can't work.
 - A finished run shows how long ago (`rememberElapsed`, recomputed when the words would change and at least each
   minute), never a count of what moved.
 

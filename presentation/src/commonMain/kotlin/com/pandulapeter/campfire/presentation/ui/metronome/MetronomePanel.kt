@@ -51,7 +51,7 @@ import kotlinx.coroutines.flow.Flow
  * screens that have one, so that it is started, stopped and accented the same way on either.
  *
  * On the song details screen it is a panel inside the app bar, under its title row, that the bar's own button shows and
- * hides (`CampfireViewModel.toggleMetronomePanel`): the click is something a song is played to there, the tempo is
+ * hides (`MetronomeController.toggleMetronomePanel`): the click is something a song is played to there, the tempo is
  * already in the song's own first section right under the bar, and being part of the bar rather than something floating
  * under it, it stays where it is while the song is read and covers none of it. On the Metronome tab it is the header,
  * pinned above everything else the tab sets and never hidden ([isVisible] always true), so that the click can be

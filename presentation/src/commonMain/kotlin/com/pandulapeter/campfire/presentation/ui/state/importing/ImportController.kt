@@ -56,7 +56,7 @@ import kotlinx.coroutines.withContext
  * [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each other
  * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
- * @param openImportedSong Opens the one song the system handed over, see `CampfireViewModel.openImportedSong`.
+ * @param openImportedSong Opens the one song the system handed over, see `Navigator.openImportedSong`.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
  */

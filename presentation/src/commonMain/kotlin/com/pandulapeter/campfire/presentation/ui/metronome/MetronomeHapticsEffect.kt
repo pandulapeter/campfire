@@ -36,7 +36,7 @@ internal fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
     LaunchedEffect(haptics, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(if (areBeatHapticsFeltInBackground) Lifecycle.State.CREATED else Lifecycle.State.RESUMED) {
             withContext(beatHapticsDispatcher) {
-                viewModel.metronomeBeats.collect { beat ->
+                viewModel.metronomeController.metronomeBeats.collect { beat ->
                     if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
                 }
             }

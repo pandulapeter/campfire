@@ -70,8 +70,8 @@ internal fun DeleteLibraryDialog(
     viewModel: CampfireViewModel,
 ) {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
-    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
+    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
+    val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     // Files dropped or opened with the app while the sheet is up are imported against the library it would delete, so
@@ -88,7 +88,7 @@ internal fun DeleteLibraryDialog(
         }
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dismissSheet(DialogType.DeleteLibrary) },
+        onDismissRequest = { viewModel.dialogHost.dismissSheet(DialogType.DeleteLibrary) },
         title = stringResource(Res.string.settings_library_delete),
         text = { contentPadding ->
             val closeSheet = { close() }

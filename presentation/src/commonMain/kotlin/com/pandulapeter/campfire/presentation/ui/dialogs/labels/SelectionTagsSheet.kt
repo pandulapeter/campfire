@@ -31,7 +31,7 @@ internal fun SelectionTagsSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.SelectionTags,
 ) {
-    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
+    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
     val songs = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it] } }
     TagsSheet(
         viewModel = viewModel,
@@ -39,9 +39,9 @@ internal fun SelectionTagsSheet(
         sheetKey = dialog.songFileNames.joinToString(),
         subtitle = pluralStringResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size),
         confirmLabel = stringResource(Res.string.save),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         onSave = { draft, spellings ->
-            viewModel.setSelectionTags(
+            viewModel.selectionEditing.setSelectionTags(
                 fileNames = dialog.songFileNames,
                 added = draft.added.mapNotNull(spellings::get),
                 removed = draft.removed,

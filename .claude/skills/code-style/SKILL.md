@@ -119,7 +119,9 @@ wrong or undo it".
   code they test.
 - **No god objects.** When a class gains a responsibility unrelated to the ones it has, give that
   responsibility a collaborator of its own instead of another dozen members. A facade such as
-  `CampfireViewModel` holds one-line delegations only; logic it would grow goes into the holder it belongs to. Interfaces are as narrow as
+  `CampfireViewModel` builds its holders and exposes them as `internal val`s, which screens call directly; logic it
+  would grow goes into the holder it belongs to, and no member only forwards to a holder unless a module outside
+  `:presentation` needs it. Interfaces are as narrow as
   their clients (split one that two clients use halves of); a long-lived class takes its
   `CoroutineScope`, dispatcher and clocks rather than building them, so a test can pass virtual time.
 - **A behaviour-preserving split moves code verbatim**: the same declarations, KDoc with its declaration,

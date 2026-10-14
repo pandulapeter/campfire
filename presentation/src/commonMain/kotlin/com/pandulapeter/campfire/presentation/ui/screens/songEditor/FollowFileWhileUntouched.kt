@@ -32,11 +32,11 @@ internal fun FollowFileWhileUntouched(
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) {
-    val notation = viewModel.editorNotation
+    val notation = viewModel.editorSession.editorNotation
     LaunchedEffect(textFieldState, fileName) {
         val editorTextOf = { text: String -> viewModel.songRenderer.editorTextOf(text, notation) }
-        var previous = viewModel.songTexts.value[fileName]?.let(editorTextOf)
-        viewModel.songTexts.map { it[fileName]?.let(editorTextOf) }.distinctUntilChanged().collect { current ->
+        var previous = viewModel.songTextStore.songTexts.value[fileName]?.let(editorTextOf)
+        viewModel.songTextStore.songTexts.map { it[fileName]?.let(editorTextOf) }.distinctUntilChanged().collect { current ->
             val base = previous
             previous = current
             if (current != null && base != null && current != base && textFieldState.text.contentEquals(base)) {

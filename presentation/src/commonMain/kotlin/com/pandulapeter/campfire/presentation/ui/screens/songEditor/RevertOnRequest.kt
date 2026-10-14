@@ -27,10 +27,10 @@ internal fun RevertOnRequest(
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) {
-    val notation = viewModel.editorNotation
+    val notation = viewModel.editorSession.editorNotation
     LaunchedEffect(textFieldState, fileName) {
-        viewModel.editorRevertRequests.collect {
-            viewModel.songTexts.value[fileName]?.let { text ->
+        viewModel.editorSession.editorRevertRequests.collect {
+            viewModel.songTextStore.songTexts.value[fileName]?.let { text ->
                 summaryCache.clear()
                 textFieldState.replaceAll(viewModel.songRenderer.editorTextOf(text, notation), isSelectionMapped = false)
             }

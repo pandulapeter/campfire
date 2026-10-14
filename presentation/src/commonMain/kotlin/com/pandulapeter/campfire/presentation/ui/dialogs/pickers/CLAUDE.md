@@ -22,7 +22,7 @@ The setlist picker (every setlist, one song) and the song picker (every song, on
   tag and language chips (`SortableChipRow`) are a plain `Row` animated by `animateBounds`, since a lazy row sent to its
   start drops its placement animation; their selection is the sheet's own, empty each opening. Rows are built off the
   main thread once per library (`SongPickerIndex.kt`); chips are `ScreenData.libraryTags`/`libraryLanguages`.
-- **One write per tick** (`CampfireViewModel.setSetlistSong`, serialized by a `Mutex`, each applied to the setlist as
+- **One write per tick** (`SetlistsController.setSetlistSong`, serialized by a `Mutex`, each applied to the setlist as
   the library has it then): ticks come faster than a write round-trips, and boxes following `setlists` would flick back.
   A gone setlist is not recreated from the sheet's copy. A ticked song goes to the end; an entry whose file is missing
   is kept.

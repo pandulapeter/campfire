@@ -25,10 +25,10 @@ import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilt
 @Composable
 internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilterUiState {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
+    val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
-    val languages by viewModel.languages.collectAsStateWithLifecycle()
-    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
+    val languages by viewModel.libraryState.languages.collectAsStateWithLifecycle()
+    val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
     return remember(userPreferences, songFilter, tags, languages, isSongFilterActive) {
         SongFilterUiState(
             tags = tags,
@@ -49,19 +49,19 @@ internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilter
 internal fun rememberSongFilterActions(viewModel: CampfireViewModel): SongFilterActions = remember(viewModel) {
     object : SongFilterActions {
         override fun toggleTagFilter(tag: String) {
-            viewModel.toggleTagFilter(tag)
+            viewModel.songListState.toggleTagFilter(tag)
         }
 
         override fun clearTagFilter() {
-            viewModel.clearTagFilter()
+            viewModel.songListState.clearTagFilter()
         }
 
         override fun setTagMatchMode(value: UserPreferences.MatchMode) {
-            viewModel.setTagMatchMode(value)
+            viewModel.songListState.setTagMatchMode(value)
         }
 
         override fun setTagSortingMode(value: UserPreferences.LabelSortingMode) {
-            viewModel.setTagSortingMode(value)
+            viewModel.preferencesController.setTagSortingMode(value)
         }
 
         override fun toggleLanguageFilter(code: String) {
@@ -69,19 +69,19 @@ internal fun rememberSongFilterActions(viewModel: CampfireViewModel): SongFilter
         }
 
         override fun clearLanguageFilter() {
-            viewModel.clearLanguageFilter()
+            viewModel.songListState.clearLanguageFilter()
         }
 
         override fun setLanguageMatchMode(value: UserPreferences.MatchMode) {
-            viewModel.setLanguageMatchMode(value)
+            viewModel.songListState.setLanguageMatchMode(value)
         }
 
         override fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) {
-            viewModel.setLanguageSortingMode(value)
+            viewModel.preferencesController.setLanguageSortingMode(value)
         }
 
         override fun clearSongFilter() {
-            viewModel.clearSongFilter()
+            viewModel.songListState.clearSongFilter()
         }
     }
 }

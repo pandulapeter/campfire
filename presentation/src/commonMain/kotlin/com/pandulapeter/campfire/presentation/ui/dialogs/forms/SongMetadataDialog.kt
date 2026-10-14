@@ -79,7 +79,7 @@ internal fun SongMetadataDialog(
         )
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_metadata_edit),
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
@@ -113,7 +113,7 @@ internal fun SongMetadataDialog(
             BottomSheetConfirmButton(
                 enabled = SONG_METADATA_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.setSongMetadata(
+                    viewModel.songMetadataEditing.setSongMetadata(
                         target = dialog.target,
                         values = values.fromSongMetadataDraft(),
                         offeredValues = offeredValues.fromSongMetadataDraft(),

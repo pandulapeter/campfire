@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
  * @param isDemoLibraryPending See `FirstRunController.isDemoLibraryPending`.
  * @param isEditorDraftRecoveryPending Whether a draft a previous run left is still being reopened.
  * @param editorDraftRecovery Completed with whether the editor was reopened on a stored draft.
- * @param restoreNavigationState See `CampfireViewModel.restoreNavigationState`.
+ * @param restoreNavigationState See `Navigator.restoreNavigationState`.
  */
 internal class LaunchState(
     private val scope: CoroutineScope,

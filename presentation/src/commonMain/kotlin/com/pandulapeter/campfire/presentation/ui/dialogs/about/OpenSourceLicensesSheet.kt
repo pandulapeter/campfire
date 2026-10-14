@@ -73,7 +73,7 @@ internal fun OpenSourceLicensesSheet(
     urlOpener: (String) -> Unit,
 ) = CampfireBottomSheet(
     title = stringResource(Res.string.settings_open_source_licenses),
-    onDismiss = { viewModel.dismissSheet(DialogType.OpenSourceLicenses) },
+    onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.OpenSourceLicenses) },
 ) { contentPadding ->
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
     val components = remember { openSourceComponents.filter { appBuild in it.builds } }

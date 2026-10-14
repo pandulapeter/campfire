@@ -31,7 +31,7 @@ internal enum class LibraryPersistence {
 
 /**
  * Asks the platform to hold on to the library, and reports what it said. Called once, by the view model as it is
- * created (`CampfireViewModel.libraryPersistence`): the browsers that decide by asking the user must only be made to
+ * created (`PreferencesController.libraryPersistence`): the browsers that decide by asking the user must only be made to
  * ask once, and the settings screen reads the answer that call left behind rather than asking again.
  */
 internal expect suspend fun requestLibraryPersistence(): LibraryPersistence

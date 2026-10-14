@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * One setlist's rows in the order they are drawn, which is the order a drag in flight has put them in rather than
  * the setlist's own. Each row takes the number of the slot it now sits in instead of the one it arrived with, so
  * that the rows a drag passes are renumbered as it passes them - and since the slots are the ones the visible rows
- * already occupied, the numbers do not change again when [CampfireViewModel.reorderSetlist] writes the same
+ * already occupied, the numbers do not change again when `SetlistsController.reorderSetlist` writes the same
  * dealing out to the file.
  */
 internal fun SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {

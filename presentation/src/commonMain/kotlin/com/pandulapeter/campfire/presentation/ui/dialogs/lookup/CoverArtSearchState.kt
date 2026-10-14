@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
-/** What the cover search sheet shows under its fields, see [CampfireViewModel.coverArtSearch]. */
+/** What the cover search sheet shows under its fields, see `CoverArtSearchController.coverArtSearch`. */
 sealed interface CoverArtSearchState {
 
     /** Nothing has been asked yet, or there is nothing to ask by. */

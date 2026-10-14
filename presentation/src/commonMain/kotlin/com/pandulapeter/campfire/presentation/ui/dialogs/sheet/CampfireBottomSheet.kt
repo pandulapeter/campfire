@@ -115,7 +115,7 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  * @param onTopMoved Where the sheet's top edge is on the screen, on every frame it moves: for what is drawn behind the
  *   sheet and has to stay in the part of it the sheet leaves uncovered. Screen coordinates rather than the window's, since
  *   on Android the sheet is a window of its own.
- * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
+ * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`DialogHost.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet ([BottomSheetContentScope.close]), for a sheet with a button of its own that is
  *   done with it. That close is final the way the actions' is.

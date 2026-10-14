@@ -78,13 +78,13 @@ internal fun SetlistPicker(
     }
     val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, listOf(dialog.song.fileName)) }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
-    val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
+    val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dialogHost.dismissSheet(dialog) else isNamingNewSetlist = false }
     if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_choose_setlists),
             subtitle = songLabel(dialog.song),
-            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel::setSetlistSortingMode) },
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel.setlistsController::setSetlistSortingMode) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         ) { contentPadding ->
             SearchField(
                 query = query,
@@ -111,9 +111,9 @@ internal fun SetlistPicker(
                         isEnabled = !setlist.isArchived && setlist.fileName != dialog.setlistFileName,
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
-                                viewModel.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                                viewModel.setlistsController.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
                             } else {
-                                viewModel.removeSongFromSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                                viewModel.setlistsController.removeSongFromSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
                             }
                         },
                     )
@@ -138,7 +138,7 @@ internal fun SetlistPicker(
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.createSetlistWithSongs(
+                viewModel.setlistsController.createSetlistWithSongs(
                     title = setlistTitle,
                     description = description,
                     date = date,

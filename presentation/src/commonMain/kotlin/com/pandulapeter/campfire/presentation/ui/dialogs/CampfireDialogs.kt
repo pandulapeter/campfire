@@ -92,8 +92,8 @@ internal fun CampfireDialogs(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
 ) {
-    val openDialogs by viewModel.openDialogs.collectAsStateWithLifecycle()
-    val closeRequest by viewModel.dialogCloseRequest.collectAsStateWithLifecycle()
+    val openDialogs by viewModel.dialogHost.openDialogs.collectAsStateWithLifecycle()
+    val closeRequest by viewModel.dialogHost.closeRequest.collectAsStateWithLifecycle()
     // A slot of its own for every open dialog, keyed by its place, so that one a dialog was put over stays composed
     // under it - its sheet up, its draft and scroll position kept - and is only uncovered when that one goes.
     openDialogs.forEach { dialog ->
@@ -118,11 +118,11 @@ private fun CampfireDialog(
         DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             confirmLabel = stringResource(Res.string.create),
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             // Dismissed before the setlist is created rather than after, since creating it is what opens the song
             // picker for it, and a dismissal arriving after that would close the picker instead.
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.dismissDialog()
+                viewModel.dialogHost.dismissDialog()
                 viewModel.createSetlist(title = setlistTitle, description = description, date = date, isCountdownShown = isCountdownShown)
             },
         )
@@ -137,7 +137,7 @@ private fun CampfireDialog(
             initialDate = dialog.setlist.date,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.save),
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.editSetlist(
                     offered = dialog.setlist,
@@ -158,9 +158,9 @@ private fun CampfireDialog(
             initialDescription = dialog.setlist.description,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.duplicate),
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.duplicateSetlist(
+                viewModel.setlistsController.duplicateSetlist(
                     setlist = dialog.setlist,
                     title = setlistTitle,
                     description = description,
@@ -171,7 +171,7 @@ private fun CampfireDialog(
         )
 
         DialogType.NewSong -> NewSongDialog(
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onCreate = { values, _ -> viewModel.createSong(values = values) },
         )
 
@@ -181,13 +181,13 @@ private fun CampfireDialog(
             songFileName = dialog.song.fileName,
             offeredValues = dialog.values,
             confirmLabel = stringResource(Res.string.duplicate),
-            onDismiss = { viewModel.dismissSheet(dialog) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onCreate = { values, offeredValues -> viewModel.duplicateSong(song = dialog.song, values = values, offeredValues = offeredValues) },
         )
 
         DialogType.SongFilters -> CampfireBottomSheet(
             title = stringResource(Res.string.songs_filter),
-            onDismiss = { viewModel.dismissSheet(DialogType.SongFilters) },
+            onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
         ) { contentPadding ->
             SongFilters(
                 state = rememberSongFilterUiState(viewModel),
@@ -238,10 +238,10 @@ private fun CampfireDialog(
             title = stringResource(Res.string.songs_delete_song),
             text = textResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.delete),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
                 viewModel.deleteSong(dialog.song.fileName)
-                viewModel.dismissDialog()
+                viewModel.dialogHost.dismissDialog()
             },
         )
 
@@ -285,11 +285,11 @@ private fun CampfireDialog(
             text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
             // Not removing the cover is not being done with it: the cover sheet the bin was tapped in is still under it.
-            onDismiss = { viewModel.dismissDialog() },
+            onDismiss = { viewModel.dialogHost.dismissDialog() },
             onConfirm = {
-                viewModel.setSongCoverArt(target = dialog.target, url = null)
+                viewModel.songMetadataEditing.setSongCoverArt(target = dialog.target, url = null)
                 // The cover sheet under the question goes with it, sliding away: there is nothing left for it to change.
-                viewModel.dismissDialogAndSheetUnder()
+                viewModel.dialogHost.dismissDialogAndSheetUnder()
             },
         )
 
@@ -297,10 +297,10 @@ private fun CampfireDialog(
             title = stringResource(Res.string.setlists_remove_song),
             text = textResource(Res.string.setlists_remove_song_confirmation, dialog.songTitle),
             confirmLabel = stringResource(Res.string.setlists_remove_song),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = dialog.setlistFileName)
-                viewModel.dismissDialog()
+                viewModel.setlistsController.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = dialog.setlistFileName)
+                viewModel.dialogHost.dismissDialog()
             },
         )
 
@@ -308,10 +308,10 @@ private fun CampfireDialog(
             title = stringResource(Res.string.setlists_delete_setlist),
             text = textResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
             confirmLabel = stringResource(Res.string.delete),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
                 viewModel.deleteSetlist(dialog.setlist.fileName)
-                viewModel.dismissDialog()
+                viewModel.dialogHost.dismissDialog()
             },
         )
 
@@ -319,10 +319,10 @@ private fun CampfireDialog(
             title = stringResource(Res.string.settings_sync_disconnect),
             text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
                 viewModel.disconnectSyncProvider()
-                viewModel.dismissDialog()
+                viewModel.dialogHost.dismissDialog()
             },
         )
 
@@ -330,10 +330,10 @@ private fun CampfireDialog(
             title = stringResource(Res.string.settings_library_cover_art_cache_clear),
             text = stringResource(Res.string.settings_library_cover_art_cache_clear_confirmation),
             confirmLabel = stringResource(Res.string.settings_library_cover_art_cache_clear_action),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
                 viewModel.clearCoverArtCache()
-                viewModel.dismissDialog()
+                viewModel.dialogHost.dismissDialog()
             },
         )
 
@@ -345,18 +345,18 @@ private fun CampfireDialog(
             title = stringResource(Res.string.song_editor_revert),
             text = stringResource(Res.string.song_editor_revert_confirmation),
             confirmLabel = stringResource(Res.string.song_editor_revert),
-            onDismiss = viewModel::dismissDialog,
-            onConfirm = viewModel::revertEditorChanges,
+            onDismiss = viewModel.dialogHost::dismissDialog,
+            onConfirm = viewModel.editorSession::revertEditorChanges,
         )
 
         is DialogType.ConfirmImportReplace -> ConfirmationDialog(
             title = pluralStringResource(Res.plurals.import_replace_title, dialog.count, dialog.count),
             text = pluralStringResource(Res.plurals.import_replace_message, dialog.count),
             confirmLabel = stringResource(Res.string.import_conflicts_replace),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.dismissDialog()
-                viewModel.resolveImport()
+                viewModel.dialogHost.dismissDialog()
+                viewModel.importController.resolveImport()
             },
         )
 
@@ -365,15 +365,15 @@ private fun CampfireDialog(
             text = stringResource(Res.string.confirm_exit_message),
             confirmLabel = stringResource(Res.string.close),
             isDestructive = false,
-            onDismiss = viewModel::dismissDialog,
-            onConfirm = viewModel::exitConfirmed,
+            onDismiss = viewModel.dialogHost::dismissDialog,
+            onConfirm = viewModel.appExitController::exitConfirmed,
         )
 
         DialogType.UnsavedChanges -> UnsavedChangesDialog(
-            isSaving = viewModel.isSavingSong.collectAsStateWithLifecycle().value,
-            onCancel = viewModel::dismissDialog,
-            onDiscard = viewModel::leaveEditorWithoutSaving,
-            onSave = viewModel::saveEditorChangesAndLeave,
+            isSaving = viewModel.editorSession.isSavingSong.collectAsStateWithLifecycle().value,
+            onCancel = viewModel.dialogHost::dismissDialog,
+            onDiscard = viewModel.editorSession::leaveEditorWithoutSaving,
+            onSave = viewModel.editorSession::saveEditorChangesAndLeave,
         )
 
         DialogType.WhatsNew -> {
@@ -382,9 +382,9 @@ private fun CampfireDialog(
             // flow ends the process (see FirstRunController.showWhatsNewOnVersionChange).
             LaunchedEffect(Unit) {
                 delay(WHATS_NEW_SEEN_DELAY)
-                viewModel.onWhatsNewShown()
+                viewModel.firstRunController.onWhatsNewShown()
             }
-            WhatsNewDialog(onDismiss = viewModel::dismissDialog)
+            WhatsNewDialog(onDismiss = viewModel.dialogHost::dismissDialog)
         }
     }
 }

@@ -85,7 +85,7 @@ private fun ImportExportSection(
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_import_export)) {
-    val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
+    val demoLibraryOffer by viewModel.firstRunController.demoLibraryOffer.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     ActionListItem(
         title = stringResource(Res.string.settings_import),
@@ -103,7 +103,7 @@ private fun ImportExportSection(
             icon = painterResource(Res.drawable.ic_songs),
             isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
             isEmphasized = false,
-            onClick = viewModel::importDemoLibrary,
+            onClick = viewModel.firstRunController::importDemoLibrary,
         )
     }
     ActionListItem(
@@ -122,9 +122,9 @@ private fun OnThisDeviceSection(
     isPerformanceModeEnabled: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_on_this_device)) {
     // Null until the library has been read, so that the row arrives with real counts instead of showing zeroes.
-    val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
-    val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
-    val coverArtCacheSize by viewModel.coverArtCacheSize.collectAsStateWithLifecycle()
+    val librarySummary by viewModel.libraryState.librarySummary.collectAsStateWithLifecycle()
+    val libraryPersistence by viewModel.preferencesController.libraryPersistence.collectAsStateWithLifecycle()
+    val coverArtCacheSize by viewModel.coverArtSearchController.coverArtCacheSize.collectAsStateWithLifecycle()
     AnimatedSettingsRow(value = librarySummary) { summary ->
         DeletableSettingsRow(
             title = stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount),

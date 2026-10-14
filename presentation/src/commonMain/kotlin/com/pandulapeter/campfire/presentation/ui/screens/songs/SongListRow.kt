@@ -111,7 +111,7 @@ internal fun SongListRow(
         onTagClicked = { onTagClicked(itemKey, it) },
         onLanguageClicked = { onLanguageClicked(itemKey, it) },
         onClick = if (isSelecting) {
-            { viewModel.toggleSongSelection(song.fileName) }
+            { viewModel.songSelection.toggle(song.fileName) }
         } else {
             {
                 keyboardController?.hide()
@@ -206,7 +206,7 @@ private fun SongRowActions(
                     title = selectMultipleTitle,
                     icon = selectSongsIcon,
                     isAlwaysInMenu = true,
-                    onClick = { viewModel.startSongSelection(song.fileName) },
+                    onClick = { viewModel.songSelection.start(song.fileName) },
                 ),
             )
         }

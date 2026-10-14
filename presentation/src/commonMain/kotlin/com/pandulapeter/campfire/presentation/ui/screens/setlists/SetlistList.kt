@@ -101,7 +101,7 @@ internal fun SetlistList(
 ) {
     val songActions = rememberSongActionHandler(viewModel)
     val setlistActions = rememberSetlistActionHandler(viewModel)
-    val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
+    val setlistsWithSongs by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
     // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
     val shownSetlists = remember(setlistsWithSongs, narrowedSetlistFileName) {
@@ -147,18 +147,18 @@ internal fun SetlistList(
     }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
-    val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
+    val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     val topFade = rememberListTopFade(listState, sectionHeaderContentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read by the headers alone, so midnight recomposes the ones counting down and not the list around them.
     val today by rememberToday()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
-    val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
+    val setlistsPlaceholder = viewModel.setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle().value
     LaunchedEffect(isScreenActive, isPerformanceModeEnabled, setlistsWithSongs) {
         if (!isScreenActive || isPerformanceModeEnabled ||
             setlistsWithSongs.none { it.setlist.fileName == reorderingSetlistFileName && it.canReorder }
@@ -167,14 +167,14 @@ internal fun SetlistList(
         }
     }
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault)
-    val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = viewModel::reorderSetlist)
+    val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = viewModel.setlistsController::reorderSetlist)
     val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()
     val rowsCache = remember { SetlistRowsCache() }
     rowsCache.retainOnly(setlistsWithSongs)
 
-    val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
-    val query = if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""
+    val isSearchOpen by viewModel.setlistsController.setlistsSearch.isOpen.collectAsStateWithLifecycle()
+    val query = if (isSearchOpen) viewModel.setlistsController.setlistsSearch.textFieldState.text.toString() else ""
     val searchedQuery = remember(query) { viewModel.songRenderer.normalizeForSearch(query) }
     ScrollToTopWhenChanged(
         listState = listState,
@@ -211,7 +211,7 @@ internal fun SetlistList(
                     ListPlaceholder(
                         modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
                         placeholder = placeholder,
-                        onRetry = viewModel::refresh,
+                        onRetry = viewModel.libraryState::refresh,
                         onNewSetlist = if (isPerformanceModeEnabled) null else {
                             { viewModel.showDialog(DialogType.NewSetlist) }
                         },
@@ -346,7 +346,7 @@ internal fun SetlistList(
                         modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).fillMaxWidth(),
                         title = stringResource(Res.string.setlists_show_archived),
                         isChecked = userPreferences?.shouldShowArchivedSetlists == true,
-                        onCheckedChange = viewModel::setShouldShowArchivedSetlists,
+                        onCheckedChange = viewModel.setlistsController::setShouldShowArchivedSetlists,
                     )
                 }
             }

@@ -94,7 +94,7 @@ internal fun LanguagesSheet(
     onSave: (BulkLabelDraft) -> Unit,
 ) {
     val appLanguageCode = currentLanguage.value.code
-    val libraryLanguages by viewModel.languages.collectAsStateWithLifecycle()
+    val libraryLanguages by viewModel.libraryState.languages.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
@@ -133,7 +133,7 @@ internal fun LanguagesSheet(
         startButton = {
             LabelSortingToggle(
                 sortingMode = sortingMode,
-                onSortingModeSelected = viewModel::setLanguageSortingMode,
+                onSortingModeSelected = viewModel.preferencesController::setLanguageSortingMode,
             )
         },
         text = { contentPadding ->

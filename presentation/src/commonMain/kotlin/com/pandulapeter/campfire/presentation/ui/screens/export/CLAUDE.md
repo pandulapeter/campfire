@@ -34,7 +34,7 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
 ## Format and files preview
 
 - **The format is the first option**, with a line saying what each is for (the names alone don't tell anybody).
-  `Format.FILES` are written by `CampfireViewModel.exportFiles`; a saved one closes the screen like a PDF.
+  `Format.FILES` are written by `ExportController.exportFiles`; a saved one closes the screen like a PDF.
 - All PDF options fold away for files except a setlist's song ticks, one selection for both formats (switching doesn't
   restore unticked songs). `chosenSongFileNames` is null when all are ticked, so the manifest goes out as stored. A zip
   of none isn't offered unless the setlist has no songs.
@@ -50,7 +50,7 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
   is on screen**: an earlier tap (a FAB has no disabled look) is kept and carried out once it is (`ExportRequest`).
 - Options go to `pendingPrintSettings` as they change, saved after settling, and whatever is pending is saved however
   the screen closes (`setVisibleDialog`).
-- `CampfireViewModel.exportPdf` draws off the main thread into `pdfExportProgress` (a ring on the save button, which is
+- `ExportController.exportPdf` draws off the main thread into `pdfExportProgress` (a ring on the save button, which is
   Cancel, `cancelPdfExport`, until the picker is up). The button leaves while there are no pages. Failures, including
   `OutOfMemoryError` (not catchable on the web), report a failed export.
 - A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a

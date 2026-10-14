@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
-/** What the song details lookup shows under its fields, see [CampfireViewModel.songDetailsLookup]. */
+/** What the song details lookup shows under its fields, see `SongDetailsLookupController.songDetailsLookup`. */
 sealed interface SongDetailsLookupState {
 
     /** Nothing has been asked yet, or there is nothing to ask by. */

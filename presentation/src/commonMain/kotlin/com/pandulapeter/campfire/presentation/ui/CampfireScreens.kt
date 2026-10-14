@@ -108,13 +108,13 @@ internal fun CampfireScreens(
     metronomeBeat: MetronomeIconBeat,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
-    val backStack = viewModel.backStack
-    val topLevelDestinations by viewModel.topLevelDestinations.collectAsStateWithLifecycle()
+    val backStack = viewModel.navigator.backStack
+    val topLevelDestinations by viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     val motionScheme = MaterialTheme.motionScheme
-    // Makes interrupted transitions retarget instead of getting stuck, see CampfireViewModel.navigationGeneration.
-    val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigationGeneration)
+    // Makes interrupted transitions retarget instead of getting stuck, see Navigator.navigationGeneration.
+    val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigator.navigationGeneration)
 
     // What the chrome takes out of the window on this frame, which follows it while it changes shape, and what it will
     // have taken out once it has settled. The insets are the first and the column counts the second.
@@ -204,7 +204,7 @@ internal fun CampfireScreens(
                     isShortWindow = isShortWindow,
                     currentTopLevelDestination = destination,
                     metronomeBeat = metronomeBeat,
-                    lastTool = viewModel.lastTool,
+                    lastTool = viewModel.navigator.lastTool,
                     isKeyboard = isKeyboard,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                     onToolsItemSelected = viewModel::selectToolsItem,
@@ -271,7 +271,7 @@ internal fun CampfireScreens(
                 .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,
             // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
-            onBack = { viewModel.navigateBack(isPredictiveBackCompleted = navigationScrim.isPredictiveBack) },
+            onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = navigationScrim.isPredictiveBack) },
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
@@ -305,7 +305,7 @@ internal fun CampfireScreens(
                             MetronomeScreen(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
-                                scrollPosition = viewModel.metronomeScrollPosition,
+                                scrollPosition = viewModel.navigator.metronomeScrollPosition,
                                 contentPadding = shellContentPadding,
                             )
                         }
@@ -317,7 +317,7 @@ internal fun CampfireScreens(
                             TunerScreen(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
-                                scrollPosition = viewModel.tunerScrollPosition,
+                                scrollPosition = viewModel.navigator.tunerScrollPosition,
                                 contentPadding = shellContentPadding,
                             )
                         }
@@ -354,7 +354,7 @@ internal fun CampfireScreens(
                             windowSize = windowSize,
                             contentPadding = songEditorContentPadding,
                             urlOpener = urlOpener,
-                            onBack = viewModel::navigateBack,
+                            onBack = viewModel.navigator::navigateBack,
                         )
                     }
                 }
@@ -364,7 +364,7 @@ internal fun CampfireScreens(
                             viewModel = viewModel,
                             // Its search is typed into, so its list ends above the keyboard as the editor's text does.
                             contentPadding = songEditorContentPadding,
-                            onBack = viewModel::navigateBack,
+                            onBack = viewModel.navigator::navigateBack,
                         )
                     }
                 }
@@ -383,7 +383,7 @@ internal fun CampfireScreens(
                             destination = destination,
                             settledWidth = settledSongDetailsWidth,
                             contentPadding = songDetailsContentPadding,
-                            onBack = viewModel::navigateBack,
+                            onBack = viewModel.navigator::navigateBack,
                         )
                     }
                 }
@@ -423,7 +423,7 @@ internal fun CampfireScreens(
 
 /**
  * Every entry reports whether the [NavDisplay] transition hosting it is running, so that the view model knows when
- * a back stack change interrupts an animation (see [CampfireViewModel.navigationGeneration]), and so that
+ * a back stack change interrupts an animation (see `Navigator.navigationGeneration`), and so that
  * [CampfireContent] knows when a pop has settled and the navigation chrome can leave the top level screens again.
  */
 @Composable
@@ -433,7 +433,7 @@ private fun ReportNavigationTransition(
 ) {
     val isRunning = LocalNavAnimatedContentScope.current.transition.isRunning
     SideEffect {
-        viewModel.setNavigationTransitionRunning(isRunning)
+        viewModel.navigator.setNavigationTransitionRunning(isRunning)
         onRunningChanged(isRunning)
     }
 }

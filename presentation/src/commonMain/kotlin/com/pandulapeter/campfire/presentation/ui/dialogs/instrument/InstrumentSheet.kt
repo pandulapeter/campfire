@@ -44,7 +44,7 @@ internal fun InstrumentSheet(
     val preferences = userPreferences ?: return
     CampfireBottomSheet(
         title = stringResource(Res.string.instrument_choose),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }

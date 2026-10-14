@@ -153,7 +153,7 @@ internal fun SongPlayingDialog(
         )
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_playing_edit),
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
@@ -209,7 +209,7 @@ internal fun SongPlayingDialog(
             BottomSheetConfirmButton(
                 enabled = isValid && SONG_PLAYING_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.setSongPlaying(
+                    viewModel.songMetadataEditing.setSongPlaying(
                         target = dialog.target,
                         values = values,
                         offeredValues = offeredValues,
@@ -243,9 +243,9 @@ internal fun songPlayingOverrides(
     song: Song,
     setlistFileName: String?,
 ): SongPlayingOverrides {
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
+    val tempos by viewModel.overrides.tempos.collectAsStateWithLifecycle()
+    val capos by viewModel.overrides.capos.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
@@ -262,9 +262,9 @@ internal fun songPlayingOverrides(
     return SongPlayingOverrides(
         labels = labels,
         onReset = {
-            if (transposition != 0) viewModel.resetTransposition(song.fileName, setlistFileName)
-            if (capo?.isDefault == false) viewModel.resetCapo(song.fileName, setlistFileName)
-            if (tempo?.isDefault == false) viewModel.resetTempo(song.fileName, setlistFileName)
+            if (transposition != 0) viewModel.overrides.resetTransposition(song.fileName, setlistFileName)
+            if (capo?.isDefault == false) viewModel.overrides.resetCapo(song.fileName, setlistFileName)
+            if (tempo?.isDefault == false) viewModel.overrides.resetTempo(song.fileName, setlistFileName)
         },
     )
 }

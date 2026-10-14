@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * What [CampfireDestination.ImportReport] shows, see [CampfireViewModel.importReport]: the stages of one import the user
+ * What [CampfireDestination.ImportReport] shows, see `ImportReportState.importReport`: the stages of one import the user
  * started, in the order it goes through them, each replacing the one before it in place.
  */
 sealed interface ImportReport {
@@ -24,18 +24,18 @@ sealed interface ImportReport {
     /** The files being read and compared, or the address being downloaded; [sourceName] names what is read, if anything. */
     data class Loading(val sourceName: String?) : ImportReport
 
-    /** Why nothing could be read, which [CampfireViewModel.retryImport] asks again about. */
+    /** Why nothing could be read, which `ImportController.retryImport` asks again about. */
     data class Failed(val reason: ImportFailure, val sourceName: String?) : ImportReport
 
     /**
      * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
-     * [CampfireViewModel.confirmImport]. The choices live here rather than on the screen, so that a screen composed
+     * `ImportController.confirmImport`. The choices live here rather than on the screen, so that a screen composed
      * again (an Android activity recreated under it) keeps every tick. [isDemoLibrary] is the app's own demo library,
      * which the subtitle names as such rather than by the bundled files it is read from.
      */
     data class Review(val plan: ImportPlan, val choices: ImportChoices, val isDemoLibrary: Boolean) : ImportReport
 
-    /** The choices being carried out, with [CampfireViewModel.importProgress] saying how far. */
+    /** The choices being carried out, with `ImportController.importProgress` saying how far. */
     data object Importing : ImportReport
 
     /** What the import came to; null for one that failed before it could say. */

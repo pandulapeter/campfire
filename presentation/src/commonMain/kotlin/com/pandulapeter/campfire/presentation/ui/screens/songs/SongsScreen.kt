@@ -84,22 +84,22 @@ internal fun SongsScreen(
     layout: ListLayout,
     contentPadding: PaddingValues,
 ) {
-    val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
+    val isSearchOpen by viewModel.songListState.songsSearch.isOpen.collectAsStateWithLifecycle()
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
-    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
-    val hasSongFilters by viewModel.hasSongFilters.collectAsStateWithLifecycle()
+    val placeholder by viewModel.songListState.songsPlaceholder.collectAsStateWithLifecycle()
+    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
+    val hasSongFilters by viewModel.songListState.hasSongFilters.collectAsStateWithLifecycle()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
-    val isEditingSongs by viewModel.isEditingSongs.collectAsStateWithLifecycle()
+    val isEditingSongs by viewModel.selectionEditing.isEditingSongs.collectAsStateWithLifecycle()
     // Snapshot state, read here so that a tick recomposes the screen it changes and nothing above it.
-    val selection = viewModel.selectedSongFileNames
-    val isSelecting = selection != null && viewModel.isSongSelecting && !isPerformanceModeEnabled
+    val selection = viewModel.songSelection.selectedSongFileNames
+    val isSelecting = selection != null && viewModel.songSelection.isSongSelecting && !isPerformanceModeEnabled
     val shownSongGroups = if (isSelecting) {
-        key(viewModel.songSelectionSession) { rememberSongGroupsWithSelection(songGroups, selection, viewModel.songSelectAllCount) }
+        key(viewModel.songSelection.session) { rememberSongGroupsWithSelection(songGroups, selection, viewModel.songSelection.selectAllCount) }
     } else {
         songGroups
     }
@@ -110,22 +110,22 @@ internal fun SongsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToItem(0) }
+        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToItem(0) }
     }
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
         isSheetVisible = visibleDialog == DialogType.SongFilters,
-        onDismiss = viewModel::dismissDialog,
+        onDismiss = viewModel.dialogHost::dismissDialog,
     )
     // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
     LaunchedEffect(hasSongFilters) {
-        if (!hasSongFilters && visibleDialog == DialogType.SongFilters) viewModel.dismissDialog()
+        if (!hasSongFilters && visibleDialog == DialogType.SongFilters) viewModel.dialogHost.dismissDialog()
     }
     // The widest the app bar's buttons reach in over the list, which a pinned header keeps clear of - nothing once
     // the bar has filled in and moved the list down under itself.
     var appBarReach by remember { mutableStateOf(0.dp) }
     val appBarReveal = animateAppBarReveal(
-        searchState = viewModel.songsSearch,
+        searchState = viewModel.songListState.songsSearch,
         // The ranked results of a search come in one group with no header, and a placeholder has none either.
         isShownWithoutSearch = placeholder != null || shownSongGroups.groups.none { it.header != null },
     )
@@ -169,7 +169,7 @@ internal fun SongsScreen(
                     contentPadding = listContentPadding,
                     appBarReveal = appBarProgress,
                     placeholder = stringResource(Res.string.songs_search),
-                    searchState = viewModel.songsSearch,
+                    searchState = viewModel.songListState.songsSearch,
                     onReachChanged = { appBarReach = it },
                     areClosedSearchActionsShown = isSelecting || !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
                     // The search is where most of a selection is put together, so its menu stays while the search is open.
@@ -189,8 +189,8 @@ internal fun SongsScreen(
                                     hasSelection = ticked.isNotEmpty(),
                                     areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
                                     areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-                                    onSelectAll = { viewModel.selectSongs(listedFileNames) },
-                                    onDeselectAll = viewModel::deselectAllSongs,
+                                    onSelectAll = { viewModel.songSelection.select(listedFileNames) },
+                                    onDeselectAll = viewModel.songSelection::deselectAll,
                                     onChooseSetlists = viewModel::showSelectionSetlists,
                                     onManageTags = viewModel::showSelectionTags,
                                     onManageLanguages = viewModel::showSelectionLanguages,
@@ -213,7 +213,7 @@ internal fun SongsScreen(
                         SongSortMenu(
                             modifier = Modifier.overlappingAction(),
                             selected = userPreferences?.sortingMode,
-                            onSelected = viewModel::setSortingMode,
+                            onSelected = viewModel.preferencesController::setSortingMode,
                         )
                         // The last tag leaving the library takes the filters with it while the list is being looked at.
                         AnimatedVisibility(
@@ -247,7 +247,7 @@ internal fun SongsScreen(
     NavigationBackHandler(
         state = backGesture,
         isBackEnabled = isSelecting && !isSearchOpen && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
-        onBackCompleted = viewModel::endSongSelection,
+        onBackCompleted = viewModel.songSelection::end,
     )
 }
 

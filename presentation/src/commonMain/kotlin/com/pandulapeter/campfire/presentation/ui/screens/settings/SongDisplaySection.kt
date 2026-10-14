@@ -47,7 +47,7 @@ internal fun SongDisplaySection(
         title = stringResource(Res.string.settings_number_sections),
         description = stringResource(Res.string.settings_number_sections_description),
         isChecked = userPreferences?.shouldNumberSections == true,
-        onCheckedChange = viewModel::setSectionNumberingEnabled,
+        onCheckedChange = viewModel.preferencesController::setSectionNumberingEnabled,
     )
     // One row of chips per list, since a setlist's cards are where a set is timed and the library's where a song is found.
     // The key's chip is gone with the chords, which take it off the cards whatever it says; the tempo's stays with the
@@ -65,7 +65,7 @@ internal fun SongDisplaySection(
                 details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
-                onDetailsChanged = viewModel::setSongCardDetails,
+                onDetailsChanged = viewModel.preferencesController::setSongCardDetails,
             )
         }
         CardDetailsRow(
@@ -78,7 +78,7 @@ internal fun SongDisplaySection(
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
                 isEnabled = areSetlistsEnabled,
-                onDetailsChanged = viewModel::setSetlistCardDetails,
+                onDetailsChanged = viewModel.preferencesController::setSetlistCardDetails,
             )
         }
     }

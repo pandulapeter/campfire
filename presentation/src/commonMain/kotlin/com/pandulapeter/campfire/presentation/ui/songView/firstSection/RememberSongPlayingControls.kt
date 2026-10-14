@@ -81,8 +81,8 @@ internal fun rememberSongPlayingControls(
                     transposition = shownTransposition,
                     isDefault = transposition == 0,
                     key = key,
-                    onStep = { viewModel.stepTransposition(fileName, setlistFileName, it) },
-                    onReset = { viewModel.resetTransposition(fileName, setlistFileName) },
+                    onStep = { viewModel.overrides.stepTransposition(fileName, setlistFileName, it) },
+                    onReset = { viewModel.overrides.resetTransposition(fileName, setlistFileName) },
                 )
             } else {
                 null
@@ -90,8 +90,8 @@ internal fun rememberSongPlayingControls(
             capo = if (shouldShowChords && !readsCapoAsTransposition) {
                 SongCapoControl(
                     capo = capo,
-                    onStep = { viewModel.stepCapo(fileName, setlistFileName, it) },
-                    onReset = { viewModel.resetCapo(fileName, setlistFileName) },
+                    onStep = { viewModel.overrides.stepCapo(fileName, setlistFileName, it) },
+                    onReset = { viewModel.overrides.resetCapo(fileName, setlistFileName) },
                 )
             } else {
                 null
@@ -99,9 +99,9 @@ internal fun rememberSongPlayingControls(
             tempo = if (shouldShowTempo) {
                 SongTempoControl(
                     tempo = tempo,
-                    onStep = { viewModel.stepTempo(fileName, setlistFileName, it) },
-                    onTapped = { viewModel.setTempo(fileName, setlistFileName, it) },
-                    onReset = { viewModel.resetTempo(fileName, setlistFileName) },
+                    onStep = { viewModel.overrides.stepTempo(fileName, setlistFileName, it) },
+                    onTapped = { viewModel.overrides.setTempo(fileName, setlistFileName, it) },
+                    onReset = { viewModel.overrides.resetTempo(fileName, setlistFileName) },
                 )
             } else {
                 null

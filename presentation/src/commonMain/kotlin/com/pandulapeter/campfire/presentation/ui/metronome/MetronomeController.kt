@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
  * pattern of what is on screen.
  *
  * @param currentSongFileName The song a details screen has settled on, which the pager's target stands in for.
- * @param songsBeingRenamed The songs being renamed, under their old names, see `CampfireViewModel.songsBeingRenamed`.
+ * @param songsBeingRenamed The songs being renamed, under their old names, see `SongTextStore.songsBeingRenamed`.
  * @param writeDelayMillis How long the settings have to hold still before they are written to the preferences.
  */
 internal class MetronomeController(

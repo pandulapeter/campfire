@@ -39,7 +39,7 @@ internal fun AppLanguageSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_user_interface_language),
-        onDismiss = { viewModel.dismissSheet(DialogType.AppLanguage) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.AppLanguage) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         LanguageChoice(
@@ -51,7 +51,7 @@ internal fun AppLanguageSheet(
                 .padding(contentPadding),
             selected = userPreferences?.language,
             onSelected = { language ->
-                viewModel.setLanguage(language)
+                viewModel.preferencesController.setLanguage(language)
                 close()
             },
         )

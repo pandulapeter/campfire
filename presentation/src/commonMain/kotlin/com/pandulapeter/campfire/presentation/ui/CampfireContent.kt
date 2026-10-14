@@ -40,8 +40,8 @@ internal fun CampfireContent(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
 ) {
-    val backStack = viewModel.backStack
-    val topLevelDestinations by viewModel.topLevelDestinations.collectAsStateWithLifecycle()
+    val backStack = viewModel.navigator.backStack
+    val topLevelDestinations by viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle()
     var isNavigationTransitionRunning by remember { mutableStateOf(false) }
     var isChromeInScreens by remember { mutableStateOf(false) }
     val isTopLevelScreenCovered = backStack.lastOrNull() !is CampfireDestination.TopLevel
@@ -63,13 +63,13 @@ internal fun CampfireContent(
     // included, so the screens draw their own copy of it from the frame it is asked for until it has slid all the way
     // off again, the way they do under a card. The copy swaps for the shared one only where both sit still.
     val exportTransition = remember { ExportTransition() }
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isExportMovingDeck by remember { derivedStateOf { exportTransition.progress.value > 0f } }
     val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || visibleDialog is DialogType.Export || isExportMovingDeck
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val metronomeBeat = rememberMetronomeIconBeat(
-        playback = viewModel.metronomePlayback,
-        beats = viewModel.metronomeBeats,
+        playback = viewModel.metronomeController.metronomePlayback,
+        beats = viewModel.metronomeController.metronomeBeats,
         isEnabled = metronomeSettings.isVisualBeatEnabled,
     )
 
@@ -101,7 +101,7 @@ internal fun CampfireContent(
                 isShortWindow = isShortWindow,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 metronomeBeat = metronomeBeat,
-                lastTool = viewModel.lastTool,
+                lastTool = viewModel.navigator.lastTool,
                 isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
                 onToolsItemSelected = viewModel::selectToolsItem,

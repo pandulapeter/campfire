@@ -87,34 +87,34 @@ fun CampfireApp(
     if (isLibraryEditableOutsideApp) {
         var hasStartedBefore by remember { mutableStateOf(false) }
         LifecycleEventEffect(Lifecycle.Event.ON_START) {
-            if (hasStartedBefore) viewModel.refresh() else hasStartedBefore = true
+            if (hasStartedBefore) viewModel.libraryState.refresh() else hasStartedBefore = true
         }
         if (isDesktopPlatform) {
             var hasResumedBefore by remember { mutableStateOf(false) }
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                if (hasResumedBefore) viewModel.refreshIfStale() else hasResumedBefore = true
+                if (hasResumedBefore) viewModel.libraryState.refreshIfStale() else hasResumedBefore = true
             }
         }
     }
     // The editor's unsaved text goes to disk whenever the app stops being the one in front, and a waiting sync run
-    // starts, see CampfireViewModel.onAppPaused. ON_PAUSE rather than ON_STOP: it always comes first, and an app swiped
+    // starts, see AppExitController.onAppPaused. ON_PAUSE rather than ON_STOP: it always comes first, and an app swiped
     // away from iOS's app switcher may never have got any further. The run is handed to the platform right here, while
     // the app is still in front: waiting for it to reach the composition would mean waiting for a frame, and a phone
     // whose screen was just turned off pauses and stops the app with none in between.
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onAppPaused()?.let(showSyncNotification) }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.appExitController.onAppPaused()?.let(showSyncNotification) }
     // A click that cannot sound is stopped once the app has been out of sight for a moment, see
-    // CampfireViewModel.onAppStopped. ON_STOP rather than ON_PAUSE: Control Center or a notification shade pulled over
+    // MetronomeController.onAppStopped. ON_STOP rather than ON_PAUSE: Control Center or a notification shade pulled over
     // the app pauses it with the click still in view.
     val areBeatsFeltInBackground = areBeatHapticsFeltInBackground && rememberBeatHaptics() != null
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
-    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onAppStarted() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.metronomeController.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.metronomeController.onAppStarted() }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
+    val arePreferencesLoaded by viewModel.preferencesController.arePreferencesLoaded.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
     // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
     // build's history that read it read the one this app is composed with.
     CompositionLocalProvider(
-        LocalOverlayState provides viewModel.overlayState,
+        LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
     ) {
         CampfireTheme(

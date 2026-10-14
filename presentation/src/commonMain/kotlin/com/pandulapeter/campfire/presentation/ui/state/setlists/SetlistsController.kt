@@ -58,7 +58,7 @@ import kotlinx.datetime.LocalDate
  *
  * @param isImporting Whether an import is running, which an empty library is waiting for.
  * @param followReportedFileNames Keeps the import screen's result naming what the library holds, see
- *   `CampfireViewModel.followReportedFileNames`.
+ *   `ImportReportState.followReportedFileNames`.
  * @param changeUserPreferences See [PreferencesController.changeUserPreferences].
  */
 internal class SetlistsController(

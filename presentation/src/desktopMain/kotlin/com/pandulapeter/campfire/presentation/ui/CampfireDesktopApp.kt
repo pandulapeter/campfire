@@ -51,7 +51,7 @@ import java.io.File
  * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses
  * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - and otherwise leaves the setlist
  * reorder mode, closes the search of the list screen on top, or pops the back stack, in that order; with nothing left
- * to go back from it asks whether to close the application ([CampfireViewModel.confirmExit]).
+ * to go back from it asks whether to close the application (`AppExitController.confirmExit`).
  *
  * @param onBackgroundColorChanged See [CampfireApp].
  */
@@ -96,7 +96,7 @@ fun CampfireDesktopApp(
     ) {
         CampfireApp(
             viewModel = viewModel,
-            urlOpener = { url -> if (!openUrl(url)) viewModel.onLinkNotOpened(url) },
+            urlOpener = { url -> if (!openUrl(url)) viewModel.exportController.onLinkNotOpened(url) },
             filesToImport = filesToImport,
             onBackgroundColorChanged = onBackgroundColorChanged,
         )
@@ -105,16 +105,16 @@ fun CampfireDesktopApp(
 
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
- * search of the list screen that is on top ([CampfireViewModel.openCurrentSearch]); it is answered here because this
+ * search of the list screen that is on top (`Navigator.openCurrentSearch`); it is answered here because this
  * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
  * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
- * ([CampfireViewModel.zoomSongText]), the shortcuts a browser zooms a page with. Space and M start and stop the
- * metronome ([CampfireViewModel.toggleMetronomeByKey]), which a focused button or field takes first, since only what
+ * (`FontScaleController.zoomSongText`), the shortcuts a browser zooms a page with. Space and M start and stop the
+ * metronome (`MetronomeController.toggleMetronomeByKey`), which a focused button or field takes first, since only what
  * nothing focused took reaches this handler.
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from and the question that
  *   follows has been answered with Close, and only once a save that is still being written has finished, see
- *   [CampfireViewModel.confirmExit] and [CampfireViewModel.requestExit].
+ *   `AppExitController.confirmExit` and [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown) {
@@ -132,20 +132,20 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
-        if (visibleDialog.value != null || overlayState.isAnyMenuOpen) return false
+        if (dialogHost.visibleDialog.value != null || dialogHost.overlayState.isAnyMenuOpen) return false
         // The search is closed from here rather than by the back handler the field registers, since this handler sees
         // the key first and would consume it either way.
-        val search = currentSearch
+        val search = navigator.currentSearch
         val step = escapeStepOf(
-            isReordering = isSetlistReordering,
+            isReordering = setlistsController.isSetlistReordering,
             isSearchOpen = search?.isOpen?.value == true,
-            isSelecting = isSongSelecting,
-            stackSize = backStack.size,
+            isSelecting = songSelection.isSongSelecting,
+            stackSize = navigator.backStack.size,
         )
         when (step) {
             EscapeStep.CLOSE_SEARCH -> search?.close()
-            EscapeStep.END_REORDERING, EscapeStep.END_SELECTION, EscapeStep.GO_BACK -> navigateBack()
-            EscapeStep.EXIT -> confirmExit(onExit)
+            EscapeStep.END_REORDERING, EscapeStep.END_SELECTION, EscapeStep.GO_BACK -> navigator.navigateBack()
+            EscapeStep.EXIT -> appExitController.confirmExit(onExit)
         }
         return true
     }

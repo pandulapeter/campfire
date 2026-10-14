@@ -68,7 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.state.online.songDetailsQueryOf
  *
  * The search is asked by the view model as the sheet is put up, and after that only when it is asked for — the
  * keyboard's search key or the button — never per keystroke, since MusicBrainz allows one request a second from the
- * whole app. Its state is the view model's ([CampfireViewModel.songDetailsLookup]), so that it outlives the Android
+ * whole app. Its state is the view model's (`SongDetailsLookupController.songDetailsLookup`), so that it outlives the Android
  * activity being recreated, and goes with the sheet; which row is open and which of its boxes are changed are saved
  * here. Everything but the header scrolls, the fields first, since they are set once and the results need the room.
  */
@@ -77,8 +77,8 @@ internal fun SongDetailsLookupSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.SongDetailsLookup,
 ) {
-    val searchState by viewModel.songDetailsLookup.collectAsStateWithLifecycle()
-    val creditsLookup by viewModel.songCredits.collectAsStateWithLifecycle()
+    val searchState by viewModel.songDetailsLookupController.songDetailsLookup.collectAsStateWithLifecycle()
+    val creditsLookup by viewModel.songDetailsLookupController.songCredits.collectAsStateWithLifecycle()
     val initialQuery = remember(dialog.song.fileName) { songDetailsQueryOf(dialog.draft) }
     var title by rememberSaveable { mutableStateOf(initialQuery.title) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
@@ -118,7 +118,7 @@ internal fun SongDetailsLookupSheet(
                 },
             ) { Text(stringResource(Res.string.song_details_lookup_fill_in)) }
         },
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val listState = rememberLazyListState()
         val content = when {
@@ -168,7 +168,7 @@ internal fun SongDetailsLookupSheet(
                         },
                         onToggle = { field -> toggledFields = if (field.name in toggledFields) toggledFields - field.name else toggledFields + field.name },
                         onRetryCredits = {
-                            viewModel.clearSongCredits()
+                            viewModel.songDetailsLookupController.clearSongCredits()
                             viewModel.loadSongCredits(candidate)
                         },
                     )

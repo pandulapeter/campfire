@@ -79,12 +79,12 @@ internal fun MetronomeScreen(
     scrollPosition: ScrollPosition,
     contentPadding: PaddingValues,
 ) {
-    val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
     val isPlaying = playback is MetronomePlayback.Playing
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
     ScrollToTopOnRequest(
-        requests = viewModel.scrollToTopRequests,
+        requests = viewModel.navigator.scrollToTopRequests,
         destination = CampfireDestination.Metronome,
         scrollState = scrollState,
         onSelectDestination = viewModel::selectTopLevelDestination,
@@ -105,9 +105,9 @@ internal fun MetronomeScreen(
                 ),
             isPlaying = panel.isPlaying,
             beatLevels = panel.beatLevels,
-            beats = viewModel.metronomeBeats,
+            beats = viewModel.metronomeController.metronomeBeats,
             isFlashEnabled = panel.isFlashEnabled,
-            onBeatLevelsChanged = { levels -> viewModel.setBeatLevels(panel.timeSignature, levels) },
+            onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
             onPlayStop = viewModel::toggleMetronome,
             isVisible = true,
             isProminent = true,
@@ -153,7 +153,7 @@ private fun MetronomeBarOptions(
     }
     TempoSetting(
         bpm = settings.bpm,
-        onBpmChanged = { value -> viewModel.updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(value)) } },
+        onBpmChanged = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(value)) } },
     )
     SettingsSubsection(
         title = stringResource(Res.string.metronome_time_signature),
@@ -162,7 +162,7 @@ private fun MetronomeBarOptions(
     ) {
         TimeSignaturePicker(
             timeSignature = settings.timeSignatureOrDefault,
-            onChange = { value -> viewModel.updateMetronomeSettings { copy(timeSignature = value.toString()) } },
+            onChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(timeSignature = value.toString()) } },
         )
     }
     SettingsSubsection(
@@ -171,7 +171,7 @@ private fun MetronomeBarOptions(
     ) {
         SubdivisionChoice(
             selected = settings.subdivision,
-            onSelected = { viewModel.updateMetronomeSettings { copy(subdivisionId = it.id) } },
+            onSelected = { viewModel.metronomeController.updateMetronomeSettings { copy(subdivisionId = it.id) } },
         )
     }
 }
@@ -189,27 +189,27 @@ private fun MetronomeSoundOptions(
         SoundChoice(
             selected = settings.sound,
             onSelected = { sound ->
-                viewModel.updateMetronomeSettings { copy(soundId = sound.id) }
-                viewModel.previewMetronomeSound(sound)
+                viewModel.metronomeController.updateMetronomeSettings { copy(soundId = sound.id) }
+                viewModel.metronomeController.previewMetronomeSound(sound)
             },
         )
     }
     SettingsSubsection(title = stringResource(Res.string.metronome_volume)) {
         VolumeSlider(
             volume = settings.volume,
-            onVolumeChanged = { value -> viewModel.updateMetronomeSettings { copy(volume = value) } },
+            onVolumeChanged = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(volume = value) } },
         )
     }
     SwitchListItem(
         title = stringResource(Res.string.metronome_animate),
         isChecked = settings.isVisualBeatEnabled,
-        onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isVisualBeatEnabled = value) } },
+        onCheckedChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isVisualBeatEnabled = value) } },
     )
     if (rememberBeatHaptics() != null) {
         SwitchListItem(
             title = stringResource(Res.string.metronome_vibrate),
             isChecked = settings.isHapticBeatEnabled,
-            onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isHapticBeatEnabled = value) } },
+            onCheckedChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isHapticBeatEnabled = value) } },
         )
     }
 }

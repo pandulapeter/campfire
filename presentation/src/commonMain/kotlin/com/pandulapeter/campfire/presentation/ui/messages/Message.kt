@@ -73,6 +73,6 @@ sealed interface Message {
     /** The click stopped, or did not start, without being asked to. */
     data class MetronomeStopped(val reason: MetronomeStopReason) : Message
 
-    /** A click that could not sound was stopped as the app left the front, see [CampfireViewModel.onAppStopped]. */
+    /** A click that could not sound was stopped as the app left the front, see `MetronomeController.onAppStopped`. */
     data object SilentMetronomeStopped : Message
 }

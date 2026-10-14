@@ -25,7 +25,7 @@ its editors.
   links tile with one link** (`songInfoTileMinHeight`). Link buttons report their height without the touch target slack
   (`withoutTouchTargetSlack`), or their tile's centering would be off. The editor's compact card (`isCompact`) shows
   links as chips.
-- Over the editor (`SongEditTarget.EditorDraft`) it reads `CampfireViewModel.editorDraft`, the key as typed, no
+- Over the editor (`SongEditTarget.EditorDraft`) it reads `EditorSession.editorDraft`, the key as typed, no
   overrides; its tiles edit the typed text.
 - `SongMetadataDialog.kt`: the duration's digits fill from the right like a timer (`DurationDigits.kt`, `428` is `4:28`,
   since a number pad has no colon), written as `m:ss`, at most `99:59:59`; a duration it cannot read is left alone on

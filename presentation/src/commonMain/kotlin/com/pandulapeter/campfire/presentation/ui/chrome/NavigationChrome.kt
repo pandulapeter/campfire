@@ -68,7 +68,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * level screen, as on the bar or on a rail in a short window, it offers the tools behind one Tools item
  * ([areToolsGrouped]), whose screens then carry a row of tabs between them ([ToolsTabRow]).
  *
- * @param destinations The top level screens of the features switched on, see `CampfireViewModel.topLevelDestinations`.
+ * @param destinations The top level screens of the features switched on, see `PreferencesController.topLevelDestinations`.
  *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not
  *   announced, and drawn in its unselected colors when disabled, since a disabled item is dimmed - in one frame on the
  *   wide rail - and nothing but the shrink should change on screen.

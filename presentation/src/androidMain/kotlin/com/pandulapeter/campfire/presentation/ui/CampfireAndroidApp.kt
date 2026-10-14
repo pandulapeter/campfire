@@ -90,7 +90,7 @@ fun CampfireAndroidApp(
             // Not for a configuration change, which keeps the view model: a flag set then would outlive it and answer a
             // later clear that this observer did not hear (an activity destroyed before its first composition).
             if (event == Lifecycle.Event.ON_DESTROY && activity != null && !activity.isChangingConfigurations) {
-                viewModel.onHostDestroyed(isFinishing = activity.isFinishing)
+                viewModel.appExitController.onHostDestroyed(isFinishing = activity.isFinishing)
             }
         }
         activity?.lifecycle?.addObserver(observer)
@@ -104,7 +104,7 @@ fun CampfireAndroidApp(
     }
     val filePicker = rememberAndroidFilePicker()
     LaunchedEffect(filePicker, viewModel) {
-        filePicker.orphanedExportResults.collect { isWritten -> if (!isWritten) viewModel.onExportFailed() }
+        filePicker.orphanedExportResults.collect { isWritten -> if (!isWritten) viewModel.exportController.onExportFailed() }
     }
     val allFilesToImport = remember(filesToImport, filePicker) { merge(filesToImport, filePicker.orphanedFiles) }
     CompositionLocalProvider(
@@ -114,7 +114,7 @@ fun CampfireAndroidApp(
     ) {
         CampfireApp(
             viewModel = viewModel,
-            urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.onLinkNotOpened(url) },
+            urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.exportController.onLinkNotOpened(url) },
             filesToImport = allFilesToImport,
             onAppReady = onAppReady,
         )

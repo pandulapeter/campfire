@@ -41,7 +41,7 @@ internal fun LaunchScreenGate(
     launchScreenColors: LaunchScreenColors,
     onAppReady: () -> Unit,
 ) {
-    val hasLibraryToShow by viewModel.hasLibraryToShow.collectAsStateWithLifecycle()
+    val hasLibraryToShow by viewModel.launchState.hasLibraryToShow.collectAsStateWithLifecycle()
     // The launch screen covers the app rather than standing in for it, and it fades away once there is
     // something to look at underneath: the app composes, lays out and draws behind it in the meantime, so
     // holding it through the first read of the library costs none of the time that read was going to take

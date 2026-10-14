@@ -22,13 +22,13 @@ internal enum class ShortcutKey {
 /** What an app-wide shortcut asks of the view model, see [appShortcutOf]. */
 internal sealed interface AppShortcut {
 
-    /** Ctrl / Cmd + F, see [CampfireViewModel.openCurrentSearch]. */
+    /** Ctrl / Cmd + F, see `Navigator.openCurrentSearch`. */
     data object OpenSearch : AppShortcut
 
-    /** Ctrl / Cmd + plus, minus or zero, see [CampfireViewModel.zoomSongText]; null [steps] resets. */
+    /** Ctrl / Cmd + plus, minus or zero, see `FontScaleController.zoomSongText`; null [steps] resets. */
     data class ZoomSongText(val steps: Int?) : AppShortcut
 
-    /** Space or M, see [CampfireViewModel.toggleMetronomeByKey]. */
+    /** Space or M, see `MetronomeController.toggleMetronomeByKey`. */
     data class ToggleMetronome(val isSpace: Boolean) : AppShortcut
 }
 
@@ -49,7 +49,7 @@ internal fun appShortcutOf(key: ShortcutKey, isCtrlOrMeta: Boolean, isAlt: Boole
 
 /** Carries [shortcut] out, and answers whether it did anything, which is when the shells consume the key. */
 internal fun CampfireViewModel.perform(shortcut: AppShortcut): Boolean = when (shortcut) {
-    AppShortcut.OpenSearch -> openCurrentSearch()
-    is AppShortcut.ZoomSongText -> zoomSongText(shortcut.steps)
-    is AppShortcut.ToggleMetronome -> toggleMetronomeByKey(isSpace = shortcut.isSpace)
+    AppShortcut.OpenSearch -> navigator.openCurrentSearch()
+    is AppShortcut.ZoomSongText -> fontScaleController.zoomSongText(shortcut.steps)
+    is AppShortcut.ToggleMetronome -> metronomeController.toggleMetronomeByKey(isSpace = shortcut.isSpace)
 }

@@ -85,9 +85,9 @@ internal fun TunerScreen(
 ) {
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
-    val state = viewModel.tunerState.collectAsStateWithLifecycle()
+    val state = viewModel.tunerController.tunerState.collectAsStateWithLifecycle()
     val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
-    val config by viewModel.tunerConfig.collectAsStateWithLifecycle()
+    val config by viewModel.tunerController.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
@@ -100,15 +100,15 @@ internal fun TunerScreen(
     val tone by remember { derivedStateOf { state.value.tone } }
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
-    val tunedNotes by viewModel.tunedNotes.collectAsStateWithLifecycle()
+    val tunedNotes by viewModel.tunerController.tunedNotes.collectAsStateWithLifecycle()
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
-        onListeningChanged = viewModel::setTunerListening,
+        onListeningChanged = viewModel.tunerController::setTunerListening,
     )
     TunerAskOnOpenEffect(
         notice = notice,
-        consumeOpenedByTap = viewModel::consumeTunerOpenedByTap,
-        ask = permission.request ?: viewModel::requestMicrophone,
+        consumeOpenedByTap = viewModel.tunerController::consumeOpenedByTap,
+        ask = permission.request ?: viewModel.tunerController::requestMicrophone,
     )
     // A window with room for two columns gives the strings the whole width of the display above them, which they are
     // played against, and sets the instrument and the reference pitch side by side under them; a narrower one keeps
@@ -117,7 +117,7 @@ internal fun TunerScreen(
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
     ScrollToTopOnRequest(
-        requests = viewModel.scrollToTopRequests,
+        requests = viewModel.navigator.scrollToTopRequests,
         destination = CampfireDestination.Tuner,
         scrollState = scrollState,
         onSelectDestination = viewModel::selectTopLevelDestination,
@@ -151,7 +151,7 @@ internal fun TunerScreen(
                 TunerNoticeCard(
                     notice = shownNotice,
                     permission = permission,
-                    onListen = viewModel::requestMicrophone,
+                    onListen = viewModel.tunerController::requestMicrophone,
                 )
             }
             TunerInputIssueMessage(issue = issue, permission = permission)
@@ -161,7 +161,7 @@ internal fun TunerScreen(
                 tone = tone,
                 heardNote = heardNote,
                 tunedNotes = tunedNotes,
-                onToggleTone = viewModel::toggleTunerTone,
+                onToggleTone = viewModel.tunerController::toggleTunerTone,
             )
         }
         val referencePitch: @Composable () -> Unit = {
@@ -169,8 +169,8 @@ internal fun TunerScreen(
                 referencePitch = config.referencePitch,
                 notation = notation,
                 isReferenceTonePlaying = tone == REFERENCE_NOTE,
-                onReferencePitchChanged = { value -> viewModel.updateTunerSettings { copy(referencePitch = value) } },
-                onToggleReferenceTone = { viewModel.toggleTunerTone(REFERENCE_NOTE) },
+                onReferencePitchChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(referencePitch = value) } },
+                onToggleReferenceTone = { viewModel.tunerController.toggleTunerTone(REFERENCE_NOTE) },
             )
         }
         SettingsPage(
@@ -190,7 +190,7 @@ internal fun TunerScreen(
                             isChromatic = settings.isChromatic,
                             onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
                             onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
-                            onChromaticChanged = { value -> viewModel.updateTunerSettings { copy(isChromatic = value) } },
+                            onChromaticChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(isChromatic = value) } },
                         )
                     }
                     if (!isWide) referencePitch()

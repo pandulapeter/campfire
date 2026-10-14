@@ -78,7 +78,7 @@ internal fun Messages(
     // restart for the second one: it would sit at the head of the queue forever, unshown, with everything after it
     // stuck behind it. A message that was on screen as the composition was recreated is shown again from the start,
     // since it was cut short.
-    val queue by viewModel.messageQueue.collectAsStateWithLifecycle()
+    val queue by viewModel.messageSink.messageQueue.collectAsStateWithLifecycle()
     val head = queue.firstOrNull()
     val text = when (val current = head?.value) {
         is Message.ImportFinished -> listOfNotNull(
@@ -147,11 +147,11 @@ internal fun Messages(
             )
             if (result == SnackbarResult.ActionPerformed) {
                 when {
-                    songToOpen != null -> viewModel.openImportedSong(songToOpen)
-                    importFinished != null -> viewModel.openImportReport(importFinished.result)
+                    songToOpen != null -> viewModel.navigator.openImportedSong(songToOpen)
+                    importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
                 }
             }
-            viewModel.onMessageShown(head)
+            viewModel.messageSink.onMessageShown(head)
         }
     }
     SnackbarHost(

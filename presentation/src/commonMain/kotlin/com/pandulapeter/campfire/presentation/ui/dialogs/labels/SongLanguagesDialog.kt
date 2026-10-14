@@ -30,6 +30,6 @@ internal fun SongLanguagesDialog(
     sheetKey = dialog.song.fileName,
     subtitle = songLabel(dialog.song),
     confirmLabel = stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save),
-    onDismiss = { viewModel.dismissSheet(dialog) },
-    onSave = { draft -> viewModel.setSongLanguages(target = dialog.target, codes = draft.onKeys.toList()) },
+    onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+    onSave = { draft -> viewModel.songMetadataEditing.setSongLanguages(target = dialog.target, codes = draft.onKeys.toList()) },
 )

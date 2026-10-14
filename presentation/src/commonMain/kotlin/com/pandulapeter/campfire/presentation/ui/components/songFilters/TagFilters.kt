@@ -65,7 +65,7 @@ internal fun TagFilters(
     val orderedTags = remember(tags, sortingMode) { tags.orderedBy(sortingMode) }
     val isPinned = remember(orderedTags, selected) { orderedTags.map { tagKey(it.name) in selected } }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
-    // (CampfireViewModel.clearTagFilter), so what the clear action and the match mode are offered for is a selection
+    // (SongListState.clearTagFilter), so what the clear action and the match mode are offered for is a selection
     // among the chips rather than whatever the filter still holds - a button that cleared nothing visible, or an
     // "any / every" asked about one chip and a tag nobody can see, would be answering a question the screen never
     // asked.

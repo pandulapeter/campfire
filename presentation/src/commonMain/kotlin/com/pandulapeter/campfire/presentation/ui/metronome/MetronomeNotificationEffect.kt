@@ -37,10 +37,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 @Composable
 internal fun MetronomeNotificationEffect(viewModel: CampfireViewModel) {
     val notifier = LocalMetronomeNotifier.current
-    val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
-    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
+    val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
+    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
     val pattern = (playback as? MetronomePlayback.Playing)?.pattern
-    val songTitle = (viewModel.metronomeContext as? MetronomeContext.Song)?.let { songsByFileName[it.songFileName]?.title }
+    val songTitle = (viewModel.metronomeController.metronomeContext as? MetronomeContext.Song)?.let { songsByFileName[it.songFileName]?.title }
     val notification = pattern?.let {
         MetronomeNotification(
             channelName = stringResource(Res.string.metronome_notification_channel),

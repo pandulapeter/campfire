@@ -55,7 +55,7 @@ internal fun SharedToolsTabRow(
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
 ) {
-    val current = viewModel.backStack.lastOrNull() as? CampfireDestination.TopLevel
+    val current = viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.TopLevel
     val lastShownTool = remember { mutableStateOf(current?.takeIf { it in tools }) }
     SideEffect { if (current in tools) lastShownTool.value = current }
     AnimatedVisibility(

@@ -39,10 +39,10 @@ import kotlinx.coroutines.flow.map
  * The sheets that each write one part of what a song says about itself - its tags, languages, details, links, cover
  * and song defaults - into the file, or into the editor's text where the editor is what they were opened from.
  *
- * @param editorNotation The notation the editor's field is written in, see `CampfireViewModel.editorNotation`.
- * @param retainedEditorField The open editor's field, see `CampfireViewModel.retainedEditorField`.
+ * @param editorNotation The notation the editor's field is written in, see `EditorSession.editorNotation`.
+ * @param retainedEditorField The open editor's field, see `EditorSession.retainedEditorField`.
  * @param editorDraft The open editor's text as it last reported it.
- * @param emitEditorTextEdit Hands an edit to the open editor, see `CampfireViewModel.editorTextEdits`.
+ * @param emitEditorTextEdit Hands an edit to the open editor, see `EditorSession.editorTextEdits`.
  */
 internal class SongMetadataEditing(
     private val dialogHost: DialogHost,

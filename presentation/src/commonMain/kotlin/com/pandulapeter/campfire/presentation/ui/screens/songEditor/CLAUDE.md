@@ -30,7 +30,7 @@ transposition, Prettify, Replace, and revert all edit the field (one more undo s
 
 ## Notation
 
-**The field is in the reader's notation, the file always in standard** (`CampfireViewModel.editorNotation`,
+**The field is in the reader's notation, the file always in standard** (`EditorSession.editorNotation`,
 `SongRenderer.editorTextOf` / `fileTextOf`, tested). Under a numbering the field is in letters (`Notation.forTyping`)
 and only the preview numbers: correcting a `{key}` would otherwise move every chord at Save, and a half-typed key leaves
 numbers nothing to count from.
@@ -66,7 +66,7 @@ numbers nothing to count from.
 - Revert is in the menu, behind `DialogType.RevertChanges`, so it can't be mistapped next to Save. The screen answers
   it through the field's own editing, so it is undoable.
 - Sheets opened from the menu or the preview's card edit a snapshot of the draft (`toEditorSong`,
-  `DialogType.SongEdit.target`), applied via `CampfireViewModel.editorTextEdits` / `EditOnRequest`. They are not taken
+  `DialogType.SongEdit.target`), applied via `EditorSession.editorTextEdits` / `EditOnRequest`. They are not taken
   down when the file leaves the library, since the draft remains.
 - No Export or Delete here: those belong to the list and the viewer.
 
@@ -103,7 +103,7 @@ numbers nothing to count from.
 
 - The screen reports the text as typed (`onEditorTextChanged`) without saving; `hasUnsavedEditorChanges` is measured
   from it. A field nobody typed in follows its file (see `ui/CLAUDE.md`), so only the user's own text is ever unsaved.
-- Every way out goes through `CampfireViewModel.navigateBack`, which asks `UnsavedChanges` (save / discard / cancel).
+- Every way out goes through `Navigator.navigateBack`, which asks `UnsavedChanges` (save / discard / cancel).
   The draft lives in the view model because that dialog saves it.
 - **The dialog's Save leaves only after the write succeeded** (`saveEditorChangesAndLeave`): until then the editor
   holds the only copy, so a failed write keeps the editor (and a closing desktop window) open with `SaveFailed`.

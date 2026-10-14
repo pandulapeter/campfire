@@ -60,7 +60,7 @@ import org.jetbrains.compose.resources.painterResource
  *
  * The search is asked by the view model as the sheet is put up, with the fields as the file fills them, and after that
  * only when it is asked for — the keyboard's search key or the button — never per keystroke, since MusicBrainz allows
- * one request a second from the whole app. Its state is the view model's ([CampfireViewModel.coverArtSearch]), so that
+ * one request a second from the whole app. Its state is the view model's (`CoverArtSearchController.coverArtSearch`), so that
  * it outlives the Android activity being recreated, and goes with the sheet.
  *
  * The sheet opens at its full height whatever it holds, since what it holds changes after it has opened: a sheet that
@@ -78,8 +78,8 @@ internal fun CoverArtSearchSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.CoverArtSearch,
 ) {
-    val searchState by viewModel.coverArtSearch.collectAsStateWithLifecycle()
-    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(song = dialog.song, target = dialog.target) }
+    val searchState by viewModel.coverArtSearchController.coverArtSearch.collectAsStateWithLifecycle()
+    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtSearchController.coverArtQueryOf(song = dialog.song, target = dialog.target) }
     var mode by rememberSaveable { mutableStateOf(CoverArtSheetMode.SEARCH) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
@@ -114,7 +114,7 @@ internal fun CoverArtSearchSheet(
                     viewModel.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target))
                 },
                 onSave = {
-                    viewModel.setSongCoverArt(
+                    viewModel.songMetadataEditing.setSongCoverArt(
                         target = dialog.target,
                         url = when (mode) {
                             CoverArtSheetMode.SEARCH -> selectedUrl
@@ -125,7 +125,7 @@ internal fun CoverArtSearchSheet(
                 },
             )
         },
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         // Choose the layout from the window, not the space above the keyboard. Moving a focused field between
         // the pinned area and a lazy grid item disposes that input as the IME opens and ends its editing session.

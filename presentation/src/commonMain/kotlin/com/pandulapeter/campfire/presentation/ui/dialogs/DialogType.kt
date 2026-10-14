@@ -130,7 +130,7 @@ sealed interface DialogType {
     /**
      * What the song's file declares for the four values it is played by, opened from the song details editing
      * menu or from the editor's: a snapshot of each as the sheet offers it, blank for nothing (see
-     * [CampfireViewModel.showSongPlayingDialog]). [setlistFileName] is the setlist the song is read through, whose overrides the
+     * `SongMetadataEditing.showSongPlayingDialog`). [setlistFileName] is the setlist the song is read through, whose overrides the
      * sheet names, or null for the library's on this device, and always null for the editor's draft.
      */
     data class SongPlaying(
@@ -162,7 +162,7 @@ sealed interface DialogType {
     /**
      * A dialog that edits the metadata of one song, opened from the song details overflow menu or from the editor's.
      * Opened from the editor, it changes the text being typed there rather than the file (see
-     * [CampfireViewModel.editorTextEdits]), since nothing but Save writes the file the editor is open on.
+     * `EditorSession.editorTextEdits`), since nothing but Save writes the file the editor is open on.
      */
     sealed interface SongEdit : DialogType {
         val song: Song
@@ -182,10 +182,10 @@ sealed interface DialogType {
     data object DeleteLibrary : DialogType
     /**
      * Asked before the editor is left with something in it that has not been written yet, see
-     * [CampfireViewModel.navigateBack].
+     * `Navigator.navigateBack`.
      */
     data object UnsavedChanges : DialogType
-    /** Asked before a key that otherwise only goes back closes the application, see [CampfireViewModel.confirmExit]. */
+    /** Asked before a key that otherwise only goes back closes the application, see `AppExitController.confirmExit`. */
     data object ConfirmExit : DialogType
 
     /**
@@ -193,7 +193,7 @@ sealed interface DialogType {
      * answer to its question that cannot be taken back.
      */
     data class ConfirmImportReplace(val count: Int) : DialogType
-    /** Asked before the editor throws away everything typed since the last save, see [CampfireViewModel.revertEditorChanges]. */
+    /** Asked before the editor throws away everything typed since the last save, see `EditorSession.revertEditorChanges`. */
     data object RevertChanges : DialogType
 
     /** The current version's introduction, shown once after the first installed version. */

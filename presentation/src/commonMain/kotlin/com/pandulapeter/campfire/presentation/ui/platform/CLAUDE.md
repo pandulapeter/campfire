@@ -46,7 +46,7 @@ The `expect` declarations and the interfaces the platform shells provide.
 - `SyncNotifier` tells Android / iOS a run is going so the process is not stopped or suspended. `CampfireApp`
   resolves the strings (in-app language, not the system's) and hands them over once per run or when the words change;
   the shells keep the count moving themselves.
-- The run started by leaving the app (`CampfireViewModel.onAppPaused`) is handed over from the ON_PAUSE callback
+- The run started by leaving the app (`AppExitController.onAppPaused`) is handed over from the ON_PAUSE callback
   itself, not through state: turning the screen off pauses and stops with no frame in between, and shells can only be
   told while in front.
 
@@ -65,7 +65,7 @@ The `expect` declarations and the interfaces the platform shells provide.
 - A `CreateDocument` that cannot be filled is deleted (it is created empty). Unreadable handed-over documents
   (`toImportedFiles`, desktop `readAsImportedFiles`) are passed on empty so the import reports them as skipped.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):
-  `CampfireViewModel.launchFileTransfer` runs one transfer at a time and ignores others, so one that never answers
+  `ExportController.launchFileTransfer` runs one transfer at a time and ignores others, so one that never answers
   blocks import and export for good.
 
 ### `SharedTextImport.kt`
@@ -87,5 +87,5 @@ The `expect` declarations and the interfaces the platform shells provide.
   (off the main thread on Android, so composition does not delay a beat) while resumed, and on Android while composed at
   all (`areBeatHapticsFeltInBackground`: the foreground service lets it vibrate).
 - A click that cannot sound (`MetronomePattern.canSound`: volume zero or every beat muted) is stopped 3 s after the app
-  leaves sight (`CampfireViewModel.onAppStopped`; the grace covers an Android activity recreation), with a snackbar on
+  leaves sight (`MetronomeController.onAppStopped`; the grace covers an Android activity recreation), with a snackbar on
   return — except on Android while it is still felt (Vibrate on, a beat not muted).

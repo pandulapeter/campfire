@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
  * result, its search field, the review's choices, and the screen being put on the back stack once nothing is in its
  * way. The import work itself, which writes the report, is `ImportController`'s.
  *
- * @param updateBackStack Changes the back stack, see `CampfireViewModel.updateBackStack`.
+ * @param updateBackStack Changes the back stack, see `Navigator.updateBackStack`.
  * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which the import screen waits for.
  */
 internal class ImportReportState(

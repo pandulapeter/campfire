@@ -80,7 +80,7 @@ internal fun SettingsScreen(
     isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,
 ) {
-    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.settingsScrollPositions.getValue(it)) }
+    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.getValue(it)) }
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
     LaunchedEffect(viewModel, scrollStates) {
@@ -89,7 +89,7 @@ internal fun SettingsScreen(
         // collector, and every later press of the item with it, without a word. collectLatest runs each request in a
         // child of its own, so an interruption ends that request alone.
         // A tab scrolled down is first taken to its top, and only a tab already there goes on to General.
-        viewModel.scrollToTopRequests.collectLatest {
+        viewModel.navigator.scrollToTopRequests.collectLatest {
             if (it.destination == CampfireDestination.Settings) {
                 val currentScrollState = scrollStates[viewModel.settingsTab.ordinal]
                 if (currentScrollState.canScrollBackward) {
@@ -107,8 +107,8 @@ internal fun SettingsScreen(
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
         state = backGesture,
-        isBackEnabled = viewModel.isSettingsBackToGeneral,
-        onBackCompleted = viewModel::navigateBack,
+        isBackEnabled = viewModel.navigator.isSettingsBackToGeneral,
+        onBackCompleted = viewModel.navigator::navigateBack,
     )
     // How far a predictive back gesture towards General has come, or null while there is none: both layouts preview
     // the step with it, so that the drag says what letting go will do, and the animation that follows a release picks
@@ -121,8 +121,8 @@ internal fun SettingsScreen(
                 ?.progress
         }
     }
-    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Read through a derived state, so that a run reporting every file it moves recomposes the sync section alone
     // rather than the whole screen for the one thing the tabs want to know about it.

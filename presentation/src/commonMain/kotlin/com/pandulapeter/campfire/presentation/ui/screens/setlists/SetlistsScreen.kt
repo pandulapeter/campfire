@@ -54,16 +54,16 @@ internal fun SetlistsScreen(
     layout: ListLayout,
     contentPadding: PaddingValues,
 ) {
-    val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val listState = rememberRetainedLazyGridState(viewModel.setlistsController.setlistsScrollPosition)
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val setlistsPlaceholder by viewModel.setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     // Not saveable: returning to this screen always starts in browsing mode.
     val reorderingSetlistFileName = viewModel.reorderingSetlistFileName
-    val isScreenActive = viewModel.backStack.lastOrNull() == CampfireDestination.Setlists
+    val isScreenActive = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Setlists
     val isReordering = reorderingSetlistFileName != null && isScreenActive && !isPerformanceModeEnabled
-    val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
+    val isSearchOpen by viewModel.setlistsController.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     LaunchedEffect(isSearchOpen) {
         if (isSearchOpen) viewModel.reorderingSetlistFileName = null
@@ -75,12 +75,12 @@ internal fun SetlistsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
+        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
     }
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }
     val appBarReveal = animateAppBarReveal(
-        searchState = viewModel.setlistsSearch,
+        searchState = viewModel.setlistsController.setlistsSearch,
         isShownWithoutSearch = setlistsPlaceholder != null,
     )
     // Built lazily and read only while the lists lay out, so that the bar's spring moves the headers and the scroller
@@ -105,7 +105,7 @@ internal fun SetlistsScreen(
                     viewModel.reorderingSetlistFileName = it
                     if (it != null) {
                         keyboardController?.hide()
-                        viewModel.setlistsSearch.close()
+                        viewModel.setlistsController.setlistsSearch.close()
                     }
                 },
             )
@@ -115,7 +115,7 @@ internal fun SetlistsScreen(
             contentPadding = contentPadding,
             appBarReveal = { appBarReveal.value },
             placeholder = stringResource(Res.string.setlists_search),
-            searchState = viewModel.setlistsSearch,
+            searchState = viewModel.setlistsController.setlistsSearch,
             isSearchEnabled = !isReordering,
             onReachChanged = { appBarReach = it },
             areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
@@ -133,7 +133,7 @@ internal fun SetlistsScreen(
                 SetlistSortMenu(
                     modifier = Modifier.overlappingAction(),
                     selected = userPreferences?.setlistSortingMode,
-                    onSelected = viewModel::setSetlistSortingMode,
+                    onSelected = viewModel.setlistsController::setSetlistSortingMode,
                     onSortingModeChanged = { viewModel.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )

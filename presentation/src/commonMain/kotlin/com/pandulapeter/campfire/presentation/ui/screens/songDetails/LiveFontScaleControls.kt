@@ -25,6 +25,6 @@ internal fun LiveFontScaleControls(
 ) = FontScaleControls(
     modifier = modifier,
     fontScale = viewModel.fontScale,
-    onFontScaleAdjusted = viewModel::adjustFontScale,
-    onFontScaleReset = { viewModel.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
+    onFontScaleAdjusted = viewModel.fontScaleController::adjustFontScale,
+    onFontScaleReset = { viewModel.fontScaleController.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
 )

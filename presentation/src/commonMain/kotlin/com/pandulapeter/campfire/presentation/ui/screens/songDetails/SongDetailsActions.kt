@@ -57,7 +57,7 @@ internal fun RowScope.SongDetailsActions(
     showsSetlistAssignmentsInBar: Boolean,
     tunerAction: ActionsMenuItem?,
 ) {
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
     // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
     // performance mode leaves the bar with nothing else in it, and elsewhere it is the first of the bar's
     // controls to go back into the menu as the bar narrows. Both are there, one leaving as the other arrives,

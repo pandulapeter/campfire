@@ -62,14 +62,14 @@ private fun AppearanceSection(
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
         UiModeChoice(
             selected = userPreferences?.uiMode,
-            onSelected = viewModel::setUiMode,
+            onSelected = viewModel.preferencesController::setUiMode,
         )
     }
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
         ThemeColorChoice(
             uiMode = userPreferences?.uiMode,
             selected = userPreferences?.themeColor,
-            onSelected = viewModel::setThemeColor,
+            onSelected = viewModel.preferencesController::setThemeColor,
         )
     }
     // Named after the icon it colors, which is a different one on every platform, and described with what that
@@ -86,13 +86,13 @@ private fun AppearanceSection(
             description = surface.description(),
             isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
             isEnabled = canColorAppIcon,
-            onCheckedChange = viewModel::setAppIconThemed,
+            onCheckedChange = viewModel.preferencesController::setAppIconThemed,
         )
     }
     BackgroundWarmthSlider(
         warmth = userPreferences?.backgroundWarmth ?: 0,
         description = stringResource(Res.string.settings_background_warmth_description),
-        onWarmthChanged = viewModel::setBackgroundWarmth,
+        onWarmthChanged = viewModel.preferencesController::setBackgroundWarmth,
     )
 }
 
@@ -103,7 +103,7 @@ private fun LanguageSection(
 ) = SettingsSection(title = stringResource(Res.string.settings_user_interface_language)) {
     LanguageChoice(
         selected = userPreferences?.language,
-        onSelected = viewModel::setLanguage,
+        onSelected = viewModel.preferencesController::setLanguage,
     )
     SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
 }

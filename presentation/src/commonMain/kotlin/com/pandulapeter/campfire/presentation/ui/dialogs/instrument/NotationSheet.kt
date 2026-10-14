@@ -47,7 +47,7 @@ internal fun NotationSheet(
     val selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_notation_choose),
-        onDismiss = { viewModel.dismissSheet(DialogType.Notation) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.Notation) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }

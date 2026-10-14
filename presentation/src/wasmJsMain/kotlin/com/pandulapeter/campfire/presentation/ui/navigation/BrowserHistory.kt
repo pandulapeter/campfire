@@ -30,14 +30,14 @@ import kotlin.js.ExperimentalWasmJsInterop
 
 /**
  * Opens the app on the address it was loaded from, see [BrowserRoutes]. Called while the web shell is first composed,
- * which is what [CampfireViewModel.navigateOnLaunch] asks of its caller; an address that names nothing the library
+ * which is what `LaunchState.navigateOnLaunch` asks of its caller; an address that names nothing the library
  * holds opens the songs, and [BrowserHistoryEffect] then writes the address of the songs over it.
  */
 internal fun CampfireViewModel.navigateToBrowserAddress() {
     val path = currentBrowserPath()
     if (path.isNullOrEmpty()) return
-    navigateOnLaunch { songs, setlists, isPerformanceModeEnabled ->
-        BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = navigationState, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    launchState.navigateOnLaunch { songs, setlists, isPerformanceModeEnabled ->
+        BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = navigator.navigationState, isPerformanceModeEnabled = isPerformanceModeEnabled)
     }
 }
 
@@ -68,14 +68,14 @@ internal fun CampfireViewModel.navigateToBrowserAddress() {
  * the tab's history it was loaded, because the entries under it belong to documents that are gone - a reload leaves
  * the ones the previous document wrote behind it - and stepping into one of those reloads the app.
  *
- * Nothing starts before [CampfireViewModel.isLaunchNavigationPending] has settled, or the address the page was opened
+ * Nothing starts before `LaunchState.isLaunchNavigationPending` has settled, or the address the page was opened
  * on would be written over with the songs a moment before the app got to open it.
  */
 @Composable
 internal fun BrowserHistoryEffect(viewModel: CampfireViewModel) {
     val dispatcher = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher ?: return
     LaunchedEffect(viewModel, dispatcher) {
-        viewModel.isLaunchNavigationPending.first { !it }
+        viewModel.launchState.isLaunchNavigationPending.first { !it }
         val input = DirectNavigationEventInput()
         val events = Channel<HistoryEvent>(Channel.UNLIMITED)
         // Read as the event arrives: the events are handled one at a time, and by the time this one's turn comes the
@@ -88,9 +88,9 @@ internal fun BrowserHistoryEffect(viewModel: CampfireViewModel) {
                 // The searches and the dialog are flows rather than snapshot states, so they are combined in rather than read.
                 combine(
                     snapshotFlow { BrowserRoutes.paths(viewModel.routeInputs()) },
-                    viewModel.songsSearch.isOpen,
-                    viewModel.setlistsSearch.isOpen,
-                    viewModel.visibleDialog,
+                    viewModel.songListState.songsSearch.isOpen,
+                    viewModel.setlistsController.setlistsSearch.isOpen,
+                    viewModel.dialogHost.visibleDialog,
                 ) { _, _, _, _ -> BrowserRoutes.paths(viewModel.routeInputs()) }
                     .distinctUntilChanged()
                     .collect { events.send(HistoryEvent.Changed) }
@@ -185,10 +185,10 @@ private class BrowserHistory(
 
     private suspend fun goForward(to: Int, path: String?) {
         val entry = entries.getOrNull(to)
-        val songs = viewModel.allSongs.value
+        val songs = viewModel.libraryState.allSongs.value
         val setlists = viewModel.setlists.value
-        val isPerformanceModeEnabled = viewModel.isPerformanceModeEnabled.value
-        val openOnboarding = viewModel.backStack.lastOrNull { it is CampfireDestination.Onboarding } as? CampfireDestination.Onboarding
+        val isPerformanceModeEnabled = viewModel.preferencesController.isPerformanceModeEnabled.value
+        val openOnboarding = viewModel.navigator.backStack.lastOrNull { it is CampfireDestination.Onboarding } as? CampfireDestination.Onboarding
         val state = entry?.state
             ?.let {
                 BrowserRoutes.validate(
@@ -196,7 +196,7 @@ private class BrowserHistory(
                     songs = songs,
                     setlists = setlists,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
-                    hasImportReport = viewModel.importReport.value != null,
+                    hasImportReport = viewModel.importReportState.importReport.value != null,
                     openOnboarding = openOnboarding,
                 )
             }
@@ -206,7 +206,7 @@ private class BrowserHistory(
                         path = it,
                         songs = songs,
                         setlists = setlists,
-                        current = viewModel.navigationState,
+                        current = viewModel.navigator.navigationState,
                         isPerformanceModeEnabled = isPerformanceModeEnabled,
                     )
                 }
@@ -221,7 +221,7 @@ private class BrowserHistory(
         while (entries.size <= to) entries += Entry(path = null)
         current = to
         entries[current] = entries[current].copy(path = path)
-        if (state != null) viewModel.restoreNavigationState(state)
+        if (state != null) viewModel.navigator.restoreNavigationState(state)
         synchronize()
     }
 
@@ -264,7 +264,7 @@ private class BrowserHistory(
                 }
                 current = target
             }
-            entries[current] = entries[current].copy(state = viewModel.navigationState)
+            entries[current] = entries[current].copy(state = viewModel.navigator.navigationState)
             return
         }
     }

@@ -20,7 +20,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * Space and M start and stop the metronome ([CampfireViewModel.toggleMetronomeByKey]). Unlike the search shortcut this
+ * Space and M start and stop the metronome (`MetronomeController.toggleMetronomeByKey`). Unlike the search shortcut this
  * listens in the bubbling phase and leaves alone whatever Compose already handled (a focused button, which Space
  * presses) or what is typed into a field (the hidden input of a focused text field), so that the key only toggles the
  * metronome where it would otherwise do nothing.

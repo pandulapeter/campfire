@@ -66,7 +66,7 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
  * Every import the user started, on one screen that goes through the import's stages in place rather than as a run of
- * dialogs replacing one another (see `CampfireViewModel.importReport`): the files being read, why they could not be,
+ * dialogs replacing one another (see `ImportReportState.importReport`): the files being read, why they could not be,
  * the review of everything they hold, the import the review decides on being written, and every file of what it came
  * to, grouped by what became of it. It is a screen of the back stack, so a song opened from its list comes back to it,
  * and a dialog that asks for one confirmation goes over it.
@@ -80,16 +80,16 @@ internal fun ImportReportScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
 ) {
-    val current by viewModel.importReport.collectAsStateWithLifecycle()
+    val current by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     // The screen is still composed while it slides away, after the view model has let go of what it showed.
     var report by remember { mutableStateOf(current) }
     current?.let { report = it }
     val shown = report ?: return
-    val progress by viewModel.importProgress.collectAsStateWithLifecycle()
-    val songs by viewModel.allSongs.collectAsStateWithLifecycle()
+    val progress by viewModel.importController.importProgress.collectAsStateWithLifecycle()
+    val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val searchState = viewModel.importReportSearch
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val searchState = viewModel.importReportState.search
     val query by searchState.activeQuery.collectAsStateWithLifecycle("")
     // Read through the state rather than off the stage, so that a tick recomposes the rows and the counts that read
     // it rather than everything the stage is handed to.
@@ -140,7 +140,7 @@ internal fun ImportReportScreen(
                     ) {
                         ImportLoadingContent(
                             progress = progress ?: ImportProgress(ImportProgress.Phase.UNPACKING),
-                            onCancel = viewModel::cancelImportPreparation,
+                            onCancel = viewModel.importController::cancelImportPreparation,
                         )
                     }
 
@@ -161,10 +161,10 @@ internal fun ImportReportScreen(
                             sections = matchingReviewSections,
                             isFiltered = query.isNotBlank(),
                             choices = choices,
-                            onEntriesChosenChange = viewModel::setImportEntriesChosen,
-                            onConflictResolutionSelected = viewModel::setImportConflictResolution,
-                            onGroupConflictResolutionSelected = viewModel::setImportGroupConflictResolution,
-                            onOpenSong = viewModel::openReportedSong,
+                            onEntriesChosenChange = viewModel.importReportState::setImportEntriesChosen,
+                            onConflictResolutionSelected = viewModel.importReportState::setImportConflictResolution,
+                            onGroupConflictResolutionSelected = viewModel.importReportState::setImportGroupConflictResolution,
+                            onOpenSong = viewModel.navigator::openReportedSong,
                         )
                     }
 
@@ -189,7 +189,7 @@ internal fun ImportReportScreen(
                             sections = matchingResultSections,
                             isFiltered = query.isNotBlank(),
                             isPerformanceModeEnabled = isPerformanceModeEnabled,
-                            onOpenSong = viewModel::openReportedSong,
+                            onOpenSong = viewModel.navigator::openReportedSong,
                             onEditSong = { viewModel.openEditor(it) },
                         )
                     }
@@ -203,8 +203,8 @@ internal fun ImportReportScreen(
                 report = shown,
                 importCount = importCount,
                 isKeyboardVisible = isKeyboardVisible,
-                onImport = viewModel::confirmImport,
-                onRetry = viewModel::retryImport,
+                onImport = viewModel.importController::confirmImport,
+                onRetry = viewModel.importController::retryImport,
                 onDone = onBack,
             )
         }

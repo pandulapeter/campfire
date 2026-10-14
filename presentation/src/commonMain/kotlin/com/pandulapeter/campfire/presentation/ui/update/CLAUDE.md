@@ -30,7 +30,7 @@ a no-op actual elsewhere. The gate wraps the whole app inside `CampfireApp`, so 
   playing click; a required update does not (a cut-off run is reported as interrupted).
 - What Play last said is saved with the activity, so a rotation keeps the blocking screen up; a carried-over state the
   first check cannot confirm is dropped.
-- Play is first asked once the app is on screen (`CampfireViewModel.isAppOnScreen`), so a cold start does not bind its
+- Play is first asked once the app is on screen (`LaunchState.isAppOnScreen`), so a cold start does not bind its
   service under the splash; a recreated activity asks on resume.
 - A build Play did not install (debug, sideloaded, no Play) answers every check with an error, so the flow can only be
   exercised from an internal testing track.

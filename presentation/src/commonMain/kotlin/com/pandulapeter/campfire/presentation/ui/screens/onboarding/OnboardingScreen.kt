@@ -63,7 +63,7 @@ import kotlinx.coroutines.flow.filterNotNull
  * The onboarding: a pager of the steps worth asking ([onboardingSteps], worked out from the features as they are now, so
  * the features page's answers take the page they make pointless off at once), one [OnboardingBottomBar] under all of
  * them, which also holds the way out on the first page. The page shown is
- * [CampfireViewModel.onboardingStep], which the bar's buttons and every way back move - a back steps through the pages
+ * `Navigator.onboardingStep`, which the bar's buttons and every way back move - a back steps through the pages
  * before it leaves the screen, see `Navigator.navigateBack` - and the pager follows it. It also takes swipes, a mouse
  * drag, and a trackpad's sideways scroll, and the page they settle on becomes the step, so that the pages turn under the
  * finger as a pager's do, and a predictive back gesture moves them the same way.
@@ -74,9 +74,9 @@ internal fun OnboardingScreen(
     destination: CampfireDestination.Onboarding,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
+    val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     val steps = viewModel.onboardingSteps(userPreferences)
-    val currentStep = viewModel.onboardingStep
+    val currentStep = viewModel.navigator.onboardingStep
     val currentSteps by rememberUpdatedState(steps)
     val pagerState = rememberPagerState(initialPage = steps.indexOf(currentStep).coerceAtLeast(0)) { currentSteps.size }
     // Claims the back gesture while there is a page to go back to, rather than leaving it to the back stack's handler,
@@ -86,8 +86,8 @@ internal fun OnboardingScreen(
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
         state = backGesture,
-        isBackEnabled = viewModel.isOnboardingBackToPreviousStep,
-        onBackCompleted = viewModel::navigateBack,
+        isBackEnabled = viewModel.navigator.isOnboardingBackToPreviousStep,
+        onBackCompleted = viewModel.navigator::navigateBack,
     )
     val backProgress = remember(backGesture) {
         {
@@ -102,7 +102,7 @@ internal fun OnboardingScreen(
     // to the page before, which the handler has just made the step, or back where it was for a cancelled gesture.
     val pagerFollowingStep = remember { PagerFollowingStep() }
     LaunchedEffect(pagerState) {
-        snapshotFlow { viewModel.onboardingStep to (backProgress() != null) }.collectLatest { (step, isGestureInProgress) ->
+        snapshotFlow { viewModel.navigator.onboardingStep to (backProgress() != null) }.collectLatest { (step, isGestureInProgress) ->
             pagerFollowingStep.isMoving = true
             try {
                 pagerState.followStep(page = currentSteps.indexOf(step).coerceAtLeast(0), isGestureInProgress = isGestureInProgress, backProgress = backProgress)
@@ -116,7 +116,7 @@ internal fun OnboardingScreen(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
             val step = currentSteps.getOrNull(page)
-            if (!pagerFollowingStep.isMoving && step != null && step != viewModel.onboardingStep) viewModel.showOnboardingStep(step)
+            if (!pagerFollowingStep.isMoving && step != null && step != viewModel.navigator.onboardingStep) viewModel.navigator.showOnboardingStepIfOpen(step)
         }
     }
     BoxWithConstraints(
@@ -175,9 +175,9 @@ internal fun OnboardingScreen(
                 isOpenedFromSettings = destination.isOpenedFromSettings,
                 isImportWaiting = importReport != null,
                 sideMargin = sideMargin,
-                onBack = viewModel::navigateBack,
-                onClose = viewModel::closeOnboarding,
-                onNext = viewModel::showNextOnboardingStep,
+                onBack = viewModel.navigator::navigateBack,
+                onClose = viewModel.navigator::closeOnboarding,
+                onNext = viewModel.navigator::showNextOnboardingStep,
             )
         }
     }
@@ -268,9 +268,9 @@ private fun OnboardingStepPage(
             themeColor = userPreferences?.themeColor,
             backgroundWarmth = userPreferences?.backgroundWarmth ?: 0,
             isCompact = isCompact,
-            onUiModeSelected = viewModel::setUiMode,
-            onThemeColorSelected = viewModel::setThemeColor,
-            onBackgroundWarmthChanged = viewModel::setBackgroundWarmth,
+            onUiModeSelected = viewModel.preferencesController::setUiMode,
+            onThemeColorSelected = viewModel.preferencesController::setThemeColor,
+            onBackgroundWarmthChanged = viewModel.preferencesController::setBackgroundWarmth,
         )
 
         OnboardingStep.INSTRUMENT -> InstrumentStep(
@@ -289,11 +289,11 @@ private fun OnboardingStepPage(
             features = features,
             chordTuning = userPreferences?.chordTuning(),
             isCompact = isCompact,
-            onChordsEnabledChange = viewModel::setChordsEnabled,
-            onChordDiagramsEnabledChange = viewModel::setChordDiagramsEnabled,
-            onMetronomeEnabledChange = viewModel::setMetronomeEnabled,
-            onTunerEnabledChange = viewModel::setTunerEnabled,
-            onSetlistsEnabledChange = viewModel::setSetlistsEnabled,
+            onChordsEnabledChange = viewModel.preferencesController::setChordsEnabled,
+            onChordDiagramsEnabledChange = viewModel.preferencesController::setChordDiagramsEnabled,
+            onMetronomeEnabledChange = viewModel.preferencesController::setMetronomeEnabled,
+            onTunerEnabledChange = viewModel.preferencesController::setTunerEnabled,
+            onSetlistsEnabledChange = viewModel.preferencesController::setSetlistsEnabled,
         )
 
         OnboardingStep.NOTATION -> NotationStep(

@@ -16,12 +16,12 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * snapshot states the addresses depend on; the searches and the dialog are flows, which the caller combines in.
  */
 internal fun CampfireViewModel.routeInputs() = RouteInputs(
-    backStack = backStack.toList(),
-    isSongsSearchOpen = songsSearch.isOpen.value,
-    isSetlistsSearchOpen = setlistsSearch.isOpen.value,
-    isSetlistReordering = isSetlistReordering,
-    isSongSelecting = isSongSelecting,
+    backStack = navigator.backStack.toList(),
+    isSongsSearchOpen = songListState.songsSearch.isOpen.value,
+    isSetlistsSearchOpen = setlistsController.setlistsSearch.isOpen.value,
+    isSetlistReordering = setlistsController.isSetlistReordering,
+    isSongSelecting = songSelection.isSongSelecting,
     settingsTab = settingsTab,
-    currentSongFileNames = backStack.filterIsInstance<CampfireDestination.SongDetails>().associate { it.id to currentSongFileName(it) },
-    hasOverlay = RouteInputs.hasOverlay(dialog = visibleDialog.value, isAnyMenuOpen = overlayState.isAnyMenuOpen),
+    currentSongFileNames = navigator.backStack.filterIsInstance<CampfireDestination.SongDetails>().associate { it.id to navigator.currentSongFileName(it) },
+    hasOverlay = RouteInputs.hasOverlay(dialog = dialogHost.visibleDialog.value, isAnyMenuOpen = dialogHost.overlayState.isAnyMenuOpen),
 )

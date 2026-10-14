@@ -21,7 +21,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * Opens the search of the list screen that is on top on Ctrl / Cmd + F ([CampfireViewModel.openCurrentSearch]), and
+ * Opens the search of the list screen that is on top on Ctrl / Cmd + F (`Navigator.openCurrentSearch`), and
  * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
  * one canvas with none. With the song editor on top, Ctrl / Cmd + F and R are the editor's Find and Find and replace
  * (`editorSearchShortcuts`), so there the browser is kept from its find bar and from reloading the page under the text
@@ -44,7 +44,7 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
         val shortcut = if (isF) appShortcutOf(ShortcutKey.F, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey) else null
         if (shortcut is AppShortcut.OpenSearch && viewModel.perform(shortcut)) {
             keyEvent.preventDefault()
-        } else if (isEditorSearchKey(keyEvent) && viewModel.backStack.lastOrNull() is CampfireDestination.SongEditor) {
+        } else if (isEditorSearchKey(keyEvent) && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongEditor) {
             keyEvent.preventDefault()
         }
     }

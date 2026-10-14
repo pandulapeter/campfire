@@ -25,11 +25,11 @@ internal fun rememberSongActionHandler(viewModel: CampfireViewModel): SongAction
         }
 
         override fun updateFileName(song: Song) {
-            viewModel.updateSongFileName(song)
+            viewModel.songFilesController.updateSongFileName(song)
         }
 
         override fun duplicate(song: Song) {
-            viewModel.showDuplicateSongDialog(song)
+            viewModel.songFilesController.showDuplicateSongDialog(song)
         }
 
         override fun export(song: Song, setlistFileName: String?) {

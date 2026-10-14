@@ -33,7 +33,7 @@ internal fun rememberSetlistActionHandler(viewModel: CampfireViewModel): Setlist
         }
 
         override fun setArchived(setlist: Setlist, isArchived: Boolean) {
-            viewModel.setSetlistArchived(setlist = setlist, isArchived = isArchived)
+            viewModel.setlistsController.setSetlistArchived(setlist = setlist, isArchived = isArchived)
         }
 
         override fun export(setlist: Setlist) {

@@ -53,16 +53,16 @@ internal fun SongInfoSheet(
     urlOpener: (String) -> Unit,
 ) {
     val isDraft = dialog.target is SongEditTarget.EditorDraft
-    val songs by viewModel.allSongs.collectAsStateWithLifecycle()
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val editorDraft by viewModel.editorDraft.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
+    val editorDraft by viewModel.editorSession.editorDraft.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     // The editor's own song is the text being typed, which neither has the overrides of a setlist nor is read only.
-    val setlistFileName = if (isDraft) null else (viewModel.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
+    val setlistFileName = if (isDraft) null else (viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
     val isReadOnly = !isDraft && (isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived })
     val text = if (isDraft) editorDraft?.takeIf { it.fileName == dialog.song.fileName }?.text else songTexts[dialog.song.fileName]
-    val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+    val metadata = remember(text) { text?.let(viewModel.songMetadataEditing::songMetadataOf) }
     // Over the editor the header names the song the way the editor's title does, from the text being typed.
     val song = if (isDraft) {
         metadata?.let { dialog.song.copy(title = it.displayTitle(fallback = dialog.song.title), artist = it.artist.orEmpty()) } ?: dialog.song
@@ -77,7 +77,7 @@ internal fun SongInfoSheet(
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
-        onDismiss = { viewModel.dismissSheet(dialog) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         if (metadata != null) {
             val scrollState = rememberScrollState()
@@ -96,7 +96,7 @@ internal fun SongInfoSheet(
                 defaults = if (shouldShowChords || shouldShowTempo) {
                     SongDefaults(
                         // The editor's text is in the reader's notation already, and the file's in the standard one.
-                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { if (isDraft) it else viewModel.songRenderer.editorKeyOf(it, viewModel.editorNotation) },
+                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { if (isDraft) it else viewModel.songRenderer.editorKeyOf(it, viewModel.editorSession.editorNotation) },
                         capo = metadata.capo?.takeIf { shouldShowChords },
                         // The click's own tempo and time where the file names none, as if they were written there.
                         tempo = (ChordProTempo.parse(metadata.tempo) ?: MetronomePattern.DEFAULT_BPM).takeIf { shouldShowTempo },

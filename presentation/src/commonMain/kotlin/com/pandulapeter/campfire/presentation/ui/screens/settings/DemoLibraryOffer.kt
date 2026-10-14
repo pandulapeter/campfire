@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
-/** The settings screen's offer to add the demo library, see [CampfireViewModel.demoLibraryOffer]. */
+/** The settings screen's offer to add the demo library, see `FirstRunController.demoLibraryOffer`. */
 enum class DemoLibraryOffer {
     AVAILABLE,
 

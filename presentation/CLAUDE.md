@@ -27,7 +27,7 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 - `.pdf`, `.docx`, `.txt`, and Android shared text become ordinary songs before the UI sees them. Every user-started
   import is reviewed on the import screen first (`ui/screens/importReport/`).
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
-  and Hungarian). A single converted song gets a snackbar **Open** (`CampfireViewModel.openImportedSong`); converted
+  and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.
 
 ## Strings

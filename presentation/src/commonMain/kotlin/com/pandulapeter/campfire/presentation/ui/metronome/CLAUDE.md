@@ -28,7 +28,7 @@ on**, so nothing ever plays with no way on screen to stop it. Three rules stop i
   and all, under a process nobody is looking at.
 
 Apart from those, a click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped a
-few seconds after the app goes out of sight, and says so (`CampfireViewModel.onAppStopped`), so no background playback
+few seconds after the app goes out of sight, and says so (`MetronomeController.onAppStopped`), so no background playback
 runs for silence — except on Android with Vibrate on and a beat not muted, which plays on (iOS has no background
 haptics).
 
@@ -70,7 +70,7 @@ haptics).
 
 ### Accents
 
-- Tapped on the `BeatRow` in both places (`CampfireViewModel.setBeatLevels` → `MetronomeController.setBeatLevels`), for
+- Tapped on the `BeatRow` in both places (`MetronomeController.setBeatLevels` → `MetronomeController.setBeatLevels`), for
   whatever the click plays for: on the tab, the signature's (`withBeatLevels`); on a song, that song's own
   (`UserPreferences.beatLevels`, `withSongBeatLevels`, tested), by signature, so a song whose 8/8 is 3+3+2 changes no
   other song.

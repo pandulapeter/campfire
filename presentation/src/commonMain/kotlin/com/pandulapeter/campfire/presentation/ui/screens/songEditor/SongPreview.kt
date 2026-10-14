@@ -82,7 +82,7 @@ internal fun SongPreview(
     val tabs = rememberTabReading(userPreferences, isMoved = false)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
     val songRenderer = viewModel.songRenderer
-    val notation = viewModel.editorNotation
+    val notation = viewModel.editorSession.editorNotation
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
     // typed into the field opposite it have to appear, or the editor would answer an edit with nothing. The reader's
     // transposition is a way of reading it too, so the preview is in the key the field and the stepper name - the

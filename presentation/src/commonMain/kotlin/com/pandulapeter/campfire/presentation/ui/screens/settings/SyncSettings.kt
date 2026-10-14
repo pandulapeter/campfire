@@ -108,7 +108,7 @@ internal fun ColumnScope.SyncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
 ) {
-    if (viewModel.syncProviders.isEmpty()) {
+    if (viewModel.syncController.syncProviders.isEmpty()) {
         SettingsMessage(text = stringResource(Res.string.settings_sync_unavailable))
         return
     }
@@ -137,7 +137,7 @@ private fun ColumnScope.DisconnectedSyncSettings(
     ActionListItem(
         title = stringResource(Res.string.settings_sync_connect_dropbox),
         icon = painterResource(Res.drawable.ic_cloud),
-        isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
+        isEnabled = viewModel.syncController.syncProviders.contains(SyncProviderId.DROPBOX),
         onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
     )
     // Under the Connect row rather than above it, so that Connect is the first row of its stage with or without a

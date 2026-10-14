@@ -68,17 +68,17 @@ fun CampfireWebApp(
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
     MetronomeShortcutEffect(viewModel)
-    LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel::stopMetronome) }
+    LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel.metronomeController::stopMetronome) }
     // The composition stops collecting while the tab is hidden (Compose moves the lifecycle to CREATED), and a hidden tab
     // is when the browser's media controls are used: the session follows the engine itself, as Android's service does.
     LaunchedEffect(viewModel) {
-        viewModel.metronomePlayback.collect { if (it !is MetronomePlayback.Playing) WebMetronomeNotifier.onMetronomeNotificationChanged(null) }
+        viewModel.metronomeController.metronomePlayback.collect { if (it !is MetronomePlayback.Playing) WebMetronomeNotifier.onMetronomeNotificationChanged(null) }
     }
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
     FaviconEffect(viewModel)
     LaunchedEffect(viewModel) {
-        viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
+        viewModel.editorSession.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
             if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
         }
     }

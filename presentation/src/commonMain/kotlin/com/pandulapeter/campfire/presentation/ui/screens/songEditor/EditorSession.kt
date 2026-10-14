@@ -48,9 +48,9 @@ import kotlinx.coroutines.withContext
  * The editor: the text it holds and has not written yet, the draft kept on disk in case the process ends in the
  * background, the field kept across a recreation, its ways out and its saves.
  *
- * @param updateBackStack Changes the back stack, see `CampfireViewModel.updateBackStack`.
- * @param popBackStack Leaves the screen on top, see `CampfireViewModel.popBackStack`.
- * @param takePendingExit Takes the exit the unsaved changes question was asked for, see `CampfireViewModel.takePendingExit`.
+ * @param updateBackStack Changes the back stack, see `Navigator.updateBackStack`.
+ * @param popBackStack Leaves the screen on top, see `Navigator.popBackStack`.
+ * @param takePendingExit Takes the exit the unsaved changes question was asked for, see `AppExitController.takePendingExit`.
  * @param requestExit Closes the application, see `CampfireViewModel.requestExit`.
  */
 internal class EditorSession(

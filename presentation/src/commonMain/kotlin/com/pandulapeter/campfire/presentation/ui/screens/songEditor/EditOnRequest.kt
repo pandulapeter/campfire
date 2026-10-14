@@ -28,7 +28,7 @@ internal fun EditOnRequest(
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) = LaunchedEffect(textFieldState, fileName) {
-    viewModel.editorTextEdits.filter { it.fileName == fileName }.collect { request ->
+    viewModel.editorSession.editorTextEdits.filter { it.fileName == fileName }.collect { request ->
         val text = textFieldState.text.toString()
         val edited = request.edit(text)
         if (edited != text) {

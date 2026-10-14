@@ -14,10 +14,10 @@ The view model facade, the composition root and navigation chrome, and the produ
 
 ### `ui/CampfireViewModel.kt`
 
-- A thin facade: state lives in plain `internal` holders it builds itself (not Koin definitions), each taking
-  `viewModelScope`, its use cases and narrow lambdas for the other holders it calls, so there are no cycles. Every
-  public member is a one-line delegation. **Construction order is behaviour**: holders are declared, and their
-  collectors started in `init`, in a fixed order; don't reorder.
+- State lives in plain `internal` holders it builds (not Koin definitions), each taking `viewModelScope`, its use
+  cases and narrow lambdas for the holders it calls, so no cycles. Screens call holders through their `internal val`s;
+  its own members serve other modules or span holders. **Construction order is behaviour**: holders are declared, and
+  their `init` collectors started, in a fixed order.
 - Cross-holder reactions are listeners registered in order (`Navigator.addOnBackStackChanged`,
   `DialogHost.addBeforeDialogChange` / `addAfterDialogChange`).
 - **Every state is kept up to date from the moment the view model exists** (`stateIn(viewModelScope, Eagerly)`), never

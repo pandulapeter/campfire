@@ -57,7 +57,7 @@ internal fun ExportHost(
     viewModel: CampfireViewModel,
     transition: ExportTransition,
 ) {
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val target = visibleDialog as? DialogType.Export
     // The export on screen, which outlives the dialog for as long as the screen takes to slide away. One export
     // replacing another is the same screen with what it reads starting over, not a second one sliding in.
@@ -73,7 +73,7 @@ internal fun ExportHost(
         isBackEnabled = target != null,
         onBackCompleted = {
             closedByGesture = target
-            target?.let(viewModel::dismissSheet)
+            target?.let(viewModel.dialogHost::dismissSheet)
         },
     )
     val spec = MaterialTheme.motionScheme.slideFractionSpec()

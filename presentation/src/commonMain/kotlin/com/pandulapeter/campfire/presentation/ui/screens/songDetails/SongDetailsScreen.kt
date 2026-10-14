@@ -77,7 +77,7 @@ import kotlinx.coroutines.launch
  * ([MenuStepperRow]) - and in performance mode, where it is all that is left, in the bar itself
  * ([showsFontScaleInPerformanceBar]). It can
  * also be changed with a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the
- * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers ([CampfireViewModel.zoomSongText]).
+ * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers (`FontScaleController.zoomSongText`).
  *
  * When there is more than one song to page through, or the song is read from a setlist of any length, a
  * [SongPagerControls] bar under the lyrics offers the same paging as the swipe gesture, along with the name of the
@@ -102,15 +102,15 @@ internal fun SongDetailsScreen(
     onBack: () -> Unit,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
+    val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Only what is drawn over the screen, which the keys are then meant for instead.
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
-    val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    val songLookup by viewModel.songLookup.collectAsStateWithLifecycle()
+    val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songLookup by viewModel.libraryState.songLookup.collectAsStateWithLifecycle()
     val resolvedSongs = remember(destination, songLookup, songsBeingRenamed) {
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
         // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
@@ -126,7 +126,7 @@ internal fun SongDetailsScreen(
         // nothing left to show, so the screen goes the way it would have if the song had been deleted from here. Only
         // while it is still the screen on top, since one that has just been popped goes on being composed for as long
         // as its exit transition runs, and going back from there would close the screen underneath it too.
-        if (resolvedSongs?.isEmpty() == true && viewModel.backStack.lastOrNull() == destination) onBack()
+        if (resolvedSongs?.isEmpty() == true && viewModel.navigator.backStack.lastOrNull() == destination) onBack()
     }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
@@ -162,19 +162,19 @@ internal fun SongDetailsScreen(
     // offered where it has something in it, and it is read from the song's text, so nowhere before that is at hand.
     // Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read for it.
     val hasSongInfo = remember(currentSongText, isReadOnly) {
-        isReadOnly && currentSongText?.let(viewModel::hasSongInfo) == true
+        isReadOnly && currentSongText?.let(viewModel.songMetadataEditing::hasSongInfo) == true
     }
     val openCurrentSongInfo = currentSong?.let { song ->
         if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val metronomePlayback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
     // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
     // beside it anyway, since a click stopped from the panel leaves it where it was, see
-    // CampfireViewModel.toggleMetronomePanel.
+    // MetronomeController.toggleMetronomePanel.
     val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
 
     val coroutineScope = rememberCoroutineScope()
@@ -236,7 +236,7 @@ internal fun SongDetailsScreen(
                 canStepForward = canStepForwardInSong || hasNextSongToStepTo,
                 hasPreviousSong = canPage && pagerState.targetPage > 0,
                 hasNextSong = canPage && pagerState.targetPage < songs.lastIndex,
-                isUncovered = visibleDialog == null && viewModel.backStack.lastOrNull() is CampfireDestination.SongDetails,
+                isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
             ),
@@ -336,13 +336,13 @@ private fun LoadSongTexts(
     currentPage: Int,
     songTexts: Map<String, String>,
 ) {
-    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
+    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
     val currentFileName = songs.getOrNull(currentPage)?.fileName
-    LaunchedEffect(currentFileName) { currentFileName?.let(viewModel::loadSongContent) }
+    LaunchedEffect(currentFileName) { currentFileName?.let(viewModel.songTextStore::loadSongContent) }
     LaunchedEffect(currentPage, songs) {
         listOfNotNull(songs.getOrNull(currentPage - 1), songs.getOrNull(currentPage + 1))
             .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
-            .forEach { viewModel.loadSongContent(it.fileName) }
+            .forEach { viewModel.songTextStore.loadSongContent(it.fileName) }
     }
 }
 
@@ -372,7 +372,7 @@ private fun rememberChordDiagrams(
             instrumentTuning = instrumentTuning,
             storedShapes = storedChordShapes,
             isFolded = isChordSectionFolded,
-            onFoldToggled = viewModel::toggleChordSectionFold,
+            onFoldToggled = viewModel.preferencesController::toggleChordSectionFold,
             notation = notation,
         )
     }
@@ -456,7 +456,7 @@ private fun FollowPager(
     LaunchedEffect(pagerState, isInitialPageSettled) {
         if (isInitialPageSettled) {
             snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
-                if (fileName != null) viewModel.onSongDetailsPageSettled(latestDestination, fileName)
+                if (fileName != null) viewModel.navigator.onSongDetailsPageSettled(latestDestination, fileName)
             }
         }
     }
@@ -466,7 +466,7 @@ private fun FollowPager(
     LaunchedEffect(pagerState, isInitialPageSettled) {
         if (isInitialPageSettled) {
             snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
-                if (target != null) viewModel.onSongDetailsPageChanged(latestDestination, target.first, target.second)
+                if (target != null) viewModel.metronomeController.onSongDetailsPageChanged(latestDestination, target.first, target.second)
             }
         }
     }

@@ -52,7 +52,7 @@ import org.jetbrains.compose.resources.painterResource
  * The text lives in a [TextFieldState] here rather than in the view model: it is the field's own state, undo history
  * included, and it lives through a configuration change whole, in the view model's keeping, and through process death
  * as its text and caret, see [EditorFieldSaver]. Nothing is ever written on its own: the file changes when the user
- * saves it, and leaving with something unsaved asks first (see [CampfireViewModel.navigateBack]). What the screen does report as it is typed is the text itself, which is
+ * saves it, and leaving with something unsaved asks first (see `Navigator.navigateBack`). What the screen does report as it is typed is the text itself, which is
  * what lets that question be answered - and the save be finished - after the screen is gone.
  */
 @Composable
@@ -65,8 +65,8 @@ internal fun SongEditorScreen(
     urlOpener: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
+    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
     // The text the field starts from, taken once. What the file holds afterwards is only ever compared with what has
     // been typed: an editor that followed songTexts would be taken apart, the field and the draft with it, by a
     // sync run deleting the file or a rescan failing to read it - the two moments the draft is the only copy left.
@@ -80,25 +80,25 @@ internal fun SongEditorScreen(
     //
     // The field is in the editor's notation, so every text of the file it is compared with or replaced by is too.
     var hasOpened by rememberSaveable(destination.fileName) { mutableStateOf(false) }
-    val notation = viewModel.editorNotation
+    val notation = viewModel.editorSession.editorNotation
     val editorTextOf = remember(notation) { { text: String -> viewModel.songRenderer.editorTextOf(text, notation) } }
     var initialText by remember(destination.fileName) {
         mutableStateOf(
             // Not before the draft a previous run left has been looked at: an Android process restored on a long document
             // gets its text from there, and the field's saved state is only read once, as the loaded editor composes.
-            if (viewModel.isEditorDraftRecoveryPending.value) {
+            if (viewModel.editorSession.isEditorDraftRecoveryPending.value) {
                 null
             } else {
-                viewModel.songTexts.value[destination.fileName]?.let(editorTextOf)
-                    ?: viewModel.retainedEditorField(destination.fileName)?.let { "" }
+                viewModel.songTextStore.songTexts.value[destination.fileName]?.let(editorTextOf)
+                    ?: viewModel.editorSession.retainedEditorField(destination.fileName)?.let { "" }
             }
         )
     }
     LaunchedEffect(destination.fileName) {
-        viewModel.loadSongContent(destination.fileName).join()
+        viewModel.songTextStore.loadSongContent(destination.fileName).join()
         viewModel.awaitEditorDraftRecovery()
-        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
-        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
+        if (initialText == null && hasOpened) initialText = viewModel.songTextStore.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
+        initialText = initialText ?: viewModel.songTextStore.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true
     }
     AnimatedContent(
@@ -111,7 +111,7 @@ internal fun SongEditorScreen(
             SongNotLoadedPane(
                 contentPadding = contentPadding,
                 hasFailed = destination.fileName in failedSongFileNames,
-                onRetry = { viewModel.loadSongContent(destination.fileName) },
+                onRetry = { viewModel.songTextStore.loadSongContent(destination.fileName) },
                 onClose = onBack,
             )
         } else {

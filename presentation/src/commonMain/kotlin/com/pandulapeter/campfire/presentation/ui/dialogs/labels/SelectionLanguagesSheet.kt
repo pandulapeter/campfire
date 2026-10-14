@@ -30,7 +30,7 @@ internal fun SelectionLanguagesSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.SelectionLanguages,
 ) {
-    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
+    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
     val songs = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it] } }
     LanguagesSheet(
         viewModel = viewModel,
@@ -38,7 +38,7 @@ internal fun SelectionLanguagesSheet(
         sheetKey = dialog.songFileNames.joinToString(),
         subtitle = pluralStringResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size),
         confirmLabel = stringResource(Res.string.save),
-        onDismiss = { viewModel.dismissSheet(dialog) },
-        onSave = { draft -> viewModel.setSelectionLanguages(fileNames = dialog.songFileNames, added = draft.added, removed = draft.removed) },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onSave = { draft -> viewModel.selectionEditing.setSelectionLanguages(fileNames = dialog.songFileNames, added = draft.added, removed = draft.removed) },
     )
 }
