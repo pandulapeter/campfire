@@ -18,15 +18,15 @@ Repository interfaces only; consumed by `:domain:implementation`, implemented by
   the models).
 - **An existing setlist is changed through `updateSetlist`** (read latest, transform, write, serialized), never by
   saving a copy read earlier: that copy lags, and two quick changes would undo each other. `renameSetlist` is the same
-  for title and description (may move the file) and takes the setlist's name. `saveSetlist` is for a setlist the caller
+  for the header fields (title, description, date, countdown; may move the file) and takes the setlist's file name. `saveSetlist` is for a setlist the caller
   owns whole (just created or copied).
 - `SongContentRepository` is a recent-texts lookup, deliberately not a `DataState` flow.
 - `UserPreferencesRepository.hasStoredUserPreferences` asks whether the preferences document exists, whose absence is
   what a never-used installation looks like (`IsFirstRunUseCase`). It is deliberately uncached: the first save would make
   a cached `false` wrong.
-- `CoverArtRepository.getCoverArt` answers bytes or nothing, never a failure; searches (`searchCoverArt`,
-  `searchSongDetails`) emit progress as each catalogue answers, a failing one recorded in `failed`, not thrown.
-  `loadSongCredits` never throws. Nothing from the details lookup or `ImportDownloadRepository` is kept.
+- `CoverArtRepository.getCoverArt` answers bytes or nothing, never a failure. The searches (`searchCoverArt`, and
+  `SongDetailsRepository.searchSongDetails`) emit progress as each catalogue answers, a failing one recorded in
+  `failed`, not thrown. `SongDetailsRepository.loadSongCredits` never throws. Nothing from the details lookup or `ImportDownloadRepository` is kept.
 - `SyncRepository` caches no list (the library stays in the song and setlist repositories, which a run feeds through
   `refresh`) and is the only thing above the data layer that knows a service is involved. `forgetStoredConnection` is
   local-only, retried by `restore` until it works.
