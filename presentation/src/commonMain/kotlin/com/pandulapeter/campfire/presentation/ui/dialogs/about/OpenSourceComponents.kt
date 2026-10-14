@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.AppBuild
 
 /**
  * What Campfire is made of that somebody else wrote, as the Open-source licenses sheet lists it: every library the
- * builds ship, the transitive ones included, the fonts the web build bundles, the runtime the desktop builds bundle,
+ * builds ship, the transitive ones included, the fonts the app bundles, the runtime the desktop builds bundle,
  * and the chord shapes the tables were filled from, each with the builds it is part of, since a build lists only what
  * it ships. The names, the holders and the licenses' names are proper names, so they are not translated.
  *
