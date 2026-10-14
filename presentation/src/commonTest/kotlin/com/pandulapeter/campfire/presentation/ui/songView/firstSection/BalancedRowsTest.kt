@@ -45,4 +45,11 @@ class BalancedRowsTest {
         assertEquals(1, balancedColumnCount(listOf(500), maxWidth = 100, gap = 8))
         assertEquals(1, balancedColumnCount(emptyList(), maxWidth = 100, gap = 8))
     }
+
+    @Test
+    fun `a row is as tall as its tallest item, and never shorter than a pill`() {
+        // A label stacked over its control makes the first item taller; only its own row grows for it.
+        assertEquals(listOf(90, 48), balancedRowHeights(listOf(90, 48, 30, 48), columnCount = 2, minRowHeight = 48))
+        assertEquals(listOf(90, 48, 48, 48), balancedRowHeights(listOf(90, 48, 30, 48), columnCount = 1, minRowHeight = 48))
+    }
 }

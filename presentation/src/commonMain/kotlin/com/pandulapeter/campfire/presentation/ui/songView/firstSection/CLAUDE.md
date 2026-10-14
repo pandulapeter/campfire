@@ -14,7 +14,8 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
 
 - Flows through the same rows and columns, never cut. Controls are `SongPlayingControls` (`SongPlayingControlsRow.kt`)
   in `BalancedRows`: one line, two and two, or one per line, never three over one; a moved control springs on the
-  sections' spring via its `layoutId`.
+  sections' spring via its `layoutId`. A control whose label and stepper are wider than the line together puts its label
+  above (`PlayingControl`), and only its own row grows for it; every row is at least a pill tall.
 - **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
   is exactly `songControlHeight` (the pill's `titleStyle` plus `HEADER_VERTICAL_PADDING`). Scaling a pill whole towered
   over the page. `UserPreferences.MIN_FONT_SCALE` is what keeps them big enough to hit.

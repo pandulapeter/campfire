@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -25,21 +20,19 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
-import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 /**
  * Its items in rows of equal length: all of them in one row where they fit, otherwise half of them in each of two
  * rows (an even count only), otherwise one per row — never a flow that leaves three of four controls stacked over one
  * pair, which reads as an accident rather than a layout. With two per row the items stand in columns, each as wide as
- * the widest item in it, so the second item of each row starts at the same place. Every row is as tall as the tallest
- * item, wherever it stands, so that an item with no pill (the time signature, which is only read) takes as much room
- * on a line of its own as the controls above it; items are centered vertically in their rows.
+ * the widest item in it, so the second item of each row starts at the same place. Every row is at least [minRowHeight]
+ * tall, a pill's height, so that an item with no pill (the time signature, which is only read) takes as much room on a
+ * line of its own as the controls above it; a row holding a taller item (a control whose label stands above it) grows
+ * for it alone. Items are centered vertically in their rows.
  *
  * Every item is measured once, at the whole width: a row of items that fits is drawn at their natural widths, and
  * where none does the one item per row is given the whole width anyway.
@@ -53,55 +46,23 @@ import kotlinx.coroutines.launch
 internal fun BalancedRows(
     modifier: Modifier = Modifier,
     gap: Dp,
+    minRowHeight: Dp,
     isAnimated: Boolean,
     content: @Composable () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val motion = remember(coroutineScope) { BalancedRowsMotion(coroutineScope) }
+    val motion = remember(coroutineScope) { PlacementMotion(coroutineScope) }
     Layout(
         modifier = modifier,
         content = content,
-        measurePolicy = BalancedRowsMeasurePolicy(gap = gap, motion = motion, isAnimated = isAnimated),
+        measurePolicy = BalancedRowsMeasurePolicy(gap = gap, minRowHeight = minRowHeight, motion = motion, isAnimated = isAnimated),
     )
-}
-
-/**
- * Where each item of [BalancedRows] is drawn while it travels, by the item's key. The animations are started from the
- * placement, which is the one place the new positions are known, and read there too, so a frame of the travel only
- * places the items again rather than measuring them.
- */
-private class BalancedRowsMotion(private val coroutineScope: CoroutineScope) {
-
-    private val offsets = mutableMapOf<Any, Animatable<IntOffset, *>>()
-
-    fun Placeable.PlacementScope.place(placeable: Placeable, key: Any, target: IntOffset) {
-        val offset = offsets.getOrPut(key) { Animatable(target, IntOffset.VectorConverter) }
-        if (offset.targetValue != target) {
-            coroutineScope.launch {
-                offset.animateTo(
-                    targetValue = target,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold),
-                )
-            }
-        }
-        placeable.placeRelative(offset.value)
-    }
-
-    /** Forgets every item that is no longer among [keys], so that one coming back is placed rather than sent travelling. */
-    fun retain(keys: Set<Any>) {
-        offsets.keys.retainAll(keys)
-    }
-
-    /**
-     * Forgets every item, while the rows are not animated: a change that keeps coming (a pinch, a window edge dragged) is
-     * followed frame by frame, and a travel that started before it would otherwise go on from a place the item has left.
-     */
-    fun clear() = offsets.clear()
 }
 
 private class BalancedRowsMeasurePolicy(
     private val gap: Dp,
-    private val motion: BalancedRowsMotion,
+    private val minRowHeight: Dp,
+    private val motion: PlacementMotion,
     private val isAnimated: Boolean,
 ) : MeasurePolicy {
 
@@ -111,9 +72,9 @@ private class BalancedRowsMeasurePolicy(
         val columnCount = balancedColumnCount(placeables.map { it.width }, constraints.maxWidth, gapPx)
         val columnWidths = columnWidths(placeables.map { it.width }, columnCount)
         val rows = placeables.chunked(columnCount)
-        val rowHeight = placeables.maxOfOrNull { it.height } ?: 0
+        val rowHeights = balancedRowHeights(placeables.map { it.height }, columnCount, minRowHeight.roundToPx())
         val width = (columnWidths.sum() + gapPx * (columnCount - 1)).coerceIn(constraints.minWidth, constraints.maxWidth)
-        val height = (rowHeight * rows.size + gapPx * (rows.size - 1).coerceAtLeast(0)).coerceAtLeast(constraints.minHeight)
+        val height = (rowHeights.sum() + gapPx * (rows.size - 1).coerceAtLeast(0)).coerceAtLeast(constraints.minHeight)
         // The lookahead pass of the song's sections is where they are headed, so the items are placed there at once.
         val animatedMotion = motion.takeIf { isAnimated && !isLookingAhead }
         val keys = measurables.mapIndexed { index, measurable -> measurable.layoutId ?: index }
@@ -123,7 +84,7 @@ private class BalancedRowsMeasurePolicy(
             rows.forEachIndexed { rowIndex, row ->
                 var x = 0
                 row.forEachIndexed { column, placeable ->
-                    val target = IntOffset(x, y + (rowHeight - placeable.height) / 2)
+                    val target = IntOffset(x, y + (rowHeights[rowIndex] - placeable.height) / 2)
                     if (animatedMotion == null) {
                         placeable.placeRelative(target)
                     } else with(animatedMotion) {
@@ -131,7 +92,7 @@ private class BalancedRowsMeasurePolicy(
                     }
                     x += columnWidths[column] + gapPx
                 }
-                y += rowHeight + gapPx
+                y += rowHeights[rowIndex] + gapPx
             }
         }
     }
@@ -161,9 +122,9 @@ private class BalancedRowsMeasurePolicy(
         val gapPx = gap.roundToPx()
         val widths = measurables.map { it.maxIntrinsicWidth(Constraints.Infinity) }
         val columnCount = balancedColumnCount(widths, width, gapPx)
-        val rowCount = (measurables.size + columnCount - 1) / columnCount
-        val rowHeight = measurables.indices.maxOf { index -> heightOf(measurables[index], minOf(widths[index], width)) }
-        return rowHeight * rowCount + gapPx * (rowCount - 1)
+        val heights = measurables.indices.map { index -> heightOf(measurables[index], minOf(widths[index], width)) }
+        val rowHeights = balancedRowHeights(heights, columnCount, minRowHeight.roundToPx())
+        return rowHeights.sum() + gapPx * (rowHeights.size - 1)
     }
 }
 
@@ -184,3 +145,7 @@ internal fun balancedColumnCount(widths: List<Int>, maxWidth: Int, gap: Int): In
 private fun columnWidths(widths: List<Int>, columnCount: Int) = List(columnCount) { column ->
     widths.indices.filter { it % columnCount == column }.maxOfOrNull { widths[it] } ?: 0
 }
+
+/** The height of each row when items [heights] tall are laid out [columnCount] to a row: its tallest, or [minRowHeight]. */
+internal fun balancedRowHeights(heights: List<Int>, columnCount: Int, minRowHeight: Int) =
+    heights.chunked(columnCount).map { row -> maxOf(row.max(), minRowHeight) }

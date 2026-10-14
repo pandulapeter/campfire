@@ -157,6 +157,7 @@ private fun SongPlayingMetadata(
         BalancedRows(
             modifier = modifier.padding(horizontal = 12.dp),
             gap = PLAYING_VALUES_GROUP_GAP,
+            minRowHeight = toolHeight,
             isAnimated = isAnimated,
         ) {
             listOf(

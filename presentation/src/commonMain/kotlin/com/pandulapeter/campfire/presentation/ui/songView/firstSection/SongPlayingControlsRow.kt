@@ -10,14 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.TextStyle
@@ -81,6 +77,7 @@ internal fun SongPlayingControlsRow(
     BalancedRows(
         modifier = modifier.padding(horizontal = 12.dp),
         gap = PLAYING_CONTROL_GAP,
+        minRowHeight = height,
         isAnimated = isAnimated,
     ) {
         controls.key?.let { key ->
@@ -88,6 +85,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.KEY),
                 label = stringResource(Res.string.song_details_transposition),
                 fontScale = fontScale,
+                isAnimated = isAnimated,
                 trailing = { if (controls.capo == null) toolButtons(PlayingToolPlace.AFTER_CHORD_VALUES, groupEnd) },
             ) {
                 TranspositionControls(
@@ -106,6 +104,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.CAPO),
                 label = stringResource(Res.string.song_editor_insert_capo),
                 fontScale = fontScale,
+                isAnimated = isAnimated,
                 trailing = { toolButtons(PlayingToolPlace.AFTER_CHORD_VALUES, groupEnd) },
             ) {
                 CapoControls(
@@ -122,6 +121,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.TEMPO),
                 label = stringResource(Res.string.song_editor_insert_tempo),
                 fontScale = fontScale,
+                isAnimated = isAnimated,
                 trailing = { if (controls.timeSignature == null) toolButtons(PlayingToolPlace.AFTER_CLICK_VALUES, groupEnd) },
             ) {
                 TempoStepper(
@@ -143,6 +143,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.TIME),
                 label = stringResource(Res.string.song_editor_insert_time),
                 fontScale = fontScale,
+                isAnimated = isAnimated,
                 trailing = { toolButtons(PlayingToolPlace.AFTER_CLICK_VALUES, groupEnd) },
             ) {
                 Text(
@@ -160,33 +161,7 @@ internal fun SongPlayingControlsRow(
 private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME, TOOLS }
 
 /**
- * One of [SongPlayingControlsRow]'s items: what it is and what sets it, and the tool buttons that end its group where
- * it is the last of it ([trailing]). The label is in the content color, since the controls themselves already set the
- * row apart.
- */
-@Composable
-private fun PlayingControl(
-    modifier: Modifier = Modifier,
-    label: String,
-    fontScale: Float,
-    trailing: @Composable () -> Unit,
-    control: @Composable RowScope.() -> Unit,
-) = Row(
-    modifier = modifier,
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(
-        modifier = Modifier.padding(end = PLAYING_CONTROL_LABEL_GAP),
-        text = label,
-        style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-    )
-    control()
-    trailing()
-}
-
-/**
  * Between two of the playing controls, and between the rows they wrap into: the gap the card's chips keep. It does not
  * grow with the song's text, any more than the gaps between its sections do.
  */
 private val PLAYING_CONTROL_GAP = 8.dp
-private val PLAYING_CONTROL_LABEL_GAP = 8.dp
