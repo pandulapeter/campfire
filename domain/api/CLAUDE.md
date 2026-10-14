@@ -30,10 +30,9 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
   byte elsewhere, since the result is the user's own file. Languages take the whole set (one rewrite per picker
   close); codes are normalized by `:chordpro` (`en-US`, `EN`, `eng` → `en`). Tag matching ignores case.
 - Transposition takes `UserPreferences.Accidentals`: spelling is the reader's preference, not part of the move.
-- Notation: files are only ever in `Notation.STANDARD`. `ConvertChordProNotationUseCase` is the last rendering step;
-  the text variant is the editor's two boundaries (show in the reader's notation, write back standard).
-  `ParseChordProUseCase` takes the notation its text is in. Numberings (Nashville, Roman) are display-only, never
-  typed or parsed, hence the editor uses `Notation.forTyping`.
+- Notation: `ConvertChordProNotationUseCase` is the last rendering step, its text variant the editor's two boundaries;
+  `ParseChordProUseCase` takes the notation its text is in; the editor types in `Notation.forTyping` (rule:
+  `chordpro/CLAUDE.md`).
 - `IsFirstRunUseCase` (has Campfire ever written its preferences) exists for the demo library and must be read once at
   start, before anything is saved.
 - Network: only sync, `GetCoverArtUseCase` / `SearchCoverArtUseCase`, the song details lookup, and

@@ -224,11 +224,10 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 - `ui/tabs/`: `tabPlayerOf` builds `:chordpro`'s `TabPlayer`, `TabReading` adds notice text, `SongRenderer.transposedSong`
   applies both (see `chordpro/CLAUDE.md`'s `ChordProTabs`).
 - Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
-  guitar's. Every tab is moved to the player's strings so it sounds what its string names say; every staff is named.
+  guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/CLAUDE.md`'s.
 - Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its
-  string names are another instrument's open strings (`A E C G` → ukulele). A staff naming none is standard tuning.
-- Only judgment calls get an italic notice (octave move, other instrument, unmovable). Keyboard and violin hide tabs with
-  a line saying so; Other shows them as written. **No switch** for any of it.
+  string names are another instrument's open strings (`A E C G` → ukulele).
+- Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
 - Details screen and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
   button writes an empty staff for the player's strings (guitar's for a fretless instrument), stored in standard
   notation on Save.

@@ -243,7 +243,7 @@ inside a delegated environment.
   fretted, never moved with a shape. Every banjo tuning has its own table.
 - `ChordProDefinitions`: `read` parses a definition (frets, base fret, fingers, keys); frets stay within 24 and keys
   wrap past four octaves so no file can make a diagram draw without end. The instrument is the selector's, else by
-  string count (four frets a ukulele, a mandolin only with `{define-mandolin}`). A value given twice is `Invalid`;
+  string count (four frets a ukulele, five a banjo, a mandolin only with `{define-mandolin}`). A value given twice is `Invalid`;
   `copy` or an unknown string count is `Other`. Last `{define}` per chord and instrument wins, in the first one's place.
   `transposed` moves a shape along the neck (open strings up an octave; fingering dropped where it can't follow);
   `movedBy` adds up, so there and back is zero. `sounding` mutes a banjo drone outside the chord, so reader and editor

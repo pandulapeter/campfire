@@ -41,15 +41,13 @@ chords, even an instrument without shapes, so the diagrams can be brought back
 
 Definitions:
 
-- One for another instrument is neither used nor translated (a guitar shape is another chord on a ukulele). Four frets
-  with no selector are the ukulele's, so mandolin definitions name it (`{define-mandolin}`); five frets are the
-  banjo's, its short fifth string only ever open or muted, drawn muted where written open but not a chord tone
-  (`ChordProDefinitions.sounding`, which every definition is drawn through).
+- One for another instrument is neither used nor translated (a guitar shape is another chord on a ukulele); which
+  instrument a definition is for, and how a banjo's is drawn, is `ChordProDefinitions`' (see `chordpro/CLAUDE.md`).
 - A definition follows its chord through every transposition (the reader's, the file's `{transpose}`, the editor's
   transpose action) in whichever octave a hand can hold; one left needing a fifth finger gives way to the player's
   shape.
 - **A definition is a standard tuning shape**: ChordPro gives `{define}` no tuning, so it is drawn only where a standard
-  shape sounds right (`ChordTuning.drawsDefinitions`: standard and ukulele low G), else kept as
+  shape sounds right (`ChordTuning.drawsDefinitions`), else kept as
   `SongChord.undrawnDefinition` and offered behind a button in the chord's sheet. The editor's Chord shape button
   always writes the standard-tuning shape (player's choice under the instrument key, else the app's first), with a
   snackbar where the diagrams are in a tuning that doesn't draw definitions
