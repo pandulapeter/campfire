@@ -58,16 +58,19 @@ internal class GoldenRendersTest {
             isUpdating = System.getProperty("campfire.screenshots.updateGoldens").toBoolean(),
         )
         val failures = mutableListOf<String>()
+        // A case that cannot be driven fails on its own, so that the rest are still drawn and build/goldens holds them all.
         cases.forEach { case ->
-            runAppTest(
-                window = case.window,
-                setlists = case.setlists,
-                appearance = case.appearance,
-                isCoverArtEnabled = case.isCoverArtEnabled,
-            ) {
-                case.drive(this)
-                goldens.check(case.name, settledWindow())?.let(failures::add)
-            }
+            runCatching {
+                runAppTest(
+                    window = case.window,
+                    setlists = case.setlists,
+                    appearance = case.appearance,
+                    isCoverArtEnabled = case.isCoverArtEnabled,
+                ) {
+                    case.drive(this)
+                    goldens.check(case.name, settledWindow())?.let(failures::add)
+                }
+            }.onFailure { failures += "${case.name} could not be drawn: $it" }
         }
         if (!goldens.wereCompared) println("The golden renders were drawn but not compared, which only happens on Linux.")
         if (failures.isNotEmpty()) fail(failures.joinToString(separator = "\n", postfix = "\nThe new images are in build/goldens."))
