@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 class OnboardingEmbersTest {
 
-    private val embers = onboardingEmbers(random = Random(42), count = 200, colorCount = 3)
+    private val embers = onboardingEmbers(random = Random(42), count = 200, colorCount = 2)
 
     @Test
     fun `every ember has burnt out when the celebration ends`() {
