@@ -93,14 +93,8 @@ object LibraryFiles {
     fun isSetlistFileName(name: String) = !isHiddenFileName(name) && name.endsWith(SETLIST_EXTENSION, ignoreCase = true)
 
     /**
-     * What stands between the artist and the title in a song's file name: the one piece of a library name that is
-     * structure rather than the user's own text, which is why naming a new song and naming an exported one both have
-     * to know about it.
-     */
-    const val ARTIST_TITLE_SEPARATOR = " - "
-
-    /**
-     * The same piece of structure inside a normalized name, which has no spaces around it to hold it apart from the
+     * What stands between the artist and the title in a song's normalized file name, the one piece of a library name
+     * that is structure rather than the user's own text, which has no spaces around it to hold it apart from the
      * words: `tukorfurogep-arviz`. Each half is normalized on its own and the dash is put back between them, so the
      * name still says where the artist ends instead of reading as one run of underscored words.
      */

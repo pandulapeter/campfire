@@ -23,8 +23,6 @@ repository.
 - `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
   library, asked by the scan, the local sync listing, and the remote listing: right extension and not hidden
   (`._song.cho` is macOS's AppleDouble companion).
-- `ARTIST_TITLE_SEPARATOR` lives here because `" - "` in a file name is structure, read by both new-song and export
-  naming.
 - `normalizedName` (rules in the root CLAUDE.md) **must stay idempotent**: an exported name is normalized again on its
   way back in. NFC comes first, before folding and lowercasing (it is what composes non-Latin marks). Letters outside
   the BMP are kept as surrogate pairs and never cut; symbols, emoji, and planes 14–16 become separators. A Latin letter
