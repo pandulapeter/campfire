@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.domain.api.models.ScreenData

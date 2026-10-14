@@ -7,8 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.state
+package com.pandulapeter.campfire.presentation.ui.state.songs
 
+import com.pandulapeter.campfire.presentation.ui.state.FakeSongFiles
+import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongFileRename
