@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.list
 
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
-import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown

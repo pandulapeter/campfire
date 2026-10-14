@@ -17,7 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.only

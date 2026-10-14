@@ -19,7 +19,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_archive
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionHandler

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.list
 
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout

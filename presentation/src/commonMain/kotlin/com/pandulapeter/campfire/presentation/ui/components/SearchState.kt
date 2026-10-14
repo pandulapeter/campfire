@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue

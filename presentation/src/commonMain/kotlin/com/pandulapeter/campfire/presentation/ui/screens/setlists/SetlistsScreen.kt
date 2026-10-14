@@ -32,18 +32,18 @@ import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
-import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
-import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
+import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
-import com.pandulapeter.campfire.presentation.ui.components.underAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.flow.collectLatest
 

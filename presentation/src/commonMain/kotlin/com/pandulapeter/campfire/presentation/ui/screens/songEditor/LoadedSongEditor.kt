@@ -63,7 +63,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut

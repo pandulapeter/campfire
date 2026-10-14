@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.list
 
-import com.pandulapeter.campfire.presentation.ui.components.CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET
+import com.pandulapeter.campfire.presentation.ui.components.appBar.CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import androidx.compose.animation.AnimatedVisibility

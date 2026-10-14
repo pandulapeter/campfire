@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination

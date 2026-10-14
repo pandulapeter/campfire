@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.print_share
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import org.jetbrains.compose.resources.painterResource
 
 /** Close, the title and what is exported under it, and Share where the platform has one. */

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.list
 
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING

@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
-import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
 import kotlin.math.roundToInt
 
 /**

@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.FAST_SCROLLER_WIDTH
@@ -64,7 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhen
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
-import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.list.listTopFadeViewport

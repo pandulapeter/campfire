@@ -50,7 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
-import com.pandulapeter.campfire.presentation.ui.components.TruncateSearchQuery
+import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
 import org.jetbrains.compose.resources.painterResource
 
 /**

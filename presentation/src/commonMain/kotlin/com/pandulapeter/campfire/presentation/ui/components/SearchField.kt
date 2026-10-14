@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions

@@ -7,8 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.appBar
 
+import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
+import com.pandulapeter.campfire.presentation.ui.components.SearchField
+import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Transition
