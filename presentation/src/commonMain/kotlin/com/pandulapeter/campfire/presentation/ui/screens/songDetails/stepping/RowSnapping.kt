@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping
 
 import com.pandulapeter.campfire.presentation.ui.songView.SongRows
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 
@@ -201,9 +202,12 @@ internal fun previousStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int
 private fun previousStepTargetOnce(scroll: Int, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Int? {
     if (rows.stepOffsets.isEmpty()) return null
     val previous = previousStepOffset(scroll, rows.stepOffsets, maxValue) ?: return null
-    // Everything between the two is in view from the stop before.
-    if (scroll - previous <= window.visibleHeight(viewportHeight)) return previous
     val pageHeight = window.pageHeight(viewportHeight)
+    // Everything between the two is in view from the stop before. Resting on a stop, the top edge fades nothing of the
+    // song, but inside one it fades part of it, and a line it cuts across is read whole only from a view that reaches
+    // past it by as much as a page does: the stop before is stepped to straight away only from as close as a page.
+    val isOnStop = rows.stepOffsets.any { abs(it.coerceIn(0, maxValue) - scroll) <= POSITION_TOLERANCE }
+    if (scroll - previous <= if (isOnStop) window.visibleHeight(viewportHeight) else pageHeight) return previous
     // A page back begins with a whole line as well: the one nearest to a page above, but never further than that.
     var lineStart: Int? = null
     for (top in rows.lineTops) {

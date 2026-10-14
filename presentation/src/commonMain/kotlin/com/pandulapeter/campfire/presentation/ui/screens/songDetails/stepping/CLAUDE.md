@@ -21,10 +21,10 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
 - **Step buttons** (`StepButtons`, one pair over the pager): stops are rows or pages, or sections in an unpaged single
   column, each stop `EDGE_FADE_SIZE` above its section.
 - Inside a stop taller than the screen a step pages (`nextStepTarget`, `previousStepTarget`, `ReadingWindow`): the
-  screen less the top fade, the bars, and two lines (at most a third), adjusted to start at a line (`lineTops`); it
-  moves on only once the stop's end is in view.
-- A press moves at least a line where that skips nothing (near-equal clamped stops are chained); the last press hands
-  off only once the whole song is on screen.
+  screen less the top fade, the bars, and two lines (at most a third), starting at a line (`lineTops`); it moves on
+  only once the stop's end is in view. Back from mid-stop, where the fade covers song, it moves at most a page.
+- A press moves at least a line where that skips nothing; the last press hands off only once the whole song is on
+  screen.
 - **A press mid-step steps on from its target**: two quick presses are two steps.
 - Previous leaves only at the very top; next only once the end has been on screen; a song that fits has neither. In a
   setlist they go on to the next song's top and the previous song's end (that page's scroll is set to its end
@@ -40,7 +40,7 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
 - **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere.
 - Focus: the buttons take none, and the screen retakes it when lost to nothing while uncovered (`isUncovered`), or
   Compose spends the next arrow on a focus search, which scrolls. While something is over it the step keys are
-  swallowed: the export screen shares the window and takes focus itself (`focusTarget()` on its root).
+  swallowed; the export screen takes focus itself.
 - **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain pages.
   A held arrow still scrolls where there are no buttons.
 

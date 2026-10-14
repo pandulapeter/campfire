@@ -265,6 +265,18 @@ class RowSnappingTest {
     }
 
     @Test
+    fun `stepping back from inside a tall row keeps a page's overlap, so a line across the faded edge is read whole`() {
+        // The end of a row whose content runs 1900 below its top is read from 2200, where the top edge fades 2200 to 2224.
+        // From the row's top only down to 2300 is in view, so a line across 2224 would be whole at neither.
+        val rows = rowsWithATallOne.copy(bottoms = listOf(1100, 3200, 3700))
+        val fadedWindow = ReadingWindow(top = 24, overlap = 100)
+        assertEquals(1324, previousStepTarget(scroll = 2200, rows = rows, viewportHeight = 1000, window = fadedWindow, maxValue = 3300))
+        assertEquals(1300, previousStepTarget(scroll = 1324, rows = rows, viewportHeight = 1000, window = fadedWindow, maxValue = 3300))
+        // Resting on a row, the edge fades nothing of the song, and the row before is stepped to whole from as far as can be read.
+        assertEquals(300, previousStepTarget(scroll = 1300, rows = rows, viewportHeight = 1000, window = fadedWindow, maxValue = 3300))
+    }
+
+    @Test
     fun `a tall last row is paged through to the end of the song before the button goes on`() {
         val rows = rowsWithATallOne.copy(bottoms = listOf(1100, 3000, 5000))
         assertEquals(4000, next(scroll = 3300, rows = rows, maxValue = 4000))
