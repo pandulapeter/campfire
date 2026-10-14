@@ -277,6 +277,9 @@ internal class ExportController(
                     else -> Message.SongExported
                 },
                 isShare = isShare,
+                // Building a setlist's archive reads every song it names, which can outlast a Back on a slow disk; a file
+                // finished for a screen that has gone would bring its picker up over whatever is on screen by then.
+                isWanted = { dialogHost.visibleDialog.value == dialog },
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
                 when {
@@ -325,17 +328,21 @@ internal class ExportController(
      * read once the file has been made): each of those already says the file was saved, and a confirmation queued
      * after them would only hold up the one line that matters. A share is not confirmed at all, since the platform's
      * own sheet is what the user sees it go out through, and it cannot tell a share that happened from one dismissed.
+     *
+     * A file [isWanted] no longer asks for once it is made is dropped without a word: whoever asked for it has gone.
      */
     private suspend fun save(
         filePicker: FilePicker,
         savedMessage: Message,
         isShare: Boolean = false,
+        isWanted: () -> Boolean = { true },
         warnings: () -> List<Message> = { emptyList() },
         onSaved: () -> Unit = {},
         export: suspend () -> ExportedFile?,
     ) = try {
         val file = export()
         when {
+            !isWanted() -> Unit
             file == null -> messageSink.sendMessage(Message.ExportFailed)
             isShare -> filePicker.shareFile(file)
             filePicker.saveFile(file) -> {
