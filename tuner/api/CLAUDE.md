@@ -26,4 +26,3 @@ domain type leaks in and the engine reads no settings of its own. Explicit API m
 - `InstrumentTuning` presets list strings as MIDI notes in written order (`gCEA`). **Their `id`s are stored settings,
   and `:chordpro`'s `ChordTuning` and `:data:model`'s `Instrument` reuse them** (`chromatic` for none). Screen grouping
   is `:presentation`'s.
-- Tests: `desktopTest` (`PitchTest`, `InstrumentTuningTest`).

@@ -41,8 +41,8 @@ Only `:app:di` sees this module. Nothing reaches the network; nothing heard is k
   only after a new one holds for three answers; an answer an octave off the target is ignored while the sound is more
   than 6 dB under its strike (dying strings read at double period); the reading is held 0.5 s after falling under twice
   the noise floor (tracked from pitchless windows); in tune at ±5 cents for 300 ms; `SILENT` after 2 s under −86 dBFS
-  (`SILENT_LEVEL`: zeros, or the dither Windows' audio enhancements gate a note down to). A clean interface in a quiet
-  room can idle under it too, so outside Windows that notice is worded as a hint, not a fault.
+  (`SILENT_LEVEL`; why that is ambiguous is `:tuner:api`'s), so outside Windows that notice is worded as a hint, not a
+  fault.
 - `ToneSynthesizer`: a loop of whole periods (frequency adjusted ≤ 0.02 cents) with three harmonics, since phone
   speakers cannot play a low string's fundamental.
 - `SampleRing`: lock-free single writer/reader; the writer publishes its count after the samples.

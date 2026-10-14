@@ -22,20 +22,17 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
   `listForScan` / `readScan` (size and date read with the text, oversized files reported and never read).
 - **Directories**: `library/songs`, `library/setlists`, `preferences`, `covers`. Android's backup rules in `:app:android`
   name `library/` and `preferences/preferences.json` by path: moving a directory or renaming the file means changing
-  those XML files. iOS backs up whole directories (library in Documents, visible to Files; preferences and covers in
-  Application Support), so `SyncIndexLocalSourceImpl` (index, forget-pending note), `EditorDraftLocalSourceImpl`, and
-  `CoverArtLocalSourceImpl` call `keepOutOfDeviceBackup` after **every** write: the exclusion is a file attribute and
+  those XML files. iOS backs up whole directories, so `SyncIndexLocalSourceImpl` (index, forget-pending note),
+  `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl` call `keepOutOfDeviceBackup` after **every** write: the exclusion is a file attribute and
   the atomic write replaces the file.
 - **Text**: written as UTF-8, read through `:data:model`'s `decodeLibraryText` (UTF-8, else Windows-1250/1252, BOM
   stripped); a fallback-read file is written back as UTF-8. The web decodes valid NUL-free UTF-8 with `TextDecoder`, else
   `decodeLibraryText`; bytes cross the Wasm boundary as a one-char-per-byte string (typed array copies are per byte).
 - **Atomic writes** on JVM (own `.campfire-<n>.tmp` per write, named without the target so a name at the length limit
   still saves; flushed, then moved) and iOS (`atomically`). OPFS:
-  - Without `createWritable()` (Safari < 26, all iOS 18 browsers) writes go to `app/web`'s `opfs-writer.js` worker
-    (`createSyncAccessHandle()`), one per page, replies matched by id; a failed worker fails its waiting writes and the
-    next write starts another. It writes in place, so it keeps the old content, restores it on failure, and journals
-    every write so a terminated worker leaves the file whole (old or new); it creates a new file only after its commit
-    marker.
+  - Without `createWritable()` (Safari < 26, all iOS 18 browsers) writes go to `app/web`'s journaled `opfs-writer.js`
+    worker (`createSyncAccessHandle()`, see `app/web`); a failed worker fails its waiting writes and the next write
+    starts another.
   - With `createWritable()`, a new file is created behind an empty `<name>.campfire-new` marker, removed on close, used
     by recovery to delete an empty leftover (omitted for names within 12 bytes of Safari's 255-byte limit).
   - The journal is replayed per directory before its handle is first handed out and after a failed write.
@@ -140,9 +137,8 @@ them. None is registered as an Open with type.
 ## A song is named by its header
 
 A song is named by its own `{artist}`, `{title}`, and `{subtitle}` (the subtitle joins the title half), whether written
-in the editor, imported (`importFileName`), or exported (`ExportFileNames.kt`). The arriving file name only stands in
-as the title when the song has no `{title}`. **A file name is reproducible from its header alone**;
-`Song.canUpdateFileName` notices where that stopped being true. Inside an exported archive entries keep their library
-names, since setlists point at songs by file name.
+in the editor, imported (`importFileName`, see `:data:source:local:api`), or exported (`ExportFileNames.kt`). **A file
+name is reproducible from its header alone**; `Song.canUpdateFileName` notices where that stopped being true. Inside an
+exported archive entries keep their library names, since setlists point at songs by file name.
 
 Tests: `./gradlew :data:source:local:implementation:desktopTest`.
