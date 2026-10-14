@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_collapse
@@ -47,3 +48,6 @@ internal fun FoldChevron(
     ),
     tint = tint,
 )
+
+internal val FOLD_CHEVRON_SIZE = 20.dp
+internal val FOLD_CHEVRON_GAP = 4.dp
