@@ -11,8 +11,8 @@
 # :presentation — ui/screens/songDetails
 
 The song details screen. The song itself is drawn and laid out by `ui/songView/`; the pedal stepping is in
-`stepping/`. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in `ui/chords/`;
-the click in `ui/metronome/`.
+`stepping/`. What the first section holds is in `ui/songView/firstSection/`, read only mode in `ui/CLAUDE.md`; chord
+diagrams in `ui/chords/`; the click in `ui/metronome/`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.
@@ -69,6 +69,5 @@ on the desktop.
 
 - `MetronomeButton` shows and hides the panel (`toggleMetronomePanel`): opening starts nothing, closing stops a playing
   click. M toggles the click from anywhere on the song, opening the panel with it.
-- The pendulum (`MetronomeIcon`) is described in `ui/metronome/CLAUDE.md`.
 - `TempoStepper` is highlighted while overridden and reset by a tap on its value; Tap sits in its `trailing` slot, since
   it sets the number the stepper steps.

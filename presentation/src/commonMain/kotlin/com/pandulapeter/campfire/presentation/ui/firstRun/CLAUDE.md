@@ -15,8 +15,9 @@
 ### The app is shipped with two songs and one setlist
 
 - Public domain songs in `composeResources/files/demo`, read back as `ImportedFile`s (`DemoLibrary.kt`) and planted
-  through the ordinary `importFiles`, so nothing here writes a file and collisions behave like any import. The songs use
-  between them the directives the details screen draws, and each carries a `Demo` tag so it can be filtered out.
+  through the ordinary import (`ImportController`), so nothing here writes a file and collisions behave like any import.
+  The songs use between them the directives the details screen draws, and each carries a `Demo` tag so it can be
+  filtered out.
 - Each file is named exactly as the library would name it, so `isPresentIn` answers from the library's own file names,
   not from anything remembered: Settings offers to add them back while any is missing (adding only what is missing),
   and the empty library state offers it as its last button with no condition of its own.

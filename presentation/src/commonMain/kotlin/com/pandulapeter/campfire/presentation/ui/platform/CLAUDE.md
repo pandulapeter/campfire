@@ -36,9 +36,9 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 ### `LibraryPersistence.kt`
 
-- `requestLibraryPersistence()` is asked once, by `CampfireViewModel` at creation (asked by the settings screen, its
-  row popped in mid transition). On the web it is `navigator.storage.persist()`, which stops eviction of the only copy
-  of the library; ask exactly once, since some browsers prompt the user.
+- `requestLibraryPersistence()` is asked once, by `PreferencesController` when the view model is created (asked by the
+  settings screen, its row popped in mid transition). On the web it is `navigator.storage.persist()`, which stops
+  eviction of the only copy of the library; ask exactly once, since some browsers prompt the user.
 - `isAppAvailableOffline()` reads `window.campfireSavedForOffline` from `index.html` (see `app/web`).
 
 ### `BackgroundSync.kt`
@@ -86,6 +86,3 @@ The `expect` declarations and the interfaces the platform shells provide.
   or desktop browsers, which define it with nothing to vibrate); null on desktop. Driven on `beatHapticsDispatcher`
   (off the main thread on Android, so composition does not delay a beat) while resumed, and on Android while composed at
   all (`areBeatHapticsFeltInBackground`: the foreground service lets it vibrate).
-- A click that cannot sound (`MetronomePattern.canSound`: volume zero or every beat muted) is stopped 3 s after the app
-  leaves sight (`MetronomeController.onAppStopped`; the grace covers an Android activity recreation), with a snackbar on
-  return — except on Android while it is still felt (Vibrate on, a beat not muted).

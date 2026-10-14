@@ -102,12 +102,13 @@ numbers nothing to count from.
 ## Unsaved text and the draft
 
 - The screen reports the text as typed (`onEditorTextChanged`) without saving; `hasUnsavedEditorChanges` is measured
-  from it. A field nobody typed in follows its file (see `ui/CLAUDE.md`), so only the user's own text is ever unsaved.
+  from it. A field nobody typed in follows its file (see `ui/state/songText/CLAUDE.md`), so only the user's own text is
+  ever unsaved.
 - Every way out goes through `Navigator.navigateBack`, which asks `UnsavedChanges` (save / discard / cancel).
   The draft lives in the view model because that dialog saves it.
 - **The dialog's Save leaves only after the write succeeded** (`saveEditorChangesAndLeave`): until then the editor
   holds the only copy, so a failed write keeps the editor (and a closing desktop window) open with `SaveFailed`.
 - A draft reopened on launch is unsaved like any other (update gate, way out, web `beforeunload`). An editor composed
-  in a restored process waits for draft recovery (`awaitEditorDraftRecovery`) so a long document gets its text from the
-  draft, not the file.
+  in a restored process waits for draft recovery (`EditorSession.editorDraftRecovery`) so a long document gets its text
+  from the draft, not the file.
 - A failed first read shows the details screen's failed state (Retry, Close).
