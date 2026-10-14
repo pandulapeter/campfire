@@ -286,12 +286,14 @@ internal fun SetlistList(
                     }
                     val setlistRows = rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist)
                     val rows = setlistRows.rows
-                    val songFileNames = setlistRows.songFileNames
                     itemsIndexed(
                         items = rows,
                         key = { _, row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
                         contentType = { _, _ -> "song" },
                     ) { rowIndex, row ->
+                        // Built here, in the item's composition, rather than in the builder above, which runs again on
+                        // every move: there it would be a new lambda each time and keep every row from skipping the move.
+                        val songFileNames = { rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist).songFileNames }
                         SetlistSongRow(
                             viewModel = viewModel,
                             songActions = songActions,

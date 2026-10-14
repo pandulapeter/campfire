@@ -64,7 +64,8 @@ import sh.calvin.reorderable.ReorderableItem
  * [reorder] while the setlist is in its reorder mode.
  *
  * @param isLastRow Whether the row is the last of its setlist, which leaves it no step down.
- * @param songFileNames The setlist's songs in the order the rows are drawn in, which a step up or down moves this one in.
+ * @param songFileNames The setlist's songs in the order the rows are drawn in, which a step up or down moves this one in;
+ * read only when a step is taken, so that a move of another row, which changes the order, is not a new parameter here.
  */
 @Composable
 internal fun LazyGridItemScope.SetlistSongRow(
@@ -74,7 +75,7 @@ internal fun LazyGridItemScope.SetlistSongRow(
     row: SetlistRow,
     rowIndex: Int,
     isLastRow: Boolean,
-    songFileNames: List<String>,
+    songFileNames: () -> List<String>,
     columnCount: Int,
     listState: LazyGridState,
     hasLoadedLibrary: Boolean,
@@ -117,10 +118,10 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
     // no step that way.
     val onMoveUp: (() -> Unit)? = if (canMove && rowIndex > 0) {
-        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = -1)) }
+        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = -1)) }
     } else null
     val onMoveDown: (() -> Unit)? = if (canMove && !isLastRow) {
-        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = 1)) }
+        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = 1)) }
     } else null
     val moveActions = moveActionsSemantics(onMoveUp = onMoveUp, onMoveDown = onMoveDown)
     val onDragStarted: (Offset) -> Unit = { reorder.onDragStarted(setlistWithSongs.setlist.fileName) }
@@ -178,7 +179,7 @@ internal fun LazyGridItemScope.SetlistSongRow(
             animateItemModifier = listItemAnimation(
                 listState = listState,
                 isEnabled = hasLoadedLibrary,
-                isRearranging = reorder.draggedSetlist != null,
+                isRearranging = reorder.isRearranging,
             ),
         ) { isBeingDragged -> rowContent(this, isBeingDragged, Modifier) }
     } else {
