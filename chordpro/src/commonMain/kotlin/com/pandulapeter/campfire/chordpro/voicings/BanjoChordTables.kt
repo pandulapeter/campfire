@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro.chords
+package com.pandulapeter.campfire.chordpro.voicings
 
 /**
  * The five-string banjo's shapes, one table per tuning, typed for them: none of the chord libraries Campfire takes shapes

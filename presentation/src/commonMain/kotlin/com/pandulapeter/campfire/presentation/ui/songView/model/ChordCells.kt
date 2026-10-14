@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences

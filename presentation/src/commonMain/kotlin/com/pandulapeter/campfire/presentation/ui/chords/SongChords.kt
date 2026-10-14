@@ -12,9 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
+import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProSong

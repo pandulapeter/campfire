@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.chordpro.syntax
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabRetuner
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer

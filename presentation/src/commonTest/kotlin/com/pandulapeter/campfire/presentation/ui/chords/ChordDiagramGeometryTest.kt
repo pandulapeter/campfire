@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.chords
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
+import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing

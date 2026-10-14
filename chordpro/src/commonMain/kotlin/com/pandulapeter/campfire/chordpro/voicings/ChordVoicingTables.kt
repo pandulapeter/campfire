@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro.chords
+package com.pandulapeter.campfire.chordpro.voicings
 
 /**
  * The shapes of every tuning that has a table of its own, in the syntax of a `{define}`'s value. Within a chord they are

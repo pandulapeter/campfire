@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro.chords
+package com.pandulapeter.campfire.chordpro.voicings
 
 /**
  * The guitar's shapes in standard tuning: the ones Campfire was first shipped with, then chords-db's and ChordPro's.

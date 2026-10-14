@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro.chords
+package com.pandulapeter.campfire.chordpro.voicings
 
 /**
  * The ukulele's shapes in standard tuning (G C E A, the fourth string re-entrant): the ones Campfire was first shipped

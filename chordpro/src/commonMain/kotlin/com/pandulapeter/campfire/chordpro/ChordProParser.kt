@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
