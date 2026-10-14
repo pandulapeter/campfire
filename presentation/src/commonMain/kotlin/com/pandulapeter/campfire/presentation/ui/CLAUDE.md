@@ -160,7 +160,6 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 - `{meta: language en}` per language, read into `Song.languages` as lowercase ISO codes, 639-2 folded to 639-1 where one
   exists (`eng` → `en`, `rom` kept). Its filter group appears only once the library holds more than one language, with
   "Unknown" for songs declaring none.
-- **Names are never shipped**: the platform names each code (`languageDisplayName`), falling back to the code in caps.
 
 ### The cover of a song is carried the same way too
 
@@ -171,12 +170,6 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 
 - `{meta: link https://… Optional name}` per link, into `ChordProMetadata.links`; nothing is ever fetched from them. Shown
   in their saved order (tags and languages are always alphabetical), edited with order in Manage links, written on Save.
-- **The About the song sheet** (opened only by tapping the song details title while the song is at its top) is the one
-  place a song's description is edited: each group is a tile opening its own sheet; the cover opens the cover search.
-  Key, capo, tempo, and time stay on the page (see below); the sheet only reads what the file declares and opens Song
-  defaults. No menu lists the sheet's editors one by one; Edit song file is the details menu's first own entry.
-- The editor's preview shows the same tiles as a card (each opening its editor directly); over the editor the tiles
-  change the typed text, which only Save writes.
 
 ## How a song is played
 
@@ -188,13 +181,9 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 - Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
   signature is written into the file** (`{time}`), and the click counts by it.
 - **Song defaults sheet** (from About the song's Song defaults tile only) edits the file's four values; empty means the
-  default. It never names a device, since library overrides are synced. A new song's template carries `{key}`,
+  default. A new song's template carries `{key}`,
   `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`.
-- **Read only** (performance mode, archived setlist) shows the four as one line that always names capo, tempo, and time
-  (defaults where absent), since an absent value would read as unknown. The editor's preview names a capo only where the
-  text writes one.
 - Chords off removes key and capo; metronome off removes tempo and time — everywhere but the editor's preview.
-- **The app bar names the key the band hears**: transposition *and* capo applied, unlike the Transposition control.
 - Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the metronome
   switch (`CardDetails.isTempoShown`) without writing anything.
 
@@ -253,8 +242,8 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 ### Features are switched on and off as a whole
 
 - Settings → Features. Every switch is a `UserPreferences` field, never exported or synced, and **only hides**: nothing
-  is written or deleted. Order:
-  - **Read only** (`isPerformanceModeEnabled`), first because it decides what the rest may do.
+  is written or deleted. What each takes:
+  - **Read only** (`isPerformanceModeEnabled`): see Performance mode.
   - **Chords** (`areChordsEnabled`, stored inverted as `isLyricsOnlyModeEnabled`): takes chords, key, transposition, and
     capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
@@ -264,7 +253,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
   - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
   - **Setlists**: takes their tab and every way into one; setlist files still travel through import, export, and sync.
   - **Online song details** (`isSongDetailsLookupEnabled`): takes the lookup button.
-  - **Cover art** (`isCoverArtEnabled`), last since it decides whether the app reaches the network on its own.
+  - **Cover art** (`isCoverArtEnabled`): cover fetching, drawing, and search.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
   neither named nor reset.
 - A disabled tab leaves the chrome (`topLevelDestinations`, animated by `components/NavigationItemPresence.kt`); a restored

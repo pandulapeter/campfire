@@ -10,8 +10,8 @@
 
 # :presentation — ui/screens/songDetails
 
-The song details screen. What the first section holds, read only mode, and the About the song sheet as a product are in
-`ui/CLAUDE.md`; chord diagrams in `ui/chords/`; the click in `ui/metronome/`.
+The song details screen. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in
+`ui/chords/`; the click in `ui/metronome/`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.
@@ -113,13 +113,18 @@ Product side in `ui/metronome/CLAUDE.md`.
   after the time signature; a button whose group is absent goes after the other (`playingToolPlaces`, tested). With
   chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
 - Whether the section holds either button is part of `RenderSection.Metadata`, since measured sizes are keyed by it.
-- Read only line: always names capo, tempo, and time (`readsDefaults`: "Capo 0", 120, 4/4) and reads values as the click
-  and the steppers do (tempo clamped to the click's range, `C` as 4/4, capo within the neck); split around the tools.
+- Read only line (performance mode, archived setlist): always names capo, tempo, and time, since an absent value would
+  read as unknown (`readsDefaults`: "Capo 0", 120, 4/4); the editor's preview names a capo only where the text writes
+  one. It reads values as the click and the steppers do (tempo clamped to the click's range, `C` as 4/4, capo within
+  the neck); split around the tools.
 - In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under one
   key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
 
 ### The About the song sheet and its editors
 
+- **The one place a song's description is edited**: each group is a tile opening its own sheet; the cover opens the
+  cover search. Key, capo, tempo, and time stay on the page; the sheet only reads what the file declares and opens Song
+  defaults. No menu lists the sheet's editors one by one; Edit song file is the details menu's first own entry.
 - `DialogType.SongInfo`, read live from the song's text and closed with the song; opened only by the title (below). The
   sheet and the preview's card share `SongInfoBody`; `songPlayingOverrides` is shared with the Song defaults sheet.
 - Group titles are always plural, so a title does not change wording under the finger adding the first item.
