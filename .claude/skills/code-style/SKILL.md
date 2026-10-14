@@ -202,15 +202,16 @@ wrong or undo it".
 
 - What is tested, and the command that runs it, are in the root `CLAUDE.md`'s Tests section. **When you change tested
   logic, add or update its tests in the same change** and run them.
-- Don't add a test module or a UI test framework for a change that doesn't warrant one.
+- Logic is tested in its own module; what only the running app shows (layout, navigation, a sheet over the keyboard)
+  gets a UI test in `tools/screenshots` (its `CLAUDE.md`). Don't add another test module or framework.
 - **Tests assert behaviour, not implementation.** Check what a user or a caller could observe — a returned value, a
   file on disk, an emitted state — never a private constant copied into the test, an exact count of internal calls or
   a pretty-printed format searched as text (decode it). A call order on a fake is asserted only where the order is
   itself the documented behaviour. Time is virtual (`runTest`), never a `delay` on a real dispatcher.
 - **Every test is named as a backtick sentence** in the present tense (`` `a keep-both import numbers the new file` ``),
-  uses `kotlin.test` only, and sits in the package of the code it tests, in the module that owns that code. A module's
-  repository and use case fakes are shared stubs in its test sources (each unused member failing the same way), not a
-  copy per test file.
+  uses `kotlin.test` only, and sits in the package of the code it tests, in the module that owns that code (UI tests:
+  `tools/screenshots`, in the screen's package). A module's repository and use case fakes are shared stubs in its test
+  sources (each unused member failing the same way), not a copy per test file.
 
 ## Keep the CLAUDE.md files in sync
 
