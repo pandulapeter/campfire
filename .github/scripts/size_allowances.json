@@ -45,7 +45,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongsScreen.kt::SongsScreen": 172,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/tuner/TunerScreen.kt::TunerScreen": 128,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songInfo/SongInfoBody.kt::SongInfoBody": 141,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongChordsSection.kt::ChordRowsBlock": 156,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongChordsSection.kt::ChordRowsBlock": 144,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongLyrics.kt::SongLyrics": 266,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongSectionContent.kt::SongSectionContent": 177,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongSectionsLayout.kt::SongSectionsLayout": 194,
@@ -54,6 +54,6 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/grid/SectionGrid.kt::SectionGrid.arrange": 134,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/grid/SectionGrid.kt::flowIntoRows": 143,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/importing/ImportController.kt": 533,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/theme/CLAUDE.md": 885,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/theme/CLAUDE.md": 874,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md": 793
 }

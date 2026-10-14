@@ -11,18 +11,36 @@ package com.pandulapeter.campfire.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.inter_bold
+import com.pandulapeter.campfire.presentation.resources.inter_medium
+import com.pandulapeter.campfire.presentation.resources.inter_regular
+import org.jetbrains.compose.resources.Font
 
 /**
- * The typography the interface is set in, or null for as long as the font it needs is still on its way.
+ * The typography the interface is set in, Material's type scale in [interFontFamily], or null for as long as the font
+ * is still on its way.
  *
- * Material's own everywhere but the web, which is answered at once: its generic sans serif family resolves to the
- * system's font there (SF Pro, Segoe UI, Roboto). The web build draws with its own copy of Skia, which cannot reach
- * the browser's fonts and carries a single weight of Roboto instead - so every style Material sets in Medium, the
- * titles, labels, tabs and buttons, came out in Regular, and the whole interface read as thin. That build bundles a
- * font with the weights Material asks for.
- *
- * [CampfireTheme] does not report itself settled until this has answered, which holds the launch screen over the app
+ * Every platform but the web reads the font from the app's own files before the first frame; the web fetches it, and
+ * [CampfireTheme] does not report itself settled until it has arrived, which holds the launch screen over the app
  * rather than letting every line of text in it be laid out again once the font lands.
  */
 @Composable
 internal expect fun interfaceTypography(): Typography?
+
+/**
+ * Inter, which the whole app is set in on every platform, so that it looks the same everywhere and a song breaks its
+ * lines and pages in the same places on a phone, a computer and paper. Bundled in the three weights Material's type
+ * scale and the app use: Regular, Medium and Bold. The files are subset to the Latin, Greek and Cyrillic scripts,
+ * punctuation, arrows and the symbols a song uses, and keep only the default layout features, which takes them to a
+ * sixth of their size; a character outside that falls back to the system's fonts (on the web, to the Roboto Skia
+ * carries). Italic is left to the text engine to slant.
+ */
+@Composable
+internal fun interFontFamily() = FontFamily(
+    Font(Res.font.inter_regular, FontWeight.Normal),
+    Font(Res.font.inter_medium, FontWeight.Medium),
+    Font(Res.font.inter_bold, FontWeight.Bold),
+)

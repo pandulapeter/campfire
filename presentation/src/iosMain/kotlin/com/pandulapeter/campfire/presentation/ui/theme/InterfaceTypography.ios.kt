@@ -14,4 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 
 @Composable
-internal actual fun interfaceTypography(): Typography? = remember { Typography() }
+internal actual fun interfaceTypography(): Typography? {
+    val fontFamily = interFontFamily()
+    return remember(fontFamily) { Typography(fontFamily = fontFamily) }
+}

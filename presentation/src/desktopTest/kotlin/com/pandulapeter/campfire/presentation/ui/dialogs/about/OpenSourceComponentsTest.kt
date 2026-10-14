@@ -35,7 +35,7 @@ class OpenSourceComponentsTest {
         assertTrue("Public Suffix List" in namesOf(AppBuild.ANDROID) && "Skia" !in namesOf(AppBuild.ANDROID))
         assertTrue("JetBrains Runtime" in namesOf(AppBuild.LINUX) && "ANGLE" !in namesOf(AppBuild.LINUX))
         assertTrue("ANGLE" in namesOf(AppBuild.WINDOWS))
-        assertTrue("Inter" in namesOf(AppBuild.WEB) && "SLF4J" !in namesOf(AppBuild.WEB))
+        assertTrue("Inter" in namesOf(AppBuild.ANDROID) && "Inter" in namesOf(AppBuild.WEB) && "SLF4J" !in namesOf(AppBuild.WEB))
         assertTrue("js-joda" in namesOf(AppBuild.WEB) && "js-joda" !in namesOf(AppBuild.ANDROID))
         assertTrue("HarfBuzz" in namesOf(AppBuild.IOS) && "HarfBuzz" in namesOf(AppBuild.WEB) && "HarfBuzz" in namesOf(AppBuild.MACOS) && "HarfBuzz" !in namesOf(AppBuild.ANDROID))
         assertTrue("piex" in namesOf(AppBuild.MACOS) && "piex" !in namesOf(AppBuild.WEB) && "piex" !in namesOf(AppBuild.WINDOWS))

@@ -76,9 +76,10 @@ The worker `OpfsFileStorage` writes through where there is no `createWritable()`
   the page's folder), creates the font preloads, and exposes `window.campfireVersioned`, through which `campfire.js`,
   `opfs-writer.js`, `metronome-timer.js`, and the favicons are named. An address already carrying `v` is left alone
   (another build's file being kept). No versions on the dev server.
-- Fonts `:presentation` bundles (Inter, the monospaced ones) are preloaded `as="fetch"` with `crossorigin` so Compose's
+- Fonts `:presentation` bundles (Inter, JetBrains Mono) are preloaded `as="fetch"` with `crossorigin` so Compose's
   own `fetch()` matches (`as="font"` downloads twice). They are named by distribution path
-  (`composeResources/<package>/font/…`): rename there too.
+  (`composeResources/<package>/font/…`): rename there too. The loading screen's text is set in Inter as well, through
+  `FontFace`s at the same versioned addresses, so the page and the app hand over in one font.
 - `favicon-<color>.png`: every icon, the default too, is named by color, because browsers cache favicons by address —
   a redrawn set needs new names. A script applies the stored choice before anything loads.
 - **No web app manifest, deliberately**: the web build is a page; installable platforms get native builds.

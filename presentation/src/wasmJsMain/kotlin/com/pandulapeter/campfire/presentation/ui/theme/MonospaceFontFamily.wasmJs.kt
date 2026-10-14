@@ -20,13 +20,8 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.preloadFont
 
 /**
- * JetBrains Mono, in the variant without programming ligatures, which would draw a tab's `--` and `|-` as joined
- * shapes. The files are subset to the Latin, Greek and Cyrillic scripts and the symbols a song uses (the
- * accidentals, box drawing, punctuation), which halves them; a character outside that falls back to the default font.
- *
- * Bold is bundled because the editor sets the chords and directives in it; italic is left to Skia to slant.
- * Until both weights have arrived the family is the default one, which is what the first frames of a cold start show
- * rather than a blank where the text should be.
+ * [jetBrainsMonoFontFamily], fetched. Until both weights have arrived the family is the default one, which is what the
+ * first frames of a cold start show rather than a blank where the text should be.
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable

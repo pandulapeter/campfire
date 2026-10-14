@@ -189,7 +189,6 @@ internal val openSourceComponents = listOf(
         licenseName = OFL,
         licenseFile = "$LICENSES/inter_ofl.txt",
         licenseUrl = OFL_URL,
-        builds = setOf(AppBuild.WEB),
     ),
     apache("JetBrains Annotations", "JetBrains s.r.o.", "https://github.com/JetBrains/java-annotations", JVM),
     OpenSourceComponent(
@@ -199,7 +198,6 @@ internal val openSourceComponents = listOf(
         licenseName = OFL,
         licenseFile = "$LICENSES/jetbrains_mono_ofl.txt",
         licenseUrl = OFL_URL,
-        builds = setOf(AppBuild.WEB),
     ),
     OpenSourceComponent(
         name = "JetBrains Runtime",

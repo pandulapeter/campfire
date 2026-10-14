@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
@@ -55,10 +56,11 @@ internal fun ChordDiagram(
     val rootColor = LocalSecondAccentColor.current
     val backgroundColor = MaterialTheme.colorScheme.surface
     val textMeasurer = rememberTextMeasurer()
+    val fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
     Spacer(
         modifier = modifier
             .semantics { contentDescription = description }
-            .drawBehind { drawChordDiagram(geometry, size, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers) },
+            .drawBehind { drawChordDiagram(geometry, size, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily, showsFingers) },
     )
 }
 
@@ -69,6 +71,7 @@ internal fun ChordDiagram(
  * under a scale, whose measurer counts a point as a pixel. Its thinnest line is [minimumStroke], one pixel of the
  * device it ends up on.
  *
+ * @param fontFamily What its numbers are set in, the interface's font.
  * @param minimumStroke The thinnest a line is drawn, in the drawing's units: 1 on a screen, and under a scale one pixel
  *   of whatever the drawing ends up on.
  */
@@ -80,10 +83,11 @@ internal fun DrawScope.drawChordDiagram(
     rootColor: Color,
     backgroundColor: Color,
     textMeasurer: TextMeasurer,
+    fontFamily: FontFamily?,
     showsFingers: Boolean = false,
     minimumStroke: Float = 1f,
 ) = when (geometry) {
-    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, area, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers, minimumStroke)
+    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, area, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily, showsFingers, minimumStroke)
     is ChordDiagramGeometry.Keyboard -> drawKeyboard(geometry, area, lineColor, rootColor, backgroundColor, minimumStroke)
 }
 
@@ -95,6 +99,7 @@ private fun DrawScope.drawFretted(
     rootColor: Color,
     backgroundColor: Color,
     textMeasurer: TextMeasurer,
+    fontFamily: FontFamily?,
     showsFingers: Boolean,
     minimumStroke: Float,
 ) {
@@ -115,7 +120,7 @@ private fun DrawScope.drawFretted(
     }
     (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
     if (geometry.baseFret > 1) {
-        val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor), density = this)
+        val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor, fontFamily = fontFamily), density = this)
         // Right of it the first string's dot reaches out by its radius, a barre's end included.
         drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
     }
@@ -141,17 +146,17 @@ private fun DrawScope.drawFretted(
         )
         // A root at the barre's end is a dot of its own, which carries the finger instead.
         val isUnderDot = geometry.dots.any { it.string == barre.fromString && it.row == barre.row }
-        if (showsFingers && barre.finger != null && !isUnderDot) drawFinger(textMeasurer, barre.finger, Offset(x(barre.fromString), y(barre.row)), radius, backgroundColor)
+        if (showsFingers && barre.finger != null && !isUnderDot) drawFinger(textMeasurer, fontFamily, barre.finger, Offset(x(barre.fromString), y(barre.row)), radius, backgroundColor)
     }
     geometry.dots.forEach { dot ->
         val center = Offset(x(dot.string), y(dot.row))
         drawCircle(if (dot.isRoot) rootColor else lineColor, radius = radius, center = center)
-        if (showsFingers && dot.finger != null) drawFinger(textMeasurer, dot.finger, center, radius, backgroundColor)
+        if (showsFingers && dot.finger != null) drawFinger(textMeasurer, fontFamily, dot.finger, center, radius, backgroundColor)
     }
 }
 
-private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, finger: Int, center: Offset, radius: Float, color: Color) {
-    val label = textMeasurer.measure(finger.toString(), TextStyle(fontSize = (radius * FINGER_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, color = color), density = this)
+private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, fontFamily: FontFamily?, finger: Int, center: Offset, radius: Float, color: Color) {
+    val label = textMeasurer.measure(finger.toString(), TextStyle(fontSize = (radius * FINGER_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, color = color, fontFamily = fontFamily), density = this)
     drawText(label, topLeft = Offset(center.x - label.size.width / 2f, center.y - label.size.height / 2f))
 }
 

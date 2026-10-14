@@ -177,7 +177,8 @@
          set in are preloaded from here as well, since the address a preload answers has to be the versioned one: they
          are fetched alongside the binaries rather than after them, so they are in by the time the app asks for them.
          "fetch" and "crossorigin" are what make the Compose resource reader's own fetch() the request this answers;
-         as="font" would be downloaded twice. -->
+         as="font" would be downloaded twice. The loading screen's text is set in the same Inter files, given to the page
+         as font faces at their versioned addresses, which the preloads have put in the browser's cache. -->
     <script type="application/javascript">
         (function () {
             var build = /*{{BUILD}}*/null;
@@ -215,9 +216,17 @@
                 link.rel = 'preload';
                 link.as = 'fetch';
                 link.crossOrigin = 'anonymous';
-                link.href = versioned('composeResources/com.pandulapeter.campfire.presentation.resources/font/' + font + '.ttf');
+                link.href = fontAddress(font);
                 document.head.appendChild(link);
             });
+            if (window.FontFace && document.fonts) {
+                document.fonts.add(new FontFace('Inter', 'url("' + fontAddress('inter_regular') + '")', {weight: '400'}));
+                document.fonts.add(new FontFace('Inter', 'url("' + fontAddress('inter_bold') + '")', {weight: '700'}));
+            }
+
+            function fontAddress(font) {
+                return versioned('composeResources/com.pandulapeter.campfire.presentation.resources/font/' + font + '.ttf');
+            }
         })();
     </script>
     <!-- The icon of the theme color the user chose, which the app leaves in local storage whenever it shows one (see
@@ -299,7 +308,7 @@
             justify-content: center;
             gap: 20px;
             background-color: var(--background);
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             transition: opacity 300ms ease-out;
         }
 

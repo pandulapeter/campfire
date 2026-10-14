@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalPlatformWindowInsets
 import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.Lifecycle
@@ -64,16 +63,12 @@ import kotlin.io.path.createTempDirectory
  * derives the library from as it is created ([writeData] fills its data directory first), and the platform it is drawn
  * as, which the interface reads on every access. Koin is stopped again afterwards and the home deleted, so that the next
  * start has a library of its own. A scene composing [CampfireAppHost.Content] must be closed before [block] returns.
- *
- * @param fontFamily The interface's font, or null for Compose's default (what a test reads text in).
  */
 @OptIn(DelicateCoilApi::class)
 internal inline fun <T> withCampfireApp(
     platform: ImpersonatedPlatform,
     chrome: SystemChrome,
     density: Float,
-    fontFamily: FontFamily?,
-    monospaceFontFamily: FontFamily?,
     writeData: (dataDirectory: File) -> Unit,
     block: (CampfireAppHost) -> T,
 ): T {
@@ -87,8 +82,6 @@ internal inline fun <T> withCampfireApp(
         check(dataDirectory.startsWith(home)) { "The app's data directory, $dataDirectory, is outside its own home; unset XDG_DATA_HOME or APPDATA." }
         writeData(dataDirectory)
         PlatformImpersonation.platform = platform
-        PlatformImpersonation.fontFamily = fontFamily
-        PlatformImpersonation.monospaceFontFamily = monospaceFontFamily
         // Coil's image loader is one per process and is built once, with the cover use case of the Koin it was first
         // composed under: kept for the next start, it would read the covers from the first start's home, deleted by now,
         // and show only the ones its memory cache happened to hold. Each start builds its own instead.
@@ -104,8 +97,6 @@ internal inline fun <T> withCampfireApp(
         }
     } finally {
         PlatformImpersonation.platform = null
-        PlatformImpersonation.fontFamily = null
-        PlatformImpersonation.monospaceFontFamily = null
         home.deleteRecursively()
     }
 }

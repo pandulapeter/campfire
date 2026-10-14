@@ -25,11 +25,8 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.preloadFont
 
 /**
- * Inter, the closest to the desktop systems' own fonts that may be shipped (SF Pro's license keeps it on Apple's
- * platforms), in the three weights Material's type scale and the app use: Regular, Medium and Bold. The files are
- * subset to the Latin, Greek and Cyrillic scripts, punctuation, arrows and the symbols a song uses, and keep only the
- * default layout features, which takes them to a sixth of their size; a character outside that falls back to the
- * Roboto Skia carries. Italic is left to Skia to slant.
+ * [interFontFamily], fetched: preloaded rather than asked for with Compose's own `Font`, which answers with Skia's Roboto
+ * until the file is in and so would lay out every line of text twice.
  *
  * The wait is bounded, see [FONT_DEADLINE_MILLIS]: Compose resources never reports a fetch that failed, and a font
  * that is not coming must not keep the app covered - it opens in Material's own typography instead.

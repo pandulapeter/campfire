@@ -88,8 +88,6 @@ internal fun runAppTest(
     platform = ImpersonatedPlatform.ANDROID,
     chrome = SystemChrome.None,
     density = 1f,
-    fontFamily = testFonts.android,
-    monospaceFontFamily = testFonts.androidMonospace,
     writeData = { dataDirectory -> writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled) },
 ) { host ->
     host.koin.loadModules(listOf(testFakes), allowOverride = true)
@@ -216,12 +214,6 @@ private class TestFilePicker(private val files: List<ImportedFile>) : FilePicker
 
     override suspend fun shareFile(file: ExportedFile) = false
 }
-
-/**
- * The Android fonts the build downloads, pinned, which every test sets the app in: the systems' own default fonts have
- * different metrics, so a song laid out on a Mac would break its lines elsewhere than on the Linux that CI runs.
- */
-private val testFonts by lazy { Fonts(File(System.getProperty("campfire.screenshots.fonts"))) }
 
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
 private const val WRITE_TIMEOUT_MILLIS = 10_000L

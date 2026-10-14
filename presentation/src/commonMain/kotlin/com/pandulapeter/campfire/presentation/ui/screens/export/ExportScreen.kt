@@ -113,7 +113,7 @@ internal fun ExportScreen(
     val filePicker = LocalFilePicker.current
     val fontResolver = LocalFontFamilyResolver.current
     val fontFamily = LocalMonospaceFontFamily.current
-    // The face the viewer sets lyrics in, which on the web is the preloaded Inter rather than FontFamily.Default.
+    // The face the viewer sets lyrics in, Inter rather than FontFamily.Default.
     val textFontFamily = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
     fun newRenderer() = PrintRenderer(
         measurer = TextMeasurer(fontResolver, Density(1f), LayoutDirection.Ltr, cacheSize = 256),

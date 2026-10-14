@@ -16,7 +16,7 @@ description: Retake Campfire's promotional images for every platform and form fa
 # Campfire promotional images
 
 Every image is made from the desktop build drawn offscreen as each platform (the platforms share every line of the
-interface), with that platform's fonts, scale and system bars, at the exact pixels of the Screenshot Bro device frame
+interface and its bundled fonts), with that platform's scale and system bars, at the exact pixels of the Screenshot Bro device frame
 it goes into. Nothing here touches the production apps: the tool is `tools/screenshots`, which no app module depends
 on, and the only seam in the app is `PlatformImpersonation` in `:presentation`'s desktop source set, which the desktop
 app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.

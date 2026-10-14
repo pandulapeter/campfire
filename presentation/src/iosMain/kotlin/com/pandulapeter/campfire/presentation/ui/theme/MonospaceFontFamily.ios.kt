@@ -13,4 +13,4 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
 
 @Composable
-internal actual fun monospaceFontFamily(): FontFamily = FontFamily.Monospace
+internal actual fun monospaceFontFamily(): FontFamily = jetBrainsMonoFontFamily()

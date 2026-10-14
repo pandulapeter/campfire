@@ -26,12 +26,13 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
   and the view model read their start once. The scene runs on `Dispatchers.Main` (Swing), which the view model
   dispatches to, pumped a frame at a time with a real `delay` so IO lands; `onAppReady` says the launch screen is gone.
 - **Looking like the platform**: `PlatformImpersonation` (`:presentation`'s desktop source set) supplies the
-  platform's answers (touch scale, store, icon, Android wallpaper colors, fonts); the tool provides the `FilePicker`
+  platform's answers (touch scale, store, icon, Android wallpaper colors); the tool provides the `FilePicker`
   (whether Share is offered) and insets through `LocalPlatformWindowInsets` (an internal Compose API), which
   `SystemChrome` draws over the app (9:41, full battery).
-- Fonts: Roboto and Droid Sans Mono (Android, ChromeOS), Open Sans (Windows; Segoe UI's license keeps it on Windows),
-  the Mac's own SF (Apple). The build downloads the three into `build/fonts`, each pinned to a commit and checked
-  against its SHA-256 in `build.gradle.kts` — updating one means a new commit address and a new checksum.
+- Fonts: the app is drawn in the fonts it bundles, as on every platform. Only the system chrome around it takes the
+  platform's: Roboto (Android, ChromeOS), Open Sans (Windows; Segoe UI's license keeps it on Windows), the Mac's own SF
+  (Apple). The build downloads the two into `build/fonts`, each pinned to a commit and checked against its SHA-256 in
+  `build.gradle.kts` — updating one means a new commit address and a new checksum.
 - **Nothing reaches outside** (`Fakes.kt`): sync shows a connected account and runs nothing, the metronome is silent and
   lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only scripted readings, the file picker
   writes nothing. Covers come from the copied cache.
@@ -66,8 +67,7 @@ language, theme, and system text size.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait for them with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or
   deleted the same day, never retried.
-- Tests are set in the downloaded Android fonts (`testFonts`), so a song breaks its lines in the same places on a Mac
-  and on CI's Linux; the systems' own default fonts differ in their metrics.
+- Tests draw the app in the fonts it bundles, so a song breaks its lines in the same places on a Mac and on CI's Linux.
 
 ### Golden renders
 

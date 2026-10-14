@@ -36,7 +36,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -59,10 +58,8 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -75,7 +72,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
-import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -162,14 +158,7 @@ private fun ChordRowsBlock(
     isLastSlot: Boolean,
     onCellClicked: ((cell: Int) -> Unit)?,
 ) {
-    val nameColor = LocalSecondAccentColor.current
-    val secondNameColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val lineColor = MaterialTheme.colorScheme.onSurface
-    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val backgroundColor = MaterialTheme.colorScheme.surface
-    // The page's measurer keeps nothing, since whoever asks keeps what it measured; a diagram measures its base fret's
-    // number on every draw, so it gets one with a cache of its own, as the composed diagram had.
-    val diagramTextMeasurer = rememberTextMeasurer()
+    val paint = chordCellPaint()
     // The width the block was last placed at, which is all its cells depend on that composition does not know: kept
     // rather than the cells, so that a new layout of the cells is described from it at once.
     var shownWidth by remember { mutableIntStateOf(-1) }
@@ -292,12 +281,7 @@ private fun ChordRowsBlock(
                             top = y,
                             width = cellWidth,
                             isRightToLeft = isRightToLeft,
-                            nameColor = nameColor,
-                            secondNameColor = secondNameColor,
-                            lineColor = lineColor,
-                            mutedColor = mutedColor,
-                            backgroundColor = backgroundColor,
-                            diagramTextMeasurer = diagramTextMeasurer,
+                            paint = paint,
                             fadingOut = shapeCrossfade.fadingOut[cell],
                             fadeProgress = shapeCrossfade.progress.value,
                             layerPaint = layerPaint,
@@ -322,12 +306,7 @@ private fun DrawScope.drawChordCell(
     top: Float,
     width: Int,
     isRightToLeft: Boolean,
-    nameColor: Color,
-    secondNameColor: Color,
-    lineColor: Color,
-    mutedColor: Color,
-    backgroundColor: Color,
-    diagramTextMeasurer: TextMeasurer,
+    paint: ChordCellPaint,
     fadingOut: ChordDiagramGeometry?,
     fadeProgress: Float,
     layerPaint: Paint,
@@ -339,10 +318,10 @@ private fun DrawScope.drawChordCell(
     clipRect(left = left, top = top, right = left + width, bottom = top + nameRowHeight) {
         val rowLeft = left + ((width - nameRowWidth).coerceAtLeast(0) / 2f).roundToInt()
         val nameLeft = if (isRightToLeft) rowLeft + nameRowWidth - name.size.width else rowLeft
-        drawText(textLayoutResult = name, color = nameColor, topLeft = Offset(nameLeft, top + nameRowHeight - name.size.height))
+        drawText(textLayoutResult = name, color = paint.nameColor, topLeft = Offset(nameLeft, top + nameRowHeight - name.size.height))
         secondName?.let {
             val secondLeft = if (isRightToLeft) rowLeft else rowLeft + name.size.width + layouts.nameGap
-            drawText(textLayoutResult = it, color = secondNameColor, topLeft = Offset(secondLeft, top + nameRowHeight - it.size.height))
+            drawText(textLayoutResult = it, color = paint.secondNameColor, topLeft = Offset(secondLeft, top + nameRowHeight - it.size.height))
         }
     }
     val diagramSize = layouts.diagramSizes[cell]
@@ -352,11 +331,12 @@ private fun DrawScope.drawChordCell(
             drawChordDiagram(
                 geometry = geometry,
                 area = area,
-                lineColor = lineColor,
-                mutedColor = mutedColor,
-                rootColor = nameColor,
-                backgroundColor = backgroundColor,
-                textMeasurer = diagramTextMeasurer,
+                lineColor = paint.lineColor,
+                mutedColor = paint.mutedColor,
+                rootColor = paint.nameColor,
+                backgroundColor = paint.backgroundColor,
+                textMeasurer = paint.diagramTextMeasurer,
+                fontFamily = paint.diagramFontFamily,
             )
         }
         if (fadingOut == null || fadeProgress >= 1f) {

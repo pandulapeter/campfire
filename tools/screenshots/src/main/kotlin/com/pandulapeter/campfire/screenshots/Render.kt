@@ -35,7 +35,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-/** What every render of a run shares: where the library and the fonts are, and the version the app reports. */
+/** What every render of a run shares: where the library and the system chrome's fonts are, and the version the app reports. */
 internal class RenderEnvironment(
     val library: File,
     val fonts: Fonts,
@@ -60,8 +60,6 @@ internal suspend fun render(
     platform = device.platform,
     chrome = device.chrome,
     density = device.density,
-    fontFamily = environment.fonts.interfaceFamily(device.platform),
-    monospaceFontFamily = environment.fonts.monospaceFamily(device.platform),
     writeData = { dataDirectory ->
         prepareLibrary(
             source = environment.library,

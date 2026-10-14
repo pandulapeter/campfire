@@ -152,6 +152,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
+- The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
 - The app links only to the website's downloads and its own store's rating page: `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
 - Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`.

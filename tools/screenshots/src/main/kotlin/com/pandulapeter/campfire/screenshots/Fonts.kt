@@ -18,36 +18,24 @@ import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import java.io.File
 
 /**
- * The fonts a platform's system sets an app in where it asks for none. A Mac has the Apple ones itself, so they are
- * left to Compose's own defaults (SF Pro and SF Mono); the others come from the folder the build downloads them into.
- * Windows' monospace, Consolas, has no open stand-in with its metrics, so tablature there is set in the Mac's own.
+ * The fonts a platform's system draws its own chrome in - the status bar, the title bar, the menu bar - around the app,
+ * which is set in the fonts it bundles on every platform. A Mac has the Apple ones itself, so they are left to
+ * Compose's own default (SF Pro); the others come from the folder the build downloads them into.
  */
 internal class Fonts(directory: File) {
     private val roboto = File(directory, "Roboto.ttf")
-    private val droidSansMono = File(directory, "DroidSansMono.ttf")
     private val openSans = File(directory, "OpenSans.ttf")
 
-    val android: FontFamily by lazy { variableFamily(roboto) }
+    private val android: FontFamily by lazy { variableFamily(roboto) }
 
-    val androidMonospace: FontFamily by lazy { FontFamily(Font(file = droidSansMono)) }
+    private val windows: FontFamily by lazy { variableFamily(openSans) }
 
-    val windows: FontFamily by lazy { variableFamily(openSans) }
-
-    /** What the interface is set in on [platform], or null where it is the desktop's own. */
-    fun interfaceFamily(platform: ImpersonatedPlatform): FontFamily? = when (platform) {
+    /** What the system chrome around the app is set in on [platform]. */
+    fun chromeFamily(platform: ImpersonatedPlatform) = when (platform) {
         ImpersonatedPlatform.ANDROID -> android
         ImpersonatedPlatform.WINDOWS -> windows
-        ImpersonatedPlatform.IOS, ImpersonatedPlatform.MACOS -> null
+        ImpersonatedPlatform.IOS, ImpersonatedPlatform.MACOS -> FontFamily.Default
     }
-
-    /** What tablature and the editor are set in on [platform], or null where it is the desktop's own. */
-    fun monospaceFamily(platform: ImpersonatedPlatform): FontFamily? = when (platform) {
-        ImpersonatedPlatform.ANDROID -> androidMonospace
-        ImpersonatedPlatform.IOS, ImpersonatedPlatform.MACOS, ImpersonatedPlatform.WINDOWS -> null
-    }
-
-    /** What the system chrome around the app is set in, which is the interface's font, the Apple ones included. */
-    fun chromeFamily(platform: ImpersonatedPlatform) = interfaceFamily(platform) ?: FontFamily.Default
 
     /** One file of a variable font, as the nine weights Compose asks a family for, each set on its weight axis. */
     @OptIn(ExperimentalTextApi::class)

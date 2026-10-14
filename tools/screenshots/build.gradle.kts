@@ -54,10 +54,11 @@ application {
 }
 
 /**
- * The fonts the other platforms set the interface in, none of which a Mac has: Roboto and Android's monospace for the
- * Android and ChromeOS shots, and for the Windows ones Open Sans, the closest open relative of Segoe UI (the two share
- * their designer), which the license keeps on Windows. All three may be redistributed, but nothing needs them but this
- * tool, so they are fetched into the build folder rather than committed.
+ * The fonts the other platforms draw their system chrome in (the status bar, the title bar), none of which a Mac has:
+ * Roboto for the Android and ChromeOS shots, and for the Windows ones Open Sans, the closest open relative of Segoe UI
+ * (the two share their designer), which the license keeps on Windows. The app itself is set in the fonts it bundles.
+ * Both may be redistributed, but nothing needs them but this tool, so they are fetched into the build folder rather
+ * than committed.
  *
  * Each is pinned to a commit of its repository and checked against its SHA-256, so that a font changed upstream never
  * lays the text of two retakes out differently, and an error page is never taken for a font. These are the files the
@@ -70,10 +71,6 @@ val downloadFonts by tasks.registering {
         "Roboto.ttf" to Pair(
             "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf",
             "d7598e12c5dbef095ff8272cfc55da0250bd07fbdecbac8a530b9b277872a134",
-        ),
-        "DroidSansMono.ttf" to Pair(
-            "https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/1cdfff555f4a21f71ccc978290e2e212e2f8b168/data/fonts/DroidSansMono.ttf",
-            "db19a1fdaba41cc4a2fec0330e5c15e71c6dd68a3ef074f4f28268828b45c862",
         ),
         "OpenSans.ttf" to Pair(
             "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/opensans/OpenSans%5Bwdth,wght%5D.ttf",
@@ -97,14 +94,11 @@ val downloadFonts by tasks.registering {
 
 tasks.test {
     useJUnitPlatform()
-    // The golden renders are set in the pinned fonts, so that a render does not depend on the fonts a machine has.
-    dependsOn(downloadFonts)
     val isUpdatingGoldens = project.property("campfire.updateGoldens").toString().toBoolean()
     // Rewriting the goldens is asked for with a property, which a run that changed nothing else would not repeat.
     outputs.upToDateWhen { !isUpdatingGoldens }
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
-    systemProperty("campfire.screenshots.fonts", fonts.get().asFile.absolutePath)
     systemProperty("campfire.screenshots.goldens", file("src/test/resources/goldens").absolutePath)
     systemProperty("campfire.screenshots.goldenOutput", layout.buildDirectory.dir("goldens").get().asFile.absolutePath)
     systemProperty("campfire.screenshots.updateGoldens", isUpdatingGoldens.toString())

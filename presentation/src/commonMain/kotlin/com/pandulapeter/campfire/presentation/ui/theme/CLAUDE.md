@@ -65,20 +65,18 @@ minimum accounts for it (see `app/desktop`).
 XML vector drawables in `composeResources/drawable/`, passed as `Painter`. Directional ones (back, previous/next song,
 undo/redo) carry `android:autoMirrored`, which Compose honors on every platform for RTL.
 
-## Web fonts
+## Fonts
 
-The web build's Skia can't reach the browser's fonts, so it bundles its own (OFL licenses under `files/licenses`, shown
-in that build's Open-source licenses sheet), subset to Latin, Greek, Cyrillic, and the symbols songs use. `app/web`'s
-`index.html` preloads them **by their path in the distribution**, so renaming a font means renaming it there too.
+**Bundled on every platform** (`src/commonMain/composeResources/font`, OFL licenses under `files/licenses`): Inter for
+the interface, JetBrains Mono (no-ligatures) for tabs and the editor, so a song looks and breaks the same on a phone, a
+computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, Cyrillic, and song symbols; other
+scripts fall back to the system's fonts (Skia's Roboto on the web).
 
-- `InterfaceTypography.kt`: Material's typography elsewhere; the web bundles Inter Regular/Medium/Bold (its single
-  Roboto weight made every Medium style Regular). The actual returns null until all three weights load, and the theme
-  isn't settled until then (no second layout of every line); after five seconds it falls back to Material's, since
-  Compose resources never reports a failed fetch.
-- `MonospaceFontFamily.kt`: `LocalMonospaceFontFamily` for tab blocks and the editor field. The system monospace
-  everywhere but the web, where `FontFamily.Monospace` is proportional; there JetBrains Mono (no-ligatures, regular and
-  bold) lives in `src/wasmJsMain/composeResources/font`, so other builds don't carry it. Provided by the theme so it
-  loads at start.
+- `InterfaceTypography.kt`: Material's type scale in Inter Regular/Medium/Bold, read before the first frame except on
+  the web, whose actual returns null until all three weights are fetched; the theme isn't settled until then (no second
+  layout of every line), and after five seconds falls back to Material's, as a failed fetch is never reported.
+- `MonospaceFontFamily.kt`: `LocalMonospaceFontFamily`, provided by the theme so the web fetches it at launch.
+- `app/web`'s `index.html` preloads them **by their path in the distribution**: renaming one means renaming it there.
 
 ## The app icon and the app's own colors
 
