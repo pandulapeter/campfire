@@ -10,20 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.data.model.domain.Song
-
-/**
- * The whole library by file name, together with whether it has been read, as one value: see `LibraryState.songLookup`.
- *
- * @param isLibraryRead False while the library is being read for the first time, as `LibraryState.isLoading` says.
- */
-internal data class SongLookup(
-    val songsByFileName: Map<String, Song>,
-    val isLibraryRead: Boolean,
-) {
-    companion object {
-        val Empty = SongLookup(emptyMap(), isLibraryRead = false)
-    }
-}
+import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 
 /**
  * The songs a details screen pages through, or null while it cannot say yet: before the library has been read,

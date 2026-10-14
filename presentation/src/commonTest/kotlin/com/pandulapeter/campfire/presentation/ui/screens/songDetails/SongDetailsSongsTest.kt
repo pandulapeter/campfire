@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
