@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSo
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.HERE
 import com.pandulapeter.campfire.data.sync.implementation.ORIGINAL
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.THERE
 import com.pandulapeter.campfire.data.sync.implementation.indexOf

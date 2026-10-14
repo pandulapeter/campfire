@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.ORIGINAL
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.THERE

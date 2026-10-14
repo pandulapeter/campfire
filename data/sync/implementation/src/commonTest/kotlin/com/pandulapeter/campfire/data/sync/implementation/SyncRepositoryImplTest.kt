@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song

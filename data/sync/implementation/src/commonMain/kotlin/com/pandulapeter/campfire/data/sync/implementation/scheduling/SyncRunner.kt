@@ -12,12 +12,12 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesSync
-import com.pandulapeter.campfire.data.sync.implementation.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason

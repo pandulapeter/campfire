@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSongRepository
 import com.pandulapeter.campfire.data.sync.implementation.RunCounter
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesSync

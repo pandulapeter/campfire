@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnectionManager
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibraryRefresher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.model.domain.SyncProgress

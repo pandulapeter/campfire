@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSo
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.GIG
 import com.pandulapeter.campfire.data.sync.implementation.GIG_COPY
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.indexOf
 import com.pandulapeter.campfire.data.sync.implementation.song

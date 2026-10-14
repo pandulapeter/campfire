@@ -10,10 +10,10 @@
 package com.pandulapeter.campfire.data.sync.implementation.connection
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
-import com.pandulapeter.campfire.data.sync.implementation.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.toFailureReason

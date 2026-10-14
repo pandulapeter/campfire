@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.index
 
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
+import com.pandulapeter.campfire.data.sync.implementation.SyncKey
+import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

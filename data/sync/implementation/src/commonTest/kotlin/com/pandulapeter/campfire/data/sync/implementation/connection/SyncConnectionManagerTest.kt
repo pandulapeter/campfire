@@ -14,13 +14,13 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeSyncAuthenticator
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.RecordingLogger
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.TEST_COMPLETION_PAGE
 import com.pandulapeter.campfire.data.sync.implementation.TEST_REDIRECT
 import com.pandulapeter.campfire.data.sync.implementation.awaitOutcome
 import com.pandulapeter.campfire.data.sync.implementation.encoded
-import com.pandulapeter.campfire.data.sync.implementation.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import com.pandulapeter.campfire.data.sync.implementation.synchronize

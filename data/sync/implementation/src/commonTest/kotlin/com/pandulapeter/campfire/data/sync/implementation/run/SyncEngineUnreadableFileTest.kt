@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.RecordingLogger
-import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.foreign
 import com.pandulapeter.campfire.data.sync.implementation.indexOf
 import com.pandulapeter.campfire.data.sync.implementation.librarySongs
