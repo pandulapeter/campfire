@@ -9,14 +9,13 @@
 -->
 # To do
 ## Short-term (in this version)
-
 ### Improvements
 - Find a way to allow entering tempo using the keyboard
 - Onboarding: increment horizontal padding of the pages
 - Onboarding: the screen transition when the onboarding is Done should be improved
 - Search: highlight matched substrings
 - Simplify adding chord diagrams in the editor
-- Update website + store screenshots + store descriptions to include the chord diagram library
+- Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
 
 ### Refactor + testing
 - Verify the current unit test coverage, extend it if needed
