@@ -26,15 +26,16 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
-import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.shownFor
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
@@ -45,8 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
-import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
-import com.pandulapeter.campfire.presentation.ui.tabs.tabPlayerOf
+import com.pandulapeter.campfire.presentation.ui.tabs.tabReadingOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -153,16 +153,10 @@ internal class ExportController(
         // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
         // than reading the songs again; with the feature switched off the export does not offer them at all.
         val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
-        val storedChordShapes = chordTuning?.let { preferences.chordVoicings[it.voicingKey] }.orEmpty()
+        val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
         val readsCapoAsTransposition = preferences.readsCapoAsTransposition
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
-        val tabs = preferences?.let { preferences ->
-            TabReading(
-                player = tabPlayerOf(preferences.instrument, preferences.instrumentTuning, spelling.notation.toChordNotation(), isMoved = true),
-                labels = tabNoticeLabels,
-                selects = true,
-            )
-        }
+        val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.songs.firstOrNull { it.fileName == entry.songFileName } ?: dialog.song
             val content = getSongContent(entry.songFileName)
@@ -174,11 +168,11 @@ internal class ExportController(
             val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
             // On the keyboard the pages are in the chords that sound, as the screen is: the capo the screen counts into
             // the transposition is counted in here too, the library's included, and none is printed.
-            val transposition = if (readsCapoAsTransposition) {
-                soundingTransposition(playedTransposition, effectiveCapoOf(entry.songFileName, setlistFileName).fret)
-            } else {
-                playedTransposition
-            }
+            val transposition = SongPlayback(
+                transposition = playedTransposition,
+                capo = effectiveCapoOf(entry.songFileName, setlistFileName),
+                tempo = effectiveTempoOf(entry.songFileName, setlistFileName),
+            ).shownFor(preferences).transposition
             val transposed = content?.let { withContext(Dispatchers.Default) {
                 songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs).withTempo(tempo).let { song ->
                     if (readsCapoAsTransposition) song.withoutCapo() else song.withCapo(capo)

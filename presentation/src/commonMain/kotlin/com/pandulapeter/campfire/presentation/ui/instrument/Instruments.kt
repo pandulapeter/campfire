@@ -159,6 +159,9 @@ internal fun UserPreferences.chordTuning(): ChordTuning? {
     return instrumentTuning?.let { ChordTuning.fromId(it.id) } ?: ChordTuning.standard(chordInstrument)
 }
 
+/** The player's own shapes for the chords of [tuning], by chord, where they picked one over the app's first. */
+internal fun UserPreferences.storedChordShapes(tuning: ChordTuning) = chordVoicings[tuning.voicingKey].orEmpty()
+
 internal fun UserPreferences.withInstrument(instrument: UserPreferences.Instrument) = copy(instrument = instrument)
 
 /**

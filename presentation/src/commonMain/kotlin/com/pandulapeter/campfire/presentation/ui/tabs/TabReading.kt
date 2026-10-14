@@ -46,10 +46,15 @@ internal fun rememberTabReading(preferences: UserPreferences?, isMoved: Boolean 
     val instrument = preferences.instrument
     val tuning = preferences.instrumentTuning
     val notation = preferences.chordSpelling.notation.toChordNotation()
-    return remember(instrument, tuning, notation, labels, isMoved) {
-        TabReading(player = tabPlayerOf(instrument, tuning, notation, isMoved), labels = labels, selects = isMoved)
-    }
+    return remember(instrument, tuning, notation, labels, isMoved) { tabReadingOf(preferences = preferences, labels = labels, isMoved = isMoved) }
 }
+
+/** The [TabReading] of the reader [preferences] describe, telling what was done to the tabs in [labels]. */
+internal fun tabReadingOf(preferences: UserPreferences, labels: TabNoticeLabels, isMoved: Boolean) = TabReading(
+    player = tabPlayerOf(preferences.instrument, preferences.instrumentTuning, preferences.chordSpelling.notation.toChordNotation(), isMoved),
+    labels = labels,
+    selects = isMoved,
+)
 
 /** The [TabNoticeLabels] in the app's language. */
 @Composable

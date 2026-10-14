@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 
 /**
  * A chord of the Chords tab with every way it can be played, the song's chord sheet ([ChordShapeSheet]) with no song
@@ -43,7 +44,7 @@ internal fun ChordReferenceSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tuning = userPreferences?.chordTuning() ?: return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    val storedShapes = userPreferences?.chordVoicings?.get(tuning.voicingKey).orEmpty()
+    val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     val chord = dialog.chord
     CampfireBottomSheet(
         title = textResource(Res.string.song_details_chord_shape_choose, chord.name),

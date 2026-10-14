@@ -52,5 +52,8 @@ internal fun SongPlayback.withCapoSounding() = copy(
     capo = EffectiveCapo(fret = 0, songFret = 0),
 )
 
+/** [this] as the player whose [preferences] these are reads it, see [readsCapoAsTransposition]. */
+internal fun SongPlayback.shownFor(preferences: UserPreferences?) = if (preferences.readsCapoAsTransposition) withCapoSounding() else this
+
 /** The transposition that takes a song played at [transposition] and capoed at [capo] to the chords that sound. */
 internal fun soundingTransposition(transposition: Int, capo: Int) = wrapTransposition(transposition + capo)

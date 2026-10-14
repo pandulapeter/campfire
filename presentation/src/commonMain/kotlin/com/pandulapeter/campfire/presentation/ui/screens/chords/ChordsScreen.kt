@@ -67,6 +67,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -235,7 +236,7 @@ internal fun ChordsScreen(
 
                     is ChordLibraryResults.Chords -> {
                         val heldTuning = held.tuning
-                        val storedShapes = userPreferences?.chordVoicings?.get(heldTuning.voicingKey).orEmpty()
+                        val storedShapes = userPreferences?.storedChordShapes(heldTuning).orEmpty()
                         // Cells held from another tuning are on their way out: their chords name that tuning's shapes.
                         val isCurrent = heldTuning == tuning
                         items(items = results.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { chord ->

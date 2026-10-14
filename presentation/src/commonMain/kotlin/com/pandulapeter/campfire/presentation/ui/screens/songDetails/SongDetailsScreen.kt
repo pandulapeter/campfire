@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
@@ -354,7 +355,7 @@ private fun rememberChordDiagrams(
 ): ChordDiagrams? {
     val preferences = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled } ?: return null
     val chordTuning = preferences.chordTuning()
-    val storedChordShapes = chordTuning?.let { preferences.chordVoicings[it.voicingKey] }.orEmpty()
+    val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
     val instrument = preferences.instrument
     val instrumentTuning = preferences.instrumentTuning
     val isChordSectionFolded = preferences.isChordSectionFolded

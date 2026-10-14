@@ -40,8 +40,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.shownFor
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
-import com.pandulapeter.campfire.presentation.ui.playing.withCapoSounding
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 
 /**
@@ -134,7 +134,7 @@ internal fun SongPages(
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
         val readsCapoAsTransposition = userPreferences.readsCapoAsTransposition
-        val shownPlayback = if (readsCapoAsTransposition) playback.withCapoSounding() else playback
+        val shownPlayback = playback.shownFor(userPreferences)
         val tempo = playback.tempo
         val capo = shownPlayback.capo
         SongDetailsPage(
@@ -163,7 +163,7 @@ internal fun SongPages(
                     song = song,
                     setlistFileName = destination.setlistFileName,
                     playback = playback,
-                    readsCapoAsTransposition = readsCapoAsTransposition,
+                    userPreferences = userPreferences,
                     chordSpelling = chordSpelling,
                     shouldShowChords = shouldShowChords,
                     shouldShowTempo = isMetronomeEnabled,

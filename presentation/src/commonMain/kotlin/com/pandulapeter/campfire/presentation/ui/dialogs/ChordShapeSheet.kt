@@ -47,9 +47,10 @@ import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
-import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
-import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
+import com.pandulapeter.campfire.presentation.ui.playing.shownFor
+import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -82,12 +83,11 @@ internal fun ChordShapeSheet(
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
     val text = songTexts[song.fileName]
-    val playedTransposition = transpositions[song.fileName, dialog.setlistFileName]
-    val transposition = if (userPreferences.readsCapoAsTransposition) {
-        soundingTransposition(playedTransposition, effectiveCapo(song = song, setlistFileName = dialog.setlistFileName, capos = capos).fret)
-    } else {
-        playedTransposition
-    }
+    val transposition = songPlaybackOf(
+        song = song,
+        setlistFileName = dialog.setlistFileName,
+        overrides = PlayingOverridesSnapshot(transpositions = transpositions, capos = capos),
+    ).shownFor(userPreferences).transposition
     val chords by produceState<List<SongChord>?>(null, text, transposition, spelling, tuning) {
         value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning) } }
     }
@@ -95,7 +95,7 @@ internal fun ChordShapeSheet(
     // The page names the chord as the song is played there, so a transposition or an edit synced in while the sheet is up
     // may leave nothing by that name: the diagram that was tapped is gone, and with it the sheet.
     if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
-    val storedShapes = userPreferences?.chordVoicings?.get(tuning.voicingKey).orEmpty()
+    val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     CampfireBottomSheet(
         // A numbering names the chord by its step, which reads as another chord in letters (`b7`), so it stays as it is.
         title = textResource(
