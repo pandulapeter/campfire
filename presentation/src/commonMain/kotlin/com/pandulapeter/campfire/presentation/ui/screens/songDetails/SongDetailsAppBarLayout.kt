@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.STEPPER_WIDTH
 
 /**
@@ -72,9 +74,5 @@ private val APP_BAR_OVERLAPPING_ACTION_WIDTH = APP_BAR_ACTION_WIDTH - ACTION_BUT
 
 /** The back button, the bar's paddings and the overflow button. */
 private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH
-
-/** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
-internal val APP_BAR_COVER_SIZE = 40.dp
-internal val APP_BAR_COVER_GAP = 12.dp
 
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.

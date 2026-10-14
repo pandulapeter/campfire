@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_GAP
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
 
 /**
  * How wide the editor's overflow menu ([EditorMenu]) may be in an app bar [appBarWidth] wide: what the close button,
