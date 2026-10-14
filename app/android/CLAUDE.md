@@ -51,8 +51,8 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
 ## Permissions
 
 `INTERNET`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS` (sync);
-`FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `VIBRATE` (metronome); `RECORD_AUDIO` (tuner, asked only from its page;
-`android.hardware.microphone` is not required, so Play still offers the app without one).
+`FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `VIBRATE` (metronome); `RECORD_AUDIO` (tuner, asked only by a tap that opens a
+tuner; `android.hardware.microphone` is not required, so Play still offers the app without one).
 
 ## Sync sign-in
 
