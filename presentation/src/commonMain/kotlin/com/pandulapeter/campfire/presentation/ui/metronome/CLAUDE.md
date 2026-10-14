@@ -70,7 +70,7 @@ haptics).
 
 ### Accents
 
-- Tapped on the `BeatRow` in both places (`MetronomeController.setBeatLevels` → `MetronomeController.setBeatLevels`), for
+- Tapped on the `BeatRow` in both places (`MetronomeController.setBeatLevels`), for
   whatever the click plays for: on the tab, the signature's (`withBeatLevels`); on a song, that song's own
   (`UserPreferences.beatLevels`, `withSongBeatLevels`, tested), by signature, so a song whose 8/8 is 3+3+2 changes no
   other song.
