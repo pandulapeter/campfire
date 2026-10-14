@@ -70,7 +70,7 @@ internal class GoldenRendersTest {
                     case.drive(this)
                     goldens.check(case.name, settledWindow())?.let(failures::add)
                 }
-            }.onFailure { failures += "${case.name} could not be drawn: $it" }
+            }.onFailure { failures += "${case.name} could not be drawn: ${it.stackTraceToString()}" }
         }
         failures += goldens.unused(cases.map { it.name }.toSet()).map { "$it has a golden but no case; delete the image." }
         if (!goldens.wereCompared) println("The golden renders were drawn but not compared, which only happens on Linux.")
