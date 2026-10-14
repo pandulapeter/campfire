@@ -10,8 +10,9 @@
 
 # :presentation — ui/screens/songDetails
 
-The song details screen. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in
-`ui/chords/`; the click in `ui/metronome/`.
+The song details screen. The song itself is drawn and laid out by `ui/songView/`; the pedal stepping is in
+`stepping/`. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in `ui/chords/`;
+the click in `ui/metronome/`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.
@@ -23,84 +24,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   page index onto the wrong song over a partial batch.
 - Once every song it names is gone from a read library, the screen closes itself.
 
-### Rendering (`SongLyrics.kt` and its siblings)
-
-- Tabs and grids are monospace: columns of characters that must line up.
-- Lyrics take their direction from content (`TextDirection.Content`), so chords of an RTL line hang leftwards.
-- Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
-  (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary (padding whitespace is
-  non-breaking, a zero-width space is the break), so no chord is pulled back over the one before. Overflow is clipped by
-  the line and each pager page, never wrapped onto the lyrics.
-- Because chords are drawn, each chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
-  block's its lines, so screen readers read the chords.
-- One `TextMeasurer` per page; `SongTextMeasurements` caches chord names, lyric widths, line heights, tab rows, and
-  aligned grid bars per page, keyed on the styles and the measurer (not the song), so a transposition only measures chord
-  names it has not drawn yet.
-
-#### Tabs and grids
-
-- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together. Row cuts are
-  `ChordProTabWrapper`'s rule. The block draws text rather than composing it because a section is measured at several
-  widths: a childless `Layout` answers an intrinsic measurement by running its measure block, so the height for a
-  candidate width already counts the rows the tab wraps into.
-- A run with no staff line (chord names over lyrics in `{start_of_tab}`) is preformatted text, cut between words
-  (`wrapPreformatted`), a chord line kept with its lyrics. **Nothing on the page scrolls sideways.**
-- Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) pads every bar so bar lines align across lines; text
-  after a line's last bar line is aligned with nothing so it never widens a bar; each bar is one text, since only one
-  monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`), a too-wide bar inside
-  itself.
-- A paragraph holding nothing but one tab or grid run is headed "Tab" / "Grid" (screen and PDF); one with lyrics around
-  the run is not.
-
-#### Tempo and time changes
-
-Product side in `ui/metronome/CLAUDE.md`.
-
-- Unpaged layouts (the editor's preview, a songbook) show changes as lines; a songbook with changes is one column
-  whatever the width (`widthColumnCountFor`).
-
-### Folding
-
-- Every section with a header folds, and so does every tab or grid run inside one (`FoldedRuns`). Saved per song in
-  `UserPreferences.foldedSections` (`toggleSectionFold`), the same wherever the song is opened from: it is the reader's,
-  so it never reaches a setlist, an export, or a sync run; a rename carries it, a deletion drops it.
-- The page remembers only keys toggled while it was open, so only those fade in.
-- A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill (`UNNAMED_SECTION_HEADER`),
-  named for screen readers by `firstLyric`. The editor's preview folds nothing but draws that pill empty, keeping the
-  chevron's room, so it lays out like the details screen.
-- A chorus has no pill and folds from its whole title row; its card's paddings are inside `SongSectionContent` so the
-  press reaches the card's edges. The chevron is `components/ExpandChevron.kt`, shared by every fold in the app.
-- Folds are part of `UnitContent.foldedKeys`, so a fold re-measures only its own section (the grid is still
-  re-searched). An unfolding run animates only opacity: a height still animating would be measured halfway.
-
-### Layout (`SongSectionsLayout`; the search and placement rules are in `ui/songView/grid/CLAUDE.md`)
-
-- **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just
-  tapped would move and a second tap miss. Armed in a `SideEffect` ahead of the frame's measure, released only by the
-  delay; `SongSectionsLayout` records spreads and page shifts on unheld lookahead passes, `arrange`'s `heldSpreads` /
-  `heldPageShifts` place them. `SongLyrics` passing no hold turns it off.
-- The editor's preview and a songbook (over `MAX_CUT_SECTION_COUNT`, 200 sections) keep a plain, unmeasured single
-  column, neither cut, narrowed, nor fitted: the search would rerun on every pinch frame, and typing would move pieces.
-- A continuation piece shows no header. Chorus cards are drawn by the layout behind the chunks, one per piece, padding
-  inside the first and last chunk and added at a cut, so an uncut card is unchanged.
-- **Motion** (`SectionMotion`): a single change springs with `animateBounds` in a `LookaheadScope`; continuous changes
-  (pinch, resize, title row collapse, metronome panel; `GLIDE` from the second change within 200 ms) follow directly,
-  only a new grid's jump glided (`SectionGlides`, an offset from the lookahead pass, so each section is measured once).
-  The preview animates neither (`NONE`).
-- `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px with any width: animated sections are
-  measured no taller than half that (`maxAnimatedSectionHeight`), and one reaching it loses the modifier.
-- Each section is a traversal group indexed in song order, or screen readers read across the columns.
-- `SongDetailsScreen` passes `availableHeight` from a `BoxWithConstraints`: inside `verticalScroll` height is infinite.
-
 ### Scrolling, stepping, and snapping
 
 - **A fling rests the top of the screen exactly below a row's divider** (`RowSnapping.kt`, rows from `SongRows`); a row
   taller than the screen is landed on at its top and then scrolls freely. Rows are measured by content, never trailing
   space. The fling finishes the sub-pixel remainder. The top fade is the scroll past the current row's top
   (`SongRows.scrolledIntoRow`), so a rested row is unfaded. Dividers come from the lookahead pass, not mid-animation.
-- **Every row shorter than the screen is followed by space down to its bottom** (`minRowPitch`, where `rowViewportHeight`
-  is given; never in the preview), the last too (`minLastRowHeight`), so a rest shows one row. Only where the song
-  scrolls anyway.
 - **Step buttons** (`StepButtons`, one pair over the whole pager, answering the current page's `SongStepper`): stops are
   rows or pages, or sections in an unpaged single column, each stop `EDGE_FADE_SIZE` above its section. `SongStepper`
   scans offsets without sorting or allocating per scroll update.

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongLyricsModel
+import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue

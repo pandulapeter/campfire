@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songControlHeight
+import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height

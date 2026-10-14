@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionsLayout
+import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import kotlin.math.abs

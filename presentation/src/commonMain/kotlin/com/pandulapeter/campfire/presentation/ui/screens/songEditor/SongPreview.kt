@@ -38,9 +38,9 @@ import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
+import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels

@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songControlHeight
+import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
+import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoCard

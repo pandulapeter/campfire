@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools

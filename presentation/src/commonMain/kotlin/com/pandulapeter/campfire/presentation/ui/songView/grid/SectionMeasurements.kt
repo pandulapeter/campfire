@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionsLayout
+import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.Constraints
 

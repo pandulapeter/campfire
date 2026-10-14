@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.SongRows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
