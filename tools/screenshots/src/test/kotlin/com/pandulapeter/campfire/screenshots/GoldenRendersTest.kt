@@ -72,6 +72,7 @@ internal class GoldenRendersTest {
                 }
             }.onFailure { failures += "${case.name} could not be drawn: $it" }
         }
+        failures += goldens.unused(cases.map { it.name }.toSet()).map { "$it has a golden but no case; delete the image." }
         if (!goldens.wereCompared) println("The golden renders were drawn but not compared, which only happens on Linux.")
         if (failures.isNotEmpty()) fail(failures.joinToString(separator = "\n", postfix = "\nThe new images are in build/goldens."))
     }

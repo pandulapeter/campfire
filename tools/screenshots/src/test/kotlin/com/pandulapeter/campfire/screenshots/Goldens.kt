@@ -42,6 +42,9 @@ internal class Goldens(private val directory: File, private val output: File, pr
         }
     }
 
+    /** The goldens no case is called by any more, which would otherwise stay in the folder unnoticed. */
+    fun unused(names: Set<String>) = directory.listFiles().orEmpty().map { it.name }.filter { it.endsWith(".png") }.map { it.removeSuffix(".png") }.filter { it !in names }.sorted()
+
     /** Whether the goldens were compared at all, for the run to say when they were not. */
     val wereCompared get() = isComparing
 
