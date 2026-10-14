@@ -42,7 +42,7 @@ The view model facade, the composition root and navigation chrome, and the produ
   right while animating away — so lists combine `activeQuery`, gated on `isOpen`, never the raw text.
 - `visibleSetlists` (archive filter only) is kept apart from `setlistsWithSongs` (search applied) so placeholders can
   tell the two empty states apart. Each entry carries its place in its setlist, missing files included.
-- **Renames** (`state/SongFilesController.kt`; metronome and navigator follow themselves, `followSongRename`): entries on
+- **Renames** (`state/songs/SongFilesController.kt`; metronome and navigator follow themselves, `followSongRename`): entries on
   the old name are rewritten, not popped (each song once, or two pages would share a key). The file moves before
   references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a
   playing click's changes until its context names the new file (`metronomeRenames`). A state, not a wait: no emission

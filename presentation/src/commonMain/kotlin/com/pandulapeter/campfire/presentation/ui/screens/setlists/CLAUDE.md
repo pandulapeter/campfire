@@ -50,7 +50,7 @@ The setlists screen.
 - The screen keeps the dragged order (`DraggedSetlist`, via `SetlistWithSongs.rows`) until the library agrees, or the
   write fails / is refused / the setlist is archived, so nothing snaps back mid-write.
 - `reorderSetlist` writes once at the end, dealing the dragged songs back into the slots they held (`withSongOrder`,
-  `ui/state/SetlistSongOrder.kt`) so an entry that reached the file meanwhile keeps its place. Writing per move made
+  `ui/state/setlists/SetlistSongOrder.kt`) so an entry that reached the file meanwhile keeps its place. Writing per move made
   quick drags jump.
 - Other setlists' rows are not drop targets (`ReorderableItem`'s `enabled`): the reorderable state locks after each move
   until the list answers, and a cross-setlist move is never answered, freezing the drag.

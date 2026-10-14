@@ -118,7 +118,7 @@ Flow<SongCreditsState>`. Nothing is kept.
 
 ### 2.5 `:presentation`
 
-- **`state/SongDetailsLookupController`**, beside `CoverArtSearchController`: `songDetailsLookup` (`Idle`,
+- **`state/online/SongDetailsLookupController`**, beside `CoverArtSearchController`: `songDetailsLookup` (`Idle`,
   `Active(query, results)`), `songCredits` (the candidate's key and its state), `searchSongDetails(query)` and
   `loadSongCredits(candidate)`, each cancelling the previous one, and `clear()`. The view model's dialog listener starts
   the search as the sheet is put up and clears both whenever the dialog on screen stops being the lookup.
