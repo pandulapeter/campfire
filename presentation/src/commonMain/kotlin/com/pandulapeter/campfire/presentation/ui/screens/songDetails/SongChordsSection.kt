@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
+import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown

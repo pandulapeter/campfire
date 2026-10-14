@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.CardKey
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
+import com.pandulapeter.campfire.presentation.ui.songView.model.UnitKey
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionGrid
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMetrics

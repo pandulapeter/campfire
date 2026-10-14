@@ -9,6 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentChipsContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
+import com.pandulapeter.campfire.presentation.ui.songView.model.chordCellsOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.definitionCellsOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell

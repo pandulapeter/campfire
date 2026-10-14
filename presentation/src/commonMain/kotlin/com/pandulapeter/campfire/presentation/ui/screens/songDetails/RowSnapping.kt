@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 

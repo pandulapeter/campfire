@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
+import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
+import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItem
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
+import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues

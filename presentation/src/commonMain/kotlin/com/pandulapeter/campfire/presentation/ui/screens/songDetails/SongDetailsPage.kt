@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
+import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
+import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut

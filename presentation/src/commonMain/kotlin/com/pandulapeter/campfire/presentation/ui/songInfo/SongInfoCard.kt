@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songInfo
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withMetadataSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSection
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

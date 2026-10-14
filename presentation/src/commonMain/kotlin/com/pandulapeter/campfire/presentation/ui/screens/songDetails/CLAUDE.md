@@ -26,16 +26,6 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 ### Rendering (`SongLyrics.kt` and its siblings)
 
 - Tabs and grids are monospace: columns of characters that must line up.
-- A comment's bracketed chords are transposed and colored (`ChordProHighlighter.chordsOfShownText`, shared with the
-  editor). A chorus recall draws everything `ChordProBlock.ChorusRecall` carries, headed once.
-- **A section cut by a comment, break, or `{transpose}` is drawn whole again** (`joinCutSections` (shared with the PDF), over
-  `Section.isContinuation`), so the comment stays between its lines rather than becoming a unit that could land
-  elsewhere. Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section
-  folds with it; one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
-- A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
-  the capo left out as in the Transposition control; omitted where the song has no `{key}` or the chords are off.
-- Lyrics-only mode drops tab and grid lines (and comments inside them, `isInTabOrGrid`), a section left empty whole, and
-  the info section's key, capo, tempo, and time line (the section itself where nothing else is, `withMetadataSection`).
 - Lyrics take their direction from content (`TextDirection.Content`), so chords of an RTL line hang leftwards.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
   (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary (padding whitespace is
@@ -66,12 +56,6 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 Product side in `ui/metronome/CLAUDE.md`.
 
-- **A later `{tempo}` / `{time}` starts a page of its own** (`RenderSection.Timing`, `showsTiming`): never joined into
-  its section; a read-only `SongTimingLine` stands in its place (an override scaled in by `withTempo` / `sectionBpm`); the
-  rest of the section is headed by its fold toggle alone and folded under the section's key plus `~n`, so switching the
-  Metronome feature does not renumber later folds. With the feature off it is joined over like a `{transpose}`.
-- A timing line with no song line after it is dropped (`withoutEmptyTimings`, after `LayoutBudget`).
-- A change before the first line starts no page (`timingStretchesOf`); `SongRows.timingSections` reports it at section 0.
 - Unpaged layouts (the editor's preview, a songbook) show changes as lines; a songbook with changes is one column
   whatever the width (`widthColumnCountFor`).
 
@@ -80,20 +64,10 @@ Product side in `ui/metronome/CLAUDE.md`.
 - Every section with a header folds, and so does every tab or grid run inside one (`FoldedRuns`). Saved per song in
   `UserPreferences.foldedSections` (`toggleSectionFold`), the same wherever the song is opened from: it is the reader's,
   so it never reaches a setlist, an export, or a sync run; a rename carries it, a deletion drops it.
-- **A fold is keyed by what the file calls the section** (label as written, else its kind) plus which occurrence
-  (`chorus#2`), and a run by its section's key plus its own label or kind (`Intro#1/Picking pattern#1`). Never by
-  position (a verse added above would shift every fold) and never by the shown heading (translated).
 - The page remembers only keys toggled while it was open, so only those fade in.
-- Every section has a header: unnamed kinds labelled in the app's language (`DefaultSectionLabels.labelOf`, shared with
-  the PDF), numbered where a song has several (`withNumberedSections` in `SectionNumbering.kt`,
-  `UserPreferences.shouldNumberSections`). Only unlabelled sections and those labelled with the kind's own name are
-  numbered, and "Verse 2" keeps its number, so no two share one. The number is `Section.number`, not part of the label,
-  so the saved folds do not move with the setting. An unnamed `{chorus}` recall takes the repeated chorus's number.
 - A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill (`UNNAMED_SECTION_HEADER`),
   named for screen readers by `firstLyric`. The editor's preview folds nothing but draws that pill empty, keeping the
   chevron's room, so it lays out like the details screen.
-- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid"; two back-to-back environments with
-  different labels fold apart; a section that is only one run folds as the section, no second toggle.
 - A chorus has no pill and folds from its whole title row; its card's paddings are inside `SongSectionContent` so the
   press reaches the card's edges. The chevron is `components/ExpandChevron.kt`, shared by every fold in the app.
 - Folds are part of `UnitContent.foldedKeys`, so a fold re-measures only its own section (the grid is still
@@ -117,17 +91,6 @@ Product side in `ui/metronome/CLAUDE.md`.
   the neck); split around the tools.
 - In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under one
   key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
-
-### Building the model, and the budget
-
-- `rememberSongLyricsModel` parses, transposes, and splits off the main thread, except the first rendering of the page
-  on screen (and pages before it), built in place (`buildsModelInPlace`) so the page never opens on an empty frame and a
-  step back from a song's top has the previous song's end to land on. Search-found chord shapes follow from
-  `Dispatchers.Default`. Later builds keep the previous rendering until the next is ready.
-- **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
-  line measured on the main thread, and a concatenated songbook or a log file froze the app for seconds (on a phone,
-  killed it). The model stops after the last section that fits (or inside an oversized first one) and says so; the file
-  is untouched and the header is built from all of it.
 
 ### Layout (`SongSectionsLayout`; the search and placement rules are in `ui/songView/grid/CLAUDE.md`)
 

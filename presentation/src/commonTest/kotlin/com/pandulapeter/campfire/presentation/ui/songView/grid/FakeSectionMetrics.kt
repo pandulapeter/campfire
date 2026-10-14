@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongUnits
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 
 /**
  * The units of a song as lists of line widths in pixels, measured the way text is: every line a lyric line of

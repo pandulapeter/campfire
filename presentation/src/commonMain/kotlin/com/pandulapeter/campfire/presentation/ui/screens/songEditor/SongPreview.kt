@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.contentEdges
@@ -41,8 +41,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
+import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 import kotlinx.coroutines.Dispatchers

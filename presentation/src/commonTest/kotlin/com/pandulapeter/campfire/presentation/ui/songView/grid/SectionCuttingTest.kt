@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.sectionChunkStarts
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionItemKind.BLANK
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionItemKind.COMMENT
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionItemKind.CONTENT
+import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItemKind.BLANK
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItemKind.COMMENT
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItemKind.CONTENT
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals

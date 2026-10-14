@@ -7,8 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songView.model
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongRows
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongSectionsLayout
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.places
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionSizesPool
 import androidx.compose.foundation.layout.size
 

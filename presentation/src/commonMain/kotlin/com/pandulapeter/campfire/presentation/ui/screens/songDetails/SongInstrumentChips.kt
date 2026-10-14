@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable

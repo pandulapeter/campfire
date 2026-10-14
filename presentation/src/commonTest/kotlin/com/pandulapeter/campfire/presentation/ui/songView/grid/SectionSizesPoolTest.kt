@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.RenderSection
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionPart
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.UnitContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
+import com.pandulapeter.campfire.presentation.ui.songView.model.UnitContent
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
 import kotlin.test.assertNotSame
