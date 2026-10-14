@@ -101,7 +101,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
-import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.filledForm
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot

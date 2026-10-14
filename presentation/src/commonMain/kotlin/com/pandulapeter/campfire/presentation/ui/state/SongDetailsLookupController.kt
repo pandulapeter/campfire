@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.SongCreditsLookup
-import com.pandulapeter.campfire.presentation.ui.dialogs.SongDetailsLookupState
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongCreditsLookup
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongDetailsLookupState
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

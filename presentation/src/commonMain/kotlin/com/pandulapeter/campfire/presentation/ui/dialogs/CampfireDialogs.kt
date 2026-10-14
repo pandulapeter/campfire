@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongDetailsLookupSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.AppLanguageSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SelectionSetlistsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker

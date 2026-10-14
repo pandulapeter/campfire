@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
-import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
+import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
