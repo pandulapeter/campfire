@@ -59,7 +59,8 @@ language, theme, and system text size.
   the ways to a screen or sheet that several of them take are `AppTestNavigation.kt`'s.
 - The library is the demo songs plus the `src/test/resources/songs` and `setlists` files a test names; never the tool's
   own `library/`. A preferences document is written, so no onboarding and no planted demo; covers are off unless asked
-  for, and the song text size is `runAppTest`'s `fontScale`.
+  for, and the song text size is `runAppTest`'s `fontScale`. `isFirstRun` starts from an empty data directory instead,
+  in English (the system's language, pinned for the test).
 - **What may be faked** is only what reaches outside or picks files: `Fakes.kt`, `TestFakes.kt` (the cover search finds
   nothing, no cover downloads), and the test's file picker (`pickedFiles`). A new fake comes with the test that needs it.
 - **The keyboard** is the test's to raise (`keyboardHeight`): the desktop has none. It reaches the app twice, through

@@ -40,6 +40,7 @@ import kotlinx.serialization.json.putJsonArray
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
 import java.io.File
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -73,6 +74,9 @@ internal data class TestAppearance(
  * Only the network is kept out: sync is `Fakes.kt`'s, the cover search finds nothing (`OfflineCoverArtRepository`),
  * covers are switched off unless [isCoverArtEnabled], and nothing else reaches outside unless a test opens a song
  * details lookup. The current version's What's new counts as seen.
+ *
+ * With [isFirstRun] the data directory starts empty instead, as a fresh install's does: no preferences, so the
+ * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to English.
  */
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class, InternalTestApi::class)
 internal fun runAppTest(
@@ -83,12 +87,44 @@ internal fun runAppTest(
     pickedFiles: List<ImportedFile> = emptyList(),
     appearance: TestAppearance = TestAppearance(),
     isCoverArtEnabled: Boolean = false,
+    isFirstRun: Boolean = false,
+    test: suspend AppTestScope.() -> Unit,
+) {
+    if (isFirstRun) {
+        require(songs.isEmpty() && setlists.isEmpty() && !isCoverArtEnabled && fontScale == UserPreferences.DEFAULT_FONT_SCALE) {
+            "A first run starts from an empty data directory, which has no songs, setlists, or preferences to set."
+        }
+    }
+    // Without a preferences document the app speaks the system's language, which the test JVM leaves to the machine.
+    val systemLocale = Locale.getDefault()
+    if (isFirstRun) Locale.setDefault(Locale.ENGLISH)
+    try {
+        runApp(
+            window = window,
+            pickedFiles = pickedFiles,
+            appearance = appearance,
+            writeData = { dataDirectory ->
+                if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled)
+            },
+            test = test,
+        )
+    } finally {
+        Locale.setDefault(systemLocale)
+    }
+}
+
+@OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class, InternalTestApi::class)
+private fun runApp(
+    window: TestWindow,
+    pickedFiles: List<ImportedFile>,
+    appearance: TestAppearance,
+    writeData: (File) -> Unit,
     test: suspend AppTestScope.() -> Unit,
 ) = withCampfireApp(
     platform = ImpersonatedPlatform.ANDROID,
     chrome = SystemChrome.None,
     density = 1f,
-    writeData = { dataDirectory -> writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled) },
+    writeData = writeData,
 ) { host ->
     host.koin.loadModules(listOf(testFakes), allowOverride = true)
     val keyboardHeight = mutableStateOf(0.dp)
