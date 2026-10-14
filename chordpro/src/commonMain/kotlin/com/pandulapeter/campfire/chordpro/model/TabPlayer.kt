@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.chordpro.model
 import com.pandulapeter.campfire.chordpro.ChordNotation
 
 /**
- * The reader a song's tablature is shown to, which [com.pandulapeter.campfire.chordpro.chords.ChordProTabs] and the
+ * The reader a song's tablature is shown to, which [com.pandulapeter.campfire.chordpro.tabs.ChordProTabs] and the
  * transposition move it for. Everything that knows about instruments is handed in, since this module knows the
  * instruments it draws chord shapes for and not the ones a tab may be written for (a bass, a seven-string guitar).
  *

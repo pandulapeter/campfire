@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 
 /**
  * One line inside a [ChordProBlock.Section].
@@ -28,7 +28,7 @@ public sealed interface ChordProLine {
 
     /**
      * One line inside {start_of_tab}: monospaced, cut at its columns rather than reflowed by its words when it is
-     * too wide (see [com.pandulapeter.campfire.chordpro.ChordProTabWrapper]); transposed on the frets, not on the
+     * too wide (see [ChordProTabWrapper]); transposed on the frets, not on the
      * notes. A run of them can sit anywhere inside a section, with lyrics before and after it.
      */
     public data class Tab(
@@ -44,7 +44,7 @@ public sealed interface ChordProLine {
         /**
          * The selector of the `{start_of_tab}` the line was written in, on every line of it: the instrument it is
          * for (`guitar` for `{start_of_tab-guitar}`), with a `!` after it where it is for every instrument but that
-         * one, or null for a tab written for everybody. See [com.pandulapeter.campfire.chordpro.chords.ChordProTabs.select].
+         * one, or null for a tab written for everybody. See [com.pandulapeter.campfire.chordpro.tabs.ChordProTabs.select].
          */
         val selector: String? = null,
         /**

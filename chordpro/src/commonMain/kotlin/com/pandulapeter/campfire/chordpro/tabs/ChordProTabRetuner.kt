@@ -7,15 +7,17 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro.chords
+package com.pandulapeter.campfire.chordpro.tabs
 
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.StaffPrefix
-import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.respelled
-import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.shiftedBy
-import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.staffPrefix
-import com.pandulapeter.campfire.chordpro.chords.ChordProTabTransposer.SEMITONES_IN_OCTAVE
-import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.tabs.ChordProStaffNames.StaffPrefix
+import com.pandulapeter.campfire.chordpro.tabs.ChordProStaffNames.respelled
+import com.pandulapeter.campfire.chordpro.tabs.ChordProStaffNames.shiftedBy
+import com.pandulapeter.campfire.chordpro.tabs.ChordProStaffNames.staffPrefix
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer.SEMITONES_IN_OCTAVE
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.TabNotice
 import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.chordpro.model.TabTuning

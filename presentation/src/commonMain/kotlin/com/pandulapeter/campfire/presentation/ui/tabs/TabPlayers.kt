@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.tabs
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTabs
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabs
 import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.chordpro.model.TabTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences

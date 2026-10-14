@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.tabs.ChordProStaffNames
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProSong

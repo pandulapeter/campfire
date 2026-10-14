@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.rendering
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTabs
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabs
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
