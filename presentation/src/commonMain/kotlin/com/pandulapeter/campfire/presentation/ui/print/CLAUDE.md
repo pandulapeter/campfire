@@ -80,7 +80,6 @@ kept). Diagrams use the screen's `drawChordDiagram` in black (root mid gray), th
 - A run holding any RTL cluster (`rtlRuns`, the whole run) is wrapped in a `/Span` with `ActualText`, since readers
   ordering by position would read it backwards; the importer honours it.
 - No font programs are embedded, so visible glyphs match the preview.
-- Check selection and search by hand in Chrome (accents, chords, columns, no duplicate text).
 
 ## Tests
 
