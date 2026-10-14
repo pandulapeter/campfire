@@ -142,7 +142,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SelectionEditing
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
-import com.pandulapeter.campfire.presentation.ui.state.SetlistsController
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.SongFilesController

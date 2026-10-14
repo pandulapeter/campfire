@@ -7,8 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.state
+package com.pandulapeter.campfire.presentation.ui.state.setlists
 
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import com.pandulapeter.campfire.presentation.ui.state.asState
+import com.pandulapeter.campfire.presentation.ui.state.setlistListPlaceholder
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,9 +39,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
-import com.pandulapeter.campfire.presentation.ui.state.withSongTicked
-import com.pandulapeter.campfire.presentation.ui.state.withSongsAdded
-import com.pandulapeter.campfire.presentation.ui.state.withSongsTakenOut
+import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongTicked
+import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongsAdded
+import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongsTakenOut
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
