@@ -42,9 +42,7 @@ split exists so a whole archive can be put to the user as one review before anyt
 
 - **Every import the user starts is reviewed before it writes** on its own screen (`CampfireDestination.ImportReport`,
   `:presentation`'s `ui/screens/importReport/`): every entry listed and ticked; names taken by something *different*
-  each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out; leaving the
-  screen cancels. The demo library and a single song file handed over by the system are not reviewed unless a name
-  they want is taken.
+  each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out.
 - **Replacing is the only overwrite in the app**: a choice on that screen plus a confirmation, and only
   `ImportConflictResolution.REPLACE` overwrites. `ImportFilesUseCaseImpl` re-checks the rule at the write.
 - A song already in the library under its name, a numbered sibling (`x_2.cho`), or the exact name it arrived under is
