@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
@@ -236,6 +237,16 @@ internal class SongMetadataEditing(
             .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
             .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
         if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
+    }
+
+    /** Reopens the song edit sheet [saved] names over [song], through the opener its menu uses, see `SavedDialogRestorer`. */
+    fun showSavedSongEdit(saved: SavedDialog.SongEdit, song: Song) = when (saved.kind) {
+        SavedDialog.SongEdit.Kind.TAGS -> showSongTagsDialog(song, saved.target)
+        SavedDialog.SongEdit.Kind.LANGUAGES -> showSongLanguagesDialog(song, saved.target)
+        SavedDialog.SongEdit.Kind.METADATA -> showSongMetadataDialog(song, saved.target)
+        SavedDialog.SongEdit.Kind.LINKS -> showSongLinksDialog(song, saved.target)
+        SavedDialog.SongEdit.Kind.PLAYING -> showSongPlayingDialog(song, saved.setlistFileName, saved.target)
+        SavedDialog.SongEdit.Kind.COVER_ART -> showSongCoverArtDialog(song, saved.target)
     }
 
     /** A key typed in the editor's notation, as the file is to hold it; the inverse of [SongRenderer.editorKeyOf]. */

@@ -69,6 +69,16 @@ class SavedDialogTest {
     }
 
     @Test
+    fun `the topmost sheet worth reopening is the one saved`() {
+        assertEquals(SavedDialog.NewSetlist, savedDialogOf(listOf(DialogType.NewSetlist, DialogType.UnsavedChanges)))
+        assertEquals(
+            SavedDialog.SetlistPicker(songFileName = "a.cho", setlistFileName = null),
+            savedDialogOf(listOf(DialogType.SongPicker(setlist), DialogType.SetlistPicker(song))),
+        )
+        assertNull(savedDialogOf(listOf(DialogType.Tuner, DialogType.ConfirmExit)))
+    }
+
+    @Test
     fun `confirmations, the export screen, the tuner and sheets with nothing typed are not saved`() {
         listOf(
             DialogType.DeleteLibrary,

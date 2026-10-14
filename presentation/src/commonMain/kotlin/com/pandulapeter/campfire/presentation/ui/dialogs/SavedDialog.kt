@@ -67,6 +67,12 @@ internal sealed interface SavedDialog {
     }
 }
 
+/**
+ * The sheet of [openDialogs] (bottom first) a restored process should reopen: the topmost one worth reopening rather
+ * than the one on top, so that a sheet with a question over it is what comes back.
+ */
+internal fun savedDialogOf(openDialogs: List<DialogType>): SavedDialog? = openDialogs.asReversed().firstNotNullOfOrNull { it.toSavedDialog() }
+
 /** What of this dialog is worth reopening in a restored process, see [SavedDialog]; null for everything else. */
 internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     DialogType.NewSong -> SavedDialog.NewSong

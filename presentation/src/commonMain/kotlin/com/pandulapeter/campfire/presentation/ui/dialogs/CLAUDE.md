@@ -13,7 +13,7 @@
 Dialog and sheet content. The export screen is `ui/screens/export`.
 
 - A new form sheet with typed or picked input gets a `SavedDialog` variant, so a process Android restores reopens it
-  (see `ui/navigation`). A new confirmation deliberately does not: an unanswered question is not one to put back.
+  (`SavedDialogRestorer`). A new confirmation deliberately does not: an unanswered question is not one to put back.
 - **A dialog or sheet is titled with the label of the entry that opened it**; one about one song or setlist names it in
   the `SheetHeader` subtitle.
 - A dialog about one song (setlist picker, tag and language dialogs, delete confirmation) is taken down by the view
@@ -36,8 +36,8 @@ away and uncovers the one under it as it was (its sheet, draft and scroll positi
   (`dismissSheet`); an underlying dialog that must change is updated in place (`updateUnderlyingDialog`); a question
   whose answer leaves the sheet under it nothing to do asks that sheet to close itself (`dismissDialogAndSheetUnder`,
   `closeRequest`, read by `CampfireBottomSheet` through `LocalIsSheetCloseRequested`).
-- What belongs to a sheet for as long as it is anywhere in the stack (the cover search, the lookup search, the dialog a
-  restored process reopens — the topmost with a `SavedDialog`) is kept by `DialogHost.addOpenDialogsChange`.
+- What belongs to a sheet for as long as it is anywhere in the stack (the cover search, the lookup search, the sheet
+  `SavedDialogRestorer` saves) is kept by `DialogHost.addOpenDialogsChange`.
 - Nested setlist naming and calendar sheets are local state of the sheet under them, not stack entries.
 
 ### `CampfireBottomSheet`

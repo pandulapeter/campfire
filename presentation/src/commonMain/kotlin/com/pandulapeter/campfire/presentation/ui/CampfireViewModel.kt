@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -106,9 +105,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
-import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
-import com.pandulapeter.campfire.presentation.ui.dialogs.toSavedDialog
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
@@ -116,6 +113,7 @@ import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
+import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialogRestorer
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
@@ -161,11 +159,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -325,9 +318,7 @@ class CampfireViewModel(
             if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) stopTuner()
         }
         addOpenDialogsChange { before, after ->
-            // Every change is written, so that a sheet that goes takes its entry with it. The topmost one worth reopening
-            // rather than the one on top, so that a sheet with a question over it is what a restored process opens.
-            savedStateStore.persist(SavedStateStore.VISIBLE_DIALOG_KEY, after.asReversed().firstNotNullOfOrNull { it.toSavedDialog() })
+            savedDialogRestorer.onOpenDialogsChanged(after)
             coverArtSearchController.onOpenDialogsChanged(before = before, after = after)
             songDetailsLookupController.onOpenDialogsChanged(before = before, after = after)
         }
@@ -742,6 +733,20 @@ class CampfireViewModel(
         deleteSongFile = deleteSong,
     )
 
+    private val savedDialogRestorer: SavedDialogRestorer = SavedDialogRestorer(
+        scope = viewModelScope,
+        savedStateStore = savedStateStore,
+        dialogHost = dialogHost,
+        backStack = backStack,
+        songLookup = songLookup,
+        setlists = setlists,
+        editorDraft = editorSession.editorDraft,
+        songTexts = songTexts,
+        loadSongContent = { loadSongContent(it) },
+        duplicateSongDialogOf = { songFilesController.duplicateSongDialogOf(it) },
+        showSavedSongEdit = songMetadataEditing::showSavedSongEdit,
+    )
+
     /** See [ImportController.isImporting]. */
     val isImporting: StateFlow<Boolean> get() = importController.isImporting
 
@@ -1010,7 +1015,7 @@ class CampfireViewModel(
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         editorSession.startRecovery()
-        restoreVisibleDialog()
+        savedDialogRestorer.start()
         songSelection.startPruning(screenData)
         viewModelScope.launch {
             // Performance mode leaves no row menu to start the mode from, and no way to act on what is ticked.
@@ -1564,69 +1569,6 @@ class CampfireViewModel(
 
     /** See [DialogHost.dismissSheet]. */
     fun dismissSheet(dialogType: DialogType) = dialogHost.dismissSheet(dialogType)
-
-    /**
-     * Reopens the form sheet that was up when Android ended the process, see [SavedDialog], through the opener its menu
-     * uses, so that the sheet composes where it did and its saved fields find it again. Not before the library has been
-     * read and indexed and, for a sheet over a song's text, the text is held, since the openers read both; given up as
-     * soon as the screen on top is another one, which a sheet put up later would cover by mistake. A sheet that cannot
-     * be reopened takes its entry with it, so that the next process death does not try it again.
-     */
-    private fun restoreVisibleDialog() {
-        val saved = restore<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY) ?: return
-        val top = backStack.lastOrNull()
-        viewModelScope.launch {
-            val isReopened = merge(
-                flow { emit(reopenSavedDialog(saved, top)) },
-                snapshotFlow { backStack.lastOrNull() }.filter { it != top }.map { false },
-            ).first()
-            if (!isReopened) savedStateStore.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, null)
-        }
-    }
-
-    private suspend fun reopenSavedDialog(saved: SavedDialog, top: CampfireDestination?): Boolean {
-        if (saved is SavedDialog.SongEdit && saved.isEditorDraft) {
-            // The editor reports its text only once it has composed, which it may never do if it is not on top.
-            if (top !is CampfireDestination.SongEditor || top.fileName != saved.songFileName) return false
-        }
-        val lookup = songLookup.first { it.isLibraryRead }
-        fun songOf(fileName: String) = lookup.songsByFileName[fileName]
-        fun setlistOf(fileName: String) = setlists.value.firstOrNull { it.fileName == fileName }
-        if (saved is SavedDialog.SongEdit) {
-            if (saved.isEditorDraft) {
-                editorSession.editorDraft.first { it?.fileName == saved.songFileName }
-            } else {
-                loadSongContent(saved.songFileName).join()
-                if (songTexts.value[saved.songFileName] == null) return false
-            }
-        }
-        // What's new or an import question go first.
-        if (dialogHost.visibleDialog.value != null) return false
-        when (saved) {
-            SavedDialog.NewSong -> showDialog(DialogType.NewSong)
-            is SavedDialog.DuplicateSong -> showDialog(songFilesController.duplicateSongDialogOf(songOf(saved.songFileName) ?: return false) ?: return false)
-            SavedDialog.NewSetlist -> showDialog(DialogType.NewSetlist)
-            is SavedDialog.EditSetlist -> showDialog(DialogType.EditSetlist(setlistOf(saved.setlistFileName) ?: return false))
-            is SavedDialog.DuplicateSetlist -> showDialog(DialogType.DuplicateSetlist(setlistOf(saved.setlistFileName) ?: return false))
-            is SavedDialog.SongPicker -> showDialog(DialogType.SongPicker(setlistOf(saved.setlistFileName) ?: return false))
-            is SavedDialog.SetlistPicker -> showDialog(
-                DialogType.SetlistPicker(song = songOf(saved.songFileName) ?: return false, setlistFileName = saved.setlistFileName),
-            )
-            is SavedDialog.SongEdit -> {
-                val song = songOf(saved.songFileName) ?: return false
-                when (saved.kind) {
-                    SavedDialog.SongEdit.Kind.TAGS -> showSongTagsDialog(song, saved.target)
-                    SavedDialog.SongEdit.Kind.LANGUAGES -> showSongLanguagesDialog(song, saved.target)
-                    SavedDialog.SongEdit.Kind.METADATA -> showSongMetadataDialog(song, saved.target)
-                    SavedDialog.SongEdit.Kind.LINKS -> showSongLinksDialog(song, saved.target)
-                    SavedDialog.SongEdit.Kind.PLAYING -> showSongPlayingDialog(song, saved.setlistFileName, saved.target)
-                    SavedDialog.SongEdit.Kind.COVER_ART -> showSongCoverArtDialog(song, saved.target)
-                }
-            }
-        }
-        // An opener that found nothing to open on puts nothing up.
-        return dialogHost.visibleDialog.value != null
-    }
 
     // Helpers
 
