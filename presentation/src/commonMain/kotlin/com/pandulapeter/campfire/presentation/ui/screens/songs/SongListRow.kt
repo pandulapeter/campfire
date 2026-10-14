@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
+import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistAssignmentsButton

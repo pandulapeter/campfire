@@ -61,11 +61,11 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_add
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
-import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
-import com.pandulapeter.campfire.presentation.ui.components.TagPill
-import com.pandulapeter.campfire.presentation.ui.components.languageLabel
-import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
-import com.pandulapeter.campfire.presentation.ui.components.tagColor
+import com.pandulapeter.campfire.presentation.ui.components.labels.TagFlowRow
+import com.pandulapeter.campfire.presentation.ui.components.labels.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.labels.languageLabel
+import com.pandulapeter.campfire.presentation.ui.components.labels.sortedAlphabeticallyBy
+import com.pandulapeter.campfire.presentation.ui.components.labels.tagColor
 import org.jetbrains.compose.resources.painterResource
 
 /**

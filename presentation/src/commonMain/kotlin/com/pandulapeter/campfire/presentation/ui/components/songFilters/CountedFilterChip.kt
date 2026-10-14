@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
 import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
-import com.pandulapeter.campfire.presentation.ui.components.TAG_GAP
-import com.pandulapeter.campfire.presentation.ui.components.TagIcon
+import com.pandulapeter.campfire.presentation.ui.components.labels.TAG_GAP
+import com.pandulapeter.campfire.presentation.ui.components.labels.TagIcon
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState

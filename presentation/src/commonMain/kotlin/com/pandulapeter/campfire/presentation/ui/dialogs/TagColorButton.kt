@@ -46,8 +46,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_n
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
-import com.pandulapeter.campfire.presentation.ui.components.TagColor
-import com.pandulapeter.campfire.presentation.ui.components.TagIcon
+import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
+import com.pandulapeter.campfire.presentation.ui.components.labels.TagIcon
 import com.pandulapeter.campfire.presentation.ui.components.colorChoiceWidth
 import com.pandulapeter.campfire.presentation.ui.components.isDarkerMoreLegible
 import com.pandulapeter.campfire.presentation.ui.components.textResource

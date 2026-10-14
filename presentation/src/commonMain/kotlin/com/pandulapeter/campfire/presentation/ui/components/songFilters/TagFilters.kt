@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.orderedBy
-import com.pandulapeter.campfire.presentation.ui.components.tagColor
+import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
+import com.pandulapeter.campfire.presentation.ui.components.labels.tagColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key

@@ -44,7 +44,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_language_se
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
+import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace
 import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberCh
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
+import com.pandulapeter.campfire.presentation.ui.components.labels.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 

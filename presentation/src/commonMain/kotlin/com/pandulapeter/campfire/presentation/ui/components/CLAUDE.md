@@ -35,14 +35,6 @@ The label sits beside a wide control while its longest word fits, else above it.
 `decidingLabel` names the widest form (measured, never drawn), and a row that stacked at a width stays stacked
 (`isLabelBesideControls`, tested), so nothing moves under a dragging finger. Not animated.
 
-### `ui/components/Languages.kt`
-
-- `LANGUAGE_CODES` (~620: ISO 639-1 plus the 639-2/3 codes it lacks; no browser enumerates languages) is all the app
-  ships. `languageName` asks the platform in the app's language (reactive via `currentLanguage`), capitalizes it (CLDR
-  writes `angol`), falls back to English, then to the code in caps.
-- `pickableLanguages`: sorted through `NormalizeTextUseCase`, the library's own languages first.
-  `SongLanguage.UNKNOWN` is named from string resources.
-
 ### `ui/components/CoverArtImage.kt` / `ProvideCoverArtImageLoader.kt`
 
 - Coil 3 with no network artifact and **no disk cache of its own**: bytes come from `GetCoverArtUseCase` (the offline
@@ -72,21 +64,6 @@ never animates on its own.
 
 Song details and editor only: fades in after 300ms, since one local file is nearly always read before then. Lists keep
 the plain indicator (the launch screen covers their first read).
-
-### `ui/components/TagFlowRow.kt` / `TagPill.kt`
-
-- The one place a tag is drawn. In a song row (`SongLabels`) one line that scrolls sideways, edge fades masked with
-  `BlendMode.DstIn` in an offscreen layer (to fade to the card, not punch through). Labels on **every song in the whole
-  library** are omitted (`labelsOnEverySong`), counted over the whole library, not the filtered list, or a filter would
-  hide the label it filters by.
-- Tapping a row's tag or language toggles its filter chip without scrolling; no row chip edits tags. Setlist rows show
-  no labels (`shouldShowLabels`).
-- Pills are outlined (only a selected row pill is filled). Tags carry `ic_label`, languages `ic_language` — "Magyar" is
-  otherwise ambiguous.
-- `TagIcon` fills the mark with the tag's color under an outline in the content color, so color never stands alone;
-  from `LocalTagColors`, provided once by `CampfireApp`. `TagColor`'s ids are what devices store; an unknown id draws as
-  no color. Light/dark tones are chosen by surface luminance.
-- `LabelSortingToggle` sorts tags and languages on one preference; "Unknown" stays last.
 
 #### Edge fades (`EdgeFade.kt`)
 

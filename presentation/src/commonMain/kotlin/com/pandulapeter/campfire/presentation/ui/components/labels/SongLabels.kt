@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.labels
 
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.data.model.domain.tagKey
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement

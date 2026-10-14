@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.languageLabel
-import com.pandulapeter.campfire.presentation.ui.components.languageName
-import com.pandulapeter.campfire.presentation.ui.components.orderedBy
+import com.pandulapeter.campfire.presentation.ui.components.labels.languageLabel
+import com.pandulapeter.campfire.presentation.ui.components.labels.languageName
+import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

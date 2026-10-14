@@ -44,11 +44,11 @@ import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistO
 import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
-import com.pandulapeter.campfire.presentation.ui.components.languageLabel
-import com.pandulapeter.campfire.presentation.ui.components.languageName
+import com.pandulapeter.campfire.presentation.ui.components.labels.languageLabel
+import com.pandulapeter.campfire.presentation.ui.components.labels.languageName
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.orderedBy
-import com.pandulapeter.campfire.presentation.ui.components.tagColor
+import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
+import com.pandulapeter.campfire.presentation.ui.components.labels.tagColor
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import org.jetbrains.compose.resources.painterResource
 

@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_next
-import com.pandulapeter.campfire.presentation.ui.components.tagPillHeight
+import com.pandulapeter.campfire.presentation.ui.components.labels.tagPillHeight
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import org.jetbrains.compose.resources.painterResource
 

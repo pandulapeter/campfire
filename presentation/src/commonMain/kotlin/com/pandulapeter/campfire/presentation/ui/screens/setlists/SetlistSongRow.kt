@@ -41,7 +41,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
-import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
+import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState

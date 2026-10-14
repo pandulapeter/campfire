@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
 import androidx.compose.animation.animateBounds
 import androidx.compose.foundation.layout.Arrangement
