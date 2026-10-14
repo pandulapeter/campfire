@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -328,6 +330,47 @@ class NavigatorTest {
         navigator.popBackStack()
         navigator.updateBackStack { add(pager) }
         assertEquals("a.cho", navigator.currentSongFileName(pager))
+    }
+
+    @Test
+    fun `a consent answered on the songs opens the settings on the library tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
+        assertEquals(SettingsTab.LIBRARY, navigator.settingsTab)
+    }
+
+    @Test
+    fun `a consent answered on the settings screen stays there and switches to the library tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Settings)
+        val scrollToTopRequests = mutableListOf<ScrollToTopRequest>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(scrollToTopRequests) }
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
+        assertEquals(SettingsTab.LIBRARY, navigator.settingsTab)
+        assertEquals(emptyList(), scrollToTopRequests)
+    }
+
+    @Test
+    fun `a consent asked from an onboarding opened in the settings reopens it on its sync page over the about tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.ONBOARDING_FROM_SETTINGS)
+        assertEquals(
+            listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
+            navigator.backStack.toList(),
+        )
+        assertEquals(SettingsTab.ABOUT, navigator.settingsTab)
+        assertEquals(OnboardingStep.SYNC, navigator.onboardingStep)
+    }
+
+    @Test
+    fun `an answer is not shown over a stack the user has built on`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.openSong(song("a.cho"))
+        val stack = navigator.backStack.toList()
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        assertEquals(stack, navigator.backStack.toList())
     }
 
     private fun song(fileName: String) = Song(

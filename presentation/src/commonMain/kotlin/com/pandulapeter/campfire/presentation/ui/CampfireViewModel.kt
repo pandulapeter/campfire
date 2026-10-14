@@ -115,12 +115,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentAnswer
-import com.pandulapeter.campfire.presentation.ui.platform.keepSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.sync.syncConsentAnswerOf
-import com.pandulapeter.campfire.presentation.ui.sync.syncConsentOriginOf
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
@@ -1010,7 +1008,8 @@ class CampfireViewModel(
         libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
-        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::showSyncConsentAnswer)
+        // The origin is taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
+        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = { navigator.showSyncConsentAnswer(takeSyncConsentOrigin()) })
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
@@ -1068,39 +1067,6 @@ class CampfireViewModel(
     /** See [LaunchState.navigateOnLaunch]. */
     internal fun navigateOnLaunch(resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?) =
         launchState.navigateOnLaunch(resolve)
-
-    /**
-     * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
-     * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen's About tab where that was what opened it, or
-     * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
-     * songs the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
-     * an owed onboarding still on its first page, which a start up that still owes it opens while the
-     * code is being exchanged and which is moved on to its Dropbox page (see [syncConsentAnswerOf]); an onboarding
-     * Android brings back is already on the page that says how it went. The code exchange this
-     * follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile has moved on: the
-     * settings screen says the same thing whenever they get there, and an editor they opened in the meantime holds text
-     * that nothing but its own ways out may take away.
-     */
-    private fun showSyncConsentAnswer() {
-        // Taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
-        val origin = takeSyncConsentOrigin()
-        when (syncConsentAnswerOf(backStack = backStack.toList(), onboardingStep = navigator.onboardingStep, origin = origin)) {
-            SyncConsentAnswer.NOTHING -> Unit
-            SyncConsentAnswer.ONBOARDING -> navigator.openOnboarding(isOpenedFromSettings = false, step = OnboardingStep.SYNC)
-            SyncConsentAnswer.ONBOARDING_FROM_SETTINGS -> {
-                openSettingsOn(SettingsTab.ABOUT)
-                navigator.openOnboarding(isOpenedFromSettings = true, step = OnboardingStep.SYNC)
-            }
-            SyncConsentAnswer.SETTINGS -> openSettingsOn(SettingsTab.LIBRARY)
-            SyncConsentAnswer.ONBOARDING_ON_SYNC_PAGE -> navigator.showOnboardingStepIfOpen(OnboardingStep.SYNC)
-        }
-    }
-
-    private fun openSettingsOn(tab: SettingsTab) {
-        // Not through the re-selection of an open settings screen, which would send it back to General a moment after.
-        if (backStack.lastOrNull() != CampfireDestination.Settings) selectTopLevelDestination(CampfireDestination.Settings)
-        settingsTab = tab
-    }
 
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) = selectTopLevelDestination(destination, destinationWhenAtTop = null)
 
@@ -1549,7 +1515,7 @@ class CampfireViewModel(
     // Sync
 
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
-        keepSyncConsentOrigin(syncConsentOriginOf(backStack.lastOrNull()))
+        navigator.rememberSyncConsentOrigin()
         syncController.connectSyncProvider(providerId, completionPage)
     }
 
