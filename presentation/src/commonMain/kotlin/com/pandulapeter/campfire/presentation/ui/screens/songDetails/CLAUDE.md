@@ -138,7 +138,7 @@ Product side in `ui/metronome/CLAUDE.md`.
   overrides; its tiles edit the typed text.
 - `SongMetadataDialog.kt`: the duration's digits fill from the right like a timer (`DurationDigits.kt`, `428` is `4:28`,
   since a number pad has no colon), written as `m:ss`, at most `99:59:59`; a duration it cannot read is left alone on
-  Save. Opens with no field focused. **Writes only the fields changed** (`SetChordProMetadataUseCase`), so a field
+  Save. Opens with no field focused. **Writes only the fields changed** (`ChordProMetadataFields.set`), so a field
   synced in meanwhile survives. A blank field removes the directive. A new title or artist is not a rename.
 - `SongLinksDialog.kt`: a draft written once on Save. Rows are keyed by an id of the dialog's own so a moved row slides
   rather than two rows trading contents. Links keep the file's order (tags and languages are alphabetical,

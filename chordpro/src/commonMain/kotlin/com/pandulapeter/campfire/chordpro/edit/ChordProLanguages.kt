@@ -28,7 +28,12 @@ public object ChordProLanguages {
     /**
      * Rewrites the song's language directives to be exactly [codes], in one pass: the ones no longer wanted are
      * dropped wherever they sit, whichever spelling they use, and the new ones are written after the last language
-     * the file already declares. A set that is already what the file says returns the text unchanged.
+     * the file already declares. A set that is already what the file says returns the text unchanged. A language the
+     * file already declares keeps the line and the spelling it is written on.
+     *
+     * The codes are normalized on the way in — folded to lower case and cut down to their primary subtag — so `en-US`
+     * and `EN` name the same language as `en` does, and a code that names no language (`und`, `zxx`, an empty string)
+     * is dropped rather than written.
      */
     public fun setLanguages(text: String, codes: List<String>): String {
         val wanted = codes.mapNotNull(ChordProMetaItems::languageCode).distinct()

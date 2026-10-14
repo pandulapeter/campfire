@@ -10,7 +10,8 @@
 # :domain:api
 
 Use case interfaces and `ScreenData`: all the presentation layer sees (never repositories). Exposes `:chordpro` as
-`api` so the UI can render a `ChordProSong`.
+`api` because `CreateSongUseCase` and `DuplicateSongUseCase` take `:chordpro` types; `:presentation` calls `:chordpro`'s
+pure functions directly (no use case only forwards to one).
 
 Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*`,
 `Import*` / `Export*`, `Is*` for yes/no, a plain verb for pure transforms.
@@ -26,13 +27,7 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
   status never wait for a library scan.
 - `EditSetlistUseCase` takes the setlist's file name, not a setlist, so the entries written back are the library's,
   not a dialog's stale copy; title and description are written together and the title decides the file name.
-- Text-level `SetChordPro*` use cases (tag, languages, links, metadata, cover) rewrite only what they change, byte for
-  byte elsewhere, since the result is the user's own file. Languages take the whole set (one rewrite per picker
-  close); codes are normalized by `:chordpro` (`en-US`, `EN`, `eng` → `en`). Tag matching ignores case.
-- Transposition takes `UserPreferences.Accidentals`: spelling is the reader's preference, not part of the move.
-- Notation: `ConvertChordProNotationUseCase` is the last rendering step, its text variant the editor's two boundaries;
-  `ParseChordProUseCase` takes the notation its text is in; the editor types in `Notation.forTyping` (rule:
-  `chordpro/CLAUDE.md`).
+- `SetChordProTagUseCase` is the one `:chordpro` wrapper: tag matching ignores case and folds NFC.
 - `IsFirstRunUseCase` (has Campfire ever written its preferences) exists for the demo library and must be read once at
   start, before anything is saved.
 - Network: only sync, `GetCoverArtUseCase` / `SearchCoverArtUseCase`, the song details lookup, and

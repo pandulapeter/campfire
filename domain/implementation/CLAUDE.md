@@ -121,9 +121,8 @@ conventions have it. A failure a use case notes but does not throw goes to the i
 - `DeleteLibraryUseCase` (Settings → Library, after typing `DELETE`) deletes every song and setlist: it stops any
   running sync, then runs one with deletions allowed (the typed word answering the guard), emptying the cloud folder and
   every synced device too.
-- `:chordpro` use cases (`Transpose*`, `Parse*`, `Convert*Notation`, `Prettify*`, `SetChordPro*`) are kept where a
-  preference is translated for `:chordpro` (which knows none): `mapper/AccidentalsMappers.kt` (nullable `preferFlats`)
-  and `mapper/NotationMappers.kt` (`ChordNotation`) are the whole translation.
+- `SetChordProTagUseCaseImpl` is the one `:chordpro` wrapper left, for the NFC fold; `:presentation` calls the rest
+  directly and owns the preference translation (`presentation/mapper/ChordProMappers.kt`).
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
   marks. `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols; it would break sorting
   (`a b` after `ab c`).

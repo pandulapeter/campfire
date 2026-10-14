@@ -124,7 +124,7 @@ The setlist picker (every setlist, one song) and the song picker (every song, on
   since the song goes into the setlist as soon as it exists (`createSetlistWithSongs`). It opens named after a search
   that found nothing. A song with no listable setlist (`hasListableSetlist`) skips straight to the naming sheet.
 - Language picker: search over names and codes (`HUN` and `hu-HU` both find Hungarian, via
-  `NormalizeLanguageCodeUseCase`); the song's own languages stay at the top while open, since a row reordering under
+  `ChordProLanguages.code`); the song's own languages stay at the top while open, since a row reordering under
   the finger that ticked it is worse than scrolling.
 
 ### The selection mode's sheets
