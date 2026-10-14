@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCas
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_STEP
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview

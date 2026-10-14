@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.fontScale
 
 /** How far one step of the text size stepper or of a zoom shortcut moves the font scale. */
 const val FONT_SCALE_STEP = 0.1f

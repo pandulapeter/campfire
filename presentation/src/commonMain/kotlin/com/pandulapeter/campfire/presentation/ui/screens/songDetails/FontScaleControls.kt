@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size_d
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_reset
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.fontScale.FONT_SCALE_STEP
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
