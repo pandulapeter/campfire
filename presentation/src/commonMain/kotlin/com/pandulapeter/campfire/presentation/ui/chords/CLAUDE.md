@@ -40,7 +40,7 @@ The app's first shape.
 Definitions:
 
 - One for another instrument is neither used nor translated (a guitar shape is another chord on a ukulele); which
-  instrument a definition is for, and how a banjo's is drawn, is `ChordProDefinitions`' (see `chordpro/CLAUDE.md`).
+  instrument a definition is for, and how a banjo's is drawn, is `ChordProDefinitions`' (see `chordpro/voicings/CLAUDE.md`).
 - A definition follows its chord through every transposition (the reader's, the file's `{transpose}`, the editor's
   transpose action) in whichever octave a hand can hold; one left needing a fifth finger gives way to the player's
   shape.

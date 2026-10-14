@@ -12,7 +12,8 @@
 The [ChordPro](https://www.chordpro.org) format and the conversion of positioned chord sheets into it. **No dependencies
 at all**, not even Koin: stateless `object`s called directly by `:presentation`, `:domain:*`, `:data:formats`, and
 `:data:source:local:implementation`. Explicit API mode. Everything is pure and tested in `commonTest`; rules pinned by a
-test are not repeated here.
+test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`chords`, `voicings`, `tabs`, `edit`,
+`convert`).
 
 ## Rules that span the module
 
@@ -47,88 +48,9 @@ test are not repeated here.
   empty one included, which is how a cleared value stays cleared.
 - `{transpose}` before the first line transposes the whole song; later ones, and body `{tempo}`/`{time}` that differ
   from the one in force, are mid-song changes that cut the section. Recalled choruses leave them out.
-
-## Text editors (`edit/`)
-
-- Tags, languages, cover, and links are directives: `{tag}` one per value; `{meta: language en}`, `{meta: cover URL}`,
-  `{meta: link URL Optional name}`. **Language codes are normalized** to one primary subtag, two letters where one
-  exists (a region or three-letter code would split a filter group); `und` and `zxx` mean no language. Values
-  cannot inject braces or line breaks.
-- `ChordProMetadataFields.set` rewrites the line the parser reads, in its own spelling, **but never a body
-  `{key}`/`{tempo}`/`{time}`**; a cleared header value the body still changes is kept as an empty line, so the song
-  does not start in its first change.
-- `ChordProHeader.insert` puts a directive in the header, never at the caret (valid but invisible mid-verse).
-- `ChordProPrettifier` formats raw text, never re-serializes a model, so unsupported directives survive. **No blank line
-  is added around a tab or grid, or inside a legacy heading section or implicit paragraph** — it would split or close
-  it. `define` is deliberately not in `metadataOrder`.
 - `ChordProSplitter` splits at `{new_song}` outside delegated environments. `comparable` (what an import compares
   against the file on disk) also folds line endings, notation, and directive spellings, which Prettify must not do.
   Both drop a BOM anywhere, or a `{title}` behind it would read as lyrics.
-
-## Chord sheet conversion (`convert/`)
-
-`ChordSheetConverter` is one deterministic conversion for plain text, PDF, and Word; it knows no file format. Its
-heuristics and near misses are pinned in `ChordSheetConverterTest`: a change belongs in a test first.
-
-- **No recognized song structure means escaped prose, not a guessed song** (`ChordProLiteralText`), and a line that is
-  as likely sung (a single chord, `La La La`, "Time after time") is a chord or a field only with corroborating evidence.
-- It reads back Campfire's own PDF export (the heading row, wrapped chord lines, narrow-column titles).
-
-## Transposition and tabs
-
-- `ChordProTransposer`: **a bracket moves only if
-  `ChordProChordNames.isChordName` accepts all of it** (`[Chorus 2x]` stays). The text transposition leaves
-  `{transpose}` alone, since each is relative to the song as written.
-- `ChordProTabTransposer` moves frets, not the tuning: a run moves as a whole, **by octaves if a fret would leave the
-  neck**, and one that fits no octave is left alone rather than half moved. Only staff lines are fretted; columns stay
-  aligned.
-- `ChordProTabs.select` keeps, of adjacent selector tabs, the reader's, else `guitar`, else the first. `TabPlayer`
-  comes from `:presentation`, which knows the instruments.
-- **A staff's string names are its tuning**; an unnamed staff is in the standard tuning `TabPlayer.assumedTuning` picks.
-  Retuning happens in the same move as the transposition, so one octave decision covers both; another instrument's
-  strings line up as one block. A run that cannot be moved is shown as written, transposition only. Every staff line is
-  renamed for the reader's string. **Text transposition and notation conversion never retune.**
-- `TabNotice` records only judgment calls (octave move, another instrument, failure); a `hidesTabs` instrument
-  (keyboard, violin) gets a notice in place of every tab.
-- `ChordProTabWrapper` cuts a run into rows (**nothing scrolls sideways**: songs are read with an up/down pedal), every
-  line at the same columns, never inside a surrogate pair or combining mark.
-
-## Notation (`ChordNotation`, `ChordProNotation`)
-
-- **Every file and the model are in `STANDARD`** (`C D E F G A B`, `#`, `b`); German and Latin are ways of showing and
-  typing, Nashville and Roman of showing only. Conversion happens only at two boundaries: `toNotation` (last rendering
-  step) and `convertText` (the editor's field). An import writes standard; a file arriving otherwise is normalized the
-  next time the editor saves it.
-- **A text is read in the notation it is declared in**, except that `H`/`h` makes a standard text German, and Latin
-  needs no declaring (no Latin name is a standard chord). `ChordProNotation.read` is the one reading path. A lowercase
-  root is minor, a lowercase bass a note.
-- Tab string names follow the notation; a system that could not come back exactly is left as written.
-- **Numberings are display only**: counted from the song's key per modulated stretch, no key = letters, and nothing is
-  ever read from numbers (`[1]` is as often an ending). Definitions follow the chords but do not vote on notation.
-
-## `ChordProHighlighter`
-
-Lives here so "what is a chord" is decided once. A directive the parser reads and drops is one `INVALID` token, decided
-by the parser's own functions; an *empty* value is not invalid.
-
-## Chords and shapes
-
-- `ChordProChords.parse` reads a name through the same walk as `isChordName`, so a name is read exactly where it is
-  recognized. **`Chord.id` (`C#:0.3.7.10`) is what player shape choices are stored under**, inside a `voicingKey`
-  (the instrument id where it `drawsDefinitions`, else the tuning id); both are synced and stored, so never change
-  either format.
-- The tables (sources and notices in each file's KDoc): every shape
-  must sound exactly the chord it is filed under, below the twelfth fret, holdable (`ChordVoicingTablesTest`). **Table
-  order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`
-  is tolerant.
-- `ChordTuning`: its `id` must match `:tuner:api`'s `InstrumentTuning` ids. **A chord name names the chord that
-  sounds.** A tuning has its own table or shifts one by a single interval. `drawsDefinitions` (standard and ukulele low
-  G) is where a `{define}`, which has no tuning, is drawn.
-- **The banjo's fifth string is a drone**: only open (if its note is in the chord) or muted, never fretted or moved.
-- `ChordProDefinitions`: frets stay within 24 and keys wrap past four octaves, so no file can make a diagram draw
-  without end. The instrument is the selector's, else by string count (four a ukulele, five a banjo, a mandolin only
-  with `{define-mandolin}`). Last `{define}` per chord and instrument wins. `sounding` mutes a banjo drone outside the
-  chord, so reader and editor draw one shape. A rewritten line changes only its numbers.
 
 ## Tests
 

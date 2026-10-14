@@ -152,9 +152,9 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`; the navigat
 ### Tabs follow the instrument
 
 - `ui/tabs/`: `tabPlayerOf` builds `:chordpro`'s `TabPlayer`, `TabReading` adds notice text, `SongRenderer.transposedSong`
-  applies both (see `chordpro/CLAUDE.md`'s `ChordProTabs`).
+  applies both (see `chordpro/tabs/CLAUDE.md`'s `ChordProTabs`).
 - Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
-  guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/CLAUDE.md`'s.
+  guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
 - Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its
   string names are another instrument's open strings (`A E C G` → ukulele).
 - Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
