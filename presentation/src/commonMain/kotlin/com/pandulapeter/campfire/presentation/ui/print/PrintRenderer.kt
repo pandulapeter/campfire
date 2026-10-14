@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
-import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
+import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext

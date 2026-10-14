@@ -10,7 +10,7 @@
 
 # :presentation — ui/chords
 
-Chord diagrams (`ui/chords/`, `screens/songDetails/SongChordsSection.kt`, `components/ChordDiagram.kt`,
+Chord diagrams (`ui/chords/`, `screens/songDetails/SongChordsSection.kt`,
 `dialogs/ChordShapeSheet.kt`). Nothing is shipped or fetched: `:chordpro` reads what notes a name means
 (`ChordProChords`) and finds shapes (`ChordVoicings`: a hand-typed table first, a search for the rest).
 

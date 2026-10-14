@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.tuner
-import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.ChordsIcon
 import org.jetbrains.compose.resources.painterResource
 

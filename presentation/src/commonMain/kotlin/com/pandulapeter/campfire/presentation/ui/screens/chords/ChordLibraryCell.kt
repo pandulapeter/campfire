@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**

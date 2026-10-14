@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_chord_diagram_description
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**

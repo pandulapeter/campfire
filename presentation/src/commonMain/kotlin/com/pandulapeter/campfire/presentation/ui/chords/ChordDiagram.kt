@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +31,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
-import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
+import com.pandulapeter.campfire.presentation.ui.components.isDarkerMoreLegible
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.math.min
 
