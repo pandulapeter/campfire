@@ -78,6 +78,7 @@ a beat not muted, which plays on (iOS has no background haptics).
   reading), are renamed, deleted, and synced with it, and **are removed once tapped back to the signature's**, so the song
   follows the tab again.
 - Each beat's whole column takes the press, not the block (a sliver at a muted beat).
+- Settings are `UserPreferences.metronomeSettings`, saved once they hold still (`DebouncedPreference`).
 
 ## Tempo and time changes inside a song
 

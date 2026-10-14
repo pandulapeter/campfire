@@ -107,8 +107,8 @@ wrong or undo it".
   that would cross a limit, never after: private state classes become `internal` top-level classes in files of
   their own, a pure algorithm moves next to its users in a file named for it, a Composable's visual groups become
   named children. What was already over when the check came in is listed in `size_allowances.json` and may only
-  shrink; never raise an allowance or add one outside a review plan's execution (codebase-review) — split instead,
-  then run `check_sizes.py --update`.
+  shrink; never add an allowance, and never raise one outside a review plan's execution (codebase-review) — split
+  instead, then run `check_sizes.py --update`.
   Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph names, the color
   schemes; `strings.xml` and tests are never measured): a new data file is added there in a commit of its own,
   never split for the check and never given an allowance.

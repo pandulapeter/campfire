@@ -11,8 +11,8 @@
 # :presentation — ui/screens/songDetails
 
 The song details screen. The song itself is drawn and laid out by `ui/songView/`; the pedal stepping is in
-`stepping/`. What the first section holds is in `ui/songView/firstSection/`, read only mode in `ui/CLAUDE.md`; chord
-diagrams in `ui/chords/`; the click in `ui/metronome/`.
+`stepping/`. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in `ui/chords/`;
+the click in `ui/metronome/`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.

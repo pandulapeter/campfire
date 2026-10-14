@@ -148,6 +148,7 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Tabs follow the instrument
 
+- `ui/tabs/` builds the `TabPlayer` and its notice text; `SongRenderer.transposedSong` applies them.
 - Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
   guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
 - Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its
