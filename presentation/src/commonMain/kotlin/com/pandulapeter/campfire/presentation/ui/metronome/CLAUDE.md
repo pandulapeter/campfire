@@ -40,7 +40,7 @@ on**, so nothing ever plays with no way on screen to stop it. Three rules stop i
     `fromNextBar`), from beat one, so the band finishes its bar.
   - Anything else (a tempo stepped, a setting, the same stretch at a scaled tempo) applies from the next beat.
   - The first value is only remembered, so a view model rebuilt over a playing click does not stop it.
-- The last collector in `init` tells the engine whether the tab or a song is on top with the feature on
+- A collector in `init` tells the engine whether the tab or a song is on top with the feature on
   (`isMetronomeStartable` → `Metronome.setStartable`): only those screens' taps may open the web's audio device; a no-op
   elsewhere.
 - `toggleMetronome` starts or stops the context's pattern; starting over a song opens its panel. A click that stops on
