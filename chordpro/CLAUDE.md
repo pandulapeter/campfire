@@ -119,6 +119,9 @@ touches no syntax.
   readable body `{tempo}`/`{time}` of a song whose header has none moves into the header (never from inside a delegated
   environment); other changes are grouped, tempo first, right before the line they head. `define` is deliberately not in
   `metadataOrder`. `prettifiedOffset` keeps caret and selection on their lines.
+
+## Package root
+
 - `ChordProSplitter`: splits at `{new_song}`/`{ns}`; one inside a delegated environment is its text, and an unclosed
   environment takes the rest. `comparable` is what an import compares against the file on disk: it also folds line
   endings, notation, and directive spellings (`canonicalDirective`), which Prettify must not do since it would rewrite
@@ -173,7 +176,7 @@ string names).
   (`ChordProStaffNames.respelled`). A staff with a string count no instrument has is untouched. **Text transposition and
   notation conversion never retune.**
 - `TabNotice` on the run's first line records octave moves, another instrument, or failure; a plain move says nothing.
-  `withNotices` writes them as comments; a `hidesTabs` instrument (keyboard) gets a notice in place of every tab.
+  `withNotices` writes them as comments; a `hidesTabs` instrument (keyboard, violin) gets a notice in place of every tab.
 
 ## `ChordProTabWrapper`
 
