@@ -10,15 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.animateBounds
-import androidx.compose.animation.core.SpringSpec
-import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -29,7 +21,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,7 +32,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -62,8 +51,6 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
@@ -71,63 +58,35 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
-import com.pandulapeter.campfire.presentation.resources.print_missing
-import com.pandulapeter.campfire.presentation.resources.print_no_songs
-import com.pandulapeter.campfire.presentation.resources.print_setlist_empty
-import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.resources.setlists_export
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo
-import com.pandulapeter.campfire.presentation.resources.song_details_transposition
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
-import com.pandulapeter.campfire.presentation.resources.songs_export_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
-import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
-import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
-import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
-import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
-import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 
@@ -163,28 +122,7 @@ internal fun ExportScreen(
     )
     val renderer = remember(fontResolver, fontFamily, textFontFamily) { newRenderer() }
     val tabNoticeLabels = rememberTabNoticeLabels()
-    val labels = PrintLabels(
-        key = stringResource(Res.string.song_editor_insert_key),
-        transposition = stringResource(Res.string.song_details_transposition),
-        capo = stringResource(Res.string.song_editor_insert_capo),
-        tempo = stringResource(Res.string.song_editor_insert_tempo),
-        tempoValue = textResource(Res.string.song_details_tempo, TEMPO_VALUE),
-        time = stringResource(Res.string.print_time),
-        missing = stringResource(Res.string.print_missing),
-        sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
-        chordTuning = preferences?.let { preferences ->
-            preferences.chordTuning()?.let { tuning ->
-                listOfNotNull(
-                    instrumentLabel(preferences.instrument).takeIf { preferences.instrument !in INSTRUMENTS_NAMED_BY_DIAGRAMS },
-                    if (tuning.isStandard) {
-                        null
-                    } else {
-                        stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, preferences.chordSpelling.notation.toChordNotation()))
-                    },
-                ).joinToString(" · ").ifEmpty { null }
-            }
-        },
-    )
+    val labels = rememberPrintLabels(preferences)
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false
         try {
@@ -217,51 +155,12 @@ internal fun ExportScreen(
             )
         }
     }
-    // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
-    // page to the next instead of blanking the preview to a spinner each time.
-    // Retry is keyed too: the source it reads again equals the one that failed to lay out, so without it nothing would.
     // What the Features tab switched off is left out of the file whatever the options say, the options themselves being
     // kept for the switch to be turned back on.
     val areChordsEnabled = preferences?.areChordsEnabled != false
     val isMetronomeEnabled = preferences?.isMetronomeEnabled != false
     val printedSettings = state.settings.withinFeatures(areChordsEnabled = areChordsEnabled, isMetronomeEnabled = isMetronomeEnabled)
-    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, printedSettings, labels, renderer, state.attempt) {
-        state.layoutFailed = false
-        val input = chosenSource
-        val inputSettings = printedSettings
-        if (input == null || input.songs.isEmpty()) {
-            value = null
-            return@produceState
-        }
-        // An export of the library's own files has no pages, and the ones laid out for the PDF are kept for the format being switched back,
-        // which then lays out nothing again.
-        if (inputSettings.format != PrintSettings.Format.PDF) return@produceState
-        if (value.let { it != null && it.source === input && it.settings == inputSettings && it.labels == labels }) return@produceState
-        // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
-        if (value != null) delay(LAYOUT_DEBOUNCE)
-        try {
-            val document = withContext(Dispatchers.Default) {
-                val measurements = newRenderer()
-                layoutPrintDocument(
-                    source = input,
-                    settings = inputSettings,
-                    labels = labels,
-                    measureText = measurements::width,
-                )
-            }
-            value = LaidOutDocument(
-                document = document,
-                source = input,
-                settings = inputSettings,
-                labels = labels,
-                generation = (value?.generation ?: 0) + 1,
-            )
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            state.layoutFailed = true
-        }
-    }
+    val laidOut by produceLaidOutDocument(state = state, source = chosenSource, settings = printedSettings, labels = labels, renderer = renderer, newRenderer = ::newRenderer)
     // Only a document laid out from what the screen shows now may be saved: the producer restarts a frame after an option
     // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
     // since it is remembered and an equality check would walk every song in it.
@@ -280,22 +179,8 @@ internal fun ExportScreen(
         }
     }
     val isFiles = state.settings.format == PrintSettings.Format.FILES
-    // The songs a setlist's zip is narrowed to, by the same ticks a PDF is: null where every one of them is chosen, which
-    // hands the setlist's manifest out exactly as it is stored.
-    val chosenSongFileNames = state.source?.takeIf { it.hasSeveralSongs }?.let { source ->
-        val selected = state.selected.orEmpty()
-        if (source.songs.indices.all { it in selected }) null else source.songs.filterIndexed { index, _ -> index in selected }.mapTo(mutableSetOf()) { it.fileName }
-    }
-    // A song whose file could not be read has nothing to write, and a setlist's zip wants a song chosen unless it has
-    // none at all, in which case its manifest is all there is to share.
-    val canExportFiles = state.source.let { source ->
-        when {
-            source == null -> false
-            source.hasRunningOrder -> source.songs.isEmpty() || state.selected.orEmpty().isNotEmpty()
-            source.hasSeveralSongs -> state.selected.orEmpty().isNotEmpty()
-            else -> source.songs.firstOrNull()?.text != null
-        }
-    }
+    val chosenSongFileNames = chosenSongFileNames(source = state.source, selected = state.selected.orEmpty())
+    val canExportFiles = canExportFiles(source = state.source, selected = state.selected.orEmpty())
     val hasPages = laidOut?.document?.pages?.isNotEmpty() == true
     val pageCount = laidOut?.document?.pages?.size ?: 0
     val pagerState = rememberPagerState(initialPage = state.page.coerceIn(0, maxOf(0, pageCount - 1))) { pageCount }
@@ -359,11 +244,7 @@ internal fun ExportScreen(
         }
     }
     val close = { viewModel.dismissSheet(dialog) }
-    val content = when {
-        state.failed || state.layoutFailed && !isFiles -> PrintScreenContent.FAILED
-        state.source == null -> PrintScreenContent.LOADING
-        else -> PrintScreenContent.LOADED
-    }
+    val content = exportContentOf(isFailed = state.failed, isLayoutFailed = state.layoutFailed, isFiles = isFiles, hasSource = state.source != null)
     val canSaveNow = content == PrintScreenContent.LOADED && if (isFiles) canExportFiles else hasPages
     // Drawn in the same window as the screen under it, so it does not take the focus by being there, and a key would
     // otherwise go on reaching that screen - a pedal stepping the song being exported. A bare focus target draws no
@@ -403,13 +284,7 @@ internal fun ExportScreen(
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
-                    title = stringResource(
-                        when {
-                            dialog.setlist != null -> Res.string.setlists_export
-                            dialog.songs.isNotEmpty() -> Res.string.songs_export_songs
-                            else -> Res.string.songs_export_song
-                        },
-                    ),
+                    title = stringResource(exportTitleOf(dialog)),
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
                     canShare = filePicker.canShare && content == PrintScreenContent.LOADED && exportProgress == null &&
                         if (isFiles) canExportFiles else hasPages,
@@ -424,19 +299,14 @@ internal fun ExportScreen(
                 ) {
                     val bodyWidth = maxWidth
                     val bodyHeight = maxHeight
-                    val optionsWidth = when {
-                        bodyWidth >= 760.dp && bodyHeight >= 480.dp -> 330.dp
-                        // A phone on its side: too short to stack the two, wide enough to put them side by side.
-                        bodyWidth >= 520.dp -> 260.dp
-                        else -> null
-                    }
+                    val optionsWidth = optionsWidthFor(bodyWidth = bodyWidth, bodyHeight = bodyHeight)
                     val isSideBySide = optionsWidth != null
-                    val pageFit = when {
-                        // Under the options only the pill floats over the preview, in the list the save button floats over.
-                        !isSideBySide -> PageFit(top = FLOATING_CONTROLS_CLEARANCE)
-                        isShortWindow -> PageFit(end = maxOf(pageButtonsWidth, saveButtonWidth) + PAGE_MARGIN * 2, bottom = bottomInset + PAGE_MARGIN)
-                        else -> PageFit(top = FLOATING_CONTROLS_CLEARANCE, bottom = bottomInset + FLOATING_CONTROLS_CLEARANCE)
-                    }
+                    val pageFit = pageFitFor(
+                        isSideBySide = isSideBySide,
+                        isShortWindow = isShortWindow,
+                        floatingControlsWidth = maxOf(pageButtonsWidth, saveButtonWidth),
+                        bottomInset = bottomInset,
+                    )
                     val turnPage: (Int) -> Unit = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } }
                     AnimatedContent(content, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
                         when (shown) {
@@ -451,55 +321,27 @@ internal fun ExportScreen(
                             }
                             PrintScreenContent.LOADED -> if (state.source != null) {
                                 val preview: @Composable (Modifier) -> Unit = { modifier ->
-                                    AnimatedContent(isFiles, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { showsFiles ->
-                                        if (showsFiles) {
-                                            FilesPreview(
-                                                modifier = Modifier.fillMaxSize(),
-                                                source = state.source!!,
-                                                setlistFileName = dialog.setlist?.fileName,
-                                                selected = state.selected.orEmpty(),
-                                                // Beside the options the save button floats over the end of this pane.
-                                                bottomPadding = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 8.dp,
-                                                isBottomAnchored = isSideBySide,
-                                            )
-                                        } else {
-                                            val emptyMessage = when {
-                                                state.source!!.songs.isEmpty() -> stringResource(Res.string.print_setlist_empty)
-                                                state.selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
-                                                else -> null
-                                            }
-                                            // Stacked, the preview is the first item of the options' list, so the pill turning its pages
-                                            // is drawn inside it and scrolls away with it rather than staying over the options.
-                                            Box(Modifier.fillMaxSize()) {
-                                                PrintPreview(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    laidOut = laidOut,
-                                                    isCurrent = isCurrent,
-                                                    renderer = renderer,
-                                                    emptyMessage = emptyMessage,
-                                                    fit = pageFit,
-                                                    areOptionsBelow = !isSideBySide,
-                                                    pagerState = pagerState,
-                                                    magnifications = viewModel.printPreviewMagnifications,
-                                                    pageView = { state.pageView },
-                                                    onPageViewChanged = {
-                                                        // A new zoom or pan gesture takes over from the automatic reset.
-                                                        pageResetAnimation?.cancel()
-                                                        state.pageView = it
-                                                    },
-                                                )
-                                                if (!isSideBySide) {
-                                                    PageButtons(
-                                                        modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
-                                                        isVisible = hasPages,
-                                                        page = pagerState.currentPage,
-                                                        pageCount = pageCount,
-                                                        onTurn = turnPage,
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                    ExportPreviewPane(
+                                        modifier = modifier,
+                                        state = state,
+                                        isFiles = isFiles,
+                                        setlistFileName = dialog.setlist?.fileName,
+                                        isSideBySide = isSideBySide,
+                                        bottomInset = bottomInset,
+                                        laidOut = laidOut,
+                                        isCurrent = isCurrent,
+                                        renderer = renderer,
+                                        pageFit = pageFit,
+                                        pagerState = pagerState,
+                                        magnifications = viewModel.printPreviewMagnifications,
+                                        onPageViewChanged = {
+                                            // A new zoom or pan gesture takes over from the automatic reset.
+                                            pageResetAnimation?.cancel()
+                                            state.pageView = it
+                                        },
+                                        hasPages = hasPages,
+                                        onTurn = turnPage,
+                                    )
                                 }
                                 val options: @Composable (Modifier) -> Unit = { modifier ->
                                     PrintOptions(
@@ -550,66 +392,5 @@ internal fun ExportScreen(
     }
 }
 
-/**
- * The options beside the preview, [optionsWidth] wide at its start, or filling the width where that is null,
- * with the preview as their first scrolling item. The options keep their scroll across arrangements and their bounds
- * animate when the arrangement changes, while a resize within one arrangement is followed as it comes.
- */
-@Composable
-private fun PrintPanes(
-    optionsWidth: Dp?,
-    options: @Composable (Modifier) -> Unit,
-    preview: @Composable (Modifier) -> Unit,
-) {
-    val arrangement = updateTransition(targetState = optionsWidth, label = "PrintPanes")
-    val motionScheme = MaterialTheme.motionScheme
-    // A child animation on the same spring keeps the transition running for as long as the panes travel, which is what
-    // tells a change of arrangement from a resize in the frames after the first one.
-    arrangement.animateFloat(transitionSpec = { motionScheme.defaultSpatialSpec() }, label = "PrintPanesProgress") {
-        it?.value ?: 0f
-    }
-    val spec = motionScheme.paneBoundsSpec()
-    val boundsTransform = remember(arrangement, spec) {
-        BoundsTransform { _, _ -> if (arrangement.currentState != arrangement.targetState) spec else snap() }
-    }
-    LookaheadScope {
-        val paneBounds = Modifier.animateBounds(lookaheadScope = this, boundsTransform = boundsTransform)
-        Box(Modifier.fillMaxSize()) {
-            options(
-                if (optionsWidth != null) {
-                    Modifier.width(optionsWidth).fillMaxHeight()
-                } else {
-                    Modifier.fillMaxSize()
-                }.then(paneBounds),
-            )
-            if (optionsWidth != null) {
-                preview(Modifier.fillMaxSize().padding(start = optionsWidth).then(paneBounds))
-            }
-        }
-    }
-}
-
-/** The motion scheme's spatial spring for the bounds of a pane, settling within a pixel. */
-private fun MotionScheme.paneBoundsSpec() = when (val spec = defaultSpatialSpec<Rect>()) {
-    is SpringSpec -> spring(dampingRatio = spec.dampingRatio, stiffness = spec.stiffness, visibilityThreshold = Rect.VisibilityThreshold)
-    else -> spec
-}
-
 /** What a tap on Save or Share asked for, kept until the pages it is to export are laid out. */
 private enum class ExportRequest { SAVE, SHARE }
-
-/** What the screen's area shows, which it fades between; a new document is not one of these, see [PrintPreview]. */
-private enum class PrintScreenContent { FAILED, LOADING, LOADED }
-
-/** How long the options have to hold still before the pages are laid out again, so that a burst of steps is one layout. */
-private val LAYOUT_DEBOUNCE = 120.milliseconds
-
-/**
- * The instruments the PDF's tuning line leaves unnamed: the guitar's diagrams are what a reader expects, the twelve-string
- * is drawn as the guitar, and the keyboard's diagram is a keyboard.
- */
-private val INSTRUMENTS_NAMED_BY_DIAGRAMS = setOf(
-    UserPreferences.Instrument.GUITAR,
-    UserPreferences.Instrument.GUITAR_TWELVE_STRING,
-    UserPreferences.Instrument.KEYBOARD,
-)

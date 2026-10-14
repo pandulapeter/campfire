@@ -1,0 +1,74 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.screens.export
+
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.setlists_export
+import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.songs_export_songs
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.print.PrintSource
+
+/** What the screen's area shows, which it fades between; a new document is not one of these, see [PrintPreview]. */
+internal enum class PrintScreenContent { FAILED, LOADING, LOADED }
+
+/** What the screen shows: a failure (a layout failing only for the PDF), the source still being read, or the source. */
+internal fun exportContentOf(isFailed: Boolean, isLayoutFailed: Boolean, isFiles: Boolean, hasSource: Boolean) = when {
+    isFailed || isLayoutFailed && !isFiles -> PrintScreenContent.FAILED
+    !hasSource -> PrintScreenContent.LOADING
+    else -> PrintScreenContent.LOADED
+}
+
+/**
+ * The songs a setlist's zip is narrowed to, by the same ticks ([selected], by place) a PDF is: null where every one of
+ * them is chosen, which hands the setlist's manifest out exactly as it is stored, and for a single song.
+ */
+internal fun chosenSongFileNames(source: PrintSource?, selected: Set<Int>): Set<String>? = source?.takeIf { it.hasSeveralSongs }?.let {
+    if (it.songs.indices.all { index -> index in selected }) null else it.songs.filterIndexed { index, _ -> index in selected }.mapTo(mutableSetOf()) { song -> song.fileName }
+}
+
+/**
+ * Whether the library's own files can be exported: a song whose file could not be read has nothing to write, and a
+ * setlist's zip wants a song chosen unless it has none at all, in which case its manifest is all there is to share.
+ */
+internal fun canExportFiles(source: PrintSource?, selected: Set<Int>) = when {
+    source == null -> false
+    source.hasRunningOrder -> source.songs.isEmpty() || selected.isNotEmpty()
+    source.hasSeveralSongs -> selected.isNotEmpty()
+    else -> source.songs.firstOrNull()?.text != null
+}
+
+/** How wide the options are beside the preview, null where the two are stacked. */
+internal fun optionsWidthFor(bodyWidth: Dp, bodyHeight: Dp) = when {
+    bodyWidth >= 760.dp && bodyHeight >= 480.dp -> 330.dp
+    // A phone on its side: too short to stack the two, wide enough to put them side by side.
+    bodyWidth >= 520.dp -> 260.dp
+    else -> null
+}
+
+/**
+ * The room the page leaves for the controls floating over its pane: in a short window the column [floatingControlsWidth]
+ * wide they stack in at its end, elsewhere a band at each end a control floats over.
+ */
+internal fun pageFitFor(isSideBySide: Boolean, isShortWindow: Boolean, floatingControlsWidth: Dp, bottomInset: Dp) = when {
+    // Under the options only the pill floats over the preview, in the list the save button floats over.
+    !isSideBySide -> PageFit(top = FLOATING_CONTROLS_CLEARANCE)
+    isShortWindow -> PageFit(end = floatingControlsWidth + PAGE_MARGIN * 2, bottom = bottomInset + PAGE_MARGIN)
+    else -> PageFit(top = FLOATING_CONTROLS_CLEARANCE, bottom = bottomInset + FLOATING_CONTROLS_CLEARANCE)
+}
+
+/** The title of the screen, by what is exported. */
+internal fun exportTitleOf(dialog: DialogType.Export) = when {
+    dialog.setlist != null -> Res.string.setlists_export
+    dialog.songs.isNotEmpty() -> Res.string.songs_export_songs
+    else -> Res.string.songs_export_song
+}
