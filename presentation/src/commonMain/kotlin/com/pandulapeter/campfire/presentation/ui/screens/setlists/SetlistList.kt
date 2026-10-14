@@ -41,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -369,15 +371,23 @@ internal fun SetlistList(
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
         ) {
-            ExtendedFloatingActionButton(
-                onClick = { onReorderingSetlistChanged(null) },
-                icon = { Icon(painterResource(Res.drawable.ic_reorder_songs_done), contentDescription = null) },
-                text = { Text(stringResource(Res.string.setlists_done_reordering)) },
-            )
+            DoneReorderingButton(onClick = { onReorderingSetlistChanged(null) })
         }
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }
+}
+
+/** Ends reordering. Described by its label, since Material's extended floating button clears the semantics of its text. */
+@Composable
+private fun DoneReorderingButton(onClick: () -> Unit) {
+    val label = stringResource(Res.string.setlists_done_reordering)
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        modifier = Modifier.semantics { contentDescription = label },
+        icon = { Icon(painterResource(Res.drawable.ic_reorder_songs_done), contentDescription = null) },
+        text = { Text(label) },
+    )
 }

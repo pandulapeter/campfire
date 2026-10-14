@@ -28,7 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -42,7 +42,8 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Save, which while the pages of a PDF are drawn counts them in a ring in place of its icon and cancels; once the picker
  * is up there is nothing to cancel, and a tap waits for it to answer. It leaves while there is nothing to save: no pages,
- * or a song file that could not be read.
+ * or a song file that could not be read. It is described by the label it shows, since Material's extended floating
+ * button clears the semantics of its text.
  */
 @Composable
 internal fun SaveButton(
@@ -52,8 +53,10 @@ internal fun SaveButton(
     onSave: () -> Unit,
     onCancel: () -> Unit,
 ) = AnimatedVisibility(isVisible, modifier = modifier, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+    val label = stringResource(if (progress != null) Res.string.cancel else Res.string.print_save)
     ExtendedFloatingActionButton(
         onClick = if (progress != null) onCancel else onSave,
+        modifier = Modifier.semantics { contentDescription = label },
         icon = {
             // Keyed by whether there is any, so that the ring fades out showing the last count rather than an empty one.
             AnimatedContent(progress, transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it != null }) { shown ->
@@ -80,6 +83,6 @@ private fun CrossfadedLabel(
     isSecondShown: Boolean,
 ) = Box(contentAlignment = Alignment.Center) {
     val secondAlpha by animateFloatAsState(if (isSecondShown) 1f else 0f)
-    Text(first, Modifier.alpha(1f - secondAlpha).semantics { if (isSecondShown) hideFromAccessibility() })
-    Text(second, Modifier.alpha(secondAlpha).semantics { if (!isSecondShown) hideFromAccessibility() })
+    Text(first, Modifier.alpha(1f - secondAlpha))
+    Text(second, Modifier.alpha(secondAlpha))
 }

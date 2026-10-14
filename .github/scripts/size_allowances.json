@@ -30,7 +30,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/importReport/ImportReportScreen.kt::ImportReportScreen": 135,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/onboarding/CLAUDE.md": 806,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/CLAUDE.md": 793,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/SetlistList.kt::SetlistList": 294,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/SetlistList.kt::SetlistList": 290,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/CLAUDE.md": 823,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/SettingsScreen.kt::SettingsScreen": 136,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/CLAUDE.md": 745,
