@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRo
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
@@ -82,7 +82,7 @@ import kotlinx.coroutines.flow.collectLatest
 internal fun TunerScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: SettingsWidthLayout,
+    layout: PageWidthLayout,
     scrollPosition: ScrollPosition,
     contentPadding: PaddingValues,
 ) {

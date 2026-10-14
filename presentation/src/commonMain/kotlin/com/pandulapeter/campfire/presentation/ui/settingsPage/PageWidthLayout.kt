@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  * window being resized recomposes the screen only in the frames one of these changes in.
  */
 @Immutable
-internal data class SettingsWidthLayout(
+internal data class PageWidthLayout(
     val isWide: Boolean,
     val sectionColumns: Int,
 ) {
@@ -46,9 +46,9 @@ internal data class SettingsWidthLayout(
          * @param settledWidth The width of the screen once the navigation bars have finished animating.
          * @param contentPadding The insets the screen is laid out inside, whose start and end are not part of its width.
          */
-        fun of(settledWidth: Dp, contentPadding: PaddingValues, layoutDirection: LayoutDirection): SettingsWidthLayout {
+        fun of(settledWidth: Dp, contentPadding: PaddingValues, layoutDirection: LayoutDirection): PageWidthLayout {
             val pageWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
-            return SettingsWidthLayout(
+            return PageWidthLayout(
                 isWide = pageWidth > SETTINGS_TAB_ROW_MAX_WIDTH + SETTINGS_CATEGORY_PANE_WIDTH,
                 sectionColumns = (pageWidth / MIN_COLUMN_WIDTH).toInt(),
             )

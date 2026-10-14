@@ -92,7 +92,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
   host): a double tap on the editor's Close otherwise hit the song's Back.
 - **Chrome kind changes hand over rather than switch** (`NavigationChromeTransition`), the room interpolated so screens
   travel with it. Screens *decide* from the settled width (`settledRailWidth`), passed down as `ListLayout` /
-  `SettingsWidthLayout`, not the raw width, so they recompose only when a breakpoint flips.
+  `PageWidthLayout`, not the raw width, so they recompose only when a breakpoint flips.
 - `NavigationChromeScaffold` is a `SubcomposeLayout` that measures the chrome before composing the screens: reporting
   its size back as state is one pass late and the first frame would be laid out without chrome.
 - **The chrome moves with the screen under a card**: while a card is dealt (until its pop has settled, two frames on),

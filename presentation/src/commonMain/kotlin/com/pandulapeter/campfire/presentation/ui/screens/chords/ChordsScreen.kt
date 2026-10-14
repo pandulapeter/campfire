@@ -70,7 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -90,7 +90,7 @@ import kotlinx.coroutines.withContext
 internal fun ChordsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: SettingsWidthLayout,
+    layout: PageWidthLayout,
     contentPadding: PaddingValues,
 ) {
     val state = viewModel.chordLibrary

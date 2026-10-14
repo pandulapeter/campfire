@@ -47,7 +47,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -75,7 +75,7 @@ import kotlinx.coroutines.launch
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: SettingsWidthLayout,
+    layout: PageWidthLayout,
     contentPadding: PaddingValues,
     isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,

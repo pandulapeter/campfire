@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  * ([AnimatedSettingsRow]) are first composed in the state they are in - where an item added to a lazy list a frame
  * late is animated in, which is a screen rearranging itself while it is still arriving.
  *
- * @param sectionColumns How many [MIN_COLUMN_WIDTH] wide columns the page has room for, see [SettingsWidthLayout].
+ * @param sectionColumns How many [MIN_COLUMN_WIDTH] wide columns the page has room for, see [PageWidthLayout].
  * @param contentPadding The window insets left to the screen, applied inside the scroll so the rows pass under the
  *   system bars instead of stopping short of them.
  * @param header Rows above the sections that span every column, so that a control which reads as one row (the Tuner

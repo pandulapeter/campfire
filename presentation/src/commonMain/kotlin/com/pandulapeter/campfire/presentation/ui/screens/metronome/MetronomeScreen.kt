@@ -58,7 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlinx.coroutines.flow.collectLatest
 
 /**
@@ -76,7 +76,7 @@ import kotlinx.coroutines.flow.collectLatest
 internal fun MetronomeScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: SettingsWidthLayout,
+    layout: PageWidthLayout,
     scrollPosition: ScrollPosition,
     contentPadding: PaddingValues,
 ) {

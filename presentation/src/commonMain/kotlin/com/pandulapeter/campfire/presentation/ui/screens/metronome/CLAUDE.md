@@ -14,7 +14,7 @@ The Metronome tab: the whole instrument. The click's lifecycle is in `ui/metrono
 
 - **The song details screen's own `MetronomePanel` is pinned at the top and never hidden** (`isVisible` always true), so
   the click is played the same way on both screens and can be stopped however far the page is scrolled. Drawn
-  `isProminent` (56dp row and button) and capped at `SettingsWidthLayout.pageMaxWidth`.
+  `isProminent` (56dp row and button) and capped at `PageWidthLayout.pageMaxWidth`.
 - The `BeatRow` uses shades of one color (the second accent), since every palette but the app's own has no second accent
   apart from the primary. A tap cycles a beat through accent, plain, and muted, stored per signature here (a song's
   panel stores them for that song alone).
