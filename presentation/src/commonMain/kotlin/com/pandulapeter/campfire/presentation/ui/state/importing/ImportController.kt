@@ -17,9 +17,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
-import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
+import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

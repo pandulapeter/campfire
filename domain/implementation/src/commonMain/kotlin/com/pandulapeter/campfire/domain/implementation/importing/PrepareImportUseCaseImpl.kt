@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -30,8 +30,8 @@ import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
-import com.pandulapeter.campfire.domain.implementation.ImportPlanner
+import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
 import com.pandulapeter.campfire.domain.implementation.mapper.toChordSheet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

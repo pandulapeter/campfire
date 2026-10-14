@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
-import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
+import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.songs.DuplicateSongUseCase
@@ -73,12 +73,12 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.songs.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase

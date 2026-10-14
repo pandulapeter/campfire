@@ -7,12 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation
+package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
-import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
+import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlinx.datetime.LocalDate

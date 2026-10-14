@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
@@ -21,9 +21,9 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
-import com.pandulapeter.campfire.domain.implementation.ImportPlanner
-import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
+import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
+import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.yield
