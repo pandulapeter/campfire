@@ -11,6 +11,10 @@
 ## Short-term (in this version)
 ### Improvements
 - Find a way to allow entering tempo using the keyboard
+- Onboarding animation: make it use the theme colors
+- Redo onboarding: find a better place for it in the Settings menu.
+- Review Settings menu structure
+- Run the tests after every push / merge to master
 - Search: highlight matched substrings
 - Simplify adding chord diagrams in the editor
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
