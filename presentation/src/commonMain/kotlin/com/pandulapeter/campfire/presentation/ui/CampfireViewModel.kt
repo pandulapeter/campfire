@@ -109,7 +109,6 @@ import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
 import com.pandulapeter.campfire.presentation.ui.dialogs.toSavedDialog
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
@@ -378,12 +377,7 @@ class CampfireViewModel(
             }
         }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
-        addOnBackStackChanged { _, stack ->
-            stack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
-                songDetailsTargetSongs.keys.retainAll(ids)
-                songDetailsTargetTimings.keys.retainAll(ids)
-            }
-        }
+        addOnBackStackChanged { _, stack -> metronomeController.onBackStackChanged(stack) }
         addOnBackStackChanged { _, _ -> importController.onBackStackChanged() }
     }
 
@@ -669,12 +663,6 @@ class CampfireViewModel(
 
     /** See [MetronomeController.metronomeBeats]. */
     val metronomeBeats get() = metronomeController.metronomeBeats
-
-    private val songDetailsTargetSongs get() = metronomeController.songDetailsTargetSongs
-
-    private val songDetailsTargetTimings get() = metronomeController.songDetailsTargetTimings
-
-    private val metronomeRenames get() = metronomeController.metronomeRenames
 
     /** See [MetronomeController.metronomeContext]. */
     internal val metronomeContext get() = metronomeController.metronomeContext
@@ -1223,10 +1211,9 @@ class CampfireViewModel(
             val fileName = rename.fileName
             // Only while the screen being rewritten is the one on top, which is what makes sure the context moves off
             // the old name and the entry is taken out again.
-            if ((metronomeContext as? MetronomeContext.Song)?.songFileName == song.fileName) metronomeRenames[song.fileName] = fileName
+            metronomeController.followSongRename(from = song.fileName, to = fileName)
             songTextStore.updateSongTexts { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
             navigator.followSongRename(from = song.fileName, to = fileName)
-            songDetailsTargetSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsTargetSongs[it.key] = fileName }
             followReportedFileNames { if (it == song.fileName) fileName else it }
             // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
             if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)

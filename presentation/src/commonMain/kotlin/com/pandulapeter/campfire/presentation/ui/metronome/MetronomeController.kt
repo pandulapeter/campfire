@@ -83,20 +83,20 @@ internal class MetronomeController(
      * rather than the one it settles on, so that a click paged on to the next song has the new tempo while the page is
      * still sliding in. Reported by the screen, see [onSongDetailsPageChanged].
      */
-    val songDetailsTargetSongs = mutableStateMapOf<String, String>()
+    private val songDetailsTargetSongs = mutableStateMapOf<String, String>()
 
     /**
      * The stretch of the song in [songDetailsTargetSongs] each song details screen's page is headed for, by the same
      * id, where it changes its tempo or time signature further down: what the click follows inside one song.
      */
-    val songDetailsTargetTimings = mutableStateMapOf<String, SongTiming>()
+    private val songDetailsTargetTimings = mutableStateMapOf<String, SongTiming>()
 
     /**
-     * The renames of the song a click plays for, old name to new, from the moment [updateSongFileName] knows the new
+     * The renames of the song a click plays for, old name to new, from the moment `updateSongFileName` knows the new
      * name until the click's context has followed it: the context moving from one to the other is the same song under
      * another name, which keeps the bar going instead of restarting it. Read and written on the main thread only.
      */
-    val metronomeRenames = mutableMapOf<String, String>()
+    private val metronomeRenames = mutableMapOf<String, String>()
 
     /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
     val metronomeContext
@@ -123,6 +123,23 @@ internal class MetronomeController(
                 if (timing == null) songDetailsTargetTimings.remove(destination.id) else songDetailsTargetTimings[destination.id] = timing
             }
         }
+    }
+
+    /**
+     * Follows the song file [from] being renamed to [to]: where the click plays for that song, the move to the new name is
+     * remembered as the same song ([metronomeRenames]) so the bar goes on, and the pages headed for it name the new file.
+     * Called before the back stack is rewritten, since [metronomeContext] is read from it and must still name [from].
+     */
+    fun followSongRename(from: String, to: String) {
+        if ((metronomeContext as? MetronomeContext.Song)?.songFileName == from) metronomeRenames[from] = to
+        songDetailsTargetSongs.entries.filter { it.value == from }.forEach { songDetailsTargetSongs[it.key] = to }
+    }
+
+    /** Lets go of the pages of the song details screens that are no longer on the back stack. */
+    fun onBackStackChanged(stack: List<CampfireDestination>) {
+        val ids = stack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }
+        songDetailsTargetSongs.keys.retainAll(ids)
+        songDetailsTargetTimings.keys.retainAll(ids)
     }
 
     /** The pattern a click started now would play, for [metronomeContext]. */
