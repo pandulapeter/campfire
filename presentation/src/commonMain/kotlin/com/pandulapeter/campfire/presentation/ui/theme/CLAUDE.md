@@ -69,8 +69,8 @@ undo/redo) carry `android:autoMirrored`, which Compose honors on every platform 
 
 **Bundled on every platform** (`src/commonMain/composeResources/font`, OFL licenses under `files/licenses`): Inter for
 the interface, JetBrains Mono (no-ligatures) for tabs and the editor, so a song looks and breaks the same on a phone, a
-computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, Cyrillic, and song symbols; other
-scripts fall back to the system's fonts (Skia's Roboto on the web).
+computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, and Cyrillic (♯ ♭: Mono only); others
+fall back to system fonts (Skia's Roboto on the web).
 
 - `InterfaceTypography.kt`: Material's type scale in Inter Regular/Medium/Bold, read before the first frame except on
   the web, whose actual returns null until all three weights are fetched; the theme isn't settled until then (no second

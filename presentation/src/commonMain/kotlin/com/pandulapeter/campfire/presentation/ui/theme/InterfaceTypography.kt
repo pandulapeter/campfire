@@ -34,9 +34,10 @@ internal expect fun interfaceTypography(): Typography?
  * Inter, which the whole app is set in on every platform, so that it looks the same everywhere and a song breaks its
  * lines and pages in the same places on a phone, a computer and paper. Bundled in the three weights Material's type
  * scale and the app use: Regular, Medium and Bold. The files are subset to the Latin, Greek and Cyrillic scripts,
- * punctuation, arrows and the symbols a song uses, and keep only the default layout features, which takes them to a
- * sixth of their size; a character outside that falls back to the system's fonts (on the web, to the Roboto Skia
- * carries). Italic is left to the text engine to slant.
+ * punctuation and arrows, and keep only the default layout features, which takes them to a sixth of their size; a
+ * character outside that falls back to the system's fonts (on the web, to the Roboto Skia carries). Inter has no music
+ * accidentals, so a ♯ or ♭ typed into a title is one of those; the app itself writes accidentals as # and b. Italic is
+ * left to the text engine to slant.
  */
 @Composable
 internal fun interFontFamily() = FontFamily(
