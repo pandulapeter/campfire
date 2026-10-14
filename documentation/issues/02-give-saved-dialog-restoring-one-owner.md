@@ -10,6 +10,10 @@
 
 # Give saving and reopening the form sheet a process death left open one owner, `SavedDialogRestorer`
 
+**Challenged:** amended — `first` added to the imports to check; the restorer tests now say which scope
+and when to run the scheduler (`runCurrent()` before the push, so the `snapshotFlow` path is what is exercised), and
+the third test is renamed: a dialog already up makes the restorer give up, it does not wait.
+
 **Kind:** structure · **Severity:** low · **Platforms:** all (the behaviour matters on Android)
 **Files:**
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt`,
@@ -124,7 +128,8 @@ One commit: "Give saving and reopening the sheet a process death left open one o
      `editorSession.startRecovery()`, before `songSelection.startPruning(screenData)`): the back stack's top is read
      there, and the editor draft recovery started just before it may already have put an editor on top.
    - Delete `restoreVisibleDialog`, `reopenSavedDialog`, and the imports that only they used (`merge`, `flow`, `filter`,
-     `map`, `snapshotFlow`, `SavedDialog`, `toSavedDialog` — check each).
+     `map`, `first`, `snapshotFlow`, `SavedDialog`, `toSavedDialog` — check each; at HEAD `first` is used only by
+     `reopenSavedDialog`, and the remaining `.filter` call is the collection one, which needs no import).
    - The `restore` helper at the bottom stays if `_songFilter` still uses it.
 5. Run `python3 .github/scripts/check_sizes.py --update` (the view model shrinks).
 
@@ -140,16 +145,20 @@ Neither may grow (both packages are near or over budget: check with `check_sizes
   is the setlist picker's; a stack of nothing reopenable is `null`.
 - New `SavedDialogRestorerTest` (desktop `runTest`, `SavedStateStore(SavedStateHandle(), backgroundScope)`,
   `DialogHost(backgroundScope)`, a `mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)`,
-  `MutableStateFlow`s for the lookup, setlists, draft and texts, lambdas that record calls):
+  `MutableStateFlow`s for the lookup, setlists, draft and texts, lambdas that record calls; the restorer's `scope` is
+  `backgroundScope`, and every step that needs the launched coroutine to move is followed by `runCurrent()`):
   - `a saved new setlist sheet is reopened once the library is read`: persist `SavedDialog.NewSetlist`, `start()`, set
     the lookup to `SongLookup(emptyMap(), isLibraryRead = true)`; `dialogHost.visibleDialog.value` is
     `DialogType.NewSetlist` and the saved entry is unchanged.
-  - `a saved sheet is given up once another screen is on top`: persist `SavedDialog.NewSetlist`, `start()`, push
-    `CampfireDestination.Settings` while the lookup is unread, then read it; nothing is shown and the saved entry is
-    `null`. (The `snapshotFlow` needs a snapshot apply: call `Snapshot.sendApplyNotifications()` after the push.)
-  - `a saved sheet waits behind a dialog already up and is then forgotten`: show `DialogType.WhatsNew` first; nothing
-    else is shown and the entry is `null`.
-  - `a sheet over a song that is gone is forgotten`: persist an `EditSetlist("missing.setlist.json")`; entry `null`.
+  - `a saved sheet is given up once another screen is on top`: persist `SavedDialog.NewSetlist`, `start()`,
+    `runCurrent()` (so the race is collecting), push `CampfireDestination.Settings` while the lookup is unread,
+    `Snapshot.sendApplyNotifications()` and `runCurrent()`, then read the lookup; nothing is shown and the saved entry
+    is `null`. (Without the apply notification the `snapshotFlow` never sees the push, as in `ImportControllerQueueTest`.)
+  - `a saved sheet gives way to a dialog already up and is forgotten`: persist `SavedDialog.NewSetlist`, show
+    `DialogType.WhatsNew` through `dialogHost.showDialog`, `start()`, read the lookup; `WhatsNew` is still the visible
+    dialog and the entry is `null`.
+  - `a sheet over a setlist that is gone is forgotten`: persist an `EditSetlist("missing.setlist.json")`, `start()`,
+    read the lookup with `setlists` empty; nothing is shown and the entry is `null`.
 
 Then the root CLAUDE.md test command, the four platform compile tasks listed in the brief, `spotlessCheck`, and the
 size check.
