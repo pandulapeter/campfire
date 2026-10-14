@@ -27,6 +27,14 @@ internal class LibraryFilesTest {
     }
 
     @Test
+    fun `a song is named after its artist and title, or its title alone without an artist`() {
+        assertEquals("tukorfurogep-arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = "Tükörfúrógép"))
+        assertEquals("arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = ""))
+        assertEquals("arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = " "))
+        assertEquals("кино-группа_крови", LibraryFiles.songBaseName(title = "Группа крови", artist = "Кино"))
+    }
+
+    @Test
     fun `a capped name survives being normalized again`() {
         // Cut by characters, the first pass would end on "feat", which the second pass files as "ft".
         val feather = "a".repeat(115) + " feather"

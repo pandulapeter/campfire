@@ -28,6 +28,8 @@ repository.
   the BMP are kept as surrogate pairs and never cut; symbols, emoji, and planes 14–16 become separators. A Latin letter
   `Accents.kt`'s `withoutAccent` table does not know becomes a separator, so extend the table; it lives here because two
   modules share it.
+- `songBaseName` is the one song naming rule (artist, dash, title, each normalized; the title alone without an
+  artist): the local source, the PDF export, and the demo library test use it.
 - `identityKey` / `isSameLibraryName` are the one rule for whether two names are one file (NFC, then
   `uppercaseChar().lowercaseChar()` per code point, matching the JVM's `equals(ignoreCase = true)`); asked by storage
   renames, sync matching, and the import (`LibraryNameIdentityJvmTest` holds it against the JVM).

@@ -37,9 +37,7 @@ class DemoLibraryTest {
         assertTrue(songs.isNotEmpty())
         songs.forEach { file ->
             val metadata = ChordProParser.parseMetadata(file.bytes.decodeToString())
-            val title = LibraryFiles.normalizedName(metadata.displayTitle(fallback = ""))
-            val artist = metadata.artist.orEmpty()
-            val expected = if (artist.isBlank()) title else LibraryFiles.normalizedName(artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR + title
+            val expected = LibraryFiles.songBaseName(title = metadata.displayTitle(fallback = ""), artist = metadata.artist.orEmpty())
             assertEquals(expected + LibraryFiles.SONG_EXTENSION, file.name)
         }
     }

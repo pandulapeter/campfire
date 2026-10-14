@@ -18,18 +18,14 @@ internal const val SONG_EXTENSION = LibraryFiles.SONG_EXTENSION
 internal const val SETLIST_EXTENSION = LibraryFiles.SETLIST_EXTENSION
 
 /**
- * The name a song's own metadata gives it: the artist and the title normalized one at a time and joined by
- * [LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR], a song with no artist named after its title alone. It is the
- * name an export hands out as well, so a song that is named this way leaves the app under the name it already has.
+ * The name a song's own metadata gives it, by the one rule ([LibraryFiles.songBaseName]). It is the name an export
+ * hands out as well, so a song that is named this way leaves the app under the name it already has.
  *
  * @param extension The one the file is stored under, since the library reads the whole ChordPro family and renaming
  *   a file is no reason to claim its contents are written differently than they are.
  */
-internal fun songFileName(title: String, artist: String, extension: String = SONG_EXTENSION): String {
-    val name = LibraryFiles.normalizedName(title)
-    val base = if (artist.isBlank()) name else LibraryFiles.normalizedName(artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR + name
-    return base + extension
-}
+internal fun songFileName(title: String, artist: String, extension: String = SONG_EXTENSION): String =
+    LibraryFiles.songBaseName(title, artist) + extension
 
 /**
  * The name a setlist is stored under, normalized the way a song's is ([LibraryFiles.normalizedName]). A setlist

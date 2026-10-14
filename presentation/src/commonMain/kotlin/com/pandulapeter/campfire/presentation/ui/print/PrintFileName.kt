@@ -14,11 +14,10 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 
 /**
  * The name a PDF is offered under. A song's is the one its own header gives it, artist and title, by the rule the
- * library and every other export name a song by - whatever its library file happens to be called, a numbered sibling
- * or a name from before its title changed. That rule lives in the local source, which this module does not see, so it
- * is spelled out here from [LibraryFiles]. A setlist's running order is told apart from its song sheets, so that the
- * two exports of one setlist do not take each other's name either. Several songs that are not a setlist have no title of
- * their own, and are named the way their zip is.
+ * library and every other export name a song by ([LibraryFiles.songBaseName]) - whatever its library file happens to
+ * be called, a numbered sibling or a name from before its title changed. A setlist's running order is told apart from
+ * its song sheets, so that the two exports of one setlist do not take each other's name either. Several songs that are
+ * not a setlist have no title of their own, and are named the way their zip is.
  */
 internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
     val song = source.songs.singleOrNull()
@@ -27,9 +26,7 @@ internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
                 if (settings.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) RUNNING_ORDER_SUFFIX else ""
         source.kind == PrintSource.Kind.SONGS -> SONGS_FILE_NAME
         song == null -> LibraryFiles.normalizedName(source.title)
-        song.artist.isNullOrBlank() -> LibraryFiles.normalizedName(song.title)
-        else -> LibraryFiles.normalizedName(song.artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR +
-                LibraryFiles.normalizedName(song.title)
+        else -> LibraryFiles.songBaseName(title = song.title, artist = song.artist.orEmpty())
     }
     return base + PDF_EXTENSION
 }

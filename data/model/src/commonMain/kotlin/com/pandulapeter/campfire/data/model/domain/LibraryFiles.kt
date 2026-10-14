@@ -98,7 +98,7 @@ object LibraryFiles {
      * words: `tukorfurogep-arviz`. Each half is normalized on its own and the dash is put back between them, so the
      * name still says where the artist ends instead of reading as one run of underscored words.
      */
-    const val NORMALIZED_ARTIST_TITLE_SEPARATOR = "-"
+    private const val NORMALIZED_ARTIST_TITLE_SEPARATOR = "-"
 
     /**
      * The longest a name may be before its extension. Long enough for any title somebody actually writes, short
@@ -188,6 +188,17 @@ object LibraryFiles {
         }
         if (name.isEmpty() && words.isNotEmpty()) name.append(words.first().takeBytes(MAX_NAME_BYTES))
         return name.toString().ifEmpty { FALLBACK_NAME }
+    }
+
+    /**
+     * The name a song's own header gives it, without an extension: [artist] and [title] normalized one at a time
+     * ([normalizedName]) and joined by [NORMALIZED_ARTIST_TITLE_SEPARATOR], so that the dash survives as structure
+     * (`tukorfurogep-arviz`); a song with a blank artist is named after its title alone. The library stores a song under
+     * it, every export hands it out under it, and the PDF of a song is named after it.
+     */
+    fun songBaseName(title: String, artist: String): String {
+        val name = normalizedName(title)
+        return if (artist.isBlank()) name else normalizedName(artist) + NORMALIZED_ARTIST_TITLE_SEPARATOR + name
     }
 
     /** What a [normalizedName] is made of, and what a collision suffix is joined to it with. */

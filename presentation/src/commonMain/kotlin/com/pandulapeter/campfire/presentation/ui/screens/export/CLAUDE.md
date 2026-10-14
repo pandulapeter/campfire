@@ -55,8 +55,8 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
   `OutOfMemoryError` (not catchable on the web), report a failed export.
 - A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a
   share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android, iOS).
-- `pdfFileName` names it like `ExportFileNames.kt` names a song; a running order gets `-running_order`, so the two
-  exports of one setlist don't collide.
+- `pdfFileName` names it by `LibraryFiles.songBaseName`, like the library; a running order gets `-running_order`, so
+  the two exports of one setlist don't collide.
 
 ## Layout
 

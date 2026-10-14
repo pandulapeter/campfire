@@ -26,7 +26,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
  * can edit or delete any of them without the app ever putting one back on its own.
  *
  * Every song is public domain, and every file is named exactly as the library would name the song inside it
- * (`LibraryFiles.normalizedName(artist)-normalizedName(title).cho`), so that the one list below serves both reading
+ * (`LibraryFiles.songBaseName` plus `.cho`), so that the one list below serves both reading
  * the resources and asking whether they are already in the library.
  */
 internal object DemoLibrary {
