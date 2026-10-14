@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SetlistRowsTest {
 
@@ -52,6 +54,52 @@ class SetlistRowsTest {
         assertEquals(listOf("b", "a", "c"), listOf("a", "b", "c").movedOnePlace(from = 0, by = 1))
         assertEquals(listOf("a", "c", "b"), listOf("a", "b", "c").movedOnePlace(from = 2, by = -1))
     }
+
+    @Test
+    fun `only a setlist in use with two songs or more can be reordered`() {
+        assertTrue(first.canReorder)
+        assertFalse(second.canReorder)
+        assertFalse(first.copy(setlist = first.setlist.copy(isArchived = true)).canReorder)
+    }
+
+    @Test
+    fun `a move within a setlist puts the song where it was dropped`() {
+        val moved = null.afterMove(from = key("first", "a"), to = key("first", "c"), setlists = listOf(first, second))
+
+        assertEquals(DraggedSetlist(setlistFileName = "first.setlist.json", songFileNames = listOf("b", "c", "a")), moved)
+    }
+
+    @Test
+    fun `a move continues from the order the drag has put the setlist in`() {
+        val dragged = DraggedSetlist(setlistFileName = "first.setlist.json", songFileNames = listOf("c", "b", "a"))
+
+        assertEquals(listOf("b", "c", "a"), dragged.afterMove(from = key("first", "c"), to = key("first", "b"), setlists = listOf(first))?.songFileNames)
+    }
+
+    @Test
+    fun `a move onto another setlist or onto no song is no move`() {
+        assertNull(null.afterMove(from = key("first", "a"), to = key("second", "d"), setlists = listOf(first, second)))
+        assertNull(null.afterMove(from = key("first", "a"), to = SetlistItemKey("setlist_first.setlist.json"), setlists = listOf(first)))
+    }
+
+    @Test
+    fun `a drag settles once the library has its order`() {
+        val dragged = DraggedSetlist(setlistFileName = "first.setlist.json", songFileNames = listOf("a", "b", "c"))
+
+        assertTrue(dragged.isSettledBy(first))
+        assertFalse(dragged.copy(songFileNames = listOf("b", "a", "c")).isSettledBy(first))
+    }
+
+    @Test
+    fun `a drag is given up for a setlist that changed its songs, went, or was archived`() {
+        val dragged = DraggedSetlist(setlistFileName = "first.setlist.json", songFileNames = listOf("b", "a"))
+
+        assertTrue(dragged.isSettledBy(first))
+        assertTrue(dragged.isSettledBy(null))
+        assertTrue(dragged.copy(songFileNames = listOf("b", "a", "c")).isSettledBy(first.copy(setlist = first.setlist.copy(isArchived = true))))
+    }
+
+    private fun key(setlist: String, song: String) = SetlistItemKey(setlistFileName = "$setlist.setlist.json", songFileName = song)
 
     private fun setlistWithSongs(name: String, description: String, vararg songFileNames: String) = SetlistWithSongs(
         setlist = Setlist(

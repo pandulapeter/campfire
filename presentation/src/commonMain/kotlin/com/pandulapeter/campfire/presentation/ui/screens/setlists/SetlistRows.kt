@@ -70,3 +70,62 @@ internal data class DraggedSetlist(
     val setlistFileName: String,
     val songFileNames: List<String>,
 )
+
+/**
+ * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before
+ * it while performance mode is off, which it is whenever a setlist is being reordered.
+ */
+internal fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
+    var index = 0
+    forEach { setlistWithSongs ->
+        if (setlistWithSongs.setlist.fileName == setlistFileName) return index
+        index += 2 + setlistWithSongs.entries.size + if (setlistWithSongs.setlist.description.isNotBlank()) 1 else 0
+    }
+    return null
+}
+
+/** Swap the row at [from] with its neighbor in the already checked direction. */
+internal fun List<String>.movedOnePlace(from: Int, by: Int): List<String> {
+    val result = toMutableList()
+    val to = from + by
+    val neighbor = result[to]
+    result[to] = result[from]
+    result[from] = neighbor
+    return result
+}
+
+/** Whether a setlist's songs can be put in another order: an archived setlist is read only, and one song has none. */
+internal val SetlistWithSongs.canReorder get() = !setlist.isArchived && entries.size > 1
+
+/**
+ * The order a drag's move from [from] to [to] leaves the rows in, taken from the order the drag has put this setlist in
+ * already or else from [setlists]; null for a move that changes nothing, since songs can only be reordered within their
+ * own setlist.
+ */
+internal fun DraggedSetlist?.afterMove(from: SetlistItemKey, to: SetlistItemKey, setlists: List<SetlistWithSongs>): DraggedSetlist? {
+    val setlistFileName = from.setlistFileName ?: return null
+    val fromSongFileName = from.songFileName ?: return null
+    val toSongFileName = to.songFileName ?: return null
+    if (setlistFileName != to.setlistFileName) return null
+    val songFileNames = this?.takeIf { it.setlistFileName == setlistFileName }?.songFileNames
+        ?: setlists.firstOrNull { it.setlist.fileName == setlistFileName }?.entries?.map { it.songFileName }
+        ?: return null
+    return DraggedSetlist(
+        setlistFileName = setlistFileName,
+        songFileNames = songFileNames.toMutableList().apply {
+            val fromIndex = indexOf(fromSongFileName)
+            val toIndex = indexOf(toSongFileName)
+            if (fromIndex >= 0 && toIndex >= 0) add(toIndex, removeAt(fromIndex))
+        },
+    )
+}
+
+/**
+ * Whether the drawn order can be given up for [setlist], the dragged one as the library has it now: once the library
+ * agrees with it, and just as readily when the setlist turns out to hold different songs than the drag was working
+ * from, when it has gone or when it has been archived, since an archived setlist is never reordered.
+ */
+internal fun DraggedSetlist.isSettledBy(setlist: SetlistWithSongs?): Boolean {
+    val libraryOrder = setlist?.entries?.map { it.songFileName }
+    return setlist?.setlist?.isArchived == true || libraryOrder == songFileNames || libraryOrder?.toSet() != songFileNames.toSet()
+}
