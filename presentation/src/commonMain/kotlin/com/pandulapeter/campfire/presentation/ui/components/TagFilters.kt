@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layoutId
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_label
@@ -58,9 +59,9 @@ internal fun TagFilters(
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
-    val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf()) { it.lowercase() } }
+    val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf(), ::tagKey) }
     val orderedTags = remember(tags, sortingMode) { tags.orderedBy(sortingMode) }
-    val isPinned = remember(orderedTags, selected) { orderedTags.map { it.name.lowercase() in selected } }
+    val isPinned = remember(orderedTags, selected) { orderedTags.map { tagKey(it.name) in selected } }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
     // (CampfireViewModel.clearTagFilter), so what the clear action and the match mode are offered for is a selection
     // among the chips rather than whatever the filter still holds - a button that cleared nothing visible, or an
@@ -81,7 +82,7 @@ internal fun TagFilters(
         lookaheadScope = lookaheadScope,
         isVisible = isVisible,
         items = orderedTags,
-        key = { it.name.lowercase() },
+        key = { tagKey(it.name) },
         isExpanded = isExpanded,
         isPinned = isPinned,
         onExpandedChanged = { isExpanded = it },
@@ -89,7 +90,7 @@ internal fun TagFilters(
         CountedFilterChip(
             label = tag.name,
             songCount = tag.songCount,
-            isSelected = tag.name.lowercase() in selected,
+            isSelected = tagKey(tag.name) in selected,
             onClick = { onTagClicked(tag.name) },
             leadingIcon = painterResource(Res.drawable.ic_label),
             leadingIconFill = tagColor(tag.name)?.color() ?: Color.Unspecified,

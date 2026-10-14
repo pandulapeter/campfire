@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -68,7 +69,7 @@ internal fun SongLabels(
         sortedTags.forEach { tag ->
             TagPill(
                 text = tag,
-                isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
+                isSelected = onTagClicked != null && selectedTags.any { tagKey(it) == tagKey(tag) },
                 onClick = onTagClicked?.let { { it(tag) } },
                 leadingIcon = painterResource(Res.drawable.ic_label),
                 leadingIconFill = tagColor(tag)?.color() ?: Color.Unspecified,

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -95,7 +96,7 @@ internal fun SongPicker(
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
     // otherwise keep hiding every song with no chip left to turn it off.
     val activeTags = remember(filters, selectedTags) {
-        selectedTags.filterTo(mutableSetOf()) { selected -> filters.tags.any { it.name.lowercase() == selected } }
+        selectedTags.filterTo(mutableSetOf()) { selected -> filters.tags.any { tagKey(it.name) == selected } }
     }
     val activeLanguages = remember(filters, selectedLanguages) {
         selectedLanguages.filterTo(mutableSetOf()) { selected -> filters.languages.any { it.code == selected } }
@@ -240,7 +241,7 @@ private fun PickerFilters(
                 sortingMode = tagSortingMode,
                 onSortingModeSelected = onTagSortingModeSelected,
             ) { tag ->
-                val key = tag.name.lowercase()
+                val key = tagKey(tag.name)
                 CountedFilterChip(
                     label = tag.name,
                     songCount = tag.songCount,

@@ -12,10 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.search
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.domain.tagKey
 
 /**
- * A song of the song picker with the title and the artist its search compares, normalized, and the tags (in lower
- * case) and languages ([SongLanguage.UNKNOWN] for none) its filters compare.
+ * A song of the song picker with the title and the artist its search compares, normalized, and the tags (by
+ * `tagKey`) and languages ([SongLanguage.UNKNOWN] for none) its filters compare.
  */
 internal class PickableSong(
     val song: Song,
@@ -31,7 +32,7 @@ internal fun SearchableSong.toPickableSong() = PickableSong(
     song = song,
     title = title,
     artist = artist,
-    tags = song.tags.mapTo(mutableSetOf()) { it.lowercase() },
+    tags = song.tags.mapTo(mutableSetOf(), ::tagKey),
     searchableTags = tags,
     languages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
 )

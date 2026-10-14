@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.search
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
@@ -121,7 +122,7 @@ class SongPickerIndexTest {
         song = song(name, tags = tags, languages = languages),
         title = title,
         artist = artist,
-        tags = tags.mapTo(mutableSetOf()) { it.lowercase() },
+        tags = tags.mapTo(mutableSetOf(), ::tagKey),
         searchableTags = tags,
         languages = languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
     )

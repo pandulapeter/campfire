@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.models.SongSection
@@ -79,8 +80,8 @@ internal class SongListState(
      * found in the controls it opens.
      */
     val isSongFilterActive = combine(songFilter, tags, languages) { filter, tags, languages ->
-        val selectedTags = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() }
-        tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
+        val selectedTags = filter.selectedTags.mapTo(mutableSetOf(), ::tagKey)
+        tags.any { tagKey(it.name) in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
     }.asState(scope, false)
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
@@ -103,16 +104,16 @@ internal class SongListState(
         songListPlaceholder(screenData = screenData, songGroups = songGroups, isImporting = isImporting)
     }.asState(scope, Placeholder.LOADING)
 
-    /** A selected tag is matched the way the filter itself matches it, without regard to case. */
+    /** A selected tag is matched the way the filter itself matches it, by `tagKey`. */
     fun toggleTagFilter(tag: String) = mutableSongFilter.update { filter ->
-        val without = filter.selectedTags.filterNotTo(mutableSetOf()) { it.equals(tag, ignoreCase = true) }
+        val without = filter.selectedTags.filterNotTo(mutableSetOf()) { tagKey(it) == tagKey(tag) }
         filter.copy(selectedTags = if (without.size == filter.selectedTags.size) filter.selectedTags + tag else without)
     }
 
     /** Only the tags the library still has are cleared: a selection this screen never showed is not a tap's to lose. */
     fun clearTagFilter() = mutableSongFilter.update { filter ->
-        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
-        filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
+        val libraryTags = tags.value.mapTo(mutableSetOf()) { tagKey(it.name) }
+        filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { tagKey(it) in libraryTags })
     }
 
     fun setTagMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(tagMatchMode = value) }
@@ -138,10 +139,10 @@ internal class SongListState(
      * it with only the tags reset for a frame.
      */
     fun clearSongFilter() = mutableSongFilter.update { filter ->
-        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
+        val libraryTags = tags.value.mapTo(mutableSetOf()) { tagKey(it.name) }
         val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
         filter.copy(
-            selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags },
+            selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { tagKey(it) in libraryTags },
             selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages },
         )
     }

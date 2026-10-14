@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
@@ -37,7 +38,7 @@ internal class SongPickerState(
 
     /** Assignment-sheet tags survive reopening the sheet, independently of the main Songs filter. Same run lifetime. */
     private val _songPickerSelectedTags = MutableStateFlow<Set<String>>(
-        savedStateStore.restore<List<String>>(SONG_PICKER_TAGS_KEY).orEmpty().mapTo(mutableSetOf()) { it.lowercase() }
+        savedStateStore.restore<List<String>>(SONG_PICKER_TAGS_KEY).orEmpty().mapTo(mutableSetOf(), ::tagKey)
     )
 
     val songPickerSelectedTags = _songPickerSelectedTags.asStateFlow()
@@ -67,7 +68,7 @@ internal class SongPickerState(
         .asState(scope, PickerFilterOptions.Empty)
 
     fun toggleSongPickerTag(tag: String) = _songPickerSelectedTags.update { selected ->
-        val key = tag.lowercase()
+        val key = tagKey(tag)
         if (key in selected) selected - key else selected + key
     }
 
