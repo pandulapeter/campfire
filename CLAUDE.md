@@ -80,8 +80,7 @@ campfire.log / campfire.log.1          desktop only: bounded process log
   Sources in `src/commonMain/kotlin`; platform code in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via
   `expect`/`actual`, JVM code shared by Android and desktop in `jvmSharedMain`. `:app:*` and `:app:baselineprofile` are
   single-platform; every other module is multiplatform.
-- Shared code is JVM-free: no `java.*`, no `KoinJavaComponent`. Use `kotlin.uuid.Uuid`,
-  `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()`, `import kotlinx.coroutines.IO`.
+- Shared code is JVM-free (the `code-style` skill lists the replacements).
 - Implementation classes are `internal`, named `<Interface>Impl`; use cases are `operator fun invoke`. Layers are
   crossed through `mapper/` packages. `:chordpro` and `:metronome:api` use `explicitApi()`.
 - Formatting is checked: `.editorconfig` + Spotless/ktlint (`./gradlew spotlessApply`), and
@@ -98,16 +97,11 @@ campfire.log / campfire.log.1          desktop only: bounded process log
   `@Provided` marks only what a platform shell supplies (the Android `Context`).
 - **Never inject a `List<T>`**: it resolves as `getAll<T>()` and arrives empty. Wrap a list in its own type
   (`SyncProviders`).
-- **Never give a defaulted parameter to a `@Single` / `@Factory` / `@KoinViewModel` constructor or a `@Single`
-  function**: the plugin uses `skipDefaultValues = true`, so the default is silently used.
+- No defaulted parameter on a Koin definition's constructor or `@Single` function (see the `code-style` skill).
 
 ### Strings
 
-- In `presentation/src/commonMain/composeResources/values[-hu]/strings.xml`; every key in both files.
-- Read with `com.pandulapeter.campfire.presentation.localization.stringResource`, never the
-  `org.jetbrains.compose.resources` one (it ignores the in-app language). Formatted strings always get their arguments.
-- Text written by someone else (a title, tag, file or account name) goes through `textResource` /
-  `pluralTextResource` (`components/TextResource.kt`), since the formatter rescans its output (`100% sure`).
+- In `presentation/src/commonMain/composeResources/values[-hu]/strings.xml`, read as the `code-style` skill says.
 - A counted sentence is a `<plurals>` with `one` and `other`, not a second key.
 
 ### UI rules
