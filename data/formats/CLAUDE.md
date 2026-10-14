@@ -10,18 +10,12 @@
 # :data:formats
 
 Pure PDF and Word text extractors and zip reader/writer in common Kotlin on every target, on no third-party library
-(only `kotlinx.coroutines`) and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no network. Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and
-`ArchiveLocalSourceImpl`; public is only what those use, everything else `internal`. `ZipReader` is the one place that
+(only `kotlinx.coroutines`) and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no network.
+Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and `ArchiveLocalSourceImpl`; public is
+only what those use, everything else `internal`. `ZipReader` is the one place that
 prints (the name of an entry it could not read).
 
-## Documents as the import sees them
-
-- **Documents are converted locally, never rendered, uploaded, or kept**: `.pdf` and `.docx` are extracted to an
-  `ExtractedDocument` (pages, lines, positioned and styled spans), then `ChordSheetConverter` turns them into ChordPro
-  (`:chordpro`). Plain `.txt` uses the same converter; the ChordPro extension family never does. Every imported song is
-  formatted by `ChordProPrettifier` and written in the standard chord notation.
-- Documents with no readable text (scans, encrypted PDFs, legacy `.doc`) are reported separately from unsupported files.
-  No "Open with" association is registered for documents; Android adds only PDF and Word share MIME types.
+Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocument` is all that leaves this module.
 
 ## `document/`
 
