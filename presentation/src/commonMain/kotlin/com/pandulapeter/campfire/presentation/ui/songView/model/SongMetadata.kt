@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf

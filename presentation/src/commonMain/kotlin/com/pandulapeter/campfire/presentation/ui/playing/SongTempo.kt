@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.playing
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import kotlin.math.roundToInt
 

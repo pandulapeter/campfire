@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase

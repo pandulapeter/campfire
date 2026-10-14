@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.api.songs
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 interface CreateSongUseCase {
 

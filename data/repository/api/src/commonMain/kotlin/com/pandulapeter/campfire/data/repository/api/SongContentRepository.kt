@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import kotlinx.coroutines.flow.Flow
 
 /**

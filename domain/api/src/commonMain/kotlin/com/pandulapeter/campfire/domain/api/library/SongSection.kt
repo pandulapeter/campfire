@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.library
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * One section of the sorted song list: the songs filed under one header, in the order the list shows them.

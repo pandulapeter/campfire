@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 
 /**
  * The editor's unsaved text as the app last left the front, kept outside the library so that the system ending the

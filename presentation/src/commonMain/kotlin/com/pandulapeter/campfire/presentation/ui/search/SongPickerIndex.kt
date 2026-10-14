@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.search
 
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
-import com.pandulapeter.campfire.data.model.domain.tagKey
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Tag
+import com.pandulapeter.campfire.data.model.song.tagKey
 
 /**
  * A song of the song picker with the title and the artist its search compares, normalized, and the tags (by

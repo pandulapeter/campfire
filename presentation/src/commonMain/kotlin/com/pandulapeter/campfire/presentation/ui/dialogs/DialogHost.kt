@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverlayState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

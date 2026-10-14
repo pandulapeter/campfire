@@ -13,7 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import com.pandulapeter.campfire.data.model.domain.tagKey
+import com.pandulapeter.campfire.data.model.song.tagKey
 
 /**
  * The colors a tag can be given, painted inside its icon ([TagIcon]). They are fixed hues rather than roles of the

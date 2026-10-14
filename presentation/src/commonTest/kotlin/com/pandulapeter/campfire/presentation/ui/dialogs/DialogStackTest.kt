@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.filledForm
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

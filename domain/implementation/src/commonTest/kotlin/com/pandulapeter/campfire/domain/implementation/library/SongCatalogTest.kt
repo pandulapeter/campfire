@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.domain.implementation.library
 
 import com.pandulapeter.campfire.domain.implementation.text.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.testSong
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

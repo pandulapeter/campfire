@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
 import com.pandulapeter.campfire.data.source.local.api.EditorDraftLocalSource
 import kotlinx.coroutines.sync.Mutex

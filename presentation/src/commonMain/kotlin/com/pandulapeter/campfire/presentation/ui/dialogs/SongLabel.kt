@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
 import com.pandulapeter.campfire.presentation.localization.textResource

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import org.koin.core.annotation.Factory

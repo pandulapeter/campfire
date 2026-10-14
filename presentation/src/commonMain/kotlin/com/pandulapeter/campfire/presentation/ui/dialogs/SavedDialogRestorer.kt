@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup

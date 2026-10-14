@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.navigation
 
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * The addresses of the web build, relative to the folder the page is served from and still percent-encoded. Every

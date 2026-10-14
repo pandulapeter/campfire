@@ -18,11 +18,11 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.model.domain.normalizedTags
-import com.pandulapeter.campfire.data.model.domain.tagKey
+import com.pandulapeter.campfire.data.model.song.normalizedTags
+import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

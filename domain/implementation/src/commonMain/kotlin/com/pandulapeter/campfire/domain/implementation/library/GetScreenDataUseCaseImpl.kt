@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.library
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository

@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.model.library
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

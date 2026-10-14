@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * One setlist as a list shows it: every entry it has, since a setlist is read as the list somebody wrote down

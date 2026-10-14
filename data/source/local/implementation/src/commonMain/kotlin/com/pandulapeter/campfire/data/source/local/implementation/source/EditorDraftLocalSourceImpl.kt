@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.source.local.api.EditorDraftLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toEditorDraftDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel

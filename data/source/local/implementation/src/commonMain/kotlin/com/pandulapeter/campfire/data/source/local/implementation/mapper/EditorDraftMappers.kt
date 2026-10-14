@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.source.local.implementation.model.EditorDraftDocument
 
 internal fun EditorDraftDocument.toModel() = SongContent(

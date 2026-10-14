@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.online
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.SearchCoverArtUseCase

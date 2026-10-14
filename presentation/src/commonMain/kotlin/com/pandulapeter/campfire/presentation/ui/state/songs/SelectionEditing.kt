@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.songs
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.data.model.domain.tagKey
+import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message

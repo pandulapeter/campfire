@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter

@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationDigitsOf
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.domain.Catalogue
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.domain.SongCredits
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import kotlinx.coroutines.test.runTest

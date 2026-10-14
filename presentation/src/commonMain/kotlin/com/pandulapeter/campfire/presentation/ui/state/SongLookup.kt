@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * The whole library by file name, together with whether it has been read, as one value: see `LibraryState.songLookup`.

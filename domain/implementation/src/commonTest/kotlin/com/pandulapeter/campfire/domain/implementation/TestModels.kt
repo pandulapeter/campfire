@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlinx.datetime.LocalDate
 

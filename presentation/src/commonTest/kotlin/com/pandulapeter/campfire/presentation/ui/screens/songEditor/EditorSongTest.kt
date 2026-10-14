@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

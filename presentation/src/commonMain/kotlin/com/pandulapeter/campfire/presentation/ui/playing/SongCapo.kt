@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.playing
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * Every song's capo override, see [SongOverrides]. One band plays a song capoed at the second fret and the next set

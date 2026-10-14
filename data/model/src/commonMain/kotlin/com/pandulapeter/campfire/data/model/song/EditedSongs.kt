@@ -7,10 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.song
 
-/** The full ChordPro text of one song file. */
-data class SongContent(
-    val fileName: String,
-    val text: String,
+/**
+ * What an edit of several song files at once came to: the files it changed, and the ones it could not read or write,
+ * which the rest of the edit carried on without.
+ */
+data class EditedSongs(
+    val changedFileNames: Set<String>,
+    val failedFileNames: List<String>,
 )

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.runtime.mutableStateListOf
-import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase

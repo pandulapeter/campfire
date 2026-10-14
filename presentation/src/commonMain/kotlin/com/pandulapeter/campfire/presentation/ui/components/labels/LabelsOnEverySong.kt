@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**

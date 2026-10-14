@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement

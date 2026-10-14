@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.actions
 
 import androidx.compose.runtime.Stable
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * What the song menus ([SongActions]) and the Choose setlists button ([SetlistAssignmentsButton]) do with their song. One per

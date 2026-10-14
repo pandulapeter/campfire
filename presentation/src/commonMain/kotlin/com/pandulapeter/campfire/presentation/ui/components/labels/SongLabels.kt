@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.data.model.domain.tagKey
+import com.pandulapeter.campfire.data.model.song.tagKey
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

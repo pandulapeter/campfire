@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedTags
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.song.normalizedTags
 
 /**
  * The song as the text being typed describes it, which is what the metadata dialogs of the preview's card and the cover

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.songs
 
-import com.pandulapeter.campfire.data.model.domain.EditedSongs
+import com.pandulapeter.campfire.data.model.song.EditedSongs
 
 /** See `SongRepository.editSongs`: the edit of many songs at once that announces itself to the library once. */
 interface EditSongsUseCase {

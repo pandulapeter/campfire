@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.search
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 
 /** A song with the title, artist and tags the search compares, normalized for searching. */
 internal data class SearchableSong(

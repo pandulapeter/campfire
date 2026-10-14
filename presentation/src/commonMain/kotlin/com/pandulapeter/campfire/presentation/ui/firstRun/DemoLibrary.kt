@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.firstRun
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
