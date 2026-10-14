@@ -18,9 +18,9 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import kotlinx.coroutines.CompletableDeferred

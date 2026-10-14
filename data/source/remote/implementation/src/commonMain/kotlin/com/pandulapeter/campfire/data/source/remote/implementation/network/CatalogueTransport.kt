@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.network
 
-import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext

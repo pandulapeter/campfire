@@ -15,9 +15,9 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.SongCredits
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
-import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.network.catalogueTransport
 import com.pandulapeter.campfire.data.source.remote.implementation.network.parseCatalogueAnswer
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder

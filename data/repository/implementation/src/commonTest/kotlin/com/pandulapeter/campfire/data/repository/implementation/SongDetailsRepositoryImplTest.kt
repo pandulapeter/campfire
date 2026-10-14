@@ -15,9 +15,9 @@ import com.pandulapeter.campfire.data.model.domain.SongCreditsState
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
-import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
-import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSources
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSources
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope

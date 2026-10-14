@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api
+package com.pandulapeter.campfire.data.source.remote.api.catalogue
 
 /** A catalogue could not answer a search: no network, or it kept refusing past every retry. */
 class CatalogueSearchException(message: String, cause: Throwable? = null) : Exception(message, cause)

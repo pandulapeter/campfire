@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
-import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine

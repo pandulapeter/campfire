@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import kotlinx.coroutines.Deferred

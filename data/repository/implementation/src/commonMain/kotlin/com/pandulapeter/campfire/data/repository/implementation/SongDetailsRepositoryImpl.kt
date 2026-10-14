@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.model.domain.recovering
 import com.pandulapeter.campfire.data.repository.api.SongDetailsRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
-import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSources
+import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSources
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import org.koin.core.annotation.Single
