@@ -7,16 +7,16 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.sync
 
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
-import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-internal class StartScheduledSynchronizationUseCaseImpl(
+internal class GetSyncStateUseCaseImpl(
     private val syncRepository: SyncRepository,
-) : StartScheduledSynchronizationUseCase {
+) : GetSyncStateUseCase {
 
-    override operator fun invoke() = syncRepository.startScheduledSynchronization()
+    override operator fun invoke() = syncRepository.syncState
 }

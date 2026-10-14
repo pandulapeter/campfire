@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.useCases
+package com.pandulapeter.campfire.domain.api.sync
 
+import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import kotlinx.coroutines.flow.Flow
 

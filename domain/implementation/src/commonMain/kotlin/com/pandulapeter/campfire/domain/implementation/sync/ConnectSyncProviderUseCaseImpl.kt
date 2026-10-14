@@ -7,13 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
-import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
+import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
 import org.koin.core.annotation.Factory
 
 @Factory

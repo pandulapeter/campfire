@@ -25,8 +25,8 @@ import androidx.core.app.ServiceCompat
 import com.pandulapeter.campfire.CampfireMainActivity
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
+import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlinx.coroutines.CoroutineScope

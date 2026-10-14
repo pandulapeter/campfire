@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.useCases
+package com.pandulapeter.campfire.domain.api.sync
 
-interface DisconnectSyncProviderUseCase {
+interface CancelSynchronizationUseCase {
 
-    /** Forgets the account. Nothing in the library and nothing in the remote folder is touched. */
-    suspend operator fun invoke()
+    /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
+    operator fun invoke()
 }

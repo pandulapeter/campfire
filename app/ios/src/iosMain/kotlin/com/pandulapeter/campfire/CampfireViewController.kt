@@ -12,8 +12,8 @@ package com.pandulapeter.campfire
 import androidx.compose.ui.window.ComposeUIViewController
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
-import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
+import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
 import kotlinx.cinterop.BetaInteropApi
 import platform.Foundation.NSCharacterSet
