@@ -9,14 +9,14 @@
 -->
 # :presentation — ui/tuner
 
-What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen's tuner sheet (`dialogs/TunerSheet`)
-share.
+What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen's tuner sheet
+(`dialogs/instrument/TunerSheet`) share.
 
 ## Lifecycle
 
-- `TunerController` holds the settings (`UserPreferences.tunerSettings`, a `DebouncedPreference`), listening, tones,
-  and `hasTurnedOnMicrophone` (device-only, never exported or synced). It listens for `tunerConfig`: the player's
-  instrument and tuning (`ui/instrument/`) plus Chromatic and reference pitch, and follows changes made on any screen.
+- `TunerController` holds the settings (`UserPreferences.tunerSettings`, a `DebouncedPreference`), listening, tones, and
+  `hasTurnedOnMicrophone` (device-only, never exported or synced). It listens for `tunerConfig`: the player's instrument
+  and tuning (`ui/instrument/`) plus Chromatic and reference pitch, and follows changes made on any screen.
 - **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes
   (closing the sheet, which belongs to the song under it), whenever the tuner sheet stops being the visible dialog, and
   on exit (`AppExitController`). `TunerListeningEffect` stops and restarts it with the screen's lifecycle (app hidden,
@@ -26,19 +26,19 @@ share.
 
 ## Microphone permission
 
-`ui/platform/MicrophonePermission.kt`: Android and iOS re-read on every resume; the web queries
-`navigator.permissions` at app start (`CampfireWebApp`) and follows its change events; the desktop is always unknown.
+`ui/platform/MicrophonePermission.kt`: Android and iOS re-read on every resume; the web queries `navigator.permissions`
+at app start (`CampfireWebApp`) and follows its change events; the desktop is always unknown.
 
-- **Nothing asks at launch.** A tap that opens a tuner (the Tuner item, the song's tuner button or menu entry) marks
-  the opening (`TunerController.markOpenedByTap`, only where the tuner did open), and the page consumes the mark and,
-  if the notice is the never-asked question, presses its button for the player (`TunerAskOnOpenEffect`).
+- **Nothing asks at launch.** A tap that opens a tuner (the Tuner item, the song's tuner button or menu entry) marks the
+  opening (`TunerController.markOpenedByTap`, only where the tuner did open), and the page consumes the mark and, if the
+  notice is the never-asked question, presses its button for the player (`TunerAskOnOpenEffect`).
 - A tuner shown without a tap (restored, the web's address or Back) waits for the button: an unrequested system prompt
   is easily refused, and iOS and Android only ask so often.
 - Where the platform cannot say (desktop), the first ask is remembered and later openings listen without a tap; a later
   refusal is heard as silence and shown with Open settings.
 - `TunerNotice.kt` (pure, tested): which notice replaces the display (`tunerNoticeOf`: a stop reason, then a refusal,
-  then a never-asked question) and `canListenWithoutTap`. `TunerNoticeCard` and `TunerInputIssueMessage` are polite
-  live regions, since both arrive without a tap.
+  then a never-asked question) and `canListenWithoutTap`. `TunerNoticeCard` and `TunerInputIssueMessage` are polite live
+  regions, since both arrive without a tap.
 - On Windows the silent line names the system's audio enhancements, which remove a held note as noise and which Java
   Sound cannot switch off, and offers Open sound settings.
 
@@ -76,5 +76,5 @@ share.
 
 The tab pins the display above a `SettingsPage` (notice, issue line, strings, Chromatic, instrument, reference pitch),
 two columns where there is room, following the Metronome tab; it keeps the screen on while it hears. The sheet scrolls
-everything under its header: the same display at the same size (compact only in a short window), then the issue line
-and strings.
+everything under its header: the same display at the same size (compact only in a short window), then the issue line and
+strings.

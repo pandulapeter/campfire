@@ -10,9 +10,9 @@
 
 # :presentation — ui/chords
 
-Chord diagrams (`ui/chords/`, `songView/SongChordsSection.kt`, `dialogs/ChordShapeSheet.kt`). Nothing is shipped or
-fetched: `:chordpro` reads what notes a name means (`ChordProChords`) and finds shapes (`ChordVoicings`: a hand-typed
-table first, a search for the rest).
+Chord diagrams (`ui/chords/`, `songView/SongChordsSection.kt`, `dialogs/instrument/ChordShapeSheet.kt`). Nothing is
+shipped or fetched: `:chordpro` reads what notes a name means (`ChordProChords`) and finds shapes (`ChordVoicings`: a
+hand-typed table first, a search for the rest).
 
 ## Which instruments
 

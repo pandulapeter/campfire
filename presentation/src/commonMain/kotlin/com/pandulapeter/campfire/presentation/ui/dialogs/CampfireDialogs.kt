@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TunerSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TuningSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongDetailsLookupSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.AppLanguageSheet
