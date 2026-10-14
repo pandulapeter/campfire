@@ -55,9 +55,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * One chord of a song, opened by tapping its diagram in the Chords section: every way it can be played, as a grid of
- * diagrams larger than the section draws, with their fingers and the chord's notes ([ChordShapeGrid]). The shape picked
- * there is the player's choice for that chord in that tuning in every song, written at once like the page's own steppers
- * write, so the sheet has nothing to save and its close button cancels nothing; the section behind it follows. Its title
+ * diagrams larger than the section draws, with their fingers ([ChordShapeGrid]), under the chord's notes in the subtitle.
+ * The shape picked there is the player's choice for that chord in that tuning in every song, written at once like the
+ * page's own steppers write, so the sheet has nothing to save and its close button cancels nothing; the section behind it
+ * follows. Its title
  * names the chord with its root in capitals, or in title case in Latin, however the song writes it. It reads the song
  * as the page shows it: transposed (on the keyboard by the capo too, see `withCapoSounding`) and spelled the same way,
  * and finds the chord by the name the page gave it. A tuning other than the standard one is named under the title, so
@@ -101,7 +102,9 @@ internal fun ChordShapeSheet(
             Res.string.song_details_chord_shape_choose,
             dialog.chordName.takeIf { notation.isNumbering } ?: ChordProNotation.canonicalName(dialog.chordName, notation) ?: dialog.chordName,
         ),
-        subtitle = songLabel(song),
+        // The notes rather than the song: the sheet is only ever opened from that song's page, and the notes say what the
+        // shapes below have in common, which a line scrolled away with them would stop saying.
+        subtitle = chord?.let { chordNoteNames(it, notation) }.orEmpty(),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         val gridModifier = Modifier.weight(1f, fill = false)

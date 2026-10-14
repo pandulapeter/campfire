@@ -95,6 +95,9 @@ sealed interface DialogType {
     /** The tuning of the instrument in the player's hands, opened from the tuning chip next to the instrument's. */
     data object Tuning : DialogType
 
+    /** The notation chords are written in, opened from its chip in Settings. */
+    data object Notation : DialogType
+
     /** The tuner over the song being read, opened from the song's tuner button (or its overflow menu); it listens while it is up. */
     data object Tuner : DialogType
     /**

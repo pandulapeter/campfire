@@ -175,6 +175,75 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `the names of a staff are converted with the chords above it, and back`() {
+        val text = "{sot}\n  Bb    B\ne|--0--1--|\nB|--1--2--|\n{eot}"
+        val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+        assertEquals("{sot}\n  B     H\ne|--0--1--|\nH|--1--2--|\n{eot}", german)
+        assertEquals(text, ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a staff renamed in Latin keeps its bar in one column, and the chords over their notes`() {
+        val text = "{sot}\n  Am     E7\ne|-0-----0-|\nB|-1-----0-|\nG|-2-----1-|\nD|-2-----0-|\nA|-0-----2-|\nE|-------0-|\n{eot}"
+        val latin = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.LATIN)
+
+        assertEquals(
+            "{sot}\n    Lam    Mi7\n mi|-0-----0-|\n Si|-1-----0-|\nSol|-2-----1-|\n Re|-2-----0-|\n La|-0-----2-|\n Mi|-------0-|\n{eot}",
+            latin,
+        )
+        assertEquals(text, ChordProNotation.convertText(latin, ChordNotation.LATIN, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `every staff converted to a notation and back is returned as it was`() {
+        val texts = listOf(
+            // A guitar tuned a half step down, whose B flat is a character shorter in German.
+            "{sot}\n   Am\nEb|--0--|\nBb|--1--|\nGb|--2--|\nDb|--2--|\nAb|--0--|\nEb|-----|\n{eot}",
+            // Names set right in front of the bar, a staff without bars, and an indented one.
+            "{sot}\n    C\n  e|--0--|\n  B|--1--|\nEb |--0--|\n{eot}",
+            "{sot}\ne-----0-----\nB-----1-----\nG-----0-----\n{eot}",
+            "{sot}\n      G\n    e|--3--|\n    B|--0--|\n    G|--0--|\n{eot}",
+            // Two systems one under the other, the second named again, and strings named by numbers.
+            "{sot}\nA|--0--|\nE|--2--|\nC|--2--|\nG|--2--|\n\nA|--3--|\nE|--0--|\nC|--0--|\nG|--0--|\n{eot}",
+            "{sot}\n1|--0--|\n2|--1--|\n3|--0--|\n{eot}",
+            // A right-aligned staff whose only long name gets shorter in German, under a chord row that starts at its
+            // edge.
+            "{sot}\nAm\nBb|--0--|\n F|--1--|\n C|--2--|\n{eot}",
+        )
+        texts.forEach { text ->
+            listOf(ChordNotation.GERMAN, ChordNotation.LATIN).forEach { notation ->
+                val converted = ChordProNotation.convertText(text, ChordNotation.STANDARD, notation)
+                assertEquals(text, ChordProNotation.convertText(converted, notation, ChordNotation.STANDARD), "$notation: $converted")
+            }
+        }
+    }
+
+    @Test
+    fun `strings named in the notation the field is typed in are saved in the standard one`() {
+        val latin = "{sot}\n mi|--0--|\nSol|--1--|\n{eot}"
+        val german = "{sot}\nB|--0--|\nH|--1--|\nh|--2--|\n{eot}"
+
+        assertEquals("{sot}\ne|--0--|\nG|--1--|\n{eot}", ChordProNotation.convertText(latin, ChordNotation.LATIN, ChordNotation.STANDARD))
+        assertEquals("{sot}\nBb|--0--|\n B|--1--|\n b|--2--|\n{eot}", ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `the names of a staff in a file are read as standard ones whatever its chords look like`() {
+        val text = "{sot}\n  H\nB|--0--|\n{eot}"
+
+        assertEquals("{sot}\n  B\nB|--0--|\n{eot}", ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.STANDARD))
+        assertEquals(listOf("   B", "Bb|--0--|"), ChordProParser.parse("{sot}\n  H\nB|--0--|\n{eot}", ChordNotation.GERMAN).tabLines())
+    }
+
+    @Test
+    fun `a staff indented with tab characters is not renamed`() {
+        val text = "{sot}\n\te|--0--|\n\tB|--1--|\n{eot}"
+
+        assertEquals(text, ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.LATIN))
+    }
+
+    @Test
     fun `a comment inside a grid does not hide the chords after it from the notation`() {
         val song = ChordProNotation.toNotation(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| B . |\n{eog}"), ChordNotation.GERMAN)
 
@@ -186,7 +255,7 @@ class ChordProNotationTest {
         // Bb is a character wider than the B it becomes, so the space it leaves behind is put back after it.
         val song = ChordProNotation.toNotation(ChordProParser.parse("{sot}\n  Bb    Bb\ne|--0--3--|\n{eot}"), ChordNotation.GERMAN)
 
-        assertEquals(listOf("  B     B ", "e|--0--3--|"), song.tabLines())
+        assertEquals(listOf("  B     B", "e|--0--3--|"), song.tabLines())
     }
 
     @Test

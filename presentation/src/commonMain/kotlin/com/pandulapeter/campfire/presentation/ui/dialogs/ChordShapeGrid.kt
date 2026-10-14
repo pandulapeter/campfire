@@ -68,9 +68,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * The scrolling content of a chord's sheet: [tuningLine] where the tuning is not the standard one, the chord's letters
- * where the page counts it and its notes, and under them every shape of it as a grid of diagrams, the one the songs draw
- * it with marked. A tap on another marks that one and hands it to [onShapeSelected] at once; the marked shape is never
+ * The scrolling content of a chord's sheet, whose subtitle names the chord's notes ([chordNoteNames]): [tuningLine] where
+ * the tuning is not the standard one, the chord's letters where the page counts it, and under them every shape of it as a
+ * grid of diagrams, the one the songs draw it with marked. A tap on another marks that one and hands it to [onShapeSelected] at once; the marked shape is never
  * reset, since which shape is the app's first says nothing to a player who only picks the one their hands play. A chord
  * the song defines has its definition alone, and says so under it. [footer] closes the grid. While [chord] is null (the
  * song's chords are still being worked out) and while its shapes are searched for, one empty frame stands where the first
@@ -136,7 +136,6 @@ internal fun ChordShapeGrid(
         chordHeader(
             tuningLine = tuningLine,
             letterName = chord?.letterName,
-            notes = chord?.let { (it.spelling?.let { spelling -> ChordProChords.spelledNoteNames(spelling, notation) } ?: ChordProChords.noteNames(it.chord, notation)).joinToString(" ") },
         )
         if (chord == null || options == null) {
             item(key = PLACEHOLDER_KEY, contentType = OPTION_CONTENT_TYPE) {
@@ -185,7 +184,6 @@ internal fun ChordShapeGrid(
 private fun LazyGridScope.chordHeader(
     tuningLine: String?,
     letterName: String?,
-    notes: String?,
 ) {
     tuningLine?.let {
         item(key = TUNING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = TUNING_KEY) {
@@ -197,20 +195,14 @@ private fun LazyGridScope.chordHeader(
             HeaderLine(text = it, style = MaterialTheme.typography.titleMedium)
         }
     }
-    notes?.let {
-        item(key = NOTES_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = NOTES_KEY) {
-            HeaderLine(modifier = Modifier.padding(bottom = 4.dp), text = it, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
 }
 
 @Composable
 private fun HeaderLine(
-    modifier: Modifier = Modifier,
     text: String,
     style: TextStyle,
 ) = Text(
-    modifier = modifier.fillMaxWidth(),
+    modifier = Modifier.fillMaxWidth(),
     text = text,
     style = style,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -350,6 +342,10 @@ internal fun shapeGridOptions(selection: SelectedShape, all: List<ChordVoicing>)
     }
 }
 
+/** The notes [chord] is made of, spelled the way the song spells the chord where it does: the subtitle of its sheet. */
+internal fun chordNoteNames(chord: SongChord, notation: ChordNotation) =
+    (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation)).joinToString(" ")
+
 /** Whether two shapes are fingered on the same frets or keys, whatever either says about the fingers. */
 private fun ChordVoicing.sameShapeAs(other: ChordVoicing) = when (this) {
     is ChordVoicing.Fretted -> other is ChordVoicing.Fretted && frets == other.frets
@@ -362,7 +358,6 @@ private const val DEFINED_KEY = "defined"
 private const val FOOTER_KEY = "footer"
 private const val TUNING_KEY = "tuning"
 private const val LETTERS_KEY = "letters"
-private const val NOTES_KEY = "notes"
 private val OPTION_GAP = 8.dp
 private val OPTION_BORDER_WIDTH = 2.dp
 private val FRETTED_WIDTH = 112.dp

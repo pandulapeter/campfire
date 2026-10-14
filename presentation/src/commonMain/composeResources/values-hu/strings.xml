@@ -21,7 +21,7 @@
     <string name="select_all">Mind kijelölése</string>
     <string name="deselect_all">Kijelölés megszüntetése</string>
     <string name="retry">Újra</string>
-    <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
+    <string name="add_demo_library">Bemutató könyvtár hozzáadása</string>
     <string name="confirm_exit_title">Bezárod a Campfire-t?</string>
     <string name="confirm_exit_message">Az Escape bezárja az alkalmazást, ha már nincs hová visszalépni.</string>
 
@@ -106,6 +106,7 @@
     <string name="import_review_title">Importálás áttekintése</string>
     <string name="import_review_title_empty">Nincs mit importálni</string>
     <string name="import_review_from">Forrás: %1$s</string>
+    <string name="import_review_demo_library">Bemutató könyvtár</string>
     <plurals name="import_review_confirm">
         <item quantity="one">%1$d fájl importálása</item>
         <item quantity="other">%1$d fájl importálása</item>
@@ -162,7 +163,7 @@
     <string name="songs_sorting_mode_by_artist">Előadó</string>
     <string name="songs_sorting_mode_by_title">Cím</string>
     <string name="songs_empty_title">A könyvtárad üres</string>
-    <string name="songs_empty_hint">Hozz létre egy dalt, importálj dalokat, PDF- vagy Word-dokumentumokat és zip archívumokat, vagy add hozzá a bemutató dalokat.</string>
+    <string name="songs_empty_hint">Hozz létre egy dalt, importálj dalokat, PDF- vagy Word-dokumentumokat és zip archívumokat, vagy add hozzá a bemutató könyvtárat.</string>
     <string name="songs_create_song">Dal létrehozása</string>
     <string name="songs_new_song">Új dal</string>
     <string name="optional_field_label">%1$s (nem kötelező)</string>
@@ -360,10 +361,8 @@
     <string name="instrument">Hangszer</string>
     <string name="instrument_description">A hangszer, amelyen játszol. A Campfire ehhez rajzolja az akkordfogásokat, és erre állítja be a hangolót.</string>
     <string name="instrument_choose">Hangszer kiválasztása</string>
-    <string name="instrument_tuning">Hangolás</string>
     <string name="instrument_tuning_standard">Normál hangolás</string>
     <string name="instrument_tuning_choose">Hangolás kiválasztása</string>
-    <string name="instrument_tuning_description">Ahogy a hangszered fel van hangolva. A Campfire ezekre a húrokra rajzolja az akkordfogásokat, és ezeket figyeli a hangoló.</string>
     <string name="instrument_guitar">Gitár</string>
     <string name="instrument_guitar_strings">%1$d húros gitár</string>
     <string name="instrument_bass">Basszusgitár</string>
@@ -598,6 +597,7 @@
     <string name="song_editor_section_solo">Szóló</string>
     <string name="song_editor_section_outro">Outro</string>
     <string name="song_editor_section_tab">Tab</string>
+    <string name="song_editor_tab_any_instrument">Bármely hangszer</string>
     <string name="song_editor_section_grid">Rács</string>
     <string name="song_editor_insert_chorus_recall">Refrén ismétlése</string>
     <string name="song_editor_insert_comment">Megjegyzés</string>

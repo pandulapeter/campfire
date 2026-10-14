@@ -89,10 +89,36 @@ class TabPlayersTest {
 
     @Test
     fun `the editor's empty staff is the player's strings, or a guitar's where they play none`() {
-        assertEquals(listOf("d", "a", "G", "D", "A", "D"), emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR_DADGAD).map { it.substringBefore('|') })
-        assertEquals("E|----------------|", emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR).last())
-        assertEquals(listOf("A", "E", "C", "G"), emptyTabStaffOf(Instrument.UKULELE, InstrumentTuning.UKULELE).map { it.substringBefore('|') })
-        assertEquals(listOf("e", "B", "G", "D", "A", "E"), emptyTabStaffOf(Instrument.KEYBOARD, null).map { it.substringBefore('|') })
+        assertEquals(listOf("d", "a", "G", "D", "A", "D"), emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR_DADGAD, ChordNotation.STANDARD).map { it.substringBefore('|') })
+        assertEquals("E|----------------|", emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD).last())
+        assertEquals(listOf("A", "E", "C", "G"), emptyTabStaffOf(Instrument.UKULELE, InstrumentTuning.UKULELE, ChordNotation.STANDARD).map { it.substringBefore('|') })
+        assertEquals(listOf("e", "B", "G", "D", "A", "E"), emptyTabStaffOf(Instrument.KEYBOARD, null, ChordNotation.STANDARD).map { it.substringBefore('|') })
+    }
+
+    @Test
+    fun `the editor's empty staff names the strings in the notation the field is typed in`() {
+        assertEquals(listOf(" mi", " Si", "Sol", " Re", " La", " Mi"), emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.LATIN).map { it.substringBefore('|') })
+        assertEquals(listOf("e", "H", "G", "D", "A", "E"), emptyTabStaffOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.GERMAN).map { it.substringBefore('|') })
+    }
+
+    @Test
+    fun `a tab for another instrument starts as that instrument's standard strings, and one for the player's as theirs`() {
+        val ukulele = emptyTabStaffFor(Instrument.UKULELE, Instrument.GUITAR, InstrumentTuning.GUITAR_DADGAD, ChordNotation.STANDARD)
+        val guitar = emptyTabStaffFor(Instrument.GUITAR, Instrument.GUITAR, InstrumentTuning.GUITAR_DADGAD, ChordNotation.STANDARD)
+        val unnamed = emptyTabStaffFor(null, Instrument.GUITAR, InstrumentTuning.GUITAR_DADGAD, ChordNotation.STANDARD)
+
+        assertEquals(listOf("A", "E", "C", "G"), ukulele.map { it.substringBefore('|') })
+        assertEquals(listOf("d", "a", "G", "D", "A", "D"), guitar.map { it.substringBefore('|') })
+        assertEquals(guitar, unnamed)
+    }
+
+    @Test
+    fun `a tab is offered for every instrument with frets and for no other`() {
+        assertTrue(Instrument.BANJO in tabInstruments)
+        assertTrue(Instrument.GUITAR_TWELVE_STRING in tabInstruments)
+        assertFalse(Instrument.KEYBOARD in tabInstruments)
+        assertFalse(Instrument.VIOLIN in tabInstruments)
+        assertFalse(Instrument.OTHER in tabInstruments)
     }
 
     private fun unnamed(strings: Int) = List<Int?>(strings) { null }

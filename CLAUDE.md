@@ -292,7 +292,7 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - Every chord of a song is shown fingered at its top, for the instrument and tuning picked; the shape is the song's own
   `{define}` (a standard tuning shape, drawn only where it sounds what it says), then the player's
   library-wide choice, then the app's first: `:presentation`'s `ui/chords/CLAUDE.md`.
-- The app is shipped with two demo songs and one setlist, planted once through the ordinary import on a fresh
+- The app is shipped with a demo library of two songs and one setlist, planted once through the ordinary import on a fresh
   installation only: `:presentation`'s `ui/firstRun/CLAUDE.md`.
 - A first run opens a short, skippable onboarding, one question a page and each shown on what it changes, whose earlier
   answers take away the later questions they make pointless; every answer is written as it is given, it opens again on

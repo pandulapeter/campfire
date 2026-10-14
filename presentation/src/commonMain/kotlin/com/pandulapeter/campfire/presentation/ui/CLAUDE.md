@@ -506,8 +506,11 @@ said, in an italic line above the tab: an octave move, a tab from another instru
 and is shown as written. The keyboard and the violin hide every tab, a line saying which in its place; Other is shown
 every tab as written. There is no switch for any of it: a reader who wants a tab as written tunes to what it names,
 or duplicates the song and edits it. The song details screen and the PDF follow it; the editor's preview only names
-the strings, moving and hiding nothing, and the editor's Tab button writes an empty staff named for the player's strings
-(a guitar's for an instrument without frets), in the standard notation every file is in.
+the strings, in the reader's notation, moving and hiding nothing. The editor's field names them in the reader's
+notation too, as it does every chord (see `screens/songEditor/`); the Tab button asks which instrument with frets the
+tab is for, or any, and writes an empty staff named for the player's strings (a guitar's for an instrument without
+frets), or for the standard tuning of the instrument picked where it is another, in the field's notation, which Save
+writes into the file in the standard one.
 
 ## Haptics
 

@@ -46,7 +46,7 @@ already the page wherever the tab was visited in this session, not only where th
 the search keeps the chords on screen until it is answered, drawn for the tuning they were found for, and not opened,
 after the tuning or the instrument changes (`ChordLibraryShown`). A tap opens `ChordReferenceSheet`
 (`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same grid of shapes
-(`dialogs/ChordShapeGrid.kt`), titled the same way and naming a tuning that is not the standard one, **whose shape picked
+(`dialogs/ChordShapeGrid.kt`), titled and subtitled the same way and naming a tuning that is not the standard one, **whose shape picked
 is written at once as the player's shape for the chord** — so choosing a shape here changes it in every song, synced like
 any other choice. It is offered in read only mode too, since it writes no file.
 

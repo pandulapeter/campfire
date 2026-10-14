@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.add_demo_songs
+import com.pandulapeter.campfire.presentation.resources.add_demo_library
 import com.pandulapeter.campfire.presentation.resources.error_no_data
 import com.pandulapeter.campfire.presentation.resources.error_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.ic_archive
@@ -103,7 +103,7 @@ internal fun ListPlaceholder(
                 listOf(
                     EmptyStateAction(text = stringResource(Res.string.songs_create_song), onClick = newSong),
                     EmptyStateAction(text = stringResource(Res.string.import_files), onClick = onImport),
-                    EmptyStateAction(text = stringResource(Res.string.add_demo_songs), onClick = onDemoLibrary),
+                    EmptyStateAction(text = stringResource(Res.string.add_demo_library), onClick = onDemoLibrary),
                 )
             }.orEmpty(),
         )

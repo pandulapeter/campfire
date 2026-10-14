@@ -224,7 +224,7 @@ their own after the read; that is the system's and is not suppressed.
   Symbols' Content Paste, in `composeResources/drawable` like the others). The Setlists screen passes none. Its KDoc's
   "the first two buttons of the screen's own empty state" becomes three.
 - `ListPlaceholder` gets `onPaste` with the other three, and `NO_SONGS` lists Create a song, Import files, Paste a chord
-  sheet, Add the demo songs — the same order as the menu, the demo songs still last. `songs_empty_hint` names pasting.
+  sheet, Add the demo library — the same order as the menu, the demo library still last. `songs_empty_hint` names pasting.
   Both stand or fall with `onNewSong`, so performance mode takes them as it takes the rest.
 - `SongsScreen` passes `{ viewModel.newSongFromClipboard(clipboardReader) }` to both, `clipboardReader` from
   `rememberClipboardTextReader()`.
@@ -256,7 +256,7 @@ text from elsewhere is a plain `stringResource`.
 | Key | English |
 | --- | --- |
 | `songs_paste_song` | Paste a chord sheet |
-| `songs_empty_hint` (changed) | Create a song, paste a chord sheet, import songs, PDF or Word documents and zip archives, or add the demo songs. |
+| `songs_empty_hint` (changed) | Create a song, paste a chord sheet, import songs, PDF or Word documents and zip archives, or add the demo library. |
 | `songs_paste_converted` | Converted from chords written over the lyrics. Check the title and the artist; the song opens in the editor next. |
 | `songs_paste_chordpro` | Kept as the ChordPro it is written in. Check the title and the artist; the song opens in the editor next. |
 | `songs_paste_no_chords` | No chords were found, so this is a song of lyrics only. Check the title and the artist; the song opens in the editor next. |

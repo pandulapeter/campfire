@@ -18,7 +18,7 @@ Packages (under `com.pandulapeter.campfire.chordpro`): the root holds the entry 
 directive holds (`ChordProTempo`, `ChordProTime`, `ChordProDuration`); `model` the immutable song model; `chords` what a
 chord name means, how it is spelled, moved and played (`ChordProChords`, `ChordProNotation`, `ChordProNashville`,
 `ChordProTransposer`, `ChordProTabTransposer`, `ChordProTabs`, `ChordProDefinitions`, `ChordVoicings` and their internal
-helpers);
+helpers, `ChordProStaffNames` among them);
 `edit` the text rewriters the editor and the sheets call (`ChordProMetadataFields`, `ChordProHeader`, `ChordProTags`,
 `ChordProLanguages`, `ChordProLinks`, `ChordProCoverArt`, `ChordProPrettifier`, `ChordProHighlighter`,
 `ChordProTabWrapper`); `convert` the chord sheet conversion of the imports (`ChordSheet`, `ChordSheetConverter`); and
@@ -332,7 +332,10 @@ what nothing outside the module calls is `internal`.
   Every staff line is then named for the reader's string in their notation (the higher of two strings that share a
   name in lowercase: `e B G D A E`, a banjo's `d B G D g`), the lines above the staff moved with the names so that a
   chord stays over its note. A run that would leave the neck moves by octaves, and one that no octave keeps on it, or
-  that cannot be lined up, is shown as written with its own names, moved by the transposition alone. A staff of a
+  that cannot be lined up, is shown as written with its own names, moved by the transposition alone. Those names are
+  respelled in the reader's notation (`ChordProStaffNames.respelled`), keeping the writer's accidental and case (`Eb`
+  is `Mib` in Latin, a `B` is `H` in German, where a `B|` would read as B flat), and so are a staff's when the reader
+  has no tuning to move it to; where the notation spells them as written, the staff is left byte for byte. A staff of a
   number of strings no instrument has is left alone; the text transposition and the notation never retune anything.
 
   `model/TabNotice` says what was decided — an octave, another instrument (only where the strings did not land on the
@@ -369,7 +372,13 @@ what nothing outside the module calls is `internal`.
   transposition, which works in the standard one; `convertText` rewrites a raw document from one notation to another,
   leaving every other character where it was (`ChordProChordRewriter.rewriteChordNamesInText`, with the tabs' chord rows
   renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
-  writes what was typed back. `{define}` / `{chord}` names are converted with the chords (outside an environment
+  writes what was typed back. The names of a tab's strings go with them (`ChordProStaffNames.respelledStaffNames`),
+  read in the notation the text is declared in and never guessed from its chords, so a German chart's `B|` is the B
+  flat only where it was typed in German; `parse` reads them the same way. A system keeps its bar in one column, each
+  staff line its indentation relative to the others, so the way back is exactly the way there, and a system that could
+  not come back exactly (all its names shorter in German under a label at the edge) is left as written on the way out
+  of the standard notation. A row of chord names keeps no space after its last name, which a name renamed into a
+  longer notation and back would otherwise leave. `{define}` / `{chord}` names are converted with the chords (outside an environment
   handed to another program, a selector's instrument included), and a transposition moves their shapes as well (see
   `ChordProDefinitions.transposed`). Definitions do not vote on the notation, so a file whose only `H` is in a
   `{define: H …}` is read as standard. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else

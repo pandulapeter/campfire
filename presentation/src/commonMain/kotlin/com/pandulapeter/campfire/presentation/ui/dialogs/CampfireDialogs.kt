@@ -176,6 +176,7 @@ private fun CampfireDialog(
         is DialogType.ChordReference -> ChordReferenceSheet(viewModel = viewModel, dialog = dialog)
         DialogType.Instrument -> InstrumentSheet(viewModel = viewModel, dialog = DialogType.Instrument)
         DialogType.Tuning -> TuningSheet(viewModel = viewModel, dialog = DialogType.Tuning)
+        DialogType.Notation -> NotationSheet(viewModel = viewModel)
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)

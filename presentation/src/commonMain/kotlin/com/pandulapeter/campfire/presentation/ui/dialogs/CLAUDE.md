@@ -162,6 +162,8 @@ either), the editor's unsaved changes and revert questions, and the controls, se
 
 `AppLanguageSheet` (`DialogType.AppLanguage`) is Settings' language list in a sheet, put up by the onboarding's first
 page; a pick is written at once and closes it, and it has no `SavedDialog`, since nothing is typed into it.
+`NotationSheet` (`DialogType.Notation`), opened from the notation chip in Settings, works the same way: the five
+notations with their examples, a pick written at once and closing it.
 
 `WhatsNewDialog` is an alert titled with
 `CAMPFIRE_VERSION_NAME`, shown once per version after the first installed one.

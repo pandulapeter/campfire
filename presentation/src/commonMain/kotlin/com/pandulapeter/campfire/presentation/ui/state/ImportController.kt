@@ -301,7 +301,7 @@ internal class ImportController(
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
-                    val review = ImportReport.Review(plan = plan, choices = ImportChoices())
+                    val review = ImportReport.Review(plan = plan, choices = ImportChoices(), isDemoLibrary = request.isDemoLibrary)
                     if (isReviewed) _importReport.value = review else showImportReport(review)
                     _isImporting.value = false
                 } else {

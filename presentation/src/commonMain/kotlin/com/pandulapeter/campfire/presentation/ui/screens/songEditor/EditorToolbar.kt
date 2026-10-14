@@ -22,28 +22,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -79,8 +73,11 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
+import com.pandulapeter.campfire.presentation.resources.song_editor_tab_any_instrument
 import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 
 /**
  * The insertion rows of the editor's app bar: a button for every directive the parser understands, so that a format
@@ -102,7 +99,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
  *   follows it rather than each of them copying it again.
  * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with, see
  *   [chordShapeInsertion].
- * @param tabStaff The empty staff the Tab button writes where nothing is selected, its strings named for the player's.
+ * @param tabStaff The empty staff the Tab button writes where nothing is selected for the instrument picked from its
+ *   menu, or for none, its strings named.
  */
 @Composable
 internal fun EditorToolbar(
@@ -111,7 +109,7 @@ internal fun EditorToolbar(
     text: State<String>,
     contentPadding: PaddingValues,
     chordShapes: EditorChordShapes,
-    tabStaff: List<String>,
+    tabStaff: (UserPreferences.Instrument?) -> List<String>,
 ) {
     // What the song already says about itself follows the text rather than being read once, so that a directive
     // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The cache is what
@@ -176,11 +174,19 @@ private fun EditorToolbarRow(
         groups.forEachIndexed { index, group ->
             if (index > 0) EditorToolbarDivider()
             group.forEach { insertion ->
-                EditorToolbarButton(
-                    label = insertion.label,
-                    isEnabled = insertion.isEnabled(declaredMetadata),
-                    onClick = { textFieldState.insert(insertion) },
-                )
+                if (insertion.choices.isEmpty()) {
+                    EditorToolbarButton(
+                        label = insertion.label,
+                        isEnabled = insertion.isEnabled(declaredMetadata),
+                        onClick = { textFieldState.insert(insertion) },
+                    )
+                } else {
+                    EditorToolbarMenuButton(
+                        label = insertion.label,
+                        choices = insertion.choices.map { it.label },
+                        onChoiceSelected = { index -> textFieldState.insert(insertion.choices[index]) },
+                    )
+                }
             }
         }
         trailing()
@@ -208,12 +214,16 @@ private fun EditorToolbarRow(
  * once, every further tap writes a change at the caret's line, which is what the row is reached for while the song is
  * being written; the first one still goes into the header, see [metadataInsertions].
  *
- * A tab with nothing selected starts as an empty staff of one bar for the player's strings ([tabStaff]), named, so
- * that the file says what it is written in for whoever reads it in another tuning or on another instrument; with
- * something selected, which is most likely a tab pasted in, it only puts the environment around it.
+ * The Tab button first asks what the tab is for: any instrument, which writes a plain `{start_of_tab}`, or one of the
+ * instruments with frets ([tabInstruments]), whose id becomes its selector (`{start_of_tab-ukulele}`), so that of the
+ * tabs written one after the other for several instruments each player is shown theirs. A tab with nothing selected
+ * starts as an empty staff of one bar ([tabStaff]) — the player's strings for their own instrument or for any, the
+ * standard tuning's for another — named, so that the file says what it is written in for whoever reads it in another
+ * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
+ * environment around it.
  */
 @Composable
-private fun contentInsertions(tabStaff: List<String>): List<List<EditorInsertion>> = listOf(
+private fun contentInsertions(tabStaff: (UserPreferences.Instrument?) -> List<String>): List<List<EditorInsertion>> = listOf(
     listOf(
         EditorInsertion(stringResource(Res.string.song_editor_insert_chord), prefix = "[", suffix = "]", isOwnLine = false),
         EditorInsertion(stringResource(Res.string.song_editor_insert_annotation), prefix = "[*", suffix = "]", isOwnLine = false),
@@ -229,7 +239,11 @@ private fun contentInsertions(tabStaff: List<String>): List<List<EditorInsertion
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_chorus_recall), name = "chorus", hasValue = false),
     ),
     listOf(
-        EditorInsertion.tab(stringResource(Res.string.song_editor_section_tab), staff = tabStaff),
+        EditorInsertion.menu(
+            label = stringResource(Res.string.song_editor_section_tab),
+            choices = listOf(EditorInsertion.tab(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, staff = tabStaff(null))) +
+                tabInstruments.map { instrument -> EditorInsertion.tab(instrumentLabel(instrument), selector = instrument.id, staff = tabStaff(instrument)) },
+        ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
     ),
     listOf(
@@ -293,6 +307,8 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  *   instead of to the caret, under the name `:chordpro` knows it by. Null for everything that is part of the song.
  * @param emptyPrefix What is written in front of the caret in place of [prefix] where nothing is selected.
  * @param emptySuffix What is written after the caret in place of [suffix] where nothing is selected.
+ * @param choices What a button that opens a menu offers, each written as an insertion of its own once it is picked;
+ *   empty for a button that writes itself.
  */
 private data class EditorInsertion(
     val label: String,
@@ -302,20 +318,36 @@ private data class EditorInsertion(
     val metadataName: String? = null,
     val emptyPrefix: String = prefix,
     val emptySuffix: String = suffix,
+    val choices: List<EditorInsertion> = emptyList(),
 ) {
 
     companion object {
 
+        /** A button that writes nothing itself and asks which of [choices] to write instead. */
+        fun menu(label: String, choices: List<EditorInsertion>) = EditorInsertion(
+            label = label,
+            prefix = "",
+            suffix = "",
+            isOwnLine = true,
+            choices = choices,
+        )
+
         /**
          * A `{start_of_tab}` … `{end_of_tab}` environment around what is selected, or around an empty [staff] with the
          * caret after the name of its top string where nothing is.
+         *
+         * @param selector The instrument the tab is for, written after its opening directive's name
+         *   (`{start_of_tab-guitar}`), or null for one for every instrument. The closing directive carries none, as
+         *   ChordPro writes it.
          */
-        fun tab(label: String, staff: List<String>): EditorInsertion {
+        fun tab(label: String, selector: String?, staff: List<String>): EditorInsertion {
             val section = section(label, name = TAB)
+            val prefix = if (selector == null) section.prefix else "{start_of_$TAB-$selector}\n"
             val firstLine = staff.firstOrNull().orEmpty()
             val caret = firstLine.indexOf('|') + 1
             return section.copy(
-                emptyPrefix = section.prefix + firstLine.take(caret),
+                prefix = prefix,
+                emptyPrefix = prefix + firstLine.take(caret),
                 emptySuffix = (listOf(firstLine.drop(caret)) + staff.drop(1)).joinToString("\n") + section.suffix,
             )
         }
@@ -373,30 +405,6 @@ private fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) = metadataN
     metadataName in ChordProHeader.repeatableMetadata ||
     metadataName in ChordProHeader.changeableMetadata ||
     metadataName !in declaredMetadata
-
-@Composable
-private fun EditorToolbarButton(
-    modifier: Modifier = Modifier,
-    label: String,
-    isEnabled: Boolean,
-    onClick: () -> Unit,
-) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-    Surface(
-        modifier = modifier.focusProperties { canFocus = false }.alpha(if (isEnabled) 1f else DISABLED_ALPHA),
-        onClick = onClick,
-        enabled = isEnabled,
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    ) {
-        Text(
-            modifier = Modifier.padding(horizontal = BUTTON_HORIZONTAL_PADDING, vertical = BUTTON_VERTICAL_PADDING),
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 1,
-        )
-    }
-}
 
 @Composable
 private fun EditorToolbarDivider() = VerticalDivider(modifier = Modifier.height(DIVIDER_HEIGHT).padding(horizontal = TOOLBAR_GAP))
@@ -494,9 +502,6 @@ private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit 
 }
 
 private const val TAB = "tab"
-private const val DISABLED_ALPHA = 0.5f
 private val TOOLBAR_PADDING = 16.dp
 private val TOOLBAR_GAP = 4.dp
 private val DIVIDER_HEIGHT = 24.dp
-private val BUTTON_HORIZONTAL_PADDING = 12.dp
-private val BUTTON_VERTICAL_PADDING = 8.dp

@@ -127,7 +127,8 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  * frame.
  *
  * @param title What the sheet is about, named in its [SheetHeader].
- * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
+ * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for, or the notes of the
+ *   chord a chord's sheet is about. Left out when blank.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
  *   the button that finishes what the sheet is for. The close they are handed is final: unlike the header's close
  *   button, a hide that follows an action is not taken back by a finger landing on the sliding sheet. The ones that

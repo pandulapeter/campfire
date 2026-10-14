@@ -10,7 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
-- Chord library search - chord name should always be all-caps
+- Chord library search - chord name should always be all-caps, but the search itself should not be case sensitive
 - Chord library search - display partial matches but only within the selected key
 
 ### Improvements

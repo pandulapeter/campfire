@@ -32,15 +32,15 @@ at every width (see below), in this order:
   (`components/InstrumentSetting.kt`, opening their sheets, see `ui/CLAUDE.md`), first since it decides the shapes,
   the tuner, and the capo, and disabled only with both the chords and the tuner switched off, since the tuner listens
   for the same instrument and the keyboard reads the capo as a transposition whether or not diagrams are drawn; then
-  the chord spelling — the notation as a `PickerChip` like the instrument's, naming the one picked and opening a popup
-  of the five (Standard, German, Latin, Nashville numbers, and Roman numerals), each with an example under it, which
-  closes with the choice, and the accidentals, which stay enabled under a numbering since they still spell its key.
+  the chord spelling — the notation as a `PickerChip` like the instrument's, naming the one picked and opening a sheet
+  of the five (`dialogs/NotationSheet.kt`, `DialogType.Notation`: Standard, German, Latin, Nashville numbers, and Roman
+  numerals), each with an example under it, which closes with the choice, and the accidentals, which stay enabled under a numbering since they still spell its key.
   The accidentals' examples, the instruments' strings, and the tunings' notes are written in the notation picked
   there, never in the language.
 - Display is section numbers, then one Song cards setting with a row of `CardDetailsChoice` chips for each list, named
   Songs and Setlists and set beside their name while it fits (`LabeledControlRow`), the key's chip gone with the chords
   off, the tempo's kept with the metronome off, and the Setlists row disabled with the setlists (see `ui/CLAUDE.md`).
-- **Library**: Sync (`SyncSettings.kt`, below), Import and export (import, the demo songs while they are not all in
+- **Library**: Sync (`SyncSettings.kt`, below), Import and export (import, the demo library while it is not all in
   the library, export), and On this device, last since its rows are the ones that cannot be undone: the song and
   setlist counts and the cover cache are each a row that deletes what it counts, the cache behind an ordinary
   confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE` typed in every language, into a field

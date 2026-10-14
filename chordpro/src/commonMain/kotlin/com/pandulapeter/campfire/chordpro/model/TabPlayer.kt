@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
+import com.pandulapeter.campfire.chordpro.ChordNotation
+
 /**
  * The reader a song's tablature is shown to, which [com.pandulapeter.campfire.chordpro.chords.ChordProTabs] and the
  * transposition move it for. Everything that knows about instruments is handed in, since this module knows the
@@ -31,6 +33,9 @@ package com.pandulapeter.campfire.chordpro.model
  *   tuning itself.
  * @property stringName The name a string tuned to a MIDI note is written with in front of the staff, in the notation
  *   the reader reads chords in, before the top string of a staff that names its note twice is put in lowercase.
+ * @property notation The notation the reader reads chords in, which [stringName] names in too: a staff shown with the
+ *   names it is written with (one that is not moved) has them respelled in it, its own spelling of an accidental kept,
+ *   so that a German reader is never shown a `B|` that reads to them as B flat.
  */
 public class TabPlayer(
     public val selectors: List<String>,
@@ -38,4 +43,5 @@ public class TabPlayer(
     public val hidesTabs: Boolean,
     public val assumedTuning: (notes: List<Int?>, selector: String?) -> TabTuning?,
     public val stringName: (note: Int) -> String,
+    public val notation: ChordNotation,
 )

@@ -30,9 +30,10 @@ sealed interface ImportReport {
     /**
      * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
      * [CampfireViewModel.confirmImport]. The choices live here rather than on the screen, so that a screen composed
-     * again (an Android activity recreated under it) keeps every tick.
+     * again (an Android activity recreated under it) keeps every tick. [isDemoLibrary] is the app's own demo library,
+     * which the subtitle names as such rather than by the bundled files it is read from.
      */
-    data class Review(val plan: ImportPlan, val choices: ImportChoices) : ImportReport
+    data class Review(val plan: ImportPlan, val choices: ImportChoices, val isDemoLibrary: Boolean) : ImportReport
 
     /** The choices being carried out, with [CampfireViewModel.importProgress] saying how far. */
     data object Importing : ImportReport

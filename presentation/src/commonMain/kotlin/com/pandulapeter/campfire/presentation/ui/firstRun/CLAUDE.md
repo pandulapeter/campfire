@@ -21,7 +21,7 @@ which is what lets `isPresentIn` answer whether they are already there from the 
 from anything the app remembers doing — so the offer in the settings screen comes back when one of them is deleted, and
 putting them back adds only what is missing, since an import disregards a name taken by identical content. The same
 offer is the last of the empty library state's buttons (`components/ListPlaceholder.kt`, after "Create a song" and
-"Import files"), where it needs no condition of its own: a library with none of the demo songs in it is exactly what
+"Import files"), where it needs no condition of its own: a library with none of the demo library in it is exactly what
 that state is.
 
 `EmptyState` takes those as a list of `EmptyStateAction`s, the first filled and the rest outlined, laid out in a row

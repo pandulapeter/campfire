@@ -112,9 +112,13 @@ public object ChordProNotation {
             ChordProChordRewriter.keepingLowercaseMinors { name -> shownName(fromWritten(name), to) }
         }
         val rename = { name: String -> ChordProChordNames.latinExpanded(name)?.let { shownName(withAsciiAccidentals(it), to) } ?: renameWritten(name) }
+        // The names of a staff's strings are read in the notation the text is declared in, never guessed from its
+        // chords: a German chart's `B|` is the B flat only where it was typed in German.
+        val namesFrom = if (from.isNumbering) ChordNotation.STANDARD else from
+        val namesTo = if (to.isNumbering) ChordNotation.STANDARD else to
         return ChordProChordRewriter.rewriteChordNamesInText(
             text = text,
-            rewriteTab = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
+            rewriteTab = { lines -> ChordProStaffNames.respelledStaffNames(ChordProTabTransposer.rewriteChordNames(lines, rename), namesFrom, namesTo) },
             rename = rename,
             rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename) },
         )
@@ -187,9 +191,12 @@ public object ChordProNotation {
         val hasLowercaseMinors = names.any { ChordProChordNames.lowercaseMinorExpanded(it) != null }
         if (!german && !hasLowercaseMinors && !hasLatinName(song) && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
         val rename = { name: String -> read(name, german) }
+        val namesFrom = if (notation.isNumbering) ChordNotation.STANDARD else notation
         return ChordProChordRewriter.rewriteChords(song) {
             ChordProChordRewriter.ChordRewrite(
-                rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
+                rewriteTabLines = { lines ->
+                    ChordProStaffNames.respelledStaffNames(ChordProTabTransposer.rewriteChordNames(lines, rename), namesFrom, ChordNotation.STANDARD)
+                },
                 rename = rename,
                 rewriteDefinition = { ChordProDefinitions.renamedFromNotation(it, rename) },
             )

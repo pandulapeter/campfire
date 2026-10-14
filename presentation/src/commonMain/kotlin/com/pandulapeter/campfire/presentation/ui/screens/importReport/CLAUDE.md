@@ -20,7 +20,8 @@ floating button crossfading) rather than dialogs replacing one another. The view
 dialog is up, no editor with unsaved text is on the stack and the onboarding is not (`showImportReport`); the reading
 runs behind any of those meanwhile. Two imports are not reviewed: the demo library (`shouldReview = false`), and a single
 song file the system handed over, which is written and opened as before — each of them puts the screen up only for a
-name it finds taken, as a one-row review. A song picked from the app's own Import files is reviewed.
+name it finds taken, as a one-row review. The demo library's subtitle says "Demo library" (`Review.isDemoLibrary`) rather
+than naming the bundled files it is read from. A song picked from the app's own Import files is reviewed.
 
 **Loading** shows the download (an address, `importFromAddress`, reached by nothing yet) or the reading, through
 `ImportProgressContent`, with Cancel under it while the phase only reads (`isCancellable`); Close does the same.

@@ -154,7 +154,7 @@ internal object ChordProTabTransposer {
     /**
      * Applies [replacements] (in order, non-overlapping) to [line], keeping everything after each of them in the
      * column it was in: a wider replacement eats a [filler] character next to it (after it, or if there is none to
-     * spare there, before it), a narrower one puts one back. A filler is only ever eaten while another one is left to
+     * spare there, before it), a narrower one puts one back, except a space at the end of the line. A filler is only ever eaten while another one is left to
      * separate the replacement from its neighbour, so a tab whose notes are one dash apart grows rather than becoming
      * unreadable.
      */
@@ -176,7 +176,9 @@ internal object ChordProTabTransposer {
                 result.deleteAt(fillerIndex)
                 difference--
             }
-            if (difference < 0) {
+            // A row of chord names keeps no space after its last one, which nothing stands in the column of, and which
+            // would be left behind by a name renamed into a longer notation and back.
+            if (difference < 0 && !(filler == ' ' && consumedUntil >= line.length)) {
                 repeat(-difference) { result.append(filler) }
             }
         }

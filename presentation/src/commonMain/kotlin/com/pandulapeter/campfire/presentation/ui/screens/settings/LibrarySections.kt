@@ -24,7 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.add_demo_songs
+import com.pandulapeter.campfire.presentation.resources.add_demo_library
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_import
@@ -97,7 +97,7 @@ private fun ImportExportSection(
     // a library that turns out to hold them.
     AnimatedSettingsRow(value = demoLibraryOffer) { offer ->
         ActionListItem(
-            title = stringResource(Res.string.add_demo_songs),
+            title = stringResource(Res.string.add_demo_library),
             icon = painterResource(Res.drawable.ic_songs),
             isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
             isEmphasized = false,

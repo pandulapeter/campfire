@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -22,8 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.instrument
-import com.pandulapeter.campfire.presentation.resources.instrument_description
+import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.InstrumentList
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -43,7 +40,7 @@ internal fun InstrumentSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val preferences = userPreferences ?: return
     CampfireBottomSheet(
-        title = stringResource(Res.string.instrument),
+        title = stringResource(Res.string.instrument_choose),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
@@ -57,12 +54,6 @@ internal fun InstrumentSheet(
                 .padding(contentPadding)
                 .padding(bottom = 8.dp),
         ) {
-            Text(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                text = stringResource(Res.string.instrument_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             InstrumentList(
                 selected = preferences.instrument,
                 onSelected = { instrument ->

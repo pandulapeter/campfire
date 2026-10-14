@@ -96,7 +96,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
-import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffOf
+import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffFor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.painterResource
@@ -421,7 +421,9 @@ internal fun LoadedSongEditor(
                             )
                         },
                         tabStaff = remember(userPreferences) {
-                            emptyTabStaffOf(userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR, userPreferences?.instrumentTuning)
+                            val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
+                            val tuning = userPreferences?.instrumentTuning
+                            { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, tuning, notation.toChordNotation()) }
                         },
                     )
                 }

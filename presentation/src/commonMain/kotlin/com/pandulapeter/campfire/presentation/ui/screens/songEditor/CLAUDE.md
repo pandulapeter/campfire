@@ -40,10 +40,13 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   **song** (chords, the seven sections the app has a name for, tablature and grids, comments, and last the changes from
   where they stand: Key change, Tempo and Time signature), so the row being scrolled through is always the short one.
   Tab and Grid are a group of their own between the sections and the comments, because that is what they are: a display
-  mode that opens inside a section rather than a section of its own. Tab writes an empty staff of one bar named for the
-  player's strings (`emptyTabStaffOf`, see `ui/CLAUDE.md`'s Tabs follow the instrument), the caret after the top
-  string's name, and with something selected only puts the environment around it, since that is most likely a tab
-  pasted in.
+  mode that opens inside a section rather than a section of its own. Tab first asks, in a popup hanging from it
+  (`EditorToolbarMenuButton`, which takes no focus, so the keyboard stays up), what the tab is for: Any instrument
+  (`{start_of_tab}`) or one of the instruments with frets (`tabInstruments`), whose id becomes the selector
+  (`{start_of_tab-ukulele}`, closed by a plain `{end_of_tab}`). It then writes an empty staff of one bar, named — the
+  player's strings for their own instrument or for any, the standard tuning's for another, in the field's notation
+  (`emptyTabStaffFor`, see `ui/CLAUDE.md`'s Tabs follow the instrument) — the caret after the top string's name, and with something selected only
+  puts the environment around it, since that is most likely a tab pasted in.
 - Two kinds of directive are deliberately absent, both still read without complaint: `{new_song}`, since the editor only
   ever holds one song, and `{new_page}` / `{column_break}`, since Campfire flows sections into columns at whatever size
   the window is and a hand written break would decide nothing. `{transpose}` is offered as **Key change**, in the second
@@ -83,7 +86,9 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   count from. Otherwise `SongRenderer.editorTextOf` (`rendering/SongRenderer.kt`, tested, handed the view model's
   `editorNotation` explicitly) converts the file's text as the field is opened, reverted or made to follow its file, and
   Save converts the field back (`fileTextOf`), so a German reader types `[B]` for B flat in any key and the file says
-  `Bb`.
+  `Bb`. The names of a tab's strings are converted with the chords (`e|` is `mi|` in Latin, a German `B|` the B flat),
+  the staff keeping its columns, and a file opened and saved unedited is the file it was, byte for byte (see
+  `:chordpro`'s `ChordProStaffNames`).
 
   Every comparison of the field with the file — what is unsaved, the draft reopened on launch — is made in the field's
   notation, while the stored draft is in the file's, so it means the same chords whatever the notation is by the time it

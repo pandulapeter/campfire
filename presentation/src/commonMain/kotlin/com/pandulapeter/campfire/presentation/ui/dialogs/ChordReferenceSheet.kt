@@ -47,6 +47,7 @@ internal fun ChordReferenceSheet(
     val chord = dialog.chord
     CampfireBottomSheet(
         title = textResource(Res.string.song_details_chord_shape_choose, chord.name),
+        subtitle = chordNoteNames(chord, notation),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         key(chord.chord.id, tuning) {

@@ -66,9 +66,10 @@ the white keys (deeper in the dark theme, paler in the light one).
 The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song; its grid, `ChordShapeGrid.kt`,
 is shared with the Chords tab's sheet, see `ui/screens/chords/CLAUDE.md`) is titled "Choose chord shape -
 G", the label of the screen reader action that opens it, the chord named with its root and bass in capitals, or in title
-case in Latin, however the song writes it (`ChordProNotation.canonicalName`; a numbering's step as it is), and reads the
-song as the page plays it, finding the chord by its name (gone, it closes): the chord's letters and notes, then every
-shape of it as one vertically scrolling grid of diagrams larger than the section's, with their fingers, through
+case in Latin, however the song writes it (`ChordProNotation.canonicalName`; a numbering's step as it is), subtitled with
+the chord's notes (`chordNoteNames`; rather than the song, since it is only opened from that song's page, and pinned so
+they stay in view over the shapes they explain), and reads the song as the page plays it, finding the chord by its name
+(gone, it closes): the chord's letters, then every shape of it as one vertically scrolling grid of diagrams larger than the section's, with their fingers, through
 `ChordVoicings.all` (searched off the main thread, an empty frame in the first cell meanwhile, the shapes decided once
 they are there, a stored shape the app does not list first). The shape the songs draw it with is marked, and a tap on
 another marks it and writes it at once by `setChordVoicing` (picking the app's first shape removes the entry); there is

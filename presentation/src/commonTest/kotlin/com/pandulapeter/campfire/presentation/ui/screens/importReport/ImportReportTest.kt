@@ -22,7 +22,7 @@ class ImportReportTest {
     fun `every stage before the result is an import the process would lose`() {
         assertTrue(ImportReport.Loading(sourceName = "songs.zip").isUnfinished)
         assertTrue(ImportReport.Failed(reason = ImportFailure.UNREADABLE, sourceName = null).isUnfinished)
-        assertTrue(ImportReport.Review(plan = ImportPlan(), choices = ImportChoices()).isUnfinished)
+        assertTrue(ImportReport.Review(plan = ImportPlan(), choices = ImportChoices(), isDemoLibrary = false).isUnfinished)
         assertTrue(ImportReport.Importing.isUnfinished)
     }
 

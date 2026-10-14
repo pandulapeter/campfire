@@ -26,6 +26,10 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.window.PopupProperties
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 
 /**
  * The popup behind app bar and overflow buttons, and the one place that knows whether one is open: a
@@ -34,6 +38,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
  * Escape pressed with a menu up belongs to the menu rather than to the back stack.
  *
  * @param state Whether the menu is open, hoisted only where something other than [button] opens it too.
+ * @param isFocusable False for a menu that writes into a text field which is being typed into (the editor's toolbar):
+ *   a popup that takes the focus takes it out of the field, which closes the keyboard under the menu on every tap. Such
+ *   a menu hears no back press or Escape of its own, so it is closed by a back handler of its own instead.
  * @param button The button that opens the menu, handed the way to open it.
  * @param content The entries of the menu. Actions that should close it use the handed [OverflowMenuState.select]
  *   helper; choices that keep it open act directly.
@@ -42,6 +49,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 internal fun OverflowMenu(
     modifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
+    isFocusable: Boolean = true,
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) {
@@ -81,9 +89,17 @@ internal fun OverflowMenu(
             },
             expanded = isShown,
             onDismissRequest = state::dismiss,
+            properties = PopupProperties(focusable = isFocusable),
         ) {
             content(state::select)
         }
+    }
+    if (!isFocusable) {
+        NavigationBackHandler(
+            state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+            isBackEnabled = isShown,
+            onBackCompleted = state::dismiss,
+        )
     }
 }
 

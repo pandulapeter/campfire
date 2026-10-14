@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.StaffPrefix
+import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.respelled
+import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.shiftedBy
+import com.pandulapeter.campfire.chordpro.chords.ChordProStaffNames.staffPrefix
 import com.pandulapeter.campfire.chordpro.chords.ChordProTabTransposer.SEMITONES_IN_OCTAVE
 import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.TabNotice
@@ -112,6 +117,7 @@ internal object ChordProTabRetuner {
             tuning = tuning,
             isUnknown = standard == null,
             stringName = player.stringName,
+            notation = player.notation,
         )
     }
 
@@ -135,6 +141,7 @@ internal object ChordProTabRetuner {
         val tuning: TabTuning?,
         val isUnknown: Boolean,
         val stringName: (Int) -> String,
+        val notation: ChordNotation,
     ) {
 
         fun fretsOf(line: Int) = ChordProTabTransposer.fretNumbers(lines[staff[line]].substring(prefixes[line].bodyStart))
@@ -180,11 +187,21 @@ internal object ChordProTabRetuner {
             )
         }
 
-        /** The system moved by [semitones] alone, its names kept where it writes them and the assumed ones written where not. */
+        /**
+         * The system moved by [semitones] alone: the assumed names written where it names no strings, and where it names
+         * them all, its own names in the reader's notation, which only rewrites the staff where one of them reads
+         * differently there.
+         */
         fun asWritten(semitones: Int) = Plan(
             system = this,
             shifts = staff.map { semitones },
-            names = tuning?.takeIf { prefixes.any { it.note == null } }?.let { namesOf(it.strings.asReversed()) },
+            names = tuning?.let { tuning ->
+                if (prefixes.any { it.note == null }) {
+                    namesOf(tuning.strings.asReversed())
+                } else {
+                    prefixes.map { prefix -> prefix.name?.let { respelled(it, from = ChordNotation.STANDARD, to = notation) } }.takeIf { names -> names != prefixes.map { it.name } }
+                }
+            },
             dropped = emptySet(),
             otherInstrument = null,
         )
@@ -272,70 +289,11 @@ internal object ChordProTabRetuner {
         return rewritten
     }
 
-    /** [this] with [columns] spaces put in front of it, or as many of its leading spaces taken off as it has, up to that. */
-    private fun String.shiftedBy(columns: Int) = when {
-        columns > 0 && isNotBlank() -> " ".repeat(columns) + this
-        columns < 0 -> drop(minOf(-columns, takeWhile { it == ' ' }.length))
-        else -> this
-    }
-
-    /**
-     * What opens a staff line: the name of its string (`Eb`, `e`, `D#`, `Mi`; a string's number, `1|`, names no note)
-     * and the bar after it. [bodyStart] is where the music starts: after the bar, at the first dash after a name with no
-     * bar (`e-----`, `e -----`), or after the indentation of a line that names nothing (`|-----`'s bar is music, the one a
-     * staff starts with).
-     */
-    private class StaffPrefix(val note: Int?, val bodyStart: Int)
-
-    private fun staffPrefix(line: String): StaffPrefix {
-        var index = 0
-        while (index < line.length && line[index].isWhitespace()) index++
-        val indentation = index
-        while (index < line.length && index - indentation < MAX_NAME_LENGTH && (line[index].isLetterOrDigit() || line[index] in ACCIDENTALS)) index++
-        val name = line.substring(indentation, index)
-        var barIndex = index
-        while (barIndex < line.length && line[barIndex] == ' ') barIndex++
-        return when {
-            name.isNotEmpty() && line.getOrNull(barIndex) == BAR -> StaffPrefix(note = noteOf(name), bodyStart = barIndex + 1)
-            // Without a bar only a note followed by the staff (`e-----`, `e -----`) names a string: a staff that starts
-            // with a fret is music.
-            noteOf(name) != null && line.getOrNull(barIndex) == '-' -> StaffPrefix(note = noteOf(name), bodyStart = barIndex)
-            line.getOrNull(indentation) == BAR -> StaffPrefix(note = null, bodyStart = indentation + 1)
-            else -> StaffPrefix(note = null, bodyStart = indentation)
-        }
-    }
-
-    /** The pitch class a string's name stands for, in the standard notation, the German or the Latin one, or null. */
-    private fun noteOf(name: String): Int? {
-        if (name.isEmpty() || name.first().isDigit()) return null
-        val capitalized = name.replaceFirstChar { it.uppercaseChar() }
-        val standard = ChordProChordNames.latinExpanded(capitalized) ?: capitalized
-        val base = when (standard.first()) {
-            'C' -> 0
-            'D' -> 2
-            'E' -> 4
-            'F' -> 5
-            'G' -> 7
-            'A' -> 9
-            'B', 'H' -> 11
-            else -> return null
-        }
-        val accidental = when (standard.substring(1)) {
-            "" -> 0
-            "#", "♯" -> 1
-            "b", "♭" -> -1
-            else -> return null
-        }
-        return (base + accidental).mod(SEMITONES_IN_OCTAVE)
-    }
-
     /**
      * How far apart the moves of the strings of one tab may be where it is moved onto another instrument: two semitones,
      * the most a drop tuning moves one string by. Further apart, the tab's shapes no longer hold.
      */
     private const val MAX_SHIFT_SPREAD = 2
-    private const val MAX_NAME_LENGTH = 4
     private const val BAR = '|'
     private const val NEGATION = "!"
-    private val ACCIDENTALS = setOf('#', '♯', '♭')
 }

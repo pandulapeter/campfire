@@ -190,7 +190,7 @@ class ChordProLatinNotationTest {
     fun `a row of Latin names over a staff is renamed in its columns`() {
         val lines = listOf("Do   Sol  Lam  Fa", "e|---0----0----0----1-|")
 
-        assertEquals(listOf("C    G    Am   F ", "e|---0----0----0----1-|"), ChordProTabTransposer.rewriteChordNames(lines) { ChordProNotation.read(it, isGerman = false) })
+        assertEquals(listOf("C    G    Am   F", "e|---0----0----0----1-|"), ChordProTabTransposer.rewriteChordNames(lines) { ChordProNotation.read(it, isGerman = false) })
         assertEquals(listOf("Do Sol Lam Fa", "e|-0--0--0--1-|"), ChordProTabTransposer.rewriteChordNames(listOf("C G Am F", "e|-0--0--0--1-|"), ChordProNotation::toLatin))
     }
 

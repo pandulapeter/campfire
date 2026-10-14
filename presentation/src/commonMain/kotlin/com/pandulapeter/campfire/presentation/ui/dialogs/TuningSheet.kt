@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.instrument_tuning
-import com.pandulapeter.campfire.presentation.resources.instrument_tuning_description
+import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
@@ -55,7 +52,7 @@ internal fun TuningSheet(
     val notation = preferences.chordSpelling.notation.toChordNotation()
     val selected = preferences.instrumentTuning
     CampfireBottomSheet(
-        title = stringResource(Res.string.instrument_tuning),
+        title = stringResource(Res.string.instrument_tuning_choose),
         // Named under the title, since the tunings are that instrument's and its chip is behind the sheet.
         subtitle = instrumentLabel(preferences.instrument),
         onDismiss = { viewModel.dismissSheet(dialog) },
@@ -69,26 +66,19 @@ internal fun TuningSheet(
                 .fadingTopEdge(scrollState, sheetContainerColor())
                 .bounceVerticalScroll(scrollState)
                 .padding(contentPadding)
-                .padding(bottom = 8.dp),
+                .padding(bottom = 8.dp)
+                .selectableGroup(),
         ) {
-            Text(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                text = stringResource(Res.string.instrument_tuning_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Column(modifier = Modifier.selectableGroup()) {
-                preferences.instrument.tunings.forEach { tuning ->
-                    RadioListItem(
-                        title = tuningLabel(tuning, notation),
-                        description = tuningStringsLabel(tuning, notation),
-                        isSelected = tuning == selected,
-                        onSelected = {
-                            viewModel.setTuning(tuning)
-                            closeSheet()
-                        },
-                    )
-                }
+            preferences.instrument.tunings.forEach { tuning ->
+                RadioListItem(
+                    title = tuningLabel(tuning, notation),
+                    description = tuningStringsLabel(tuning, notation),
+                    isSelected = tuning == selected,
+                    onSelected = {
+                        viewModel.setTuning(tuning)
+                        closeSheet()
+                    },
+                )
             }
         }
     }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -169,6 +170,20 @@ class ChordProTabsTest {
     }
 
     @Test
+    fun `a reader with no tuning is shown the names a staff writes in their notation`() {
+        val german = ChordProTransposer.transpose(tab("e|--0--|", "B|--1--|", "G|-----|", "D|-----|", "A|-----|", "E|-----|"), 0, tabPlayer = player(null, notation = ChordNotation.GERMAN))
+        val latin = ChordProTransposer.transpose(
+            tab("  Am", "Eb|--0--|", "Bb|-----|", "Gb|-----|", "Db|-----|", "Ab|-----|", "eb|-----|"),
+            0,
+            tabPlayer = player(null, notation = ChordNotation.LATIN),
+        )
+
+        assertEquals(listOf("e|--0--|", "H|--1--|", "G|-----|", "D|-----|", "A|-----|", "E|-----|"), german.tabLines())
+        assertEquals(listOf("    Am", " Mib|--0--|", " Sib|-----|", "Solb|-----|", " Reb|-----|", " Lab|-----|", " mib|-----|"), latin.tabLines())
+        assertEquals(emptyList(), german.notices() + latin.notices())
+    }
+
+    @Test
     fun `a staff of a number of strings no instrument has is left as it is`() {
         val lines = arrayOf("|--0--|", "|--1--|", "|--2--|")
 
@@ -269,7 +284,7 @@ class ChordProTabsTest {
         },
     )
 
-    private fun player(tuning: TabTuning?, hidesTabs: Boolean = false) = TabPlayer(
+    private fun player(tuning: TabTuning?, hidesTabs: Boolean = false, notation: ChordNotation = ChordNotation.STANDARD) = TabPlayer(
         selectors = listOfNotNull(tuning?.instrument),
         tuning = tuning,
         hidesTabs = hidesTabs,
@@ -279,6 +294,7 @@ class ChordProTabsTest {
                 ?: STANDARD_TUNINGS.firstOrNull { it.strings.size == notes.size }
         },
         stringName = { note -> NOTE_NAMES[note.mod(12)] },
+        notation = notation,
     )
 
     private companion object {

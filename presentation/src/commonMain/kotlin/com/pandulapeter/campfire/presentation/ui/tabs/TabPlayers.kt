@@ -44,17 +44,41 @@ internal fun tabPlayerOf(
             ?: tunings.firstOrNull()
     },
     stringName = { note -> noteName(note, notation) },
+    notation = notation,
 )
 
 /**
  * The lines of the empty staff the editor writes for a new tab: the strings of [instrument] tuned to [tuning], or a
  * guitar's in standard tuning for an instrument a tab is not played on, which is the tab whoever reads the file is
- * most likely to play. Named in the standard notation, since that is what every file is written in.
+ * most likely to play. Named in [notation], the one the editor's field is typed in, as the chords around it are: Save
+ * writes them into the file in the standard one.
  */
-internal fun emptyTabStaffOf(instrument: UserPreferences.Instrument, tuning: InstrumentTuning?) = ChordProTabs.emptyStaff(
+internal fun emptyTabStaffOf(instrument: UserPreferences.Instrument, tuning: InstrumentTuning?, notation: ChordNotation) = ChordProTabs.emptyStaff(
     strings = tuning?.takeIf { instrument.hasFrets }?.strings ?: InstrumentTuning.GUITAR.strings,
-    stringName = { note -> noteName(note, ChordNotation.STANDARD) },
+    stringName = { note -> noteName(note, notation) },
 )
+
+/**
+ * The empty staff the editor writes for a tab for [tabInstrument], whose id its selector names: the player's own strings
+ * ([emptyTabStaffOf] of [instrument] tuned to [tuning]) where it is the instrument in their hands or where the tab names
+ * none, and the standard tuning of [tabInstrument] otherwise, since the player's tuning is of another instrument.
+ */
+internal fun emptyTabStaffFor(
+    tabInstrument: UserPreferences.Instrument?,
+    instrument: UserPreferences.Instrument,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+) = if (tabInstrument == null || tabInstrument == instrument) {
+    emptyTabStaffOf(instrument, tuning, notation)
+} else {
+    emptyTabStaffOf(tabInstrument, tabInstrument.tunings.firstOrNull(), notation)
+}
+
+/**
+ * The instruments a tab can be written for, in the order the editor's Tab button offers them: every one with frets,
+ * each named by its own id in the selector (`{start_of_tab-ukulele}`), which [tabPlayerOf] then picks it out by.
+ */
+internal val tabInstruments get() = UserPreferences.Instrument.entries.filter { it.hasFrets }
 
 /**
  * The names a tab's selector may call [instrument] by, the best match first: its own, then the instrument it is a

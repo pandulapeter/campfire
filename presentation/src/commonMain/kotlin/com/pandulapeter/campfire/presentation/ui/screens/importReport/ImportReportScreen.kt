@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_loading_title
 import com.pandulapeter.campfire.presentation.resources.import_progress_downloading
 import com.pandulapeter.campfire.presentation.resources.import_progress_title
+import com.pandulapeter.campfire.presentation.resources.import_review_demo_library
 import com.pandulapeter.campfire.presentation.resources.import_review_from
 import com.pandulapeter.campfire.presentation.resources.import_review_title
 import com.pandulapeter.campfire.presentation.resources.import_review_title_empty
@@ -101,7 +102,11 @@ internal fun ImportReportScreen(
     Column(Modifier.fillMaxSize()) {
         ImportReportTopAppBar(
             title = shown.title(progress),
-            subtitle = shown.sourceName?.let { textResource(Res.string.import_review_from, it) },
+            subtitle = if ((shown as? ImportReport.Review)?.isDemoLibrary == true) {
+                stringResource(Res.string.import_review_demo_library)
+            } else {
+                shown.sourceName?.let { textResource(Res.string.import_review_from, it) }
+            },
             onClose = onBack,
         )
         Box(
