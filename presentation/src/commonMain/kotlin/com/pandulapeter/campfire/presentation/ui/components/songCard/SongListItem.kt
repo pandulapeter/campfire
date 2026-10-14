@@ -43,8 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -92,6 +96,9 @@ import kotlin.time.Duration
  *   song names none or covers are turned off.
  * @param actions The trailing content of the row, which is the overflow button of the song's actions
  *   ([SongActions]).
+ * @param toggleableState Whether the song is ticked, where the card is one of a selection; null elsewhere. A ticked card
+ *   is a checkbox to a screen reader, and the state is set on the node the card's click merges its text into, since a
+ *   checkbox around that node would be read without a label and the card without its state.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -114,6 +121,7 @@ internal fun SongListItem(
     coverArtUrl: String? = null,
     onClick: () -> Unit,
     onContextClick: (() -> Unit)? = null,
+    toggleableState: ToggleableState? = null,
     actions: (@Composable () -> Unit)? = null,
 ) {
     val displayedDuration = duration?.let(ChordProDuration::format)
@@ -161,7 +169,8 @@ internal fun SongListItem(
         CenteredSongCardContent(
             modifier = Modifier
                 .onContextClick(onContextClick)
-                .combinedClickable(onClick = onClick, onLongClick = onContextClick.takeUnless { isDesktopPlatform }),
+                .combinedClickable(onClick = onClick, onLongClick = onContextClick.takeUnless { isDesktopPlatform })
+                .then(remember(toggleableState) { selectionSemanticsOf(toggleableState) }),
             coverArtUrl = coverArtUrl,
             actions = actions,
             headlineContent = {
@@ -222,6 +231,20 @@ internal fun SongListItem(
                 }
             },
         )
+    }
+}
+
+/**
+ * A card of the selection mode as a checkbox to a screen reader, or nothing for [toggleableState] null. Remembered by
+ * the caller, since the semantics lambda is a new one on every pass, which would make the modifier unequal and have
+ * every visible card composed again on every tick of the selection mode.
+ */
+private fun selectionSemanticsOf(toggleableState: ToggleableState?) = if (toggleableState == null) {
+    Modifier
+} else {
+    Modifier.semantics {
+        role = Role.Checkbox
+        this.toggleableState = toggleableState
     }
 }
 

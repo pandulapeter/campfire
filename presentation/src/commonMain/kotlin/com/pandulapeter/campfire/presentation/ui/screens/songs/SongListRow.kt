@@ -20,15 +20,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.song.Song
@@ -92,13 +87,8 @@ internal fun SongListRow(
         capo = capo.fret,
         chordSpelling = cardOptions.chordSpelling,
     )
-    // Remembered, since the semantics lambda is a new one on every pass, which would make the modifier
-    // unequal and have every visible card composed again on every tick of the selection mode.
-    val selectionSemantics = remember(isSelecting, isTicked) {
-        Modifier.selectionSemantics(isSelecting = isSelecting, isTicked = isTicked)
-    }
     SongListItem(
-        modifier = Modifier.fadingUnderListTop(topFade).then(selectionSemantics),
+        modifier = Modifier.fadingUnderListTop(topFade),
         song = song,
         cardPadding = cardPadding,
         key = key.takeIf { cardOptions.isKeyShown },
@@ -122,6 +112,7 @@ internal fun SongListRow(
         // natural way to ask for it, a long press: the same menu, hanging from the same button, since
         // the same entries shown two different ways would read as two different things. In
         // performance mode there is nothing to open either way, so a row does nothing but open a song.
+        toggleableState = if (isSelecting) ToggleableState(isTicked) else null,
         onContextClick = if (isPerformanceModeEnabled || isSelecting) {
             null
         } else {
@@ -211,16 +202,6 @@ private fun SongRowActions(
             )
         }
     }
-}
-
-/** A card of the selection mode is one checkbox to a screen reader, the card being what ticks it. */
-private fun Modifier.selectionSemantics(isSelecting: Boolean, isTicked: Boolean) = if (isSelecting) {
-    semantics(mergeDescendants = true) {
-        role = Role.Checkbox
-        toggleableState = ToggleableState(isTicked)
-    }
-} else {
-    this
 }
 
 /** The room a card's box stands in, which is a touch target's, where the menu button stood. */

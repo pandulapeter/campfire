@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
@@ -47,6 +48,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param importCount How many files Import writes; null where the review has nothing to tick.
  * @param isKeyboardVisible Hides the button while the keyboard is up: that is when the rows it would cover are being
  *   searched, and in a window that leaves little height it sits over the tick boxes and the conflict buttons at their ends.
+ *
+ * Each button is described by its own label, since Material's extended floating button clears the semantics of the
+ * text it draws, and would otherwise be read as a button with no name.
  */
 @Composable
 internal fun ImportReportButton(
@@ -67,6 +71,7 @@ internal fun ImportReportButton(
         ImportReport.Review::class -> {
             val count = importCount ?: 0
             val isEnabled = count > 0
+            val label = pluralStringResource(Res.plurals.import_review_confirm, count, count)
             val containerColor by animateColorAsState(
                 if (isEnabled) FloatingActionButtonDefaults.containerColor else MaterialTheme.colorScheme.surfaceContainerHighest,
             )
@@ -75,26 +80,37 @@ internal fun ImportReportButton(
             )
             // A floating button has no disabled state of its own, so it is drawn and announced as one and ignores taps.
             ExtendedFloatingActionButton(
-                modifier = Modifier.semantics { if (!isEnabled) disabled() },
+                modifier = Modifier.semantics {
+                    contentDescription = label
+                    if (!isEnabled) disabled()
+                },
                 onClick = { if (isEnabled) onImport() },
                 containerColor = containerColor,
                 contentColor = contentColor,
                 icon = { Icon(painter = painterResource(Res.drawable.ic_import), contentDescription = null) },
-                text = { Text(pluralStringResource(Res.plurals.import_review_confirm, count, count)) },
+                text = { Text(label) },
             )
         }
 
-        ImportReport.Failed::class -> ExtendedFloatingActionButton(
-            onClick = onRetry,
-            icon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
-            text = { Text(stringResource(Res.string.import_retry)) },
-        )
+        ImportReport.Failed::class -> {
+            val label = stringResource(Res.string.import_retry)
+            ExtendedFloatingActionButton(
+                modifier = Modifier.semantics { contentDescription = label },
+                onClick = onRetry,
+                icon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
+                text = { Text(label) },
+            )
+        }
 
-        ImportReport.Finished::class -> ExtendedFloatingActionButton(
-            onClick = onDone,
-            icon = { Icon(painter = painterResource(Res.drawable.ic_check), contentDescription = null) },
-            text = { Text(stringResource(Res.string.done)) },
-        )
+        ImportReport.Finished::class -> {
+            val label = stringResource(Res.string.done)
+            ExtendedFloatingActionButton(
+                modifier = Modifier.semantics { contentDescription = label },
+                onClick = onDone,
+                icon = { Icon(painter = painterResource(Res.drawable.ic_check), contentDescription = null) },
+                text = { Text(label) },
+            )
+        }
 
         else -> Box(Modifier)
     }
