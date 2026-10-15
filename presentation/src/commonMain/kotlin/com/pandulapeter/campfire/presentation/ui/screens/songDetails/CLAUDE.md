@@ -69,6 +69,5 @@ on the desktop.
 
 - `MetronomeButton` shows and hides the panel (`toggleMetronomePanel`): opening starts nothing, closing stops a playing
   click. M toggles the click from anywhere on the song, opening the panel with it.
-- `TempoStepper` is highlighted while overridden; its value is a typed field (`StepperField`), so the reset is the pill's
-  last segment while focused, in Tap's place. Tap sits in its `trailing` slot, since it sets the number the stepper
-  steps. While a value is typed (`OverlayState.isValueBeingTyped`) the arrows and M are the field's, not the song's.
+- `TempoStepper` (`ui/metronome`) is highlighted while overridden; Tap sits in its `trailing` slot, since it sets the
+  number the stepper steps.
