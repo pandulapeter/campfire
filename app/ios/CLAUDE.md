@@ -62,6 +62,9 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   `PrivacyInfo.xcprivacy` declares no required-reason API.
 - `ShareInbox/` is excluded from device backup (by the extension, and again by the app). Its strings are its own
   `Localizable.strings` (`en`, `hu`), in the system's language.
+- Its view sits in the sharing app's sheet, which an extension cannot size or replace (its presentation style is ignored:
+  it is hosted in a remote view), so a saved share closes the sheet by itself after two seconds; a refusal waits for
+  Done.
 
 ## `Info.plist`
 

@@ -474,6 +474,7 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         reportState = importReportState,
         openImportedSong = { navigator.openImportedSong(it) },
+        songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
         downloadImportFile = downloadImportFile,

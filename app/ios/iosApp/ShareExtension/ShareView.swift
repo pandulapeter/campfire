@@ -15,8 +15,8 @@ final class ShareState: ObservableObject {
     @Published var outcome: ShareOutcome?
 }
 
-/// One line of state, one under it, and Done. It does not close on its own: the line under "Saved to Campfire" is the
-/// instruction to open the app, which is what finishes the import.
+/// One line of state, one under it, and Done. A saved share closes the sheet by itself (`ShareViewController`); a
+/// refusal stays until Done, since its second line is the instruction.
 struct ShareView: View {
     @ObservedObject var state: ShareState
     let onDone: () -> Void
@@ -41,7 +41,10 @@ struct ShareView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(NSLocalizedString("share_done", comment: ""), action: onDone).disabled(state.outcome == nil)
+                    // Colored by hand: the toolbar draws its buttons in the label color, not the accent color.
+                    Button(NSLocalizedString("share_done", comment: ""), action: onDone)
+                        .foregroundColor(Color("AccentColor"))
+                        .disabled(state.outcome == nil)
                 }
             }
         }

@@ -40,6 +40,8 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
+import com.pandulapeter.campfire.presentation.ui.state.SongLookup
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,6 +51,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Every import: the queue the batches wait in, the download of a file from an address, the reading and comparing that
@@ -57,6 +61,7 @@ import kotlinx.coroutines.withContext
  * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
  * @param openImportedSong Opens the one song the system handed over, see `Navigator.openImportedSong`.
+ * @param songLookup The library as the screens look songs up in it, which the song to open is waited for in.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
  */
@@ -67,6 +72,7 @@ internal class ImportController(
     private val backStack: List<CampfireDestination>,
     private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
+    private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
     private val downloadImportFile: DownloadImportFileUseCase,
@@ -416,6 +422,14 @@ internal class ImportController(
                     // import screen would, rather than going on top of its pages.
                     scope.launch {
                         snapshotFlow { backStack.none { it is CampfireDestination.Onboarding } }.first { it }
+                        // The details screen closes itself over a song the lookup does not hold once the library has been
+                        // read, and the lookup is indexed again off the main thread after this write, so a screen pushed now
+                        // could find the library read and its song not in it yet. One pushed before the library is read
+                        // waits for it by itself. Should the song never arrive (synced away meanwhile), it is not opened
+                        // at all rather than out of nowhere much later.
+                        withTimeoutOrNull(SONG_LOOKUP_TIMEOUT) {
+                            songLookup.first { !it.isLibraryRead || songToOpen in it.songsByFileName }
+                        } ?: return@launch
                         openImportedSong(songToOpen)
                     }
                     if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFinished(result, hasDetails = false))
@@ -547,3 +561,5 @@ internal class ImportController(
         if (reportState.onBackStackChanged()) onImportReportLeft()
     }
 }
+
+private val SONG_LOOKUP_TIMEOUT = 10.seconds
