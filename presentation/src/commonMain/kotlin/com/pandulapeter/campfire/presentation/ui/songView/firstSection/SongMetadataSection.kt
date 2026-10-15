@@ -89,7 +89,7 @@ internal fun SongMetadataSection(
         // The chips' names stand on the controls' keyline by reaching out of it as the section pills do: the row starts
         // their own padding short of it rather than drawing them shifted, so that it counts that width as room to wrap in.
         FlowRow(
-            modifier = Modifier.padding(start = 12.dp - PICKER_CHIP_START_PADDING, end = 12.dp, bottom = INSTRUMENT_CHIP_GAP),
+            modifier = Modifier.padding(start = 12.dp - PICKER_CHIP_START_PADDING, end = 12.dp, bottom = INSTRUMENT_CHIPS_GAP),
             horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
             verticalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
         ) {
@@ -241,8 +241,8 @@ private fun PlayingValuesGroup(
 private val PLAYING_VALUES_GROUP_GAP = 16.dp
 private val PLAYING_VALUES_TOOL_GAP = 12.dp
 
-/** Under the instrument chips, which sets them a little apart from the controls as a group of their own. */
-private val INSTRUMENT_CHIP_GAP = 16.dp
-
-/** Between the instrument chip and the tuning chip, and between their lines, as between the song's playing tools. */
+/**
+ * Between the instrument chip and the tuning chip, between their lines, and under them, as between the song's playing
+ * tools and between the rows of its controls, so that a line of chips over the controls reads as one more of their rows.
+ */
 private val INSTRUMENT_CHIPS_GAP = 8.dp
