@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,17 +86,16 @@ internal fun SongMetadataSection(
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        // On the controls' keyline, which the chips' names stand on by reaching out of it as the section pills do.
+        // The chips' names stand on the controls' keyline by reaching out of it as the section pills do: the row starts
+        // their own padding short of it rather than drawing them shifted, so that it counts that width as room to wrap in.
         FlowRow(
-            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = INSTRUMENT_CHIP_GAP),
+            modifier = Modifier.padding(start = 12.dp - PICKER_CHIP_START_PADDING, end = 12.dp, bottom = INSTRUMENT_CHIP_GAP),
             horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
             verticalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
         ) {
             lastChip.content?.invoke()
             if (playingTools != null) {
                 SongPlayingToolButtons(
-                    // Shifted with the chips, which reach out of the keyline, so it keeps their gap to the last of them.
-                    modifier = Modifier.offset(x = -PICKER_CHIP_START_PADDING),
                     tools = playingTools,
                     // Only the tuner ever stands here, wherever the values put the metronome.
                     places = playingTools.places(hasInstrumentChips = true, hasChordValues = false, hasClickValues = false),
