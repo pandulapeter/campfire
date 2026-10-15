@@ -48,7 +48,9 @@ internal class SetlistOverrideTest {
         tap(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
         tap(hasContentDescription(string(Res.string.song_details_transpose_up)))
         waitForLibrary { setlistEntries().singleOrNull()?.second == 1 }
-        assertTrue(transposition().startsWith("+1 "), "The setlist's stepper reads ${transposition()}.")
+        // The setlist file can land before the stepper's next frame, since the write and the view model's state both
+        // arrive from other threads than the test clock's composition, so the stepper is waited for on its own.
+        waitUntil { transposition().startsWith("+1 ") }
         assertEquals(songsBefore, songContents())
         assertEquals(listOf(HOUSE_OF_THE_RISING_SUN to 1), setlistEntries())
         tap(hasContentDescription(string(Res.string.back)))
