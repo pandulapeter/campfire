@@ -9,9 +9,9 @@
 # Every test the repository has: the unit tests of every module, run on the desktop target, the UI tests, the Node
 # tests of the web build's storage worker and offline support and the Python test of the release description's parser
 # — and a compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the
-# desktop target's. Run on every pull request, on every push to master (a merged pull request or a direct push), and
-# by publish-all.yml before it starts a single store build, so a failing test or a platform that does not compile stops
-# every store's release rather than one of them.
+# desktop target's. Run on every pull request, on every push to master (a merged pull request or a direct push) that
+# changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
+# platform that does not compile stops every store's release rather than one of them.
 
 name: 'Tests'
 
@@ -19,6 +19,9 @@ on:
   pull_request:
   push:
     branches: [ master ]
+    # Notes, plans, and the README's images, which nothing here reads. Not on pull requests, whose required check would
+    # wait for a run that never comes.
+    paths-ignore: [ 'documentation/**' ]
   workflow_call:
   workflow_dispatch:
 
@@ -26,9 +29,11 @@ permissions:
   contents: read
 
 concurrency:
-  # A new push to a pull request makes the run for the previous one moot. Nothing else shares a group: the ref of a
-  # release's run is its tag, and every push to master is tested, so a failure names the commit that caused it.
-  group: test-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  # A new push to a pull request makes the run for the previous one moot, and a new push to master the run for the
+  # previous push: the newer run tests everything the older one would have, so a failure names the pushes since the last
+  # finished run rather than one commit, and the size check below judges only the newest push (the pre-commit hook
+  # judged every commit already). A release's run shares no group.
+  group: test-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event_name == 'push' && github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:

@@ -194,7 +194,8 @@ desktop JVM, and a release is still checked by hand. Add or update tests with ev
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
 beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header check, and
-compiles every platform (iOS on macOS) on every PR, on every push to `master`, and before `publish-all.yml` builds anything.
+compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than `documentation/`
+(a newer push cancels the older run), and before `publish-all.yml` builds anything.
 
 ## Build
 
