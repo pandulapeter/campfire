@@ -146,4 +146,4 @@ the pure, golden-tested `webBuildManifest`):
 ## Files in
 
 No file associations or "open with" (browsers only offer them to installed apps). Files come through a hidden
-`<input type="file">` or a drop (files, or a folder one level deep).
+`<input type="file">` or a drop (files, or a folder read to the bottom).

@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import kotlinx.coroutines.CancellationException
@@ -123,7 +124,11 @@ private fun downloadFile(name: String, mimeType: String, bytes: Int8Array): Unit
  * into a `js` block, and a promise is what the rest of this file already speaks.
  */
 internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
-    listenForDrops()
+    listenForDrops(
+        maxDepth = ImportLimits.MAX_FOLDER_DEPTH,
+        maxEntries = ImportLimits.MAX_FOLDER_ENTRIES,
+        importableExtensions = LibraryFiles.IMPORTABLE_EXTENSIONS.joinToString(","),
+    )
     while (true) {
         emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty())
     }
@@ -167,17 +172,19 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget): ImportedFile? {
 }
 
 /**
- * A dropped folder is opened one level deep: its own files are taken, in name order, and the folders inside it
- * are not. That is what "my folder of songs" is, and it keeps a home directory dropped by accident from being read
- * into memory. Names starting with a dot are left out of a folder, as they are out of an archive - nobody chose
- * those, and the `._` companions macOS writes next to every file on a foreign volume carry a song's extension.
+ * A dropped folder is read to the bottom, as the desktop's is (`filesBelow`): each folder's files in name order,
+ * within [maxDepth] levels and [maxEntries] entries so that a home directory dropped by accident is not walked for
+ * good. Only the files the import knows by name are opened; the others arrive empty, to be reported as skipped, as an
+ * archive's entries are. [importableExtensions] are the extensions the import knows, joined by commas. Names starting
+ * with a dot are left out of a folder, folders included, and unreported, as they are out of an archive - nobody
+ * chose those, and the `._` companions macOS writes next to every file on a foreign volume carry a song's extension.
  *
  * `webkitGetAsEntry` and `getAsFile` are only answered while the `drop` handler is running, so every item is asked
  * before the handler returns and the reading happens afterwards. Nothing here rejects: an entry that cannot be
  * read resolves to nothing, and a browser without `webkitGetAsEntry` hands a folder over as a `File` that
  * [fileBytes] then reports as unreadable.
  */
-private fun listenForDrops(): Unit = js(
+private fun listenForDrops(maxDepth: Int, maxEntries: Int, importableExtensions: String): Unit = js(
     """(function () {
         if (window.__campfireDropsReady) return;
         window.__campfireDropsReady = true;
@@ -203,12 +210,29 @@ private fun listenForDrops(): Unit = js(
                 read();
             });
         }
-        function filesIn(directory) {
+        var extensions = importableExtensions.split(',');
+        function isImportable(name) {
+            var lowerCase = name.toLowerCase();
+            return extensions.some(function (extension) { return lowerCase.endsWith(extension); });
+        }
+        function filesIn(directory, depth, entries) {
             return childrenOf(directory).then(function (children) {
-                return Promise.all(children
-                    .filter(function (child) { return child.isFile && child.name.charAt(0) !== '.'; })
+                var groups = [];
+                children
                     .sort(function (first, second) { return first.name < second.name ? -1 : first.name > second.name ? 1 : 0; })
-                    .map(fileOf));
+                    .forEach(function (child) {
+                        if (entries.left-- <= 0 || child.name.charAt(0) === '.') return;
+                        if (child.isDirectory) {
+                            if (depth < maxDepth) groups.push(filesIn(child, depth + 1, entries));
+                        } else if (child.isFile) {
+                            // An empty file of the same name stands for one the import does not know, which it reports as
+                            // skipped without anything of the real one being read, as an archive's entry is.
+                            groups.push(isImportable(child.name)
+                                ? fileOf(child).then(function (file) { return [file]; })
+                                : Promise.resolve([new File([], child.name)]));
+                        }
+                    });
+                return Promise.all(groups).then(function (found) { return [].concat.apply([], found); });
             });
         }
         function collect(dataTransfer) {
@@ -219,7 +243,7 @@ private fun listenForDrops(): Unit = js(
                     if (items[i].kind !== 'file') continue;
                     var entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
                     if (entry && entry.isDirectory) {
-                        pending.push(filesIn(entry));
+                        pending.push(filesIn(entry, 1, { left: maxEntries }));
                     } else {
                         var file = items[i].getAsFile();
                         if (file) pending.push(Promise.resolve([file]));

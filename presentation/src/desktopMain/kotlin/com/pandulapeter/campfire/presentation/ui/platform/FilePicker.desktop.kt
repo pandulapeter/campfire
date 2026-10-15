@@ -11,13 +11,16 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
+import java.nio.file.Files
 
 /**
  * `java.awt.FileDialog` rather than `JFileChooser`: it is the operating system's own dialog on macOS and Windows,
@@ -91,25 +94,56 @@ private fun File.withExtensionOf(offeredName: String): File {
 /**
  * Reads whatever of the given paths can be read, within one [ImportBudget], which is also how a file reaches the app
  * without a dialog: as a command line argument from an "open with", or as a drop onto the window. A folder stands for
- * the files directly inside it - not for the folders in there, and not for the hidden files nobody chose. Anything
- * the import does not recognise is reported by it as skipped. A file that cannot be read is handed over empty, which
- * the import reports as skipped, as on Android; one bad file still does not lose the ones next to it.
+ * the files below it, in every folder inside it (see [filesBelow]), which are treated as the entries of an archive are:
+ * a file the import does not know by name is handed over unread, to be reported as skipped, rather than opened to see
+ * whether it is an archive. A file that was named itself is read whatever it is called. A file that cannot be read is
+ * handed over empty, which the import reports as skipped, as on Android; one bad file still does not lose the ones next
+ * to it.
  */
 fun List<String>.readAsImportedFiles(): List<ImportedFile> {
     val budget = ImportBudget()
     return flatMap { path ->
         val file = File(path)
-        if (file.isDirectory) {
-            file.listFiles { child -> child.isFile && !child.name.startsWith(".") }.orEmpty().sortedBy { it.name }
-        } else {
-            listOf(file)
-        }
-    }.mapNotNull { file ->
+        if (file.isDirectory) file.filesBelow().map { it to true } else listOf(file to false)
+    }.mapNotNull { (file, isInFolder) ->
         try {
-            if (file.isFile) budget.read(name = file.name, size = file.length()) { file.readBytes() } else null
+            if (isInFolder && !LibraryFiles.isImportableFileName(file.name)) {
+                ImportedFile.unread(file.name)
+            } else if (file.isFile) {
+                budget.read(name = file.name, size = file.length()) { file.readBytes() }
+            } else {
+                null
+            }
         } catch (exception: Exception) {
             println("Could not read \"${file.path}\": ${exception.message}")
             ImportedFile.unread(file.name)
         }
     }
+}
+
+/**
+ * The files in this folder and the folders inside it, each folder's in name order. A folder dropped on the app is a
+ * library exported as folders, or songs sorted into folders by artist, so it is read to the bottom - within
+ * [ImportLimits.MAX_FOLDER_DEPTH] levels and [ImportLimits.MAX_FOLDER_ENTRIES] entries, which keep a home directory
+ * dropped by accident from being walked for good. Names starting with a dot are left out, folders included, and
+ * unreported, as they are out of an archive: nobody chose them, and the `._` companions macOS writes next to every
+ * file on a foreign volume carry a song's extension. A link to a folder is not followed, which could lead back to
+ * where it started.
+ */
+internal fun File.filesBelow(): List<File> {
+    val found = mutableListOf<File>()
+    var visited = 0
+    fun visit(folder: File, depth: Int) {
+        for (child in folder.listFiles().orEmpty().sortedBy { it.name }) {
+            if (++visited > ImportLimits.MAX_FOLDER_ENTRIES) return
+            if (child.name.startsWith(".") || Files.isSymbolicLink(child.toPath())) continue
+            if (child.isDirectory) {
+                if (depth < ImportLimits.MAX_FOLDER_DEPTH) visit(child, depth + 1)
+            } else if (child.isFile) {
+                found += child
+            }
+        }
+    }
+    visit(this, depth = 1)
+    return found
 }

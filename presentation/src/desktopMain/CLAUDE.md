@@ -14,7 +14,8 @@ The desktop shell, called by `:app:desktop`.
 
 ## `ui/CampfireDesktopApp.kt`
 
-- Dropped files are imported (a folder stands for the files directly inside it). A drop whose file list can't be read
+- Dropped files are imported (a folder stands for the files in every folder inside it, to
+  `ImportLimits.MAX_FOLDER_DEPTH`; hidden entries are left out, unknown files reported as skipped, as in a zip). A drop whose file list can't be read
   is refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses
   every later drag. Dropped text is a pasted song, accepted only where `isNewSongPasteAvailable`; a file list wins.
   Read only mode refuses both (`isDropAvailable`).

@@ -41,6 +41,15 @@ object ImportLimits {
     const val MAX_IMPORT_SIZE = 24L shl 20
 
     /**
+     * How many levels of folders a dropped folder is opened to, its own being the first: a library exported as folders is
+     * two deep, and a home directory dropped by accident is not read to the bottom.
+     */
+    const val MAX_FOLDER_DEPTH = 8
+
+    /** How many entries, files and folders alike, are looked at below one dropped folder before the rest is left unread. */
+    const val MAX_FOLDER_ENTRIES = 10_000
+
+    /**
      * How many bytes of a file called [name] an import reads, which is none for a file it would not look inside.
      * Asked before the file is opened wherever the name is known first, which is everywhere. A name it does not know at
      * all is a question for [ImportBudget], which reads such a file to see whether it is an archive under another name.
