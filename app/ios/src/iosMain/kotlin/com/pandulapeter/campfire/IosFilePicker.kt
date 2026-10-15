@@ -29,6 +29,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
+import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingMappedIfSafe
 import platform.Foundation.NSError
@@ -122,6 +123,9 @@ internal class IosFilePicker(
                     continuation.resume(false)
                 } else {
                     val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
+                    // Campfire's own share extension takes every file an export makes, and would only queue it for
+                    // re-import as a batch of songs that are all already there.
+                    NSBundle.mainBundle.bundleIdentifier?.let { controller.excludedActivityTypes = listOf("$it$SHARE_EXTENSION_SUFFIX") }
                     // An iPad presents this as a popover, which needs something to point at. The menu the share was chosen
                     // from is Compose's and out of reach from here, so the popover stands in the middle of the view with no
                     // arrow rather than pointing at the view's corner, which is where a source rectangle left at zero is.
@@ -292,3 +296,9 @@ private fun ByteArray.toNSData() = if (isEmpty()) {
 } else {
     usePinned { NSData.create(bytes = it.addressOf(0), length = size.toULong()) }
 }
+
+/**
+ * The share extension's bundle id is the app's with this appended (`project.pbxproj`), and an extension's activity type
+ * is its bundle id.
+ */
+private const val SHARE_EXTENSION_SUFFIX = ".ShareExtension"
