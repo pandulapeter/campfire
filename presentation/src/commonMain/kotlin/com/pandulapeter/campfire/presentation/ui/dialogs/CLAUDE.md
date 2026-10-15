@@ -13,8 +13,9 @@
 Dialog and sheet content; the root holds the dialog stack and the confirmations, and `sheet`, `forms`, `pickers`,
 `labels`, `lookup`, and `about` have a `CLAUDE.md` of their own. The export screen is `ui/screens/export`.
 
-- A new form sheet with typed or picked input gets a `SavedDialog` variant, so a process Android restores reopens it
-  (`SavedDialogRestorer`). A new confirmation deliberately does not: an unanswered question is not one to put back.
+- A new form sheet with typed or picked input gets a `SavedDialog` variant (not `NewSongFromText`, whose text lives only
+  in the dialog), so a process Android restores reopens it (`SavedDialogRestorer`). A new confirmation deliberately does
+  not: an unanswered question is not one to put back.
 - **A dialog or sheet is titled with the label of the entry that opened it**; one about one song or setlist names it in
   the `SheetHeader` subtitle.
 - A dialog about one song (setlist picker, tag and language dialogs, delete confirmation) is taken down by the view
