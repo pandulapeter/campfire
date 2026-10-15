@@ -97,14 +97,22 @@ internal class ImportReportState(
         val request = ++request
         _importReport.value = report
         scope.launch {
-            combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
-                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
-                    stack.none { it is CampfireDestination.Onboarding }
-            }.first { it }
+            awaitNothingInTheWay()
             if (this@ImportReportState.request == request && _importReport.value != null && !isOnBackStack) {
                 updateBackStack { add(CampfireDestination.ImportReport) }
             }
         }
+    }
+
+    /**
+     * Suspends until nothing [show] waits for is in the way: no dialog, no editor holding unsaved text on the back stack,
+     * and no onboarding. Also what the New song form of a pasted or shared text waits for, see `ImportController.startQueue`.
+     */
+    suspend fun awaitNothingInTheWay() {
+        combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
+            dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
+                stack.none { it is CampfireDestination.Onboarding }
+        }.first { it }
     }
 
     /** Takes the import screen off the back stack, with whatever is on top of it, see `ImportController.onImportReportLeft`. */

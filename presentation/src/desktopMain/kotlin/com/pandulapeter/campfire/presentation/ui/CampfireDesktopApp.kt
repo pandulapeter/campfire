@@ -89,6 +89,9 @@ fun CampfireDesktopApp(
                             val transferable = event.awtTransferable
                             val files = try {
                                 if (!transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                                    // Checked again rather than trusted from the start of the drag, during which a dialog
+                                    // or the editor can have opened.
+                                    if (!viewModel.pastedSongController.isNewSongPasteAvailable) return false
                                     val text = transferable.getTransferData(DataFlavor.stringFlavor) as? String ?: return false
                                     viewModel.pastedSongController.newSongFromText(text)
                                     return true

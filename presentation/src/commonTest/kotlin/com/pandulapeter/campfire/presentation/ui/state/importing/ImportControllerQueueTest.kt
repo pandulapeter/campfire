@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
@@ -57,6 +58,7 @@ class ImportControllerQueueTest {
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
     private var plannedSongs = listOf(songEntry("new.cho"))
+    private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private lateinit var dialogHost: DialogHost
     private lateinit var controller: ImportController
     private lateinit var reportState: ImportReportState
@@ -91,7 +93,7 @@ class ImportControllerQueueTest {
             prepareImport = object : PrepareImportUseCase {
                 override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
                     prepareCount++
-                    return ImportPlan(songs = plannedSongs)
+                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs)
                 }
             },
             importFiles = object : ImportFilesUseCase {
@@ -256,6 +258,71 @@ class ImportControllerQueueTest {
         assertNull(dialogHost.visibleDialog.value)
         assertNull(reportState.importReport.value)
         assertEquals(listOf("held.cho"), openedSongs)
+    }
+
+    @Test
+    fun `texts arriving together are offered one form at a time, each with its own values`() = runTest {
+        nextPlans += listOf(songEntry("first.cho", text = "{title: First}\n[G]Hello"))
+        nextPlans += listOf(songEntry("second.cho", text = "{title: Second}\n[G]Hello"))
+        startController()
+        val firstSettled = enqueuePaste()
+        val secondSettled = enqueuePaste()
+        runCurrent()
+        val first = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertEquals("First", first.values[ChordProMetadataFields.Field.TITLE])
+        assertEquals(1, prepareCount)
+        assertFalse(firstSettled.isCompleted)
+        dialogHost.dismissSheet(first)
+        runCurrent()
+        assertTrue(firstSettled.isCompleted)
+        val second = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertEquals("Second", second.values[ChordProMetadataFields.Field.TITLE])
+        assertFalse(secondSettled.isCompleted)
+        assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a text arriving while another dialog is open waits for it to close rather than replacing it`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        dialogHost.showDialog(DialogType.WhatsNew)
+        enqueuePaste()
+        runCurrent()
+        assertEquals(DialogType.WhatsNew, dialogHost.visibleDialog.value)
+        dialogHost.dismissDialog()
+        runCurrent()
+        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+    }
+
+    @Test
+    fun `a text arriving over the onboarding shows its form only once the onboarding is left`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        val onboarding = CampfireDestination.Onboarding(isOpenedFromSettings = false)
+        backStack += onboarding
+        startController()
+        enqueuePaste()
+        runCurrent()
+        assertNull(dialogHost.visibleDialog.value)
+        backStack.remove(onboarding)
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+    }
+
+    @Test
+    fun `a file batch queued behind an open form is not read until the form is closed`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        val form = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        enqueue()
+        runCurrent()
+        assertEquals(1, prepareCount)
+        dialogHost.dismissSheet(form)
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertEquals(2, prepareCount)
     }
 
     private fun enqueuePaste() = controller.enqueueImport(

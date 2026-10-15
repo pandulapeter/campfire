@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  * [DialogType.NewSongFromText] read them), with [note] above the fields saying how the text was read: it is set once, so
  * it scrolls with the fields rather than taking pinned height from them.
  *
- * @param songFileName The song being duplicated, which keys the draft; null for a new song.
+ * @param songFileName The song being duplicated, which keys the draft with [offeredValues]; null for a new song.
  */
 @Composable
 internal fun NewSongDialog(
@@ -68,7 +68,7 @@ internal fun NewSongDialog(
     confirmLabel: String = stringResource(Res.string.create),
 ) {
     val offeredDraft = remember(offeredValues) { offeredValues.toSongMetadataDraft() }
-    var values by rememberSaveable(songFileName, stateSaver = songMetadataSaver) { mutableStateOf(offeredDraft) }
+    var values by rememberSaveable(songFileName, offeredValues, stateSaver = songMetadataSaver) { mutableStateOf(offeredDraft) }
     val isValid = values[Field.TITLE].orEmpty().isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = songFileName == null)
     val keyboardController = LocalSoftwareKeyboardController.current

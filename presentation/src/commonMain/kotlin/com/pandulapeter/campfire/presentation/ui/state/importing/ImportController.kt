@@ -214,23 +214,29 @@ internal class ImportController(
      * and pressed Import, or, for a batch that is not reviewed, until the plan turns out to have no name taken - which
      * is why the plan is kept here rather than on the screen: the answer can arrive long after the screen that started
      * this was left.
+     *
+     * @return The New song form a pasted or shared text came to, which the caller puts up once nothing is in its way
+     *   (see [startQueue]); null for anything else, where the import has gone its own way.
      */
-    suspend fun import(request: ImportRequest) {
+    suspend fun import(request: ImportRequest): DialogType.NewSongFromText? {
         // Only ever called by the consumer of importQueue, which waits for each import to settle before the next and
         // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
         // holds by construction; it is kept so that a second caller could not start an import over a running one.
-        if (request.source.isEmpty || _isImporting.value || activeRequest != null) return
+        if (request.source.isEmpty || _isImporting.value || activeRequest != null) return null
         val isReviewed = request.isReviewed
         if (isReviewed) {
             activeRequest = request
             // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
             reportState.show(ImportReport.Loading(request.source.name))
         }
-        prepare(request = request, isReviewed = isReviewed)
+        return prepare(request = request, isReviewed = isReviewed)
     }
 
-    /** Downloads, reads and compares the batch of [request], and hands the plan on to the review or to the writing. */
-    private suspend fun prepare(request: ImportRequest, isReviewed: Boolean) {
+    /**
+     * Downloads, reads and compares the batch of [request], and hands the plan on to the review or to the writing, or
+     * returns the New song form it came to, see [import].
+     */
+    private suspend fun prepare(request: ImportRequest, isReviewed: Boolean): DialogType.NewSongFromText? {
         _isImporting.update { true }
         isPreparationCancelled = false
         // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
@@ -241,7 +247,10 @@ internal class ImportController(
             deferred.await()
         } catch (exception: CancellationException) {
             // The user's Cancel cancels only the deferred; the consumer itself still being active is what tells the two apart.
-            if (isPreparationCancelled && currentCoroutineContext().isActive) return onPreparationCancelled(isReviewed)
+            if (isPreparationCancelled && currentCoroutineContext().isActive) {
+                onPreparationCancelled(isReviewed)
+                return null
+            }
             _importProgress.value = null
             _isImporting.value = false
             throw exception
@@ -253,7 +262,10 @@ internal class ImportController(
         }
         // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
         // main thread, behind a click already queued there): it was still pressed while the screen said "reading", so it wins.
-        if (isPreparationCancelled) return onPreparationCancelled(isReviewed)
+        if (isPreparationCancelled) {
+            onPreparationCancelled(isReviewed)
+            return null
+        }
         _importProgress.value = null
         when (outcome) {
             is Preparation.Failed -> {
@@ -274,9 +286,10 @@ internal class ImportController(
                 val plan = outcome.plan
                 val newSongDialog = if (request.isNewSongFromText) newSongFromTextDialogOf(plan) else null
                 if (newSongDialog != null) {
-                    // The form is not an import: nothing waits for it, and closing it writes nothing.
+                    // The form is not an import, and closing it writes nothing: no progress bar runs under it, and it is
+                    // the queue that puts it up, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
-                    dialogHost.showDialog(newSongDialog)
+                    return newSongDialog
                 } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && !plan.isLoneSongWrittenAsIs) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
@@ -289,6 +302,7 @@ internal class ImportController(
                 }
             }
         }
+        return null
     }
 
     /** The download, where the batch is an address, and the reading and comparing, as one cancellable piece of work. */
@@ -544,7 +558,7 @@ internal class ImportController(
                 // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue
-                import(request)
+                import(request)?.let { form -> showNewSongForm(form) }
                 // The next batch waits for this one's review too: it would have nowhere to be shown.
                 awaitImportSettled()
             } finally {
@@ -552,6 +566,27 @@ internal class ImportController(
                 // preparation was cancelled, failed, or left a review that was answered or abandoned.
                 _queuedImportCount.update { it - 1 }
                 request.settled.complete(Unit)
+            }
+        }
+    }
+
+    /**
+     * Puts up the New song form of a pasted or shared text once nothing is in its way, as the import screen waits (see
+     * [ImportReportState.awaitNothingInTheWay]), and suspends until it has left: answered, closed, or replaced by another
+     * dialog. It holds the queue as an unanswered review does, so that texts arriving together are offered one after
+     * another rather than each replacing the form before it, which would keep the first one's values; and since the
+     * queue's count stays up meanwhile, What's new waits for it too.
+     */
+    private suspend fun showNewSongForm(form: DialogType.NewSongFromText) {
+        while (true) {
+            reportState.awaitNothingInTheWay()
+            // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
+            awaitImportSettled()
+            if (isLeaving()) return
+            // What's new waits for no dialog too and can win the race, in which case this waits for it to go.
+            if (dialogHost.showIfNoneIsShown(form)) {
+                dialogHost.openDialogs.first { form !in it }
+                return
             }
         }
     }
