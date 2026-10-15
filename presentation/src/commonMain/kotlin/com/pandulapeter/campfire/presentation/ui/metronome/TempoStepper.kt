@@ -42,11 +42,11 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The tempo stepper of a song, the transposition's twin gesture for gesture: highlighted while the song plays at a
- * tempo of its own here, and one tap on the value puts it back to the file's. Its buttons repeat while held, since a
+ * tempo of its own here, and its reset mark puts it back to the file's. Its buttons repeat while held, since a
  * tempo is often far from where it starts. The Metronome tab steps its own tempo with the same pill, so that a tempo is
  * set the same way wherever it is set — always plainly and with no reset there, since that tempo is nobody's override.
  *
- * @param isDefault Whether [bpm] is the one a tap on the value would put back, which is when the value is drawn plainly.
+ * @param isDefault Whether [bpm] is the one the reset mark would put back, which is when the value is drawn plainly.
  * @param valueKey What a new tempo cross-fades in for, see [Stepper]: every change by default, and something that stays
  * the same across the changes that come many to a second where the caller has such a source, a slider being dragged.
  * @param onSet Sets a tempo tapped in or typed: the pill ends in a Tap segment, since tapping along with a song sets the
