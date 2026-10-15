@@ -19,8 +19,8 @@ The editor's Shortcuts toolbar and its control row.
 
 ### Shortcut rules
 
-- Toolbar buttons and the Tab menu (`EditorToolbarMenuButton`) **take no focus**, or the keyboard closes on every tap
-  and the insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
+- Toolbar buttons and the Tab and Chord shape menus (`EditorToolbarMenuButton`) **take no focus**, or the keyboard
+  closes on every tap and the insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
 - Everything in braces goes on a line of its own (the only way ChordPro reads a directive).
 - Deliberately absent: `{new_song}` (one song per editor) and `{new_page}` / `{column_break}` (Campfire flows sections
   into columns itself). `{transpose}` is offered only as **Key change**, written at the caret, never in the header: one
@@ -30,9 +30,10 @@ The editor's Shortcuts toolbar and its control row.
   as typed, so hand-written directives count); Tag and Language stay tappable. Tempo and Time signature go into the
   header while it has none of their kind, otherwise at the caret's line as a change (`ChordProHeader.insertChangeable`).
 - Tab asks what the tab is for (Any instrument, or one with frets → `{start_of_tab-<id>}`, closed by plain
-  `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor` (see `ui/CLAUDE.md`'s Tabs follow the
-  instrument). With a selection it only wraps it (likely a pasted tab).
-- Chord shape: see `ui/chords/CLAUDE.md`.
+  `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor`: that instrument's strings in standard tuning
+  (Any: the player's instrument's, a guitar's for a fretless one), whatever the player's own tuning. With a selection
+  it only wraps it (likely a pasted tab).
+- Chord shape asks the instrument the same way and always writes a standard-tuning shape: see `ui/chords/CLAUDE.md`.
 
 ### Folding
 

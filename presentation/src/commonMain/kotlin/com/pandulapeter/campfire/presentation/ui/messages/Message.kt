@@ -49,9 +49,6 @@ sealed interface Message {
     /** The editor was reopened on the unsaved text a previous run left when it ended in the background. */
     data object EditorDraftRestored : Message
 
-    /** The editor's Chord shape button wrote a definition in standard tuning for a player whose diagrams are in another. */
-    data object ChordShapeWrittenForStandardTuning : Message
-
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message
 

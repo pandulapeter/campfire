@@ -48,31 +48,21 @@ internal fun tabPlayerOf(
 )
 
 /**
- * The lines of the empty staff the editor writes for a new tab: the strings of [instrument] tuned to [tuning], or a
- * guitar's in standard tuning for an instrument a tab is not played on, which is the tab whoever reads the file is
- * most likely to play. Named in [notation], the one the editor's field is typed in, as the chords around it are: Save
- * writes them into the file in the standard one.
- */
-internal fun emptyTabStaffOf(instrument: UserPreferences.Instrument, tuning: InstrumentTuning?, notation: ChordNotation) = ChordProTabs.emptyStaff(
-    strings = tuning?.takeIf { instrument.hasFrets }?.strings ?: InstrumentTuning.GUITAR.strings,
-    stringName = { note -> noteName(note, notation) },
-)
-
-/**
- * The empty staff the editor writes for a tab for [tabInstrument], whose id its selector names: the player's own strings
- * ([emptyTabStaffOf] of [instrument] tuned to [tuning]) where it is the instrument in their hands or where the tab names
- * none, and the standard tuning of [tabInstrument] otherwise, since the player's tuning is of another instrument.
+ * The lines of the empty staff the editor writes for a new tab for [tabInstrument], whose id its selector names, or for
+ * the player's own [instrument] where the tab names none: its strings in standard tuning, or a guitar's for an instrument
+ * a tab is not played on, which is the tab whoever reads the file is most likely to play. Standard whatever the player's
+ * own tuning, since that is what a tab is read in everywhere else; the staff names its strings all the same, so one
+ * retuned by hand still says what it is written in. Named in [notation], the one the editor's field is typed in, as the
+ * chords around it are: Save writes them into the file in the standard one.
  */
 internal fun emptyTabStaffFor(
     tabInstrument: UserPreferences.Instrument?,
     instrument: UserPreferences.Instrument,
-    tuning: InstrumentTuning?,
     notation: ChordNotation,
-) = if (tabInstrument == null || tabInstrument == instrument) {
-    emptyTabStaffOf(instrument, tuning, notation)
-} else {
-    emptyTabStaffOf(tabInstrument, tabInstrument.tunings.firstOrNull(), notation)
-}
+) = ChordProTabs.emptyStaff(
+    strings = (tabInstrument ?: instrument).takeIf { it.hasFrets }?.tunings?.firstOrNull()?.strings ?: InstrumentTuning.GUITAR.strings,
+    stringName = { note -> noteName(note, notation) },
+)
 
 /**
  * The instruments a tab can be written for, in the order the editor's Tab button offers them: every one with frets,

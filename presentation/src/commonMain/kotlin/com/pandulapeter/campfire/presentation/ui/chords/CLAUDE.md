@@ -95,9 +95,10 @@ in the song as the page plays it, and closes if it is gone.
 
 ## The editor
 
-Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row: writes a `{define}` for the chord at the caret
-into the header with the standard-tuning shape the player would see (their choice under the instrument key, else the
-app's first; a guitar's for an instrument without shapes), frets selected, or moves the caret to an existing line's
-frets. Where the diagrams are in a tuning that doesn't draw definitions it says so
-(`Message.ChordShapeWrittenForStandardTuning`). The preview's Chords section shows every definition in the text, each on
-its own instrument, whatever the switches.
+Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row and, like Tab, asks which instrument first
+(`chordShapeInstruments`: every one with shapes, the twelve-string being the guitar). It writes a `{define}` for the
+chord at the caret into the header, **always the standard-tuning shape** whatever the player's tuning (ChordPro gives a
+definition none): their choice under that instrument's key, else the app's first, frets selected; or it moves the caret
+to an existing line's frets for that instrument. With the caret in no chord it writes a whole placeholder (a C, name
+selected), since a line to edit teaches the syntax and an empty `{define: }` does not. The preview's Chords section shows every definition in the text, each
+on its own instrument, whatever the switches.

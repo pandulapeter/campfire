@@ -70,7 +70,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.resources.song_editor_tab_any_instrument
-import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
+import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInstruments
+import com.pandulapeter.campfire.presentation.ui.instrument.chordInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
@@ -93,8 +94,8 @@ import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
  *
  * @param text The text of [textFieldState] as one string, which the screen copies once per edit for everything that
  *   follows it rather than each of them copying it again.
- * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with, see
- *   [chordShapeInsertion].
+ * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with for the instrument
+ *   picked from its menu ([chordShapeInstruments]), see `chordShapeInsertion`.
  * @param tabStaff The empty staff the Tab button writes where nothing is selected for the instrument picked from its
  *   menu, or for none, its strings named.
  */
@@ -127,10 +128,10 @@ internal fun EditorToolbar(
         ) {
             // A song defines as many chords as it has, so this one is never out of reach, like Tag and Language.
             EditorToolbarDivider()
-            EditorToolbarButton(
+            EditorToolbarMenuButton(
                 label = stringResource(Res.string.song_editor_insert_chord_shape),
-                isEnabled = true,
-                onClick = { textFieldState.insertChordShape(chordShapes) },
+                choices = chordShapeInstruments.map { instrumentLabel(it) },
+                onChoiceSelected = { index -> chordShapeInstruments[index].chordInstrument?.let { textFieldState.insertChordShape(chordShapes, it) } },
             )
         }
         EditorToolbarRow(
@@ -213,8 +214,8 @@ private fun EditorToolbarRow(
  * The Tab button first asks what the tab is for: any instrument, which writes a plain `{start_of_tab}`, or one of the
  * instruments with frets ([tabInstruments]), whose id becomes its selector (`{start_of_tab-ukulele}`), so that of the
  * tabs written one after the other for several instruments each player is shown theirs. A tab with nothing selected
- * starts as an empty staff of one bar ([tabStaff]) — the player's strings for their own instrument or for any, the
- * standard tuning's for another — named, so that the file says what it is written in for whoever reads it in another
+ * starts as an empty staff of one bar ([tabStaff]) — the picked instrument's strings in standard tuning, the player's
+ * own instrument's for any — named, so that the file says what it is written in for whoever reads it in another
  * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
  * environment around it.
  */

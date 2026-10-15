@@ -155,7 +155,7 @@ The view model facade, the composition root, and the product rules every screen 
   string names are another instrument's open strings (`A E C G` → ukulele).
 - Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
 - Details screen and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
-  button writes an empty staff for the player's strings (guitar's for a fretless instrument), stored in standard
+  button writes an empty staff in standard tuning (see `screens/songEditor/toolbar/CLAUDE.md`), stored in standard
   notation on Save.
 
 ## Haptics

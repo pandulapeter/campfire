@@ -67,8 +67,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
@@ -78,7 +76,6 @@ import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
@@ -305,20 +302,14 @@ internal fun LoadedSongEditor(
                         text = text,
                         contentPadding = contentPadding,
                         chordShapes = remember(userPreferences) {
-                            // Other draws no diagrams, but a definition is still worth writing for whoever reads the
-                            // file on a guitar, the instrument ChordPro takes a `{define}` without one to be for.
-                            val tuning = userPreferences?.chordTuning() ?: ChordTuning.GUITAR
                             EditorChordShapes(
                                 notation = notation.toChordNotation(),
-                                tuning = tuning,
-                                storedShapes = userPreferences?.chordVoicings?.get(tuning.instrument.id).orEmpty(),
-                                onWrittenForStandardTuning = viewModel::onChordShapeWrittenForStandardTuning,
+                                storedShapes = userPreferences?.chordVoicings.orEmpty(),
                             )
                         },
                         tabStaff = remember(userPreferences) {
                             val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
-                            val tuning = userPreferences?.instrumentTuning
-                            { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, tuning, notation.toChordNotation()) }
+                            { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, notation.toChordNotation()) }
                         },
                     )
                 }

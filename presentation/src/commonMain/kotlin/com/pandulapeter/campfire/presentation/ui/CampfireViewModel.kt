@@ -599,9 +599,6 @@ class CampfireViewModel(
 
     private val isLeaving get() = appExitController.isLeaving
 
-    /** Called by the snackbar host once [message] has been on screen for its whole duration, or dismissed. */
-    fun onChordShapeWrittenForStandardTuning() = messageSink.sendMessage(Message.ChordShapeWrittenForStandardTuning)
-
     // Dialogs
 
     /**
