@@ -11,16 +11,24 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
+import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_artist
+import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_title
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.SongEditor.Companion.NEW_SONG_FILE_NAME
 import com.pandulapeter.campfire.presentation.ui.navigation.songEditorEntries
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PendingExit
@@ -54,6 +62,8 @@ import kotlinx.coroutines.withContext
  * @param popBackStack Leaves the screen on top, see `Navigator.popBackStack`.
  * @param takePendingExit Takes the exit the unsaved changes question was asked for, see `AppExitController.takePendingExit`.
  * @param requestExit Closes the application, see `CampfireViewModel.requestExit`.
+ * @param followNewSongCreated Puts the song the new song's first Save wrote under its editor, see
+ *   `Navigator.followNewSongCreated`.
  */
 internal class EditorSession(
     private val scope: CoroutineScope,
@@ -67,11 +77,14 @@ internal class EditorSession(
     private val getSongContent: GetSongContentUseCase,
     private val getEditorDraft: GetEditorDraftUseCase,
     private val saveEditorDraft: SaveEditorDraftUseCase,
+    private val draftSongFromText: DraftSongFromTextUseCase,
+    private val createSongFromText: CreateSongFromTextUseCase,
     private val updateBackStack: (SnapshotStateList<CampfireDestination>.() -> Unit) -> Unit,
     private val isSongShownOnTop: (fileName: String) -> Boolean,
     private val popBackStack: () -> Unit,
     private val takePendingExit: () -> PendingExit?,
     private val requestExit: (onExit: () -> Unit, onCancelled: () -> Unit) -> Unit,
+    private val followNewSongCreated: (fileName: String) -> Unit,
 ) {
 
     /**
@@ -167,6 +180,33 @@ internal class EditorSession(
         }
     }
 
+    /**
+     * Opens the editor on a pasted, dropped or shared [text] that is one song the library does not hold, which has no
+     * file until its first Save (see [CampfireDestination.SongEditor.NEW_SONG_FILE_NAME]): shaped like a new song, with
+     * a placeholder title and artist for what it does not declare, the title's selected to be typed over. Nothing is
+     * unsaved in an editor it replaces on top: the import queue waits out one that has (see `ImportController`). The
+     * draft is put on disk at once rather than at the next pause, since it is now the only copy of a share that the
+     * iOS share extension's inbox lets go of.
+     */
+    suspend fun openNewSongEditor(text: String) {
+        arePreferencesLoaded.first { it }
+        val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
+        val draft = editorTextOf(
+            draftSongFromText(
+                text = text,
+                placeholderTitle = placeholderTitle,
+                placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
+            )
+        )
+        onEditorTextChanged(fileName = NEW_SONG_FILE_NAME, text = draft)
+        retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, placeholderTitle))
+        updateBackStack {
+            if (lastOrNull() is CampfireDestination.SongEditor) removeAt(lastIndex)
+            add(CampfireDestination.SongEditor.newSong())
+        }
+        storeEditorDraft(currentEditorDraftToStore())
+    }
+
     private fun pushEditor(editor: CampfireDestination.SongEditor) {
         val entries = songEditorEntries(editor = editor, isSongShownOnTop = isSongShownOnTop(editor.fileName))
         updateBackStack { addAll(entries) }
@@ -246,6 +286,7 @@ internal class EditorSession(
         }
         editorDraftStoreMutex.withLock { storedEditorDraft = draft }
         if (draft == null) return false
+        val isNewSong = draft.fileName == NEW_SONG_FILE_NAME
         if (backStack.any { it is CampfireDestination.SongEditor }) {
             // An Android process restored on the editor. Its own saved state decides what the field holds, but the draft is
             // reported as the editor's text before the editor composes, so that the collector below does not take the
@@ -258,7 +299,7 @@ internal class EditorSession(
             }
             return false
         }
-        val content = getSongContent(draft.fileName)
+        val content = if (isNewSong) null else getSongContent(draft.fileName)
         // The draft is in the file's notation and the field shows the reader's, which only the preferences can say.
         arePreferencesLoaded.first { it }
         val text = editorTextOf(draft.text)
@@ -270,11 +311,11 @@ internal class EditorSession(
         // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
         // the moments before it composes - a pause, the update gate - hears "no".
         onEditorTextChanged(fileName = draft.fileName, text = text)
-        pushEditor(CampfireDestination.SongEditor(fileName = draft.fileName))
+        pushEditor(if (isNewSong) CampfireDestination.SongEditor.newSong() else CampfireDestination.SongEditor(fileName = draft.fileName))
         // Taken by the editor as its field, see LoadedSongEditor, the same way a field it retained across a rotation is.
         retainedEditorField = draft.fileName to TextFieldState(initialText = text)
         messageSink.sendMessage(Message.EditorDraftRestored)
-        if (content == null) messageSink.sendMessage(Message.EditedSongFileGone)
+        if (content == null && !isNewSong) messageSink.sendMessage(Message.EditedSongFileGone)
         return true
     }
 
@@ -338,7 +379,7 @@ internal class EditorSession(
      * Runs on [NonCancellable] because the last save of an editing session can be started as the screen is going
      * away, which cancels its scope.
      */
-    private suspend fun writeEditorText(fileName: String, text: String) = try {
+    private suspend fun writeEditorText(fileName: String, text: String) = if (fileName == NEW_SONG_FILE_NAME) writeNewSong(text) else try {
         _isSavingSong.update { true }
         val fileText = fileTextOf(text)
         withContext(NonCancellable) {
@@ -359,6 +400,45 @@ internal class EditorSession(
         false
     } finally {
         _isSavingSong.update { false }
+    }
+
+    /**
+     * The first Save of a song that has no file yet: the text written as it is, named by its header, and the editor
+     * going on under the file's name in place, with the song's details screen put under it. A song with no title is
+     * not written, since its title is what names the file. The draft follows the file before the editor does, so that
+     * nothing asking whether there is unsaved text in between hears that the new song was lost.
+     */
+    private suspend fun writeNewSong(text: String): Boolean {
+        val fileText = fileTextOf(text)
+        if (ChordProParser.parseMetadata(fileText).title.isNullOrBlank()) {
+            messageSink.sendMessage(Message.NewSongUntitled)
+            return false
+        }
+        return try {
+            _isSavingSong.update { true }
+            val fileName = withContext(NonCancellable) {
+                songTextStore.songWriteMutex.withLock {
+                    createSongFromText(fileText).fileName.also { fileName -> songTextStore.updateSongTexts { it + (fileName to fileText) } }
+                }
+            }
+            // Asked of the editor while it still listens under the name it was opened with, see writeEditorText.
+            val writtenText = editorTextOf(fileText)
+            if (writtenText != text) {
+                _editorTextEdits.tryEmit(EditorTextEdit(fileName = NEW_SONG_FILE_NAME) { current -> if (current == text) writtenText else current })
+            }
+            _editorDraft.update { draft -> if (draft?.fileName == NEW_SONG_FILE_NAME) draft.copy(fileName = fileName) else draft }
+            retainedEditorField = retainedEditorField?.let { (name, field) -> (if (name == NEW_SONG_FILE_NAME) fileName else name) to field }
+            followNewSongCreated(fileName)
+            true
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not save the new song: ${exception.message}")
+            messageSink.sendMessage(Message.SaveFailed)
+            false
+        } finally {
+            _isSavingSong.update { false }
+        }
     }
 
     /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */

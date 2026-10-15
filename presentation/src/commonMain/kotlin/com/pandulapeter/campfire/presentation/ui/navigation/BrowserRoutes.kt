@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
  * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an
  *   import running in the page that is gone;
+ * - the address of the screen under it again for the editor of a song that has no file yet, which a reload reopens from
+ *   its draft;
  * - the address of the screen under it again for the onboarding, which an address names nothing for either: a reload
  *   or a typed address opens the app rather than a page of questions. Its pages are one entry, which a Back steps
  *   through before it leaves, the way it closes a dialog, and the entry is put back on top while there is a page left;
@@ -82,7 +84,9 @@ internal object BrowserRoutes {
                     add(destination.setlistFileName?.let { "$SETLIST/${setlistPathSegment(it)}/$song" } ?: "$SONG/$song")
                 }
 
-                is CampfireDestination.SongEditor -> add("$SONG/${songPathSegment(destination.fileName)}/$EDIT")
+                // A song with no file yet has no address: a reload reopens its editor from the draft, over the screen
+                // under it, as the onboarding is reopened over nothing.
+                is CampfireDestination.SongEditor -> add(if (destination.isNewSong) lastOrNull() ?: ROOT else "$SONG/${songPathSegment(destination.fileName)}/$EDIT")
                 CampfireDestination.ImportReport -> add(IMPORT)
                 is CampfireDestination.Onboarding -> add(lastOrNull() ?: ROOT)
             }

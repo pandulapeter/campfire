@@ -18,7 +18,6 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
-import com.pandulapeter.campfire.presentation.ui.state.importing.newSongFromTextDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
@@ -102,7 +101,6 @@ internal class SavedDialogRestorer(
                 DialogType.SetlistPicker(song = songOf(saved.songFileName) ?: return false, setlistFileName = saved.setlistFileName),
             )
             is SavedDialog.SongEdit -> showSavedSongEdit(saved, songOf(saved.songFileName) ?: return false)
-            is SavedDialog.NewSongFromText -> dialogHost.showDialog(newSongFromTextDialog(text = saved.text, isConverted = saved.isConverted))
         }
         // An opener that found nothing to open on puts nothing up.
         return dialogHost.visibleDialog.value != null

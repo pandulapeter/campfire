@@ -53,7 +53,7 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   and deletes them after an hour. Inside: `files/<n>/<name>`, `texts/<n>.txt`, and `share.json`, decoded by
   `:presentation` (`ui/platform/CLAUDE.md`). A share goes to `inboxSharesToImport` as one `InboxShare` (one batch, read
   with one `ImportBudget`), one at a time, and its folder is deleted only once the app has taken it (its import settled,
-  a text's New song form gone), so a process ended before that offers it again.
+  or a text's editor open with its draft on disk), so a process ended before that offers it again.
 - `ShareInboxWriter.fileName` cannot call `LibraryFiles.normalizedName`, so the copy it writes is only lowercase,
   underscored, free of separators, control, invisible, and bidirectional characters and leading dots, and at most 200
   bytes.

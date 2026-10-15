@@ -45,18 +45,16 @@ internal class SongFilesController(
 ) {
 
     /**
-     * Creates the file and opens it in the editor, which is the only useful thing to do with an empty song - and with a
-     * pasted [text], whose conversion is a best attempt that the editor is where to check. The caret starts inside the
-     * template's empty verse, or at the top of a pasted song.
+     * Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. The caret
+     * starts inside the template's empty verse.
      */
-    fun createSong(values: Map<ChordProMetadataFields.Field, String>, text: String? = null) = messageSink.launchLibraryChange {
+    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = messageSink.launchLibraryChange {
         val song = createSongFile(
             title = values[ChordProMetadataFields.Field.TITLE].orEmpty(),
             artist = values[ChordProMetadataFields.Field.ARTIST].orEmpty(),
             metadata = values,
-            text = text,
         )
-        openEditor(song.fileName, text == null)
+        openEditor(song.fileName, true)
     }
 
     /**

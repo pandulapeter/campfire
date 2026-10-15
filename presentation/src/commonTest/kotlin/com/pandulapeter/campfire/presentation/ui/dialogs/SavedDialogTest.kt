@@ -14,14 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
-import androidx.compose.runtime.mutableStateListOf
-import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
-import com.pandulapeter.campfire.presentation.ui.state.SongLookup
-import com.pandulapeter.campfire.presentation.ui.state.importing.newSongFromTextDialog
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
@@ -102,41 +95,6 @@ class SavedDialogTest {
     }
 
     @Test
-    fun `a pasted text's form is saved with its text up to the limit and comes back as it was`() {
-        val text = "{title: A}\n{subtitle: Live}\n[G]Hello".padEnd(MAX_SAVED_TEXT_LENGTH, ' ')
-        val dialog = newSongFromTextDialog(text = text, isConverted = true)
-        assertEquals(SavedDialog.NewSongFromText(text = text, isConverted = true), savedDialogOf(listOf(dialog)))
-        assertEquals(dialog, newSongFromTextDialog(text = text, isConverted = true))
-        assertNull(newSongFromTextDialog(text = "$text ", isConverted = true).toSavedDialog())
-    }
-
-    @Test
-    fun `a saved pasted text's form is reopened once the library is read`() = runTest {
-        val store = SavedStateStore(SavedStateHandle(), backgroundScope)
-        store.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, SavedDialog.NewSongFromText(text = "[G]Hello", isConverted = false))
-        val dialogHost = DialogHost(backgroundScope)
-        val songLookup = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = false))
-        SavedDialogRestorer(
-            scope = backgroundScope,
-            savedStateStore = store,
-            dialogHost = dialogHost,
-            backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs),
-            songLookup = songLookup,
-            setlists = MutableStateFlow(emptyList()),
-            editorDraft = MutableStateFlow(null),
-            songTexts = MutableStateFlow(emptyMap()),
-            loadSongContent = { Job() },
-            duplicateSongDialogOf = { null },
-            showSavedSongEdit = { _, _ -> },
-        ).start()
-        runCurrent()
-        assertNull(dialogHost.visibleDialog.value)
-        songLookup.value = songLookup.value.copy(isLibraryRead = true)
-        runCurrent()
-        assertEquals(newSongFromTextDialog(text = "[G]Hello", isConverted = false), dialogHost.visibleDialog.value)
-    }
-
-    @Test
     fun `every saved sheet survives the saved state`() = runTest {
         val store = SavedStateStore(SavedStateHandle(), backgroundScope)
         listOf(
@@ -147,7 +105,6 @@ class SavedDialogTest {
             SavedDialog.SongPicker("s.setlist.json"),
             SavedDialog.SetlistPicker(songFileName = "a.cho", setlistFileName = null),
             SavedDialog.SongEdit(SavedDialog.SongEdit.Kind.PLAYING, songFileName = "a.cho", isEditorDraft = false, setlistFileName = "s.setlist.json"),
-            SavedDialog.NewSongFromText(text = "{title: A}\n[G]Hello", isConverted = true),
         ).forEach { saved ->
             store.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, saved)
             assertEquals(saved, store.restore<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY))

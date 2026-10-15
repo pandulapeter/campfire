@@ -15,8 +15,11 @@
   failure is returned, not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are
   found from the files, not the cache, and changed through `updateSetlist`; one already naming the new name keeps
   one entry.
-- `CreateSongUseCaseImpl`'s template carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`: the values
-  a song declaring none plays by. A pasted `text` replaces the template: the form's values are set into it (a blank one
-  removing its field), then each template line it has no line of is added (`ChordProMetadataFields.declare`).
+- The new song template (`NewSongTemplate.kt`) carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`:
+  the values a song declaring none plays by. `CreateSongUseCaseImpl` writes it with the New song form's values.
+- A pasted, dropped, or shared text is never written by a form: `DraftSongFromTextUseCaseImpl` gives it placeholders for
+  a missing or blank title and artist, then each template line it has no line of (`ChordProMetadataFields.declare`), and
+  prettifies it, for the editor to open on; `CreateSongFromTextUseCaseImpl` writes the editor's text byte for byte at
+  its Save, named by its header.
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.

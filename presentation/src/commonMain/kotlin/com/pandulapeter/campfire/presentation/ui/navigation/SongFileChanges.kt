@@ -44,3 +44,16 @@ internal fun CampfireDestination?.isShowingSong(fileName: String) =
 internal fun Navigator.closeScreensShowing(fileName: String) {
     while (backStack.lastOrNull().isShowingSong(fileName)) popBackStack()
 }
+
+/**
+ * Rewrites the editor of the new song to edit the file [fileName] its first Save has just written, in place, and puts
+ * that song's details screen under it, which is where leaving the editor lands from now on; the screen on top stays
+ * where it is. False, and nothing changed, where no editor of a new song is on the stack.
+ */
+internal fun MutableList<CampfireDestination>.followNewSongCreated(fileName: String): Boolean {
+    val index = indexOfFirst { it is CampfireDestination.SongEditor && it.isNewSong }.takeIf { it >= 0 } ?: return false
+    val editor = (this[index] as CampfireDestination.SongEditor).copy(fileName = fileName)
+    removeAt(index)
+    addAll(index, songEditorEntries(editor = editor, isSongShownOnTop = false))
+    return true
+}

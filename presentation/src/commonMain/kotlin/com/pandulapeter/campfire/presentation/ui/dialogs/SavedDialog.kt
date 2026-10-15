@@ -11,14 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.LONG_DOCUMENT_LENGTH
 import kotlinx.serialization.Serializable
 
 /**
  * The form sheet that was up as Android saved the process's state, by kind and file names only: [DialogType] carries
  * domain models and snapshots taken as the sheet opened, which are neither serializable nor worth saving, since the
- * sheet is reopened through its ordinary opener and its own saved fields find it again. The one exception is
- * [NewSongFromText], whose text exists nowhere else.
+ * sheet is reopened through its ordinary opener and its own saved fields find it again.
  *
  * Only the sheets something is typed or picked into have one. Every confirmation is left out, since putting back a
  * question nobody answered is worse than losing it, and `DeleteLibrary` above all, whose typed answer must never outlive
@@ -49,13 +47,6 @@ internal sealed interface SavedDialog {
 
     @Serializable
     data class SetlistPicker(val songFileName: String, val setlistFileName: String?) : SavedDialog
-
-    /**
-     * The New song form of a pasted or shared text, with the text: a share is not handed over again in a restored
-     * process. The values it offers are what the text declares, read again, see `newSongFromTextDialog`.
-     */
-    @Serializable
-    data class NewSongFromText(val text: String, val isConverted: Boolean) : SavedDialog
 
     /**
      * One of the [DialogType.SongEdit] sheets.
@@ -93,7 +84,6 @@ internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     is DialogType.DuplicateSetlist -> SavedDialog.DuplicateSetlist(setlist.fileName)
     is DialogType.SongPicker -> SavedDialog.SongPicker(setlist.fileName)
     is DialogType.SetlistPicker -> SavedDialog.SetlistPicker(songFileName = song.fileName, setlistFileName = setlistFileName)
-    is DialogType.NewSongFromText -> if (text.length <= MAX_SAVED_TEXT_LENGTH) SavedDialog.NewSongFromText(text, isConverted) else null
     is DialogType.SongTags -> savedSongEdit(SavedDialog.SongEdit.Kind.TAGS)
     is DialogType.SongLanguages -> savedSongEdit(SavedDialog.SongEdit.Kind.LANGUAGES)
     is DialogType.SongMetadata -> savedSongEdit(SavedDialog.SongEdit.Kind.METADATA)
@@ -102,14 +92,6 @@ internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     is DialogType.CoverArtSearch -> savedSongEdit(SavedDialog.SongEdit.Kind.COVER_ART)
     else -> null
 }
-
-/**
- * The longest text a [SavedDialog.NewSongFromText] carries; a longer one is not reopened. The saved state crosses to the
- * system in one transaction of about a megabyte for the whole process, written as UTF-16, and already holds the back
- * stack (up to `MAX_SAVED_BACK_STACK_LENGTH` JSON characters) and an editor's text (up to [LONG_DOCUMENT_LENGTH]), since
- * an editor can be on the stack under the form: this keeps the sum near 400 KB, far above any real chord sheet.
- */
-internal const val MAX_SAVED_TEXT_LENGTH = LONG_DOCUMENT_LENGTH
 
 private fun DialogType.SongEdit.savedSongEdit(kind: SavedDialog.SongEdit.Kind, setlistFileName: String? = null) = SavedDialog.SongEdit(
     kind = kind,

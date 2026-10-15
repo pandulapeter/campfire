@@ -94,10 +94,13 @@ internal fun SongEditorScreen(
             }
         )
     }
+    // A song that has no file yet has nothing to read: its text is the draft's, and the field is compared with none.
     LaunchedEffect(destination.fileName) {
-        viewModel.songTextStore.loadSongContent(destination.fileName).join()
+        if (!destination.isNewSong) viewModel.songTextStore.loadSongContent(destination.fileName).join()
         viewModel.editorSession.editorDraftRecovery.await()
-        if (initialText == null && hasOpened) initialText = viewModel.songTextStore.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
+        if (initialText == null && (hasOpened || destination.isNewSong)) {
+            initialText = viewModel.songTextStore.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
+        }
         initialText = initialText ?: viewModel.songTextStore.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true
     }

@@ -37,7 +37,6 @@ class PastedSongControllerTest {
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
     private val isImporting = MutableStateFlow(false)
     private val isPerformanceModeEnabled = MutableStateFlow(false)
-    private var hasUnsavedEditorText = false
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
     private val importSettled = CompletableDeferred<Unit>()
     private lateinit var messageSink: MessageSink
@@ -53,7 +52,6 @@ class PastedSongControllerTest {
             backStack = backStack,
             isImporting = isImporting,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
-            hasUnsavedEditorText = { hasUnsavedEditorText },
             enqueueImport = { files, isNewSongFromText ->
                 queued += files to isNewSongFromText
                 importSettled
@@ -84,17 +82,10 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `in read only mode a text is an ordinary import rather than a form`() = runTest {
+    fun `in read only mode a text is still a new song`() = runTest {
         isPerformanceModeEnabled.value = true
         controller().newSongFromText("Am  C\nHello")
-        assertFalse(queued.single().second)
-    }
-
-    @Test
-    fun `with unsaved text in the editor a text is an ordinary import rather than a form`() = runTest {
-        hasUnsavedEditorText = true
-        controller().newSongFromText("Am  C\nHello")
-        assertFalse(queued.single().second)
+        assertTrue(queued.single().second)
     }
 
     @Test

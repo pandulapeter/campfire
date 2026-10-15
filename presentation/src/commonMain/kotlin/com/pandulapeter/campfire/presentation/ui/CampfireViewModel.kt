@@ -44,7 +44,9 @@ import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.CreateSongUseCase
+import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
@@ -164,6 +166,8 @@ class CampfireViewModel(
     private val saveEditorDraft: SaveEditorDraftUseCase,
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     createSong: CreateSongUseCase,
+    draftSongFromText: DraftSongFromTextUseCase,
+    createSongFromText: CreateSongFromTextUseCase,
     duplicateSong: DuplicateSongUseCase,
     private val editSongs: EditSongsUseCase,
     deleteSong: DeleteSongUseCase,
@@ -401,11 +405,14 @@ class CampfireViewModel(
         getSongContent = getSongContent,
         getEditorDraft = getEditorDraft,
         saveEditorDraft = saveEditorDraft,
+        draftSongFromText = draftSongFromText,
+        createSongFromText = createSongFromText,
         updateBackStack = { navigator.updateBackStack(update = it) },
         isSongShownOnTop = navigator::isSongShownOnTop,
         popBackStack = { navigator.popBackStack() },
         takePendingExit = { appExitController.takePendingExit() },
         requestExit = { onExit, onCancelled -> requestExit(onExit = onExit, onCancelled = onCancelled) },
+        followNewSongCreated = navigator::followNewSongCreated,
     )
 
     internal val overrides: PlayingOverrides = PlayingOverrides(
@@ -474,6 +481,7 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         reportState = importReportState,
         openImportedSong = { navigator.openImportedSong(it) },
+        openNewSongEditor = { editorSession.openNewSongEditor(it) },
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
@@ -491,7 +499,6 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         isImporting = importController.isImporting,
         isPerformanceModeEnabled = preferencesController.isPerformanceModeEnabled,
-        hasUnsavedEditorText = { editorSession.hasUnsavedEditorText() },
         enqueueImport = { files, isNewSongFromText ->
             importController.enqueueImport(
                 source = ImportSource.Files(files),

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.snapshotFlow
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
@@ -61,6 +62,8 @@ import kotlin.time.Duration.Companion.seconds
  * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
  * @param openImportedSong Opens the one song the system handed over, see `Navigator.openImportedSong`.
+ * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
+ *   `EditorSession.openNewSongEditor`.
  * @param songLookup The library as the screens look songs up in it, which the song to open is waited for in.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
@@ -72,6 +75,7 @@ internal class ImportController(
     private val backStack: List<CampfireDestination>,
     private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
+    private val openNewSongEditor: suspend (text: String) -> Unit,
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
@@ -164,14 +168,14 @@ internal class ImportController(
 
     /**
      * Puts a batch at the end of [importQueue] and returns what completes once it is over: reviewed, the import the
-     * review decided on written, and its result dismissed, or its New song form gone. An empty batch is not queued at all.
+     * review decided on written, and its result dismissed, or its new song open in the editor, whose draft holds it from
+     * then on. An empty batch is not queued at all.
      *
      * @param shouldReview False for the demo library, whose contents are known and asked for by name: it is written at
      *   once, and only a name it finds taken puts the import screen up.
      * @param isNewSongFromText True for a text pasted, dropped or shared as a new song: where it turns out to be one song
-     *   the library does not hold, nothing is written and the New song form opens on it instead (see
-     *   [newSongFromTextDialogOf]); one that declares its own title and artist is written and opened, as is one the
-     *   library holds; anything else - a songbook pasted whole - is the import it would be as a file.
+     *   the library does not hold, nothing is written and the editor opens on it instead (see [newSongOf]); one the
+     *   library holds is opened; anything else - a songbook pasted whole - is the import it would be as a file.
      */
     fun enqueueImport(
         source: ImportSource,
@@ -215,10 +219,10 @@ internal class ImportController(
      * is why the plan is kept here rather than on the screen: the answer can arrive long after the screen that started
      * this was left.
      *
-     * @return The New song form a pasted or shared text came to, which the caller puts up once nothing is in its way
-     *   (see [startQueue]); null for anything else, where the import has gone its own way.
+     * @return The new song a pasted or shared text came to, which the caller opens the editor on once nothing is in its
+     *   way (see [startQueue]); null for anything else, where the import has gone its own way.
      */
-    suspend fun import(request: ImportRequest): DialogType.NewSongFromText? {
+    suspend fun import(request: ImportRequest): ImportPlan.SongEntry? {
         // Only ever called by the consumer of importQueue, which waits for each import to settle before the next and
         // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
         // holds by construction; it is kept so that a second caller could not start an import over a running one.
@@ -234,9 +238,9 @@ internal class ImportController(
 
     /**
      * Downloads, reads and compares the batch of [request], and hands the plan on to the review or to the writing, or
-     * returns the New song form it came to, see [import].
+     * returns the new song it came to, see [import].
      */
-    private suspend fun prepare(request: ImportRequest, isReviewed: Boolean): DialogType.NewSongFromText? {
+    private suspend fun prepare(request: ImportRequest, isReviewed: Boolean): ImportPlan.SongEntry? {
         _isImporting.update { true }
         isPreparationCancelled = false
         // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
@@ -284,13 +288,13 @@ internal class ImportController(
                 // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing.
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
-                val newSongDialog = if (request.isNewSongFromText) newSongFromTextDialogOf(plan) else null
-                if (newSongDialog != null) {
-                    // The form is not an import, and closing it writes nothing: no progress bar runs under it, and it is
-                    // the queue that puts it up, since it may have to wait for whatever is on screen.
+                val newSong = if (request.isNewSongFromText) plan.newSongOf() else null
+                if (newSong != null) {
+                    // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
+                    // and it is the queue that opens it, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
-                    return newSongDialog
-                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && !plan.isLoneSongWrittenAsIs) {
+                    return newSong
+                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && plan.loneSong == null) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
@@ -558,7 +562,7 @@ internal class ImportController(
                 // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue
-                import(request)?.let { form -> showNewSongForm(form) }
+                import(request)?.let { song -> showNewSongEditor(song, request) }
                 // The next batch waits for this one's review too: it would have nowhere to be shown.
                 awaitImportSettled()
             } finally {
@@ -571,24 +575,23 @@ internal class ImportController(
     }
 
     /**
-     * Puts up the New song form of a pasted or shared text once nothing is in its way, as the import screen waits (see
-     * [ImportReportState.awaitNothingInTheWay]), and suspends until it has left: answered, closed, or replaced by another
-     * dialog. It holds the queue as an unanswered review does, so that texts arriving together are offered one after
-     * another rather than each replacing the form before it, which would keep the first one's values; and since the
-     * queue's count stays up meanwhile, What's new waits for it too.
+     * Opens the editor on the new song of a pasted or shared text once nothing is in its way, as the import screen waits
+     * (see [ImportReportState.awaitNothingInTheWay]: an editor it replaces has nothing unsaved), says how the text was
+     * read, and suspends until no editor is left on the back stack: the song saved and left, or discarded. It holds the
+     * queue as an unanswered review does, so that texts arriving together are opened one after another rather than each
+     * replacing the editor of the one before; and since the queue's count stays up meanwhile, What's new waits for it
+     * too. The request is settled as soon as the editor is open, since the editor's draft holds the text from then on,
+     * and the iOS share extension's inbox can let go of it.
      */
-    private suspend fun showNewSongForm(form: DialogType.NewSongFromText) {
-        while (true) {
-            reportState.awaitNothingInTheWay()
-            // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
-            awaitImportSettled()
-            if (isLeaving()) return
-            // What's new waits for no dialog too and can win the race, in which case this waits for it to go.
-            if (dialogHost.showIfNoneIsShown(form)) {
-                dialogHost.openDialogs.first { form !in it }
-                return
-            }
-        }
+    private suspend fun showNewSongEditor(song: ImportPlan.SongEntry, request: ImportRequest) {
+        reportState.awaitNothingInTheWay()
+        // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
+        awaitImportSettled()
+        if (isLeaving()) return
+        openNewSongEditor(song.text)
+        request.settled.complete(Unit)
+        messageSink.sendMessage(Message.NewSongFromText(isConverted = song.isConverted, hasChords = ChordProParser.summarize(song.text).hasChords))
+        snapshotFlow { backStack.none { it is CampfireDestination.SongEditor } }.first { it }
     }
 
     /** Notes whether the import screen is still on the back stack, and lets go of what it asked once it is not. */

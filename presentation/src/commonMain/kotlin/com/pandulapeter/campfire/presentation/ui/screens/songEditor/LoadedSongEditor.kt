@@ -66,6 +66,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
@@ -153,7 +154,9 @@ internal fun LoadedSongEditor(
     val hasUnsavedChanges by viewModel.editorSession.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
-    val editorSong = summary.toEditorSong(destination.fileName)
+    // A song with no file yet has no name to fall back on either.
+    val untitledTitle = if (destination.isNewSong) stringResource(Res.string.songs_new_song) else destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)
+    val editorSong = summary.toEditorSong(fileName = destination.fileName, untitledTitle = untitledTitle)
     val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
     val latestEditorSong by rememberUpdatedState(editorSong)
     val onOpenSongInfo = remember(viewModel) {
@@ -242,7 +245,7 @@ internal fun LoadedSongEditor(
             },
             title = {
                 EditorTitle(
-                    title = summary.metadata.displayTitle(destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
+                    title = summary.metadata.displayTitle(untitledTitle),
                     artist = summary.metadata.artist.orEmpty(),
                     coverArtUrl = summary.metadata.coverArt.takeIf { userPreferences?.isCoverArtEnabled == true },
                 )

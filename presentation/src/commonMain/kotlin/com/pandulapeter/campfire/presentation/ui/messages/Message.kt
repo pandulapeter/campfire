@@ -50,6 +50,15 @@ sealed interface Message {
     /** The editor was reopened on the unsaved text a previous run left when it ended in the background. */
     data object EditorDraftRestored : Message
 
+    /** A song with no file yet was not saved, since it has no title to name its file by. */
+    data object NewSongUntitled : Message
+
+    /**
+     * The editor was opened on a pasted, dropped or shared text as a new song: how the text was read, from chords over
+     * the lyrics ([isConverted]) or as ChordPro, or as lyrics alone where it has no chords.
+     */
+    data class NewSongFromText(val isConverted: Boolean, val hasChords: Boolean) : Message
+
     /** Paste from clipboard, or its shortcut, found no text on the clipboard. */
     data object ClipboardEmpty : Message
 

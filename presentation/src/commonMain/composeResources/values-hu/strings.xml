@@ -166,9 +166,11 @@
     <string name="songs_empty_hint">Hozz létre egy dalt, illessz be egyet a vágólapról, importálj dalokat, PDF- vagy Word-dokumentumokat és zip archívumokat, vagy add hozzá a bemutató könyvtárat.</string>
     <string name="songs_create_song">Dal létrehozása</string>
     <string name="songs_paste_from_clipboard">Beillesztés a vágólapról</string>
-    <string name="songs_paste_converted">A dalszöveg fölé írt akkordokat a Campfire a szövegbe illesztette. Ellenőrizd a címet és az előadót; utána a dal a szerkesztőben nyílik meg.</string>
-    <string name="songs_paste_chordpro">A szöveg már ChordPro formátumú, így változatlan maradt. Ellenőrizd a címet és az előadót; utána a dal a szerkesztőben nyílik meg.</string>
-    <string name="songs_paste_no_chords">Nem található benne akkord, így ez csak a dalszöveg. Ellenőrizd a címet és az előadót; utána a dal a szerkesztőben nyílik meg.</string>
+    <string name="songs_paste_converted">A dalszöveg fölé írt akkordokat a Campfire a szövegbe illesztette. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
+    <string name="songs_paste_chordpro">A szöveg már ChordPro formátumú, így változatlan maradt. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
+    <string name="songs_paste_no_chords">Nem található benne akkord, így ez csak a dalszöveg. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
+    <string name="new_song_placeholder_title">Új dal</string>
+    <string name="new_song_placeholder_artist">Ismeretlen előadó</string>
     <string name="paste_clipboard_empty">A vágólapon nincs beilleszthető szöveg.</string>
     <string name="paste_only_links">Egy link nem dal, és a Campfire nem nyit meg weboldalakat. Magukat az akkordokat és a dalszöveget másold ki.</string>
     <string name="paste_too_large">A szöveg hosszabb annál a 8 MB-nál, amennyit egy importálás feldolgoz.</string>
@@ -657,6 +659,7 @@
     <string name="song_editor_draft_lost">A nem mentett módosításokat nem sikerült visszaállítani</string>
     <string name="song_editor_draft_restored">A nem mentett módosítások visszaállítva</string>
     <string name="song_editor_file_gone">A dal fájlja már nincs a könyvtáradban. Mentéssel visszakerül.</string>
+    <string name="song_editor_untitled">Mentés előtt adj címet a dalnak</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
@@ -766,9 +769,7 @@
     <string name="song_details_lookup_credits_none">A MusicBrainz nem nevez meg dalszerzőt ehhez a felvételhez</string>
     <string name="song_details_lookup_credits_failed">A dalszerzőket nem sikerült lekérdezni</string>
     <string name="song_details_lookup_nothing_new">Ez a felvétel semmi olyat nem tartalmaz, ami ne szerepelne már az űrlapon</string>
-    <string name="song_details_lookup_attribution">Felvételek a MusicBrainzről és az iTunesból. Egyik sem tartja nyilván a dalok hangnemét és tempóját.</string>
-    <string name="song_details_lookup_musicbrainz">MusicBrainz</string>
-    <string name="song_details_lookup_itunes">iTunes</string>
+    <string name="song_details_lookup_attribution">Adatok a MusicBrainztől és az iTunestól.</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

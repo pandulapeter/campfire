@@ -19,10 +19,15 @@ import com.pandulapeter.campfire.data.model.song.normalizedTags
  * The song as the text being typed describes it, which is what the metadata dialogs of the preview's card and the cover
  * art sheet of the editor's menu are opened on: the library's entry describes the file, which the text may already
  * have moved away from.
+ *
+ * @param untitledTitle The title of a text that declares none.
  */
-internal fun ChordProSummary.toEditorSong(fileName: String) = Song(
+internal fun ChordProSummary.toEditorSong(
+    fileName: String,
+    untitledTitle: String = fileName.removeSuffix(LibraryFiles.SONG_EXTENSION),
+) = Song(
     fileName = fileName,
-    title = metadata.displayTitle(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
+    title = metadata.displayTitle(untitledTitle),
     artist = metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
     key = metadata.key?.takeIf { it.isNotBlank() },
     transpose = metadata.transpose,

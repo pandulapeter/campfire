@@ -40,7 +40,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.catalogue.Catalogue
 import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -49,16 +48,14 @@ import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_credits_failed
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_credits_loading
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_credits_none
-import com.pandulapeter.campfire.presentation.resources.song_details_lookup_itunes
-import com.pandulapeter.campfire.presentation.resources.song_details_lookup_musicbrainz
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_nothing_new
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_now
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
- * One recording the song details lookup found: its title, then on one line its artist, album, year and duration and
- * the catalogue it is from. Selected, it is outlined in the primary color and opens in place into its review — a box per
+ * One recording the song details lookup found: its title, then on one line its artist, album, year, and duration; the
+ * catalogues are credited once, under the list, rather than on every row. Selected, it is outlined in the primary color and opens in place into its review — a box per
  * value it would fill into the form, the value the form holds now under it, and on MusicBrainz a line saying where
  * asking for the songwriters is — rather than onto a screen of its own, so that Back and the close button mean what
  * they mean on every other sheet.
@@ -122,19 +119,12 @@ private fun CandidateSummary(
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
-    val catalogueName = stringResource(
-        when (candidate.catalogue) {
-            Catalogue.MUSIC_BRAINZ -> Res.string.song_details_lookup_musicbrainz
-            Catalogue.ITUNES -> Res.string.song_details_lookup_itunes
-        },
-    )
     Text(
         text = listOfNotNull(
             candidate.artist.takeIf { it.isNotBlank() },
             candidate.album,
             candidate.year,
             candidate.duration?.let(ChordProDuration::format),
-            catalogueName,
         ).joinToString(" · "),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

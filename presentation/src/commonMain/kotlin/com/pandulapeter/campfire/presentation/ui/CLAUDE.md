@@ -27,8 +27,8 @@ The view model facade, the composition root, and the product rules every screen 
 - Theme and language come from `GetUserPreferencesUseCase`, not `ScreenData`, so they don't wait for the library scan.
 - `visibleDialog` is written through `setVisibleDialog`, which drops work parked behind a dialog (the exit behind the
   unsaved changes question) once that dialog leaves; a dropped exit is reported to `requestExit`'s `onCancelled`,
-  because the macOS quit request must be answered. The song picker after a new setlist, What's new, and a
-  pasted text's New song sheet are shown only over no dialog (`DialogHost.showIfNoneIsShown`).
+  because the macOS quit request must be answered. The song picker after a new setlist and What's new are shown only
+  over no dialog (`DialogHost.showIfNoneIsShown`).
 - The import is parked on the import screen and dropped however that screen leaves the back stack.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
   `Message.OperationFailed` snackbar instead of a crash. An import's writes and the selection's tag/language writes run
@@ -77,8 +77,9 @@ The view model facade, the composition root, and the product rules every screen 
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
 - Settings keeps every row (the mode is switched off there); its two library actions are disabled, not hidden.
-- OS-handed files and shared texts are still imported (a text as an import offering Open). Paste from clipboard, its
-  Ctrl / Cmd + V, and dropped text are gone with the New buttons (`PastedSongController.isNewSongPasteAvailable`).
+- OS-handed files are still imported, and a shared text that is one new song still opens the editor on it (the mode's
+  one way in: the user asked for a song). Paste from clipboard, its Ctrl / Cmd + V, and dropped text are gone with the
+  New buttons (`PastedSongController.isNewSongPasteAvailable`).
 
 ## What a song carries in its file
 

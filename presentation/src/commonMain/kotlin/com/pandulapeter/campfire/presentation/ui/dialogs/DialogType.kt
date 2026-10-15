@@ -35,6 +35,7 @@ sealed interface DialogType {
     ) : DialogType
     data object NewSetlist : DialogType
     data object NewSong : DialogType
+
     /**
      * The New song form filled in with what [song] says about itself ([values], a snapshot of each field the form
      * offers, blank for nothing), which makes a copy of the song with whatever the user changed there written over it,
@@ -42,19 +43,6 @@ sealed interface DialogType {
      */
     data class DuplicateSong(val song: Song, val values: Map<ChordProMetadataFields.Field, String>) : DialogType
 
-    /**
-     * The New song form over a text that was pasted or dropped and turned out to be one song the library does not hold:
-     * [values] are what the converted [text] says for each field the form offers, and Create writes [text] under what
-     * the form says then (`SongFilesController.createSong`). [isConverted] and [hasChords] choose the line above the
-     * fields that says how the text was read. Reopened in a restored process when its text is at most
-     * `MAX_SAVED_TEXT_LENGTH` characters; the text is saved with it, see `SavedDialog.NewSongFromText`.
-     */
-    data class NewSongFromText(
-        val text: String,
-        val values: Map<ChordProMetadataFields.Field, String>,
-        val isConverted: Boolean,
-        val hasChords: Boolean,
-    ) : DialogType
     data object SongFilters : DialogType
     /**
      * Every setlist with a box each, which is how a song is both put into one and taken out of another.

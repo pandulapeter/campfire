@@ -34,8 +34,6 @@ import kotlinx.coroutines.launch
  * `.txt` file (see [sharedTextsToImportedFiles]), so it is converted, split and compared exactly as that file would be,
  * and the import decides what it comes to (see [ImportController.enqueueImport]'s `isNewSongFromText`).
  *
- * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which a shared text can arrive
- *   over: the New song form ends in the editor, so the song is imported and announced with Open instead.
  * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise, and
  *   returns what completes once they have settled.
  */
@@ -46,7 +44,6 @@ internal class PastedSongController(
     private val backStack: List<CampfireDestination>,
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
-    private val hasUnsavedEditorText: () -> Boolean,
     private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean) -> Deferred<Unit>,
 ) {
 
@@ -60,10 +57,9 @@ internal class PastedSongController(
             !dialogHost.overlayState.isAnyMenuOpen && !isPerformanceModeEnabled.value
 
     /**
-     * The one way from a text to a new song. Read only mode offers none of its own ways in, so a text that still arrives
-     * there is written as a song the system handed over would be, and offered to open, rather than put into a form
-     * that mode never shows; so is one that arrives while the editor holds unsaved text, which the form's Create would
-     * have to push another editor over.
+     * The one way from a text to a new song, which opens the editor on it, read only mode included: a text shared there
+     * is the user asking for a song, and the share is the one way in that mode leaves. One that arrives while the editor
+     * holds unsaved text waits in the import queue for that editor to be left.
      *
      * @param subject What the text was called where it came from, which names it where the text declares no title.
      * @return Completed once the text has settled: at once where it is answered with a message alone.
@@ -72,10 +68,7 @@ internal class PastedSongController(
         text.isBlank() -> answered(Message.ClipboardEmpty)
         text.isOnlyLinks() || text.isLinkWithTitle() -> answered(Message.PastedOnlyLinks)
         !text.fitsImport() -> answered(Message.PastedTextTooLarge)
-        else -> enqueueImport(
-            sharedTextsToImportedFiles(listOf(text), subject),
-            !isPerformanceModeEnabled.value && !hasUnsavedEditorText(),
-        )
+        else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject), true)
     }
 
     /**

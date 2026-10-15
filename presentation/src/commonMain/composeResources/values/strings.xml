@@ -166,9 +166,11 @@
     <string name="songs_empty_hint">Create a song, paste one from the clipboard, import songs, PDF or Word documents, and zip archives, or add the demo library.</string>
     <string name="songs_create_song">Create a song</string>
     <string name="songs_paste_from_clipboard">Paste from clipboard</string>
-    <string name="songs_paste_converted">Converted from chords written over the lyrics. Check the title and the artist; the song opens in the editor next.</string>
-    <string name="songs_paste_chordpro">Kept as the ChordPro it is written in. Check the title and the artist; the song opens in the editor next.</string>
-    <string name="songs_paste_no_chords">No chords were found, so this is a song of lyrics only. Check the title and the artist; the song opens in the editor next.</string>
+    <string name="songs_paste_converted">Converted from chords written over the lyrics. Check the title and the artist, then save.</string>
+    <string name="songs_paste_chordpro">Kept as the ChordPro it is written in. Check the title and the artist, then save.</string>
+    <string name="songs_paste_no_chords">No chords were found, so this is a song of lyrics only. Check the title and the artist, then save.</string>
+    <string name="new_song_placeholder_title">New song</string>
+    <string name="new_song_placeholder_artist">Unknown artist</string>
     <string name="paste_clipboard_empty">There is no text on the clipboard to paste.</string>
     <string name="paste_only_links">A link is not a song, and Campfire does not open pages. Copy the chords and the lyrics themselves.</string>
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
@@ -657,6 +659,7 @@
     <string name="song_editor_draft_lost">The unsaved changes could not be restored</string>
     <string name="song_editor_draft_restored">The unsaved changes were restored</string>
     <string name="song_editor_file_gone">This song\'s file is no longer in the library. Save to put it back.</string>
+    <string name="song_editor_untitled">Give the song a title to save it</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Previous song</string>
@@ -766,9 +769,7 @@
     <string name="song_details_lookup_credits_none">MusicBrainz names no songwriters for this recording</string>
     <string name="song_details_lookup_credits_failed">The songwriters could not be looked up</string>
     <string name="song_details_lookup_nothing_new">This recording says nothing the form does not say already</string>
-    <string name="song_details_lookup_attribution">Recordings from MusicBrainz and iTunes. Neither lists a song\'s key or tempo.</string>
-    <string name="song_details_lookup_musicbrainz">MusicBrainz</string>
-    <string name="song_details_lookup_itunes">iTunes</string>
+    <string name="song_details_lookup_attribution">Data from MusicBrainz and iTunes.</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
-import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
@@ -55,6 +54,7 @@ class ImportControllerQueueTest {
     private var prepareCount = 0
     private var importCount = 0
     private val openedSongs = mutableListOf<String>()
+    private val newSongTexts = mutableListOf<String>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
     private var plannedSongs = listOf(songEntry("new.cho"))
@@ -84,6 +84,11 @@ class ImportControllerQueueTest {
             backStack = backStack,
             reportState = reportState,
             openImportedSong = { openedSongs += it },
+            openNewSongEditor = { text ->
+                newSongTexts += text
+                backStack.removeAll { it is CampfireDestination.SongEditor }
+                backStack += CampfireDestination.SongEditor.newSong()
+            },
             songLookup = library,
             launchFileTransfer = { null },
             isLeaving = { false },
@@ -166,37 +171,35 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a pasted text that is one new song opens the New song form and writes nothing`() = runTest {
+    fun `a pasted text that is one new song opens the editor on it and writes nothing`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
-        enqueuePaste()
+        val settled = enqueuePaste()
         runCurrent()
-        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertEquals(listOf("[G]Hello"), newSongTexts)
+        assertTrue(backStack.last().let { it is CampfireDestination.SongEditor && it.isNewSong })
+        assertTrue(settled.isCompleted)
         assertNull(reportState.importReport.value)
         assertFalse(controller.isImporting.value)
         assertEquals(0, importCount)
     }
 
     @Test
-    fun `a pasted song that declares its own title and artist is written and opened, with no form and no review`() = runTest {
+    fun `a pasted song that declares its own title and artist opens the editor too`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\n{artist: Band}\n[G]Hello"))
         startController()
         enqueuePaste()
         runCurrent()
-        Snapshot.sendApplyNotifications()
-        runCurrent()
-        assertNull(dialogHost.visibleDialog.value)
-        assertNull(reportState.importReport.value)
-        assertEquals(1, importCount)
-        assertEquals(listOf("new.cho"), openedSongs)
+        assertEquals(listOf("{title: Song}\n{artist: Band}\n[G]Hello"), newSongTexts)
+        assertEquals(0, importCount)
+        assertTrue(openedSongs.isEmpty())
     }
 
     @Test
     fun `a written song is opened only once the library lookup holds it`() = runTest {
-        plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\n{artist: Band}\n[G]Hello"))
         isLibraryIndexedAtOnce = false
         startController()
-        enqueuePaste()
+        handOver()
         runCurrent()
         Snapshot.sendApplyNotifications()
         runCurrent()
@@ -209,11 +212,10 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a written song is opened at once while the library is still being read, whose screen waits for it`() = runTest {
-        plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\n{artist: Band}\n[G]Hello"))
         isLibraryIndexedAtOnce = false
         library.value = SongLookup(songsByFileName = emptyMap(), isLibraryRead = false)
         startController()
-        enqueuePaste()
+        handOver()
         runCurrent()
         Snapshot.sendApplyNotifications()
         runCurrent()
@@ -222,10 +224,9 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a written song the lookup never holds is not opened`() = runTest {
-        plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\n{artist: Band}\n[G]Hello"))
         isLibraryIndexedAtOnce = false
         startController()
-        enqueuePaste()
+        handOver()
         runCurrent()
         Snapshot.sendApplyNotifications()
         advanceTimeBy(11.seconds)
@@ -235,7 +236,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a pasted songbook is reviewed like the file it would be, with no form`() = runTest {
+    fun `a pasted songbook is reviewed like the file it would be, with no editor`() = runTest {
         plannedSongs = listOf(songEntry("one.cho"), songEntry("two.cho"))
         startController()
         enqueuePaste()
@@ -243,98 +244,89 @@ class ImportControllerQueueTest {
         Snapshot.sendApplyNotifications()
         runCurrent()
         assertIs<ImportReport.Review>(reportState.importReport.value)
-        assertNull(dialogHost.visibleDialog.value)
+        assertTrue(newSongTexts.isEmpty())
         assertEquals(0, importCount)
     }
 
     @Test
-    fun `a pasted song the library already holds is opened, with no form and no review`() = runTest {
+    fun `a pasted song the library already holds is opened, with no editor and no review`() = runTest {
         plannedSongs = listOf(songEntry("held.cho", status = ImportPlan.Status.IDENTICAL, isConverted = true))
         startController()
         enqueuePaste()
         runCurrent()
         Snapshot.sendApplyNotifications()
         runCurrent()
-        assertNull(dialogHost.visibleDialog.value)
+        assertTrue(newSongTexts.isEmpty())
         assertNull(reportState.importReport.value)
         assertEquals(listOf("held.cho"), openedSongs)
     }
 
     @Test
-    fun `texts arriving together are offered one form at a time, each with its own values`() = runTest {
+    fun `texts arriving together are opened one editor at a time, the next once the editor is left`() = runTest {
         nextPlans += listOf(songEntry("first.cho", text = "{title: First}\n[G]Hello"))
         nextPlans += listOf(songEntry("second.cho", text = "{title: Second}\n[G]Hello"))
         startController()
         val firstSettled = enqueuePaste()
         val secondSettled = enqueuePaste()
         runCurrent()
-        val first = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
-        assertEquals("First", first.values[ChordProMetadataFields.Field.TITLE])
+        assertEquals(listOf("{title: First}\n[G]Hello"), newSongTexts)
         assertEquals(1, prepareCount)
-        assertFalse(firstSettled.isCompleted)
-        dialogHost.dismissSheet(first)
-        runCurrent()
         assertTrue(firstSettled.isCompleted)
-        val second = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
-        assertEquals("Second", second.values[ChordProMetadataFields.Field.TITLE])
         assertFalse(secondSettled.isCompleted)
+        leaveEditor()
+        assertEquals(listOf("{title: First}\n[G]Hello", "{title: Second}\n[G]Hello"), newSongTexts)
+        assertTrue(secondSettled.isCompleted)
         assertEquals(0, importCount)
     }
 
     @Test
-    fun `a pasted text's form is put up through the dialog listeners, which save it for a restored process`() = runTest {
-        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
-        startController()
-        val changes = mutableListOf<List<DialogType>>()
-        dialogHost.addOpenDialogsChange { _, after -> changes += after }
-        enqueuePaste()
-        runCurrent()
-        assertIs<DialogType.NewSongFromText>(changes.single().single())
-    }
-
-    @Test
-    fun `a text arriving while another dialog is open waits for it to close rather than replacing it`() = runTest {
+    fun `a text arriving while a dialog is open waits for it to close`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
         dialogHost.showDialog(DialogType.WhatsNew)
         enqueuePaste()
         runCurrent()
-        assertEquals(DialogType.WhatsNew, dialogHost.visibleDialog.value)
+        assertTrue(newSongTexts.isEmpty())
         dialogHost.dismissDialog()
         runCurrent()
-        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertEquals(listOf("[G]Hello"), newSongTexts)
     }
 
     @Test
-    fun `a text arriving over the onboarding shows its form only once the onboarding is left`() = runTest {
+    fun `a text arriving over the onboarding opens the editor only once the onboarding is left`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         val onboarding = CampfireDestination.Onboarding(isOpenedFromSettings = false)
         backStack += onboarding
         startController()
         enqueuePaste()
         runCurrent()
-        assertNull(dialogHost.visibleDialog.value)
+        assertTrue(newSongTexts.isEmpty())
         backStack.remove(onboarding)
         Snapshot.sendApplyNotifications()
         runCurrent()
-        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertEquals(listOf("[G]Hello"), newSongTexts)
     }
 
     @Test
-    fun `a file batch queued behind an open form is not read until the form is closed`() = runTest {
+    fun `a file batch queued behind a new song's editor is not read until the editor is left`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
         enqueuePaste()
         runCurrent()
-        val form = assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
         enqueue()
         runCurrent()
         assertEquals(1, prepareCount)
-        dialogHost.dismissSheet(form)
-        Snapshot.sendApplyNotifications()
-        runCurrent()
+        leaveEditor()
         assertEquals(2, prepareCount)
     }
+
+    private fun TestScope.leaveEditor() {
+        backStack.removeAll { it is CampfireDestination.SongEditor }
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+    }
+
+    private fun handOver() = controller.importFiles(listOf(ImportedFile(name = "new.cho", bytes = "{title: New}".encodeToByteArray())))
 
     private fun enqueuePaste() = controller.enqueueImport(
         source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),

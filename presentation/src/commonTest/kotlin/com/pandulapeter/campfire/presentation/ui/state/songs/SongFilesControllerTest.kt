@@ -61,7 +61,6 @@ class SongFilesControllerTest {
                     title: String,
                     artist: String,
                     metadata: Map<ChordProMetadataFields.Field, String>,
-                    text: String?,
                 ) = error("Not used.")
             },
             duplicateSongFile = object : DuplicateSongUseCase {

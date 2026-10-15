@@ -55,6 +55,10 @@ import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
+import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
+import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
+import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
+import com.pandulapeter.campfire.presentation.resources.songs_paste_no_chords
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
@@ -116,6 +120,15 @@ internal fun Messages(
         Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
         Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
+        Message.NewSongUntitled -> stringResource(Res.string.song_editor_untitled)
+        // Lyrics alone may well come through the conversion unchanged, so the chords are asked about first.
+        is Message.NewSongFromText -> stringResource(
+            when {
+                !current.hasChords -> Res.string.songs_paste_no_chords
+                current.isConverted -> Res.string.songs_paste_converted
+                else -> Res.string.songs_paste_chordpro
+            }
+        )
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         is Message.SongsUpdated -> pluralStringResource(Res.plurals.songs_selection_updated, current.count, current.count)
         is Message.SongsNotUpdated -> pluralStringResource(Res.plurals.songs_selection_failed, current.count, current.count)

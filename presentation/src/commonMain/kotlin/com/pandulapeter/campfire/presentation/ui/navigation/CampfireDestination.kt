@@ -130,20 +130,37 @@ sealed interface CampfireDestination : NavKey {
     /**
      * The raw text of one song, opened over whatever was showing.
      *
+     * @param fileName The song's file, or [NEW_SONG_FILE_NAME] for a pasted, dropped or shared song that has no file
+     *   until its first Save.
      * @param shouldStartInsideFirstSection Where the caret goes: a song that has just been created opens inside the
      *   empty verse its template ends with, an existing one at the top of its text.
+     * @param entryKey What the entry is to Navigation 3 in place of [fileName], given to the new song's editor: its
+     *   first Save rewrites [fileName] in place, and an entry keyed on it would be a new editor sliding in over itself.
      */
     @Serializable
     data class SongEditor(
         val fileName: String,
         val shouldStartInsideFirstSection: Boolean = false,
+        val entryKey: String? = null,
     ) : CampfireDestination {
 
         // The flag is deliberately not part of this: it says how to open the editor, not which editor it is.
-        override val contentKey get() = "$CONTENT_KEY_PREFIX$fileName"
+        override val contentKey get() = "$CONTENT_KEY_PREFIX${entryKey ?: fileName}"
+
+        /** Whether this is the editor of a song that has no file yet, see [NEW_SONG_FILE_NAME]. */
+        val isNewSong get() = fileName == NEW_SONG_FILE_NAME
 
         companion object {
             private const val CONTENT_KEY_PREFIX = "songEditor|"
+
+            /**
+             * The name the editor, its draft and the unsaved changes question know a song by that has no file yet. No
+             * song of the library can have it, since every song file ends in one of the song extensions.
+             */
+            const val NEW_SONG_FILE_NAME = ":new-song:"
+
+            /** The editor of a song that has no file yet, keyed by an id of its own, see [entryKey]. */
+            fun newSong() = SongEditor(fileName = NEW_SONG_FILE_NAME, entryKey = Uuid.random().toString())
         }
     }
 

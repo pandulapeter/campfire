@@ -161,11 +161,12 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Other apps' backups are read as archives (SongbookPro translated): `data/source/local/implementation`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
-- The editor always opens over its song's details screen: `ui/navigation`.
+- The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
 - Imports are reviewed before writing; existing files are skipped, collisions numbered or replaced after confirmation:
   `domain/implementation`.
-- A pasted, dropped, or shared chord sheet that is one new song opens the New song sheet, nothing written before Create,
-  unless it declares both title and artist, when it is imported and opened; never a link followed: `presentation`.
+- A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, read only mode included, with
+  placeholders for a missing title and artist; nothing is written before Save, which needs a title; never a link
+  followed: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; a shared web
   page is answered, never fetched; the extension never opens the app: `presentation`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,

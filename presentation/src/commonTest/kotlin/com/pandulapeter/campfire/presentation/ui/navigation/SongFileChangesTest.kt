@@ -61,4 +61,22 @@ class SongFileChangesTest {
         assertFalse(CampfireDestination.Songs.isShowingSong("b.cho"))
         assertFalse(null.isShowingSong("b.cho"))
     }
+
+    @Test
+    fun `a new song's first save puts its details screen under its editor, which keeps its key`() {
+        val editor = CampfireDestination.SongEditor.newSong()
+        val stack = mutableListOf(CampfireDestination.Songs, editor)
+        assertTrue(stack.followNewSongCreated("song.cho"))
+        val details = stack[1] as CampfireDestination.SongDetails
+        assertEquals(listOf("song.cho"), details.songFileNames)
+        assertEquals(editor.copy(fileName = "song.cho"), stack.last())
+        assertEquals(editor.contentKey, stack.last().contentKey)
+    }
+
+    @Test
+    fun `a stack with no new song's editor is left as it is`() {
+        val stack = mutableListOf<CampfireDestination>(CampfireDestination.Songs, CampfireDestination.SongEditor(fileName = "a.cho"))
+        assertFalse(stack.followNewSongCreated("song.cho"))
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.SongEditor(fileName = "a.cho")), stack)
+    }
 }

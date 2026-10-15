@@ -15,15 +15,12 @@ import com.pandulapeter.campfire.data.model.song.Song
 interface CreateSongUseCase {
 
     /**
-     * Writes a new song with its title, artist and optional metadata, and returns the song it became. The song is the
-     * template the editor opens on, or [text] where one is given - a chord sheet pasted in - with the values set into
-     * it, a blank one removing what the text declared for its field. Either way the file is named by the title and the
-     * artist, numbered where the name is taken.
+     * Writes a new song with its title, artist and optional metadata, and returns the song it became: the template the
+     * editor opens on, named by the title and the artist, numbered where the name is taken.
      */
     suspend operator fun invoke(
         title: String,
         artist: String,
         metadata: Map<Field, String> = emptyMap(),
-        text: String? = null,
     ): Song
 }

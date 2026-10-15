@@ -10,7 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Handle share sheet corner cases: multiple shares, iOS issues, always opening the editor.
+- Drag and drop support on all platforms where it's possible
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
 - Create screenshot UI tests for every screen and dialog
 - Review UI consistency

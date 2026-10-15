@@ -120,3 +120,14 @@ numbers nothing to count from.
   in a restored process waits for draft recovery (`EditorSession.editorDraftRecovery`) so a long document gets its text
   from the draft, not the file.
 - A failed first read shows the details screen's failed state (Retry, Close).
+
+## A new song from a pasted or shared text
+
+- Opened by `EditorSession.openNewSongEditor` on `NEW_SONG_FILE_NAME`, which no file has: nothing is read, nothing is
+  written before Save, and nothing is synced. The text is shaped like a new song (`DraftSongFromTextUseCase`: localized
+  placeholders for a missing title and artist, the template's header lines) with the placeholder title selected. Its
+  draft goes to disk at once (it is then the only copy of an iOS share) and survives process death like any draft.
+- Always unsaved, so Close asks; its Discard leaves nothing behind. Revert is off (no file to go back to).
+- **Save needs a title** (`Message.NewSongUntitled` otherwise; a kept placeholder is a title). The text is written byte
+  for byte under its header's name, numbered if taken (`CreateSongFromTextUseCase`); the draft and field follow the file,
+  and the editor goes on over the song's details screen.

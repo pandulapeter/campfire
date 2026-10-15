@@ -260,6 +260,11 @@ internal class Navigator(
         persistBackStack()
     }
 
+    /** See [followNewSongCreated]; past [updateBackStack], as [followSongRename] is, since nothing has been navigated. */
+    fun followNewSongCreated(fileName: String) {
+        if (backStack.followNewSongCreated(fileName)) persistBackStack()
+    }
+
     /** The file name of the song the given details screen is showing, which is where it was opened until it is paged. */
     fun currentSongFileName(destination: CampfireDestination.SongDetails) =
         songDetailsCurrentSongs[destination.id] ?: destination.songFileNames.getOrNull(destination.initialIndex) ?: destination.songFileNames.firstOrNull()

@@ -15,12 +15,16 @@ The destinations and the back stack.
 ### `CampfireDestination.kt`
 
 - **The editor always opens over its song's details screen** (`songEditorEntries`), whatever opened it, so leaving it
-  lands on the song, as the web's `song/{song}/edit` address does.
+  lands on the song, as the web's `song/{song}/edit` address does. The exception is a pasted or shared song with no
+  file yet (`SongEditor.NEW_SONG_FILE_NAME`, `isNewSong`): its editor goes alone, so a discard lands where it was
+  opened, and its first Save puts the song's details screen under it (`Navigator.followNewSongCreated`). It has no web
+  address of its own (the screen under it again; a reload reopens it from the draft).
 - Songs and setlists are addressed by **file name** everywhere (their identity on disk).
 - `SongDetails` is keyed by an `id` generated once per push, not by its file names, so a rename rewrites the entry
   without Navigation 3 taking it for a new one.
 - `SongEditor`'s `contentKey` is its file name behind its own prefix, excluding `shouldStartInsideFirstSection` (how it
-  opens, not which editor).
+  opens, not which editor); a new song's editor is keyed by its `entryKey` instead, so the first Save, which rewrites
+  its file name in place, is not a new editor sliding in.
 - `ImportReport` carries nothing (one import at a time) and is never restored (the report dies with the process);
   `Message.ImportInterrupted` says so where the import had not been written yet (a flag saved beside the back stack).
 - Top level selection resets the stack to `[Songs, tab?]`, so Back always returns to Songs. The tools behind one Tools
