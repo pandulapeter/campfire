@@ -8,8 +8,8 @@ description: Code style, commenting, and documentation conventions for the Campf
 Conventions for matching the pre-established style of this codebase. Architecture, the module graph,
 the build, the coding conventions and a one-line index of the product rules are in the root `CLAUDE.md`;
 the release pipeline is in `.github/CLAUDE.md`; everything else is in the nearest directory-scoped
-`CLAUDE.md` (each module's, and inside `:presentation` each package's and source set's). This skill is
-about how the code reads.
+`CLAUDE.md` (each module's, each `:presentation` source set's, and those of the packages that need one).
+This skill is about how the code reads.
 
 ## License header
 

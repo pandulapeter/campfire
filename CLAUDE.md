@@ -13,8 +13,8 @@ Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI 
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
 zip archives, and other apps' backups, picked in the app, opened with it, or shared to it (Android, the iOS share
-extension). Every module has a `CLAUDE.md` of its own (inside `:presentation`, every
-package and source set); read the nearest one before changing code there.
+extension). Every module has a `CLAUDE.md` of its own, as does every `:presentation` source set and every package with
+something the code cannot say; read the nearest one before changing code there.
 
 ## Privacy: what reaches the network
 
