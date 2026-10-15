@@ -36,7 +36,7 @@ import androidx.compose.ui.geometry.Rect
  * metronome otherwise take before anything focused sees them - but it is no overlay to the back stack or the browser's
  * history, and Escape is answered by the field itself. A press anywhere outside its stepper ends the typing
  * ([onPointerPressed], from the app's root): nothing else on the screen takes the focus from it, and a field left
- * focused once the user has moved on keeps its caret, its keyboard, and its floating Reset.
+ * focused once the user has moved on keeps its caret, and its keyboard.
  */
 @Stable
 internal class OverlayState {
