@@ -106,10 +106,10 @@ wrong or undo it".
   private state classes become `internal` top-level classes in files of their own, a pure algorithm moves next to its
   users in a file named for it, a Composable's visual groups become named children. `.github/scripts/check_sizes.py`
   fails only such a crossing — after every edit (the Claude Code hook in `.claude/settings.json`), before every commit
-  (`.githooks/pre-commit`) and on a pull request. What is already past a limit may change freely; when a change adds
-  a new responsibility to it, give that a file of its own, but splitting the rest is a review sweep's plan, not a side
-  task. A `CLAUDE.md` past its budget only gets a note: cut narration, never a rule. Moves and renames are judged
-  against the old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph
+  (`.githooks/pre-commit`) and in CI (`tests.yml`, on a pull request or a push to `master`). What is already past a
+  limit may change freely; when a change adds a new responsibility to it, give that a file of its own, but splitting
+  the rest is a review sweep's plan, not a side task. A `CLAUDE.md` past its budget only gets a note: cut narration,
+  never a rule. Moves and renames are judged against the old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph
   names, the color schemes; `strings.xml` and tests are never measured), added there in a commit of its own.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
