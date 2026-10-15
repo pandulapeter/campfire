@@ -178,10 +178,7 @@ class ChordVoicingsTest {
                     if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < 4, label)
                     instrument.droneString?.let { assertTrue(frets[it] == null || frets[it] == 0, "$label leaves its drone string open or muted") }
                     if (!instrument.playsChordOver) {
-                        val bottom = sounding.minBy { tuning.strings[it] + frets[it]!! }
-                        val lowest = (tuning.strings[bottom] + frets[bottom]!!) % 12
-                        val isOpenFifth = tuning.isOpen && chord.bass == null && 7 in chord.intervals && lowest == (chord.root + 7) % 12 && frets[bottom] == 0
-                        assertTrue(lowest == (chord.bass ?: chord.root) || isOpenFifth, "$label sounds its bass or root lowest, or an open tuning's open string its fifth")
+                        assertTrue(soundsBassLowest(chord, tuning, frets), "$label sounds its bass or root lowest, or an open tuning's open string its fifth")
                     }
                 }
             }

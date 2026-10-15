@@ -9,12 +9,10 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
+import com.pandulapeter.campfire.domain.implementation.RecordingSongRepository
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
-import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
-import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -71,16 +69,5 @@ class DuplicateSongUseCaseImplTest {
 
     private class FixedSongContentRepository(private val text: String?) : SongContentRepositoryStub() {
         override suspend fun loadSongContent(fileName: String, useCache: Boolean) = text?.let { SongContent(fileName = fileName, text = it) }
-    }
-
-    private class RecordingSongRepository : SongRepositoryStub() {
-        var text = ""
-        var name = "" to ""
-
-        override suspend fun createSong(title: String, artist: String, text: String): Song {
-            this.text = text
-            name = title to artist
-            return testSong(fileName = "song.cho", title = title, artist = artist)
-        }
     }
 }

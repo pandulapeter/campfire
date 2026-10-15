@@ -9,14 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
-import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
+import com.pandulapeter.campfire.presentation.ui.LowercaseSearchText
 
 internal fun testSongRenderer() = SongRenderer(
     normalizeText = object : NormalizeTextUseCase {
         override fun invoke(text: String) = text.lowercase()
     },
-    normalizeSearchText = object : NormalizeSearchTextUseCase {
-        override fun invoke(text: String) = text.lowercase()
-    },
+    normalizeSearchText = LowercaseSearchText,
 )

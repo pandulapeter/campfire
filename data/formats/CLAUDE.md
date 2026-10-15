@@ -58,6 +58,6 @@ rejected; ZIP64, encrypted, or otherwise compressed entries left out); `Inflater
 
 ## Tests
 
-`./gradlew :data:formats:desktopTest`. `commonTest` goes through `ReadableDocuments`, a mirror of what the local source
-does around the extractors; `desktopTest` checks against archives the JVM produced. End-to-end document goldens live in
-`:data:source:local:implementation`.
+`./gradlew :data:formats:desktopTest`. `commonTest` calls the extractors directly; `desktopTest` checks against archives
+the JVM produced. What the local source does around the extractors (size limit, extension, blank text, failure) and the
+end-to-end document goldens are tested in `:data:source:local:implementation`.

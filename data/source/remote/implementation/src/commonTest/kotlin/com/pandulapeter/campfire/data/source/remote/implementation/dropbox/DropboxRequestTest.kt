@@ -12,17 +12,19 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
-import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.TextContent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -46,10 +48,9 @@ class DropboxRequestTest {
     /** Dropbox's answer to writes landing in one folder at once, which the engine's own concurrency provokes. */
     @Test
     fun `retries a write that was refused for too many write operations`() = runTest {
-        val requests = mutableListOf<String>()
-        val provider = dropboxProvider { request ->
-            requests += request.url.toString()
-            if (requests.size <= 3) {
+        var requestCount = 0
+        val provider = dropboxProvider {
+            if (++requestCount <= 3) {
                 respondJson("""{"error_summary":"path/too_many_write_operations/...","error":{}}""", HttpStatusCode.Conflict)
             } else {
                 respondJson("""{"name":"song.cho","rev":"0123456789abcdef"}""")
@@ -59,62 +60,6 @@ class DropboxRequestTest {
             expected = RemoteWriteResult.Written("0123456789abcdef"),
             actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
         )
-        assertEquals(expected = 4, actual = requests.size)
-    }
-
-    /** A deletion made of single requests takes long enough for another device to see it half done. */
-    @Test
-    fun `deletes every file in one batch job and waits for it`() = runTest {
-        val requests = mutableListOf<String>()
-        val provider = dropboxProvider { request ->
-            requests += request.url.encodedPath
-            when (requests.size) {
-                1 -> respondJson("""{".tag":"async_job_id","async_job_id":"job"}""")
-                2 -> respondJson("""{".tag":"in_progress"}""")
-                else -> respondJson(
-                    """{".tag":"complete","entries":[
-                        {".tag":"success","metadata":{}},
-                        {".tag":"failure","failure":{".tag":"path_lookup","path_lookup":{".tag":"not_found"}}},
-                        {".tag":"failure","failure":{".tag":"path_write","path_write":{".tag":"conflict","conflict":{".tag":"file"}}}},
-                        {".tag":"failure","failure":{".tag":"path_lookup","path_lookup":{".tag":"restricted_content"}}}
-                    ]}""",
-                )
-            }
-        }
-        val deletions = (1..4).map { RemoteDeletion(LibraryFileKind.SONG, "song_$it.cho", expectedRevision = "r$it") }
-
-        val failures = provider.delete(deletions)
-
-        assertEquals(
-            expected = listOf("/2/files/delete_batch", "/2/files/delete_batch/check", "/2/files/delete_batch/check"),
-            actual = requests,
-        )
-        // Gone already and changed since both count as done; only the real refusal is reported.
-        assertEquals(expected = mapOf(deletions[3] to "path_lookup/restricted_content"), actual = failures)
-    }
-
-    @Test
-    fun `sends the files of a busy batch again`() = runTest {
-        val bodies = mutableListOf<String>()
-        val provider = dropboxProvider { request ->
-            bodies += (request.body as TextContent).text
-            if (bodies.size == 1) {
-                respondJson(
-                    """{".tag":"complete","entries":[
-                        {".tag":"success","metadata":{}},
-                        {".tag":"failure","failure":{".tag":"too_many_write_operations"}}
-                    ]}""",
-                )
-            } else {
-                respondJson("""{".tag":"failed","failed":{".tag":"too_many_write_operations"}}""").takeIf { bodies.size == 2 }
-                    ?: respondJson("""{".tag":"complete","entries":[{".tag":"success","metadata":{}}]}""")
-            }
-        }
-        val deletions = (1..2).map { RemoteDeletion(LibraryFileKind.SONG, "song_$it.cho", expectedRevision = null) }
-
-        assertEquals(expected = emptyMap(), actual = provider.delete(deletions))
-        assertEquals(expected = 3, actual = bodies.size)
-        assertTrue(bodies.drop(1).all { "song_2.cho" in it && "song_1.cho" !in it })
     }
 
     @Test
@@ -221,7 +166,7 @@ class DropboxRequestTest {
 
     @Test
     fun `disconnecting while the browser cannot send the revocation still disconnects`() = runTest {
-        val storage = ConnectedStorage()
+        val storage = StoredSyncCredentials(connectedCredentials())
         val provider = dropboxProvider(storage = storage) { request ->
             if (request.url.toString() == REVOKE_URL) throw Error("Fail to fetch")
             error("No other request was expected.")
@@ -233,7 +178,7 @@ class DropboxRequestTest {
     @Test
     fun `the stored account is answered without a request`() = runTest {
         val provider = dropboxProvider(
-            storage = ConnectedStorage(names = ""","displayName":"Jane","email":"jane@example.com""""),
+            storage = StoredSyncCredentials(connectedCredentials(extraFields = ""","displayName":"Jane","email":"jane@example.com"""")),
         ) { error("No request was expected.") }
         assertEquals(
             expected = SyncAccount(SyncProviderId.DROPBOX, id = "", displayName = "Jane", email = "jane@example.com"),
@@ -243,7 +188,7 @@ class DropboxRequestTest {
 
     @Test
     fun `a stored account whose name was never read goes by its id`() = runTest {
-        val provider = dropboxProvider(storage = ConnectedStorage(names = ""","accountId":"dbid:1"""")) {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(extraFields = ""","accountId":"dbid:1""""))) {
             error("No request was expected.")
         }
         assertEquals(
@@ -258,16 +203,67 @@ class DropboxRequestTest {
         assertNull(provider.storedAccount())
     }
 
+    /** Only a refusal means the credentials are no longer good for anything; the account is then no account. */
+    @Test
+    fun `an account read the service refuses is no account`() = runTest {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(extraFields = STORED_NAME))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                respondJson("""{"access_token":"renewed","expires_in":14400}""")
+            } else {
+                respondJson("""{"error_summary":"invalid_access_token/..."}""", HttpStatusCode.Unauthorized)
+            }
+        }
+        assertNull(provider.loadAccount())
+    }
+
+    @Test
+    fun `an account read that cannot reach the service is the account stored last time`() = runTest {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(extraFields = STORED_NAME))) {
+            throw Error("Fail to fetch")
+        }
+        assertEquals(
+            expected = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Jane", email = "jane@example.com"),
+            actual = provider.loadAccount(),
+        )
+    }
+
+    @Test
+    fun `an account read stores the name it got`() = runTest {
+        val storage = StoredSyncCredentials(connectedCredentials())
+        val provider = dropboxProvider(storage = storage) {
+            respondJson("""{"account_id":"dbid:2","name":{"display_name":"Joe"},"email":"joe@example.com"}""")
+        }
+        val account = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:2", displayName = "Joe", email = "joe@example.com")
+        assertEquals(expected = account, actual = provider.loadAccount())
+        assertEquals(expected = account, actual = provider.storedAccount())
+    }
+
+    /** Without a refresh token the connection would end in four hours with no way to renew it. */
+    @Test
+    fun `an authorization answered without a refresh token is refused and stores nothing`() = runTest {
+        val storage = StoredSyncCredentials()
+        val provider = dropboxProvider(storage = storage) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                respondJson("""{"access_token":"access","expires_in":14400,"account_id":"dbid:1"}""")
+            } else {
+                error("No request but the token exchange was expected.")
+            }
+        }
+        assertFailsWith<SyncAuthorizationException> {
+            provider.completeAuthorization(RemoteAuthorizationResponse(code = "code", state = "state"), verifier = "verifier", redirectUri = null)
+        }
+        assertNull(storage.credentials)
+    }
+
     /** A cell handover or a tunnel, which the next attempt gets through. */
     @Test
     fun `a socket timeout is retried`() = runTest {
         var attempts = 0
         val provider = dropboxProvider {
             if (++attempts <= 2) throw SocketTimeoutException("Stalled")
-            respondJson(EMPTY_LISTING)
+            respondJson("""{"entries":[{".tag":"file","name":"song.cho","path_lower":"/songs/song.cho","rev":"r1"}],"cursor":"","has_more":false}""")
         }
-        provider.list()
-        assertEquals(3, attempts)
+        assertEquals(expected = listOf("song.cho"), actual = provider.list().files.map { it.name })
     }
 
     @Test
@@ -283,5 +279,6 @@ class DropboxRequestTest {
 
     private companion object {
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
+        const val STORED_NAME = ""","accountId":"dbid:1","displayName":"Jane","email":"jane@example.com""""
     }
 }

@@ -9,14 +9,12 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 class DocxTextExtractorTest {
@@ -92,12 +90,11 @@ class DocxTextExtractorTest {
             ZipEntry("word/header1.xml", "not XML and never opened".encodeToByteArray()),
             ZipEntry("word/footnotes.xml", "not XML and never opened".encodeToByteArray()),
         ))
-        val source = ReadableDocuments
-        assertNotNull(source.extract(ImportedFile("song.docx", bytes)))
-        assertNull(source.extract(ImportedFile("song.docx", "%PDF-1.7".encodeToByteArray())))
-        assertNull(source.extract(ImportedFile("song.docx", ZipWriter.write(listOf(ZipEntry("other.xml", byteArrayOf(1)))))))
-        assertNull(source.extract(ImportedFile("song.doc", byteArrayOf(0xd0.toByte(), 0xcf.toByte(), 0x11, 0xe0.toByte()))))
-        assertNull(source.extract(ImportedFile("empty.docx", ZipWriter.write(listOf(ZipEntry("word/document.xml", document("<w:p/>").encodeToByteArray()))))))
+        assertEquals("Readable", DocxTextExtractor.extract(bytes).pages.single().lines.single().spans.single().text)
+        assertFails { DocxTextExtractor.extract("%PDF-1.7".encodeToByteArray()) }
+        assertFails { DocxTextExtractor.extract(ZipWriter.write(listOf(ZipEntry("other.xml", byteArrayOf(1))))) }
+        val empty = DocxTextExtractor.extract(ZipWriter.write(listOf(ZipEntry("word/document.xml", document("<w:p/>").encodeToByteArray()))))
+        assertTrue(empty.pages.flatMap { it.lines }.flatMap { it.spans }.all { it.text.isBlank() })
     }
 
     @Test

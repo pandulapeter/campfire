@@ -9,17 +9,15 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
@@ -27,11 +25,12 @@ import kotlin.time.measureTime
 class PdfTextExtractorTest {
     @Test
     fun `oversized shown strings stop at the glyph budget and cancellation propagates`() = runTest {
-        val source = ReadableDocuments
-        assertNull(source.extract(ImportedFile("huge.pdf", PdfTestWriter.song("BT /F1 10 Tf (" + "a".repeat(PdfTextExtractor.MAX_GLYPHS + 1) + ") Tj ET"))))
+        assertFailsWith<PdfLimitException> {
+            PdfTextExtractor.extract(PdfTestWriter.song("BT /F1 10 Tf (" + "a".repeat(PdfTextExtractor.MAX_GLYPHS + 1) + ") Tj ET"))
+        }
         val cancelled = launch(start = CoroutineStart.UNDISPATCHED) {
             coroutineContext.cancel()
-            source.extract(ImportedFile("cancelled.pdf", PdfTestWriter.song("BT /F1 10 Tf (text) Tj ET")))
+            PdfTextExtractor.extract(PdfTestWriter.song("BT /F1 10 Tf (text) Tj ET"))
             error("Cancelled extraction returned")
         }
         cancelled.join()
@@ -47,7 +46,7 @@ class PdfTextExtractorTest {
             append("ET")
         }
         val bytes = PdfTestWriter.song(content)
-        val elapsed = measureTime { assertNull(ReadableDocuments.extract(ImportedFile("padded.pdf", bytes))) }
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
         assertTrue(elapsed < 2.seconds, "Took $elapsed")
     }
 
@@ -319,7 +318,7 @@ class PdfTextExtractorTest {
             writer.add("<< /Type /Catalog /Pages 2 0 R >>")
             writer.add("<< /Type /Pages $tree >>")
             writer.add("<< /Type /Page >>")
-            assertNull(ReadableDocuments.extract(ImportedFile("invalid.pdf", writer.write())))
+            assertFails { PdfTextExtractor.extract(writer.write()) }
         }
     }
 
@@ -453,15 +452,14 @@ class PdfTextExtractorTest {
 
     @Test
     fun `protected scanned malformed and unmapped documents are unreadable`() = runTest {
-        val source = ReadableDocuments
-        assertNull(source.extract(ImportedFile("scan.pdf", PdfTestWriter.song("q Q"))))
-        assertNull(source.extract(ImportedFile("bad.pdf", "not a pdf".encodeToByteArray())))
-        assertNull(source.extract(ImportedFile("unknown.pdf", PdfTestWriter.song("BT /F1 10 Tf (abc) Tj ET", "/Type /Font /Subtype /Type1 /BaseFont /Unknown"))))
+        assertFails { PdfTextExtractor.extract(PdfTestWriter.song("q Q")) }
+        assertFails { PdfTextExtractor.extract("not a pdf".encodeToByteArray()) }
+        assertFails { PdfTextExtractor.extract(PdfTestWriter.song("BT /F1 10 Tf (abc) Tj ET", "/Type /Font /Subtype /Type1 /BaseFont /Unknown")) }
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [] >>")
-        assertNull(source.extract(ImportedFile("protected.pdf", writer.write("/Root 1 0 R /Encrypt 8 0 R"))))
-        assertNotNull(source.extract(ImportedFile("okay.pdf", PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))))
+        assertFails { PdfTextExtractor.extract(writer.write("/Root 1 0 R /Encrypt 8 0 R")) }
+        assertEquals("text", PdfTextExtractor.extract(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET")).pages.single().lines.single().spans.joinToString("") { it.text })
     }
 
     private fun pages(first: String, second: String, secondPage: String = ""): ByteArray {

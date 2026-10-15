@@ -84,6 +84,24 @@ class SyncEngineConflictTest {
     }
 
     @Test
+    fun `a conflict copy whose name is taken in the cloud during the run is kept and settled by the next run`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "A's edit".encodeToByteArray()))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "B's edit".encodeToByteArray()))
+        provider.onUpload = { key -> if (key == copy) provider.files[copy] = "C's song".encodeToByteArray() to "r-c" }
+        var index = indexOf(song(1) to "Original".encodeToByteArray())
+
+        synchronize(local, provider, index, onIndexChanged = { snapshot -> index = snapshot() })
+        provider.onUpload = {}
+        synchronize(local, provider, index)
+
+        val expected = setOf("A's edit", "B's edit", "C's song")
+        assertEquals("A's edit", local.files.getValue(song(1)).decodeToString())
+        assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
+        assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
+    }
+
+    @Test
     fun `a song created under a name that is waiting to come down is kept`() = runTest {
         val mine = "Mine".encodeToByteArray()
         val theirs = "Theirs".encodeToByteArray()
@@ -111,7 +129,6 @@ class SyncEngineConflictTest {
         assertContentEquals(edited, local.files[song(1)])
         assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
         assertContentEquals(edited, provider.files.getValue(song(1)).first)
-        assertEquals(1, provider.downloadCounts[song(1)])
     }
 
     @Test

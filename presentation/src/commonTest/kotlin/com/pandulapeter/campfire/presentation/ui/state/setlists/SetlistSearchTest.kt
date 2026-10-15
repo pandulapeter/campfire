@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.setlists
 
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.presentation.ui.LowercaseSearchText
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
@@ -20,9 +20,7 @@ import kotlin.test.assertTrue
 
 class SetlistSearchTest {
 
-    private val normalize = object : NormalizeSearchTextUseCase {
-        override fun invoke(text: String) = text.lowercase()
-    }
+    private val normalize = LowercaseSearchText
 
     private val library = mapOf(
         "present.cho" to SearchableSong(song = song("present.cho"), title = "wonderwall", artist = "oasis", tags = listOf("britpop")),

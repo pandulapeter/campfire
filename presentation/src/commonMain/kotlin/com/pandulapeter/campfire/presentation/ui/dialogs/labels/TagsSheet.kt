@@ -60,12 +60,10 @@ import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingT
 import com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace
 import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
-import com.pandulapeter.campfire.presentation.ui.components.labels.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.labels.tagColorOf
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
@@ -112,11 +110,7 @@ internal fun TagsSheet(
     var createdTags by rememberSaveable(sheetKey, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
     // Keep the library's sorting order, using the songs' spelling where the same tag differs only by case.
     val offeredTags = remember(songs, createdTags, libraryTags, sortingMode) {
-        val ownTags = songs.flatMap { it.tags } + createdTags
-        val tags = (libraryTags.orderedBy(sortingMode).map { tag ->
-            ownTags.firstOrNull { it.equals(tag.name, ignoreCase = true) } ?: tag.name
-        } + ownTags).distinctBy { it.lowercase() }
-        if (sortingMode == UserPreferences.LabelSortingMode.ALPHABETICAL) tags.sortedAlphabeticallyBy { it } else tags
+        offeredTagsOf(libraryTags = libraryTags, sortingMode = sortingMode, ownTags = songs.flatMap { it.tags } + createdTags)
     }
     val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.songRenderer.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {
@@ -126,12 +120,8 @@ internal fun TagsSheet(
     val tagOrder = rememberChecklistOrder(draft.checkedKeys, sortingMode to query)
     val tagLayout = remember(matches, tagOrder) { tagOrder.layout(matches) { it.lowercase() } }
     val typedTag = query.trim()
-    val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
-    // Include a tag still in the field, since Save commits it too.
-    val draftToSave = if (typedTag.isEmpty()) draft else draft.checked(typedTag.lowercase())
-    val spellings = offeredTags.associateBy { it.lowercase() }.let { offered ->
-        if (typedTag.isEmpty() || spelledTag != null) offered else offered + (typedTag.lowercase() to typedTag)
-    }
+    val spelledTag = spelledTagOf(typedTag, offeredTags)
+    val (draftToSave, spellings) = tagsToSave(draft = draft, offeredTags = offeredTags, typedTag = typedTag)
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     // The keyboard is put away two frames after Done rather than straight from it: the web build focuses its text input

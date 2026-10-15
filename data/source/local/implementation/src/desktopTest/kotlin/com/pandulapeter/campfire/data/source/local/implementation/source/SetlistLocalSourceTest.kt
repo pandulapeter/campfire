@@ -92,11 +92,11 @@ class SetlistLocalSourceTest {
     fun `a setlist file that names no day is listed with today's and left as it is`() = runBlocking {
         val undated = """{"title":"Old"}"""
         fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", undated)
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val dayBefore = today()
 
         val listed = setlistLocalSource.loadSetlists().single()
 
-        assertEquals(today, listed.setlist.date)
+        assertTrue(listed.setlist.date in setOf(dayBefore, today()), "${listed.setlist.date}")
         assertFalse(listed.isDated)
         assertEquals(undated, fileStorage.readText(StorageDirectory.SETLISTS, "old.setlist.json"))
     }
@@ -104,23 +104,30 @@ class SetlistLocalSourceTest {
     @Test
     fun `a setlist file that names no day is given today's when it is read on its own and keeps it`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", """{"title":"Old"}""")
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val dayBefore = today()
 
-        assertEquals(today, setlistLocalSource.loadSetlist("old.setlist.json")?.date)
-        assertTrue("\"date\": \"$today\"" in fileStorage.readText(StorageDirectory.SETLISTS, "old.setlist.json").orEmpty())
-        assertTrue(setlistLocalSource.loadSetlists().single().isDated)
+        val date = setlistLocalSource.loadSetlist("old.setlist.json")?.date
+
+        assertTrue(date in setOf(dayBefore, today()), "$date")
+        val reread = setlistLocalSource.loadSetlists().single()
+        assertTrue(reread.isDated)
+        assertEquals(date, reread.setlist.date)
     }
 
     @Test
     fun `a setlist document that names no day is parsed with today's and says so`() = runBlocking {
+        val dayBefore = today()
         val undated = assertNotNull(setlistLocalSource.parseSetlist("""{"title":"Old"}"""))
         val dated = assertNotNull(setlistLocalSource.parseSetlist("""{"title":"New","date":"2026-09-28"}"""))
 
-        assertEquals(Clock.System.todayIn(TimeZone.currentSystemDefault()), undated.setlist.date)
+        assertTrue(undated.setlist.date in setOf(dayBefore, today()), "${undated.setlist.date}")
         assertFalse(undated.isDated)
         assertEquals(LocalDate(2026, 9, 28), dated.setlist.date)
         assertTrue(dated.isDated)
     }
+
+    /** Read before and after the call under test: the source reads the clock itself, and a run may cross midnight. */
+    private fun today() = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
     private fun setlistNamingASongTwice(fileName: String, title: String) = Setlist(
         fileName = fileName,

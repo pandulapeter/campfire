@@ -233,9 +233,8 @@ internal class SongPlayingOverrides(
 
 /**
  * The overrides of [song] read through [setlistFileName], or in the library where it is null. Only those
- * of the features switched on: the transposition and the capo go with the chords, and the transposition with a song
- * that has some, the tempo with the metronome, and an override nobody is shown is not one to be named or taken back
- * either.
+ * of the features switched on ([shownPlayingOverrides]): an override nobody is shown is not one to be named or taken
+ * back either.
  */
 @Composable
 internal fun songPlayingOverrides(
@@ -247,24 +246,27 @@ internal fun songPlayingOverrides(
     val tempos by viewModel.overrides.tempos.collectAsStateWithLifecycle()
     val capos by viewModel.overrides.capos.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val shouldShowChords = userPreferences?.areChordsEnabled != false
-    val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
-    val transposition = transpositions[song.fileName, setlistFileName].takeIf { shouldShowChords && song.hasChords } ?: 0
-    val capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos).takeIf { shouldShowChords }
-    val tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos).takeIf { shouldShowTempo }
+    val shown = shownPlayingOverrides(
+        song = song,
+        transposition = transpositions[song.fileName, setlistFileName],
+        capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos),
+        tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos),
+        areChordsEnabled = userPreferences?.areChordsEnabled != false,
+        isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
+    )
     val labels = listOfNotNull(
-        transposition.takeIf { it != 0 }?.let {
+        shown.transposition.takeIf { it != 0 }?.let {
             stringResource(Res.string.song_details_playing_override_transposition, transpositionLabel(transposition = it, key = null))
         },
-        capo?.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_capo, it.fret) },
-        tempo?.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_tempo, it.bpm.toString()) },
+        shown.capo?.let { stringResource(Res.string.song_details_capo, it.fret) },
+        shown.tempo?.let { stringResource(Res.string.song_details_tempo, it.bpm.toString()) },
     )
     return SongPlayingOverrides(
         labels = labels,
         onReset = {
-            if (transposition != 0) viewModel.overrides.resetTransposition(song.fileName, setlistFileName)
-            if (capo?.isDefault == false) viewModel.overrides.resetCapo(song.fileName, setlistFileName)
-            if (tempo?.isDefault == false) viewModel.overrides.resetTempo(song.fileName, setlistFileName)
+            if (shown.transposition != 0) viewModel.overrides.resetTransposition(song.fileName, setlistFileName)
+            if (shown.capo != null) viewModel.overrides.resetCapo(song.fileName, setlistFileName)
+            if (shown.tempo != null) viewModel.overrides.resetTempo(song.fileName, setlistFileName)
         },
     )
 }

@@ -67,7 +67,7 @@ internal class CoverArtRemoteSourceImpl(
     private val HttpStatusCode.isTransient
         get() = this == HttpStatusCode.RequestTimeout || this == HttpStatusCode.TooManyRequests || value >= 500
 
-    private companion object {
+    internal companion object {
         const val MAXIMUM_SIZE_BYTES = 5 * 1024 * 1024
     }
 }

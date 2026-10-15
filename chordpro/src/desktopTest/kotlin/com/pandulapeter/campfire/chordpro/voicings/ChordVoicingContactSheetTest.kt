@@ -31,26 +31,10 @@ import kotlin.test.Test
 class ChordVoicingContactSheetTest {
 
     @Test
-    fun `draw the tables`() {
+    fun `every shape is drawn for review where a QA directory is set`() {
         val directory = System.getenv("CAMPFIRE_CHORD_QA_DIR")?.takeIf { it.isNotBlank() }?.let(::File) ?: return
         directory.mkdirs()
-        mapOf(
-            ChordTuning.GUITAR to ChordVoicingTables.guitar,
-            ChordTuning.GUITAR_DROP_D to ChordVoicingTables.dropD,
-            ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
-            ChordTuning.UKULELE to ChordVoicingTables.ukulele,
-            ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
-            ChordTuning.GUITAR_OPEN_G to ChordVoicingTables.openG,
-            ChordTuning.GUITAR_OPEN_D to ChordVoicingTables.openD,
-            ChordTuning.GUITAR_OPEN_C to ChordVoicingTables.openC,
-            ChordTuning.GUITAR_DADGAD to ChordVoicingTables.dadgad,
-            ChordTuning.MANDOLIN_GDGD to ChordVoicingTables.mandolinGdgd,
-            ChordTuning.BANJO to ChordVoicingTables.banjo,
-            ChordTuning.BANJO_DOUBLE_C to ChordVoicingTables.banjoDoubleC,
-            ChordTuning.BANJO_C to ChordVoicingTables.banjoC,
-            ChordTuning.BANJO_OPEN_D to ChordVoicingTables.banjoOpenD,
-            ChordTuning.BANJO_G_MODAL to ChordVoicingTables.banjoGModal,
-        ).forEach { (tuning, lines) ->
+        tablesByTuning.forEach { (tuning, lines) ->
             val shapes = lines.map { ChordProDefinitions.read(it, tuning.instrument.id) as ChordProDefinitions.Reading.Shape }
             draw(shapes.map { it.name to it.voicing as ChordVoicing.Fretted }, File(directory, "chord-shapes-${tuning.id}.png"))
         }

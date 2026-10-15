@@ -11,8 +11,9 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
-import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsDocument
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -27,7 +28,7 @@ import io.ktor.http.headersOf
 /** A [DropboxSyncProvider] whose service is [handler], connected through [storage]. */
 internal fun dropboxProvider(
     configure: HttpClientConfig<*>.() -> Unit = {},
-    storage: SyncCredentialsLocalSource = ConnectedStorage(),
+    storage: SyncCredentialsLocalSource = StoredSyncCredentials(connectedCredentials()),
     handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ) = DropboxSyncProvider(
     httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
@@ -41,24 +42,6 @@ internal fun MockRequestHandleScope.respondJson(content: String, status: HttpSta
     status = status,
     headers = headersOf("Content-Type", "application/json"),
 )
-
-/**
- * A connection whose access token is good for as long as any test runs unless [expiresAt] says otherwise, so no
- * request needs a refresh. [credentials] is what the provider last stored.
- */
-internal class ConnectedStorage(names: String = "", expiresAt: Long = Long.MAX_VALUE) : SyncCredentialsLocalSource {
-    var credentials: String? =
-        """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":$expiresAt$names}"""
-
-    /** [credentials] read back the way the provider reads them. */
-    val document get() = credentials?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
-
-    override suspend fun loadSyncCredentials() = credentials
-
-    override suspend fun saveSyncCredentials(document: String?) {
-        credentials = document
-    }
-}
 
 /** An empty last page of a listing, the answer of a request whose own content does not matter. */
 internal const val EMPTY_LISTING = """{"entries":[],"cursor":"","has_more":false}"""

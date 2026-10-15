@@ -9,8 +9,8 @@
 -->
 # :data:sync:implementation
 
-Implements `SyncRepository` and `DemoLibraryRepository`. Everything is `internal`. `SyncEngine`'s demo lookup must stay
-a `DataSyncModule` function, since the Koin plugin would hand an annotated constructor its `{ null }` default.
+Implements `SyncRepository` and `DemoLibraryRepository`. Everything is `internal`. `SyncEngine` is built by a
+`DataSyncModule` function, since its demo lookup is a lambda over `UserPreferencesRepository` that Koin cannot inject.
 `DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks
 them up by.
 

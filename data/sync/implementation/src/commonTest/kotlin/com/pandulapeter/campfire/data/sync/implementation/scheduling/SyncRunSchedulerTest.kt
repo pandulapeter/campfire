@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
@@ -41,6 +42,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * When runs start, against a real [SyncRunner] on the in-memory fakes, on virtual time. The scheduler's scope is
@@ -53,11 +55,11 @@ class SyncRunSchedulerTest {
         val world = world()
 
         world.scheduler.schedule()
-        advanceTimeBy(6_000)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY / 2)
         world.scheduler.schedule()
-        advanceTimeBy(9_900)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY - 100.milliseconds)
         assertEquals(0, world.runs.count)
-        advanceTimeBy(200)
+        advanceTimeBy(200.milliseconds)
 
         assertEquals(1, world.runs.count)
     }
@@ -73,7 +75,7 @@ class SyncRunSchedulerTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(1, world.runs.count)
-        advanceTimeBy(10_100)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + 100.milliseconds)
 
         assertEquals(2, world.runs.count)
     }

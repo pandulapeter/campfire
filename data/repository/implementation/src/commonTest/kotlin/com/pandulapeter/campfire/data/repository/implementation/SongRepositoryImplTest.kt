@@ -272,6 +272,34 @@ class SongRepositoryImplTest {
     }
 
     @Test
+    fun `a refresh lists the named files as they are now and leaves the others alone`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b", "c.cho" to "c"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        repository.loadSongsIfNeeded()
+        localSource.files["a.cho"] = "a, edited elsewhere"
+        localSource.files.remove("b.cho")
+        localSource.files["c.cho"] = "c, not named"
+        localSource.files["d.cho"] = "d"
+
+        repository.refresh(setOf("a.cho", "b.cho", "d.cho"))
+
+        assertEquals(
+            listOf("a, edited elsewhere", "c", "d"),
+            repository.songs.first().data?.map { it.title }?.sorted(),
+        )
+    }
+
+    @Test
+    fun `a refresh before the list was read reads the whole library`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+
+        repository.refresh(setOf("a.cho"))
+
+        assertEquals(listOf("a.cho", "b.cho"), repository.songs.first().data?.map { it.fileName }?.sorted())
+    }
+
+    @Test
     fun `songs adopted before the list was read read the whole library`() = runTest {
         val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "imported.cho" to "imported"))
         val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)

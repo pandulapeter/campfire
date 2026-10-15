@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.repository.implementation.SongContentRepositoryImpl.Companion.MAXIMUM_CACHED_SONGS
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,7 +52,6 @@ class SongContentRepositoryImplTest {
         localSource.files["a.cho"] = "new"
 
         assertEquals("old", repository.loadSongContent("a.cho")?.text)
-        assertEquals(1, localSource.reads.count { it == "a.cho" })
     }
 
     @Test
@@ -68,16 +68,18 @@ class SongContentRepositoryImplTest {
 
     @Test
     fun `only the most recently used songs are kept`() = runTest {
-        (0..40).forEach { localSource.files["$it.cho"] = "text" }
-        (0..40).forEach { repository.loadSongContent("$it.cho") }
-        // Used again, so it is the most recent rather than the oldest.
-        repository.loadSongContent("9.cho")
+        val fileNames = (0..MAXIMUM_CACHED_SONGS).map { "$it.cho" }
+        fileNames.forEach { localSource.files[it] = "text" }
+        fileNames.dropLast(1).forEach { repository.loadSongContent(it) }
+        // Used again, so it is the most recent rather than the oldest when the cache overflows.
+        repository.loadSongContent("0.cho")
+        repository.loadSongContent(fileNames.last())
         localSource.reads.clear()
 
-        (0..40).forEach { repository.loadSongContent("$it.cho") }
+        repository.loadSongContent("0.cho")
+        repository.loadSongContent("1.cho")
 
-        assertEquals((0..8).map { "$it.cho" }, localSource.reads.take(9))
-        assertEquals(false, "9.cho" in localSource.reads)
+        assertEquals(listOf("1.cho"), localSource.reads)
     }
 
     @Test

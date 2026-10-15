@@ -158,7 +158,7 @@ internal class SyncRunScheduler(
         syncJob.exchange(null)?.cancelAndJoin()
     }
 
-    private companion object {
+    internal companion object {
         /** How long the library has to stay unchanged before an automatic run starts, see [schedule]. */
         val AUTOMATIC_RUN_DELAY = 10.seconds
     }

@@ -38,6 +38,20 @@ internal class PrintLayoutTest {
         page.texts.firstOrNull { it.text == text }?.let { index to it.x }
     }
 
+    /** The columns a page of [settings] is cut into, read from where the lines of a song longer than a page start. */
+    private suspend fun columnsOf(settings: PrintSettings): List<ClosedFloatingPointRange<Float>> {
+        val document = layout(source(song(lyrics(400))), settings)
+        val starts = document.pages.first().texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().sorted()
+        val width = document.width - settings.marginMm * 72f / 25.4f - starts.last()
+        return starts.map { it..it + width }
+    }
+
+    /** How far apart two lines of lyrics without chords are printed at [fontSize]. */
+    private suspend fun lyricPitch(fontSize: Int = PrintSettings().fontSize): Float {
+        val texts = layout(source(song(lyrics(2))), PrintSettings(fontSize = fontSize)).pages.single().texts
+        return texts.single { it.text == "Line 2" }.y - texts.single { it.text == "Line 1" }.y
+    }
+
     @Test fun `long songs keep every line and chord within printable columns`() = runTest {
         val lines = (1..180).map { ChordProLine.Lyrics("Line $it " + "words ".repeat(14), listOf(ChordProLine.Lyrics.Chord(0, "D", false))) }
         (2..PrintSettings.MAX_COLUMNS).forEach { columns ->
@@ -47,7 +61,7 @@ internal class PrintLayoutTest {
             val texts = document.pages.flatMap { it.texts }
             assertEquals(180, texts.count { it.text == "D" })
             val margin = settings.marginMm * 72f / 25.4f
-            val columnWidth = (document.width - 2 * margin - 18 * (columns - 1)) / columns
+            val columnWidth = columnsOf(settings).first().let { it.endInclusive - it.start }
             texts.forEach { item ->
                 assertTrue(item.x >= margin)
                 assertTrue(item.x + measure(item.text, item.style) <= document.width - margin + 0.01f, item.toString())
@@ -68,6 +82,20 @@ internal class PrintLayoutTest {
             (1..PrintSettings.MAX_COLUMNS).forEach { columns ->
                 val texts = layout(source(song), PrintSettings(isLandscape = isLandscape, columns = columns)).pages.first().texts
                 assertEquals(columns, texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, "$columns, landscape: $isLandscape")
+            }
+        }
+    }
+
+    @Test fun `the columns share the printable width evenly, apart from each other`() = runTest {
+        listOf(false, true).forEach { isLandscape ->
+            (2..PrintSettings.MAX_COLUMNS).forEach { count ->
+                val settings = PrintSettings(isLandscape = isLandscape, columns = count)
+                val columns = columnsOf(settings)
+                assertEquals(count, columns.size)
+                assertEquals(settings.marginMm * 72f / 25.4f, columns.first().start, 0.01f)
+                columns.zipWithNext().forEach { (left, right) -> assertTrue(left.endInclusive < right.start, "$count, landscape: $isLandscape") }
+                val pitches = columns.zipWithNext { left, right -> right.start - left.start }
+                pitches.forEach { assertEquals(pitches.first(), it, 0.01f) }
             }
         }
     }
@@ -235,7 +263,7 @@ internal class PrintLayoutTest {
         assertTrue(prefixes.size > 6)
         prefixes.chunked(6).forEach { assertEquals(listOf("e", "B", "G", "D", "A", "E"), it) }
         val strings = document.pages.first().texts.filter { it.text.contains('|') }
-        assertTrue(strings[6].y - strings[5].y >= 16 * 1.45f + 16 * 0.7f - 0.01f)
+        assertTrue(strings[6].y - strings[5].y > strings[5].y - strings[4].y + 0.01f)
     }
 
     @Test fun `a wrapped preformatted run has no gap between its systems`() = runTest {
@@ -243,7 +271,8 @@ internal class PrintLayoutTest {
         val page = layout(source(song(lines)), PrintSettings(columns = 2, fontSize = 16)).pages.single().texts
         val texts = page.filter { it.style.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
         assertTrue(texts.size > 2)
-        texts.zipWithNext().forEach { (upper, lower) -> assertEquals(16 * 1.45f, lower.y - upper.y, 0.01f) }
+        val pitch = lyricPitch(fontSize = 16)
+        texts.zipWithNext().forEach { (upper, lower) -> assertEquals(pitch, lower.y - upper.y, 0.01f) }
     }
 
     @Test fun `a heading stays in the column of its first section`() = runTest {
@@ -286,13 +315,12 @@ internal class PrintLayoutTest {
             val settings = PrintSettings(marginMm = marginMm)
             val document = layout(source(song(lyrics(200))), settings)
             val margin = marginMm * 72f / 25.4f
-            val bottom = document.height - margin - 18f
             assertTrue(document.pages.size > 1)
             document.pages.forEachIndexed { index, page ->
                 val number = page.texts.single { it.text == "${index + 1} / ${document.pages.size}" }
-                assertTrue(number.y + 11 <= document.height - margin && number.y >= bottom, number.toString())
+                assertTrue(number.y + number.style.size <= document.height - margin, number.toString())
                 assertEquals(document.width / 2, number.x + measure(number.text, number.style) / 2, 0.01f)
-                (page.texts - number).forEach { assertTrue(it.y + it.style.size * 1.45f <= bottom + 0.01f, it.toString()) }
+                (page.texts - number).forEach { assertTrue(it.y + it.style.size * 1.45f <= number.y + 0.01f, it.toString()) }
             }
         }
     }
@@ -303,7 +331,7 @@ internal class PrintLayoutTest {
             ChordProLine.Lyrics("Sung words", emptyList()),
         ))
         val texts = layout(source(entry)).pages.single().texts
-        assertEquals(texts.first { it.text == "G" }.y + 12 * 1.45f, texts.first { it.text == "Sung words" }.y, 0.01f)
+        assertEquals(texts.first { it.text == "G" }.y + lyricPitch(), texts.first { it.text == "Sung words" }.y, 0.01f)
         assertFalse(texts.any { it.text.isBlank() || it.text.all { char -> char == '\u00A0' || char == ' ' } })
     }
 
@@ -316,15 +344,16 @@ internal class PrintLayoutTest {
         ))))
         val document = layout(source(entry), settings)
         val texts = document.pages.single().texts
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18) / 2
+        val column = columnsOf(settings).first()
         val label = texts.first { it.text == "Verse" }
         val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.style.italic && it.text.isNotBlank() }
-        assertEquals(label.y + label.style.size * 1.45f, annotationRows.minOf { it.y }, 0.01f)
+        val plain = layout(source(song(lyrics(1))), settings).pages.single().texts
+        val firstRowGap = plain.single { it.text == "Line 1" }.y - plain.first { it.text == "Verse" }.y
+        assertEquals(label.y + firstRowGap, annotationRows.minOf { it.y }, 0.01f)
         val lyrics = texts.first { it.text.contains("here") }
         val follow = texts.first { it.text.contains("follow") }
         assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
-        texts.filter { it.style.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.style) <= margin + columnWidth + 0.01f, it.toString()) }
+        texts.filter { it.style.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
     }
 
     @Test fun `a chorus recall is headed by its own label`() = runTest {
@@ -460,10 +489,9 @@ internal class PrintLayoutTest {
         val document = layout(source(song(emptyList(), listOf(ChordProBlock.Comment("Boxed", CommentStyle.BOX)))), settings)
         val page = document.pages.single()
         val text = page.texts.single { it.text == "Boxed" }
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18) / 2
+        val column = columnsOf(settings).first()
         assertEquals(4, page.rules.size)
-        page.rules.forEach { assertTrue(it.x >= margin - 0.01f && it.x + it.width <= margin + columnWidth + 0.01f, it.toString()) }
+        page.rules.forEach { assertTrue(it.x >= column.start - 0.01f && it.x + it.width <= column.endInclusive + 0.01f, it.toString()) }
         assertTrue(page.rules.minOf { it.x } < text.x && page.rules.maxOf { it.x + it.width } > text.x + measure(text.text, text.style))
         assertTrue(page.rules.minOf { it.y } < text.y && page.rules.maxOf { it.y + it.height } > text.y + text.style.size * 1.2f)
     }
@@ -486,16 +514,16 @@ internal class PrintLayoutTest {
         val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Lyrics("Chorus words " + "and more words ".repeat(6), emptyList())) + lyrics(3, "Sung"))
         val document = layout(source(song(emptyList(), listOf(chorus))), settings)
         val page = document.pages.single()
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18) / 2
+        val column = columnsOf(settings).first()
+        val barEnd = page.rules.maxOf { it.x + it.width }
         val label = page.texts.single { it.text == "Chorus" }
         val chorusTexts = page.texts.filter { it.y >= label.y && it.style.size != 9 }
         assertTrue(chorusTexts.size > 5)
-        chorusTexts.forEach { assertTrue(it.x >= margin + 8 - 0.01f && it.x + measure(it.text, it.style) <= margin + columnWidth + 0.01f, it.toString()) }
+        chorusTexts.forEach { assertTrue(it.x > barEnd && it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
         // The label's row, then the wrapped first line and three more, each a lyric row tall.
         val lyricRows = chorusTexts.count { it.style == PrintStyle(12) }
         assertTrue(lyricRows > 4)
-        assertEquals(11 * 1.45f + lyricRows * 12 * 1.45f, page.rules.sumOf { it.height.toDouble() }.toFloat(), 0.01f)
+        assertEquals(11 * 1.45f + lyricRows * lyricPitch(), page.rules.sumOf { it.height.toDouble() }.toFloat(), 0.01f)
         assertTrue(layout(source(song(lyrics(3)))).pages.single().rules.isEmpty())
     }
 
@@ -507,8 +535,7 @@ internal class PrintLayoutTest {
         ))))
         val page = document.pages.single()
         val comment = page.texts.single { it.text == "Softly" }
-        val margin = PrintSettings().marginMm * 72f / 25.4f
-        assertTrue(comment.x >= margin + 8 - 0.01f)
+        assertTrue(comment.x > page.rules.maxOf { it.x + it.width })
         assertTrue(page.rules.any { it.y <= comment.y && it.y + it.height >= comment.y + comment.style.size * 1.45f })
         // One bar from the label to the last line, with no gap where the comment cuts the chorus.
         val bars = page.rules.sortedBy { it.y }
@@ -522,7 +549,7 @@ internal class PrintLayoutTest {
             ChordProBlock.Section(SectionType.Chorus, null, lyrics(2, "After"), isContinuation = true),
         )))).pages.single()
         val keyChange = page.texts.single { it.text == "Key: E" }
-        assertTrue(keyChange.x >= PrintSettings().marginMm * 72f / 25.4f + 8 - 0.01f)
+        assertTrue(keyChange.x > page.rules.maxOf { it.x + it.width })
         assertTrue(page.rules.any { it.y <= keyChange.y && it.y + it.height >= keyChange.y + keyChange.style.size * 1.45f })
         page.rules.sortedBy { it.y }.zipWithNext().forEach { (upper, lower) -> assertEquals(upper.y + upper.height, lower.y, 0.01f) }
     }
@@ -545,7 +572,7 @@ internal class PrintLayoutTest {
             ChordProBlock.Transpose(0),
             ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2, "End"), isContinuation = true),
         )))).pages.single().texts
-        assertEquals(12 * 1.45f, texts.single { it.text == "End 1" }.y - texts.single { it.text == "Line 2" }.y, 0.01f)
+        assertEquals(lyricPitch(), texts.single { it.text == "End 1" }.y - texts.single { it.text == "Line 2" }.y, 0.01f)
     }
 
     @Test fun `a comment opening a section is printed under its heading`() = runTest {
@@ -638,11 +665,10 @@ internal class PrintLayoutTest {
         val settings = PrintSettings(showChordDiagrams = true, columns = 4)
         val document = layout(source(song(lyrics(1)).copy(chords = (1..12).map { guitarChord("C$it") })), settings)
         val diagrams = document.pages.single().diagrams
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18 * 3) / 4
+        val column = columnsOf(settings).first()
         assertEquals(12, diagrams.size)
         assertTrue(diagrams.map { it.y }.distinct().size > 1)
-        diagrams.forEach { assertTrue(it.x >= margin && it.x + it.width <= margin + columnWidth + 0.01f, it.toString()) }
+        diagrams.forEach { assertTrue(it.x >= column.start - 0.01f && it.x + it.width <= column.endInclusive + 0.01f, it.toString()) }
     }
 
     @Test fun `chord diagram names stay inside their column`() = runTest {
@@ -655,15 +681,14 @@ internal class PrintLayoutTest {
         )
         val document = layout(source(song(lyrics(1)).copy(chords = chords)), settings)
         val page = document.pages.single()
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18 * 3) / 4
+        val columns = columnsOf(settings)
         val names = page.texts.filter { !it.isSelectable }
         assertTrue(names.any { it.text == "Bbsus4" } && names.none { it.text.endsWith("Bbsus4") && it.text != "Bbsus4" })
         // The rows flow on into the next column where the first is full, so each name is held to the one it starts in.
-        fun columnOf(x: Float) = ((x - margin + 0.01f) / (columnWidth + 18)).toInt()
+        fun columnOf(x: Float) = columns.indexOfLast { x >= it.start - 0.01f }
         names.forEach {
-            val columnStart = margin + columnOf(it.x) * (columnWidth + 18)
-            assertTrue(it.x >= columnStart - 0.01f && it.x + measure(it.text, it.style) <= columnStart + columnWidth + 0.01f, it.toString())
+            val column = columns[columnOf(it.x)]
+            assertTrue(it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString())
         }
         names.forEach { name ->
             // The diagrams of a name's row are the first line of them below it in its column.

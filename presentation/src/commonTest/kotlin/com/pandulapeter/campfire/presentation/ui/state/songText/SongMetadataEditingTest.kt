@@ -13,12 +13,10 @@ import androidx.compose.foundation.text.input.TextFieldState
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.data.model.library.normalizedToNfc
-import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
+import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -121,13 +119,7 @@ class SongMetadataEditingTest {
             retainedEditorField = { fileName -> retainedField.takeIf { fileName == FILE } },
             editorDraft = { draft },
             emitEditorTextEdit = { edits += it },
-            setChordProTag = object : SetChordProTagUseCase {
-                override fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
-                    ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
-                } else {
-                    ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
-                }
-            },
+            setChordProTag = ChordProTagWriter,
         )
     }
 

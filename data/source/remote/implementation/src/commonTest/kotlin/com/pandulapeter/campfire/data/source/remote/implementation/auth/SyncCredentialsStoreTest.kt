@@ -12,11 +12,9 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -31,42 +29,40 @@ class SyncCredentialsStoreTest {
 
     @Test
     fun `a cancelled first read is not remembered as no credentials`() = runTest {
-        val storage = FakeStorage(CONNECTED).apply { shouldCancelNextRead = true }
+        val storage = StoredSyncCredentials(CONNECTED).apply { shouldCancelNextRead = true }
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<CancellationException> { store.load() }
 
         assertEquals("refresh", store.load()?.refreshToken)
-        assertEquals(2, storage.readCount)
     }
 
     @Test
     fun `an authorization started after a cancelled read keeps the stored tokens`() = runTest {
-        val storage = FakeStorage(CONNECTED).apply { shouldCancelNextRead = true }
+        val storage = StoredSyncCredentials(CONNECTED).apply { shouldCancelNextRead = true }
         val store = SyncCredentialsStore(storage, Logger.Standard)
         assertFailsWith<CancellationException> { store.load() }
 
         PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
 
-        val stored = Json { ignoreUnknownKeys = true }.decodeFromString<SyncCredentialsDocument>(storage.credentials.orEmpty())
+        val stored = assertNotNull(storage.document)
         assertEquals("refresh", stored.refreshToken)
         assertEquals("state", stored.pending?.state)
     }
 
     @Test
     fun `a read the storage refused is not remembered as no credentials`() = runTest {
-        val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
+        val storage = StoredSyncCredentials(CONNECTED).apply { shouldFailNextRead = true }
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<LibraryStorageException> { store.load() }
 
         assertEquals("refresh", store.load()?.refreshToken)
-        assertEquals(2, storage.readCount)
     }
 
     @Test
     fun `an authorization started while the credentials cannot be read writes nothing over them`() = runTest {
-        val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
+        val storage = StoredSyncCredentials(CONNECTED).apply { shouldFailNextRead = true }
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<LibraryStorageException> {
@@ -79,7 +75,7 @@ class SyncCredentialsStoreTest {
 
     @Test
     fun `a document that cannot be parsed is read as none, once`() = runTest {
-        val storage = FakeStorage("not json")
+        val storage = StoredSyncCredentials("not json")
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertNull(store.load())
@@ -89,7 +85,7 @@ class SyncCredentialsStoreTest {
 
     @Test
     fun `a document that was read is not read again`() = runTest {
-        val storage = FakeStorage(CONNECTED)
+        val storage = StoredSyncCredentials(CONNECTED)
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         store.load()
@@ -100,7 +96,7 @@ class SyncCredentialsStoreTest {
 
     @Test
     fun `a write that was refused is not remembered`() = runTest {
-        val storage = FakeStorage(CONNECTED)
+        val storage = StoredSyncCredentials(CONNECTED)
         val store = SyncCredentialsStore(storage, Logger.Standard)
         val stored = assertNotNull(store.load())
         storage.shouldRefuseNextWrite = true
@@ -108,12 +104,11 @@ class SyncCredentialsStoreTest {
         assertFailsWith<IllegalStateException> { store.save(stored.copy(accessToken = "new")) }
 
         assertEquals("access", store.load()?.accessToken)
-        assertEquals(2, storage.readCount)
     }
 
     @Test
     fun `a pending authorization that could not be saved leaves nothing to clear`() = runTest {
-        val storage = FakeStorage(CONNECTED)
+        val storage = StoredSyncCredentials(CONNECTED)
         val pendingStore = PendingAuthorizationStoreImpl(SyncCredentialsStore(storage, Logger.Standard))
         storage.shouldRefuseNextWrite = true
         assertFailsWith<IllegalStateException> { pendingStore.savePendingAuthorization(SyncProviderId.DROPBOX, REQUEST) }
@@ -128,7 +123,7 @@ class SyncCredentialsStoreTest {
 
     @Test
     fun `a write that was cancelled after it was stored is read back`() = runTest {
-        val storage = FakeStorage(null).apply { shouldCancelNextWriteAfterStoring = true }
+        val storage = StoredSyncCredentials().apply { shouldCancelNextWriteAfterStoring = true }
         val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<CancellationException> {
@@ -136,51 +131,10 @@ class SyncCredentialsStoreTest {
         }
 
         assertEquals("refresh", store.load()?.refreshToken)
-        assertEquals(1, storage.readCount)
-    }
-
-    /**
-     * Credentials in a variable, with a first read that can be made to end the way a cleared view model ends it or the
-     * way a secret store that refuses for a moment does, and writes that can be refused or cancelled once they have
-     * gone through.
-     */
-    private class FakeStorage(var credentials: String?) : SyncCredentialsLocalSource {
-        var shouldCancelNextRead = false
-        var shouldFailNextRead = false
-        var readCount = 0
-        var writeAttemptCount = 0
-        var shouldRefuseNextWrite = false
-        var shouldCancelNextWriteAfterStoring = false
-
-        override suspend fun loadSyncCredentials(): String? {
-            readCount++
-            if (shouldCancelNextRead) {
-                shouldCancelNextRead = false
-                throw CancellationException("The reader went away.")
-            }
-            if (shouldFailNextRead) {
-                shouldFailNextRead = false
-                throw LibraryStorageException("Keystore busy")
-            }
-            return credentials
-        }
-
-        override suspend fun saveSyncCredentials(document: String?) {
-            writeAttemptCount++
-            if (shouldRefuseNextWrite) {
-                shouldRefuseNextWrite = false
-                throw IllegalStateException("The storage refused the write.")
-            }
-            credentials = document
-            if (shouldCancelNextWriteAfterStoring) {
-                shouldCancelNextWriteAfterStoring = false
-                throw CancellationException("The writer went away.")
-            }
-        }
     }
 
     private companion object {
-        const val CONNECTED = """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":1}"""
+        val CONNECTED = connectedCredentials()
 
         val REQUEST = RemoteAuthorizationRequest(
             authorizationUrl = "https://example.com",

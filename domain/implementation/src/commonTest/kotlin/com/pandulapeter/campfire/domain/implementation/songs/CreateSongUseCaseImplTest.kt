@@ -9,11 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
-import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
-import com.pandulapeter.campfire.domain.implementation.testSong
+import com.pandulapeter.campfire.domain.implementation.RecordingSongRepository
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.song.Song
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -62,16 +60,5 @@ class CreateSongUseCaseImplTest {
         assertEquals(original, repository.text)
         assertEquals("Title" to "", repository.name)
         assertEquals("{title: Title}\n{artist: }\n{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
-    }
-
-    private class RecordingSongRepository : SongRepositoryStub() {
-        var text = ""
-        var name = "" to ""
-
-        override suspend fun createSong(title: String, artist: String, text: String): Song {
-            this.text = text
-            name = title to artist
-            return testSong(fileName = "song.cho", title = title, artist = artist)
-        }
     }
 }

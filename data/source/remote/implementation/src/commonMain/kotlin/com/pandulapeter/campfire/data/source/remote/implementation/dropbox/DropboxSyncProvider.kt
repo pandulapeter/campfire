@@ -391,7 +391,7 @@ internal class DropboxSyncProvider(
     /** At the top of the app folder, where [toRemoteFiles] never looks, beside the two library folders. */
     private fun documentPath(name: String) = "/$name"
 
-    private companion object {
+    internal companion object {
         const val AUTHORIZE_URL = "https://www.dropbox.com/oauth2/authorize"
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
         const val ACCOUNT_URL = "https://api.dropboxapi.com/2/users/get_current_account"

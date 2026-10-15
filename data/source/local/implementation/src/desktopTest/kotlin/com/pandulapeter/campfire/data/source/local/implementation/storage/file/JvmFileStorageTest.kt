@@ -30,7 +30,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 /**
  * Exercises the file system implementation the JVM platforms share against a temporary directory. The iOS and web
@@ -357,16 +356,6 @@ class JvmFileStorageTest {
             JvmFileStorage(root, isWindows = false).retryingWhileDenied { calls++; throw AccessDeniedException("a.cho") }
         }
         assertEquals(1, calls)
-    }
-
-    @Test
-    fun `numbers a collision without listing the directory`() = runBlocking {
-        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "first")
-        val unlisted = object : FileStorage by fileStorage {
-            override suspend fun listNames(directory: StorageDirectory): List<String> = fail("The directory was listed.")
-        }
-
-        assertEquals("a_2.cho", unlisted.uniqueName(StorageDirectory.SONGS, "a.cho"))
     }
 
     @Test

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,11 +20,14 @@ class LiveRescanPauseTest {
 
     @Test
     fun `a quick rescan is repeated after the ordinary interval`() {
-        assertEquals(1.seconds, liveRescanPauseAfter(40.milliseconds))
+        assertEquals(LIVE_RESCAN_INTERVAL, liveRescanPauseAfter(40.milliseconds))
     }
 
     @Test
-    fun `a slow rescan is not repeated until five times what it cost has passed`() {
-        assertEquals(15.seconds, liveRescanPauseAfter(3.seconds))
+    fun `a slow rescan waits several times what it cost, in proportion to it`() {
+        val pause = liveRescanPauseAfter(3.seconds)
+
+        assertTrue(pause >= 3.seconds * 3)
+        assertEquals(pause * 2, liveRescanPauseAfter(6.seconds))
     }
 }

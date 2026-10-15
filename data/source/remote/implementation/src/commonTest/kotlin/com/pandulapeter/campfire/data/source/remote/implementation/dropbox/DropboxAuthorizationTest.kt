@@ -9,13 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters
-import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
-import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
-import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.Test
@@ -83,18 +78,7 @@ class DropboxAuthorizationTest {
     fun `leaves the redirect out when the platform cannot receive one`() =
         assertTrue(provider().buildAuthorizationRequest(redirectUri = null).authorizationUrl.contains("redirect_uri").not())
 
-    private fun provider() = DropboxSyncProvider(
-        httpClientHolder = HttpClientHolder(create = ::createHttpClient),
-        credentialsStore = SyncCredentialsStore(NoStorage, Logger.Standard),
-        appKey = APP_KEY,
-        logger = Logger.Standard,
-    )
-
-    /** Building the URL touches no storage, so the test does not need any. */
-    private object NoStorage : SyncCredentialsLocalSource {
-        override suspend fun loadSyncCredentials(): String? = null
-        override suspend fun saveSyncCredentials(document: String?) = Unit
-    }
+    private fun provider() = dropboxProvider { error("Building the authorization URL makes no request.") }
 
     private companion object {
         const val APP_KEY = "test-app-key"

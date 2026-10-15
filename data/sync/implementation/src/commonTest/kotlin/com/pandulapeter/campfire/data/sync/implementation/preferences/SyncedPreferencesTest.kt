@@ -488,6 +488,27 @@ class SyncedPreferencesTest {
     }
 
     @Test
+    fun `a document written elsewhere under every attempt is settled by the next run without losing a change`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{}""") to "r1"
+        var writesElsewhere = 0
+        provider.onUploadDocument = {
+            provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"b.cho":{"capo":3}}""") to "elsewhere${writesElsewhere++}"
+        }
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        val synchronization = sync(preferences, library("a.cho", "b.cho"))
+
+        assertNull(synchronization.synchronize(provider, base = document("{}"), keptFileNames = emptyList(), onLocalSettled = {}))
+
+        // The other device has stopped writing, and the next run starts from the base the unsettled one left in place.
+        provider.onUploadDocument = {}
+        synchronization.synchronize(provider, base = document("{}"), keptFileNames = emptyList(), onLocalSettled = {})
+        val expected = mapOf("a.cho" to 2, "b.cho" to 3)
+        assertEquals(expected, preferences.current.capos)
+        assertEquals(expected, SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+    }
+
+    @Test
     fun `a document already in step is not uploaded again`() = runTest {
         val provider = FakeSyncProvider()
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))

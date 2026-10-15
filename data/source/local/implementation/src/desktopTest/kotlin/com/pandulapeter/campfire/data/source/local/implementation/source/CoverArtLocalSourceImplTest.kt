@@ -10,17 +10,29 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** The prune runs while thumbnails are being saved, so it must leave alone whatever a write in progress keeps beside them. */
+/**
+ * The copies of covers are a cache: a failure costs a cover rather than an error, and none of them belongs in a device
+ * backup. The prune runs while thumbnails are being saved, so it must leave alone whatever a write in progress keeps
+ * beside them.
+ */
 class CoverArtLocalSourceImplTest {
 
     private val root: File = Files.createTempDirectory("campfire-cover-art").toFile()
@@ -44,5 +56,46 @@ class CoverArtLocalSourceImplTest {
         assertContentEquals(byteArrayOf(1), localSource.loadCoverArt(firstKey))
         assertNull(localSource.loadCoverArt(secondKey))
         assertTrue(temporaryFile.exists())
+    }
+
+    @Test
+    fun `every copy written is kept out of the device backup, however often it is written`() = runBlocking {
+        val fileStorage = InMemoryFileStorage()
+        val localSource = CoverArtLocalSourceImpl(fileStorage, Logger.Standard)
+
+        localSource.saveCoverArt(KEY, byteArrayOf(1))
+        localSource.saveCoverArt(KEY, byteArrayOf(2))
+
+        assertEquals(listOf(KEY), fileStorage.listNames(StorageDirectory.COVERS))
+        assertEquals(emptyList(), fileStorage.namesInDeviceBackup(StorageDirectory.COVERS))
+    }
+
+    @Test
+    fun `a storage that fails is answered with nothing`() = runBlocking {
+        val failing = object : FileStorage by InMemoryFileStorage() {
+            override suspend fun readBytes(directory: StorageDirectory, name: String): ByteArray? = throw LibraryStorageException("Unreadable")
+
+            override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = throw LibraryStorageException("Full")
+
+            override suspend fun list(directory: StorageDirectory): List<StoredFileInfo> = throw LibraryStorageException("Unlistable")
+        }
+        val localSource = CoverArtLocalSourceImpl(failing, Logger.Standard)
+
+        assertNull(localSource.loadCoverArt(KEY))
+        localSource.saveCoverArt(KEY, byteArrayOf(1))
+        assertNull(localSource.getCoverArtCacheSize())
+    }
+
+    @Test
+    fun `a cancellation is not taken for a failure`() = runBlocking<Unit> {
+        val cancelled = object : FileStorage by InMemoryFileStorage() {
+            override suspend fun readBytes(directory: StorageDirectory, name: String): ByteArray? = throw CancellationException("The screen went away.")
+        }
+
+        assertFailsWith<CancellationException> { CoverArtLocalSourceImpl(cancelled, Logger.Standard).loadCoverArt(KEY) }
+    }
+
+    private companion object {
+        val KEY = "0123456789abcdef".repeat(4)
     }
 }

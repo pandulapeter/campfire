@@ -57,6 +57,18 @@ internal open class SongRepositoryStub : SongRepository {
         unexpected()
 }
 
+/** Keeps the text and the name of the last song it was asked to create, failing every other call as its stub does. */
+internal class RecordingSongRepository : SongRepositoryStub() {
+    var text = ""
+    var name = "" to ""
+
+    override suspend fun createSong(title: String, artist: String, text: String): Song {
+        this.text = text
+        name = title to artist
+        return testSong(fileName = "song.cho", title = title, artist = artist)
+    }
+}
+
 /** A [SetlistRepository] whose every member fails the same way, see [SongRepositoryStub]. */
 internal open class SetlistRepositoryStub : SetlistRepository {
     override val setlists: Flow<DataState<List<Setlist>>> get() = unexpected()

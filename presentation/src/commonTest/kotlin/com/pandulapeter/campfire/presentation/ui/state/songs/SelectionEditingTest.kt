@@ -10,11 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.state.songs
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.song.EditedSongs
-import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
+import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -75,12 +73,6 @@ class SelectionEditingTest {
                 return EditedSongs(changedFileNames = changed, failedFileNames = emptyList())
             }
         },
-        setChordProTag = object : SetChordProTagUseCase {
-            override fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
-                ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
-            } else {
-                ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
-            }
-        },
+        setChordProTag = ChordProTagWriter,
     )
 }

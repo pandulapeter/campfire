@@ -70,16 +70,6 @@ class LibraryListingTest {
     }
 
     @Test
-    fun `a song file larger than any song is left out of the scan`() = runBlocking {
-        writeSongs()
-        fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())
-
-        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs {}
-
-        assertEquals(listOf("a.cho"), songs.map { it.fileName })
-    }
-
-    @Test
     fun `a scan skips a song file larger than any song and reads the rest with what the listing reports`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\n")
         fileStorage.writeText(StorageDirectory.SONGS, "c.cho", "{title: C}\nLonger text\n")

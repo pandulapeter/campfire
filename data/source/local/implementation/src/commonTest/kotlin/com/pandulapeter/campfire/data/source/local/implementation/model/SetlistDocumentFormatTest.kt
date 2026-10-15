@@ -65,7 +65,8 @@ internal class SetlistDocumentFormatTest {
         val document = SetlistDocumentFormat.decode("""{"title":"Summer","priority":3}""")
 
         assertTrue(document.unknownFields.isEmpty())
-        assertFalse("priority" in SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).toDocument()))
+        val encoded = SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).toDocument())
+        assertFalse("priority" in Json.parseToJsonElement(encoded).jsonObject)
     }
 
     @Test

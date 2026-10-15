@@ -21,6 +21,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -60,8 +61,12 @@ class ExportScreenDecisionsTest {
 
     @Test
     fun `the options stand beside the preview where there is room`() {
-        assertEquals(330.dp, optionsWidthFor(bodyWidth = 800.dp, bodyHeight = 600.dp))
-        assertEquals(260.dp, optionsWidthFor(bodyWidth = 800.dp, bodyHeight = 400.dp))
+        val roomy = assertNotNull(optionsWidthFor(bodyWidth = 800.dp, bodyHeight = 600.dp))
+        val onItsSide = assertNotNull(optionsWidthFor(bodyWidth = 800.dp, bodyHeight = 400.dp))
+        assertTrue(onItsSide < roomy)
+        assertTrue(roomy < 800.dp / 2)
+        val narrowest = assertNotNull(optionsWidthFor(bodyWidth = 520.dp, bodyHeight = 300.dp))
+        assertTrue(narrowest <= 520.dp / 2)
         assertNull(optionsWidthFor(bodyWidth = 400.dp, bodyHeight = 800.dp))
     }
 

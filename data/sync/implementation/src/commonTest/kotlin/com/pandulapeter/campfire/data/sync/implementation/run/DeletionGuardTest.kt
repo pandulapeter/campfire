@@ -31,6 +31,12 @@ class DeletionGuardTest {
     }
 
     @Test
+    fun `tidying up most of a small library goes ahead`() {
+        assertNull(check(localDeletions = 4, total = 6))
+        assertNull(check(remoteDeletions = 4, total = 6))
+    }
+
+    @Test
     fun `exactly half is not more than half`() {
         assertNull(check(localDeletions = 5, total = 10))
     }

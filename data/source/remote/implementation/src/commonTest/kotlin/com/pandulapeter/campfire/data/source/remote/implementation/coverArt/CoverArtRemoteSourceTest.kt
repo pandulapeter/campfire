@@ -46,7 +46,7 @@ class CoverArtRemoteSourceTest {
 
     @Test
     fun `an image larger than a cover has any reason to be is missing`() = runTest {
-        val bytes = ByteArray(5 * 1024 * 1024 + 1)
+        val bytes = ByteArray(CoverArtRemoteSourceImpl.MAXIMUM_SIZE_BYTES + 1)
         val download = source { _ -> respond(bytes, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "image/png")) }.downloadCoverArt(URL)
 
         assertEquals(CoverArtDownload.Missing, download)

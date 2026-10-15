@@ -11,11 +11,9 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
-import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -26,12 +24,12 @@ import kotlin.test.assertNull
  */
 class PendingAuthorizationStoreTest {
 
-    private val storage = Storage()
+    private val storage = StoredSyncCredentials()
     private val store = PendingAuthorizationStoreImpl(SyncCredentialsStore(storage, Logger.Standard))
 
     @Test
     fun `an authorization started while connected keeps the tokens`() = runTest {
-        storage.credentials = CONNECTED
+        storage.credentials = connectedCredentials()
 
         store.savePendingAuthorization(SyncProviderId.DROPBOX, REQUEST)
 
@@ -44,7 +42,7 @@ class PendingAuthorizationStoreTest {
 
     @Test
     fun `an authorization abandoned while connected keeps the tokens`() = runTest {
-        storage.credentials = CONNECTED
+        storage.credentials = connectedCredentials()
         store.savePendingAuthorization(SyncProviderId.DROPBOX, REQUEST)
 
         store.clearPendingAuthorization()
@@ -63,22 +61,7 @@ class PendingAuthorizationStoreTest {
         assertNull(storage.credentials)
     }
 
-    /** The credentials document in a variable, as the platform storage would keep it. */
-    private class Storage : SyncCredentialsLocalSource {
-        var credentials: String? = null
-
-        val document get() = credentials?.let { Json { ignoreUnknownKeys = true }.decodeFromString<SyncCredentialsDocument>(it) }
-
-        override suspend fun loadSyncCredentials() = credentials
-
-        override suspend fun saveSyncCredentials(document: String?) {
-            credentials = document
-        }
-    }
-
     private companion object {
-        const val CONNECTED = """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":1}"""
-
         val REQUEST = RemoteAuthorizationRequest(
             authorizationUrl = "https://example.com",
             redirectUri = "campfire://oauth",

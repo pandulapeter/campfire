@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.math.abs
 import kotlin.math.log2
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -101,6 +103,32 @@ class PitchDetectorTest {
             *listOf(48, 52, 55, 59).map { TestSignals.sine(Pitch.frequencyOf(it, 440) * 1.003f, sampleRate, detector.inputSize, 0.2f, phase = it * 0.4) }.toTypedArray(),
         )
         assertNull(detector.detect(chord, range.start, range.endInclusive).frequency)
+    }
+
+    @Test
+    fun `a low E is read under a mains hum 10 dB louder than it`() {
+        val sampleRate = 48_000
+        val detector = PitchDetector(sampleRate)
+        val frequency = Pitch.frequencyOf(40, 440)
+        val string = TestSignals.pluckedString(frequency, sampleRate, detector.inputSize, seed = 40, skip = sampleRate / 10)
+        // A sine's amplitude is its RMS times the square root of two.
+        val humAmplitude = TestSignals.rms(string) * 10f.pow(10f / 20) * sqrt(2f)
+        val window = TestSignals.mixed(string, TestSignals.sine(50f, sampleRate, detector.inputSize, amplitude = humAmplitude))
+        val range = PitchDetector.rangeFor(InstrumentTuning.GUITAR.strings, 440)
+        assertReads(detector.detect(window, range.start, range.endInclusive), frequency, tolerance = 2f, label = "low E under hum")
+    }
+
+    @Test
+    fun `a clear note is read only above the level floor`() {
+        val sampleRate = 48_000
+        val detector = PitchDetector(sampleRate)
+        fun read(rms: Float) = detector.detect(
+            TestSignals.sine(440f, sampleRate, detector.inputSize, amplitude = rms * sqrt(2f)),
+            PitchDetector.CHROMATIC_MIN_FREQUENCY,
+            PitchDetector.CHROMATIC_MAX_FREQUENCY,
+        ).frequency
+        assertNull(read(PitchDetector.LEVEL_FLOOR / 10))
+        assertNotNull(read(PitchDetector.LEVEL_FLOOR * 10))
     }
 
     private fun assertReads(detector: PitchDetector, window: FloatArray, frequency: Float, tolerance: Float, label: String) {

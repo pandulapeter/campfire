@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.songs
 
+import com.pandulapeter.campfire.presentation.ui.LowercaseSearchText
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import androidx.lifecycle.SavedStateHandle
@@ -19,7 +20,6 @@ import com.pandulapeter.campfire.data.model.song.Tag
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.domain.api.library.SongSection
-import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
@@ -118,9 +118,7 @@ class SongListStateTest {
         tags = tags,
         languages = languages,
         isImporting = MutableStateFlow(false),
-        normalizeSearchText = object : NormalizeSearchTextUseCase {
-            override fun invoke(text: String) = text.lowercase()
-        },
+        normalizeSearchText = LowercaseSearchText,
         changeUserPreferences = {},
     )
 }

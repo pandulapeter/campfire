@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
@@ -34,7 +36,7 @@ class DropboxTokensTest {
     fun `an expired token is renewed before the first request rather than after a refusal`() = runTest {
         val requests = mutableListOf<String>()
         var refreshForm = ""
-        val provider = dropboxProvider(storage = ConnectedStorage(expiresAt = 0)) { request ->
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
             if (request.url.toString() == TOKEN_URL) {
                 requests += "token"
                 refreshForm = (request.body as TextContent).text
@@ -54,7 +56,7 @@ class DropboxTokensTest {
     /** Dropbox may hand out a new refresh token, and keeping the old one would end the connection silently. */
     @Test
     fun `a renewal that carries a new refresh token stores it`() = runTest {
-        val storage = ConnectedStorage(expiresAt = 0)
+        val storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))
         val provider = dropboxProvider(storage = storage) { request ->
             if (request.url.toString() == TOKEN_URL) {
                 respondJson("""{"access_token":"renewed","refresh_token":"new refresh","expires_in":14400}""")
@@ -69,7 +71,7 @@ class DropboxTokensTest {
 
     @Test
     fun `a renewal without a refresh token keeps the old one`() = runTest {
-        val storage = ConnectedStorage(expiresAt = 0)
+        val storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))
         val provider = dropboxProvider(storage = storage) { request ->
             if (request.url.toString() == TOKEN_URL) {
                 respondJson("""{"access_token":"renewed","expires_in":14400}""")
@@ -86,7 +88,7 @@ class DropboxTokensTest {
     @Test
     fun `a busy token endpoint is the service not being reached rather than a refusal`() = runTest {
         for (status in listOf(HttpStatusCode.TooManyRequests, HttpStatusCode.ServiceUnavailable)) {
-            val storage = ConnectedStorage(expiresAt = 0)
+            val storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))
             val provider = dropboxProvider(storage = storage) { request ->
                 if (request.url.toString() == TOKEN_URL) respond(content = "", status = status) else respondJson(EMPTY_LISTING)
             }
@@ -97,7 +99,7 @@ class DropboxTokensTest {
 
     @Test
     fun `a token exchange the browser could not send is the service not being reached`() = runTest {
-        val provider = dropboxProvider(storage = ConnectedStorage(expiresAt = 0)) { request ->
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
             if (request.url.toString() == TOKEN_URL) throw Error("Fail to fetch")
             respondJson(EMPTY_LISTING)
         }

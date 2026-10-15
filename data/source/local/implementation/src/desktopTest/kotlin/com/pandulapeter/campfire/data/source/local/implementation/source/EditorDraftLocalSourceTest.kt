@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
@@ -76,6 +77,18 @@ class EditorDraftLocalSourceTest {
         StorageDirectory.entries.filter { it != StorageDirectory.PREFERENCES }.forEach { directory ->
             assertTrue(fileStorage.listNames(directory).isEmpty(), "$directory")
         }
+    }
+
+    @Test
+    fun `the draft is kept out of the device backup, however often it is written`() = runBlocking {
+        val fileStorage = InMemoryFileStorage()
+        val localSource = EditorDraftLocalSourceImpl(fileStorage, Logger.Standard)
+
+        localSource.saveEditorDraft(SongContent(fileName = "a.cho", text = "first"))
+        localSource.saveEditorDraft(SongContent(fileName = "a.cho", text = "second"))
+
+        assertEquals(listOf(FILE_NAME), fileStorage.listNames(StorageDirectory.PREFERENCES))
+        assertEquals(emptyList(), fileStorage.namesInDeviceBackup(StorageDirectory.PREFERENCES))
     }
 
     private companion object {

@@ -77,9 +77,9 @@ internal class SyncEngine(
      * What the app planted under a name, as a content hash, or null for a file it did not plant; see
      * [ConflictResolver.resolveWith].
      */
-    plantedContentHash: suspend (SyncKey) -> String? = { null },
-    /** Where the failures of single files are written. A default for the tests' direct calls; production passes one. */
-    private val logger: Logger = Logger.Standard,
+    plantedContentHash: suspend (SyncKey) -> String?,
+    /** Where the failures of single files are written. */
+    private val logger: Logger,
 ) {
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)

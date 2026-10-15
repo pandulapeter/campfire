@@ -22,7 +22,7 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `every shape of the tables sounds exactly the chord it is filed under`() {
-        tables.forEach { (tuning, lines) ->
+        tablesByTuning.forEach { (tuning, lines) ->
             val instrument = tuning.instrument
             lines.forEach { line ->
                 val shape = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(line, instrument.id), line)
@@ -38,10 +38,7 @@ class ChordVoicingTablesTest {
                     "$line leaves out ${played.pitchClasses - sounded}",
                 )
                 if (!instrument.playsChordOver) {
-                    val bottom = voicing.frets.withIndex().filter { it.value != null }.minBy { tuning.strings[it.index] + it.value!! }
-                    val lowest = (tuning.strings[bottom.index] + bottom.value!!) % 12
-                    val isOpenFifth = tuning.isOpen && chord.bass == null && lowest == fifth && bottom.value == 0
-                    assertTrue(lowest == (chord.bass ?: chord.root) || isOpenFifth, "$line sounds its bass or root lowest, or an open tuning's open string its fifth")
+                    assertTrue(soundsBassLowest(chord, tuning, voicing.frets), "$line sounds its bass or root lowest, or an open tuning's open string its fifth")
                 }
             }
         }
@@ -49,7 +46,7 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `every fingering names as many fingers as frets are stopped`() {
-        tables.forEach { (tuning, lines) ->
+        tablesByTuning.forEach { (tuning, lines) ->
             lines.forEach { line ->
                 val voicing = (ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
                 assertTrue(ChordShapeGeometry.isHoldable(voicing.frets), line)
@@ -64,7 +61,7 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `a finger laid across several strings has no string between them sounding lower`() {
-        tables.forEach { (tuning, lines) ->
+        tablesByTuning.forEach { (tuning, lines) ->
             lines.forEach { line ->
                 val voicing = (ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
                 val fingers = voicing.fingers ?: return@forEach
@@ -83,30 +80,7 @@ class ChordVoicingTablesTest {
     }
 
     @Test
-    fun `every tuning without a table of its own is the one whose table it reads, every string moved by one interval`() {
-        ChordTuning.entries.filter { it.tableTuning != it }.forEach { tuning ->
-            assertEquals(tuning.tableTuning, tuning.tableTuning.tableTuning, "${tuning.id} reads a table of its own tuning's")
-            val intervals = tuning.strings.indices.map { (tuning.strings[it] - tuning.tableTuning.strings[it]).mod(12) }.toSet()
-            assertEquals(setOf(tuning.shift), intervals, tuning.id)
-        }
-        ChordTuning.entries.filter { it.tableTuning == it }.forEach { assertTrue(it in tables || !it.instrument.isFretted, it.id) }
+    fun `every table is checked here`() {
+        ChordTuning.entries.filter { it.tableTuning == it }.forEach { assertTrue(it in tablesByTuning || !it.instrument.isFretted, it.id) }
     }
-
-    private val tables = mapOf(
-        ChordTuning.GUITAR to ChordVoicingTables.guitar,
-        ChordTuning.UKULELE to ChordVoicingTables.ukulele,
-        ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
-        ChordTuning.GUITAR_DROP_D to ChordVoicingTables.dropD,
-        ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
-        ChordTuning.GUITAR_OPEN_G to ChordVoicingTables.openG,
-        ChordTuning.GUITAR_OPEN_D to ChordVoicingTables.openD,
-        ChordTuning.GUITAR_OPEN_C to ChordVoicingTables.openC,
-        ChordTuning.GUITAR_DADGAD to ChordVoicingTables.dadgad,
-        ChordTuning.MANDOLIN_GDGD to ChordVoicingTables.mandolinGdgd,
-        ChordTuning.BANJO to ChordVoicingTables.banjo,
-        ChordTuning.BANJO_DOUBLE_C to ChordVoicingTables.banjoDoubleC,
-        ChordTuning.BANJO_C to ChordVoicingTables.banjoC,
-        ChordTuning.BANJO_OPEN_D to ChordVoicingTables.banjoOpenD,
-        ChordTuning.BANJO_G_MODAL to ChordVoicingTables.banjoGModal,
-    )
 }

@@ -59,6 +59,17 @@ class MetronomeEngineTest {
     }
 
     @Test
+    fun `a click is played at the square of its volume`() = runTest {
+        val engine = engine()
+        engine.start(pattern.copy(volume = 0.5f))
+        runCurrent()
+        val gains = mutableListOf<Float>()
+        output.stream?.schedule(nowFrame = 0, untilFrame = FakeAudioOutput.SAMPLE_RATE * 2L) { _, _, _, gain -> gains += gain }
+        assertTrue(gains.isNotEmpty())
+        gains.forEach { assertEquals(0.25f, it, 0.0001f) }
+    }
+
+    @Test
     fun `an output waiting for a gesture keeps saying so`() = runTest {
         output.result = AudioOutputStart.Started(MetronomeAudioIssue.WAITING_FOR_GESTURE)
         val engine = engine()

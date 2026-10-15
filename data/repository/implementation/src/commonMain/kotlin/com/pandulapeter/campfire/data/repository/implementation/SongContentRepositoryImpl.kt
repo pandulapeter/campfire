@@ -100,7 +100,7 @@ internal class SongContentRepositoryImpl(
         cache.remove(fileName)?.let { cachedCharacters -= it.text.length }
     }
 
-    private companion object {
+    internal companion object {
         const val MAXIMUM_CACHED_SONGS = 32
         const val MAXIMUM_CACHED_CHARACTERS = 1L shl 20
     }
