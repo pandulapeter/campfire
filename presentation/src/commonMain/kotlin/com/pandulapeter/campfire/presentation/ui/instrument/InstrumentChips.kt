@@ -53,7 +53,7 @@ internal fun InstrumentChips(
     tuning: InstrumentTuning?,
     notation: ChordNotation,
     height: Dp = 40.dp,
-    style: TextStyle = MaterialTheme.typography.bodyLarge,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
     chevronSize: Dp = 20.dp,
     isEnabled: Boolean = true,
     tuningChipVisibility: MutableTransitionState<Boolean>? = null,

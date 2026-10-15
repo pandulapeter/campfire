@@ -49,7 +49,7 @@ internal fun PickerChip(
     text: String,
     onClickLabel: String,
     height: Dp = 40.dp,
-    style: TextStyle = MaterialTheme.typography.bodyLarge,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
     chevronSize: Dp = 20.dp,
     isEnabled: Boolean = true,
     onClick: () -> Unit,

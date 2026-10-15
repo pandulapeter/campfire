@@ -20,8 +20,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
- * The [InstrumentChips] in a row of their own, at the size of the body text, the tuning chip going under the
- * instrument's where the two do not fit side by side rather than either being cut short.
+ * The [InstrumentChips] in a row of their own, named in the style of a song's section headers, the tuning chip going
+ * under the instrument's where the two do not fit side by side rather than either being cut short.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
