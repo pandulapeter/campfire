@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.fitsImport
+import com.pandulapeter.campfire.presentation.ui.platform.isLinkWithTitle
 import com.pandulapeter.campfire.presentation.ui.platform.isOnlyLinks
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
@@ -66,7 +67,7 @@ internal class PastedSongController(
     fun newSongFromText(text: String, subject: String? = null) {
         when {
             text.isBlank() -> messageSink.sendMessage(Message.ClipboardEmpty)
-            text.isOnlyLinks() -> messageSink.sendMessage(Message.PastedOnlyLinks)
+            text.isOnlyLinks() || text.isLinkWithTitle() -> messageSink.sendMessage(Message.PastedOnlyLinks)
             !text.fitsImport() -> messageSink.sendMessage(Message.PastedTextTooLarge)
             else -> enqueueImport(
                 sharedTextsToImportedFiles(listOf(text), subject),
@@ -77,7 +78,7 @@ internal class PastedSongController(
 
     /**
      * Texts shared to Campfire from another app. One text is a song to make, as a paste is; several are an import, each
-     * a file of its own. A share of nothing but addresses - a web page shared by its link, with its title beside it - is
+     * a file of its own. A share of nothing but addresses - a web page shared by its link, alone or beside a one-line title - is
      * answered with a sentence, since the page is never fetched. A share with nothing in it at all still goes to the
      * import, which reports it as skipped: the user picked Campfire in a share sheet and is owed an answer.
      */
@@ -85,7 +86,7 @@ internal class PastedSongController(
         val texts = payload.texts.filter { it.isNotBlank() }
         when {
             texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false)
-            texts.all { it.isOnlyLinks() } -> messageSink.sendMessage(Message.SharedLinkNotImported)
+            texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> messageSink.sendMessage(Message.SharedLinkNotImported)
             texts.size == 1 -> newSongFromText(texts.single(), payload.subject)
             else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false)
         }

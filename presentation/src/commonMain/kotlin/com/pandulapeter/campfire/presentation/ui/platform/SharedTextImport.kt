@@ -25,13 +25,15 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 fun sharedTextsToImportedFiles(texts: List<String>, subject: String?): List<ImportedFile> =
     // The user picked Campfire in a share sheet, so a share with nothing in it is still answered: an empty
     // file is one the import reports as skipped.
-    texts.ifEmpty { listOf("") }.map(::withoutSourceLink).mapIndexed { index, text ->
+    texts.ifEmpty { listOf("") }.mapIndexed { index, sharedText ->
+        val text = withoutSourceLink(sharedText)
         val name = sharedTextName(subject)?.let { if (texts.size > 1) "${it}_${index + 1}" else it } ?: text.firstPlainLine()
         ImportedFile(
             name = (name ?: UNTITLED) + LibraryFiles.TEXT_EXTENSION,
             // A link by itself is not a song. Importing it as one would leave a file to find and delete, and
-            // fetching what it points at is not something this app does.
-            bytes = if (text.isOnlyLinks()) ByteArray(0) else text.encodeToByteArray(),
+            // fetching what it points at is not something this app does. Nor is a page's title beside its address, which
+            // is how many apps share a page, and which would be a song of one line.
+            bytes = if (text.isOnlyLinks() || sharedText.isLinkWithTitle()) ByteArray(0) else text.encodeToByteArray(),
         )
     }
 
@@ -58,6 +60,14 @@ internal fun String.isLink() = LINK.matches(trim())
 
 /** Every line that is not blank is an address, which is not a song and is never fetched. */
 internal fun String.isOnlyLinks() = lineSequence().filter { it.isNotBlank() }.let { lines -> lines.any() && lines.all { LINK.matches(it.trim()) } }
+
+/**
+ * A page's address beside a one-line title, as many apps share a page: what is left once [withoutSourceLink] has taken
+ * the address is a single line, which is the page's name rather than a song, and the page is never fetched.
+ */
+internal fun String.isLinkWithTitle() = withoutSourceLink(this).let { remaining ->
+    remaining != this && remaining.lineSequence().count { it.isNotBlank() } == 1
+}
 
 /**
  * Whether the text is within what an import reads of one text file, counted in UTF-8 bytes as the file would be: a

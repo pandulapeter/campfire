@@ -117,6 +117,15 @@ class PastedSongControllerTest {
     }
 
     @Test
+    fun `a shared page title beside its address is answered as a link, as is the same text pasted`() = runTest {
+        val controller = controller()
+        controller.importSharedText(SharedTextPayload(texts = listOf("Wonderwall – Oasis\nhttps://example.com/w"), subject = null))
+        controller.newSongFromText("Wonderwall – Oasis\nhttps://example.com/w")
+        assertEquals(listOf(Message.SharedLinkNotImported, Message.PastedOnlyLinks), messages)
+        assertTrue(queued.isEmpty())
+    }
+
+    @Test
     fun `an empty share still reaches the import, which reports it as skipped`() = runTest {
         controller().importSharedText(SharedTextPayload(texts = listOf(" "), subject = null))
         assertTrue(queued.single().first.single().bytes.decodeToString().isBlank())

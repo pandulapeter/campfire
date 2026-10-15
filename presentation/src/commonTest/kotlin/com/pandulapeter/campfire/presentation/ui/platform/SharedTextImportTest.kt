@@ -122,6 +122,22 @@ class SharedTextImportTest {
     }
 
     @Test
+    fun `a page's title beside its address is a link rather than a song`() {
+        assertTrue("Wonderwall – Oasis\nhttps://example.com/w".isLinkWithTitle())
+        assertTrue("\"Wonderwall\"\n\nhttps://example.com/w".isLinkWithTitle())
+        assertFalse("[G]First line\n[C]Second line\nhttps://example.com/w".isLinkWithTitle())
+        assertFalse("https://example.com/w".isLinkWithTitle())
+        assertFalse("Wonderwall – Oasis".isLinkWithTitle())
+    }
+
+    @Test
+    fun `a page's title beside its address among several texts is passed on empty`() {
+        val files = sharedTextsToImportedFiles(listOf("Song\nhttps://x", "[G]la\n[C]la"), null)
+        assertEquals(0, files[0].bytes.size)
+        assertEquals("[G]la\n[C]la", files[1].bytes.decodeToString())
+    }
+
+    @Test
     fun `a text fits the import by its size in UTF-8`() {
         val limit = ImportLimits.MAX_TEXT_FILE_SIZE.toInt()
         assertTrue("a".repeat(limit).fitsImport())

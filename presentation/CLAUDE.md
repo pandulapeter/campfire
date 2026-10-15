@@ -35,7 +35,7 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   the queue until it is closed, so texts arriving together are offered one after another. Blank, links only, or over
   8 MB is a snackbar before anything is prepared. With unsaved editor text, or in read only mode, the song is imported
   and offered with Open instead.
-- Several shared texts are one import; a page's address alone is a snackbar (nothing is fetched).
+- Several shared texts are one import; a page's address, alone or beside a one-line title, is a snackbar (nothing is fetched).
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
   and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.
