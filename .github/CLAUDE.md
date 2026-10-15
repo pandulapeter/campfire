@@ -105,9 +105,8 @@ Archives with the signing key's Apple Distribution certificate; xcodebuild makes
 uploads the `.ipa` to TestFlight. The Xcode project starts Gradle without properties, so the sync key goes into
 `local.properties`, which the version build phase also reads (after `gradle.properties`, last value wins) — that is how
 the `build_number` input works without a commit. The archived app's and share extension's `Info.plist` versions are
-checked before upload. The extension's App ID (`com.pandulapeter.campfire.ShareExtension`) and the App Group
-`group.com.pandulapeter.campfire` on both App IDs were set up once in the developer portal by hand; automatic signing
-puts the group into every profile after that.
+checked before upload. The share extension's App ID and the App Group on both App IDs were registered in the
+developer portal by hand, once; automatic signing then puts the group into every profile.
 
 ### Apple submission (both Apple workflows)
 
