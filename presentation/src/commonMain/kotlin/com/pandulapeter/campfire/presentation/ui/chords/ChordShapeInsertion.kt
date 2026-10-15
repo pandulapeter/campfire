@@ -45,8 +45,9 @@ internal val chordShapeInstruments get() = UserPreferences.Instrument.entries.fi
  * the frets (or the keys) selected, since changing three numbers takes no knowledge of the syntax and writing the line
  * from nothing takes all of it. With the caret in no chord the line is a whole placeholder, the definition of a C
  * major ([PLACEHOLDER_CHORD]) with its name selected, so that the syntax is there to be copied from even by whoever has
- * never read it: the name is typed over first, and the frets after it. A chord the text already defines on [instrument] gets no second line: the caret goes to the
- * frets of the one there is, the way a `{tempo}` the header already names is selected rather than written again.
+ * never read it: the name is typed over first, and the frets after it. A chord the text already defines on [instrument],
+ * the placeholder too, gets no second line, which would replace the song's own shape: the caret goes to the frets of the
+ * one there is, the way a `{tempo}` the header already names is selected rather than written again.
  *
  * ChordPro gives a definition no tuning, so every program reads one as a shape in standard tuning, and that is what is
  * written whatever tuning the player's own diagrams are drawn in: [storedShapes] are their choices under the
@@ -61,10 +62,10 @@ internal fun chordShapeInsertion(
 ): TextInsertion {
     val standardTuning = ChordTuning.standard(instrument)
     val chordAtCaret = ChordProDefinitions.chordAt(text, caret)?.takeIf { ChordProChords.parse(it, notation) != null }
-    if (chordAtCaret != null) {
-        ChordProDefinitions.rangeOf(text, chordAtCaret, instrument)?.let { return TextInsertion(offset = 0, text = "", selectionStart = it.first, selectionEnd = it.last + 1) }
-    }
     val name = chordAtCaret ?: ChordProNotation.shownName(PLACEHOLDER_CHORD, notation)
+    // A chord the text already defines on this instrument, the placeholder's C included, gets no second line: the last one
+    // would win, silently replacing the song's own shape.
+    ChordProDefinitions.rangeOf(text, name, instrument)?.let { return TextInsertion(offset = 0, text = "", selectionStart = it.first, selectionEnd = it.last + 1) }
     val chord = ChordProChords.parse(name, notation)
     val shape = chord?.let { storedShapes[it.id]?.let { stored -> ChordVoicings.read(stored, standardTuning, it) } ?: ChordVoicings.default(it, standardTuning) }
     val line = if (shape == null) "{$DEFINE_DIRECTIVE: $name}" else ChordProDefinitions.line(name, shape, instrument, notation)

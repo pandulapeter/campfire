@@ -100,5 +100,6 @@ Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row and, li
 chord at the caret into the header, **always the standard-tuning shape** whatever the player's tuning (ChordPro gives a
 definition none): their choice under that instrument's key, else the app's first, frets selected; or it moves the caret
 to an existing line's frets for that instrument. With the caret in no chord it writes a whole placeholder (a C, name
-selected), since a line to edit teaches the syntax and an empty `{define: }` does not. The preview's Chords section
+selected), since a line to edit teaches the syntax and an empty `{define: }` does not; a C already defined for that
+instrument is selected instead, as the last line would replace it. The preview's Chords section
 shows every definition in the text, each on its own instrument, whatever the switches.
