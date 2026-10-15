@@ -79,10 +79,8 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 ### `ClipboardText.kt`
 
-- Read only on a tap, never to decide whether to show the entry (the web's read prompts). Android asks the clip's
-  description first (no toast) and takes no URI-only clip; iOS asks `hasStrings` first, and text that comes back nil is
-  `Refused` (Allow Paste); the web's `readText()` refusal points at Ctrl / Cmd + V, whose `paste` event needs no
-  permission. The desktop's `awtClipboardText` also serves its Ctrl / Cmd + V.
+- Read only on a tap, never to decide whether to show the entry (the web's read prompts). A refusal is
+  `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission.
 
 ### `CompactKeyboardEffect.kt`
 
