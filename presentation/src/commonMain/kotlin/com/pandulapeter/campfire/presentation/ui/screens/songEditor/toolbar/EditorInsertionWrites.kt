@@ -31,27 +31,22 @@ internal fun TextFieldState.insert(insertion: EditorInsertion) {
  * decide here is where the directive goes: a title written into the middle of a verse is valid, invisible in the
  * rendered song, and nowhere near the rest of what the file says about itself. `:chordpro` picks the line, keeping
  * the header in the order it lists metadata in and leaving one the user has arranged otherwise alone; the caret
- * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into. A tempo or
- * a time signature the header already names is the one exception, see [ChordProHeader.insertChangeable].
+ * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into. A song
+ * that already says what the button writes has that line's value selected instead, so the button is never out of
+ * reach and the next keystroke rewrites it. What is selected is copied into the directive as its value, and left
+ * where it is: it is the text that names the song (a pasted heading, a first line), which stays part of the song. A
+ * tempo or a time signature the header already names is the one exception, see [ChordProHeader.insertChangeable].
  */
 private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadataName: String) = edit {
-    val header = if (metadataName in ChordProHeader.changeableMetadata) {
-        // The header holds the song's own value and the body its changes, so here the caret does say where it goes.
-        ChordProHeader.insertChangeable(
-            text = originalText.toString(),
-            name = metadataName,
-            caretOffset = minOf(selection.start, selection.end),
-            prefix = insertion.prefix,
-            suffix = insertion.suffix,
-        )
-    } else {
-        ChordProHeader.insert(
-            text = originalText.toString(),
-            name = metadataName,
-            prefix = insertion.prefix,
-            suffix = insertion.suffix,
-        )
-    }
+    val start = minOf(selection.start, selection.end)
+    val header = ChordProHeader.write(
+        text = originalText.toString(),
+        name = metadataName,
+        caretOffset = start,
+        prefix = insertion.prefix,
+        suffix = insertion.suffix,
+        value = originalText.substring(start, maxOf(selection.start, selection.end)),
+    )
     replace(header.offset, header.offset + header.replacedLength, header.text)
     selection = TextRange(header.caretOffset, header.selectionEnd)
 }

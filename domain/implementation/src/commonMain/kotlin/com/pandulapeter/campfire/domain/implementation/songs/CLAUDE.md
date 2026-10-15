@@ -16,6 +16,7 @@
   found from the files, not the cache, and changed through `updateSetlist`; one already naming the new name keeps
   one entry.
 - `CreateSongUseCaseImpl`'s template carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`: the values
-  a song declaring none plays by.
+  a song declaring none plays by. A pasted `text` replaces the template: the form's values are set into it (a blank one
+  removing its field), then each template line it has no line of is added (`ChordProMetadataFields.declare`).
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.

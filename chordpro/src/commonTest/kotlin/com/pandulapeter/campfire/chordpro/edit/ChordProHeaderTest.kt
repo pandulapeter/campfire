@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.chordpro.edit
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -124,70 +123,62 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `every spelling of a directive is reported as declared under one name`() {
-        val text = "{t: T}\n{st: S}\n{meta: tag slow}\n{lang: hu}\n{capo: 2}"
+    fun `a directive the song already declares has its value selected rather than a second one written`() {
+        val text = "{title: Song}\n{artist: Singer}\n\n[C]The first line"
 
-        assertEquals(setOf("title", "subtitle", "tag", "language", "capo"), ChordProHeader.declaredMetadata(text))
-        assertEquals(setOf("title", "key"), ChordProHeader.declaredMetadata("{meta: title X}\n{meta: key G}"))
+        assertEquals(text to (8..12), text.write("title", caret = text.length))
     }
 
     @Test
-    fun `a directive waiting to be typed into counts as declared`() {
-        assertEquals(setOf("title"), ChordProHeader.declaredMetadata("{title: }\n\nThe first line"))
+    fun `every spelling of a declared directive is found, wherever it stands`() {
+        assertEquals("{t: T}\n{st: S}" to (12..13), "{t: T}\n{st: S}".write("subtitle"))
+        assertEquals("{meta: key G}" to (11..12), "{meta: key G}".write("key"))
+        assertEquals("[C]A line\n{year: 1970}" to (17..21), "[C]A line\n{year: 1970}".write("year"))
     }
 
     @Test
-    fun `what makes up the song is not metadata`() {
-        val text = "{start_of_verse}\nThe first line\n{end_of_verse}\n{comment: Repeat}\n{meta: tuning DADGAD}"
+    fun `a declared directive with no value yet is the line typed into`() {
+        assertEquals("{title: }\n\nThe first line" to (8..8), "{title}\n\nThe first line".write("title"))
+    }
 
-        assertEquals(emptySet(), ChordProHeader.declaredMetadata(text))
+    @Test
+    fun `a selection becomes the value of a directive the song lacks`() {
+        assertEquals("{title: Song}\n\nSong" to (8..12), "\nSong".write("title", value = "Song", caret = 1))
+    }
+
+    @Test
+    fun `a selection replaces the value of a directive the song declares`() {
+        val text = "{title: Old}\n{artist: A}\n\nNew title"
+
+        assertEquals("{title: New title}\n{artist: A}\n\nNew title" to (8..17), text.write("title", value = "New title"))
+        assertEquals("{meta: key G}" to (11..12), "{meta: key C}".write("key", value = "G"))
+    }
+
+    @Test
+    fun `a selection is written as one line without braces`() {
+        assertEquals("{title: A B}\n" to (8..11), "".write("title", value = " A\r\n{B} "))
+        assertEquals("{title: T}" to (8..9), "{title: T}".write("title", value = " \n "))
+    }
+
+    @Test
+    fun `a repeatable directive is written again, with the selection as its value`() {
+        assertEquals("{tag: Folk}\n{tag: Slow}\nSlow" to (18..22), "{tag: Folk}\nSlow".write("tag", value = "Slow"))
+    }
+
+    @Test
+    fun `a changeable directive takes the selection as the value of the line it writes or selects`() {
+        val text = "{tempo: 120}\n\n[C]The first line\n[G]The second line"
+
+        assertEquals("{tempo: 90}\n\n[C]The first line\n[G]The second line" to (8..10), text.write("tempo", value = "90", caret = 0))
+        assertEquals(
+            "{tempo: 120}\n\n[C]The first line\n{tempo: 90}\n[G]The second line" to (40..42),
+            text.write("tempo", value = "90", caret = text.indexOf("second")),
+        )
     }
 
     @Test
     fun `the tags, the languages and the links of a song are the repeatable directives`() {
         assertEquals(setOf("tag", "language", "link"), ChordProHeader.repeatableMetadata)
-    }
-
-    @Test
-    fun `random typing always matches the declared metadata of the whole text`() {
-        val random = Random(seed = 13)
-        val alphabet = "{}:  titleyarkgbx"
-        repeat(20) {
-            val cache = ChordProHeader.DeclaredMetadataCache()
-            var text = "{title: Song}\n{artist: Singer}\n{key: Am}\n\n[Am]First line of the [C]verse\nSecond line\n{tag: Folk}\nEnd"
-            var cursor = text.length
-            repeat(300) {
-                if (random.nextInt(20) == 0) cursor = random.nextInt(text.length + 1)
-                if (cursor > 0 && random.nextInt(4) == 0) {
-                    text = text.removeRange(cursor - 1, cursor)
-                    cursor--
-                } else {
-                    text = text.substring(0, cursor) + when (random.nextInt(30)) {
-                        0 -> '\n'
-                        1 -> '\r'
-                        else -> alphabet.random(random)
-                    } + text.substring(cursor)
-                    cursor++
-                }
-                assertEquals(ChordProHeader.declaredMetadata(text), cache.declaredMetadataOf(text), text)
-            }
-        }
-    }
-
-    @Test
-    fun `an edit between the two halves of a CRLF matches the declared metadata of the whole text`() {
-        val cache = ChordProHeader.DeclaredMetadataCache()
-        listOf("{title: T}\r\n{year: 1}", "{title: T}\rx\n{year: 1}", "{title: T}\r\n{year: 1}").forEach { text ->
-            assertEquals(ChordProHeader.declaredMetadata(text), cache.declaredMetadataOf(text), text)
-        }
-    }
-
-    @Test
-    fun `completing and breaking a directive changes the declared metadata`() {
-        val cache = ChordProHeader.DeclaredMetadataCache()
-        assertEquals(setOf("title"), cache.declaredMetadataOf("{title: T}\n{year: 1970"))
-        assertEquals(setOf("title", "year"), cache.declaredMetadataOf("{title: T}\n{year: 1970}"))
-        assertEquals(setOf("title"), cache.declaredMetadataOf("{title: T}\nyear: 1970}"))
     }
 
     @Test
@@ -291,6 +282,11 @@ class ChordProHeaderTest {
         val insertion = ChordProHeader.insertChangeable(text, name = name, caretOffset = header.length + caret, prefix = "{$name: ", suffix = "}")
         val result = text.replaceRange(insertion.offset, insertion.offset + insertion.replacedLength, insertion.text).removePrefix(header)
         return result to (insertion.caretOffset - header.length..insertion.selectionEnd - header.length)
+    }
+
+    private fun String.write(name: String, value: String = "", caret: Int = length): Pair<String, IntRange> {
+        val insertion = ChordProHeader.write(this, name = name, caretOffset = caret, prefix = "{$name: ", suffix = "}", value = value)
+        return replaceRange(insertion.offset, insertion.offset + insertion.replacedLength, insertion.text) to (insertion.caretOffset..insertion.selectionEnd)
     }
 
     private fun String.insert(name: String, prefix: String = "{$name: ", suffix: String = "}"): String {

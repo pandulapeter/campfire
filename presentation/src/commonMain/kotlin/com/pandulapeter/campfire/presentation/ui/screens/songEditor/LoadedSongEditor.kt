@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorChordShapes
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.isEnabled
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchSheet
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.editorSearchShortcuts
@@ -299,7 +298,6 @@ internal fun LoadedSongEditor(
                 AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
                     EditorToolbar(
                         textFieldState = textFieldState,
-                        text = text,
                         contentPadding = contentPadding,
                         chordShapes = remember(userPreferences) {
                             EditorChordShapes(

@@ -11,7 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -46,6 +47,7 @@ internal data class EmptyStateAction(
  * @param actions The buttons under the hint. Empty leaves the state text only, which is what a list that is empty
  *   for a good reason gets: there is nothing to retry.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EmptyState(
     modifier: Modifier = Modifier,
@@ -100,10 +102,11 @@ internal fun EmptyState(
                 }
             }
         } else {
-            Row(
+            // Wrapped rather than cut off: four labels this long are wider than a phone on its side.
+            FlowRow(
                 modifier = Modifier.padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
             ) {
                 actions.forEachIndexed { index, action ->
                     EmptyStateActionButton(action = action, isEmphasized = index == 0)

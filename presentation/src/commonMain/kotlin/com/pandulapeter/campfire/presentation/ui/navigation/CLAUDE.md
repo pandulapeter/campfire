@@ -14,6 +14,10 @@ The destinations and the back stack.
 
 ### `CampfireDestination.kt`
 
+- **The editor always opens over its song's details screen** (`songEditorEntries`): from anywhere else - a new song, a
+  copy, the import screen, a draft reopened on launch - that screen is pushed under it, so leaving the editor lands on
+  the song, as the web's `song/{song}/edit` address always has.
+
 - Songs and setlists are addressed by **file name** everywhere (their identity on disk).
 - `SongDetails` is keyed by an `id` generated once per push, not by its file names, so a rename rewrites the entry
   without Navigation 3 taking it for a new one.

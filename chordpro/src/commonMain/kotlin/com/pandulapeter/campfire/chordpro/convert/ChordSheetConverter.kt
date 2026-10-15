@@ -43,6 +43,36 @@ public object ChordSheetConverter {
         return groups.map { normalize(convertSong(expandLabels(it))) }.filter { it.isNotBlank() }
     }
 
+    /**
+     * Lines of plain [text] pasted into a song that already has its header, read the way [convert] reads a sheet: chord
+     * rows set into the lyric rows under them (a chord row with no lyrics under it bracketed on a line of its own),
+     * headings such as "Verse 1:" made sections, tablature put in its environment, and the rest escaped so it cannot
+     * become markup. What only a whole song has is left out: no title or credit is guessed from the first lines, and a
+     * line naming a capo, a key or a tempo stays a line of text rather than becoming the song's header in its middle.
+     * Null where [text] is ChordPro already or has no chord row to set, which is when there is nothing to convert.
+     */
+    public fun convertFragment(text: String, normalize: (String) -> String = { it }): String? {
+        if (isChordPro(text)) return null
+        val lines = ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) }
+        val candidates = chordCandidates(lines)
+        val kinds = classify(lines, candidates).map { if (it == Kind.METADATA) Kind.LYRIC else it }
+        if (Kind.CHORD !in kinds) return null
+        // The line breaks the paste ends with are kept after the section it opened rather than inside it, so that what
+        // follows the paste in the song is not pulled into the section, nor the section given an empty last line.
+        val trailingBlanks = kinds.takeLastWhile { it == Kind.BLANK }.size
+        val body = lines.size - trailingBlanks
+        return (
+            writeBody(
+                lines = lines.take(body),
+                kinds = kinds.take(body),
+                candidates = candidates.take(body),
+                omitted = emptySet(),
+                changes = emptyMap(),
+                convertParentheses = convertsParentheses(lines),
+            ) + List(trailingBlanks) { "" }
+            ).joinToString("\n")
+    }
+
     private data class Rendered(val text: String, val positions: DoubleArray, val source: ChordSheet.Line)
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, SECTION, METADATA, CHORD, LYRIC }
@@ -255,15 +285,8 @@ public object ChordSheetConverter {
     }
 
     private fun convertSong(lines: List<Rendered>): String {
-        // A row of bare note words is as likely a sung "La la la" as a row of major chords, so it counts as chords only in a
-        // sheet whose other rows show it is written in Latin, or where its words stand apart the way chords are set over
-        // the syllables they fall on, which a sung line never is.
-        val hasLatinChords = lines.any { line -> tokens(line.text).any { isLatinChordBeyondNote(it.text) } }
-        val candidates = lines.map(::chordTokens).map { row ->
-            row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> chord(word.text) }.all { word -> isBareLatinNote(word.text) } }
-        }
-        val parenthesized = lines.flatMap { parentheses.findAll(it.text).toList() }
-        val convertParentheses = parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
+        val candidates = chordCandidates(lines)
+        val convertParentheses = convertsParentheses(lines)
         val kinds = classify(lines, candidates)
         val styled = lines.any { line -> !isChordLine(line.text) && line.source.spans.any { (it.isBold || it.isRaised) && chord(it.text.trim()) } }
         if (kinds.none { it in listOf(Kind.CHORD, Kind.SECTION, Kind.TAB) } && !convertParentheses && !styled) {
@@ -276,6 +299,26 @@ public object ChordSheetConverter {
         val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
         return collapse(header + if (header.isEmpty()) output else listOf("") + output)
     }
+
+    /**
+     * The rows that may be chords. A row of bare note words is as likely a sung "La la la" as a row of major chords, so
+     * it counts as chords only in a sheet whose other rows show it is written in Latin, or where its words stand apart
+     * the way chords are set over the syllables they fall on, which a sung line never is.
+     */
+    private fun chordCandidates(lines: List<Rendered>): List<List<Token>?> {
+        val hasLatinChords = lines.any { line -> tokens(line.text).any { isLatinChordBeyondNote(it.text) } }
+        return lines.map(::chordTokens).map { row ->
+            row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> chord(word.text) }.all { word -> isBareLatinNote(word.text) } }
+        }
+    }
+
+    /** Chords written in parentheses inside the lyrics, `(Am)`, are taken for chords only where most parentheses hold one. */
+    private fun convertsParentheses(lines: List<Rendered>): Boolean {
+        val parenthesized = lines.flatMap { parentheses.findAll(it.text).toList() }
+        return parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
+    }
+
+    private fun bracketed(row: List<Token>) = row.joinToString(" ") { if (chord(it.text)) "[${ascii(it.text.removeSurrounding("(", ")"))}]" else it.text }
 
     private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
         val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
@@ -393,7 +436,7 @@ public object ChordSheetConverter {
                     if (kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted) {
                         output += merge(line, lines[index + 1], convertParentheses)
                         index++
-                    } else output += candidates[index]!!.joinToString(" ") { if (chord(it.text)) "[${ascii(it.text.removeSurrounding("(", ")"))}]" else it.text }
+                    } else output += bracketed(candidates[index]!!)
                 }
                 Kind.LYRIC -> output += inline(line, convertParentheses)
                 Kind.BLANK -> output += ""

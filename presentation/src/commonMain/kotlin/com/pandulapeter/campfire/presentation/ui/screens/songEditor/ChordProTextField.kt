@@ -191,6 +191,7 @@ internal fun ChordProTextField(
         // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
         lineLimits = TextFieldLineLimits.MultiLine(),
+        inputTransformation = PastedTextFormatting,
         outputTransformation = outputTransformation,
         onTextLayout = { getResult -> textLayout.getResult = getResult },
         cursorBrush = SolidColor(colorScheme.primary),

@@ -34,6 +34,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.EscapeStep
 import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.awtClipboardText
+import com.pandulapeter.campfire.presentation.ui.platform.clipboardTextOf
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -69,9 +71,14 @@ fun CampfireDesktopApp(
         modifier = Modifier
             .fillMaxSize()
             // Files dropped anywhere on the window are imported, which is the shortest path there is from a folder
-            // of songs to a library.
+            // of songs to a library. Text dropped on the song list is a new song, as Paste from clipboard makes one; a
+            // file list wins over a text, since a file dragged from a file manager offers both.
             .dragAndDropTarget(
-                shouldStartDragAndDrop = { it.awtTransferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) },
+                shouldStartDragAndDrop = { event ->
+                    val transferable = event.awtTransferable
+                    transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
+                        transferable.isDataFlavorSupported(DataFlavor.stringFlavor) && viewModel.pastedSongController.isNewSongPasteAvailable
+                },
                 target = remember {
                     object : DragAndDropTarget {
                         override fun onDrop(event: DragAndDropEvent): Boolean {
@@ -79,10 +86,16 @@ fun CampfireDesktopApp(
                             // (the JDK throws for a malformed uri-list on X11, or a source that is gone); an exception out
                             // of here would also skip the end of the session, and the window would refuse every drag after
                             // this one.
+                            val transferable = event.awtTransferable
                             val files = try {
-                                event.awtTransferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>
+                                if (!transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                                    val text = transferable.getTransferData(DataFlavor.stringFlavor) as? String ?: return false
+                                    viewModel.pastedSongController.newSongFromText(text)
+                                    return true
+                                }
+                                transferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>
                             } catch (exception: Exception) {
-                                println("Could not read the dropped files: ${exception.message}")
+                                println("Could not read what was dropped: ${exception.message}")
                                 return false
                             }
                             val paths = files.orEmpty().filterIsInstance<File>().map { it.absolutePath }
@@ -110,7 +123,8 @@ fun CampfireDesktopApp(
  * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
  * (`FontScaleController.zoomSongText`), the shortcuts a browser zooms a page with. Space and M start and stop the
  * metronome (`MetronomeController.toggleMetronomeByKey`), which a focused button or field takes first, since only what
- * nothing focused took reaches this handler.
+ * nothing focused took reaches this handler. Ctrl / Cmd + V on the song list makes a new song of the clipboard's text,
+ * as Paste from clipboard does (`PastedSongController.isNewSongPasteAvailable`).
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from and the question that
  *   follows has been answered with Close, and only once a save that is still being written has finished, see
@@ -119,6 +133,11 @@ fun CampfireDesktopApp(
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown) {
         val isCtrlOrMeta = keyEvent.isCtrlPressed || keyEvent.isMetaPressed
+        // A focused field takes its own paste before this hears it, so Ctrl / Cmd + V here is one on the song list.
+        if (keyEvent.key == Key.V && isCtrlOrMeta && !keyEvent.isAltPressed && pastedSongController.isNewSongPasteAvailable) {
+            pastedSongController.newSongFromClipboard { clipboardTextOf(awtClipboardText()) }
+            return true
+        }
         keyEvent.key.toShortcutKey()?.let { appShortcutOf(it, isCtrlOrMeta = isCtrlOrMeta, isAlt = keyEvent.isAltPressed) }?.let { shortcut ->
             // A held key repeats its key-down; only the first press is a request, the rest would start and stop the
             // click thirty times a second.

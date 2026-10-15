@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -60,6 +61,21 @@ internal class NewSongDialogTest {
         waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { onAllNodesWithText(TITLE).fetchSemanticsNodes().isNotEmpty() }
         waitForIdle()
         assertEquals(before + "new_song_from_a_test.cho", songFileNames())
+    }
+
+    @Test
+    fun `closing a new song's editor lands on the song rather than on the list`() = runAppTest {
+        val before = songFileNames()
+        openNewSong()
+        onAllNodes(hasSetTextAction()).onFirst().performTextInput(TITLE)
+        onNodeWithText(string(Res.string.create)).performClick()
+        waitForLibrary { songFileNames().size > before.size }
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { onAllNodesWithContentDescription(string(Res.string.close)).fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithContentDescription(string(Res.string.close)).performClick()
+        waitForIdle()
+        // The song list's New song button is only there on the list; the song's own screen shows its title.
+        onNodeWithContentDescription(string(Res.string.songs_new_song)).assertDoesNotExist()
+        onAllNodesWithText(TITLE).onFirst().assertExists()
     }
 
     private fun AppTestScope.openNewSong() {

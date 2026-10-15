@@ -27,11 +27,11 @@ What every screen shares; each destination's package has its own notes.
 
 - "New song" / "New setlist" sit in the app bar, not a FAB, leaving the corner to the fast scroller. Each opens a
   dropdown (`components/menu/NewItemMenu.kt`): create vs. import is asked first; only "Create…" opens the naming sheet.
-  Import is the same on both screens (an archive holds songs and setlists alike).
+  Import is the same on both screens (an archive holds songs and setlists alike). Songs adds Paste from clipboard third.
 - The divider before it (`ClosedSearchActionsDivider`, shown with `areClosedSearchActionsShown`) animates on the search
   action's spring, not inside the button's exit, whose clipped shrink would cut it off on the first frame.
 - The menu leaves the bar while the empty state, loading indicator, or error is up (`allowsNewItemMenu`); each offers
-  its own buttons. Both empty states start with those same two buttons, same labels, same order.
+  its own buttons. Both empty states start with the menu's buttons, same labels, same order.
 
 ## Searching the list screens
 

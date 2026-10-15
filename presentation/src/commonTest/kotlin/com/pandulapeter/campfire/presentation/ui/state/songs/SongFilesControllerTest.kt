@@ -57,7 +57,12 @@ class SongFilesControllerTest {
             followReportedFileNames = { calls += "reported" },
             getSongContent = files,
             createSongFile = object : CreateSongUseCase {
-                override suspend fun invoke(title: String, artist: String, metadata: Map<ChordProMetadataFields.Field, String>) = error("Not used.")
+                override suspend fun invoke(
+                    title: String,
+                    artist: String,
+                    metadata: Map<ChordProMetadataFields.Field, String>,
+                    text: String?,
+                ) = error("Not used.")
             },
             duplicateSongFile = object : DuplicateSongUseCase {
                 override suspend fun invoke(fileName: String, changes: Map<ChordProMetadataFields.Field, String>) = error("Not used.")

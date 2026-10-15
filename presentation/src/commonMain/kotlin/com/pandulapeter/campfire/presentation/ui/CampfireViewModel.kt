@@ -125,6 +125,8 @@ import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchCont
 import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
+import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -400,6 +402,7 @@ class CampfireViewModel(
         getEditorDraft = getEditorDraft,
         saveEditorDraft = saveEditorDraft,
         updateBackStack = { navigator.updateBackStack(update = it) },
+        isSongShownOnTop = navigator::isSongShownOnTop,
         popBackStack = { navigator.popBackStack() },
         takePendingExit = { appExitController.takePendingExit() },
         requestExit = { onExit, onCancelled -> requestExit(onExit = onExit, onCancelled = onCancelled) },
@@ -478,6 +481,22 @@ class CampfireViewModel(
         importFiles = importFiles,
         rememberDemoLibraryFiles = rememberDemoLibraryFiles,
         deleteLibrary = deleteLibrary,
+    )
+
+    internal val pastedSongController: PastedSongController = PastedSongController(
+        scope = viewModelScope,
+        messageSink = messageSink,
+        dialogHost = dialogHost,
+        backStack = navigator.backStack,
+        isImporting = importController.isImporting,
+        isPerformanceModeEnabled = preferencesController.isPerformanceModeEnabled,
+        enqueueImport = { file, isNewSongFromText ->
+            importController.enqueueImport(
+                source = ImportSource.Files(listOf(file)),
+                shouldOpenSong = !isNewSongFromText,
+                isNewSongFromText = isNewSongFromText,
+            )
+        },
     )
 
     internal val songFilesController: SongFilesController = SongFilesController(

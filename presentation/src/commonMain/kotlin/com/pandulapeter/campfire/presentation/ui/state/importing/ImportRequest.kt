@@ -24,6 +24,7 @@ import kotlinx.coroutines.CompletableDeferred
  * @param shouldOpenSong True for files the system handed over and for an address, see [ImportController.importFiles].
  * @param shouldReview See [ImportController.enqueueImport].
  * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
+ * @param isNewSongFromText The one file is a text pasted or dropped as a new song, see [ImportController.enqueueImport].
  */
 internal class ImportRequest(
     var source: ImportSource,
@@ -31,5 +32,6 @@ internal class ImportRequest(
     val shouldOpenSong: Boolean,
     val shouldReview: Boolean = true,
     val isDemoLibrary: Boolean = false,
+    val isNewSongFromText: Boolean = false,
     val settled: CompletableDeferred<Unit> = CompletableDeferred(),
 )

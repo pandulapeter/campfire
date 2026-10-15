@@ -22,7 +22,11 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  */
 object ImportLimits {
 
-    /** One song, setlist or collection of songs, picked or inside an archive: a few thousand songs in one file. */
+    /**
+     * One song, setlist or collection of songs, picked or inside an archive: a few thousand songs in one file. A text
+     * pasted as a new song is refused over it with a message that names it as 8 MB in both languages, so the strings
+     * change with it.
+     */
     const val MAX_TEXT_FILE_SIZE = 8L shl 20
 
     /** Documents may carry embedded fonts and images much larger than their extracted text. */

@@ -89,6 +89,7 @@ class EditorSessionTest {
                     }
                 },
                 updateBackStack = { update -> backStack.update() },
+                isSongShownOnTop = { fileName -> (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.songFileNames?.singleOrNull() == fileName },
                 popBackStack = { backStack.removeAt(backStack.lastIndex) },
                 takePendingExit = { null },
                 requestExit = { _, _ -> },
@@ -99,6 +100,22 @@ class EditorSessionTest {
     }
 
     private fun TestScope.fixture(notation: UserPreferences.Notation = UserPreferences.Notation.STANDARD) = Fixture(backgroundScope, notation)
+
+    @Test
+    fun `the editor opened from a list has the song's details screen under it`() = runTest {
+        fixture().session.openEditor("a.cho")
+        val details = backStack[1] as CampfireDestination.SongDetails
+        assertEquals(listOf("a.cho"), details.songFileNames)
+        assertEquals(listOf(CampfireDestination.Songs, details, CampfireDestination.SongEditor(fileName = "a.cho")), backStack.toList())
+    }
+
+    @Test
+    fun `the editor opened from the song's details screen goes straight on top of it`() = runTest {
+        val details = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
+        backStack += details
+        fixture().session.openEditor("a.cho")
+        assertEquals(listOf(CampfireDestination.Songs, details, CampfireDestination.SongEditor(fileName = "a.cho")), backStack.toList())
+    }
 
     @Test
     fun `a stored draft the file already holds is thrown away rather than reopened`() = runTest {

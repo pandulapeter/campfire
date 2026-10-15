@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.songEditorEntries
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PendingExit
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -49,6 +50,7 @@ import kotlinx.coroutines.withContext
  * background, the field kept across a recreation, its ways out and its saves.
  *
  * @param updateBackStack Changes the back stack, see `Navigator.updateBackStack`.
+ * @param isSongShownOnTop Whether the screen on top is a details screen showing the song, see `Navigator.isSongShownOnTop`.
  * @param popBackStack Leaves the screen on top, see `Navigator.popBackStack`.
  * @param takePendingExit Takes the exit the unsaved changes question was asked for, see `AppExitController.takePendingExit`.
  * @param requestExit Closes the application, see `CampfireViewModel.requestExit`.
@@ -66,6 +68,7 @@ internal class EditorSession(
     private val getEditorDraft: GetEditorDraftUseCase,
     private val saveEditorDraft: SaveEditorDraftUseCase,
     private val updateBackStack: (SnapshotStateList<CampfireDestination>.() -> Unit) -> Unit,
+    private val isSongShownOnTop: (fileName: String) -> Boolean,
     private val popBackStack: () -> Unit,
     private val takePendingExit: () -> PendingExit?,
     private val requestExit: (onExit: () -> Unit, onCancelled: () -> Unit) -> Unit,
@@ -157,10 +160,16 @@ internal class EditorSession(
      */
     val editorNotation get() = (userPreferences.value?.chordSpelling?.notation ?: UserPreferences.Notation.STANDARD).forTyping
 
+    /** Opens the editor over the song's details screen, putting that screen under it first where it is not on top. */
     fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) {
         if (backStack.lastOrNull() !is CampfireDestination.SongEditor) {
-            updateBackStack { add(CampfireDestination.SongEditor(fileName = fileName, shouldStartInsideFirstSection = shouldStartInsideFirstSection)) }
+            pushEditor(CampfireDestination.SongEditor(fileName = fileName, shouldStartInsideFirstSection = shouldStartInsideFirstSection))
         }
+    }
+
+    private fun pushEditor(editor: CampfireDestination.SongEditor) {
+        val entries = songEditorEntries(editor = editor, isSongShownOnTop = isSongShownOnTop(editor.fileName))
+        updateBackStack { addAll(entries) }
     }
 
     /** Reported by the editor on every change, see [_editorDraft]. Nothing is written here. */
@@ -261,7 +270,7 @@ internal class EditorSession(
         // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
         // the moments before it composes - a pause, the update gate - hears "no".
         onEditorTextChanged(fileName = draft.fileName, text = text)
-        updateBackStack { add(CampfireDestination.SongEditor(fileName = draft.fileName)) }
+        pushEditor(CampfireDestination.SongEditor(fileName = draft.fileName))
         // Taken by the editor as its field, see LoadedSongEditor, the same way a field it retained across a rotation is.
         retainedEditorField = draft.fileName to TextFieldState(initialText = text)
         messageSink.sendMessage(Message.EditorDraftRestored)

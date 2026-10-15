@@ -16,7 +16,8 @@
 - `ChordProMetadataFields.set` rewrites the line the parser reads, in its own spelling, **but never a body
   `{key}`/`{tempo}`/`{time}`**; a cleared header value the body still changes is kept as an empty line, so the song
   does not start in its first change.
-- `ChordProHeader.insert` puts a directive in the header, never at the caret (valid but invisible mid-verse).
+- `ChordProHeader.insert` puts a directive in the header, never at the caret (valid but invisible mid-verse);
+  `ChordProHeader.write` selects (or fills) the existing line of a kind the song may hold only once instead.
 - `ChordProPrettifier` formats raw text, never re-serializes a model, so unsupported directives survive. **No blank line
   is added around a tab or grid, or inside a legacy heading section or implicit paragraph** — it would split or close
   it. `define` is deliberately not in `metadataOrder`.

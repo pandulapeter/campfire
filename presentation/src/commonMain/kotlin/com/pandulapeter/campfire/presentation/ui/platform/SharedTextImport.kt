@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
@@ -34,7 +35,14 @@ fun sharedTextsToImportedFiles(texts: List<String>, subject: String?): List<Impo
         )
     }
 
-private fun String.isOnlyLinks() = lineSequence().filter { it.isNotBlank() }.let { lines -> lines.any() && lines.all { LINK.matches(it.trim()) } }
+/** Every line that is not blank is an address, which is not a song and is never fetched. */
+internal fun String.isOnlyLinks() = lineSequence().filter { it.isNotBlank() }.let { lines -> lines.any() && lines.all { LINK.matches(it.trim()) } }
+
+/**
+ * Whether the text is within what an import reads of one text file, counted in UTF-8 bytes as the file would be: a
+ * text over it is refused before anything is prepared rather than reported as an oversized file.
+ */
+internal fun String.fitsImport() = encodeToByteArray().size <= ImportLimits.MAX_TEXT_FILE_SIZE
 
 /** Where a pasted chord sheet has its title: the first line that is neither a directive, a section, nor a comment. */
 private fun String.firstPlainLine() = lineSequence()

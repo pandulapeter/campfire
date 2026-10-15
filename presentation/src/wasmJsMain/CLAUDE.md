@@ -21,7 +21,8 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
 - The browser's media session is cleared from the engine's own playback state, not only from the composition, since a
   hidden tab's composition stops collecting.
 - Dropped files are imported; a dropped folder stands for the files directly inside it. An unreadable file arrives
-  empty and is reported as skipped.
+  empty and is reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song where
+  `isNewSongPasteAvailable`, ignored elsewhere.
 
 ### Keys
 
@@ -35,6 +36,8 @@ canvas listener — and most dialogs open with a field focused.
 - **Ctrl/Cmd + F** (`SearchShortcutEffect`, a Kotlin listener, since the view model decides synchronously): calls
   `openCurrentSearch` and prevents the find bar only if that opened something. In the editor, F and R are always
   prevented (its Find / Find and replace; R would reload).
+- **Ctrl/Cmd + V** (`PasteShortcutEffect`): the `paste` event, not the key, since it carries the text with no permission
+  asked; a paste into an editable target is left alone, and only `isNewSongPasteAvailable` takes one.
 - **Zoom** (`SongTextZoomEffect`, song details only): Ctrl/Cmd + plus/minus/zero go to `zoomSongText`, matched by `key`
   like the browser's zoom. Ctrl + wheel is prevented by a **non-passive** listener (window wheel listeners are passive
   by default) and reaches `fontScaleGestures`.

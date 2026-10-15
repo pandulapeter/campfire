@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -40,14 +39,12 @@ import org.jetbrains.compose.resources.painterResource
 internal fun EditorToolbarButton(
     modifier: Modifier = Modifier,
     label: String,
-    isEnabled: Boolean,
     hasMenu: Boolean = false,
     onClick: () -> Unit,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
     Surface(
-        modifier = modifier.focusProperties { canFocus = false }.alpha(if (isEnabled) 1f else DISABLED_ALPHA),
+        modifier = modifier.focusProperties { canFocus = false },
         onClick = onClick,
-        enabled = isEnabled,
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -78,7 +75,6 @@ internal fun EditorToolbarButton(
     }
 }
 
-private const val DISABLED_ALPHA = 0.5f
 private val BUTTON_HORIZONTAL_PADDING = 12.dp
 private val BUTTON_MENU_END_PADDING = 8.dp
 private val BUTTON_VERTICAL_PADDING = 8.dp

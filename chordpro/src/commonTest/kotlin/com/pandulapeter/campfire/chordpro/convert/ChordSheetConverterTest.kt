@@ -317,4 +317,59 @@ class ChordSheetConverterTest {
 
     private fun span(text: String, start: Double, end: Double, size: Double = 10.0, bold: Boolean = false) =
         ChordSheet.Span(text, start, end, size, isBold = bold)
+
+    @Test
+    fun `a fragment's chord rows are set into the lyrics under them`() {
+        assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
+    }
+
+    @Test
+    fun `a fragment's chord row with no lyrics under it is bracketed on its own line`() {
+        assertEquals("[G] [D] [Em]\n\n[Am]Hello [C]world\n", ChordSheetConverter.convertFragment("G  D  Em\n\nAm     C\nHello world\n"))
+    }
+
+    @Test
+    fun `a fragment's headings become sections and its first line is no title`() {
+        assertEquals(
+            "My Song Title\n{start_of_verse: Verse 1}\n[Am]Hello [C]world\n{end_of_verse}",
+            ChordSheetConverter.convertFragment("My Song Title\nVerse 1:\nAm     C\nHello world"),
+        )
+    }
+
+    @Test
+    fun `a fragment's closing line break comes after the section it opened`() {
+        assertEquals(
+            "{start_of_chorus: Chorus}\n[G]Sing it [D]loud\n{end_of_chorus}\n",
+            ChordSheetConverter.convertFragment("Chorus:\nG       D\nSing it loud\n"),
+        )
+    }
+
+    @Test
+    fun `a fragment's metadata lines stay lines of text`() {
+        assertEquals("Capo 2\n[Am]Hello [C]world", ChordSheetConverter.convertFragment("Capo 2\nAm     C\nHello world"))
+    }
+
+    @Test
+    fun `a fragment's prose cannot become markup`() {
+        assertEquals("[G]Sing [C]along\n(a note) {stays}", ChordSheetConverter.convertFragment("G    C\nSing along\n[a note] {stays}"))
+    }
+
+    @Test
+    fun `a fragment that is ChordPro already or has no chord row is not converted`() {
+        assertEquals(null, ChordSheetConverter.convertFragment("[Am]Hello [C]world\nsecond line"))
+        assertEquals(null, ChordSheetConverter.convertFragment("{start_of_verse}\nHello\n{end_of_verse}"))
+        assertEquals(null, ChordSheetConverter.convertFragment("A long time ago\nin a galaxy far away"))
+    }
+
+    @Test
+    fun `a fragment in Latin or German notation keeps its chords as written`() {
+        assertEquals("[Lam]1 4 [Re]5 [Mi]", ChordSheetConverter.convertFragment("Lam Re Mi\n1 4 5"))
+        assertEquals("[am]Hello [H7]world", ChordSheetConverter.convertFragment("am     H7\nHello world"))
+    }
+
+    @Test
+    fun `a fragment's tabs and wide chord rows are placed by their columns`() {
+        assertEquals("[Am]Hello   world [C]", ChordSheetConverter.convertFragment("Am\t\t\tC\nHello\tworld"))
+        assertEquals("[Am]Hello [C]", ChordSheetConverter.convertFragment("Am            C\nHello"))
+    }
 }

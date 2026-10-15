@@ -77,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPad
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.launch
@@ -146,6 +147,7 @@ internal fun SongList(
     val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault)
     val filePicker = LocalFilePicker.current
+    val clipboardReader = rememberClipboardTextReader()
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
     // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
@@ -257,6 +259,9 @@ internal fun SongList(
                         },
                         onImport = if (isPerformanceModeEnabled) null else {
                             { viewModel.importController.importFiles(filePicker) }
+                        },
+                        onPaste = if (isPerformanceModeEnabled) null else {
+                            { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) }
                         },
                     )
                 }

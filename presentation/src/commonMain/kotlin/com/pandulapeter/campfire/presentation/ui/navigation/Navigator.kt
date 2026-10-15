@@ -264,6 +264,9 @@ internal class Navigator(
     fun currentSongFileName(destination: CampfireDestination.SongDetails) =
         songDetailsCurrentSongs[destination.id] ?: destination.songFileNames.getOrNull(destination.initialIndex) ?: destination.songFileNames.firstOrNull()
 
+    /** Whether the screen on top is a details screen showing the song file [fileName], see [songEditorEntries]. */
+    fun isSongShownOnTop(fileName: String) = (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.let(::currentSongFileName) == fileName
+
     /**
      * Where the user is right now, see [NavigationState]. Its snapshot states can be observed with snapshotFlow, and the
      * two searches, which are flows, have to be combined in by whoever observes it.

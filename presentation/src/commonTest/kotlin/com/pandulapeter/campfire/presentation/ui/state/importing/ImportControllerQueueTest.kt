@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
@@ -36,6 +37,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -46,11 +48,15 @@ class ImportControllerQueueTest {
 
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
     private var prepareCount = 0
+    private var importCount = 0
+    private val openedSongs = mutableListOf<String>()
+    private var plannedSongs = listOf(songEntry("new.cho"))
+    private lateinit var dialogHost: DialogHost
     private lateinit var controller: ImportController
     private lateinit var reportState: ImportReportState
 
     private fun TestScope.startController() {
-        val dialogHost = DialogHost(backgroundScope)
+        dialogHost = DialogHost(backgroundScope)
         reportState = ImportReportState(
             scope = backgroundScope,
             dialogHost = dialogHost,
@@ -69,7 +75,7 @@ class ImportControllerQueueTest {
             messageSink = MessageSink(backgroundScope),
             backStack = backStack,
             reportState = reportState,
-            openImportedSong = {},
+            openImportedSong = { openedSongs += it },
             launchFileTransfer = { null },
             isLeaving = { false },
             downloadImportFile = object : DownloadImportFileUseCase {
@@ -78,21 +84,14 @@ class ImportControllerQueueTest {
             prepareImport = object : PrepareImportUseCase {
                 override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
                     prepareCount++
-                    return ImportPlan(
-                        songs = listOf(
-                            ImportPlan.SongEntry(
-                                fileName = "new.cho",
-                                text = "{title: New}",
-                                status = ImportPlan.Status.NEW,
-                                sourceFileName = "new.cho",
-                            ),
-                        ),
-                    )
+                    return ImportPlan(songs = plannedSongs)
                 }
             },
             importFiles = object : ImportFilesUseCase {
-                override suspend fun invoke(plan: ImportPlan, choices: ImportChoices, onProgress: (ImportProgress) -> Unit) =
-                    ImportResult(importedSongFileNames = plan.songs.map { it.fileName })
+                override suspend fun invoke(plan: ImportPlan, choices: ImportChoices, onProgress: (ImportProgress) -> Unit): ImportResult {
+                    importCount++
+                    return ImportResult(importedSongFileNames = plan.songs.map { it.fileName })
+                }
             },
             rememberDemoLibraryFiles = object : RememberDemoLibraryFilesUseCase {
                 override suspend fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>) = Unit
@@ -148,4 +147,54 @@ class ImportControllerQueueTest {
         leaveImportReport()
         assertTrue(settled.isCompleted)
     }
+
+    @Test
+    fun `a pasted text that is one new song opens the New song form and writes nothing`() = runTest {
+        startController()
+        enqueuePaste()
+        runCurrent()
+        assertIs<DialogType.NewSongFromText>(dialogHost.visibleDialog.value)
+        assertNull(reportState.importReport.value)
+        assertFalse(controller.isImporting.value)
+        assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a pasted songbook is reviewed like the file it would be, with no form`() = runTest {
+        plannedSongs = listOf(songEntry("one.cho"), songEntry("two.cho"))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertNull(dialogHost.visibleDialog.value)
+        assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a pasted song the library already holds is opened, with no form and no review`() = runTest {
+        plannedSongs = listOf(songEntry("held.cho", status = ImportPlan.Status.IDENTICAL, isConverted = true))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertNull(dialogHost.visibleDialog.value)
+        assertNull(reportState.importReport.value)
+        assertEquals(listOf("held.cho"), openedSongs)
+    }
+
+    private fun enqueuePaste() = controller.enqueueImport(
+        source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),
+        isNewSongFromText = true,
+    )
 }
+
+private fun songEntry(fileName: String, status: ImportPlan.Status = ImportPlan.Status.NEW, isConverted: Boolean = false) = ImportPlan.SongEntry(
+    fileName = fileName,
+    text = "{title: $fileName}",
+    status = status,
+    sourceFileName = fileName,
+    isConverted = isConverted,
+)

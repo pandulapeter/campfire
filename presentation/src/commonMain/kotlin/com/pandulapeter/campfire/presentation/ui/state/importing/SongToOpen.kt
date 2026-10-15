@@ -15,12 +15,20 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 /**
  * The song an import of [plan] that ended in [result] opens, or null where it opens none: only one asked to open
  * one ([shouldOpenSong]), of a single song that is neither converted from a document nor travelling with a setlist.
+ *
+ * @param isConvertedSongOpened True for a text pasted as a new song, which is converted as a matter of course and was
+ *   asked for as the one song it is: one the library already holds is opened, since there is nothing to make.
  */
-internal fun songToOpen(plan: ImportPlan, result: ImportResult, shouldOpenSong: Boolean) =
+internal fun songToOpen(
+    plan: ImportPlan,
+    result: ImportResult,
+    shouldOpenSong: Boolean,
+    isConvertedSongOpened: Boolean = false,
+) =
     // A song that was already in the library is opened as well: it is still the song that was asked for, under
     // the name the library has for it. One that the review left out is in neither list, and
     // the library's own file under that name is a different song.
-    if (shouldOpenSong && plan.songs.size == 1 && !plan.songs.single().isConverted && plan.setlists.isEmpty()) {
+    if (shouldOpenSong && plan.songs.size == 1 && (isConvertedSongOpened || !plan.songs.single().isConverted) && plan.setlists.isEmpty()) {
         (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()
     } else {
         null

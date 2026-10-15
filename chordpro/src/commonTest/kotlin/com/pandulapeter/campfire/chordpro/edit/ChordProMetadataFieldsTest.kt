@@ -161,4 +161,17 @@ class ChordProMetadataFieldsTest {
         listOf(Field.KEY, Field.CAPO, Field.TEMPO, Field.TIME).forEach { assertEquals(null, ChordProMetadataFields.valueOf(metadata, it)) }
         assertEquals("96", ChordProMetadataFields.valueOf(ChordProParser.parseMetadata("{tempo: 96}\n{tempo: }"), Field.TEMPO))
     }
+
+    @Test
+    fun `declare adds a header line only for a field the song has no line of`() {
+        val text = "{title: Song}\n{capo: 2}\n\n[G]Hello\n"
+        val declared = ChordProMetadataFields.declare(text, mapOf(Field.KEY to "", Field.CAPO to "0", Field.TEMPO to "120"))
+        assertEquals("{title: Song}\n{key: }\n{capo: 2}\n{tempo: 120}\n\n[G]Hello\n", declared)
+    }
+
+    @Test
+    fun `declare leaves a field the body changes or an empty line declares alone`() {
+        val text = "{title: Song}\n{key: }\n\n[G]Hello\n{tempo: 90}\n[C]World\n"
+        assertEquals(text, ChordProMetadataFields.declare(text, mapOf(Field.KEY to "C", Field.TEMPO to "120")))
+    }
 }

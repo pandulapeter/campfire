@@ -9,10 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SharedTextImportTest {
@@ -84,5 +86,21 @@ class SharedTextImportTest {
         val text = "Ég a napmelegtől\nКатюша"
         val bytes = sharedTextsToImportedFiles(listOf(text), null).single().bytes
         assertEquals(text, bytes.decodeToString())
+    }
+
+    @Test
+    fun `only links are told apart from a text with something else in it`() {
+        assertTrue("https://example.com/a\n\n  HTTP://EXAMPLE.COM/b  ".isOnlyLinks())
+        assertFalse("https://example.com\nA lyric line".isOnlyLinks())
+        assertFalse("   \n".isOnlyLinks())
+    }
+
+    @Test
+    fun `a text fits the import by its size in UTF-8`() {
+        val limit = ImportLimits.MAX_TEXT_FILE_SIZE.toInt()
+        assertTrue("a".repeat(limit).fitsImport())
+        assertFalse("a".repeat(limit + 1).fitsImport())
+        // Two bytes each in UTF-8, so half as many characters already reach the limit.
+        assertFalse("é".repeat(limit / 2 + 1).fitsImport())
     }
 }

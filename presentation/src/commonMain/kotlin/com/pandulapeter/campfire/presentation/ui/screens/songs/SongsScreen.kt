@@ -60,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
+import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
@@ -107,6 +108,7 @@ internal fun SongsScreen(
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    val clipboardReader = rememberClipboardTextReader()
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
@@ -202,6 +204,7 @@ internal fun SongsScreen(
                                     createLabel = stringResource(Res.string.songs_create_song),
                                     onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
                                     onImport = viewModel.importController::importFiles,
+                                    onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
                                 )
                             }
                         }

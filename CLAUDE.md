@@ -160,8 +160,11 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Other apps' backups are read as archives (SongbookPro translated): `data/source/local/implementation`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
+- The editor always opens over its song's details screen: `ui/navigation`.
 - Imports are reviewed before writing; existing files are skipped, collisions numbered or replaced after confirmation:
   `domain/implementation`.
+- A pasted or dropped chord sheet that is one new song opens the New song sheet, nothing written before Create; never a
+  link followed: `presentation`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.

@@ -75,6 +75,9 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confi
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
+import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
+import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
+import com.pandulapeter.campfire.presentation.resources.songs_paste_no_chords
 import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
@@ -178,6 +181,20 @@ private fun CampfireDialog(
         DialogType.NewSong -> NewSongDialog(
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onCreate = { values, _ -> viewModel.songFilesController.createSong(values = values) },
+        )
+
+        is DialogType.NewSongFromText -> NewSongDialog(
+            offeredValues = dialog.values,
+            note = stringResource(
+                // Lyrics alone may well come through the conversion unchanged, so the chords are asked about first.
+                when {
+                    !dialog.hasChords -> Res.string.songs_paste_no_chords
+                    dialog.isConverted -> Res.string.songs_paste_converted
+                    else -> Res.string.songs_paste_chordpro
+                }
+            ),
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            onCreate = { values, _ -> viewModel.songFilesController.createSong(values = values, text = dialog.text) },
         )
 
         is DialogType.DuplicateSong -> NewSongDialog(

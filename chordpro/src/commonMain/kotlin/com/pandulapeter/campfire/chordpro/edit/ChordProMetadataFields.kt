@@ -87,6 +87,25 @@ public object ChordProMetadataFields {
         set(text = current, field = field, value = value)
     }
 
+    /**
+     * Gives each field of [values] a line in the header with its value - which may be empty, `{key: }`, a line that says
+     * nothing yet - where the song has no line of that field anywhere; a field it has a line of, an empty one or a change
+     * in the body included, is left as it is, so this never changes what the song declares. The lines go where
+     * [ChordProHeaderLayout.metadataInsertionIndex] puts them, every other byte of [text] kept.
+     */
+    public fun declare(text: String, values: Map<Field, String>): String {
+        val lines = ChordProLines.splitLines(text).toMutableList()
+        var isChanged = false
+        values.forEach { (field, value) ->
+            if (lines.none { it.kind() == field.directiveName }) {
+                val cleaned = value.replace('\r', ' ').replace('\n', ' ').trim()
+                lines.add(ChordProHeaderLayout.metadataInsertionIndex(lines, field.directiveName), "{${field.directiveName}: $cleaned}")
+                isChanged = true
+            }
+        }
+        return if (isChanged) ChordProLines.joinLines(lines, text) else text
+    }
+
     private fun set(text: String, field: Field, value: String?): String {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
         val lines = ChordProLines.splitLines(text)

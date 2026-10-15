@@ -26,17 +26,18 @@ import com.pandulapeter.campfire.presentation.ui.platform.ProvideKeyboardInsets
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
+import com.pandulapeter.campfire.presentation.ui.platform.droppedTexts
 import kotlinx.browser.window
 import org.w3c.dom.events.KeyboardEvent
 import kotlin.js.ExperimentalWasmJsInterop
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, and the
- * browser asks before the page is left with unsaved text in the editor. Escape reaches Compose from a focused text
- * field too ([startForwardingEscapeKey]), Ctrl / Cmd + S is kept from the browser's own "Save page as"
- * ([startSuppressingBrowserSave]), and Ctrl / Cmd + F opens the search of a list screen in place of the browser's
- * find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
+ * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, text dropped or
+ * pasted (Ctrl / Cmd + V, [PasteShortcutEffect]) on the song list is a new song, and the browser asks before the page is
+ * left with unsaved text in the editor. Escape reaches Compose from a focused text field too ([startForwardingEscapeKey]),
+ * Ctrl / Cmd + S is kept from the browser's own "Save page as" ([startSuppressingBrowserSave]), and Ctrl / Cmd + F opens
+ * the search of a list screen in place of the browser's find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
  * instead of zooming the page ([SongTextZoomEffect]). Every screen has an address of its own, and the browser's
  * history follows the app's back stack ([BrowserHistoryEffect]). The browser's own toolbar is painted in the palette
  * the user chose ([BrowserThemeColorEffect]), and the favicon is the icon of that palette ([FaviconEffect]). The
@@ -67,6 +68,13 @@ fun CampfireWebApp(
     remember(viewModel) { viewModel.navigateToBrowserAddress() }
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
+    PasteShortcutEffect(viewModel)
+    // Dropped anywhere else, or over a dialog, the text is dropped: the drop has no meaning there.
+    LaunchedEffect(viewModel) {
+        droppedTexts().collect { text ->
+            if (viewModel.pastedSongController.isNewSongPasteAvailable) viewModel.pastedSongController.newSongFromText(text)
+        }
+    }
     MetronomeShortcutEffect(viewModel)
     LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel.metronomeController::stopMetronome) }
     // The composition stops collecting while the tab is hidden (Compose moves the lifecycle to CREATED), and a hidden tab

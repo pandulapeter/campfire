@@ -11,9 +11,11 @@
 ## Short-term (in this version)
 ### Improvements
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
+- Create screenshot UI tests for every screen and dialog
+- Review UI consistency
 
 ### Features
-- Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)
+- Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 
 ## Midterm (in the next versions)

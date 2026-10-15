@@ -23,16 +23,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -92,8 +87,6 @@ import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
  * takes the caret out of the field closes the keyboard under itself on every tap, and the insertion the tap asked
  * for would land wherever the caret used to be.
  *
- * @param text The text of [textFieldState] as one string, which the screen copies once per edit for everything that
- *   follows it rather than each of them copying it again.
  * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with for the instrument
  *   picked from its menu ([chordShapeInstruments]), see `chordShapeInsertion`.
  * @param tabStaff The empty staff the Tab button writes where nothing is selected for the instrument picked from its
@@ -103,30 +96,19 @@ import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 internal fun EditorToolbar(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
-    text: State<String>,
     contentPadding: PaddingValues,
     chordShapes: EditorChordShapes,
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
 ) {
-    // What the song already says about itself follows the text rather than being read once, so that a directive
-    // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The cache is what
-    // keeps that off the keystroke path: only an edit that changes what a line declares counts the whole text again,
-    // and the derived state recomposes the toolbar only when the set itself changes.
-    val declaredMetadataCache = remember(text) { ChordProHeader.DeclaredMetadataCache() }
-    val declaredMetadata by remember(text) {
-        derivedStateOf { declaredMetadataCache.declaredMetadataOf(text.value) }
-    }
     Column(
         modifier = modifier.padding(bottom = TOOLBAR_PADDING),
         verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
     ) {
         EditorToolbarRow(
             groups = metadataInsertions(),
-            declaredMetadata = declaredMetadata,
             textFieldState = textFieldState,
             contentPadding = contentPadding,
         ) {
-            // A song defines as many chords as it has, so this one is never out of reach, like Tag and Language.
             EditorToolbarDivider()
             EditorToolbarMenuButton(
                 label = stringResource(Res.string.song_editor_insert_chord_shape),
@@ -136,7 +118,6 @@ internal fun EditorToolbar(
         }
         EditorToolbarRow(
             groups = contentInsertions(tabStaff),
-            declaredMetadata = declaredMetadata,
             textFieldState = textFieldState,
             contentPadding = contentPadding,
         )
@@ -145,13 +126,11 @@ internal fun EditorToolbar(
 
 /**
  * @param groups Rendered in order with a divider between them, which is the only thing that tells them apart.
- * @param declaredMetadata What the song already declares, which decides what is left for a button to write.
  */
 @Composable
 private fun EditorToolbarRow(
     modifier: Modifier = Modifier,
     groups: List<List<EditorInsertion>>,
-    declaredMetadata: Set<String>,
     textFieldState: TextFieldState,
     contentPadding: PaddingValues,
     trailing: @Composable () -> Unit = {},
@@ -174,7 +153,6 @@ private fun EditorToolbarRow(
                 if (insertion.choices.isEmpty()) {
                     EditorToolbarButton(
                         label = insertion.label,
-                        isEnabled = insertion.isEnabled(declaredMetadata),
                         onClick = { textFieldState.insert(insertion) },
                     )
                 } else {
@@ -260,8 +238,8 @@ private fun contentInsertions(tabStaff: (UserPreferences.Instrument?) -> List<St
  * the order the header of a file tends to list them.
  *
  * None of these goes to the caret: they belong to the header and are put there, see `insertIntoHeader`. The directives
- * that can only be true once — a song has one title and came out in one year — come first, each offered until the file
- * carries it and then no longer, so the start of the row empties as the header fills in. The tags, the languages and
+ * that can only be true once — a song has one title and came out in one year — come first; once the file carries one,
+ * its button takes the caret to it instead of writing a second (see `ChordProHeader.write`). The tags, the languages and
  * the links of a song, which can be added again and again, are a group of their own after them. The tempo and the time
  * signature are not here, though they are header directives too: only the first of each goes into the header, and
  * every later one at the caret's line, as a change from there on that the song details screen starts a page with, so

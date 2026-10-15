@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbarToggle
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.isEnabled
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally

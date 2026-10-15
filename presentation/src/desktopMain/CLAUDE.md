@@ -16,7 +16,7 @@ The desktop shell, called by `:app:desktop`.
 
 - Dropped files are imported (a folder stands for the files directly inside it). A drop whose file list can't be read
   is refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses
-  every later drag.
+  every later drag. Dropped text is a pasted song, accepted only where `isNewSongPasteAvailable`; a file list wins.
 - Links (`openUrl` in `ui/platform/SystemBrowser.desktop.kt`) go through `java.awt.Desktop`, falling back to `open`,
   `rundll32`, or `xdg-open` where AWT has no desktop or `browse` fails. On macOS and Windows anything but a web page
   (the microphone and sound settings pages) always uses the system command, since `browse` hands every address to the
@@ -39,3 +39,4 @@ The desktop shell, called by `:app:desktop`.
 - **Ctrl/Cmd + F** → `openCurrentSearch` (opens it, or refocuses an open one with its text selected), not under a
   dialog, sheet, or menu. It must be a window handler: nothing on a list screen is focused while its search is closed.
 - **Ctrl/Cmd + plus (or equals), minus, zero** → `zoomSongText` on the song details screen (`isSongTextZoomable`).
+- **Ctrl/Cmd + V** → `newSongFromClipboard` where `isNewSongPasteAvailable`; a focused field takes its paste first.

@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
 import com.pandulapeter.campfire.presentation.resources.import_files
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
+import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboard
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
@@ -75,6 +76,7 @@ internal fun ListPlaceholder(
     onNewSetlist: (() -> Unit)? = null,
     onDemoLibrary: (() -> Unit)? = null,
     onImport: (() -> Unit)? = null,
+    onPaste: (() -> Unit)? = null,
 ) = AnimatedContent(
     modifier = modifier,
     targetState = placeholder,
@@ -95,9 +97,9 @@ internal fun ListPlaceholder(
             actions = listOf(EmptyStateAction(text = stringResource(Res.string.retry), onClick = onRetry)),
         )
 
-        // All three offers stand or fall with onNewSong: they are the three ways of filling a library, and a
-        // screen with no business offering any of them - performance mode is on - passes none of them. The demo
-        // songs come last of the three: they are the way out for somebody who wants neither of the other two.
+        // All four offers stand or fall with onNewSong: they are the ways of filling a library, and a screen with no
+        // business offering any of them - performance mode is on - passes none of them. The first three are the New
+        // song menu's, in its order; the demo songs come last: they are the way out for somebody who wants none of those.
         Placeholder.NO_SONGS -> EmptyState(
             icon = painterResource(Res.drawable.ic_songs),
             title = stringResource(Res.string.songs_empty_title),
@@ -106,6 +108,7 @@ internal fun ListPlaceholder(
                 listOf(
                     EmptyStateAction(text = stringResource(Res.string.songs_create_song), onClick = newSong),
                     EmptyStateAction(text = stringResource(Res.string.import_files), onClick = onImport),
+                    EmptyStateAction(text = stringResource(Res.string.songs_paste_from_clipboard), onClick = onPaste),
                     EmptyStateAction(text = stringResource(Res.string.add_demo_library), onClick = onDemoLibrary),
                 )
             }.orEmpty(),

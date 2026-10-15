@@ -39,7 +39,6 @@ internal fun EditorToolbarMenuButton(
     button = { open ->
         EditorToolbarButton(
             label = label,
-            isEnabled = true,
             hasMenu = true,
             onClick = open,
         )

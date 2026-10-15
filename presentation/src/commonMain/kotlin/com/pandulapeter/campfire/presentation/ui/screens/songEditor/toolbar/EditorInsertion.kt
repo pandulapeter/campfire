@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
-
 /**
  * One thing a toolbar button writes around the selection, or around the caret where there is none.
  *
@@ -107,16 +105,5 @@ internal data class EditorInsertion(
         )
     }
 }
-
-/**
- * Whether an insertion still has anything to write: a song is only ever in one key and only came out in one year,
- * so the button that says so is offered until the file says it, and then no longer. The ones a song may repeat
- * ([ChordProHeader.repeatableMetadata]) or change further down ([ChordProHeader.changeableMetadata]) and everything
- * that is part of the song rather than about it stay.
- */
-internal fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) = metadataName == null ||
-    metadataName in ChordProHeader.repeatableMetadata ||
-    metadataName in ChordProHeader.changeableMetadata ||
-    metadataName !in declaredMetadata
 
 private const val TAB = "tab"

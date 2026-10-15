@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.messages
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import org.jetbrains.compose.resources.StringResource
 
 /** Something that has happened and is worth one line of text at the bottom of the screen. */
 sealed interface Message {
@@ -48,6 +49,18 @@ sealed interface Message {
 
     /** The editor was reopened on the unsaved text a previous run left when it ended in the background. */
     data object EditorDraftRestored : Message
+
+    /** Paste from clipboard, or its shortcut, found no text on the clipboard. */
+    data object ClipboardEmpty : Message
+
+    /** The platform would not let the clipboard be read; [text] says where that is decided. */
+    data class ClipboardRefused(val text: StringResource) : Message
+
+    /** A pasted or dropped text that is nothing but addresses, which is no song and is never fetched. */
+    data object PastedOnlyLinks : Message
+
+    /** A pasted or dropped text longer than an import reads of one file. */
+    data object PastedTextTooLarge : Message
 
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message

@@ -52,9 +52,11 @@ Android, which already has most of it. Campfire makes no request for any of it: 
   selection or an archive, applied by `ImportBudget`.
 - **Nothing in the iOS project has an entitlements file, a second target or an App Group.** The Keychain items of
   `SecretStore.ios.kt` use the default access group, which an App Group entitlement does not change.
-- **The clipboard plan (`documentation/plans/clipboard-import.md`) lands first**: it moves Android's shared-text
-  naming into `:presentation`'s `SharedText` and adds `newSongFromText`, which this plan routes both phones' shared
-  text into (§5).
+- **The clipboard plan has landed**, under other names than the ones this plan uses: the naming is
+  `ui/platform/SharedTextImport.kt` (`sharedTextsToImportedFiles`, `isOnlyLinks`, `fitsImport`), and the one way from a
+  text to a new song is `PastedSongController.newSongFromText(text, subject)` (`ui/state/importing`), whose read only
+  mode half is already there. Read "the clipboard plan's" below as those, and `createSongFromText` as
+  `SongFilesController.createSong(values, text)`; this plan routes both phones' shared text into it (§5).
 
 ### Defaults this plan assumes — veto any of them before the work starts
 

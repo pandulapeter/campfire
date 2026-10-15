@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
 
 /**
@@ -34,8 +35,8 @@ public object ChordProHeader {
     /**
      * The metadata directives a song may declare more than once, and so the ones an editor keeps offering after the
      * file already carries one: a song has as many tags as it was filed under, is sung in as many languages as it has
-     * words for, and has as many pages about it as somebody linked. Every other directive in [declaredMetadata] says one thing about the song, and a file that
-     * says it twice is a file with a contradiction in it rather than a richer one.
+     * words for, and has as many pages about it as somebody linked. Every other metadata directive says one thing about
+     * the song, and a file that says it twice is a file with a contradiction in it rather than a richer one, see [write].
      */
     public val repeatableMetadata: Set<String> = MetadataKind.entries.filter { it.isRepeatable }.map { it.longName }.toSet()
 
@@ -47,74 +48,73 @@ public object ChordProHeader {
     public val changeableMetadata: Set<String> = MetadataKind.entries.filter { it.isTimingChange }.map { it.longName }.toSet()
 
     /**
-     * The metadata directives [text] already declares, each under the one name the app knows it by (`{t}` and
-     * `{title}` are both `title`, `{meta: language en}` is `language`), and wherever in the file they stand.
+     * What an editor's button for a directive of kind [name] writes into [text], and where the caret goes, with [value]
+     * as what the directive is to say (the text the user had selected, or nothing):
+     * - the [repeatableMetadata] get one more line by [insert], and the [changeableMetadata] whatever [insertChangeable]
+     *   decides, since a song may say either again;
+     * - every other kind the song does not declare yet gets its line by [insert];
+     * - every other kind it does declare, in any spelling and wherever in the file, has its first line taken to instead,
+     *   since a second one would be a contradiction rather than a richer song: its value is selected, so that the next
+     *   keystroke rewrites it, or replaced by [value] where there is one. A line with no value yet becomes [prefix] and
+     *   [suffix], as it would have been written.
      *
-     * It is the directives that are counted and not what they are worth, so a `{title: }` waiting to be typed into
-     * counts as a title: what this answers is whether writing another one would be writing a second of the same.
+     * [value] is read as one line without braces, which would otherwise end the directive and leave the rest in the song
+     * as lyrics; one that is blank is no value. Whatever it becomes is selected once written.
      */
-    internal fun declaredMetadata(text: String): Set<String> = ChordProLines.splitLines(text)
-        .mapNotNullTo(mutableSetOf()) { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProHeaderLayout::metadataKind) }
+    public fun write(text: String, name: String, caretOffset: Int, prefix: String, suffix: String, value: String): Insertion {
+        val cleanedValue = value.replace(valueBreakRegex, " ").trim()
+        if (name in changeableMetadata) return insertChangeable(text, name, caretOffset, prefix, suffix, cleanedValue)
+        if (name in repeatableMetadata) return insert(text, name, prefix, suffix, cleanedValue)
+        val lines = ChordProLines.splitLines(text)
+        val index = lines.indexOfFirst { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProHeaderLayout::metadataKind) == name }
+        if (index < 0) return insert(text, name, prefix, suffix, cleanedValue)
+        return valueOfLine(lines[index], ChordProLines.lineStartOffsets(text)[index], prefix, suffix, cleanedValue)
+    }
 
     /**
-     * [declaredMetadata] for a text that is edited one keystroke at a time, which is how the editor's toolbar keeps a
-     * directive typed by hand from being offered again; the answer is always equal to [declaredMetadata]'s.
-     *
-     * An edit that adds or removes no line break, and does not split or join a CRLF pair, changes the text of exactly
-     * one line, and the set can only change if that line's kind does: a keystroke in a lyric line or in a directive's
-     * value leaves it as it was, and returns the set it had. Anything else is counted again over the whole text, the
-     * keystroke that completes or breaks a directive included.
-     *
-     * One instance follows one text; it is not safe to share between threads.
+     * The value of [line], a directive starting at [lineStart], selected, or replaced by [value] where there is one. A
+     * line with no value yet becomes [prefix] and [suffix] around [value], spelled as the editor writes the directive.
      */
-    public class DeclaredMetadataCache {
-        private var previousText: String? = null
-        private var previous: Set<String> = emptySet()
-
-        /** The metadata directives [text] declares, equal to what [declaredMetadata] returns for it. */
-        public fun declaredMetadataOf(text: String): Set<String> {
-            val oldText = previousText
-            if (oldText != null) {
-                if (text === oldText || text == oldText) return previous
-                val change = ChordProTextChange.between(oldText, text)
-                if (isWithinOneLine(oldText, text, change) && kindOfLineAt(oldText, change.oldStart) == kindOfLineAt(text, change.oldStart)) {
-                    previousText = text
-                    return previous
-                }
-            }
-            previous = declaredMetadata(text)
-            previousText = text
-            return previous
+    private fun valueOfLine(line: String, lineStart: Int, prefix: String, suffix: String, value: String): Insertion {
+        val directive = ChordProDirectives.matchDirective(line.trim())!!
+        val standard = ChordProMetaItems.standardMeta(directive)
+        val current = when {
+            standard != null -> standard.value
+            directive.name == META -> ChordProMetaItems.metaValue(directive)
+            else -> directive.value
+        }.orEmpty()
+        if (current.isEmpty()) {
+            val caretOffset = lineStart + prefix.length
+            return Insertion(
+                offset = lineStart,
+                text = prefix + value + suffix,
+                caretOffset = caretOffset,
+                replacedLength = line.length,
+                selectionEnd = caretOffset + value.length,
+            )
         }
-
-        /** Neither side of [change] holds a line break, and it does not sit between the two halves of a CRLF. */
-        private fun isWithinOneLine(old: String, new: String, change: ChordProTextChange): Boolean {
-            for (offset in change.oldStart until change.oldEnd) if (old[offset] == '\r' || old[offset] == '\n') return false
-            for (offset in change.oldStart until change.newEnd) if (new[offset] == '\r' || new[offset] == '\n') return false
-            return !(change.oldStart > 0 && old[change.oldStart - 1] == '\r' && old.getOrNull(change.oldEnd) == '\n')
-        }
-
-        /** The metadata kind of the line around [offset], by the same rule [declaredMetadata] applies to every line. */
-        private fun kindOfLineAt(text: String, offset: Int): String? {
-            var start = offset
-            while (start > 0 && text[start - 1] != '\n' && text[start - 1] != '\r') start--
-            var end = offset
-            while (end < text.length && text[end] != '\n' && text[end] != '\r') end++
-            return ChordProDirectives.matchDirective(text.substring(start, end).trim())?.let(ChordProHeaderLayout::metadataKind)
-        }
+        val valueStart = lineStart + line.lastIndexOf(current, line.lastIndexOf('}'))
+        // Only a value to write is an edit; selecting what is there leaves the text, and so the undo history, alone.
+        return Insertion(
+            offset = valueStart,
+            text = value,
+            caretOffset = valueStart,
+            replacedLength = if (value.isEmpty()) 0 else current.length,
+            selectionEnd = valueStart + value.ifEmpty { current }.length,
+        )
     }
 
     /**
      * Where a directive of kind [name] goes in [text], and what has to be written there: [prefix] and [suffix] are
-     * the two halves of the directive as the caller spells it (`{title: ` and `}`), which is also what decides
-     * where between them the caret ends up.
+     * the two halves of the directive as the caller spells it (`{title: ` and `}`), and [value] what is written between
+     * them, which is selected once written (the caret alone between the two halves where it is empty).
      *
      * The line goes after the last directive of its own kind, or, for a kind the song does not declare yet, into
      * the header in the order [ChordProHeaderLayout.metadataInsertionIndex] describes. Applying the result is a single
      * insertion at [Insertion.offset] and a caret at [Insertion.caretOffset]; the two are only valid for the text
      * they were computed from.
      */
-    public fun insert(text: String, name: String, prefix: String, suffix: String): Insertion {
+    public fun insert(text: String, name: String, prefix: String, suffix: String, value: String = ""): Insertion {
         val lines = ChordProLines.splitLines(text)
         val index = ChordProHeaderLayout.metadataInsertionIndex(lines, name)
         val separator = ChordProLines.lineSeparatorOf(text)
@@ -124,10 +124,12 @@ public object ChordProHeader {
         val isAppended = index >= lines.size && !ChordProLines.endsWithLineBreak(text)
         val offset = if (isAppended) text.length else ChordProLines.lineStartOffsets(text).getOrElse(index) { text.length }
         val opening = if (isAppended) "$separator$prefix" else prefix
+        val caretOffset = offset + opening.length
         return Insertion(
             offset = offset,
-            text = if (isAppended) "$opening$suffix" else "$opening$suffix$separator",
-            caretOffset = offset + opening.length,
+            text = if (isAppended) "$opening$value$suffix" else "$opening$value$suffix$separator",
+            caretOffset = caretOffset,
+            selectionEnd = caretOffset + value.length,
         )
     }
 
@@ -160,35 +162,29 @@ public object ChordProHeader {
 
     /**
      * [insert] for one of the [changeableMetadata], which the header holds once and the body as often as the song
-     * changes it, so where it goes depends on what the header says and on [caretOffset]:
+     * changes it, so where it goes depends on what the header says and on [caretOffset]; [value] is written as [insert]
+     * writes it:
      * - a header with no line of [name] gets one by [insert], since the first value a song is given is its own;
      * - an empty header line of it (one the Song defaults sheet cleared) is the line to type into, and becomes
-     *   [prefix] and [suffix] with the caret between them;
+     *   [prefix] and [suffix] around [value];
      * - a header that names a value and a caret below the body's first line of the song (a line of lyrics, tablature
      *   or a grid, or a `{chorus}` recall) get a line of their own at the start of the caret's line, which never splits
      *   a line of lyrics and puts the change before what it changes;
      * - a header that names a value and a caret in the header or anywhere up to and including that first line, or a
-     *   song with no such line yet, get nothing written and the header line's value selected, since a change before
-     *   anything is played is the song's own value.
+     *   song with no such line yet, get the header line's value selected, or replaced by [value] where there is one,
+     *   since a change before anything is played is the song's own value.
      */
-    public fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
+    public fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String, value: String = ""): Insertion {
         val lines = ChordProLines.splitLines(text)
         val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
         val headerIndex = (0 until bodyStart).firstOrNull { index ->
             ChordProDirectives.matchDirective(lines[index].trim())?.let(ChordProHeaderLayout::metadataKind) == name
-        } ?: return insert(text, name, prefix, suffix)
+        } ?: return insert(text, name, prefix, suffix, value)
         val lineStarts = ChordProLines.lineStartOffsets(text)
         val headerLine = lines[headerIndex]
-        val headerLineStart = lineStarts[headerIndex]
         val directive = ChordProDirectives.matchDirective(headerLine.trim())!!
-        val value = (ChordProMetaItems.standardMeta(directive) ?: directive).value.orEmpty()
-        if (value.isEmpty()) {
-            return Insertion(
-                offset = headerLineStart,
-                text = prefix + suffix,
-                caretOffset = headerLineStart + prefix.length,
-                replacedLength = headerLine.length,
-            )
+        if ((ChordProMetaItems.standardMeta(directive) ?: directive).value.isNullOrEmpty()) {
+            return valueOfLine(headerLine, lineStarts[headerIndex], prefix, suffix, value)
         }
         val caretLine = lineStarts.indexOfLast { it <= caretOffset }
         // Nothing of the song is played before its first line, so a change there would be the song's own value written
@@ -199,14 +195,18 @@ public object ChordProHeader {
             val directive = ChordProDirectives.matchDirective(trimmed) ?: return@firstOrNull true
             directive.name == "chorus"
         } ?: lines.size
-        if (caretLine <= firstContentLine) {
-            val valueStart = headerLineStart + headerLine.lastIndexOf(value, headerLine.lastIndexOf('}'))
-            return Insertion(offset = valueStart, text = "", caretOffset = valueStart, selectionEnd = valueStart + value.length)
-        }
+        if (caretLine <= firstContentLine) return valueOfLine(headerLine, lineStarts[headerIndex], prefix, suffix, value)
         // A caret past the final line break is on a line of its own already, the one after the last.
         val offset = if (caretOffset >= text.length && ChordProLines.endsWithLineBreak(text)) text.length else lineStarts[caretLine]
-        return Insertion(offset = offset, text = "$prefix$suffix${ChordProLines.lineSeparatorOf(text)}", caretOffset = offset + prefix.length)
+        return Insertion(
+            offset = offset,
+            text = "$prefix$value$suffix${ChordProLines.lineSeparatorOf(text)}",
+            caretOffset = offset + prefix.length,
+            selectionEnd = offset + prefix.length + value.length,
+        )
     }
+
+    private val valueBreakRegex = Regex("[\\r\\n{}]+")
 
     /**
      * @param offset The character offset the [text] is inserted at.

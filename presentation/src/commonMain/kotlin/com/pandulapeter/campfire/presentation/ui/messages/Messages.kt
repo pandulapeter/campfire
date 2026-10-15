@@ -48,6 +48,9 @@ import com.pandulapeter.campfire.presentation.resources.import_details
 import com.pandulapeter.campfire.presentation.resources.import_open
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_result
+import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
+import com.pandulapeter.campfire.presentation.resources.paste_only_links
+import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
@@ -127,6 +130,10 @@ internal fun Messages(
             }
         )
         Message.SilentMetronomeStopped -> stringResource(Res.string.metronome_stopped_silent)
+        Message.ClipboardEmpty -> stringResource(Res.string.paste_clipboard_empty)
+        is Message.ClipboardRefused -> stringResource(current.text)
+        Message.PastedOnlyLinks -> stringResource(Res.string.paste_only_links)
+        Message.PastedTextTooLarge -> stringResource(Res.string.paste_too_large)
         null -> null
     }
     val importFinished = head?.value as? Message.ImportFinished

@@ -18,9 +18,11 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_content_paste
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.import_files
+import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboard
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
@@ -33,8 +35,12 @@ import org.jetbrains.compose.resources.painterResource
  * setlist by its own title. The import is the same one on both screens, since a picked archive holds songs and
  * setlists alike and is imported whole wherever it was picked from.
  *
- * The entries are the first two buttons of the screen's own empty state, in the same order and under the same labels,
- * since they are the same two ways of filling the list - and the menu leaves the bar while that state is up, see
+ * The New song menu has a third way, a chord sheet pasted from the clipboard, which is made here like the first and
+ * read like the second: it goes to the New song dialog filled in from the text where the text is one song, and is the
+ * import that text would be as a file otherwise. The New setlist menu has no such entry.
+ *
+ * The entries are the first buttons of the screen's own empty state, in the same order and under the same labels,
+ * since they are the same ways of filling the list - and the menu leaves the bar while that state is up, see
  * [allowsNewItemMenu].
  *
  * @param contentDescription What the button is called, since it is an icon.
@@ -42,6 +48,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param onItemSelected Called before either menu action starts.
  * @param onCreate Opens the dialog of [createLabel], called once the menu is closed.
  * @param onImport Imports what is picked with the file picker it is handed, called once the menu is closed.
+ * @param onPaste Makes a new song of the clipboard's text, called once the menu is closed; null for no such entry.
  */
 @Composable
 internal fun NewItemMenu(
@@ -49,6 +56,7 @@ internal fun NewItemMenu(
     createLabel: String,
     onCreate: () -> Unit,
     onImport: (FilePicker) -> Unit,
+    onPaste: (() -> Unit)? = null,
     onItemSelected: () -> Unit = {},
     isEnabled: Boolean = true,
 ) {
@@ -83,5 +91,17 @@ internal fun NewItemMenu(
                 }
             },
         )
+        onPaste?.let { paste ->
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.songs_paste_from_clipboard)) },
+                leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_content_paste), contentDescription = null) },
+                onClick = {
+                    select {
+                        onItemSelected()
+                        paste()
+                    }
+                },
+            )
+        }
     }
 }

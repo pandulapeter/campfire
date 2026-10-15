@@ -58,6 +58,14 @@ numbers nothing to count from.
 - In documents over 50,000 characters (`LONG_DOCUMENT_LENGTH`), a whole-document rewrite (transposition, revert,
   Replace all of several matches) clears the undo history first, since each is recorded as the whole text twice.
 
+## Pasting a chord sheet
+
+- `PastedTextFormatting`, the field's `InputTransformation`, answers an edit that brought two non-blank lines or more
+  (a one-line paste looks like a keyboard's committed word): chords over lyrics in it are converted
+  (`ChordSheetConverter.convertFragment`, headings as sections, no title guessed), then the whole song is prettified as
+  the menu's Prettify does, caret kept by `prettifiedOffset` (`formattedAfterPaste`, tested). One undo step with the
+  paste; never the editor's own `edit`s; nothing past `LONG_DOCUMENT_LENGTH`.
+
 ## Overflow menu
 
 - Find and Find and replace first (promoted to buttons where the bar keeps the title 160dp wide, `editorMenuMaxWidth`);

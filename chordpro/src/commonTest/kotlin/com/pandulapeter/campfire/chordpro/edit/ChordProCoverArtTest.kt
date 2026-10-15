@@ -126,7 +126,10 @@ class ChordProCoverArtTest {
     }
 
     @Test
-    fun `a cover counts as declared metadata`() {
-        assertEquals(setOf("title", "cover"), ChordProHeader.declaredMetadata("{title: T}\n{meta: cover $url}"))
+    fun `a declared cover is the one a cover button selects`() {
+        val text = "{title: T}\n{meta: cover $url}"
+        val insertion = ChordProHeader.write(text, name = "cover", caretOffset = 0, prefix = "{meta: cover ", suffix = "}", value = "")
+
+        assertEquals(url, text.substring(insertion.caretOffset, insertion.selectionEnd))
     }
 }

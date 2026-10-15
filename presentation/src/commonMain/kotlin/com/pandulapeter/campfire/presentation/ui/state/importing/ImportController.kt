@@ -162,6 +162,9 @@ internal class ImportController(
      *
      * @param shouldReview False for the demo library, whose contents are known and asked for by name: it is written at
      *   once, and only a name it finds taken puts the import screen up.
+     * @param isNewSongFromText True for a text pasted or dropped as a new song: where it turns out to be one song the
+     *   library does not hold, nothing is written and the New song form opens on it instead (see [newSongFromTextDialogOf]);
+     *   one the library holds is opened; anything else - a songbook pasted whole - is the import it would be as a file.
      */
     fun enqueueImport(
         source: ImportSource,
@@ -169,6 +172,7 @@ internal class ImportController(
         shouldOpenSong: Boolean = false,
         shouldReview: Boolean = true,
         isDemoLibrary: Boolean = false,
+        isNewSongFromText: Boolean = false,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
             source = source,
@@ -176,6 +180,7 @@ internal class ImportController(
             shouldOpenSong = shouldOpenSong,
             shouldReview = shouldReview,
             isDemoLibrary = isDemoLibrary,
+            isNewSongFromText = isNewSongFromText,
         )
         if (source.isEmpty) {
             request.settled.complete(Unit)
@@ -260,7 +265,12 @@ internal class ImportController(
                 // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing.
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
-                if (isReviewed || plan.hasConflicts) {
+                val newSongDialog = if (request.isNewSongFromText) newSongFromTextDialogOf(plan) else null
+                if (newSongDialog != null) {
+                    // The form is not an import: nothing waits for it, and closing it writes nothing.
+                    _isImporting.value = false
+                    dialogHost.showDialog(newSongDialog)
+                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && !plan.isLoneSongInLibrary) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
@@ -387,7 +397,12 @@ internal class ImportController(
                     }
             }
             _importProgress.value = null
-            val songToOpen = songToOpen(plan = plan, result = result, shouldOpenSong = request.shouldOpenSong)
+            val songToOpen = songToOpen(
+                plan = plan,
+                result = result,
+                shouldOpenSong = request.shouldOpenSong || request.isNewSongFromText,
+                isConvertedSongOpened = request.isNewSongFromText,
+            )
             val isReportShown = isReported && reportState.isOnBackStack
             when {
                 // The one song the system handed over is what the user was after, and the review has been answered:

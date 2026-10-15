@@ -18,9 +18,11 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * library, and but a single song file the system handed over, which is opened rather than reviewed - its name taken
  * is the one thing that still puts the screen up for it. A song picked from the app's own Import files is reviewed,
  * since one row and an Import is what the user asked to see; a document or an archive is reviewed whoever picked it.
+ * A text pasted as a new song is not reviewed while it is being read: it is a form once it turns out to be one song, and
+ * the import screen comes up only for what it turns out to be otherwise.
  */
 internal val ImportRequest.isReviewed
-    get() = shouldReview && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
+    get() = shouldReview && !isNewSongFromText && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
 
 private fun isSingleSong(name: String) = LibraryFiles.isSongFileName(name) && !LibraryFiles.isArchiveFileName(name)
 

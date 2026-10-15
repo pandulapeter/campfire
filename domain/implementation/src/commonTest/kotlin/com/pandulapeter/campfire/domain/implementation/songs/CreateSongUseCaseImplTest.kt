@@ -61,4 +61,38 @@ class CreateSongUseCaseImplTest {
         assertEquals("Title" to "", repository.name)
         assertEquals("{title: Title}\n{artist: }\n{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
     }
+
+    @Test
+    fun `a pasted text is written with the form's values instead of the template`() = runTest {
+        val repository = RecordingSongRepository()
+        CreateSongUseCaseImpl(repository)(
+            title = "Real title",
+            artist = "Real artist",
+            metadata = mapOf(Field.SUBTITLE to "Live", Field.ALBUM to ""),
+            text = "{title: Guessed}\n{artist: Guessed}\n{album: Wrong album}\n{capo: 2}\n\n[Am]Hello [C]world\n",
+        )
+        val metadata = ChordProParser.parseMetadata(repository.text)
+        assertEquals("Real title", metadata.title)
+        assertEquals("Real artist", metadata.artist)
+        assertEquals("Live", metadata.subtitle)
+        assertEquals(null, metadata.album)
+        assertEquals(2, metadata.capo)
+        assertEquals("Real title (Live)" to "Real artist", repository.name)
+        assertTrue(repository.text.endsWith("\n[Am]Hello [C]world\n"))
+    }
+
+    @Test
+    fun `a pasted text with no header gets one set apart from the song`() = runTest {
+        val repository = RecordingSongRepository()
+        CreateSongUseCaseImpl(repository)(title = "Title", artist = "Artist", text = "[G]Lyrics\n")
+        assertEquals("{title: Title}\n{artist: Artist}\n{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n\n[G]Lyrics\n", repository.text)
+    }
+
+    @Test
+    fun `a pasted text gets the template's header lines it has none of`() = runTest {
+        val repository = RecordingSongRepository()
+        CreateSongUseCaseImpl(repository)(title = "Title", artist = "", text = "{capo: 3}\n\n[G]Lyrics\n")
+        assertEquals("{title: Title}\n{artist: }\n{key: }\n{capo: 3}\n{tempo: 120}\n{time: 4/4}\n\n[G]Lyrics\n", repository.text)
+        assertEquals("Title" to "", repository.name)
+    }
 }

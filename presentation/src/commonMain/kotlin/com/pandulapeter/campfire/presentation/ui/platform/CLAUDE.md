@@ -72,6 +72,13 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 - Pure and in `commonMain` so it is tested. A text of nothing but links is passed on empty, reported as skipped.
 
+### `ClipboardText.kt`
+
+- Read only on a tap, never to decide whether to show the entry (the web's read prompts). Android asks the clip's
+  description first (no toast) and takes no URI-only clip; iOS asks `hasStrings` first, and text that comes back nil is
+  `Refused` (Allow Paste); the web's `readText()` refusal points at Ctrl / Cmd + V, whose `paste` event needs no
+  permission. The desktop's `awtClipboardText` also serves its Ctrl / Cmd + V.
+
 ### `CompactKeyboardEffect.kt`
 
 - Android only: while typing in a short window, hides the status bar of the window it is in (the dialog's own or the

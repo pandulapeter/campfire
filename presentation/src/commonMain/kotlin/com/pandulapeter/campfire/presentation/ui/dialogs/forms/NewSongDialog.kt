@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +50,10 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  * already filled in, and a keyboard brought up over the title would hide the subtitle a "Live" copy is likeliest to
  * be told apart by.
  *
+ * A text pasted as a new song opens the empty form's way, focused, on what the text says ([offeredValues] again, as
+ * [DialogType.NewSongFromText] read them), with [note] above the fields saying how the text was read: it is set once, so
+ * it scrolls with the fields rather than taking pinned height from them.
+ *
  * @param songFileName The song being duplicated, which keys the draft; null for a new song.
  */
 @Composable
@@ -59,6 +64,7 @@ internal fun NewSongDialog(
     subtitle: String = "",
     songFileName: String? = null,
     offeredValues: Map<Field, String> = emptyMap(),
+    note: String? = null,
     confirmLabel: String = stringResource(Res.string.create),
 ) {
     val offeredDraft = remember(offeredValues) { offeredValues.toSongMetadataDraft() }
@@ -101,6 +107,14 @@ internal fun NewSongDialog(
                 modifier = Modifier.fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                note?.let {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
                 field(Modifier.fillMaxWidth(), Field.SUBTITLE)
                 field(Modifier.fillMaxWidth(), Field.ARTIST)

@@ -26,6 +26,11 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 
 - `.pdf`, `.docx`, `.txt`, and Android shared text become ordinary songs before the UI sees them. Every user-started
   import is reviewed on the import screen first (`ui/screens/importReport/`).
+- A pasted or dropped text (`PastedSongController`, `ui/state/importing/`) goes down the same import as a `.txt`
+  (`isNewSongFromText`): one song the library lacks becomes the New song sheet filled in from it
+  (`DialogType.NewSongFromText`, holding only what the converted text declares; nothing is written before Create, which
+  opens the editor), one it holds is opened, and anything else is the ordinary review. Blank, links only, or over 8 MB
+  is a snackbar before anything is prepared.
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
   and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.
