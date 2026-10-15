@@ -18,7 +18,7 @@
 "share_unsupported" = "Campfire cannot import this.";
 "share_unsupported_detail" = "It imports songs, plain text, PDF and Word documents, and zip archives.";
 "share_too_large" = "This is too large to import.";
-"share_too_large_detail" = "Campfire imports up to 24 MB at a time, and 16 MB for one document.";
+"share_too_large_detail" = "Campfire imports up to 24 MB at a time, 16 MB for one document, and 8 MB for one text or song file.";
 "share_inbox_full" = "Some shares are still waiting.";
 "share_inbox_full_detail" = "Open Campfire to finish them first.";
 "share_failed" = "This could not be saved for Campfire.";
