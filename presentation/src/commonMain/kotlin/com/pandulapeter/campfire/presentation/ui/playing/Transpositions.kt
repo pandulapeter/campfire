@@ -21,7 +21,7 @@ internal data class Transpositions(
     operator fun get(songFileName: String, setlistFileName: String?): Int = wrapTransposition(overrides[songFileName, setlistFileName] ?: 0)
 }
 
-private const val SEMITONES_PER_OCTAVE = 12
+internal const val SEMITONES_PER_OCTAVE = 12
 
 /**
  * [semitones] as the one amount between -5 and +6 that moves the chords to the same names: twelve semitones up

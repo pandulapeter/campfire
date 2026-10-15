@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
+import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_START_PADDING
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,7 +92,21 @@ internal fun SongMetadataSection(
             modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = INSTRUMENT_CHIP_GAP),
             horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
             verticalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
-        ) { lastChip.content?.invoke() }
+        ) {
+            lastChip.content?.invoke()
+            if (playingTools != null) {
+                SongPlayingToolButtons(
+                    // Shifted with the chips, which reach out of the keyline, so it keeps their gap to the last of them.
+                    modifier = Modifier.offset(x = -PICKER_CHIP_START_PADDING),
+                    tools = playingTools,
+                    // Only the tuner ever stands here, wherever the values put the metronome.
+                    places = playingTools.places(hasInstrumentChips = true, hasChordValues = false, hasClickValues = false),
+                    place = PlayingToolPlace.AFTER_INSTRUMENT_CHIPS,
+                    height = songControlHeight(titleStyle),
+                    fontScale = fontScale,
+                )
+            }
+        }
     }
     if (isSongInfoShown) {
         SongInfoCard(
@@ -107,6 +123,7 @@ internal fun SongMetadataSection(
             style = chordStyle,
             toolHeight = songControlHeight(titleStyle),
             fontScale = fontScale,
+            hasInstrumentChips = instrumentChips != null,
         )
     } else {
         SongPlayingControlsRow(
@@ -115,6 +132,7 @@ internal fun SongMetadataSection(
             isAnimated = animatesControls,
             titleStyle = titleStyle,
             fontScale = fontScale,
+            hasInstrumentChips = instrumentChips != null,
         )
     }
 }
@@ -137,6 +155,7 @@ private fun SongPlayingMetadata(
     style: TextStyle,
     toolHeight: Dp,
     fontScale: Float,
+    hasInstrumentChips: Boolean,
 ) {
     val chordValues = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
@@ -153,7 +172,11 @@ private fun SongPlayingMetadata(
             style = style,
         )
     } else {
-        val places = tools.places(hasChordValues = chordValues.isNotEmpty(), hasClickValues = clickValues.isNotEmpty())
+        val places = tools.places(
+            hasInstrumentChips = hasInstrumentChips,
+            hasChordValues = chordValues.isNotEmpty(),
+            hasClickValues = clickValues.isNotEmpty(),
+        )
         BalancedRows(
             modifier = modifier.padding(horizontal = 12.dp),
             gap = PLAYING_VALUES_GROUP_GAP,

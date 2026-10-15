@@ -37,14 +37,14 @@ class PlayingToolPlacesTest {
     fun `a tool switched off has no place`() {
         assertEquals(
             PlayingToolPlaces(tuner = null, metronome = AFTER_CLICK_VALUES),
-            playingToolPlaces(hasTuner = false, hasMetronome = true, hasChordValues = true, hasClickValues = true),
+            playingToolPlaces(hasTuner = false, hasMetronome = true, hasInstrumentChips = false, hasChordValues = true, hasClickValues = true),
         )
         assertEquals(
             PlayingToolPlaces(tuner = AFTER_CHORD_VALUES, metronome = null),
-            playingToolPlaces(hasTuner = true, hasMetronome = false, hasChordValues = true, hasClickValues = true),
+            playingToolPlaces(hasTuner = true, hasMetronome = false, hasInstrumentChips = false, hasChordValues = true, hasClickValues = true),
         )
     }
 
     private fun places(hasChordValues: Boolean, hasClickValues: Boolean) =
-        playingToolPlaces(hasTuner = true, hasMetronome = true, hasChordValues = hasChordValues, hasClickValues = hasClickValues)
+        playingToolPlaces(hasTuner = true, hasMetronome = true, hasInstrumentChips = false, hasChordValues = hasChordValues, hasClickValues = hasClickValues)
 }

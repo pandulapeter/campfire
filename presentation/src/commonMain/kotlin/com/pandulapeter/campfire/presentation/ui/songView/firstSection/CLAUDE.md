@@ -19,9 +19,9 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
 - **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
   is exactly `songControlHeight` (the pill's `titleStyle` plus `HEADER_VERTICAL_PADDING`). Scaling a pill whole towered
   over the page. `UserPreferences.MIN_FONT_SCALE` is what keeps them big enough to hit.
-- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the capo (or the transposition), the metronome
-  after the time signature; a button whose group is absent goes after the other (`playingToolPlaces`, tested). With
-  chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
+- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the instrument and tuning chips where they are
+  shown, else after the capo (or the transposition); the metronome after the time signature; a button whose group is
+  absent goes after the other (`playingToolPlaces`, tested). With chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
 - Whether the section holds either button is part of `RenderSection.Metadata`, since measured sizes are keyed by it.
 - Read only line (performance mode, archived setlist): always names capo, tempo, and time, since an absent value would
   read as unknown (`readsDefaults`: "Capo 0", 120, 4/4); the editor's preview names a capo only where the text writes

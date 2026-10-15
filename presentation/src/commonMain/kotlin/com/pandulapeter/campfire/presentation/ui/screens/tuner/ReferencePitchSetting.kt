@@ -11,10 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +35,6 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_in
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
-import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_RESET_SEGMENT_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
@@ -69,18 +66,6 @@ internal fun ReferencePitchSetting(
                 color = MaterialTheme.colorScheme.onSurface,
             )
         },
-        // The row as it is while a changed pitch is typed, its reset segment in the pill, so that it keeps the form that
-        // fits it: the segment comes and goes with the focus, which must not move the label.
-        decidingControls = {
-            ReferencePitchControls(
-                referencePitch = referencePitch,
-                notation = notation,
-                isReferenceTonePlaying = isReferenceTonePlaying,
-                onReferencePitchChanged = {},
-                onToggleReferenceTone = {},
-                isDeciding = true,
-            )
-        },
     ) {
         ReferencePitchControls(
             referencePitch = referencePitch,
@@ -88,17 +73,11 @@ internal fun ReferencePitchSetting(
             isReferenceTonePlaying = isReferenceTonePlaying,
             onReferencePitchChanged = onReferencePitchChanged,
             onToggleReferenceTone = onToggleReferenceTone,
-            isDeciding = false,
         )
     }
 }
 
-/**
- * The stepper and the tone toggle of [ReferencePitchSetting].
- *
- * @param isDeciding Draws the stepper with room for its reset segment and no field, for the measurement that decides
- * the row's form.
- */
+/** The stepper and the tone toggle of [ReferencePitchSetting]. */
 @Composable
 private fun ReferencePitchControls(
     referencePitch: Int,
@@ -106,13 +85,13 @@ private fun ReferencePitchControls(
     isReferenceTonePlaying: Boolean,
     onReferencePitchChanged: (Int) -> Unit,
     onToggleReferenceTone: () -> Unit,
-    isDeciding: Boolean,
 ) = Row(
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(8.dp),
 ) {
     Stepper(
         value = stringResource(Res.string.tuner_reference_pitch_value, referencePitch),
+        widestValues = Pitch.REFERENCE_PITCH_RANGE.let { listOf(it.first, it.last) }.map { stringResource(Res.string.tuner_reference_pitch_value, it) },
         isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
         decreaseIcon = painterResource(Res.drawable.ic_subtract),
         decreaseLabel = stringResource(Res.string.tuner_reference_pitch_decrease),
@@ -123,10 +102,9 @@ private fun ReferencePitchControls(
         canIncrease = referencePitch < Pitch.REFERENCE_PITCH_RANGE.last,
         onIncrease = { onReferencePitchChanged(referencePitch + 1) },
         resetLabel = stringResource(Res.string.tuner_reference_pitch_reset),
-        onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
+        onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) },
         repeatsOnHold = true,
-        entry = if (isDeciding) null else StepperEntry(number = referencePitch, range = Pitch.REFERENCE_PITCH_RANGE, onEntered = onReferencePitchChanged),
-        trailing = if (isDeciding) ({ Spacer(Modifier.width(STEPPER_RESET_SEGMENT_WIDTH)) }) else null,
+        entry = StepperEntry(number = referencePitch, range = Pitch.REFERENCE_PITCH_RANGE, onEntered = onReferencePitchChanged),
     )
     val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
     FilledTonalIconToggleButton(

@@ -71,6 +71,7 @@ internal fun TempoStepper(
     fontScale = fontScale,
     height = height,
     valueKey = valueKey,
+    widestValues = listOf(MetronomePattern.BPM_RANGE.first.toString(), MetronomePattern.BPM_RANGE.last.toString()),
     isDefault = isDefault,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_tempo_decrease),

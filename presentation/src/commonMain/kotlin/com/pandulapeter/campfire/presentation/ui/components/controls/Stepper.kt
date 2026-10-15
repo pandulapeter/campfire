@@ -19,13 +19,13 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -39,10 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
@@ -61,8 +59,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 /**
- * A decrease button, the current value (highlighted when it differs from the default, tapping it resets it) and an
- * increase button, in a tonal pill that keeps the three of them together: two of these sit one under the other in
+ * A decrease button, the current value (highlighted when it differs from the default, and followed by a reset icon
+ * while it can be reset, which a tap on the value or the icon does) and an increase button, in a tonal pill that keeps the three of them together: two of these sit one under the other in
  * the song details menu, the editor's sits among its pane controls, and the text size one sits alone in the app bar in
  * performance mode, where loose icon buttons would blend into the row of controls around them.
  *
@@ -79,11 +77,13 @@ import kotlinx.coroutines.delay
  * number of BPM; the value itself when left out.
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
  * of the key is animated.
+ * @param widestValues The widest values the stepper can show - the ends of a numeric range, every value where they are
+ * words - which its value takes the room of whatever it shows, so the pill keeps one length while it is used; where left
+ * empty, the pill is as long as its value.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
  * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
  * @param entry Makes the value a field its number can also be typed into ([StepperField]), for the few values with a
- * range too wide to step across; a tap on it then starts typing, and the reset is a segment at the pill's end while it
- * is focused ([StepperEntryTrailing]).
+ * range too wide to step across; a tap on it then starts typing, and only the reset icon after it resets it.
  * @param trailing A second way to the very same value, drawn inside the pill after the increase button and behind a
  * divider: the tempo's Tap button, which sets the number the stepper steps rather than a value of its own, and so
  * belongs to this control instead of standing next to it.
@@ -96,6 +96,7 @@ internal fun Stepper(
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
     valueKey: Any = value,
+    widestValues: List<String> = emptyList(),
     isDefault: Boolean,
     decreaseIcon: Painter,
     decreaseLabel: String,
@@ -113,7 +114,6 @@ internal fun Stepper(
 ) {
     // Where the pill is, for the press outside it that ends typing into its value (StepperField).
     val entryBounds = remember { StepperBounds() }
-    var isEntryFocused by remember { mutableStateOf(false) }
     Surface(
         modifier = modifier
             .height(height)
@@ -145,17 +145,20 @@ internal fun Stepper(
                         value = value,
                         valueDescription = valueDescription,
                         valueKey = valueKey,
+                        widestValues = widestValues,
                         isDefault = isDefault,
                         fontScale = fontScale,
                         entry = entry,
                         pillBounds = { entryBounds.rect },
-                        onFocusChanged = { isEntryFocused = it },
+                        resetLabel = resetLabel,
+                        onReset = onReset,
                     )
                 } else {
                     StepperValue(
                         value = value,
                         valueDescription = valueDescription,
                         valueKey = valueKey,
+                        widestValues = widestValues,
                         isDefault = isDefault,
                         resetLabel = resetLabel,
                         onReset = onReset,
@@ -180,15 +183,7 @@ internal fun Stepper(
                 decreaseButton()
                 stepperValue()
                 increaseButton()
-                if (entry != null) {
-                    StepperEntryTrailing(
-                        isResetShown = isEntryFocused && !isDefault && onReset != null,
-                        resetLabel = resetLabel,
-                        onReset = { onReset?.invoke() },
-                        fontScale = fontScale,
-                        trailing = trailing,
-                    )
-                } else if (trailing != null) {
+                if (trailing != null) {
                     StepperDivider()
                     trailing()
                 }
@@ -264,6 +259,7 @@ private fun StepperValue(
     value: String,
     valueDescription: String?,
     valueKey: Any,
+    widestValues: List<String>,
     isDefault: Boolean,
     resetLabel: String?,
     onReset: (() -> Unit)?,
@@ -276,24 +272,35 @@ private fun StepperValue(
         MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
-    AnimatedContent(
-        modifier = Modifier.fillMaxHeight(),
-        targetState = StepperLabel(value = value, key = valueKey),
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        contentKey = { it.key },
-    ) { label ->
-        Text(
-            modifier = Modifier.fillMaxHeight()
-                .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
-                .widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale)
-                .wrapContentHeight()
-                .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
-            text = label.value,
-            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            color = color,
-        )
+    val canReset = !isDefault && onReset != null
+    val style = stepperValueStyle(fontScale)
+    Box(
+        modifier = Modifier.fillMaxHeight()
+            .clickable(enabled = canReset, onClickLabel = resetLabel) { onReset?.invoke() }
+            .widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale),
+        contentAlignment = Alignment.Center,
+    ) {
+        StepperValueRoom(values = widestValues, style = style, isResettable = onReset != null, fontScale = fontScale)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AnimatedContent(
+                targetState = StepperLabel(value = value, key = valueKey),
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                contentKey = { it.key },
+            ) { label ->
+                Text(
+                    modifier = if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier,
+                    text = label.value,
+                    style = style,
+                    textAlign = TextAlign.Center,
+                    color = color,
+                )
+            }
+            StepperResetMark(
+                isShown = canReset,
+                color = color,
+                fontScale = fontScale,
+            )
+        }
     }
 }
 
@@ -338,6 +345,3 @@ internal fun StepperDivider() = VerticalDivider(
 )
 
 private val STEPPER_DIVIDER_PADDING = 8.dp
-
-/** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
-internal val STEPPER_WIDTH = STEPPER_BUTTON_LENGTH * 2 + STEPPER_VALUE_MIN_WIDTH

@@ -41,6 +41,8 @@ internal class SongPlayingControls(
 /**
  * The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends.
  *
+ * @param labels What the stepper reads at every transposition it wraps around, for the room of the widest.
+
  * @param isDefault Whether nothing overrides the transposition, which the amount alone does not say where it counts a
  *   capo in, see `rememberSongPlayingControls`.
  */
@@ -49,6 +51,7 @@ internal class SongKeyControl(
     val transposition: Int,
     val isDefault: Boolean,
     val key: String?,
+    val labels: List<String>,
     val onStep: (semitones: Int) -> Unit,
     val onReset: () -> Unit,
 )

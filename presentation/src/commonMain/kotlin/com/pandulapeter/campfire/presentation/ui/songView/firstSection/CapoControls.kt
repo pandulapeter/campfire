@@ -45,6 +45,7 @@ internal fun CapoControls(
     fontScale = fontScale,
     height = height,
     value = capo.fret.toString(),
+    widestValues = listOf(Song.CAPO_RANGE.first.toString(), Song.CAPO_RANGE.last.toString()),
     isDefault = capo.isDefault,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_capo_decrease),

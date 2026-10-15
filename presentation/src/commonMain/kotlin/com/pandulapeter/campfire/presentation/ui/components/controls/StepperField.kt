@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.foundation.text.input.setTextAndSelectAll
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,8 +47,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -66,9 +71,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -76,14 +78,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_undo
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * A [Stepper]'s value as a field its number is typed into, see [StepperEntry]. It reads exactly like the plain value
@@ -97,20 +94,27 @@ import org.jetbrains.compose.resources.painterResource
  * stepper (`OverlayState.onPointerPressed`) - writes back the value last set; Escape puts back the one the field was
  * focused at. Up and Down step the value while it is focused, as a hardware keyboard's arrows do in any number field.
  *
- * The reset is not a tap on the value here, since the tap is what starts typing: a focused value that can be reset
- * offers it as the pill's last segment instead ([StepperEntryTrailing]), which is why the focus is reported.
+ * The reset is not a tap on the value here, since the tap is what starts typing: only the [StepperResetMark] after it
+ * resets it, which ends the typing, as the number typed is then no longer the one wanted. The field is only as wide as its number,
+ * so that the icon follows it; a press on the rest of the value's room focuses it too.
  */
 @Composable
 internal fun StepperField(
     value: String,
     valueDescription: String?,
     valueKey: Any,
+    widestValues: List<String>,
     isDefault: Boolean,
     fontScale: Float,
     entry: StepperEntry,
     pillBounds: () -> Rect,
-    onFocusChanged: (Boolean) -> Unit,
-) = Box(contentAlignment = Alignment.Center) {
+    resetLabel: String?,
+    onReset: (() -> Unit)?,
+) = Box(
+    modifier = Modifier.fillMaxHeight().widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale),
+    contentAlignment = Alignment.Center,
+) {
+    val focusRequester = remember { FocusRequester() }
     val state = rememberTextFieldState(entry.number.toString())
     val latestEntry by rememberUpdatedState(entry)
     var isFocused by remember { mutableStateOf(false) }
@@ -129,93 +133,136 @@ internal fun StepperField(
             if (isFocused && typed != null && typed != current.number) current.onEntered(typed)
         }
     }
-    if (isFocused) {
-        val overlayState = LocalOverlayState.current
-        DisposableEffect(overlayState) {
-            overlayState.onValueTypingStarted(bounds = pillBounds, onEnd = { focusManager.clearFocus() })
-            onDispose { overlayState.onValueTypingEnded() }
-        }
-        // The keyboard put away - by its own button, or by Back, which a touch platform spends on that first - is the
-        // end of typing, since a field left focused with nothing to type with would keep its caret and its reset.
-        val ime = WindowInsets.ime
-        val density = LocalDensity.current
-        val isImeVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
-        var hasImeBeenVisible by remember { mutableStateOf(false) }
-        LaunchedEffect(isImeVisible) {
-            if (isImeVisible) hasImeBeenVisible = true else if (hasImeBeenVisible) focusManager.clearFocus()
+    if (isFocused) EndsTypingWhenLeft(pillBounds = pillBounds, onEnd = { focusManager.clearFocus() })
+    val colorScheme = MaterialTheme.colorScheme
+    val color = stepperFieldColor(
+        isDefault = isDefault,
+        isOutOfRange = isFocused && state.text.isNotEmpty() && typedNumber(state.text, entry.range) == null,
+    )
+    val canReset = !isDefault && onReset != null
+    // Not centered by its alignment, which would have the field take every width it is let have: the decoration centers
+    // the line, and every part of it is as wide as its text.
+    val textStyle = stepperValueStyle(fontScale).copy(color = color)
+    val (prefix, suffix) = remember(value, entry.number) { affixesAround(value, entry.number) }
+    StepperValueRoom(
+        modifier = Modifier.pointerInput(focusRequester) { detectTapGestures { focusRequester.requestFocus() } },
+        values = widestValues,
+        style = textStyle,
+        isResettable = onReset != null,
+        fontScale = fontScale,
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        BasicTextField(
+            modifier = Modifier
+                .fillMaxHeight()
+                .focusRequester(focusRequester)
+                // As wide as its text: a text field is otherwise as wide as it is let be, which would stretch the pill.
+                .width(IntrinsicSize.Max)
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused == isFocused) return@onFocusChanged
+                    isFocused = focusState.isFocused
+                    if (focusState.isFocused) {
+                        numberAtFocus = latestEntry.number
+                        // The number is there to be typed over rather than edited a digit at a time. This covers Tab; a
+                        // press places its caret once it is released, which selectsAllOnRelease answers.
+                        state.edit { selectAll() }
+                    } else {
+                        state.setTextAndSelectAll(latestEntry.number.toString())
+                    }
+                }
+                .selectsAllOnRelease(state = state, isFocused = { isFocused }, coroutineScope = coroutineScope)
+                .stepperFieldKeys(
+                    state = state,
+                    entry = { latestEntry },
+                    onEscape = {
+                        val current = latestEntry
+                        if (numberAtFocus != current.number) current.onEntered(numberAtFocus)
+                        focusManager.clearFocus()
+                    },
+                )
+                .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
+            state = state,
+            inputTransformation = remember(entry.range) { StepperDigits(maxLength = entry.range.last.toString().length) },
+            lineLimits = TextFieldLineLimits.SingleLine,
+            textStyle = textStyle,
+            cursorBrush = SolidColor(colorScheme.primary),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+                autoCorrectEnabled = false,
+            ),
+            onKeyboardAction = KeyboardActionHandler { focusManager.clearFocus() },
+            decorator = { innerTextField ->
+                StepperFieldDecoration(
+                    value = value,
+                    valueKey = valueKey,
+                    textStyle = textStyle,
+                    prefix = prefix,
+                    suffix = suffix,
+                    isFocused = isFocused,
+                    innerTextField = innerTextField,
+                )
+            },
+        )
+        if (onReset != null) {
+            StepperResetMark(
+                isShown = canReset,
+                color = color,
+                fontScale = fontScale,
+                resetLabel = resetLabel,
+                onReset = {
+                    if (isFocused) focusManager.clearFocus()
+                    onReset()
+                },
+            )
         }
     }
+}
+
+/**
+ * The color of a [StepperField]'s number: highlighted while it differs from the default, as every stepper's value is,
+ * and the error color while what is typed is no number of the range.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun stepperFieldColor(
+    isDefault: Boolean,
+    isOutOfRange: Boolean,
+): Color {
     val changedProgress by animateFloatAsState(
         if (isDefault) 0f else 1f,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
-    val isOutOfRange = isFocused && state.text.isNotEmpty() && typedNumber(state.text, entry.range) == null
     val outOfRangeProgress by animateFloatAsState(
         if (isOutOfRange) 1f else 0f,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val colorScheme = MaterialTheme.colorScheme
-    val color = lerp(lerp(colorScheme.onSurface, colorScheme.primary, changedProgress), colorScheme.error, outOfRangeProgress)
-    // Not centered by its alignment, which would have the field take every width it is let have: the decoration centers
-    // the line, and every part of it is as wide as its text.
-    val textStyle = MaterialTheme.typography.labelLarge.scaled(fontScale).copy(
-        color = color,
-        fontWeight = FontWeight.Bold,
-    )
-    val (prefix, suffix) = remember(value, entry.number) { affixesAround(value, entry.number) }
-    BasicTextField(
-        modifier = Modifier
-            .fillMaxHeight()
-            // As wide as its text: a text field is otherwise as wide as it is let be, which would stretch the pill.
-            .width(IntrinsicSize.Max)
-            .onFocusChanged { focusState ->
-                if (focusState.isFocused == isFocused) return@onFocusChanged
-                isFocused = focusState.isFocused
-                onFocusChanged(focusState.isFocused)
-                if (focusState.isFocused) {
-                    numberAtFocus = latestEntry.number
-                    // The number is there to be typed over rather than edited a digit at a time. This covers Tab; a
-                    // press places its caret once it is released, which selectsAllOnRelease answers.
-                    state.edit { selectAll() }
-                } else {
-                    state.setTextAndSelectAll(latestEntry.number.toString())
-                }
-            }
-            .selectsAllOnRelease(state = state, isFocused = { isFocused }, coroutineScope = coroutineScope)
-            .stepperFieldKeys(
-                state = state,
-                entry = { latestEntry },
-                onEscape = {
-                    val current = latestEntry
-                    if (numberAtFocus != current.number) current.onEntered(numberAtFocus)
-                    focusManager.clearFocus()
-                },
-            )
-            .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
-        state = state,
-        inputTransformation = remember(entry.range) { StepperDigits(maxLength = entry.range.last.toString().length) },
-        lineLimits = TextFieldLineLimits.SingleLine,
-        textStyle = textStyle,
-        cursorBrush = SolidColor(colorScheme.primary),
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Done,
-            autoCorrectEnabled = false,
-        ),
-        onKeyboardAction = KeyboardActionHandler { focusManager.clearFocus() },
-        decorator = { innerTextField ->
-            StepperFieldDecoration(
-                value = value,
-                valueKey = valueKey,
-                textStyle = textStyle,
-                prefix = prefix,
-                suffix = suffix,
-                fontScale = fontScale,
-                isFocused = isFocused,
-                innerTextField = innerTextField,
-            )
-        },
-    )
+    return lerp(lerp(colorScheme.onSurface, colorScheme.primary, changedProgress), colorScheme.error, outOfRangeProgress)
+}
+
+/**
+ * What ends typing into a focused [StepperField] from outside it: a press outside its pill (`OverlayState`), and the
+ * keyboard put away - by its own button, or by Back, which a touch platform spends on that first - since a field left
+ * focused with nothing to type with would keep its caret.
+ */
+@Composable
+private fun EndsTypingWhenLeft(
+    pillBounds: () -> Rect,
+    onEnd: () -> Unit,
+) {
+    val overlayState = LocalOverlayState.current
+    DisposableEffect(overlayState) {
+        overlayState.onValueTypingStarted(bounds = pillBounds, onEnd = onEnd)
+        onDispose { overlayState.onValueTypingEnded() }
+    }
+    val ime = WindowInsets.ime
+    val density = LocalDensity.current
+    val isImeVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
+    var hasImeBeenVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(isImeVisible) {
+        if (isImeVisible) hasImeBeenVisible = true else if (hasImeBeenVisible) onEnd()
+    }
 }
 
 /** Where a [Stepper] with a [StepperField] is, written as it is laid out and read only at a press: no state. */
@@ -234,11 +281,10 @@ private fun StepperFieldDecoration(
     textStyle: TextStyle,
     prefix: String,
     suffix: String,
-    fontScale: Float,
     isFocused: Boolean,
     innerTextField: @Composable () -> Unit,
 ) = Box(
-    modifier = Modifier.fillMaxHeight().widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale),
+    modifier = Modifier.fillMaxHeight(),
     contentAlignment = Alignment.Center,
 ) {
     // What the written value has around the number (the unit of `440 Hz`) is drawn beside the field rather than in it,
@@ -318,75 +364,5 @@ private fun Modifier.stepperFieldKeys(
     }
 }
 
-/**
- * What ends a [Stepper] whose value is typed into: its own trailing segment (the tempo's Tap), which gives way to a reset
- * while the value is focused and can be reset, or a reset that joins the pill for that long where it has none (the
- * reference pitch). Inside the pill rather than over the screen, so that it covers nothing; Tap is not wanted while a
- * number is typed. The reset cannot take the focus, so a click on it leaves the field focused until the reset itself
- * lets go of it, rather than taking the reset away on the press it is clicked with.
- */
-@Composable
-internal fun StepperEntryTrailing(
-    isResetShown: Boolean,
-    resetLabel: String?,
-    onReset: () -> Unit,
-    fontScale: Float,
-    trailing: (@Composable () -> Unit)?,
-) {
-    val focusManager = LocalFocusManager.current
-    AnimatedContent(
-        modifier = Modifier.fillMaxHeight(),
-        targetState = isResetShown,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        contentAlignment = Alignment.CenterStart,
-    ) { showsReset ->
-        when {
-            showsReset -> Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                StepperDivider()
-                StepperResetSegment(
-                    label = resetLabel,
-                    fontScale = fontScale,
-                    onClick = {
-                        focusManager.clearFocus()
-                        onReset()
-                    },
-                )
-            }
-            trailing != null -> Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                StepperDivider()
-                trailing()
-            }
-        }
-    }
-}
-
-/** The reset of [StepperEntryTrailing], drawn and pressed like the Tap segment it stands in for. */
-@Composable
-private fun StepperResetSegment(
-    label: String?,
-    fontScale: Float,
-    onClick: () -> Unit,
-) = Box(
-    modifier = Modifier
-        .fillMaxHeight()
-        .focusProperties { canFocus = false }
-        .clickable(role = Role.Button, onClick = onClick)
-        .padding(horizontal = STEPPER_SEGMENT_PADDING)
-        .semantics { if (label != null) contentDescription = label },
-    contentAlignment = Alignment.Center,
-) {
-    Icon(
-        modifier = Modifier.size(STEPPER_ICON_SIZE * fontScale),
-        painter = painterResource(Res.drawable.ic_undo),
-        contentDescription = null,
-    )
-}
-
-/**
- * What the icon of a [Stepper]'s trailing segment keeps at its ends: the reset's and the Tap's alike, so that one gives way
- * to the other without the pill changing its length.
- */
+/** What the icon of a [Stepper]'s trailing segment (the tempo's Tap) keeps at its ends. */
 internal val STEPPER_SEGMENT_PADDING = 12.dp
-
-/** How wide [StepperEntryTrailing]'s reset is, after its divider, where the stepper is not scaled by a song's text size. */
-internal val STEPPER_RESET_SEGMENT_WIDTH = STEPPER_ICON_SIZE + STEPPER_SEGMENT_PADDING * 2

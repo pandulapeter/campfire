@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_SIZE
-import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, where it is
@@ -24,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_WID
  * is the first to leave ([showsCoverInPerformanceMode]).
  */
 internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING -
-    STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH
+    FONT_SCALE_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
@@ -32,7 +31,7 @@ internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP
  * the title is still left [MIN_TITLE_WIDTH] beside both.
  */
 internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
-    appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
+    appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - FONT_SCALE_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
     APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
 
 /** What the song details app bar has the room for outside read only mode, see [appBarButtons]. */
@@ -55,7 +54,7 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
     return AppBarButtons(
         isCoverShown = room >= MIN_TITLE_WIDTH,
         isSetlistAssignmentsShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH >= MIN_TITLE_WIDTH,
-        isFontScaleShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH - STEPPER_WIDTH >= MIN_TITLE_WIDTH,
+        isFontScaleShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH,
     )
 }
 

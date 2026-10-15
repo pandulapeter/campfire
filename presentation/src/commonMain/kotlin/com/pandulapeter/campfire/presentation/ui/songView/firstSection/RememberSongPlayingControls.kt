@@ -22,7 +22,10 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.SEMITONES_PER_OCTAVE
 import com.pandulapeter.campfire.presentation.ui.playing.shownFor
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
+import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
 
 /**
  * The controls of the four values a song is played by, for one page of the song details pager: built where that page
@@ -57,6 +60,13 @@ internal fun rememberSongPlayingControls(
     // sounding key without moving a chord, so counting it in here would have this control naming a key that is written
     // nowhere in the song — unless there is no capo stepper, and the page is the sounding key itself.
     val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = shownTransposition, capo = 0, spelling = chordSpelling) else null
+    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling) {
+        if (!canTranspose) return@remember emptyList()
+        (0 until SEMITONES_PER_OCTAVE).map { semitones ->
+            val transposition = wrapTransposition(semitones)
+            transpositionLabel(transposition, viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling))
+        }
+    }
     val timeSignature = song.timeSignatureOrDefault.toString()
     val fileName = song.fileName
     return remember(
@@ -81,6 +91,7 @@ internal fun rememberSongPlayingControls(
                     transposition = shownTransposition,
                     isDefault = transposition == 0,
                     key = key,
+                    labels = transpositionLabels,
                     onStep = { viewModel.overrides.stepTransposition(fileName, setlistFileName, it) },
                     onReset = { viewModel.overrides.resetTransposition(fileName, setlistFileName) },
                 )

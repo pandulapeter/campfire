@@ -79,11 +79,10 @@ internal class TypedTempoTest {
     }
 
     @Test
-    fun `a changed tempo is reset from the segment that ends the pill while its value is focused`() = runAppTest {
+    fun `a changed tempo is reset from the icon after its value`() = runAppTest {
         openSong()
         tap(hasContentDescription(string(Res.string.song_details_tempo_increase)))
         assertEquals("237", tempo())
-        tap(tempoFieldMatcher())
         tap(hasContentDescription(string(Res.string.song_details_tempo_reset)) and hasClickAction())
         assertEquals(FILE_TEMPO, tempo())
     }
@@ -92,10 +91,8 @@ internal class TypedTempoTest {
     fun `a press outside the stepper ends typing and keeps the typed tempo`() = runAppTest {
         openSong()
         typeTempo("132")
-        onNodeWithContentDescription(string(Res.string.song_details_tempo_reset)).assertExists()
         tap(hasText(string(Res.string.song_editor_insert_time)))
         tempoField().assertIsNotFocused()
-        onNodeWithContentDescription(string(Res.string.song_details_tempo_reset)).assertDoesNotExist()
         assertEquals("132", tempo())
     }
 
