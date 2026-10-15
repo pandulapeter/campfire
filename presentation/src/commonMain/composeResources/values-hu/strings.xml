@@ -337,7 +337,7 @@
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_group_display">Megjelenítés</string>
     <string name="settings_group_chords">Akkordok</string>
-    <string name="settings_group_setup">Beállítás</string>
+    <string name="settings_group_setup">Kezdeti beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
     <string name="settings_group_playing">Zenélés</string>
     <string name="settings_group_online">Online</string>
