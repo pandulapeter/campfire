@@ -24,7 +24,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
@@ -39,9 +38,10 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param urlOpener Opens the given URL in Safari.
  * @param filePicker The document picker. Handed in for the same reason as [urlOpener]: both are UIKit, which this
  *   module stays free of.
- * @param filesToImport Files opened with Campfire, which reach the app module through `onOpenURL`, or shared to it,
- *   which the share extension leaves in its inbox.
- * @param sharedTexts Texts shared to Campfire, from the same inbox.
+ * @param filesToImport Files opened with Campfire, which reach the app module through `onOpenURL`.
+ * @param inboxShares Shares the share extension left in its inbox, one at a time: each is completed as taken once its
+ *   import has settled. Completed from the import rather than awaited here, since the queue lives in the view model
+ *   and carries on when this composition goes.
  * @param syncNotifier Holds a background task and shows the notification while a sync run lasts. UIKit again, so it
  *   comes from the app module too.
  * @param metronomeNotifier Shows a playing click in Now Playing and answers the lock screen's controls, for the same
@@ -63,7 +63,7 @@ fun CampfireIosApp(
     urlOpener: (String) -> Unit,
     filePicker: FilePicker,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
-    sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
+    inboxShares: Flow<InboxShare> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onUiModeChanged: (UserPreferences.UiMode?) -> Unit = {},
@@ -87,11 +87,17 @@ fun CampfireIosApp(
             }
         }
     }
+    LaunchedEffect(inboxShares) {
+        inboxShares.collect { share ->
+            val settled = share.texts?.let(viewModel.pastedSongController::importSharedText)
+                ?: viewModel.importController.importFiles(share.files)
+            settled.invokeOnCompletion { share.taken.complete(Unit) }
+        }
+    }
     CampfireApp(
         viewModel = viewModel,
         urlOpener = urlOpener,
         filesToImport = filesToImport,
-        sharedTexts = sharedTexts,
     )
 }
 

@@ -22,7 +22,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.isLinkWithTitle
 import com.pandulapeter.campfire.presentation.ui.platform.isOnlyLinks
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -34,7 +36,8 @@ import kotlinx.coroutines.launch
  *
  * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which a shared text can arrive
  *   over: the New song form ends in the editor, so the song is imported and announced with Open instead.
- * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise.
+ * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise, and
+ *   returns what completes once they have settled.
  */
 internal class PastedSongController(
     private val scope: CoroutineScope,
@@ -44,7 +47,7 @@ internal class PastedSongController(
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
     private val hasUnsavedEditorText: () -> Boolean,
-    private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean) -> Unit,
+    private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean) -> Deferred<Unit>,
 ) {
 
     /**
@@ -63,17 +66,16 @@ internal class PastedSongController(
      * have to push another editor over.
      *
      * @param subject What the text was called where it came from, which names it where the text declares no title.
+     * @return Completed once the text has settled: at once where it is answered with a message alone.
      */
-    fun newSongFromText(text: String, subject: String? = null) {
-        when {
-            text.isBlank() -> messageSink.sendMessage(Message.ClipboardEmpty)
-            text.isOnlyLinks() || text.isLinkWithTitle() -> messageSink.sendMessage(Message.PastedOnlyLinks)
-            !text.fitsImport() -> messageSink.sendMessage(Message.PastedTextTooLarge)
-            else -> enqueueImport(
-                sharedTextsToImportedFiles(listOf(text), subject),
-                !isPerformanceModeEnabled.value && !hasUnsavedEditorText(),
-            )
-        }
+    fun newSongFromText(text: String, subject: String? = null): Deferred<Unit> = when {
+        text.isBlank() -> answered(Message.ClipboardEmpty)
+        text.isOnlyLinks() || text.isLinkWithTitle() -> answered(Message.PastedOnlyLinks)
+        !text.fitsImport() -> answered(Message.PastedTextTooLarge)
+        else -> enqueueImport(
+            sharedTextsToImportedFiles(listOf(text), subject),
+            !isPerformanceModeEnabled.value && !hasUnsavedEditorText(),
+        )
     }
 
     /**
@@ -81,15 +83,22 @@ internal class PastedSongController(
      * a file of its own. A share of nothing but addresses - a web page shared by its link, alone or beside a one-line title - is
      * answered with a sentence, since the page is never fetched. A share with nothing in it at all still goes to the
      * import, which reports it as skipped: the user picked Campfire in a share sheet and is owed an answer.
+     *
+     * @return Completed once the share has settled, which is when iOS lets go of it in the share extension's inbox.
      */
-    fun importSharedText(payload: SharedTextPayload) {
+    fun importSharedText(payload: SharedTextPayload): Deferred<Unit> {
         val texts = payload.texts.filter { it.isNotBlank() }
-        when {
+        return when {
             texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false)
-            texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> messageSink.sendMessage(Message.SharedLinkNotImported)
+            texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> answered(Message.SharedLinkNotImported)
             texts.size == 1 -> newSongFromText(texts.single(), payload.subject)
             else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false)
         }
+    }
+
+    private fun answered(message: Message): Deferred<Unit> {
+        messageSink.sendMessage(message)
+        return CompletableDeferred(Unit)
     }
 
     /**

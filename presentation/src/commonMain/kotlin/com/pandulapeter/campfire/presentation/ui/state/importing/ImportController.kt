@@ -149,10 +149,10 @@ internal class ImportController(
      * Files the system handed over: opened with Campfire, shared to it, or dropped onto it. Where that turns out to be
      * one song, the song is what the user was after rather than the library it went into, so it is opened, and a single
      * song file is written without a review unless its name is taken, see [isReviewed].
+     *
+     * @return Completed once the batch has settled, see [enqueueImport].
      */
-    fun importFiles(files: List<ImportedFile>) {
-        enqueueImport(ImportSource.Files(files), shouldOpenSong = true)
-    }
+    fun importFiles(files: List<ImportedFile>) = enqueueImport(ImportSource.Files(files), shouldOpenSong = true)
 
     /**
      * A file somebody shared as an address, downloaded once and reviewed like any other. A link to one song opens it,
@@ -164,7 +164,7 @@ internal class ImportController(
 
     /**
      * Puts a batch at the end of [importQueue] and returns what completes once it is over: reviewed, the import the
-     * review decided on written, and its result dismissed. An empty batch is not queued at all.
+     * review decided on written, and its result dismissed, or its New song form gone. An empty batch is not queued at all.
      *
      * @param shouldReview False for the demo library, whose contents are known and asked for by name: it is written at
      *   once, and only a name it finds taken puts the import screen up.

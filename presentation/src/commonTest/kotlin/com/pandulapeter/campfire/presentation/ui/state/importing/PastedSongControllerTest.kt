@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -28,6 +29,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class PastedSongControllerTest {
@@ -37,6 +39,7 @@ class PastedSongControllerTest {
     private val isPerformanceModeEnabled = MutableStateFlow(false)
     private var hasUnsavedEditorText = false
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
+    private val importSettled = CompletableDeferred<Unit>()
     private lateinit var messageSink: MessageSink
     private lateinit var dialogHost: DialogHost
 
@@ -51,7 +54,10 @@ class PastedSongControllerTest {
             isImporting = isImporting,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             hasUnsavedEditorText = { hasUnsavedEditorText },
-            enqueueImport = { files, isNewSongFromText -> queued += files to isNewSongFromText },
+            enqueueImport = { files, isNewSongFromText ->
+                queued += files to isNewSongFromText
+                importSettled
+            },
         )
     }
 
@@ -123,6 +129,18 @@ class PastedSongControllerTest {
         controller.newSongFromText("Wonderwall – Oasis\nhttps://example.com/w")
         assertEquals(listOf(Message.SharedLinkNotImported, Message.PastedOnlyLinks), messages)
         assertTrue(queued.isEmpty())
+    }
+
+    @Test
+    fun `a share answered with a sentence has settled at once`() = runTest {
+        val settled = controller().importSharedText(SharedTextPayload(texts = listOf("https://example.com/song"), subject = null))
+        assertTrue(settled.isCompleted)
+    }
+
+    @Test
+    fun `a share of one song settles when its import does`() = runTest {
+        val settled = controller().importSharedText(SharedTextPayload(texts = listOf("Am  C\nHello"), subject = null))
+        assertSame(importSettled, settled)
     }
 
     @Test

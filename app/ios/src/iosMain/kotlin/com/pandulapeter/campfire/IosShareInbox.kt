@@ -11,12 +11,16 @@ package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.presentation.ui.InboxShare
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.decodeShareInboxManifest
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import platform.Foundation.NSBundle
 import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
@@ -28,40 +32,55 @@ import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.timeIntervalSinceNow
 
-/** Texts the share extension left, kept apart from files because one text is a song to make rather than a file to import. */
-private val pendingSharedTexts = Channel<SharedTextPayload>(Channel.BUFFERED)
+/**
+ * Shares the share extension left, kept apart from files opened with the app because each is deleted from the inbox
+ * only once the app has taken it.
+ */
+private val pendingShares = Channel<InboxShare>(Channel.BUFFERED)
 
-internal val sharedTextsToImport = pendingSharedTexts.receiveAsFlow()
+internal val inboxSharesToImport = pendingShares.receiveAsFlow()
+
+/**
+ * Held for a whole drain. The one-at-a-time scope limits threads, not coroutines: while one drain waits for a share to
+ * be taken, the next would list the same folder, not deleted yet, and hand that share over a second time.
+ */
+private val drainLock = Mutex()
 
 /**
  * Called from Swift whenever the app comes to the front, and when the share extension says it has written a share while
- * the app stays on screen (an iPad's Split View). Hands every finished share in the App Group's inbox to the import,
- * oldest first, one batch each, and deletes it; the inbox's shape is the extension's `ShareInboxWriter`'s.
+ * the app stays on screen (an iPad's Split View). Hands the finished shares in the App Group's inbox to the import one
+ * at a time, oldest first, one batch each, and deletes each once the app has taken it (see [InboxShare.taken]), so
+ * that a process ended while a review or a New song form is up offers that share and the ones after it again. The
+ * inbox's shape is the extension's `ShareInboxWriter`'s.
  *
- * Read on the same one-at-a-time scope as a file opened with the app, so that a drain asked for twice in a row reads
- * each share once, and an "Open with" and a share keep the order they came in.
+ * Read on the same scope as a file opened with the app, under [drainLock], so that a drain asked for twice in a row
+ * hands each share over once. An "Open with" that arrives while a share waits for its answer goes ahead of the shares
+ * not yet handed over.
  */
 @Suppress("unused")
 @OptIn(ExperimentalForeignApi::class)
 fun drainShareInbox() {
-    inboxScope.launch {
-        val fileManager = NSFileManager.defaultManager
-        val group = NSBundle.mainBundle.objectForInfoDictionaryKey(APP_GROUP_KEY) as? String ?: return@launch
-        val inbox = fileManager.containerURLForSecurityApplicationGroupIdentifier(group)?.URLByAppendingPathComponent(INBOX_NAME) ?: return@launch
-        val inboxPath = inbox.path ?: return@launch
-        if (!fileManager.fileExistsAtPath(inboxPath)) return@launch
-        // Set by the extension as it creates the folder; again here for one an older build or a restore made.
-        inbox.setResourceValue(true, NSURLIsExcludedFromBackupKey, null)
-        val names = fileManager.contentsOfDirectoryAtPath(inboxPath, error = null)?.filterIsInstance<String>().orEmpty().sorted()
-        names.filter { it.endsWith(PARTIAL_SUFFIX) }.forEach { name ->
-            // An extension killed in the middle of a share never renames its folder. One that young may still be writing.
-            val modified = fileManager.attributesOfItemAtPath("$inboxPath/$name", error = null)?.get(NSFileModificationDate) as? NSDate
-            if (modified != null && -modified.timeIntervalSinceNow > ABANDONED_SHARE_SECONDS) {
-                fileManager.removeItemAtPath("$inboxPath/$name", error = null)
-            }
+    inboxScope.launch { drainLock.withLock { drain() } }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private suspend fun drain() {
+    val fileManager = NSFileManager.defaultManager
+    val group = NSBundle.mainBundle.objectForInfoDictionaryKey(APP_GROUP_KEY) as? String ?: return
+    val inbox = fileManager.containerURLForSecurityApplicationGroupIdentifier(group)?.URLByAppendingPathComponent(INBOX_NAME) ?: return
+    val inboxPath = inbox.path ?: return
+    if (!fileManager.fileExistsAtPath(inboxPath)) return
+    // Set by the extension as it creates the folder; again here for one an older build or a restore made.
+    inbox.setResourceValue(true, NSURLIsExcludedFromBackupKey, null)
+    val names = fileManager.contentsOfDirectoryAtPath(inboxPath, error = null)?.filterIsInstance<String>().orEmpty().sorted()
+    names.filter { it.endsWith(PARTIAL_SUFFIX) }.forEach { name ->
+        // An extension killed in the middle of a share never renames its folder. One that young may still be writing.
+        val modified = fileManager.attributesOfItemAtPath("$inboxPath/$name", error = null)?.get(NSFileModificationDate) as? NSDate
+        if (modified != null && -modified.timeIntervalSinceNow > ABANDONED_SHARE_SECONDS) {
+            fileManager.removeItemAtPath("$inboxPath/$name", error = null)
         }
-        names.filterNot { it.endsWith(PARTIAL_SUFFIX) }.forEach { name -> importShare("$inboxPath/$name") }
     }
+    names.filterNot { it.endsWith(PARTIAL_SUFFIX) }.forEach { name -> importShare("$inboxPath/$name") }
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -84,8 +103,15 @@ private suspend fun importShare(folderPath: String) {
     val texts = manifest.texts.mapNotNull { path ->
         urlInShare(folderPath, path)?.readImportedFile(budget)?.takeIf { it.bytes.isNotEmpty() }?.bytes?.decodeToString()
     }
-    if (files.isNotEmpty()) pendingImports.send(files)
-    if (texts.isNotEmpty()) pendingSharedTexts.send(SharedTextPayload(texts = texts, subject = manifest.subject))
+    if (files.isNotEmpty() || texts.isNotEmpty()) {
+        val share = InboxShare(
+            files = files,
+            texts = texts.takeIf { files.isEmpty() }?.let { SharedTextPayload(texts = it, subject = manifest.subject) },
+            taken = CompletableDeferred(),
+        )
+        pendingShares.send(share)
+        share.taken.await()
+    }
     fileManager.removeItemAtPath(folderPath, error = null)
 }
 
