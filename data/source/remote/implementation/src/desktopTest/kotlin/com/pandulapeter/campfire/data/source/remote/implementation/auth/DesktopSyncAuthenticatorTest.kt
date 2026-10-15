@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import java.io.PrintWriter
-import java.net.ConnectException
 import java.net.Socket
+import java.net.SocketException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -151,10 +151,14 @@ class DesktopSyncAuthenticatorTest {
         stack.any { frame -> frame.className == "java.net.ServerSocket" && frame.methodName == "accept" }
     }
 
+    /**
+     * A probe that lands while the listener is closing is reset rather than refused, since Linux drops the connection
+     * still waiting in the closing socket's queue; either way nothing listens on the port any more.
+     */
     private fun isPortOpen() = try {
         Socket("127.0.0.1", 53682).close()
         true
-    } catch (exception: ConnectException) {
+    } catch (exception: SocketException) {
         false
     }
 
