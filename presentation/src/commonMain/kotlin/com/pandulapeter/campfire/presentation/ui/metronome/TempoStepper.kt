@@ -13,33 +13,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.TapTempo
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
-import com.pandulapeter.campfire.presentation.resources.metronome_tap
+import com.pandulapeter.campfire.presentation.resources.ic_tap_tempo
 import com.pandulapeter.campfire.presentation.resources.metronome_tap_description
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_ICON_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_SEGMENT_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
-import com.pandulapeter.campfire.presentation.ui.components.scaled
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -100,26 +98,19 @@ private fun TapTempoSegment(
     onTempo: (bpm: Int) -> Unit,
 ) {
     val tapTempo = remember { TapTempo() }
-    val description = stringResource(Res.string.metronome_tap_description)
     Box(
         modifier = Modifier
             .fillMaxHeight()
             .clickable(role = Role.Button) {
                 tapTempo.tap()?.let(onTempo)
             }
-            .padding(horizontal = TAP_SEGMENT_PADDING)
-            .semantics { contentDescription = description },
+            .padding(horizontal = STEPPER_SEGMENT_PADDING),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = stringResource(Res.string.metronome_tap),
-            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            // One word, and at a large text size in a narrow column there is not always room for it: it is cut off
-            // rather than broken into two lines, which read as two buttons.
-            maxLines = 1,
+        Icon(
+            modifier = Modifier.size(STEPPER_ICON_SIZE * fontScale),
+            painter = painterResource(Res.drawable.ic_tap_tempo),
+            contentDescription = stringResource(Res.string.metronome_tap_description),
         )
     }
 }
-
-/** What the Tap segment keeps at its ends, a little less than the pill's buttons, since its label is wider than an icon. */
-private val TAP_SEGMENT_PADDING = 10.dp

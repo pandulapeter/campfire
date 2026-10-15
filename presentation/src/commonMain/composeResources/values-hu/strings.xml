@@ -451,7 +451,6 @@
     <string name="metronome_start">Indítás</string>
     <string name="metronome_stop">Leállítás</string>
     <string name="metronome_tempo_slider">Tempó, ütés percenként</string>
-    <string name="metronome_tap">Koppints</string>
     <string name="metronome_tap_description">Tempó megadása koppintással</string>
     <string name="metronome_time_signature">Ütemmutató</string>
     <string name="metronome_accent_hint">Koppints egy ütésre a fenti ütemben a hangsúlyozásához vagy némításához.</string>

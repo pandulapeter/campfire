@@ -371,7 +371,7 @@ private fun StepperResetSegment(
         .fillMaxHeight()
         .focusProperties { canFocus = false }
         .clickable(role = Role.Button, onClick = onClick)
-        .padding(horizontal = RESET_SEGMENT_PADDING)
+        .padding(horizontal = STEPPER_SEGMENT_PADDING)
         .semantics { if (label != null) contentDescription = label },
     contentAlignment = Alignment.Center,
 ) {
@@ -382,7 +382,11 @@ private fun StepperResetSegment(
     )
 }
 
-private val RESET_SEGMENT_PADDING = 12.dp
+/**
+ * What the icon of a [Stepper]'s trailing segment keeps at its ends: the reset's and the Tap's alike, so that one gives way
+ * to the other without the pill changing its length.
+ */
+internal val STEPPER_SEGMENT_PADDING = 12.dp
 
 /** How wide [StepperEntryTrailing]'s reset is, after its divider, where the stepper is not scaled by a song's text size. */
-internal val STEPPER_RESET_SEGMENT_WIDTH = STEPPER_ICON_SIZE + RESET_SEGMENT_PADDING * 2
+internal val STEPPER_RESET_SEGMENT_WIDTH = STEPPER_ICON_SIZE + STEPPER_SEGMENT_PADDING * 2

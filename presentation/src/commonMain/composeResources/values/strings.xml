@@ -451,7 +451,6 @@
     <string name="metronome_start">Start</string>
     <string name="metronome_stop">Stop</string>
     <string name="metronome_tempo_slider">Tempo in beats per minute</string>
-    <string name="metronome_tap">Tap</string>
     <string name="metronome_tap_description">Tap the tempo</string>
     <string name="metronome_time_signature">Time signature</string>
     <string name="metronome_accent_hint">Tap a beat in the bar above to accent or mute it.</string>
