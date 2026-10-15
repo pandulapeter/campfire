@@ -44,6 +44,12 @@ class DialogStackTest {
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = null))
     }
 
+    @Test
+    fun `a dialog's place hashes the same in every process`() {
+        assertEquals("NewSong".hashCode(), DialogType.NewSong.slotKey.hashCode())
+        assertEquals(("SongMetadata" to file).hashCode(), form.slotKey.hashCode())
+    }
+
     private val song = Song(
         fileName = "a.cho",
         title = "A",

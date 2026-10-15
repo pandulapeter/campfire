@@ -14,13 +14,19 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
  * about one song and one [SongEditTarget] keeps its place when it is put up again with other data — the metadata form
  * with what the song details lookup filled in — so that it is updated where it is rather than closed and opened again.
  * Every other dialog's place is its kind, as it was when one branch of a `when` drew each kind.
+ *
+ * The kind is its name rather than its class: the slot's key goes into the hash `rememberSaveable` saves a sheet's
+ * typed values under, and a class hashes by identity, differently in every process, so a sheet reopened after Android
+ * ended the app would find nothing saved under its new hash.
  */
 internal val DialogType.slotKey: Any
     get() = when (this) {
-        is DialogType.SongInfo -> this::class to target
-        is DialogType.SongEdit -> this::class to target
-        else -> this::class
+        is DialogType.SongInfo -> kindName to target
+        is DialogType.SongEdit -> kindName to target
+        else -> kindName
     }
+
+private val DialogType.kindName get() = this::class.simpleName.orEmpty()
 
 /**
  * Whether this dialog is put over [parent], which then stays open under it, rather than replacing it: the editors the
