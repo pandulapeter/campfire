@@ -167,8 +167,10 @@ internal class SongRepositoryImpl(
 
     override fun importFileName(fallbackTitle: String, text: String) = songLocalSource.importFileName(fallbackTitle, text)
 
-    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = nameMutex.withLock {
-        libraryFileLock.withLock { songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace) }
+    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?) = nameMutex.withLock {
+        libraryFileLock.withLock {
+            songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace, takenNames = takenNames)
+        }
     }.also { libraryChanges.onLibraryChanged() }
 
     override suspend fun adoptImported(songs: Collection<Song>) {

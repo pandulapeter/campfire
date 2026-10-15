@@ -469,6 +469,25 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `every song of a batch is named against the library and the songs written before it`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("Song.cho" to A))
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "first.cho", text = A, status = ImportPlan.Status.NEW, sourceFileName = null),
+                ImportPlan.SongEntry(fileName = "second.cho", text = B, status = ImportPlan.Status.NEW, sourceFileName = null),
+            ),
+            setlists = emptyList(),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard).invoke(plan, ImportChoices())
+
+        val (first, second) = songs.takenNamesPerCall.map { checkNotNull(it) }
+        assertTrue(LibraryFiles.identityKey("Song.cho") in first)
+        assertTrue(LibraryFiles.identityKey("Song.cho") in second)
+        assertTrue(LibraryFiles.identityKey("first.cho") in second)
+    }
+
+    @Test
     fun `an undated setlist that replaces a library one keeps its date and one kept next to it keeps the import's`() = runTest {
         val planned = LocalDate(2026, 1, 10)
         // What parsing gives a file that names no day: the day it is imported on.
@@ -753,6 +772,7 @@ class ImportFilesUseCaseImplTest {
         private val importFailure: Exception = IllegalStateException("Full"),
     ) : SongRepositoryStub() {
         val importCalls = mutableListOf<Pair<String, Boolean>>()
+        val takenNamesPerCall = mutableListOf<Set<String>?>()
         val adopted = mutableListOf<String>()
         var rescanCount = 0
 
@@ -764,9 +784,10 @@ class ImportFilesUseCaseImplTest {
 
         override fun importFileName(fallbackTitle: String, text: String) = LibraryFiles.normalizedName(ChordProParser.parseMetadata(text).title ?: fallbackTitle) + ".cho"
 
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
+        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song {
             if (importCalls.size == failingImport) throw importFailure
             importCalls += fileName to shouldReplace
+            takenNamesPerCall += takenNames?.toSet()
             val storedName = if (shouldReplace) fileName else files.freeName(fileName, ".cho")
             files[storedName] = text
             return testSong(storedName)

@@ -113,12 +113,12 @@ internal class ImportFilesUseCaseImpl(
             // A plan is held against the library as it was when it was reviewed; a sync run may have deleted, since
             // then, the file an identical song was going to be left as. The names come from the same list the planner used,
             // folded the way the storage layer compares names (LibraryFiles.identityKey), so a file another device re-spelt in
-            // case only is still there.
-            val libraryNames = if (plan.songs.any { it.isIdenticalToLibraryFile }) {
-                songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
-            } else {
-                null
-            }
+            // case only is still there. Read here rather than at plan time, so that a sync run during the review is included.
+            val libraryNames = songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
+            // The same names, grown by every file this import writes, stand in for the listing of the songs folder the
+            // storage would otherwise make for every song: on the web and iOS that made a large import quadratic. Kept
+            // apart from libraryNames, since a song written by this batch is not the library file an identical one matched.
+            val takenNames = libraryNames?.let(::HashSet)
             plan.songs.forEachIndexed { index, entry ->
                 currentFileName = entry.sourceFileName ?: entry.fileName
                 onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs, total, currentFileName))
@@ -147,7 +147,9 @@ internal class ImportFilesUseCaseImpl(
                             },
                             text = entry.text,
                             shouldReplace = shouldReplace,
+                            takenNames = takenNames,
                         ).also {
+                            takenNames?.add(LibraryFiles.identityKey(it.fileName))
                             importedSongs += it
                             if (entry.isConverted) convertedSongFileNames += it.fileName
                         }.fileName

@@ -75,8 +75,13 @@ interface SongRepository {
      * Writes an imported song under [fileName] and returns it, suffixing the name until it is free unless
      * [shouldReplace] says otherwise. The cached list is left alone: an import writes many files at once and ends
      * with a single [adoptImported].
+     *
+     * [takenNames] are the identity keys (`LibraryFiles.identityKey`) of the library's song file names as the caller
+     * holds them, the songs it has written so far included, which spares the storage a listing of the folder per song;
+     * null has it listed. The storage still asks the file system about every name, so a stale set never overwrites a
+     * file. It is ignored when [shouldReplace].
      */
-    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
+    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song
 
     /**
      * Puts the songs an import wrote into the list, in place of any of the same name, in one change, and drops the

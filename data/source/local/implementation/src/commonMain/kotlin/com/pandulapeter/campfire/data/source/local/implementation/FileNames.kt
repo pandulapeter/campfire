@@ -41,7 +41,7 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  * A name is taken where any file of the directory has it under any case or Unicode form ([LibraryFiles.identityKey]),
  * not only where the file system says so: Android, Linux and the web tell `Song.cho` and `song.cho` apart, but the sync
  * service and the other devices' file systems take them for one file, so a second one would be a collision there. That
- * costs one listing per name given out, which also tells every number of a family at once.
+ * costs one listing per call, which also tells every number of a family at once, unless the caller passes [takenKeys].
  *
  * @param collisionSuffix How the number is written. Every name Campfire gives a file is normalized, so the default is
  *   the underscore that name is already built out of: `tukorfurogep-arviz_2`, rather than a space and a pair of
@@ -52,6 +52,12 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  *   out decomposed) is taken, and it is taken by this very file, which is not a reason to number it. The listing
  *   decides about such a candidate instead, leaving this file out: on a case-sensitive file system a different file
  *   may well be there under it.
+ * @param takenKeys The identity keys of the directory's names, where the caller already holds them (an import writing
+ *   many songs one after another), in place of the listing. Every candidate is still asked of the file system, so a
+ *   file the set does not know under its exact name, or under a spelling the file system folds, is never overwritten.
+ *   The set may be stale in both directions: a file gone since makes a name look taken, costing one number more, and a
+ *   file added since under another case or form, on a file system that tells them apart (Android, Linux and the web;
+ *   Windows for the form), makes it look free, which gives that file a sibling differing from it in case or form only.
  * @param isTaken Names that are not free for a reason the directory cannot see - a file of that name elsewhere that
  *   will arrive here. Consulted for every candidate alongside the directory itself.
  */
@@ -60,13 +66,14 @@ internal suspend fun FileStorage.uniqueName(
     desired: String,
     collisionSuffix: (index: Int) -> String = ::normalizedCollisionSuffix,
     currentName: String? = null,
+    takenKeys: Set<String>? = null,
     isTaken: (name: String) -> Boolean = { false },
 ): String {
     fun isOwnName(candidate: String) = currentName != null && candidate.isSameFileNameAs(currentName)
     // exists() still has the last word on a name the listing does not show, since it knows the file system's own folding.
-    val takenKeys = listNames(directory).filter { it != currentName }.mapTo(hashSetOf(), LibraryFiles::identityKey)
+    val keys = takenKeys ?: listNames(directory).filter { it != currentName }.mapTo(hashSetOf(), LibraryFiles::identityKey)
     suspend fun isFree(candidate: String) =
-        LibraryFiles.identityKey(candidate) !in takenKeys && !isTaken(candidate) && (isOwnName(candidate) || !exists(directory, candidate))
+        LibraryFiles.identityKey(candidate) !in keys && !isTaken(candidate) && (isOwnName(candidate) || !exists(directory, candidate))
     if (isFree(desired)) return desired
     val extension = desired.knownExtension()
     val base = desired.removeSuffix(extension)

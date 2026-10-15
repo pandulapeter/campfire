@@ -42,7 +42,7 @@ class ImportTest {
     fun `a replacing song import writes over the library file`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\nOld\n")
 
-        val song = songLocalSource.importSong(fileName = "a.cho", text = "{title: A}\nNew\n", shouldReplace = true)
+        val song = songLocalSource.importSong(fileName = "a.cho", text = "{title: A}\nNew\n", shouldReplace = true, takenNames = null)
 
         assertEquals("a.cho", song.fileName)
         assertEquals(listOf("a.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
@@ -54,7 +54,7 @@ class ImportTest {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\nOld\n")
         val original = songFile("a.cho").readBytes()
 
-        val song = songLocalSource.importSong(fileName = "a.cho", text = "{title: A}\nNew\n", shouldReplace = false)
+        val song = songLocalSource.importSong(fileName = "a.cho", text = "{title: A}\nNew\n", shouldReplace = false, takenNames = null)
 
         assertEquals("a_2.cho", song.fileName)
         assertContentEquals(original, songFile("a.cho").readBytes())
@@ -65,7 +65,7 @@ class ImportTest {
     fun `an imported song carries the size its file has on disk`() = runBlocking {
         val text = "{title: Tükörfúrógép}\n[Am]Őszi szél, 千と千尋 ${String(Character.toChars(0x1F3B8))}\n"
 
-        val song = songLocalSource.importSong(fileName = "tukorfurogep.cho", text = text, shouldReplace = false)
+        val song = songLocalSource.importSong(fileName = "tukorfurogep.cho", text = text, shouldReplace = false, takenNames = null)
 
         assertEquals(songFile(song.fileName).length(), song.size)
         assertEquals("Tükörfúrógép", song.title)

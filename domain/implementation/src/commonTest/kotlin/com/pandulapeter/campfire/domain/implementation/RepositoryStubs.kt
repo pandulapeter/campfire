@@ -47,7 +47,7 @@ internal open class SongRepositoryStub : SongRepository {
     override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean = unexpected()
     override suspend fun createSong(title: String, artist: String, text: String): Song = unexpected()
     override fun importFileName(fallbackTitle: String, text: String): String = unexpected()
-    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song = unexpected()
+    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song = unexpected()
     override suspend fun adoptImported(songs: Collection<Song>): Unit = unexpected()
     override suspend fun renameSong(song: Song): Song? = unexpected()
     override suspend fun deleteSong(fileName: String): Unit = unexpected()

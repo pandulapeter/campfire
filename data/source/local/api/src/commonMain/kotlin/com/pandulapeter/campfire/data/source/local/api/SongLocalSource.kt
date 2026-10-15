@@ -66,8 +66,14 @@ interface SongLocalSource {
      * Writes [text] under [fileName] and returns the song it became, built from [text] rather than read back from the
      * file. The name is suffixed until it is free unless [shouldReplace] says otherwise, which is the one way an import
      * ever overwrites a file the library already has.
+     *
+     * [takenNames] are the identity keys (`LibraryFiles.identityKey`) of the names the songs folder holds, where the
+     * caller already has them, so that an import writing many songs does not list the folder for every one; null lists
+     * it. The set only stands in for the listing: the file system is still asked about every name, so a stale set can
+     * cost a number too many or let a name through that differs from a file added since only in case or Unicode form,
+     * never an overwrite. It is ignored when [shouldReplace].
      */
-    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
+    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song
 
     /**
      * Moves the song's file to the name its own metadata gives it and returns it under that name, or null when nothing

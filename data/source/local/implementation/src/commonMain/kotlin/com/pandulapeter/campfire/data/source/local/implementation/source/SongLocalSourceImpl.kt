@@ -112,8 +112,8 @@ internal class SongLocalSourceImpl(
         songFileName(title = it.displayTitle(fallback = fallbackTitle), artist = it.artist.orEmpty())
     }
 
-    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
-        val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName)
+    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song {
+        val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName, takenKeys = takenNames)
         fileStorage.writeText(StorageDirectory.SONGS, name, text)
         // What was just written, without asking the storage for it back: the text is the file, and its size is the text's
         // length in UTF-8. Read back, a large import paid a stat, a read and a parse per song on top of the write.

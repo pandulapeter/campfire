@@ -72,7 +72,7 @@ internal class FakeSongLocalSource(files: Map<String, String> = emptyMap()) : So
 
     override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
 
-    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
+    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?) = throw UnsupportedOperationException()
 
     override suspend fun renameSong(song: Song): Song? {
         val newName = renames[song.fileName] ?: return null

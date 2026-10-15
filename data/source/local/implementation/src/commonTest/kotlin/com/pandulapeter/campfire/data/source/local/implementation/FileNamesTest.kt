@@ -136,6 +136,25 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun `a name the caller knows is taken is numbered without a listing`() = runTest {
+        val storage = InMemoryFileStorage(foldsNames = false)
+        storage.writeText(StorageDirectory.SONGS, "Song.cho", "")
+
+        val takenKeys = setOf(LibraryFiles.identityKey("Song.cho"))
+        assertEquals("song_2.cho", storage.uniqueName(StorageDirectory.SONGS, "song.cho", takenKeys = takenKeys))
+        assertEquals(0, storage.listCalls)
+    }
+
+    @Test
+    fun `a file the caller's names leave out is still not overwritten`() = runTest {
+        val storage = InMemoryFileStorage(foldsNames = false)
+        storage.writeText(StorageDirectory.SONGS, "a.cho", "")
+
+        assertEquals("a_2.cho", storage.uniqueName(StorageDirectory.SONGS, "a.cho", takenKeys = emptySet()))
+        assertEquals(0, storage.listCalls)
+    }
+
+    @Test
     fun `a name another file holds in another case or form is taken where the file system tells them apart`() = runTest {
         val storage = InMemoryFileStorage(foldsNames = false)
         storage.writeText(StorageDirectory.SONGS, "A.cho", "")
