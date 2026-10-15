@@ -109,8 +109,9 @@ wrong or undo it".
   (`.githooks/pre-commit`) and in CI (`tests.yml`, on a pull request or a push to `master`). What is already past a
   limit may change freely; when a change adds a new responsibility to it, give that a file of its own, but splitting
   the rest is a review sweep's plan, not a side task. A `CLAUDE.md` past its budget only gets a note: cut narration,
-  never a rule. Moves and renames are judged against the old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph
-  names, the color schemes; `strings.xml` and tests are never measured), added there in a commit of its own.
+  never a rule. Moves and renames are judged against the old path. Pure data is exempt by name in the script's
+  `EXEMPT` list (the chord tables, the PDF glyph names, the color schemes; `strings.xml` and tests are never
+  measured), added there in a commit of its own.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the
@@ -178,8 +179,8 @@ wrong or undo it".
   or account name — is read with `textResource(Res.string.x, text)` (`:presentation`'s
   `localization/TextResource.kt`) instead: the plugin's formatter scans its own output a second time, and
   the `% s` in `100% sure` is a format specifier to it (`pluralTextResource(Res.plurals.x, count, count.toString(),
-  text)` for a `<plurals>` that carries such text). Keys are lower_snake_case, grouped by intent, and an existing key is reused rather than
-  duplicated.
+  text)` for a `<plurals>` that carries such text). Keys are lower_snake_case, grouped by intent, and an
+  existing key is reused rather than duplicated.
 - Exempt: file names, preference keys, serialization identifiers, ChordPro directive names.
 
 ## Clean up after changes
