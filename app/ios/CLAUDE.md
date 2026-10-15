@@ -51,8 +51,11 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   Darwin notification `com.pandulapeter.campfire.share-inbox`, for an iPad's Split View where it stays active.
 - One folder per share, written as `<time>-<UUID>.partial` and renamed when complete; the app ignores `.partial` ones
   and deletes them after an hour. Inside: `files/<n>/<name>`, `texts/<n>.txt`, and `share.json`, decoded by
-  `:presentation`'s `decodeShareInboxManifest` (a newer `version` is left for a newer app). Files go to
-  `pendingImports` (one batch per share, read with one `ImportBudget`); texts to `sharedTextsToImport`.
+  `:presentation` (`ui/platform/CLAUDE.md`). Files go to `pendingImports` (one batch per share, read with one
+  `ImportBudget`); texts to `sharedTextsToImport`.
+- `ShareInboxWriter.fileName` cannot call `LibraryFiles.normalizedName`, so the copy it writes is only lowercase,
+  underscored, free of separators, control, invisible, and bidirectional characters and leading dots, and at most 200
+  bytes.
 - Files beat text in one share; a page's address (alone, or beside a one-line title) is refused with a sentence. The
   extension mirrors `ImportLimits` before copying (8/16/24 MB, a share at most 24 MB) and bounds the inbox at 20 shares
   and 64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values, so its own

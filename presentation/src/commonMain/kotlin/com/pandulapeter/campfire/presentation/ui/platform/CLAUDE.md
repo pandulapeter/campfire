@@ -55,14 +55,11 @@ The `expect` declarations and the interfaces the platform shells provide.
 - Shared, tested timing for both phone shells: progress throttled to one post per interval, and the keep-alive released
   only after a 2 s grace with no run, so a chained run can start in it.
 
-### `SharedTextImport.kt`, `SharedTextName.kt`, `SharedTextPayload.kt`, `ShareInboxManifest.kt`
+### Text from outside (`SharedText*.kt`, `ShareInboxManifest.kt`)
 
-- Pure helpers for text that arrives from outside (paste, drop, both phones' shares), tested in `commonTest`.
 - A name made from what arrived (`cleanedForFileName`) is `LibraryFiles.normalizedName`, the rule every library name
   follows; null where the text has no letter or digit, so the next fallback applies rather than the rule's own. A
   text of nothing but links is passed on empty, reported as skipped.
-- The iOS extension's `ShareInboxWriter.fileName` cannot call it, so the copy it writes is only lowercase, underscored,
-  free of separators, control, invisible, and bidirectional characters and leading dots, and at most 200 bytes.
 - `ShareInboxManifest` is the `share.json` the iOS share extension writes (`app/ios/CLAUDE.md`), decoded here so the
   test runs on the desktop: unknown fields ignored, a newer `version` left in the inbox, anything else null. The
   extension's Swift writes it; keep the two in step.
