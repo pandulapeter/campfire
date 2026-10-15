@@ -27,3 +27,7 @@ The Android shell, called by `:app:android`.
   unregistered the old ones). A result after *process* recreation is still acted on: picks join `filesToImport` in
   `CampfireAndroidApp`, exports are filled from `cacheDir/pending_export`. A song is exported as
   `application/octet-stream`: storage providers append `.txt` to a `.cho` saved as text.
+- **Drops** (`ui/LibraryDropTarget.kt`): from another app in split screen, a desktop window, or the taskbar. URIs are
+  read under `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items
+  are a pasted song. A drag's description can't tell a text file from a text, so a `text/plain`-only drag starts only
+  where `isNewSongPasteAvailable`.

@@ -77,9 +77,10 @@ The view model facade, the composition root, and the product rules every screen 
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
 - Settings keeps every row (the mode is switched off there); its two library actions are disabled, not hidden.
-- OS-handed files are still imported, and a shared text that is one new song still opens the editor on it (the mode's
-  one way in: the user asked for a song). Paste from clipboard, its Ctrl / Cmd + V, and dropped text are gone with the
-  New buttons (`PastedSongController.isNewSongPasteAvailable`).
+- Files opened with or shared to Campfire are still imported, and a shared text that is one new song still opens the
+  editor on it (the mode's one way in: the user asked for a song, from outside). Paste from clipboard and its Ctrl / Cmd
+  + V are gone with the New buttons (`PastedSongController.isNewSongPasteAvailable`), and every shell refuses a drop,
+  files and text alike (`state/importing/DropAvailability.kt`), asked as the drag starts and again at the drop.
 
 ## What a song carries in its file
 

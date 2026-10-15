@@ -9,10 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,7 +36,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * iOS shell of the shared UI.
+ * iOS shell of the shared UI, which also takes what is dragged onto it from another app ([libraryDropTarget]).
  *
  * @param urlOpener Opens the given URL in Safari.
  * @param filePicker The document picker. Handed in for the same reason as [urlOpener]: both are UIKit, which this
@@ -94,11 +97,13 @@ fun CampfireIosApp(
             settled.invokeOnCompletion { share.taken.complete(Unit) }
         }
     }
-    CampfireApp(
-        viewModel = viewModel,
-        urlOpener = urlOpener,
-        filesToImport = filesToImport,
-    )
+    Box(modifier = Modifier.fillMaxSize().libraryDropTarget(viewModel)) {
+        CampfireApp(
+            viewModel = viewModel,
+            urlOpener = urlOpener,
+            filesToImport = filesToImport,
+        )
+    }
 }
 
 private const val APP_ICON_DELAY_MILLISECONDS = 1000L

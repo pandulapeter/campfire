@@ -16,8 +16,9 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 
 - **Shells** live in the `ui` package of each platform source set and only do what common Compose cannot; anything
   non-trivial belongs in `commonMain` (with `expect`/`actual`, see `ui/platform/`). Each provides `LocalFilePicker` and a
-  `Flow` of files the OS handed over ("open with", share, drop); Android's also a `Flow` of shared texts, and iOS's the
-  share extension's shares, each taken (deleted from its inbox) only once its import has settled.
+  `Flow` of files the OS handed over ("open with", share); Android's also a `Flow` of shared texts, and iOS's the
+  share extension's shares, each taken (deleted from its inbox) only once its import has settled. Each takes drops too
+  (files imported, a text a pasted song), never in read only mode (`isDropAvailable`).
   Notes: `src/androidMain/CLAUDE.md`, `src/desktopMain/CLAUDE.md`, `src/iosMain/CLAUDE.md`, `src/wasmJsMain/CLAUDE.md`.
 - **Everything else** is `commonMain`, with notes in the `CLAUDE.md` of each package under
   `src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`; `ui/CLAUDE.md` holds the view model and the

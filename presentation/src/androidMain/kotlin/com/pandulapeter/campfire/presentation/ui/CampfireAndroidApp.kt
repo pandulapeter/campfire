@@ -14,12 +14,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,7 +48,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Android shell of the shared UI: keeps the system bar icons in sync with the selected theme (which can differ from
- * the system theme) and lets the URL opener follow it too.
+ * the system theme), lets the URL opener follow it too, and takes what is dragged onto it from another app
+ * ([libraryDropTarget]).
  *
  * @param urlOpener Opens the given URL, styled for the given theme, and says whether anything could open it.
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent; the files
@@ -115,12 +119,14 @@ fun CampfireAndroidApp(
         LocalSyncNotifier provides syncNotifier,
         LocalMetronomeNotifier provides metronomeNotifier,
     ) {
-        CampfireApp(
-            viewModel = viewModel,
-            urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.exportController.onLinkNotOpened(url) },
-            filesToImport = allFilesToImport,
-            sharedTexts = sharedTexts,
-            onAppReady = onAppReady,
-        )
+        Box(modifier = Modifier.fillMaxSize().libraryDropTarget(viewModel)) {
+            CampfireApp(
+                viewModel = viewModel,
+                urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.exportController.onLinkNotOpened(url) },
+                filesToImport = allFilesToImport,
+                sharedTexts = sharedTexts,
+                onAppReady = onAppReady,
+            )
+        }
     }
 }

@@ -27,7 +27,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.platform.droppedTexts
+import com.pandulapeter.campfire.presentation.ui.platform.refuseDrops
+import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.filter
 import org.w3c.dom.events.KeyboardEvent
 import kotlin.js.ExperimentalWasmJsInterop
 import org.koin.compose.viewmodel.koinViewModel
@@ -69,6 +72,8 @@ fun CampfireWebApp(
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
     PasteShortcutEffect(viewModel)
+    // Read only mode takes no drop, which the page says as the drag passes over it rather than as it ends.
+    LaunchedEffect(viewModel) { viewModel.preferencesController.isPerformanceModeEnabled.collect(::refuseDrops) }
     // Dropped anywhere else, or over a dialog, the text is dropped: the drop has no meaning there.
     LaunchedEffect(viewModel) {
         droppedTexts().collect { text ->
@@ -97,7 +102,7 @@ fun CampfireWebApp(
         CampfireApp(
             viewModel = viewModel,
             urlOpener = ::openInNewTab,
-            filesToImport = remember { droppedFiles() },
+            filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.isDropAvailable } },
             onAppReady = ::dismissLoadingScreen,
         )
     }

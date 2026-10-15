@@ -17,6 +17,7 @@ The desktop shell, called by `:app:desktop`.
 - Dropped files are imported (a folder stands for the files directly inside it). A drop whose file list can't be read
   is refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses
   every later drag. Dropped text is a pasted song, accepted only where `isNewSongPasteAvailable`; a file list wins.
+  Read only mode refuses both (`isDropAvailable`).
 - Links (`openUrl` in `ui/platform/SystemBrowser.desktop.kt`) go through `java.awt.Desktop`, falling back to `open`,
   `rundll32`, or `xdg-open` where AWT has no desktop or `browse` fails. On macOS and Windows anything but a web page
   (the microphone and sound settings pages) always uses the system command, since `browse` hands every address to the

@@ -22,7 +22,8 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
   hidden tab's composition stops collecting.
 - Dropped files are imported; a dropped folder stands for the files directly inside it. An unreadable file arrives
   empty and is reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song where
-  `isNewSongPasteAvailable`, ignored elsewhere.
+  `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`, a page flag) the listeners still
+  prevent the browser's default, which would navigate to the file, but set `dropEffect` to `none` and drop nothing.
 
 ### Keys
 
