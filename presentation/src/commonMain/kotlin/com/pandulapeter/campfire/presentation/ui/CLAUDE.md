@@ -27,8 +27,8 @@ The view model facade, the composition root, and the product rules every screen 
 - Theme and language come from `GetUserPreferencesUseCase`, not `ScreenData`, so they don't wait for the library scan.
 - `visibleDialog` is written through `setVisibleDialog`, which drops work parked behind a dialog (the exit behind the
   unsaved changes question) once that dialog leaves; a dropped exit is reported to `requestExit`'s `onCancelled`,
-  because the macOS quit request must be answered. The song picker after a new setlist and What's new are
-  compare-and-set against null (`DialogHost.showIfNoneIsShown`).
+  because the macOS quit request must be answered. The song picker after a new setlist, What's new, and a
+  pasted text's New song sheet are shown only over no dialog (`DialogHost.showIfNoneIsShown`).
 - The import is parked on the import screen and dropped however that screen leaves the back stack.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
   `Message.OperationFailed` snackbar instead of a crash. An import's writes and the selection's tag/language writes run

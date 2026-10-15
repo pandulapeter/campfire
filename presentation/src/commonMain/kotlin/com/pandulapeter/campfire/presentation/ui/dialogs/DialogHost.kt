@@ -78,11 +78,12 @@ internal class DialogHost(
     }
 
     /**
-     * Puts [dialogType] up only where nothing is on screen, and answers whether it did. Not through [setVisibleDialog]:
-     * this only ever replaces no dialog at all, behind which nothing is parked.
+     * Puts [dialogType] up only where nothing is on screen, and answers whether it did. Checked and shown with no
+     * suspension between, on the main thread the host is used on, and through [setVisibleDialog] all the same, so that
+     * the listeners see it as any other dialog: the one saving the open dialogs for a restored process among them.
      */
-    fun showIfNoneIsShown(dialogType: DialogType) = _visibleDialog.compareAndSet(null, dialogType).also { isShown ->
-        if (isShown) _openDialogs.value = listOf(dialogType)
+    fun showIfNoneIsShown(dialogType: DialogType) = (_visibleDialog.value == null).also { isShown ->
+        if (isShown) setVisibleDialog(dialogType)
     }
 
     /**

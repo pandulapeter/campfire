@@ -583,11 +583,8 @@ internal class ImportController(
             // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
             awaitImportSettled()
             if (isLeaving()) return
-            // What's new waits for no dialog too and can win the race, in which case this waits for it to go. Checked and
-            // shown with no suspension between, on the main thread, rather than through showIfNoneIsShown, which skips the
-            // listeners that save the form for a restored process.
-            if (dialogHost.visibleDialog.value == null) {
-                dialogHost.showDialog(form)
+            // What's new waits for no dialog too and can win the race, in which case this waits for it to go.
+            if (dialogHost.showIfNoneIsShown(form)) {
                 dialogHost.openDialogs.first { form !in it }
                 return
             }

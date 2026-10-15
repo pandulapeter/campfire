@@ -143,6 +143,17 @@ class DialogHostTest {
         )
     }
 
+    @Test
+    fun `a dialog shown only over no dialog is seen by the listeners, and never covers one`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val changes = mutableListOf<List<DialogType>>()
+        host.addOpenDialogsChange { _, after -> changes += after }
+        assertEquals(true, host.showIfNoneIsShown(DialogType.WhatsNew))
+        assertEquals(false, host.showIfNoneIsShown(DialogType.ConfirmExit))
+        assertEquals(listOf(listOf<DialogType>(DialogType.WhatsNew)), changes)
+        assertEquals(DialogType.WhatsNew, host.visibleDialog.value)
+    }
+
     private val file = SongEditTarget.File(song.fileName)
     private val draft = SongEditTarget.EditorDraft(song.fileName)
 }
