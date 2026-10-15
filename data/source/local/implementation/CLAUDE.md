@@ -67,8 +67,9 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
 
 ## `FileNames.kt`
 
-- `uniqueName` suffixes `_2`, `_3`…, listing the directory only when `_2` is taken; a name the listing lacks is still
-  asked of `exists`, which knows the file system's folding.
+- `uniqueName` suffixes `_2`, `_3`…. A name is taken where a listed file has it under any case or Unicode form
+  (`identityKey`), on every platform: Android, Linux, and OPFS tell them apart, sync and the other devices do not. One
+  listing per call; a name it lacks is still asked of `exists`, which knows the file system's own folding.
 - ` (2)` (`arrivingCollisionSuffix`) is only for sync's conflict copy, whose name another device chose.
 - `isNamed` (via `LibraryFiles.withoutCollisionSuffix`, ignoring case and Unicode form) keeps "Update file name" from
   offering itself to a song that was numbered aside.

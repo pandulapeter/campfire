@@ -236,6 +236,7 @@ internal fun SongsScreen(
                     modifier = panelModifier,
                     state = rememberSongFilterUiState(viewModel),
                     actions = rememberSongFilterActions(viewModel),
+                    normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
                     contentPadding = panelContentPadding,
                     fadeBackgroundColor = MaterialTheme.colorScheme.background,
                 )

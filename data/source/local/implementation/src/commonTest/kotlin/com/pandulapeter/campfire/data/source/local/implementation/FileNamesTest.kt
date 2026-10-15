@@ -136,12 +136,13 @@ internal class FileNamesTest {
     }
 
     @Test
-    fun `a single collision is numbered without a listing`() = runTest {
+    fun `a name another file holds in another case or form is taken where the file system tells them apart`() = runTest {
         val storage = InMemoryFileStorage(foldsNames = false)
-        storage.writeText(StorageDirectory.SONGS, "a.cho", "")
+        storage.writeText(StorageDirectory.SONGS, "A.cho", "")
+        storage.writeText(StorageDirectory.SONGS, DECOMPOSED_CAPITAL, "")
 
         assertEquals("a_2.cho", storage.uniqueName(StorageDirectory.SONGS, "a.cho"))
-        assertEquals(0, storage.listCalls)
+        assertEquals("\u03ad\u03bd\u03b1_2.cho", storage.uniqueName(StorageDirectory.SONGS, COMPOSED_LOWERCASE))
     }
 
     @Test

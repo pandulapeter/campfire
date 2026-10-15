@@ -208,12 +208,16 @@
     <string name="songs_tags">Címkék</string>
     <string name="songs_filters_show_all">Mind a(z) %1$d megjelenítése</string>
     <string name="songs_filters_show_less">Kevesebb</string>
+    <string name="songs_tags_search">Címke keresése</string>
+    <string name="songs_tags_no_search_results">Egy címke sem felel meg a keresésnek.</string>
     <string name="songs_tags_clear">Kijelölés törlése</string>
     <string name="songs_tags_match_mode">A dalon legyen rajta</string>
     <string name="songs_tags_match_mode_any">Bármelyik címke</string>
     <string name="songs_tags_match_mode_all">Mindegyik címke</string>
     <string name="songs_languages">Nyelvek</string>
     <string name="songs_languages_unknown">Ismeretlen</string>
+    <string name="songs_languages_search">Nyelv keresése</string>
+    <string name="songs_languages_no_search_results">Egy nyelv sem felel meg a keresésnek.</string>
     <string name="songs_languages_clear">Kijelölés törlése</string>
     <string name="songs_languages_match_mode">A dal szóljon</string>
     <string name="songs_languages_match_mode_any">Bármelyik nyelven</string>
@@ -323,6 +327,7 @@
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_group_display">Megjelenítés</string>
     <string name="settings_group_chords">Akkordok</string>
+    <string name="settings_group_setup">Beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
     <string name="settings_group_playing">Zenélés</string>
     <string name="settings_group_online">Online</string>

@@ -33,6 +33,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_any
+import com.pandulapeter.campfire.presentation.resources.songs_tags_no_search_results
+import com.pandulapeter.campfire.presentation.resources.songs_tags_search
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -42,7 +44,8 @@ import org.jetbrains.compose.resources.painterResource
  * tags must not push the languages under it off the bottom of the panel.
  *
  * A selected tag is always among the ones shown, whatever its position: the filter that is on has to be visible to
- * be turned off.
+ * be turned off. That holds while the group's search field above the chips narrows them ([chipsMatching]) to the
+ * tags spelling what is typed, folded the way the song search folds it ([normalizeForSearch]).
  *
  * It is not one layout but the children of [FilterGroupsLayout] that the group is made of, since that is what shares
  * the room out between the groups' chips.
@@ -59,17 +62,28 @@ internal fun TagFilters(
     onClear: () -> Unit,
     onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
+    normalizeForSearch: (String) -> String,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf(), ::tagKey) }
     val orderedTags = remember(tags, sortingMode) { tags.orderedBy(sortingMode) }
-    val isPinned = remember(orderedTags, selected) { orderedTags.map { tagKey(it.name) in selected } }
+    val searchKeys = remember(tags, normalizeForSearch) { tags.associate { it.name to listOf(normalizeForSearch(it.name)) } }
+    val shownTags = remember(orderedTags, selected, searchKeys, searchQuery) {
+        chipsMatching(
+            items = orderedTags,
+            normalizedQuery = normalizeForSearch(searchQuery),
+            isSelected = { tagKey(it.name) in selected },
+            searchKeys = { searchKeys[it.name].orEmpty() },
+        )
+    }
+    val isPinned = remember(shownTags, selected) { shownTags.map { tagKey(it.name) in selected } }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
     // (SongListState.clearTagFilter), so what the clear action and the match mode are offered for is a selection
     // among the chips rather than whatever the filter still holds - a button that cleared nothing visible, or an
     // "any / every" asked about one chip and a tag nobody can see, would be answering a question the screen never
     // asked.
-    val selectedChipCount = isPinned.count { it }
+    val selectedChipCount = remember(orderedTags, selected) { orderedTags.count { tagKey(it.name) in selected } }
     FilterGroupPart(isVisible = isVisible) {
         FilterSectionTitle(
             title = stringResource(Res.string.songs_tags),
@@ -80,10 +94,17 @@ internal fun TagFilters(
             onClearClicked = onClear,
         )
     }
+    FilterGroupPart(isVisible = isVisible) {
+        FilterSearchField(
+            query = searchQuery,
+            placeholder = stringResource(Res.string.songs_tags_search),
+            onQueryChange = { searchQuery = it },
+        )
+    }
     FilterGroupChips(
         lookaheadScope = lookaheadScope,
         isVisible = isVisible,
-        items = orderedTags,
+        items = shownTags,
         key = { tagKey(it.name) },
         isExpanded = isExpanded,
         isPinned = isPinned,
@@ -98,6 +119,10 @@ internal fun TagFilters(
             leadingIconFill = tagColor(tag.name)?.color() ?: Color.Unspecified,
         )
     }
+    FilterSearchEmptyState(
+        isVisible = isVisible && shownTags.isEmpty(),
+        text = stringResource(Res.string.songs_tags_no_search_results),
+    )
     MatchModeChoice(
         modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
         isVisible = isVisible && selectedChipCount > 1,

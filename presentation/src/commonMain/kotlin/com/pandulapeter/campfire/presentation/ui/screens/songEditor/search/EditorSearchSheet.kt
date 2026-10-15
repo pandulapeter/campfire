@@ -11,7 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.ChordProTextField
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.replaceAll
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -136,7 +141,6 @@ internal fun EditorSearchSheet(
                 .fadingTopEdge(scrollState, sheetContainerColor())
                 .bounceVerticalScroll(scrollState)
                 .padding(contentPadding)
-                .padding(top = 8.dp)
                 .editorSearchShortcuts(
                     onFind = { search.open(EditorSearchMode.FIND) },
                     onReplace = { search.open(EditorSearchMode.REPLACE) },
@@ -151,10 +155,11 @@ internal fun EditorSearchSheet(
                 label = { Text(stringResource(Res.string.song_editor_find_query)) },
                 leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_search), contentDescription = null) },
                 trailingIcon = rememberClearTextButton(isVisible = search.query.text.isNotEmpty(), onClear = { search.query.clearText() }),
-                // Always there, empty or not, so that the fields under it do not move as the first letter is typed.
-                supportingText = {
-                    Text(
-                        when {
+                // Inside the field rather than under it, where a line kept for it even while empty would push the replacement
+                // further from the query than the fields of any other form are from each other.
+                suffix = {
+                    MatchCount(
+                        text = when {
                             hasMatches -> stringResource(Res.string.song_editor_find_match_count, search.currentNumber, search.matchCount)
                             search.query.text.isNotEmpty() -> stringResource(Res.string.song_editor_find_no_matches)
                             else -> ""
@@ -172,7 +177,7 @@ internal fun EditorSearchSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 8.dp, bottom = 8.dp)
+                        .padding(top = 8.dp)
                         .focusRequester(replacementFocusRequester),
                     state = search.replacement,
                     label = { Text(stringResource(Res.string.song_editor_find_replacement)) },
@@ -191,7 +196,7 @@ internal fun EditorSearchSheet(
             )
             AnimatedVisibility(visible = isReplacing) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 ) {
                     OutlinedButton(
@@ -210,4 +215,19 @@ internal fun EditorSearchSheet(
             }
         }
     }
+}
+
+/**
+ * Crossfaded as it changes, growing or shrinking the field's end with it, so that typing and stepping through the
+ * matches never make it jump.
+ */
+@Composable
+private fun MatchCount(
+    text: String,
+) = AnimatedContent(
+    targetState = text,
+    transitionSpec = { (fadeIn() togetherWith fadeOut()).using(SizeTransform(clip = false)) },
+    contentAlignment = Alignment.CenterEnd,
+) { shownText ->
+    Text(shownText)
 }

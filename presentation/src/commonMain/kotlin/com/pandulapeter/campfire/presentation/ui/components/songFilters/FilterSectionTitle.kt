@@ -106,7 +106,7 @@ internal fun FilterSectionTitle(
 }
 
 /** The height of a [FilterSectionTitle], which is its action's with no touch target around it, and the gap under it. */
-private val SECTION_ACTION_HEIGHT = 32.dp
+internal val SECTION_ACTION_HEIGHT = 32.dp
 private val SECTION_TITLE_BOTTOM_PADDING = 4.dp
 
 /** The padding a text button keeps inside its own bounds, taken off so that its label lines up with the titles. */

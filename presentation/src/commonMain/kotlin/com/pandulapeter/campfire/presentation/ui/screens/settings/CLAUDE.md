@@ -16,6 +16,7 @@ breakpoint, as do the wide layout's pages.
 
 ## Tab contents (rules not obvious from the code)
 
+- **General**: Setup ("Set up Campfire again", the onboarding) leads, since General is the tab Settings opens on.
 - **Features**: Playing switches first (read only, chords, chord diagrams, metronome, tuner, setlists), then an Online
   group (song details lookup, cover art) so the two that make requests are found together. Rules in `ui/CLAUDE.md`.
 - **Songs**: the Instrument row (chips) comes first, since it decides shapes, tuner, and capo; it is disabled only when

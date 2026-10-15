@@ -199,6 +199,7 @@ private fun CampfireDialog(
             SongFilters(
                 state = rememberSongFilterUiState(viewModel),
                 actions = rememberSongFilterActions(viewModel),
+                normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
                 contentPadding = contentPadding,
                 uncoveredTopInset = uncoveredTopInset,
                 fadeBackgroundColor = sheetContainerColor(),

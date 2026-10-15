@@ -150,7 +150,7 @@ internal fun ChordsScreen(
             // The page is laid out under the keyboard, which only pads the grid, so the field's bring-into-view counts what
             // the keyboard covers as shown: the field is scrolled to the top instead, once per focus, so that what it finds
             // is above the keyboard. It follows the keyboard as it rises, since the grid can only scroll as far as the
-            // padding added so far allows, and stops just under the top fade, which would paint over the field's outline.
+            // padding added so far allows, and stops just under the top fade, which would paint over the field's edge.
             val margin = with(density) { (EDGE_FADE_SIZE - PAGE_TOP_PADDING - SEARCH_FIELD_OWN_TOP_PADDING).roundToPx() }
             snapshotFlow { imeState.value.getBottom(density) }.collectLatest {
                 gridState.animateScrollToItem(0, (searchFieldTop - margin).coerceAtLeast(0))
@@ -267,5 +267,5 @@ private const val CONTROLS_KEY = "controls"
 private const val MESSAGE_KEY = "message"
 private val CELL_GAP = 8.dp
 
-/** The room `SearchField` leaves above its outline, inside the modifier it is handed. */
+/** The room `SearchField` leaves above its pill, inside the modifier it is handed. */
 private val SEARCH_FIELD_OWN_TOP_PADDING = 8.dp

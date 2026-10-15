@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen
@@ -21,6 +22,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launch
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_appearance
+import com.pandulapeter.campfire.presentation.resources.settings_group_setup
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
@@ -28,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.preferences.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.components.preferences.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
@@ -40,18 +45,35 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
+import org.jetbrains.compose.resources.painterResource
 
 /**
- * The General tab: how the app looks, then which language it speaks. Setting the app up again is not here but in the
- * About tab's help, since it walks through every tab's first questions rather than this one's.
+ * The General tab: the way back into the first run's steps, then how the app looks, then which language it speaks.
+ * Setting the app up again leads, although it walks through every tab's first questions rather than this one's, since
+ * General is the tab Settings opens on.
  */
 @Composable
 internal fun GeneralSections(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
 ) {
+    SetupSection(onOnboardingClicked = viewModel::openOnboarding)
     AppearanceSection(viewModel = viewModel, userPreferences = userPreferences)
     LanguageSection(viewModel = viewModel, userPreferences = userPreferences)
+}
+
+/** The steps the first run opens with, which start from what everything is set to now. */
+@Composable
+private fun SetupSection(
+    onOnboardingClicked: () -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_setup)) {
+    ActionListItem(
+        title = stringResource(Res.string.settings_onboarding),
+        description = stringResource(Res.string.settings_onboarding_description),
+        icon = painterResource(Res.drawable.ic_campfire),
+        isEmphasized = false,
+        onClick = onOnboardingClicked,
+    )
 }
 
 @Composable

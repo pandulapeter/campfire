@@ -58,6 +58,8 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  *   its tallest rather than at the offset it happens to be at.
  * @param fadeBackgroundColor The opaque color the filters stand on, the screen's or the sheet's, which their top edge
  *   fades into.
+ * @param normalizeForSearch How a group's search and its chips' names are folded before they are compared:
+ *   `SongRenderer.normalizeForSearch`, so that a tag is found the way a song is.
  */
 @Composable
 internal fun SongFilters(
@@ -67,6 +69,7 @@ internal fun SongFilters(
     contentPadding: PaddingValues = PaddingValues(),
     uncoveredTopInset: () -> Dp = { 0.dp },
     fadeBackgroundColor: Color,
+    normalizeForSearch: (String) -> String,
 ) = BoxWithConstraints(
     modifier = modifier.fillMaxWidth(),
 ) {
@@ -89,6 +92,7 @@ internal fun SongFilters(
                 availableHeight = availableHeight,
                 state = state,
                 actions = actions,
+                normalizeForSearch = normalizeForSearch,
             )
         }
     }
@@ -101,6 +105,7 @@ private fun FilterGroups(
     availableHeight: Dp,
     state: SongFilterUiState,
     actions: SongFilterActions,
+    normalizeForSearch: (String) -> String,
 ) {
     FilterGroupsLayout(
         modifier = Modifier.fillMaxWidth(),
@@ -119,6 +124,7 @@ private fun FilterGroups(
             onClear = actions::clearTagFilter,
             onMatchModeSelected = actions::setTagMatchMode,
             onSortingModeSelected = actions::setTagSortingMode,
+            normalizeForSearch = normalizeForSearch,
         )
         // A library that sings in one language has nothing to choose between, and the one group it would offer
         // ("Unknown", against the single language) is a question about a library nobody has filled in yet.
@@ -133,6 +139,7 @@ private fun FilterGroups(
             onClear = actions::clearLanguageFilter,
             onMatchModeSelected = actions::setLanguageMatchMode,
             onSortingModeSelected = actions::setLanguageSortingMode,
+            normalizeForSearch = normalizeForSearch,
         )
         ResetFiltersButton(
             modifier = Modifier.layoutId(FilterSlot.TRANSIENT),

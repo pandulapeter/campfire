@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
@@ -36,8 +35,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_help
 import com.pandulapeter.campfire.presentation.resources.settings_group_legal
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
-import com.pandulapeter.campfire.presentation.resources.settings_onboarding
-import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
@@ -48,7 +45,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
@@ -59,8 +55,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * What the app is and where it lives, in three groups: the app itself (where every build of it is, how to give
- * something back, and, last, who made it and which version this is); help (setting it up again, the website's support
- * page, and the source code and issue tracker); and the fine print. The row that names the author is the link to the
+ * something back, and, last, who made it and which version this is); help (the website's support page, and the source code
+ * and issue tracker); and the fine print. The row that names the author is the link to the
  * author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
  * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
  * platforms, since a page can be kept up to date without a release and it is the one place App Review has nothing to
@@ -78,7 +74,7 @@ internal fun AboutSections(
     urlOpener: (String) -> Unit,
 ) {
     AppSection(urlOpener = urlOpener)
-    HelpSection(urlOpener = urlOpener, onOnboardingClicked = viewModel::openOnboarding)
+    HelpSection(urlOpener = urlOpener)
     LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.dialogHost.showDialog(DialogType.OpenSourceLicenses) })
 }
 
@@ -121,16 +117,7 @@ private fun AppSection(
 @Composable
 private fun HelpSection(
     urlOpener: (String) -> Unit,
-    onOnboardingClicked: () -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_help)) {
-    // The way back into the steps the first run opens with, which start from what everything is set to now.
-    ActionListItem(
-        title = stringResource(Res.string.settings_onboarding),
-        description = stringResource(Res.string.settings_onboarding_description),
-        icon = painterResource(Res.drawable.ic_settings),
-        isEmphasized = false,
-        onClick = onOnboardingClicked,
-    )
     LinkListItem(
         title = stringResource(Res.string.settings_help),
         description = stringResource(Res.string.settings_help_description),

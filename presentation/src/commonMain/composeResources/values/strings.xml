@@ -208,12 +208,16 @@
     <string name="songs_tags">Tags</string>
     <string name="songs_filters_show_all">Show all %1$d</string>
     <string name="songs_filters_show_less">Show fewer</string>
+    <string name="songs_tags_search">Find a tag</string>
+    <string name="songs_tags_no_search_results">No tag matches this search.</string>
     <string name="songs_tags_clear">Clear selection</string>
     <string name="songs_tags_match_mode">A song has to carry</string>
     <string name="songs_tags_match_mode_any">Any tag</string>
     <string name="songs_tags_match_mode_all">Every tag</string>
     <string name="songs_languages">Languages</string>
     <string name="songs_languages_unknown">Unknown</string>
+    <string name="songs_languages_search">Find a language</string>
+    <string name="songs_languages_no_search_results">No language matches this search.</string>
     <string name="songs_languages_clear">Clear selection</string>
     <string name="songs_languages_match_mode">A song has to be in</string>
     <string name="songs_languages_match_mode_any">Any language</string>
@@ -323,6 +327,7 @@
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_group_display">Display</string>
     <string name="settings_group_chords">Chords</string>
+    <string name="settings_group_setup">Setup</string>
     <string name="settings_group_appearance">Appearance</string>
     <string name="settings_group_playing">Playing</string>
     <string name="settings_group_online">Online</string>

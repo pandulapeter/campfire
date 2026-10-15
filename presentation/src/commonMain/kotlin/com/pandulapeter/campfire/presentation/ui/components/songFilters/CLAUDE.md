@@ -31,3 +31,8 @@ The tag and language filters of the songs screen, in a side panel or a sheet.
 - Room is shared in the lookahead pass only; the approach pass animates bounds. Moving chips use `animateBounds` in one
   `LookaheadScope`.
 - The language group appears only with more than one language (no-language songs counting as one).
+- **Each group has its own search field** between its title and its chips (`FilterSearchField`), always shown, a pill
+  as tall as the title row (not in it: it would get a phone's last ~100 dp and resize with the clear action), never
+  taking the caret by itself. It narrows that group's chips (`chipsMatching`, folded like the song search; languages by
+  name or code); selected chips stay in sight, and a search matching nothing says so in the chips' place
+  (`FilterSearchEmptyState`). The query is the group's saved state, gone with the sheet.

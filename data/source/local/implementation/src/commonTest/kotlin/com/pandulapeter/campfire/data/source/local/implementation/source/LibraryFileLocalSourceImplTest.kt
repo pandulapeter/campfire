@@ -57,6 +57,19 @@ class LibraryFileLocalSourceImplTest {
         assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryFileKind.SONG, COMPOSED_LOWERCASE))
     }
 
+    @Test
+    fun `a conflict copy is not given a name another file holds in another case where the file system tells case apart`() = runTest {
+        // The sync service takes the two spellings for one file, so the copy would collide with the other file there.
+        val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song (2).cho", OTHER)
+
+        val name = localSource.writeLibraryFileToFreeName(LibraryFileKind.SONG, "Song.cho", REMOTE)
+
+        assertEquals("Song (3).cho", name)
+        assertContentEquals(OTHER, localSource.readLibraryFile(LibraryFileKind.SONG, "song (2).cho"))
+    }
+
     private companion object {
         val LOCAL = "local".encodeToByteArray()
         val REMOTE = "remote".encodeToByteArray()

@@ -10,18 +10,13 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Redo onboarding: find a better place for it in the Settings menu.
-- Review Settings menu structure
-- Simplify adding chord diagrams in the editor
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
 
 ### Features
-- New song from the clipboard: documentation/plans/clipboard-import.md
 - Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 
 ## Midterm (in the next versions)
-- Search input for tags and languages
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Global sync status display

@@ -38,16 +38,20 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  * The first free variant of [desired], numbered before the extension. Nothing in the library is ever overwritten
  * implicitly, so imports and new songs land next to a name they collide with rather than replacing it.
  *
+ * A name is taken where any file of the directory has it under any case or Unicode form ([LibraryFiles.identityKey]),
+ * not only where the file system says so: Android, Linux and the web tell `Song.cho` and `song.cho` apart, but the sync
+ * service and the other devices' file systems take them for one file, so a second one would be a collision there. That
+ * costs one listing per name given out, which also tells every number of a family at once.
+ *
  * @param collisionSuffix How the number is written. Every name Campfire gives a file is normalized, so the default is
  *   the underscore that name is already built out of: `tukorfurogep-arviz_2`, rather than a space and a pair of
  *   brackets in a name that has neither. [arrivingCollisionSuffix] is for the one caller that writes a file under a
  *   name it did not invent.
  * @param currentName The name of the file being renamed, if this is a rename. A case-insensitive file system (macOS,
  *   Windows and iOS by default) says a name that differs from it only in case or in Unicode form (a Mac hands names
- *   out decomposed) is taken, and it is taken by this very file, which is not a reason to number it. Such a candidate
- *   is held against the directory's listing instead, which carries the names exactly as they are: on a case-sensitive
- *   file system a different file may well be there under it. Otherwise the directory is only listed once a numbered
- *   name turns out to be taken too, and then only to skip the numbers it shows are taken.
+ *   out decomposed) is taken, and it is taken by this very file, which is not a reason to number it. The listing
+ *   decides about such a candidate instead, leaving this file out: on a case-sensitive file system a different file
+ *   may well be there under it.
  * @param isTaken Names that are not free for a reason the directory cannot see - a file of that name elsewhere that
  *   will arrive here. Consulted for every candidate alongside the directory itself.
  */
@@ -59,24 +63,17 @@ internal suspend fun FileStorage.uniqueName(
     isTaken: (name: String) -> Boolean = { false },
 ): String {
     fun isOwnName(candidate: String) = currentName != null && candidate.isSameFileNameAs(currentName)
-    if (!isOwnName(desired) && !isTaken(desired) && !exists(directory, desired)) return desired
-    // Only a rename needs the exact names up front (see currentName): for anything else, exists() has just said all a
-    // listing would about the desired name. A listing only ever short-cuts a name it shows is taken; one it does not
-    // show is still asked of exists(), which knows the case and Unicode folding of the file system and sees a file sync
-    // wrote since, so a stale or exact listing can make a name look taken but never free.
-    var takenNames: Set<String>? = if (currentName == null) null else listNames(directory).toHashSet()
+    // exists() still has the last word on a name the listing does not show, since it knows the file system's own folding.
+    val takenKeys = listNames(directory).filter { it != currentName }.mapTo(hashSetOf(), LibraryFiles::identityKey)
     suspend fun isFree(candidate: String) =
-        takenNames?.contains(candidate) != true && !isTaken(candidate) && (isOwnName(candidate) || !exists(directory, candidate))
-    if (currentName != null && isFree(desired)) return desired
+        LibraryFiles.identityKey(candidate) !in takenKeys && !isTaken(candidate) && (isOwnName(candidate) || !exists(directory, candidate))
+    if (isFree(desired)) return desired
     val extension = desired.knownExtension()
     val base = desired.removeSuffix(extension)
     var index = 2
     while (true) {
         val candidate = base + collisionSuffix(index) + extension
         if (isFree(candidate)) return candidate
-        // A family already numbered past here: one listing tells every taken number at once, where probing them would
-        // cost one storage call each - an import of a songbook whose songs all fall back to one name, quadratically.
-        if (takenNames == null) takenNames = listNames(directory).toHashSet()
         index++
     }
 }
