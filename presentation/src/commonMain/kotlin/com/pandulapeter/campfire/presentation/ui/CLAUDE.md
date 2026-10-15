@@ -77,8 +77,8 @@ The view model facade, the composition root, and the product rules every screen 
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
 - Settings keeps every row (the mode is switched off there); its two library actions are disabled, not hidden.
-- OS-handed files ("open with", share, drop) are still imported. Paste from clipboard, its Ctrl / Cmd + V, and dropped
-  text are gone with the New buttons (`PastedSongController.isNewSongPasteAvailable`).
+- OS-handed files and shared texts are still imported (a text as an import offering Open). Paste from clipboard, its
+  Ctrl / Cmd + V, and dropped text are gone with the New buttons (`PastedSongController.isNewSongPasteAvailable`).
 
 ## What a song carries in its file
 
