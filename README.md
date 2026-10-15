@@ -15,13 +15,10 @@ It runs natively on Android, iOS, macOS, Windows, Linux, and the web.
 
 <img src="documentation/screenshots/01.webp" width="32%" /> <img src="documentation/screenshots/02.webp" width="32%" /> <img src="documentation/screenshots/03.webp" width="32%" />
 
-The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig, and a selection of songs can be filed into setlists, tagged, given languages, or exported in one go.
-A chord sheet copied from anywhere, or shared to Campfire from another app on a phone or a tablet, becomes a song with one tap, its chords written over the lyrics converted to ChordPro on the device.
-Songs automatically adapt with multi-column layouts and customizable section ordering to make reading easier on stage.
-It also includes on-the-fly transposition, chord diagrams for the six- and twelve-string guitar, ukulele, mandolin, banjo, and keyboard, in standard and alternate tunings such as drop D and DADGAD (with every other way to play each chord one tap away, the shapes a song defines for itself, and a Chords tab to browse them by key and name), adjustable font sizing, a lyrics-only view for singers, customizable themes, an optional lookup that fills in a song's artist, album, year, and songwriters from MusicBrainz and iTunes, a read only mode to lock the app against accidental edits, and a Features tab that switches off whatever a reader does not need, from the metronome and the tuner to the setlists.
-A built-in metronome starts at each song's own tempo and time signature, with tap tempo, accents, subdivisions, and five sounds, and keeps clicking with the screen locked. Setlists can play a song in its own key, with its own capo and tempo, count down to the date of the gig, and add up their running time.
-A tuner hears one string at a time through the microphone, chromatically or against the strings of a six-, seven-, eight-, or twelve-string guitar, a four- or five-string bass, a ukulele, a violin, a mandolin, or a banjo, in their alternate tunings too, and plays each string's note for tuning by ear; nothing it hears is kept or sent anywhere, and it can be opened over the song being played.
-Songs and setlists can be exported as printable PDFs, with a page preview, song selection, and saved paper, sizing, and content options.
+The interface is built for real use: organizing a song library, building setlists, and playing on stage.
+Chord sheets can be pasted, shared from other apps, or imported from PDF, Word, and other songbook apps' backups, and are converted to ChordPro on the device.
+Songs adapt to the screen with multi-column layouts, transpose on the fly, have a lyrics-only view for singers, and show chord diagrams for guitar, ukulele, mandolin, banjo, and keyboard, in alternate tunings too.
+A built-in metronome and a tuner are always at hand, setlists keep each song's own key, capo, and tempo, and songs and setlists export to printable PDFs.
 
 <img src="documentation/screenshots/04.webp" width="32%" /> <img src="documentation/screenshots/05.webp" width="32%" /> <img src="documentation/screenshots/06.webp" width="32%" />
 
