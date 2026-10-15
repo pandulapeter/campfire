@@ -150,6 +150,7 @@ internal fun StepperField(
         values = widestValues,
         style = textStyle,
         isResettable = onReset != null,
+        isResetPressable = true,
         fontScale = fontScale,
     )
     Row(verticalAlignment = Alignment.CenterVertically) {

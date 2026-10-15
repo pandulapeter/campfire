@@ -28,8 +28,8 @@ Steppers, choices, chips, and the other small controls the screens and sheets sh
   people arrive with. Elsewhere values are tried a step at a time while their effect is watched.
 - `StepperField` sets every keystroke that leaves a number in range, with no key to confirm; one outside it is drawn in
   the error color and sets nothing, never clamped (415..466 is typed through 4 and 44). A tap on its value starts
-  typing, so only the icon resets it. A unit (` Hz`) is drawn beside the field, not in it, so only the digits are ever
-  selected.
+  typing, so only the icon resets it, and it takes a press as wide as − and +. A unit (` Hz`) is drawn beside the
+  field, not in it, so only the digits are ever selected.
 - While a field is focused it counts in `OverlayState.isValueBeingTyped`, so the song's keys leave it alone; it is no
   overlay to the back stack or the web's history. **A press anywhere outside its pill ends typing** (`CampfireApp`'s
   root, initial pass, never consumed), since nothing else takes the focus from it. A press inside the pill keeps typing

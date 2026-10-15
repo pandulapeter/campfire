@@ -15,6 +15,8 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
@@ -29,6 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUTTON_LENGTH
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
@@ -85,6 +88,18 @@ internal class TypedTempoTest {
         assertEquals("237", tempo())
         tap(hasContentDescription(string(Res.string.song_details_tempo_reset)) and hasClickAction())
         assertEquals(FILE_TEMPO, tempo())
+    }
+
+    @Test
+    fun `the reset icon takes a press as wide as the buttons and its showing leaves the pill as long`() = runAppTest {
+        openSong()
+        val increase = hasContentDescription(string(Res.string.song_details_tempo_increase))
+        val increaseLeftBefore = onNode(increase).getBoundsInRoot().left
+        tap(increase)
+        assertEquals("237", tempo())
+        onNode(hasContentDescription(string(Res.string.song_details_tempo_reset)) and hasClickAction())
+            .assertWidthIsAtLeast(STEPPER_BUTTON_LENGTH)
+        assertEquals(increaseLeftBefore, onNode(increase).getBoundsInRoot().left)
     }
 
     @Test

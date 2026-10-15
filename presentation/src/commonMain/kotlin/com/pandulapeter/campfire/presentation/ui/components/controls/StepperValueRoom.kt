@@ -39,6 +39,7 @@ internal fun stepperValueStyle(fontScale: Float) = MaterialTheme.typography.labe
  * whether it can be reset, and the buttons stay under the finger.
  *
  * @param isResettable Whether the room of a reset icon is kept too.
+ * @param isResetPressable Whether that icon takes a press of its own, which makes it wider (see [stepperResetMarkWidth]).
  */
 @Composable
 internal fun StepperValueRoom(
@@ -46,6 +47,7 @@ internal fun StepperValueRoom(
     values: List<String>,
     style: TextStyle,
     isResettable: Boolean,
+    isResetPressable: Boolean,
     fontScale: Float,
 ) = Row(
     modifier = modifier
@@ -61,5 +63,5 @@ internal fun StepperValueRoom(
             )
         }
     }
-    if (isResettable) Spacer(Modifier.width(stepperResetMarkWidth(fontScale)))
+    if (isResettable) Spacer(Modifier.width(stepperResetMarkWidth(fontScale = fontScale, isPressable = isResetPressable)))
 }

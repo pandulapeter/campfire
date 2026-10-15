@@ -280,7 +280,13 @@ private fun StepperValue(
             .widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale),
         contentAlignment = Alignment.Center,
     ) {
-        StepperValueRoom(values = widestValues, style = style, isResettable = onReset != null, fontScale = fontScale)
+        StepperValueRoom(
+            values = widestValues,
+            style = style,
+            isResettable = onReset != null,
+            isResetPressable = false,
+            fontScale = fontScale,
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedContent(
                 targetState = StepperLabel(value = value, key = valueKey),
