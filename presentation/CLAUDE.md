@@ -27,18 +27,12 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 - `.pdf`, `.docx`, `.txt`, and shared text from either phone become ordinary songs before the UI sees them. Every
   import started in the app is reviewed on the import screen first (`ui/screens/importReport/`), except a pasted or
   shared song naming its own title and artist (below).
-- A pasted or dropped text (`PastedSongController`, `ui/state/importing/`) goes down the same import as a `.txt`
-  (`isNewSongFromText`): one song the library lacks becomes the New song sheet filled in from it
-  (`DialogType.NewSongFromText`, holding only what the converted text declares; nothing is written before Create, which
-  opens the editor) unless it declares both its title and its artist, when it is written and opened like one the library
-  holds (`isLoneSongWrittenAsIs`: the sheet is there for the name); anything else is the ordinary review. Blank, links only, or over 8 MB
-  is a snackbar before anything is prepared. With unsaved editor text, or in read only mode, it is an import whose song
-  is offered with Open instead of the sheet.
-- Text shared from another app (`importSharedText`, a `SharedTextPayload`) takes the same way when it is one text;
-  several are one import, a page's address alone is a snackbar. A trailing page address after selected text (Chrome's
-  share of a highlight) is dropped with its quotation marks (`withoutSourceLink`), for a paste too.
-- A text without a title is named by its share's subject without the site's boilerplate (`sharedTextName`), else by
-  its first line that is not chords, an address, or markup; either is `LibraryFiles.normalizedName`d at once.
+- A pasted, dropped, or shared text (`PastedSongController`, `ui/state/importing/`) goes down the import as a `.txt`
+  (`isNewSongFromText`). One new song opens the New song sheet (`DialogType.NewSongFromText`, nothing written before
+  Create) unless it declares both title and artist (`isLoneSongWrittenAsIs`), when it is written and opened; anything
+  else is the ordinary review. Blank, links only, or over 8 MB is a snackbar before anything is prepared. With unsaved
+  editor text, or in read only mode, the song is imported and offered with Open instead.
+- Several shared texts are one import; a page's address alone is a snackbar (nothing is fetched).
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
   and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.
