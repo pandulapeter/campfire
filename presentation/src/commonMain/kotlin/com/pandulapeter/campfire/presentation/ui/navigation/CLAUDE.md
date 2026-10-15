@@ -43,9 +43,9 @@ The destinations and the back stack.
   settled before the process ends (`settleSynchronizationBeforeExit`). A start that finds it reopens the editor on it
   behind the launch screen with a snackbar, or hands it to a restored editor (`recoveredEditorField`); kept while it
   holds unsaved text.
-- The song filter, both searches, and the open form sheet (`SavedDialog`: kind and file names, reopened by
-  `SavedDialogRestorer` once the library is read) are saved too. Confirmations, the export screen, and the tuner are never
-  reopened.
+- The song filter, both searches, and the open form sheet (`SavedDialog`: kind and file names, or a small pasted text,
+  reopened by `SavedDialogRestorer` once the library is read) are saved too. Confirmations, the export screen, and the
+  tuner are never reopened.
 - `NavigationState` is where the user is beyond the stack (searches, settings tab, each details screen's page as
   `initialIndex` via `onSongDetailsPageSettled`); `restoreNavigationState` applies it in one step and refuses while the
   editor holds unsaved text.

@@ -282,6 +282,17 @@ class ImportControllerQueueTest {
     }
 
     @Test
+    fun `a pasted text's form is put up through the dialog listeners, which save it for a restored process`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        val changes = mutableListOf<List<DialogType>>()
+        dialogHost.addOpenDialogsChange { _, after -> changes += after }
+        enqueuePaste()
+        runCurrent()
+        assertIs<DialogType.NewSongFromText>(changes.single().single())
+    }
+
+    @Test
     fun `a text arriving while another dialog is open waits for it to close rather than replacing it`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()

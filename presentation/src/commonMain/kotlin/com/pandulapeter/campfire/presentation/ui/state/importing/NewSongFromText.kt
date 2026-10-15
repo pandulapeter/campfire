@@ -44,11 +44,19 @@ internal val ImportPlan.isLoneSongWrittenAsIs
 internal fun newSongFromTextDialogOf(plan: ImportPlan): DialogType.NewSongFromText? {
     if (plan.isLoneSongWrittenAsIs) return null
     val song = plan.loneSong ?: return null
-    val summary = ChordProParser.summarize(song.text)
+    return newSongFromTextDialog(text = song.text, isConverted = song.isConverted)
+}
+
+/**
+ * The New song form over [text], offering what it declares, which a restored process reopens from the text alone (see
+ * `SavedDialog.NewSongFromText`): the form it builds offers exactly the values the first one did.
+ */
+internal fun newSongFromTextDialog(text: String, isConverted: Boolean): DialogType.NewSongFromText {
+    val summary = ChordProParser.summarize(text)
     return DialogType.NewSongFromText(
-        text = song.text,
+        text = text,
         values = SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(summary.metadata, it).orEmpty() },
-        isConverted = song.isConverted,
+        isConverted = isConverted,
         hasChords = summary.hasChords,
     )
 }

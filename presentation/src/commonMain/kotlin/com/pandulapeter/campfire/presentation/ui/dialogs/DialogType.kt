@@ -46,8 +46,8 @@ sealed interface DialogType {
      * The New song form over a text that was pasted or dropped and turned out to be one song the library does not hold:
      * [values] are what the converted [text] says for each field the form offers, and Create writes [text] under what
      * the form says then (`SongFilesController.createSong`). [isConverted] and [hasChords] choose the line above the
-     * fields that says how the text was read. Not reopened in a restored process: the text lives only here, and the
-     * clipboard still holds it.
+     * fields that says how the text was read. Reopened in a restored process when its text is at most
+     * `MAX_SAVED_TEXT_LENGTH` characters; the text is saved with it, see `SavedDialog.NewSongFromText`.
      */
     data class NewSongFromText(
         val text: String,
