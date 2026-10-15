@@ -25,7 +25,8 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 ## Document imports
 
 - `.pdf`, `.docx`, `.txt`, and shared text from either phone become ordinary songs before the UI sees them. Every
-  user-started import is reviewed on the import screen first (`ui/screens/importReport/`).
+  import started in the app is reviewed on the import screen first (`ui/screens/importReport/`), except a pasted or
+  shared song naming its own title and artist (below).
 - A pasted or dropped text (`PastedSongController`, `ui/state/importing/`) goes down the same import as a `.txt`
   (`isNewSongFromText`): one song the library lacks becomes the New song sheet filled in from it
   (`DialogType.NewSongFromText`, holding only what the converted text declares; nothing is written before Create, which
