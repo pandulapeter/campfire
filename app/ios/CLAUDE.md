@@ -71,8 +71,6 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   it, and the Mac `macos/export-compliance.plist` too.
 - `UIFileSharingEnabled` + `LSSupportsOpeningDocumentsInPlace` put the library (in Documents; the preferences are not)
   under "On My iPhone → Campfire"; opening in place commits to coordinated reads.
-- Backup: `IosFileStorage` marks the sync index, the forget-pending note, the editor draft, and every cover copy as
-  excluded each time they are written; credentials are a device-bound Keychain item.
 - `UTImportedTypeDeclarations` + `CFBundleDocumentTypes`: `.cho` `Default`, the rest `Alternate` (shared extensions).
   No zip, plain text, PDF, or Word, deliberately: the share extension is where those are accepted. Keep in step with
   `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` / `.sbp` are an imported type with no document type, only
