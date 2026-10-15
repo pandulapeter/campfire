@@ -35,7 +35,7 @@ The editor's Shortcuts toolbar and its control row.
   `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor`: that instrument's strings in standard tuning
   (Any: the player's instrument's, a guitar's for a fretless one), whatever the player's own tuning. With a selection
   it only wraps it (likely a pasted tab).
-- Chord shape asks the instrument the same way and always writes a standard-tuning shape: see `ui/chords/CLAUDE.md`.
+- Chord shape asks which instrument (no Any) and always writes a standard-tuning shape: see `ui/chords/CLAUDE.md`.
 
 ### Folding
 
