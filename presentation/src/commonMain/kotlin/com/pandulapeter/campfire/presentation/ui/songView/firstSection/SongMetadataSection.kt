@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSect
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoCard
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -81,8 +82,13 @@ internal fun SongMetadataSection(
     // Kept while it fades out, so that it leaves as it was rather than as nothing.
     val lastChip = remember { LastInstrumentChips() }
     instrumentChips?.let { lastChip.content = it }
+    val chipsVisibility = remember { MutableTransitionState(instrumentChips != null) }
+        .apply { targetState = instrumentChips != null }
+    // The tuner stands with the chips for as long as they are drawn, fading in and out with them, and joins the values
+    // only once they have gone: one button at a time.
+    val isTunerWithChips = chipsVisibility.targetState || chipsVisibility.currentState
     AnimatedVisibility(
-        visible = instrumentChips != null,
+        visibleState = chipsVisibility,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
@@ -121,7 +127,7 @@ internal fun SongMetadataSection(
             style = chordStyle,
             toolHeight = songControlHeight(titleStyle),
             fontScale = fontScale,
-            hasInstrumentChips = instrumentChips != null,
+            hasInstrumentChips = isTunerWithChips,
         )
     } else {
         SongPlayingControlsRow(
@@ -130,7 +136,7 @@ internal fun SongMetadataSection(
             isAnimated = animatesControls,
             titleStyle = titleStyle,
             fontScale = fontScale,
-            hasInstrumentChips = instrumentChips != null,
+            hasInstrumentChips = isTunerWithChips,
         )
     }
 }
