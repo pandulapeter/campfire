@@ -13,7 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +34,11 @@ private val importScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 internal val filesToImport = pendingImports.receiveAsFlow()
 
+/** Texts shared to Campfire, kept apart from the files because one text is a song to make rather than a file to import. */
+private val pendingSharedTexts = Channel<SharedTextPayload>(Channel.BUFFERED)
+
+internal val sharedTextsToImport = pendingSharedTexts.receiveAsFlow()
+
 /**
  * Reads [uris] off the main thread and queues them, one that could not be read as an empty file that the import
  * reports as skipped. The application context is enough to read
@@ -50,9 +55,9 @@ internal fun Context.importFiles(uris: List<Uri>) {
     }
 }
 
-/** Queues texts shared to Campfire as the files [sharedTextsToImportedFiles] makes of them. */
+/** Queues texts shared to Campfire, for `PastedSongController.importSharedText` to decide what they come to. */
 internal fun importSharedTexts(texts: List<String>, subject: String?) {
-    importScope.launch { pendingImports.send(sharedTextsToImportedFiles(texts, subject)) }
+    importScope.launch { pendingSharedTexts.send(SharedTextPayload(texts = texts, subject = subject)) }
 }
 
 /**

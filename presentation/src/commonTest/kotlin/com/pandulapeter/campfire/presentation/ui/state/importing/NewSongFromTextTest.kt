@@ -34,10 +34,9 @@ class NewSongFromTextTest {
     )
 
     @Test
-    fun `one new song is a form filled in with what it says`() {
-        val dialog = assertNotNull(
-            newSongFromTextDialogOf(ImportPlan(songs = listOf(song("{title: Song}\n{subtitle: Live}\n{artist: Band}\n[G]Hello\n")))),
-        )
+    fun `a song whose name is taken is a form filled in with what it says`() {
+        val text = "{title: Song}\n{subtitle: Live}\n{artist: Band}\n[G]Hello\n"
+        val dialog = assertNotNull(newSongFromTextDialogOf(ImportPlan(songs = listOf(song(text, status = ImportPlan.Status.CONFLICTING)))))
         assertEquals("Song", dialog.values[Field.TITLE])
         assertEquals("Live", dialog.values[Field.SUBTITLE])
         assertEquals("Band", dialog.values[Field.ARTIST])
@@ -68,7 +67,21 @@ class NewSongFromTextTest {
     fun `a song the library already holds is opened rather than made`() {
         val plan = ImportPlan(songs = listOf(song("[G]Hello\n", status = ImportPlan.Status.IDENTICAL)))
         assertNull(newSongFromTextDialogOf(plan))
-        assertTrue(plan.isLoneSongInLibrary)
+        assertTrue(plan.isLoneSongWrittenAsIs)
+    }
+
+    @Test
+    fun `a new song that declares its title and artist is written without a form`() {
+        val plan = ImportPlan(songs = listOf(song("{title: Song}\n{artist: Band}\n[G]Hello\n")))
+        assertNull(newSongFromTextDialogOf(plan))
+        assertTrue(plan.isLoneSongWrittenAsIs)
+    }
+
+    @Test
+    fun `a new song missing its title or its artist is still a form`() {
+        assertNotNull(newSongFromTextDialogOf(ImportPlan(songs = listOf(song("{title: Song}\n[G]Hello\n")))))
+        assertNotNull(newSongFromTextDialogOf(ImportPlan(songs = listOf(song("{title: }\n{artist: Band}\n[G]Hello\n")))))
+        assertNotNull(newSongFromTextDialogOf(ImportPlan(songs = listOf(song("{artist: Band}\n[G]Hello\n")))))
     }
 
     @Test

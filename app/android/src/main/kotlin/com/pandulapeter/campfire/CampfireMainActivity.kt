@@ -53,6 +53,7 @@ class CampfireMainActivity : ComponentActivity() {
             CampfireAndroidApp(
                 urlOpener = this::openUrl,
                 filesToImport = filesToImport,
+                sharedTexts = sharedTextsToImport,
                 syncNotifier = syncServiceStarter::onSyncNotificationChanged,
                 metronomeNotifier = { notification ->
                     // Nothing is done for a click that ended: the service follows the engine itself, since this activity

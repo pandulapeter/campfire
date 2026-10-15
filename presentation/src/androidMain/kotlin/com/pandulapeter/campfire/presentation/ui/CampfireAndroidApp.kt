@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
@@ -49,6 +50,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param urlOpener Opens the given URL, styled for the given theme, and says whether anything could open it.
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent; the files
  *   of a pick that outlived its process join them here.
+ * @param sharedTexts Texts shared to Campfire, read from the intent by the same activity.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
  * @param metronomeNotifier Starts the media playback service a playing metronome is kept alive and controlled by, for
@@ -63,6 +65,7 @@ fun CampfireAndroidApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (url: String, isDarkTheme: Boolean) -> Boolean,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onAppReady: () -> Unit = {},
@@ -116,6 +119,7 @@ fun CampfireAndroidApp(
             viewModel = viewModel,
             urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.exportController.onLinkNotOpened(url) },
             filesToImport = allFilesToImport,
+            sharedTexts = sharedTexts,
             onAppReady = onAppReady,
         )
     }

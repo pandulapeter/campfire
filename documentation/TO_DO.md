@@ -15,7 +15,7 @@
 - Review UI consistency
 
 ### Features
-- Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md
+- How to add songs card if the library is < 3 songs (dismissable, but comes back)
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 
 ## Midterm (in the next versions)

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.fitsImport
 import com.pandulapeter.campfire.presentation.ui.platform.isOnlyLinks
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
@@ -26,11 +27,13 @@ import kotlinx.coroutines.launch
 
 /**
  * A text that is to become a new song: the clipboard's, through the Songs screen's Paste from clipboard or Ctrl / Cmd + V,
- * or a text dropped onto the window. It is named and sent down the import as the `.txt` file Android's shared text
- * is (see [sharedTextsToImportedFiles]), so it is converted, split and compared exactly as that file would be, and the
- * import decides what it comes to (see [ImportController.enqueueImport]'s `isNewSongFromText`).
+ * a text dropped onto the window, or one shared to Campfire on either phone. It is named and sent down the import as a
+ * `.txt` file (see [sharedTextsToImportedFiles]), so it is converted, split and compared exactly as that file would be,
+ * and the import decides what it comes to (see [ImportController.enqueueImport]'s `isNewSongFromText`).
  *
- * @param enqueueImport Queues the text's file, as a new song where that is true and as an ordinary import otherwise.
+ * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which a shared text can arrive
+ *   over: the New song form ends in the editor, so the song is imported and announced with Open instead.
+ * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise.
  */
 internal class PastedSongController(
     private val scope: CoroutineScope,
@@ -39,7 +42,8 @@ internal class PastedSongController(
     private val backStack: List<CampfireDestination>,
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
-    private val enqueueImport: (file: ImportedFile, isNewSongFromText: Boolean) -> Unit,
+    private val hasUnsavedEditorText: () -> Boolean,
+    private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean) -> Unit,
 ) {
 
     /**
@@ -54,7 +58,8 @@ internal class PastedSongController(
     /**
      * The one way from a text to a new song. Read only mode offers none of its own ways in, so a text that still arrives
      * there is written as a song the system handed over would be, and offered to open, rather than put into a form
-     * that mode never shows.
+     * that mode never shows; so is one that arrives while the editor holds unsaved text, which the form's Create would
+     * have to push another editor over.
      *
      * @param subject What the text was called where it came from, which names it where the text declares no title.
      */
@@ -63,7 +68,26 @@ internal class PastedSongController(
             text.isBlank() -> messageSink.sendMessage(Message.ClipboardEmpty)
             text.isOnlyLinks() -> messageSink.sendMessage(Message.PastedOnlyLinks)
             !text.fitsImport() -> messageSink.sendMessage(Message.PastedTextTooLarge)
-            else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject).single(), !isPerformanceModeEnabled.value)
+            else -> enqueueImport(
+                sharedTextsToImportedFiles(listOf(text), subject),
+                !isPerformanceModeEnabled.value && !hasUnsavedEditorText(),
+            )
+        }
+    }
+
+    /**
+     * Texts shared to Campfire from another app. One text is a song to make, as a paste is; several are an import, each
+     * a file of its own. A share of nothing but addresses - a web page shared by its link, with its title beside it - is
+     * answered with a sentence, since the page is never fetched. A share with nothing in it at all still goes to the
+     * import, which reports it as skipped: the user picked Campfire in a share sheet and is owed an answer.
+     */
+    fun importSharedText(payload: SharedTextPayload) {
+        val texts = payload.texts.filter { it.isNotBlank() }
+        when {
+            texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false)
+            texts.all { it.isOnlyLinks() } -> messageSink.sendMessage(Message.SharedLinkNotImported)
+            texts.size == 1 -> newSongFromText(texts.single(), payload.subject)
+            else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false)
         }
     }
 

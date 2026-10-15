@@ -1,0 +1,25 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The share extension's own strings: it has no Kotlin to read the app's Compose resources with, and it speaks the
+   system's language rather than the one chosen inside the app. Keep hu.lproj in step. */
+"share_saving" = "Saving to Campfire…";
+"share_saved" = "Saved to Campfire";
+"share_saved_detail" = "Open Campfire to add it to your library.";
+"share_link" = "Campfire does not open web pages.";
+"share_link_detail" = "Select the chord sheet's text and share that instead.";
+"share_unsupported" = "Campfire cannot import this.";
+"share_unsupported_detail" = "It imports songs, plain text, PDF and Word documents, and zip archives.";
+"share_too_large" = "This is too large to import.";
+"share_too_large_detail" = "Campfire imports up to 24 MB at a time, and 16 MB for one document.";
+"share_inbox_full" = "Some shares are still waiting.";
+"share_inbox_full_detail" = "Open Campfire to finish them first.";
+"share_failed" = "This could not be saved for Campfire.";
+"share_done" = "Done";

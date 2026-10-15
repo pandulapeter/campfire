@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -34,7 +35,8 @@ class PastedSongControllerTest {
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
     private val isImporting = MutableStateFlow(false)
     private val isPerformanceModeEnabled = MutableStateFlow(false)
-    private val queued = mutableListOf<Pair<ImportedFile, Boolean>>()
+    private var hasUnsavedEditorText = false
+    private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
     private lateinit var messageSink: MessageSink
     private lateinit var dialogHost: DialogHost
 
@@ -48,17 +50,19 @@ class PastedSongControllerTest {
             backStack = backStack,
             isImporting = isImporting,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
-            enqueueImport = { file, isNewSongFromText -> queued += file to isNewSongFromText },
+            hasUnsavedEditorText = { hasUnsavedEditorText },
+            enqueueImport = { files, isNewSongFromText -> queued += files to isNewSongFromText },
         )
     }
 
     private val messages get() = messageSink.messageQueue.value.map { it.value }
 
     @Test
-    fun `a chord sheet is queued as a new song named by its first line`() = runTest {
+    fun `a chord sheet is queued as a new song named by its first line that is not chords`() = runTest {
         controller().newSongFromText("Am  C\nHello")
-        val (file, isNewSongFromText) = queued.single()
-        assertEquals("Am  C.txt", file.name)
+        val (files, isNewSongFromText) = queued.single()
+        val file = files.single()
+        assertEquals("hello.txt", file.name)
         assertEquals("Am  C\nHello", file.bytes.decodeToString())
         assertTrue(isNewSongFromText)
     }
@@ -78,6 +82,45 @@ class PastedSongControllerTest {
         isPerformanceModeEnabled.value = true
         controller().newSongFromText("Am  C\nHello")
         assertFalse(queued.single().second)
+    }
+
+    @Test
+    fun `with unsaved text in the editor a text is an ordinary import rather than a form`() = runTest {
+        hasUnsavedEditorText = true
+        controller().newSongFromText("Am  C\nHello")
+        assertFalse(queued.single().second)
+    }
+
+    @Test
+    fun `one shared text is a new song named by the share's subject`() = runTest {
+        controller().importSharedText(SharedTextPayload(texts = listOf("", "Am  C\nHello"), subject = "Page title"))
+        val (files, isNewSongFromText) = queued.single()
+        assertEquals("page_title.txt", files.single().name)
+        assertTrue(isNewSongFromText)
+    }
+
+    @Test
+    fun `several shared texts are one ordinary import of a file each`() = runTest {
+        controller().importSharedText(SharedTextPayload(texts = listOf("Am\nOne", "C\nTwo"), subject = null))
+        val (files, isNewSongFromText) = queued.single()
+        assertEquals(listOf("one.txt", "two.txt"), files.map { it.name })
+        assertFalse(isNewSongFromText)
+    }
+
+    @Test
+    fun `a shared page address is answered with a sentence rather than imported`() = runTest {
+        val controller = controller()
+        controller.importSharedText(SharedTextPayload(texts = listOf("https://example.com/song"), subject = "A page"))
+        controller.importSharedText(SharedTextPayload(texts = listOf("https://example.com/a", "\nhttps://example.com/b"), subject = null))
+        assertEquals(listOf(Message.SharedLinkNotImported, Message.SharedLinkNotImported), messages)
+        assertTrue(queued.isEmpty())
+    }
+
+    @Test
+    fun `an empty share still reaches the import, which reports it as skipped`() = runTest {
+        controller().importSharedText(SharedTextPayload(texts = listOf(" "), subject = null))
+        assertTrue(queued.single().first.single().bytes.decodeToString().isBlank())
+        assertTrue(messages.isEmpty())
     }
 
     @Test

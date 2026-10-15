@@ -172,6 +172,7 @@
     <string name="paste_clipboard_empty">There is no text on the clipboard to paste.</string>
     <string name="paste_only_links">A link is not a song, and Campfire does not open pages. Copy the chords and the lyrics themselves.</string>
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
+    <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>
     <string name="paste_refused_ios">Campfire was not allowed to paste. Paste from Other Apps, under Campfire in the Settings app, decides this.</string>
     <string name="paste_refused_web">The browser did not let Campfire read the clipboard. Press Ctrl+V (⌘V on a Mac) on the song list instead.</string>
     <string name="songs_new_song">New song</string>

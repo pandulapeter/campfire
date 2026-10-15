@@ -38,10 +38,10 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
     (Downloads' `msf:` ids, attachments). Unrelated files offered this way are skipped by display name.
   - No `application/zip` Open with filter.
 - **Share**: `text/plain` (also shared text), `application/octet-stream`, the two zip types, PDF, and `.docx`.
-- Shared text (`EXTRA_TEXT`) becomes a `.txt` `ImportedFile` via `:presentation`'s `sharedTextsToImportedFiles`
-  (`ui/platform/SharedTextImport.kt`), named after `EXTRA_SUBJECT` or its first line, then imported normally. A stream
-  wins over text in the same intent (the text is a caption); text that is only links is skipped (the app fetches
-  nothing).
+- Shared text (`EXTRA_TEXT`, named by `EXTRA_SUBJECT`) goes as a `SharedTextPayload` into its own channel, handed to
+  `CampfireAndroidApp` as `sharedTexts`; `:presentation`'s `PastedSongController.importSharedText` decides what it comes
+  to, the same as for the iOS share extension's texts (one text is the New song sheet, several an import, a page's
+  address a snackbar: the app fetches nothing). A stream wins over text in the same intent (the text is a caption).
 - **The activity declares no intent filter of its own**: since Android 15 an explicit intent from another app (Android
   Studio's shell included) must match one of the target's filters, and Studio's carries MAIN/LAUNCHER. A component with
   no filters is exempt. The open, share, and sign-in filters are on `.CampfireIntentActivity`, an always-enabled alias

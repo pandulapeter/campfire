@@ -490,9 +490,10 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         isImporting = importController.isImporting,
         isPerformanceModeEnabled = preferencesController.isPerformanceModeEnabled,
-        enqueueImport = { file, isNewSongFromText ->
+        hasUnsavedEditorText = { editorSession.hasUnsavedEditorText() },
+        enqueueImport = { files, isNewSongFromText ->
             importController.enqueueImport(
-                source = ImportSource.Files(listOf(file)),
+                source = ImportSource.Files(files),
                 shouldOpenSong = !isNewSongFromText,
                 isNewSongFromText = isNewSongFromText,
             )

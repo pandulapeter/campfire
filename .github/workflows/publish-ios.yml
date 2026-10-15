@@ -206,17 +206,20 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH"
       # The version is written into the Info.plist by a build phase rather than by a build setting, so a phase that
-      # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one.
+      # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one. The share
+      # extension has a phase of its own, and App Store Connect refuses an extension whose version differs from its app's.
       - name: Check the archived version
         run: |
-          PLIST="$RUNNER_TEMP/Campfire.xcarchive/Products/Applications/Campfire.app/Info.plist"
-          ARCHIVED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
-          ARCHIVED_BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
-          echo "Archived $ARCHIVED_NAME ($ARCHIVED_BUILD)"
-          if [ "$ARCHIVED_NAME" != "${{ steps.version.outputs.name }}" ] || [ "$ARCHIVED_BUILD" != "${{ steps.version.outputs.build }}" ]; then
-            echo "::error::The archive does not carry ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }})." >&2
-            exit 1
-          fi
+          APP="$RUNNER_TEMP/Campfire.xcarchive/Products/Applications/Campfire.app"
+          for PLIST in "$APP/Info.plist" "$APP/PlugIns/ShareExtension.appex/Info.plist"; do
+            ARCHIVED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
+            ARCHIVED_BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
+            echo "Archived $ARCHIVED_NAME ($ARCHIVED_BUILD): $PLIST"
+            if [ "$ARCHIVED_NAME" != "${{ steps.version.outputs.name }}" ] || [ "$ARCHIVED_BUILD" != "${{ steps.version.outputs.build }}" ]; then
+              echo "::error::$PLIST does not carry ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }})." >&2
+              exit 1
+            fi
+          done
       - name: Export the .ipa
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}

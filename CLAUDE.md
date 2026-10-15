@@ -12,7 +12,8 @@
 Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI shared by all) for viewing and editing
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
-zip archives, and other apps' backups. Every module has a `CLAUDE.md` of its own (inside `:presentation`, every
+zip archives, and other apps' backups, picked in the app, opened with it, or shared to it (Android, the iOS share
+extension). Every module has a `CLAUDE.md` of its own (inside `:presentation`, every
 package and source set); read the nearest one before changing code there.
 
 ## Privacy: what reaches the network
@@ -25,9 +26,9 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   over IPC (Play Store app); Android/iOS system backup copies `library/` and `preferences.json` — never the sync
-  credentials, the sync index, the editor draft, or `covers/` (`app/android/src/main/res/xml`; on iOS a device-bound
-  Keychain item and `FileStorage.keepOutOfDeviceBackup`). A launch with no preferences document forgets any
-  credentials it finds, since the iOS Keychain outlives an uninstall.
+  credentials, the sync index, the editor draft, the iOS share inbox, or `covers/` (`app/android/src/main/res/xml`; on
+  iOS a device-bound Keychain item and `FileStorage.keepOutOfDeviceBackup`). A launch with no preferences document
+  forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
 ## Architecture
 
@@ -163,8 +164,10 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The editor always opens over its song's details screen: `ui/navigation`.
 - Imports are reviewed before writing; existing files are skipped, collisions numbered or replaced after confirmation:
   `domain/implementation`.
-- A pasted or dropped chord sheet that is one new song opens the New song sheet, nothing written before Create; never a
-  link followed: `presentation`.
+- A pasted, dropped, or shared chord sheet that is one new song opens the New song sheet, nothing written before Create,
+  unless it declares both title and artist, when it is imported and opened; never a link followed: `presentation`.
+- A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; a shared web
+  page is answered, never fetched; the extension never opens the app: `presentation`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.

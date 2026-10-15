@@ -32,7 +32,7 @@ class SharedTextImportTest {
 
     @Test
     fun `a text with no subject is named after its first plain line`() {
-        assertEquals("Amazing Grace${LibraryFiles.TEXT_EXTENSION}", nameOf("\n  \n{title: x}\n[Chorus]\n# c\n  Amazing Grace  \nHow sweet"))
+        assertEquals("amazing_grace${LibraryFiles.TEXT_EXTENSION}", nameOf("\n  \n{title: x}\n[Chorus]\n# c\n  Amazing Grace  \nHow sweet"))
     }
 
     @Test
@@ -42,31 +42,32 @@ class SharedTextImportTest {
 
     @Test
     fun `a subject names the file`() {
-        assertEquals("Page title${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyrics", subject = "Page title"))
+        assertEquals("page_title${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyrics", subject = "Page title"))
     }
 
     @Test
     fun `several texts under one subject are numbered`() {
         assertEquals(
-            listOf("Notes 1${LibraryFiles.TEXT_EXTENSION}", "Notes 2${LibraryFiles.TEXT_EXTENSION}"),
+            listOf("notes_1${LibraryFiles.TEXT_EXTENSION}", "notes_2${LibraryFiles.TEXT_EXTENSION}"),
             namesOf(listOf("a", "b"), subject = "Notes"),
         )
     }
 
     @Test
     fun `a subject with nothing usable falls back to the first plain line`() {
-        assertEquals("Lyric${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyric", subject = " / // "))
+        assertEquals("lyric${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyric", subject = " / // "))
     }
 
     @Test
-    fun `separators and control characters become spaces`() {
-        assertEquals("a b c d${LibraryFiles.TEXT_EXTENSION}", nameOf("a/b\\c\u0007d"))
+    fun `a name follows the library's naming rule`() {
+        assertEquals("a_b_c_d${LibraryFiles.TEXT_EXTENSION}", nameOf("a/b\\c\u0007d"))
+        assertEquals("eg_a_napmelegtol${LibraryFiles.TEXT_EXTENSION}", nameOf("Ég a napmelegtől"))
+        assertEquals("rock_and_roll${LibraryFiles.TEXT_EXTENSION}", nameOf("Rock & Roll"))
     }
 
     @Test
-    fun `a long line is cut to eighty characters and trimmed`() {
+    fun `a long name is capped by whole words`() {
         assertEquals("x".repeat(79) + LibraryFiles.TEXT_EXTENSION, nameOf("x".repeat(79) + " " + "y".repeat(120)))
-        assertEquals("z".repeat(80) + LibraryFiles.TEXT_EXTENSION, nameOf("z".repeat(200)))
     }
 
     @Test
@@ -79,6 +80,31 @@ class SharedTextImportTest {
     fun `a link with a lyric is kept`() {
         val text = "https://example.com\nA lyric line"
         assertContentEquals(text.encodeToByteArray(), sharedTextsToImportedFiles(listOf(text), null).single().bytes)
+    }
+
+    @Test
+    fun `a page address after selected text is dropped with the quotation marks around it`() {
+        assertEquals("Am  C\nHello", withoutSourceLink("\"Am  C\nHello\"\n\nhttps://example.com/song#:~:text=Hello\n"))
+        assertEquals("Ég a napmelegtől", withoutSourceLink("„Ég a napmelegtől”\nhttps://example.com"))
+        assertEquals("Hello \"world\"", withoutSourceLink("Hello \"world\"\nhttps://example.com"))
+    }
+
+    @Test
+    fun `a link is kept where it is not the source of a selection`() {
+        listOf(
+            "https://example.com",
+            "https://example.com/a\nhttps://example.com/b",
+            "Hello\nhttps://example.com/a\nhttps://example.com/b",
+            "Hello\nhttps://example.com and more",
+            "https://example.com\nHello",
+        ).forEach { assertEquals(it, withoutSourceLink(it)) }
+    }
+
+    @Test
+    fun `a shared selection's file has no page address`() {
+        val file = sharedTextsToImportedFiles(listOf("\"Amazing Grace\nHow sweet\"\nhttps://example.com"), null).single()
+        assertEquals("amazing_grace${LibraryFiles.TEXT_EXTENSION}", file.name)
+        assertEquals("Amazing Grace\nHow sweet", file.bytes.decodeToString())
     }
 
     @Test

@@ -150,6 +150,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a pasted text that is one new song opens the New song form and writes nothing`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
         enqueuePaste()
         runCurrent()
@@ -157,6 +158,20 @@ class ImportControllerQueueTest {
         assertNull(reportState.importReport.value)
         assertFalse(controller.isImporting.value)
         assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a pasted song that declares its own title and artist is written and opened, with no form and no review`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\n{artist: Band}\n[G]Hello"))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertNull(dialogHost.visibleDialog.value)
+        assertNull(reportState.importReport.value)
+        assertEquals(1, importCount)
+        assertEquals(listOf("new.cho"), openedSongs)
     }
 
     @Test
@@ -191,9 +206,14 @@ class ImportControllerQueueTest {
     )
 }
 
-private fun songEntry(fileName: String, status: ImportPlan.Status = ImportPlan.Status.NEW, isConverted: Boolean = false) = ImportPlan.SongEntry(
+private fun songEntry(
+    fileName: String,
+    status: ImportPlan.Status = ImportPlan.Status.NEW,
+    isConverted: Boolean = false,
+    text: String = "{title: $fileName}",
+) = ImportPlan.SongEntry(
     fileName = fileName,
-    text = "{title: $fileName}",
+    text = text,
     status = status,
     sourceFileName = fileName,
     isConverted = isConverted,

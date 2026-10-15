@@ -11,7 +11,7 @@
 
 Kotlin/Native module producing the static `ComposeApp` framework for the Xcode project in `iosApp/` (a SwiftUI wrapper:
 `ContentView.swift` embeds the view controller with `.ignoresSafeArea()`, `iOSApp.swift` forwards `.onOpenURL` and
-`scenePhase`).
+`scenePhase`), which also builds the share extension (`iosApp/ShareExtension/`, Swift only).
 
 ## `CampfireViewController.kt`
 
@@ -40,6 +40,26 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - `cleanImportInbox()` runs when the scene goes to the background, **not at start**: a cold start's file is already in
   the inbox before it is handed over, so it couldn't be told from a leftover.
 
+## Share extension
+
+- `ShareExtension.appex`, embedded in the app: Share → Campfire for selected text and the files the import reads
+  (`NSExtensionActivationRule` in its `Info.plist`; plain text covers `.txt` and the ChordPro family). It links no Kotlin:
+  it copies what it was given into `ShareInbox/` in the App Group container (`APP_GROUP_ID` in `Config.xcconfig`, both
+  targets' entitlements, `CampfireAppGroup` in both `Info.plist`s), says so, and is done.
+- **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by
+  review. The app drains the inbox (`IosShareInbox.kt`'s `drainShareInbox`) on every `.active` scene phase and on the
+  Darwin notification `com.pandulapeter.campfire.share-inbox`, for an iPad's Split View where it stays active.
+- One folder per share, written as `<time>-<UUID>.partial` and renamed when complete; the app ignores `.partial` ones
+  and deletes them after an hour. Inside: `files/<n>/<name>`, `texts/<n>.txt`, and `share.json`, decoded by
+  `:presentation`'s `decodeShareInboxManifest` (a newer `version` is left for a newer app). Files go to
+  `pendingImports` (one batch per share, read with one `ImportBudget`); texts to `sharedTextsToImport`.
+- Files beat text in one share; a page's address (alone, or beside a one-line title) is refused with a sentence. The
+  extension mirrors `ImportLimits` before copying (8/16/24 MB, a share at most 24 MB) and bounds the inbox at 20 shares
+  and 64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values, so its own
+  `PrivacyInfo.xcprivacy` declares no required-reason API.
+- `ShareInbox/` is excluded from device backup (by the extension, and again by the app). Its strings are its own
+  `Localizable.strings` (`en`, `hu`), in the system's language.
+
 ## `Info.plist`
 
 - `CFBundleURLTypes` declares `campfire`: `ASWebAuthenticationSession` doesn't need it, but it is Dropbox's registered
@@ -51,7 +71,9 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - Backup: `IosFileStorage` marks the sync index, the forget-pending note, the editor draft, and every cover copy as
   excluded each time they are written; credentials are a device-bound Keychain item.
 - `UTImportedTypeDeclarations` + `CFBundleDocumentTypes`: `.cho` `Default`, the rest `Alternate` (shared extensions).
-  No zip or plain text, deliberately. Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
+  No zip, plain text, PDF, or Word, deliberately: the share extension is where those are accepted. Keep in step with
+  `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` / `.sbp` are an imported type with no document type, only
+  so that the extension's activation rule can name them.
 - `CFBundleLocalizations` (`en`, `hu`) tells UIKit which languages the app speaks (Compose resources are invisible to
   iOS); without it system UI stays English and Settings offers no per-app language. Keep in step with `:presentation`'s
   `values-*`. Each language also needs `<lang>.lproj/InfoPlist.strings` (the microphone prompt; Hungarian is
@@ -89,8 +111,9 @@ belong to `:metronome:implementation`. Follows the engine's `playback` to take N
 - Team id, bundle id, and app name are in `iosApp/Configuration/Config.xcconfig`; **change the team there, not in Xcode's
   Signing tab**, which writes a literal over `$(TEAM_ID)`.
 - Version and build number come from `campfire.versionName` / `campfire.buildNumber` via the "Set version from the
-  Gradle properties" phase; `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` are deliberately unset in
-  `project.pbxproj`.
+  Gradle properties" phase, the last of both targets, running `iosApp/Configuration/set-version.sh` (App Store Connect
+  refuses an extension whose version differs from its app's); `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` are
+  deliberately unset in `project.pbxproj`. The "Compile Kotlin Framework" phase is the app target's alone.
 - `.run/iOS.run.xml` makes the KMP plugin write a shared `iOS.xcscheme`, which is gitignored: a shared scheme removes the
   automatic `iosApp` scheme that `publish-ios.yml` archives with, and makes `xcodebuild -scheme iosApp` fail locally —
   so commands name the target.

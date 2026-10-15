@@ -172,6 +172,7 @@
     <string name="paste_clipboard_empty">A vágólapon nincs beilleszthető szöveg.</string>
     <string name="paste_only_links">Egy link nem dal, és a Campfire nem nyit meg weboldalakat. Magukat az akkordokat és a dalszöveget másold ki.</string>
     <string name="paste_too_large">A szöveg hosszabb annál a 8 MB-nál, amennyit egy importálás feldolgoz.</string>
+    <string name="shared_link_not_imported">A Campfire nem nyit meg weboldalakat. Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.</string>
     <string name="paste_refused_ios">A Campfire nem kapott engedélyt a beillesztésre. Ezt a Beállítások appban, a Campfire alatt a „Beillesztés más appokból” dönti el.</string>
     <string name="paste_refused_web">A böngésző nem engedte, hogy a Campfire olvassa a vágólapot. Helyette nyomd meg a Ctrl+V-t (Macen a ⌘V-t) a dallistán.</string>
     <string name="songs_new_song">Új dal</string>

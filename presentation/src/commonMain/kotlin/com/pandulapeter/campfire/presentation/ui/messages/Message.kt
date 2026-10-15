@@ -59,6 +59,9 @@ sealed interface Message {
     /** A pasted or dropped text that is nothing but addresses, which is no song and is never fetched. */
     data object PastedOnlyLinks : Message
 
+    /** A share from another app that was nothing but a web page's address (and its title), which is never fetched. */
+    data object SharedLinkNotImported : Message
+
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message
 

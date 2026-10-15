@@ -64,6 +64,7 @@ fun CampfireViewController(): UIViewController {
             urlOpener = ::openUrl,
             filePicker = filePicker,
             filesToImport = filesToImport,
+            sharedTexts = sharedTextsToImport,
             syncNotifier = syncNotifier,
             metronomeNotifier = metronomeNotifier,
             onUiModeChanged = ::applyInterfaceStyle,

@@ -29,6 +29,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
@@ -53,6 +54,7 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * @param urlOpener Opens the given URL in the platform's browser.
  * @param filesToImport Files the host handed over - opened with Campfire, shared to it, or dropped onto its window.
+ * @param sharedTexts Texts shared to Campfire from another app, on the phones that have a share sheet.
  * @param onAppReady Called once the app itself is on screen - the same moment `LaunchScreen` is taken away - for the
  *   shells that open on a startup screen of their own and are able to hold it there: Android's system splash and the
  *   loading screen of the web build. Every one of those is otherwise taken away by the first frame the app draws,
@@ -67,10 +69,12 @@ fun CampfireApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (String) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel.importController::importFiles) }
+    LaunchedEffect(sharedTexts) { sharedTexts.collect(viewModel.pastedSongController::importSharedText) }
     val showSyncNotification = rememberSyncNotifications(viewModel)
     MetronomeNotificationEffect(viewModel)
     MetronomeHapticsEffect(viewModel)

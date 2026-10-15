@@ -1,0 +1,24 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The share extension's Hungarian strings. Keep in step with en.lproj. */
+"share_saving" = "Mentés a Campfire számára…";
+"share_saved" = "Elmentve a Campfire számára";
+"share_saved_detail" = "Nyisd meg a Campfire-t, hogy a könyvtáradba kerüljön.";
+"share_link" = "A Campfire nem nyit meg weboldalakat.";
+"share_link_detail" = "Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.";
+"share_unsupported" = "Ezt a Campfire nem tudja importálni.";
+"share_unsupported_detail" = "Dalokat, egyszerű szöveget, PDF- és Word-dokumentumokat, valamint zip archívumokat importál.";
+"share_too_large" = "Ez túl nagy az importáláshoz.";
+"share_too_large_detail" = "A Campfire egyszerre legfeljebb 24 MB-ot importál, egy dokumentumból 16 MB-ot.";
+"share_inbox_full" = "Néhány megosztás még várakozik.";
+"share_inbox_full_detail" = "Előbb nyisd meg a Campfire-t, hogy befejezze őket.";
+"share_failed" = "Ezt nem sikerült elmenteni a Campfire számára.";
+"share_done" = "Kész";

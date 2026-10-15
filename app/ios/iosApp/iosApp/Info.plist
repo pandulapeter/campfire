@@ -24,6 +24,9 @@
 		<string>en</string>
 		<string>hu</string>
 	</array>
+	<!-- The App Group whose container holds the share extension's inbox (IosShareInbox.kt). -->
+	<key>CampfireAppGroup</key>
+	<string>$(APP_GROUP_ID)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -96,7 +99,11 @@
 	<!--
 	     The ChordPro types Campfire opens. ".cho" is the one it writes and the one it offers to own; the rest of the
 	     family is recognised too. Zip and plain text are deliberately absent: they belong to everything, and an app
-	     that registered for them would offer itself for every archive and note on the device.
+	     that registered for them would offer itself for every archive and note on the device. The share extension is
+	     where they, PDF and Word are accepted, from the share sheet the user is already choosing in.
+
+	     SongbookPro's backups are declared without a document type: the name is only for the share extension's
+	     activation rule to know the files by, not a claim on them.
 	-->
 	<key>UTImportedTypeDeclarations</key>
 	<array>
@@ -135,6 +142,25 @@
 					<string>crd</string>
 					<string>chord</string>
 					<string>pro</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.pandulapeter.campfire.songbookpro-backup</string>
+			<key>UTTypeDescription</key>
+			<string>SongbookPro backup</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.zip-archive</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>sbpbackup</string>
+					<string>sbp</string>
 				</array>
 			</dict>
 		</dict>

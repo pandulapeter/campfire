@@ -14,6 +14,19 @@ import ComposeApp
 struct iOSApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // The share extension's word that a share is waiting, for an app that stays active while it is made: the other
+        // half of an iPad's Split View. Everywhere else the app comes to the front afterwards, which drains it anyway.
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            { _, _, _, _, _ in IosShareInboxKt.drainShareInbox() },
+            "com.pandulapeter.campfire.share-inbox" as CFString,
+            nil,
+            .deliverImmediately
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -24,9 +37,12 @@ struct iOSApp: App {
         }
         // A file that arrives from AirDrop or Mail is a copy iOS leaves in Documents/Inbox, which the Files app
         // shows next to the library. The ones that were read are deleted as they are read; this is for the rest.
+        // Coming to the front - a cold launch's first phase too - is when what the share extension saved is imported.
         .onChange(of: scenePhase) { phase in
             if phase == .background {
                 IosFileImportKt.cleanImportInbox()
+            } else if phase == .active {
+                IosShareInboxKt.drainShareInbox()
             }
         }
     }

@@ -30,16 +30,17 @@ import platform.Foundation.NSUserDomainMask
  * channel is a top level one because the URL can arrive before the view controller (and with it the view model)
  * exists: a cold start caused by opening a file delivers it while the UI is still being built.
  */
-private val pendingImports = Channel<List<ImportedFile>>(Channel.BUFFERED)
+internal val pendingImports = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
 internal val filesToImport = pendingImports.receiveAsFlow()
 
 /**
  * One thing at a time, in the order it was asked for. The reads are off the main thread because a file that is
  * large, or not on the device yet, would otherwise hold up the very launch it caused; they are not side by side
- * because [cleanImportInbox] must not get ahead of a read that was asked for before it.
+ * because [cleanImportInbox] must not get ahead of a read that was asked for before it. The share extension's inbox
+ * is read on it too (see [drainShareInbox]).
  */
-private val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
+internal val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
 /**
  * Called from Swift for every URL iOS hands the app, which in practice means a file opened with Campfire.

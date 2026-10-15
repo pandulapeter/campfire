@@ -162,9 +162,10 @@ internal class ImportController(
      *
      * @param shouldReview False for the demo library, whose contents are known and asked for by name: it is written at
      *   once, and only a name it finds taken puts the import screen up.
-     * @param isNewSongFromText True for a text pasted or dropped as a new song: where it turns out to be one song the
-     *   library does not hold, nothing is written and the New song form opens on it instead (see [newSongFromTextDialogOf]);
-     *   one the library holds is opened; anything else - a songbook pasted whole - is the import it would be as a file.
+     * @param isNewSongFromText True for a text pasted, dropped or shared as a new song: where it turns out to be one song
+     *   the library does not hold, nothing is written and the New song form opens on it instead (see
+     *   [newSongFromTextDialogOf]); one that declares its own title and artist is written and opened, as is one the
+     *   library holds; anything else - a songbook pasted whole - is the import it would be as a file.
      */
     fun enqueueImport(
         source: ImportSource,
@@ -270,7 +271,7 @@ internal class ImportController(
                     // The form is not an import: nothing waits for it, and closing it writes nothing.
                     _isImporting.value = false
                     dialogHost.showDialog(newSongDialog)
-                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && !plan.isLoneSongInLibrary) {
+                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && !plan.isLoneSongWrittenAsIs) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
