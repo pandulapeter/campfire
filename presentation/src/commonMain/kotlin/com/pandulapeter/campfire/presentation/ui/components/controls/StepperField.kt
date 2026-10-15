@@ -62,6 +62,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -180,7 +181,7 @@ internal fun StepperField(
                         focusManager.clearFocus()
                     },
                 )
-                .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
+                .then(spokenValueOf(valueDescription, value, prefix, suffix)?.let { Modifier.semantics { contentDescription = it } } ?: Modifier),
             state = state,
             inputTransformation = remember(entry.range) { StepperDigits(maxLength = entry.range.last.toString().length) },
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -293,9 +294,9 @@ private fun StepperFieldDecoration(
         modifier = Modifier.graphicsLayer { alpha = if (isFocused) 1f else 0f },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (prefix.isNotEmpty()) Text(text = prefix, style = textStyle, softWrap = false)
+        if (prefix.isNotEmpty()) Text(modifier = Modifier.clearAndSetSemantics {}, text = prefix, style = textStyle, softWrap = false)
         Box(Modifier.width(IntrinsicSize.Max)) { innerTextField() }
-        if (suffix.isNotEmpty()) Text(text = suffix, style = textStyle, softWrap = false)
+        if (suffix.isNotEmpty()) Text(modifier = Modifier.clearAndSetSemantics {}, text = suffix, style = textStyle, softWrap = false)
     }
     if (!isFocused) {
         AnimatedContent(
@@ -303,13 +304,22 @@ private fun StepperFieldDecoration(
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             contentKey = { it.key },
         ) { label ->
+            // Silent: the field under it is what a screen reader focuses, and it says the same value.
             Text(
+                modifier = Modifier.clearAndSetSemantics {},
                 text = label.value,
                 style = textStyle,
             )
         }
     }
 }
+
+/**
+ * What a screen reader says for the field: the value as written wherever the field's own text lacks part of it, since
+ * the unit drawn beside the field and the plain value drawn over it are silent.
+ */
+private fun spokenValueOf(valueDescription: String?, value: String, prefix: String, suffix: String) =
+    valueDescription ?: value.takeIf { prefix.isNotEmpty() || suffix.isNotEmpty() }
 
 /**
  * Selects the whole number once the press that focused the field is let go of: the text field places the caret where a
