@@ -152,7 +152,7 @@ internal fun ChordShapeGrid(
                     },
                 )
             }
-            if (isDefined && selection != null) {
+            if (isDefined) {
                 item(key = DEFINED_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = DEFINED_KEY) {
                     DefinedNote(modifier = listItemAnimation(gridState), movedBy = selection.movedBy)
                 }

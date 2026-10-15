@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo_incre
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import org.jetbrains.compose.resources.painterResource
 
@@ -50,9 +51,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param isDefault Whether [bpm] is the one a tap on the value would put back, which is when the value is drawn plainly.
  * @param valueKey What a new tempo cross-fades in for, see [Stepper]: every change by default, and something that stays
  * the same across the changes that come many to a second where the caller has such a source, a slider being dragged.
- * @param onTapped Taps a tempo in, as a segment of the pill after the two buttons where it is given: tapping along
- * with a song sets the very number the stepper steps, so the two are one control rather than a stepper with a loose
- * word of a button beside it.
+ * @param onSet Sets a tempo tapped in or typed: the pill ends in a Tap segment, since tapping along with a song sets the
+ * very number the stepper steps, so the two are one control rather than a stepper with a loose word of a button beside
+ * it; and its value is a field the number is typed into ([StepperEntry]), a tempo being a long way to step to.
  */
 @Composable
 internal fun TempoStepper(
@@ -63,7 +64,7 @@ internal fun TempoStepper(
     height: Dp = STEPPER_HEIGHT,
     valueKey: Any = bpm,
     onStep: (delta: Int) -> Unit,
-    onTapped: ((bpm: Int) -> Unit)? = null,
+    onSet: (bpm: Int) -> Unit,
     onReset: (() -> Unit)?,
 ) = Stepper(
     modifier = modifier,
@@ -84,7 +85,8 @@ internal fun TempoStepper(
     resetLabel = onReset?.let { stringResource(Res.string.song_details_tempo_reset) },
     onReset = onReset,
     repeatsOnHold = true,
-    trailing = onTapped?.let { onTempo -> { TapTempoSegment(fontScale = fontScale, onTempo = onTempo) } },
+    entry = StepperEntry(number = bpm, range = MetronomePattern.BPM_RANGE, onEntered = onSet),
+    trailing = { TapTempoSegment(fontScale = fontScale, onTempo = onSet) },
 )
 
 /**

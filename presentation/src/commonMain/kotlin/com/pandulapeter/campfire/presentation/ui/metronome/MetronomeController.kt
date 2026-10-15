@@ -153,11 +153,12 @@ internal class MetronomeController(
 
     /**
      * The keyboard's way to [toggleMetronome], asked from the desktop window and the web page: Space on the Metronome tab
-     * and M on the song details screen, while nothing is drawn over either. Pedals send only arrows, so this is for
-     * keyboards. Answers whether it did, so that anywhere else the key is left alone.
+     * and M on the song details screen, while nothing is drawn over either and no tempo is being typed. Pedals send only
+     * arrows, so this is for keyboards. Answers whether it did, so that anywhere else the key is left alone.
      */
     fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
-        if (dialogHost.visibleDialog.value != null || dialogHost.overlayState.isAnyMenuOpen) return false
+        val overlayState = dialogHost.overlayState
+        if (dialogHost.visibleDialog.value != null || overlayState.isAnyMenuOpen || overlayState.isValueBeingTyped) return false
         val top = backStack.lastOrNull()
         if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails || userPreferences.value?.isMetronomeEnabled == false) return false
         toggleMetronome()

@@ -34,12 +34,15 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
  *
  * @param decidingLabel Measured for the decision alone and never drawn: the widest the label can become, for a label
  * that changes with the value (the tempo's marking), so that the form follows the widest one whatever is shown.
+ * @param decidingControls The same for controls that grow while they are used (the reference pitch's reset segment):
+ * the widest they can become, measured and never drawn, which the label also leaves room for, so it never reflows.
  */
 @Composable
 internal fun LabeledControlRow(
     modifier: Modifier = Modifier,
     label: @Composable () -> Unit,
     decidingLabel: (@Composable () -> Unit)? = null,
+    decidingControls: (@Composable () -> Unit)? = null,
     controls: @Composable () -> Unit,
 ) {
     val stackedWidth = remember { StackedWidth() }
@@ -49,11 +52,15 @@ internal fun LabeledControlRow(
             label,
             controls,
             { decidingLabel?.let { Box(modifier = Modifier.clearAndSetSemantics {}) { it() } } },
+            { decidingControls?.let { Box(modifier = Modifier.clearAndSetSemantics {}) { it() } } },
         ),
-    ) { (labelMeasurables, controlsMeasurables, decidingMeasurables), constraints ->
+    ) { (labelMeasurables, controlsMeasurables, decidingMeasurables, decidingControlsMeasurables), constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val controls = controlsMeasurables.map { it.measure(loose) }
-        val controlsWidth = controls.maxOfOrNull { it.width } ?: 0
+        val controlsWidth = maxOf(
+            controls.maxOfOrNull { it.width } ?: 0,
+            decidingControlsMeasurables.maxOfOrNull { it.maxIntrinsicWidth(constraints.maxHeight) } ?: 0,
+        )
         val controlsHeight = controls.maxOfOrNull { it.height } ?: 0
         val gap = LABEL_CONTROLS_GAP.roundToPx()
         val labelMinWidth = (labelMeasurables + decidingMeasurables).maxOfOrNull { it.minIntrinsicWidth(Constraints.Infinity) } ?: 0

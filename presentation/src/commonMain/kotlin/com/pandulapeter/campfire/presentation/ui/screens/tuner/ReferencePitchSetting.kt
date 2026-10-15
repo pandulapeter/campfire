@@ -11,8 +11,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +37,9 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_in
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_RESET_SEGMENT_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.noteName
@@ -44,8 +48,9 @@ import com.pandulapeter.campfire.tuner.api.Pitch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The frequency of A4 everything is tuned from, stepped by a hertz the way the tempo is and reset to 440 by a tap on its
- * value, next to a toggle that plays that A until it is tapped again.
+ * The frequency of A4 everything is tuned from, stepped by a hertz or typed the way the tempo is (and reset to 440 from
+ * the focused value the same way), next to a toggle that plays that A until it is tapped again. The label names the note
+ * and the pill holds only the frequency, which keeps the pill narrow enough to stand beside its label on a phone.
  */
 @Composable
 internal fun ReferencePitchSetting(
@@ -55,48 +60,84 @@ internal fun ReferencePitchSetting(
     onReferencePitchChanged: (Int) -> Unit,
     onToggleReferenceTone: () -> Unit,
 ) {
-    val referenceName = noteNameWithOctave(REFERENCE_NOTE, notation)
     LabeledControlRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         label = {
             Text(
-                text = stringResource(Res.string.tuner_reference_pitch),
+                text = stringResource(Res.string.tuner_reference_pitch, noteNameWithOctave(REFERENCE_NOTE, notation)),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
         },
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Stepper(
-                value = stringResource(Res.string.tuner_reference_pitch_value, referenceName, referencePitch),
-                isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
-                decreaseIcon = painterResource(Res.drawable.ic_subtract),
-                decreaseLabel = stringResource(Res.string.tuner_reference_pitch_decrease),
-                canDecrease = referencePitch > Pitch.REFERENCE_PITCH_RANGE.first,
-                onDecrease = { onReferencePitchChanged(referencePitch - 1) },
-                increaseIcon = painterResource(Res.drawable.ic_add),
-                increaseLabel = stringResource(Res.string.tuner_reference_pitch_increase),
-                canIncrease = referencePitch < Pitch.REFERENCE_PITCH_RANGE.last,
-                onIncrease = { onReferencePitchChanged(referencePitch + 1) },
-                resetLabel = stringResource(Res.string.tuner_reference_pitch_reset),
-                onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
-                repeatsOnHold = true,
+        // The row as it is while a changed pitch is typed, its reset segment in the pill, so that it keeps the form that
+        // fits it: the segment comes and goes with the focus, which must not move the label.
+        decidingControls = {
+            ReferencePitchControls(
+                referencePitch = referencePitch,
+                notation = notation,
+                isReferenceTonePlaying = isReferenceTonePlaying,
+                onReferencePitchChanged = {},
+                onToggleReferenceTone = {},
+                isDeciding = true,
             )
-            val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
-            FilledTonalIconToggleButton(
-                checked = isReferenceTonePlaying,
-                onCheckedChange = { onToggleReferenceTone() },
-            ) {
-                PlayStopMark(
-                    modifier = Modifier.semantics { contentDescription = description },
-                    isPlaying = isReferenceTonePlaying,
-                    size = 18.dp,
-                    color = LocalContentColor.current,
-                )
-            }
-        }
+        },
+    ) {
+        ReferencePitchControls(
+            referencePitch = referencePitch,
+            notation = notation,
+            isReferenceTonePlaying = isReferenceTonePlaying,
+            onReferencePitchChanged = onReferencePitchChanged,
+            onToggleReferenceTone = onToggleReferenceTone,
+            isDeciding = false,
+        )
+    }
+}
+
+/**
+ * The stepper and the tone toggle of [ReferencePitchSetting].
+ *
+ * @param isDeciding Draws the stepper with room for its reset segment and no field, for the measurement that decides
+ * the row's form.
+ */
+@Composable
+private fun ReferencePitchControls(
+    referencePitch: Int,
+    notation: ChordNotation,
+    isReferenceTonePlaying: Boolean,
+    onReferencePitchChanged: (Int) -> Unit,
+    onToggleReferenceTone: () -> Unit,
+    isDeciding: Boolean,
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+) {
+    Stepper(
+        value = stringResource(Res.string.tuner_reference_pitch_value, referencePitch),
+        isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
+        decreaseIcon = painterResource(Res.drawable.ic_subtract),
+        decreaseLabel = stringResource(Res.string.tuner_reference_pitch_decrease),
+        canDecrease = referencePitch > Pitch.REFERENCE_PITCH_RANGE.first,
+        onDecrease = { onReferencePitchChanged(referencePitch - 1) },
+        increaseIcon = painterResource(Res.drawable.ic_add),
+        increaseLabel = stringResource(Res.string.tuner_reference_pitch_increase),
+        canIncrease = referencePitch < Pitch.REFERENCE_PITCH_RANGE.last,
+        onIncrease = { onReferencePitchChanged(referencePitch + 1) },
+        resetLabel = stringResource(Res.string.tuner_reference_pitch_reset),
+        onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
+        repeatsOnHold = true,
+        entry = if (isDeciding) null else StepperEntry(number = referencePitch, range = Pitch.REFERENCE_PITCH_RANGE, onEntered = onReferencePitchChanged),
+        trailing = if (isDeciding) ({ Spacer(Modifier.width(STEPPER_RESET_SEGMENT_WIDTH)) }) else null,
+    )
+    val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
+    FilledTonalIconToggleButton(
+        checked = isReferenceTonePlaying,
+        onCheckedChange = { onToggleReferenceTone() },
+    ) {
+        PlayStopMark(
+            modifier = Modifier.semantics { contentDescription = description },
+            isPlaying = isReferenceTonePlaying,
+            size = 18.dp,
+            color = LocalContentColor.current,
+        )
     }
 }

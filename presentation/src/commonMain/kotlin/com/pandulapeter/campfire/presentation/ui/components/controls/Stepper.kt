@@ -39,12 +39,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
@@ -77,6 +81,9 @@ import kotlinx.coroutines.delay
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
  * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
+ * @param entry Makes the value a field its number can also be typed into ([StepperField]), for the few values with a
+ * range too wide to step across; a tap on it then starts typing, and the reset is a segment at the pill's end while it
+ * is focused ([StepperEntryTrailing]).
  * @param trailing A second way to the very same value, drawn inside the pill after the increase button and behind a
  * divider: the tempo's Tap button, which sets the number the stepper steps rather than a value of its own, and so
  * belongs to this control instead of standing next to it.
@@ -101,64 +108,90 @@ internal fun Stepper(
     resetLabel: String?,
     onReset: (() -> Unit)?,
     repeatsOnHold: Boolean = false,
+    entry: StepperEntry? = null,
     trailing: (@Composable () -> Unit)? = null,
-) = Surface(
-    modifier = modifier.height(height),
-    shape = CircleShape,
-    color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
-    val buttonLength = stepperButtonLength(fontScale)
-    val spokenValue = valueDescription ?: value
-    // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
-    // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(height, buttonLength)) {
-        val decreaseButton = @Composable {
-            StepperButton(
-                icon = decreaseIcon,
-                label = decreaseLabel,
-                stateDescription = spokenValue,
-                isEnabled = canDecrease,
-                repeatsOnHold = repeatsOnHold,
-                fontScale = fontScale,
-                height = height,
-                buttonLength = buttonLength,
-                onClick = onDecrease,
-            )
-        }
-        val stepperValue = @Composable {
-            StepperValue(
-                value = value,
-                valueDescription = valueDescription,
-                valueKey = valueKey,
-                isDefault = isDefault,
-                resetLabel = resetLabel,
-                onReset = onReset,
-                fontScale = fontScale,
-            )
-        }
-        val increaseButton = @Composable {
-            StepperButton(
-                icon = increaseIcon,
-                label = increaseLabel,
-                stateDescription = spokenValue,
-                isEnabled = canIncrease,
-                repeatsOnHold = repeatsOnHold,
-                fontScale = fontScale,
-                height = height,
-                buttonLength = buttonLength,
-                onClick = onIncrease,
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            decreaseButton()
-            stepperValue()
-            increaseButton()
-            if (trailing != null) {
-                VerticalDivider(
-                    modifier = Modifier.padding(vertical = STEPPER_DIVIDER_PADDING),
-                    color = MaterialTheme.colorScheme.outlineVariant,
+    // Where the pill is, for the press outside it that ends typing into its value (StepperField).
+    val entryBounds = remember { StepperBounds() }
+    var isEntryFocused by remember { mutableStateOf(false) }
+    Surface(
+        modifier = modifier
+            .height(height)
+            .then(if (entry != null) Modifier.onGloballyPositioned { entryBounds.rect = it.boundsInRoot() } else Modifier),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
+        val buttonLength = stepperButtonLength(fontScale)
+        val spokenValue = valueDescription ?: value
+        // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
+        // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(height, buttonLength)) {
+            val decreaseButton = @Composable {
+                StepperButton(
+                    icon = decreaseIcon,
+                    label = decreaseLabel,
+                    stateDescription = spokenValue,
+                    isEnabled = canDecrease,
+                    repeatsOnHold = repeatsOnHold,
+                    fontScale = fontScale,
+                    height = height,
+                    buttonLength = buttonLength,
+                    onClick = onDecrease,
                 )
-                trailing()
+            }
+            val stepperValue = @Composable {
+                if (entry != null) {
+                    StepperField(
+                        value = value,
+                        valueDescription = valueDescription,
+                        valueKey = valueKey,
+                        isDefault = isDefault,
+                        fontScale = fontScale,
+                        entry = entry,
+                        pillBounds = { entryBounds.rect },
+                        onFocusChanged = { isEntryFocused = it },
+                    )
+                } else {
+                    StepperValue(
+                        value = value,
+                        valueDescription = valueDescription,
+                        valueKey = valueKey,
+                        isDefault = isDefault,
+                        resetLabel = resetLabel,
+                        onReset = onReset,
+                        fontScale = fontScale,
+                    )
+                }
+            }
+            val increaseButton = @Composable {
+                StepperButton(
+                    icon = increaseIcon,
+                    label = increaseLabel,
+                    stateDescription = spokenValue,
+                    isEnabled = canIncrease,
+                    repeatsOnHold = repeatsOnHold,
+                    fontScale = fontScale,
+                    height = height,
+                    buttonLength = buttonLength,
+                    onClick = onIncrease,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                decreaseButton()
+                stepperValue()
+                increaseButton()
+                if (entry != null) {
+                    StepperEntryTrailing(
+                        isResetShown = isEntryFocused && !isDefault && onReset != null,
+                        resetLabel = resetLabel,
+                        onReset = { onReset?.invoke() },
+                        fontScale = fontScale,
+                        trailing = trailing,
+                    )
+                } else if (trailing != null) {
+                    StepperDivider()
+                    trailing()
+                }
             }
         }
     }
@@ -215,7 +248,7 @@ private fun StepperButton(
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
     ) {
         Icon(
-            modifier = Modifier.size(ICON_SIZE * fontScale),
+            modifier = Modifier.size(STEPPER_ICON_SIZE * fontScale),
             painter = icon,
             contentDescription = label,
         )
@@ -265,7 +298,7 @@ private fun StepperValue(
 }
 
 /** A stepper's value with the key that decides whether a change of it is animated, see [Stepper]. */
-private data class StepperLabel(
+internal data class StepperLabel(
     val value: String,
     val key: Any,
 )
@@ -286,9 +319,9 @@ internal val STEPPER_HEIGHT = 40.dp
  * How far along the pill one of a stepper's two buttons reaches: its icon, which grows with the song's text, and a
  * padding on either side of it that does not, the way the pills around the controls keep theirs.
  */
-private fun stepperButtonLength(fontScale: Float) = ICON_SIZE * fontScale + BUTTON_ICON_PADDING * 2
+private fun stepperButtonLength(fontScale: Float) = STEPPER_ICON_SIZE * fontScale + BUTTON_ICON_PADDING * 2
 
-private val ICON_SIZE = 20.dp
+internal val STEPPER_ICON_SIZE = 20.dp
 private val BUTTON_ICON_PADDING = 8.dp
 
 /** How wide a stepper's value is drawn at least, where the stepper is not scaled by a song's text size. */
@@ -297,7 +330,13 @@ internal val STEPPER_VALUE_MIN_WIDTH = 44.dp
 /** How far along the pill each of a stepper's two buttons reaches, where the stepper is not scaled by a song's text size. */
 internal val STEPPER_BUTTON_LENGTH = stepperButtonLength(fontScale = 1f)
 
-/** How far short of the pill's own edges the divider in front of a [Stepper]'s trailing control stops. */
+/** The line in front of a [Stepper]'s trailing control, stopping short of the pill's own edges. */
+@Composable
+internal fun StepperDivider() = VerticalDivider(
+    modifier = Modifier.padding(vertical = STEPPER_DIVIDER_PADDING),
+    color = MaterialTheme.colorScheme.outlineVariant,
+)
+
 private val STEPPER_DIVIDER_PADDING = 8.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */

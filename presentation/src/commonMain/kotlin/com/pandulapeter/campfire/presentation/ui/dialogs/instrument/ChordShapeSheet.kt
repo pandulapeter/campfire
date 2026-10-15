@@ -136,7 +136,7 @@ internal fun ChordShapeSheet(
                 tuningLine = tuningLine(shownTuning, notation),
                 contentPadding = contentPadding,
                 onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
-                footer = if (chord?.undrawnDefinition == null) {
+                footer = if (chord.undrawnDefinition == null) {
                     null
                 } else {
                     {

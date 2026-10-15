@@ -542,8 +542,8 @@
          Latin notation, "Do sharp". -->
     <string name="tuner_note_sharp_letter">%1$s sharp</string>
     <string name="tuner_note_sharp_syllable">%1$s sharp</string>
-    <string name="tuner_reference_pitch">Reference pitch</string>
-    <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
+    <string name="tuner_reference_pitch">Reference pitch (%1$s)</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
     <string name="tuner_reference_pitch_decrease">Lower the reference pitch</string>
     <string name="tuner_reference_pitch_increase">Raise the reference pitch</string>
     <string name="tuner_reference_pitch_reset">Reset the reference pitch to 440 Hz</string>

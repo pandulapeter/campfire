@@ -542,8 +542,8 @@
          Latin notation, "Do sharp". -->
     <string name="tuner_note_sharp_letter">%1$sisz</string>
     <string name="tuner_note_sharp_syllable">%1$s kereszt</string>
-    <string name="tuner_reference_pitch">Alaphang</string>
-    <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
+    <string name="tuner_reference_pitch">Alaphang (%1$s)</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
     <string name="tuner_reference_pitch_decrease">Alaphang mélyítése</string>
     <string name="tuner_reference_pitch_increase">Alaphang emelése</string>
     <string name="tuner_reference_pitch_reset">Alaphang visszaállítása 440 Hz-re</string>

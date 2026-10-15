@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Find a way to allow entering tempo using the keyboard
 - Redo onboarding: find a better place for it in the Settings menu.
 - Review Settings menu structure
 - Amazing Grace demo song?

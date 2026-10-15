@@ -65,6 +65,6 @@ internal class SongCapoControl(
 internal class SongTempoControl(
     val tempo: EffectiveTempo,
     val onStep: (delta: Int) -> Unit,
-    val onTapped: (bpm: Int) -> Unit,
+    val onSet: (bpm: Int) -> Unit,
     val onReset: () -> Unit,
 )

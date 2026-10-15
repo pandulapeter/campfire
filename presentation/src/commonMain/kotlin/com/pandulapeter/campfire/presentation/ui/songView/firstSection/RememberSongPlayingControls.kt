@@ -100,7 +100,7 @@ internal fun rememberSongPlayingControls(
                 SongTempoControl(
                     tempo = tempo,
                     onStep = { viewModel.overrides.stepTempo(fileName, setlistFileName, it) },
-                    onTapped = { viewModel.overrides.setTempo(fileName, setlistFileName, it) },
+                    onSet = { viewModel.overrides.setTempo(fileName, setlistFileName, it) },
                     onReset = { viewModel.overrides.resetTempo(fileName, setlistFileName) },
                 )
             } else {

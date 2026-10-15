@@ -130,7 +130,7 @@ internal fun SongPlayingControlsRow(
                     fontScale = fontScale,
                     height = height,
                     onStep = tempo.onStep,
-                    onTapped = tempo.onTapped,
+                    onSet = tempo.onSet,
                     onReset = tempo.onReset,
                 )
             }

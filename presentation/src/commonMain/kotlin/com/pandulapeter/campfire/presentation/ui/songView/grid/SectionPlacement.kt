@@ -111,7 +111,7 @@ internal fun placeSections(
         )
     val cellStarts = cellStartsOf(grid, cellWidths, width, layoutWidth, isInset, endInsetPx, columnGapPx, layoutDirection)
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight != null
-    val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight ?: 0 else 0
+    val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight else 0
     // How much of the viewport a row has with the scroll resting on the divider above it: measured from the row's top
     // rather than from where the scroll rests (the bottom of its divider), and less what the scroll holds below this.
     val readableRowHeight = if (isPaddedToViewport) {

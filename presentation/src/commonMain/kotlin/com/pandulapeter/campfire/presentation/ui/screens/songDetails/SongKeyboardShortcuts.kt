@@ -116,6 +116,8 @@ internal fun Modifier.songKeyboardShortcuts(
             // leaving those presses alone. Shift is not among them: it modifies a selection, and there is nothing on
             // this screen to select.
             if (keyEvent.isAltPressed || keyEvent.isMetaPressed || keyEvent.isCtrlPressed) return@onPreviewKeyEvent false
+            // A tempo being typed into takes the arrows for its caret and its steps.
+            if (overlayState.isValueBeingTyped) return@onPreviewKeyEvent false
             // Consumed rather than left alone while the screen is covered: an arrow nobody consumes is spent by Compose on
             // a focus search of its own, which would move the focus to a chip or a step button of the covered song and
             // scroll it into view.

@@ -68,9 +68,9 @@ internal fun TempoSetting(
                 pillChanges++
                 onBpmChanged(bpm + delta)
             },
-            onTapped = { tapped ->
+            onSet = { set ->
                 pillChanges++
-                onBpmChanged(tapped)
+                onBpmChanged(set)
             },
             onReset = null,
         )

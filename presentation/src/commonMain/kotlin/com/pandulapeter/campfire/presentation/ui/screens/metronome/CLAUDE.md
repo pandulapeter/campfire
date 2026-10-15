@@ -20,9 +20,9 @@ The Metronome tab: the whole instrument. The click's lifecycle is in `ui/metrono
   panel stores them for that song alone).
 - Under it a `SettingsPage` of two sections scrolls, side by side where there is room:
   - What is played (`MetronomeBarOptions`): why nothing is heard (`audioIssue`); the tempo (`TempoSetting`: the song
-    details screen's `TempoStepper`, never highlighted and with no reset, since it overrides nothing; the Italian
-    marking is not translated, being notation); the time signature; the subdivision as clicks per beat (1 to 4) rather
-    than note names, which depend on the bar and do not fit a phone.
+    details screen's `TempoStepper`, typed into too, never highlighted and with no reset, since it overrides nothing;
+    the Italian marking is not translated, being notation); the time signature; the subdivision as clicks per beat (1
+    to 4) rather than note names, which depend on the bar and do not fit a phone.
   - How it reaches the player (`MetronomeSoundOptions`, on a `SettingsCard` because it applies to a song's click too):
     sound, volume (zero is the mute, so there is no mute switch), Animate, and Vibrate (only where
     `rememberBeatHaptics` has a vibrator).

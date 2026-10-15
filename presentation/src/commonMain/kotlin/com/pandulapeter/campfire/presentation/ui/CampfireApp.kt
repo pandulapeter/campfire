@@ -21,6 +21,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -124,8 +127,20 @@ fun CampfireApp(
         ) { isThemeSettled, launchScreenColors ->
             val backgroundColor = MaterialTheme.colorScheme.background
             SideEffect { onBackgroundColorChanged(backgroundColor) }
+            val overlayState = viewModel.dialogHost.overlayState
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    // In the initial pass and never consumed, so that the press still does whatever it does underneath:
+                    // a tap or the start of a scroll elsewhere is what tells a stepper's field that typing is over.
+                    .pointerInput(overlayState) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.type == PointerEventType.Press) event.changes.forEach { overlayState.onPointerPressed(it.position) }
+                            }
+                        }
+                    },
             ) {
                 // Nothing is composed until the preferences have been read: they decide the palette and the language,
                 // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
