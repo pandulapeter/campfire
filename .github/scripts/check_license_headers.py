@@ -28,7 +28,7 @@ HEADER_LINES = (
 # How far into a file the header may start: an XML declaration or a shebang comes before it.
 HEADER_SEARCH_LINES = 20
 
-CHECKED_EXTENSIONS = (".kt", ".kts", ".py", ".yml", ".yaml", ".js", ".cjs", ".mjs", ".sh", ".swift")
+CHECKED_EXTENSIONS = (".kt", ".kts", ".py", ".yml", ".yaml", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".sh", ".swift")
 
 ALLOWED = (
     ".idea/*",
