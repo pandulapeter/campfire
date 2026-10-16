@@ -10,21 +10,20 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
-
-### Features
-- Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
+- The fast scroller should only appear if the content is longer than the screen.
+- Update website + store descriptions to include the chord diagram library and other new features
+- Regenerate the baseline profile
 
 ## Midterm (in the next versions)
+- Rename master branch to main
+- Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Global sync status display
 
 ## Long-term
-- Rename master branch to main
 - Streaming zip writer on all platforms
 - More backup importers (OnSong and other songbook apps)
 - Scale / mode library
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
-- Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)
