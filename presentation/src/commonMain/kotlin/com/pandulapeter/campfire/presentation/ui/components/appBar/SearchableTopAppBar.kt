@@ -23,11 +23,15 @@ import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
@@ -146,6 +150,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
  * @param areClosedSearchActionsKeptInSearch Keeps [closedSearchActions] in the bar while the search is open, the divider
  *   in front of them included: the songs screen's selection menu, since the search is where a selection is put
  *   together. New still makes way for the field, which is the case this is false for.
+ * @param areClosedSearchActionsDetached Stands [closedSearchActions] beside the pill instead of on it, with a gap in
+ *   place of the divider: the New menu, a filled button that reads as the screen's main action on its own and only
+ *   crowds the pill's quieter icons on it. The selection menu's plain icons stay on the pill. The pill's end and the
+ *   gap follow a change on the search's spring, so the button never moves.
  * @param actions The screen's other actions, which stay whether or not the search is open. Each is laid out with
  *   [overlappingAction], as every action of the pill is.
  */
@@ -161,6 +169,7 @@ internal fun SearchableTopAppBar(
     isSearchEnabled: Boolean = true,
     areClosedSearchActionsShown: Boolean = false,
     areClosedSearchActionsKeptInSearch: Boolean = false,
+    areClosedSearchActionsDetached: Boolean = false,
     closedSearchActions: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit,
 ) {
@@ -214,6 +223,7 @@ internal fun SearchableTopAppBar(
     val pillColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val pill = remember { SearchPill() }
     val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
+    val detachProgress = animateFloatAsState(targetValue = if (areClosedSearchActionsDetached) 1f else 0f, animationSpec = searchTravelSpec())
     LookaheadScope {
         val lookaheadScope = this
         val actionModifier = Modifier
@@ -243,7 +253,12 @@ internal fun SearchableTopAppBar(
                     drawRect(color = containerColor, alpha = appBarReveal().coerceIn(0f, 1f))
                     // Always fully opaque: the pill is one surface whose color must not change anywhere along the trip,
                     // a back gesture's preview included, which fades what the field holds and leaves the pill alone.
-                    val bounds = lerp(pill.closedActions, pill.openField, pillProgress.value)
+                    // A detached button's room is cut off the end of the closed pill, which leaves the pill ending as far
+                    // past the last action as it starts before the first one.
+                    val closedBounds = pill.closedActions.copy(
+                        right = pill.closedActions.right - pill.closedSearchActionsWidth * detachProgress.value,
+                    )
+                    val bounds = lerp(closedBounds, pill.openField, pillProgress.value)
                     drawRoundRect(
                         color = pillColor,
                         topLeft = bounds.topLeft,
@@ -306,16 +321,41 @@ internal fun SearchableTopAppBar(
                         }
                     }
                     actions()
-                    AnimatedVisibility(visible = areClosedSearchActionsShown) {
+                    AnimatedVisibility(
+                        modifier = Modifier.onPlaced {
+                            if (!searchTransition.targetState) {
+                                pill.closedSearchActionsWidth = lookaheadScope.lookaheadBoundsOf(pill.bar, it).width
+                            }
+                        },
+                        visible = areClosedSearchActionsShown,
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            ClosedSearchActionsDivider(searchProgress = { if (areClosedSearchActionsKeptInSearch) 0f else pillProgress.value })
+                            ClosedSearchActionsDivider(
+                                searchProgress = { if (areClosedSearchActionsKeptInSearch) 0f else pillProgress.value },
+                                detachProgress = { detachProgress.value },
+                            )
                             val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
                             val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
                             searchTransition.AnimatedVisibility(
                                 modifier = Modifier.overlappingAction(),
                                 visible = { !it || areClosedSearchActionsKeptInSearch },
-                                enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
-                                exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
+                                // A detached button is a filled circle, which a clipped shrink would slice into a half-moon on
+                                // its way out: it shrinks in place instead, while its room closes behind the field's edge.
+                                enter = fadeIn(closedSearchActionsFadeSpec) + if (areClosedSearchActionsDetached) {
+                                    scaleIn(closedSearchActionsFadeSpec, initialScale = DETACHED_ACTION_HIDDEN_SCALE) +
+                                        expandHorizontally(closedSearchActionsSizeSpec, clip = false)
+                                } else {
+                                    expandHorizontally(closedSearchActionsSizeSpec)
+                                },
+                                // Faded out sooner than the room closes, too, or the actions sliding into its place pass
+                                // under what is left of the disc.
+                                exit = if (areClosedSearchActionsDetached) {
+                                    fadeOut(tween(DETACHED_ACTION_FADE_OUT_MILLIS)) +
+                                        scaleOut(closedSearchActionsFadeSpec, targetScale = DETACHED_ACTION_HIDDEN_SCALE) +
+                                        shrinkHorizontally(closedSearchActionsSizeSpec, clip = false)
+                                } else {
+                                    fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec)
+                                },
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     closedSearchActions()
@@ -339,19 +379,28 @@ internal fun SearchableTopAppBar(
  * is laid out at a width that follows the search and drawn centered in it, never clipped, and it is gone by the time
  * that width is.
  *
+ * Detached actions stand off the pill instead, so the line fades out and its room widens into the gap between the
+ * pill's end and theirs (see [DETACHED_CLOSED_SEARCH_ACTIONS_GAP]).
+ *
  * @param searchProgress How far the search is open, from 0 while it is closed to 1 while it is open.
+ * @param detachProgress How far the actions after it are detached from the pill, from 0 to 1.
  */
 @Composable
-private fun ClosedSearchActionsDivider(searchProgress: () -> Float) = VerticalDivider(
+private fun ClosedSearchActionsDivider(
+    searchProgress: () -> Float,
+    detachProgress: () -> Float,
+) = VerticalDivider(
     modifier = Modifier
         .layout { measurable, constraints ->
             val placeable = measurable.measure(constraints)
-            val width = (placeable.width * (1f - searchProgress())).roundToInt().coerceAtLeast(0)
+            val detachedWidth = DETACHED_CLOSED_SEARCH_ACTIONS_GAP.toPx()
+            val closedWidth = placeable.width + (detachedWidth - placeable.width) * detachProgress()
+            val width = (closedWidth * (1f - searchProgress())).roundToInt().coerceAtLeast(0)
             layout(width, placeable.height) {
                 placeable.placeRelative(x = (width - placeable.width) / 2, y = 0)
             }
         }
-        .graphicsLayer { alpha = (1f - searchProgress()).coerceIn(0f, 1f) }
+        .graphicsLayer { alpha = ((1f - searchProgress()) * (1f - detachProgress())).coerceIn(0f, 1f) }
         .padding(horizontal = CLOSED_SEARCH_ACTIONS_DIVIDER_GAP)
         .height(CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT),
 )
@@ -498,6 +547,19 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_GAP = 4.dp
 /** The length of [ClosedSearchActionsDivider], short of the buttons' height so that it reads as a separator between them. */
 private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 
+/**
+ * The room [ClosedSearchActionsDivider] takes before detached actions, which leaves the pill's end (as far past the last
+ * action's touch target as its start is before the first one's) 6dp short of the New button's circle, which fills its
+ * touch target.
+ */
+private val DETACHED_CLOSED_SEARCH_ACTIONS_GAP = 22.dp
+
+/** How small a detached action is as it fades out of the bar and back in, see `areClosedSearchActionsDetached`. */
+private const val DETACHED_ACTION_HIDDEN_SCALE = 0.6f
+
+/** How long a detached action takes to fade out of the bar as the search opens. */
+private const val DETACHED_ACTION_FADE_OUT_MILLIS = 120
+
 /** The padding `TopAppBar` keeps at either end of its row, which this bar keeps so its buttons sit where a bar's would. */
 private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 
@@ -509,7 +571,8 @@ private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 private val APP_BAR_END_PADDING = APP_BAR_HORIZONTAL_PADDING + ACTION_BUTTON_OVERLAP / 2
 
 /**
- * How far in from the end edge of a list the middle of the closed bar's [ClosedSearchActionsDivider] stands, past the
+ * How far in from the end edge of a list the middle of the closed bar's [ClosedSearchActionsDivider] stands (detached
+ * actions widen its room into a gap, but the selection menu's dots keep it on this line), past the
  * list's own end inset: the bar's end padding, the pill's, the one 48dp button the list's new item menu is, less the
  * half of the overlap it reaches past the line with, and the gap before the line. The [FastScroller] centers its
  * bubble on it, so that the two read as one column down the list.

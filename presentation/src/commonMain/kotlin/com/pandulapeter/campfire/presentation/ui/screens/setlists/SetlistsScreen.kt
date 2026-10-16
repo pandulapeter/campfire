@@ -119,6 +119,7 @@ internal fun SetlistsScreen(
             isSearchEnabled = !isReordering,
             onReachChanged = { appBarReach = it },
             areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
+            areClosedSearchActionsDetached = true,
             closedSearchActions = {
                 NewItemMenu(
                     contentDescription = stringResource(Res.string.setlists_new_setlist),

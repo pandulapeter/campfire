@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -176,10 +178,17 @@ internal fun SongsScreen(
                     areClosedSearchActionsShown = isSelecting || !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
                     // The search is where most of a selection is put together, so its menu stays while the search is open.
                     areClosedSearchActionsKeptInSearch = isSelecting,
+                    areClosedSearchActionsDetached = !isSelecting,
                     closedSearchActions = {
                         AnimatedContent(
                             targetState = isSelecting,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
+                            // menu, and scaled, so that it is out of the way of the menu fading in where it stood.
+                            transitionSpec = {
+                                fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
+                                    fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
+                                    SizeTransform(clip = false)
+                            },
                         ) { isShowingSelectionMenu ->
                             if (isShowingSelectionMenu) {
                                 val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -296,3 +305,9 @@ private fun SongFiltersAction(
         }
     }
 }
+
+/** How small the New button and the selection menu are as they cross fade into each other. */
+private const val SELECTION_MENU_SWAP_SCALE = 0.6f
+
+/** How long the outgoing one of the two takes to fade, quicker than the pill reaches under it. */
+private const val SELECTION_MENU_FADE_OUT_MILLIS = 120

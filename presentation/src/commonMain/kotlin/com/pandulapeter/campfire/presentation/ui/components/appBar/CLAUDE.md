@@ -30,8 +30,11 @@ The top app bars of the list screens.
   and before each correction, so an interrupted transition never resumes a stale one (tested). On Setlists the list
   moves down instead and headers pin under the bar.
 - The "New" menu yields to the field (`closedSearchActions`); the selection menu stays
-  (`areClosedSearchActionsKeptInSearch`). The bar stays filled while the list has no header (placeholder, ranked
-  results). It spans the list only, never the side panel.
+  (`areClosedSearchActionsKeptInSearch`). New is a filled 48dp circle **beside the pill**
+  (`areClosedSearchActionsDetached`): the pill's end is cut by the closed actions' lookahead width and the divider's room
+  widens into a 22dp gap, both on the search's spring, so the button never moves. A clipped shrink would slice the
+  circle, so it fades (quickly) and scales in place while its room closes. The bar stays filled while the list has no
+  header (placeholder, ranked results). It spans the list only, never the side panel.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
   hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is
   layout, not a drawn translation, so `animateBounds` carries on from where the gesture left.

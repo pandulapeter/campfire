@@ -18,6 +18,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -69,6 +70,9 @@ internal class SearchPill {
     var closedActions by mutableStateOf(Rect.Zero)
 
     var openField by mutableStateOf(Rect.Zero)
+
+    /** How wide the closed search's own actions and the divider before them are, which a detached button takes off [closedActions]. */
+    var closedSearchActionsWidth by mutableFloatStateOf(0f)
 }
 
 /**

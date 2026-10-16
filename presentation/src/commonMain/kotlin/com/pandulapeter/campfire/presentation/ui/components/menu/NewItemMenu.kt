@@ -12,9 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.components.menu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
@@ -63,7 +66,9 @@ internal fun NewItemMenu(
     val filePicker = LocalFilePicker.current
     OverflowMenu(
         button = { open ->
-            IconButton(onClick = open, enabled = isEnabled) {
+            // Filled in the accent color, unlike the bar's other actions: it is the way to fill the list, and a plain
+            // icon among search, sort, and filter is the one that gets overlooked.
+            FilledIconButton(modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE), onClick = open, enabled = isEnabled) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_add),
                     contentDescription = contentDescription,
@@ -105,3 +110,6 @@ internal fun NewItemMenu(
         }
     }
 }
+
+/** The New button's circle, as tall as the pill beside it, so that the two read as one row of the bar's controls. */
+internal val NEW_ITEM_BUTTON_SIZE = 48.dp
