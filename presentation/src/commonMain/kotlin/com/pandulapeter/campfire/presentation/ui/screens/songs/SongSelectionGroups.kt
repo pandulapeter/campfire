@@ -43,7 +43,7 @@ internal fun List<SongGroup>.withSelectionLeading(order: ChecklistOrder): List<S
 
 /** The grid keys of the Selection section's items, which a tick, the start and the end of the mode change. */
 internal fun List<SongGroup>.selectionItemKeys(): List<String> =
-    firstOrNull { it.header == SongGroupHeader.Selection }?.let { group -> group.songs.map(group::itemKey) }.orEmpty()
+    firstOrNull { it.isSelection }?.let { group -> group.songs.map(group::itemKey) }.orEmpty()
 
 /**
  * [songGroups] with [selection] leading it ([withSelectionLeading]), refreshed whenever the search, the sorting or a

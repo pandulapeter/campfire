@@ -16,8 +16,17 @@ The songs screen.
   collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance
   (no mask at the real top, grows over the first 24dp, also when the first card is item 1).
 
+- An open search runs the sections together (`withoutSectionHeaders`), so cards fill the columns a section's last row
+  left open; the Selection group loses its header too and keeps the divider (`SongGroup.isSelection`). It happens in
+  the composition that opens or closes the search, and the grid's own item animation narrates it: cards slide, headers
+  fade, while the bar moves the list. **Nothing asks the grid for a position then**: a request is a jump the grid
+  forgets every running item animation over, so the cards would snap.
+- Closing a search over the same songs, unscrolled since it opened, returns to the position it opened at
+  (`RestoreScrollAfterSearch`); the grid alone would keep the first card in place and the returning headers above it
+  would leave the list scrolled. That one jump is narrated by `ListAnchor`.
+
 - Sorted by artist, cards leave their artist to the header (`isArtistShown`); the Selection group and an open search,
-  which collapses the headers, show it.
+  which takes the headers away, show it.
 
 ## The add songs hint
 
@@ -25,8 +34,7 @@ The songs screen.
   pasting a song copied off any web page, and importing another app's export. It continues the onboarding, so it has no
   dismiss button; the third song takes it away. Not under a placeholder, a search, the selection, or performance mode
   (`isAddSongsHintShown`).
-- It is the last grid item, never the first, so `itemIndexOf`, `SongSectionIndex`, and the search anchor need not
-  count it.
+- It is the last grid item, never the first, so `itemIndexOf` and `SongSectionIndex` need not count it.
 
 ## Selecting songs
 

@@ -24,11 +24,8 @@ The top app bars of the list screens.
   would fade the sticky headers (items of the same list). Strength grows with scroll, so a list at rest shows its first
   cards whole. A card takes no press inside the gradient, but a drag there still scrolls.
 - The fast scroller starts below `AppBarOverlap`'s reach so its thumb is never under a button.
-- On Songs, opening search collapses all section headers (even with an empty query); section boundaries stay so rows
-  keep their columns. `SongSearchScrollAnchor` keeps the visible section stationary and restores the exact scroll on
-  closing an unchanged search; scrolling or new results release it. It checks for an active scroll both on mode change
-  and before each correction, so an interrupted transition never resumes a stale one (tested). On Setlists the list
-  moves down instead and headers pin under the bar.
+- On Songs, opening search (even with an empty query) takes the section headers away and runs the sections together
+  (`ui/screens/songs/CLAUDE.md`); the list moves down under the bar as on Setlists.
 - The "New" menu yields to the field (`closedSearchActions`); the selection menu stays
   (`areClosedSearchActionsKeptInSearch`). New is a filled 48dp circle **beside the pill**
   (`areClosedSearchActionsDetached`): the pill's end is cut by the closed actions' lookahead width and the divider's room

@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * @param header Null for the results of a search, which are ranked rather than filed under anything.
+ * @param isSelection Whether these are the ticked songs that lead the list, which stay told apart from the rest by a
+ *   divider even where an open search has taken their header away.
  * @param copiedFileNames The songs of the Selection section that are still listed in their own section too, having
  *   been ticked since the list was last refreshed ([withSelectionLeading]). A copy is an item of its own to the grid.
  */
@@ -20,6 +22,7 @@ data class SongGroup(
     val header: SongGroupHeader?,
     val songs: List<Song>,
     val copiedFileNames: Set<String> = emptySet(),
+    val isSelection: Boolean = header == SongGroupHeader.Selection,
 ) {
     /** The key of the grid item that shows [song] in this group: its own one, or its copy's. */
     fun itemKey(song: Song) = if (song.fileName in copiedFileNames) "$SONG_COPY_ITEM_KEY_PREFIX${song.fileName}" else songItemKey(song)

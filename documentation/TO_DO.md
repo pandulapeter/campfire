@@ -10,7 +10,10 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Songs list sorted by artist: search mode makes the headers disappear but the columns still have gaps
+- Songs / Setlists cards too close to the FAB + floating pill
+- Setlist header too close to content
+- Songs / Setlists floating pill touch feedback should fill the pill
+- Metronome header too close to window top - inconsistent between navigation rail vs bottom navigation
 - Regenerate all screenshots and the promo videos
 - Regenerate the Android baseline profiles
 - Update store descriptions to include the chord diagram library and other new features + new title

@@ -23,7 +23,7 @@ internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int
 }
 
 /** Whether [SongList] follows the group at [index] with the divider that sets the Selection section off from the rest. */
-internal fun List<SongGroup>.hasSelectionDividerAfter(index: Int) = this[index].header == SongGroupHeader.Selection && index < lastIndex
+internal fun List<SongGroup>.hasSelectionDividerAfter(index: Int) = this[index].isSelection && index < lastIndex
 
 /**
  * The grid index of the first card, counted the way [SongList] emits its items: zero-height header slots are not scroll

@@ -30,7 +30,6 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOpt
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,18 +39,13 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -64,7 +58,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScr
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
-import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
@@ -86,7 +79,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextR
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 internal fun SongList(
@@ -106,43 +98,12 @@ internal fun SongList(
     val songActions = rememberSongActionHandler(viewModel)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
     val selectSongsIcon = painterResource(Res.drawable.ic_select)
-    // Keep section boundaries (including incomplete grid rows) while their header rows collapse. This makes
-    // opening and closing exact reverses and keeps every card in the active section in its original column.
-    val groups = songGroups.groups
-    val appBarHeightPx = with(LocalDensity.current) { LIST_APP_BAR_HEIGHT.toPx() }
-    val searchScroll = remember(listState, columnCount, appBarHeightPx) { SongSearchScrollAnchor(isSearchOpen) }
-    SideEffect {
-        searchScroll.update(
-            open = isSearchOpen,
-            contents = songGroups,
-            isScrolling = listState.isScrollInProgress,
-            inset = (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt(),
-        ) {
-            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" }?.let { card ->
-                val activeGroup = groups.indexOfFirst { group -> group.indexOfItem(card.key) >= 0 }
-                SongSearchScrollAnchor.Snapshot(
-                    cardIndex = card.index,
-                    cardTop = card.offset.y,
-                    position = SongSearchScrollAnchor.Position(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset),
-                    trailingHeaderCount = groups.drop(activeGroup + 1).count { it.header != null },
-                )
-            }
-        }
-    }
-    // One collector both lets the anchor go and releases the room it kept: a flow of the spacer's visibility alone
-    // would not emit again for a spacer already out of sight when the scroll let go, and a second collector could run
-    // before the first in a frame, while the anchor still holds its position. Pairing the two re-evaluates at both ends
-    // of a scroll.
-    LaunchedEffect(listState, searchScroll) {
-        snapshotFlow { listState.isScrollInProgress to listState.layoutInfo.visibleItemsInfo.any { it.key == SEARCH_ANCHOR_SPACE_KEY } }
-            .collect { (isScrolling, isSpaceVisible) ->
-                if (isScrolling) searchScroll.letGoForScroll()
-                searchScroll.releaseTrailingSpaceIfOutOfSight(isSpaceVisible)
-            }
-    }
-    val areHeadersCollapsing by remember(isSearchOpen, groups, appBarOverlap) {
-        derivedStateOf { groups.any { it.header != null } && (isSearchOpen || appBarOverlap().coverage < 1f) }
-    }
+    // An open search runs the sections together, so no section ends in a short row. The grid's own item animation moves
+    // the cards into the gaps and fades the headers out as the bar makes room for the field, all on one spring; nothing
+    // here asks the grid for a position, since a request is a jump the grid forgets every running item animation over.
+    val groups = remember(songGroups, isSearchOpen) { if (isSearchOpen) songGroups.groups.withoutSectionHeaders() else songGroups.groups }
+    val coroutineScope = rememberCoroutineScope()
+    val filterAnchor = remember { ListAnchor() }
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
@@ -156,7 +117,6 @@ internal fun SongList(
     val filePicker = LocalFilePicker.current
     val clipboardReader = rememberClipboardTextReader()
     val keyboardController = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope()
     // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
     val sectionIndex = remember(groups) {
         SongSectionIndex(
@@ -174,20 +134,10 @@ internal fun SongList(
         sectionHeaderContentType = SONG_HEADER_CONTENT_TYPE,
     )
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
-    val gridModifier = remember(topFade, searchScroll, listState, appBarOverlap) {
-        Modifier.fillMaxSize().layout { measurable, constraints ->
-            val inset = LIST_APP_BAR_HEIGHT.toPx() * (1f - appBarOverlap().coverage)
-            searchScroll.positionFor(inset.roundToInt(), isScrolling = listState.isScrollInProgress)?.let { position ->
-                listState.requestScrollToItem(position.index, position.offset)
-            }
-            val placeable = measurable.measure(constraints)
-            layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
-        }.listTopFadeViewport(topFade)
-    }
+    val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
-    val filterAnchor = remember { ListAnchor() }
     val onTagClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
         { itemKey, tag ->
             filterAnchor.set(listState, itemKey)
@@ -215,6 +165,12 @@ internal fun SongList(
         listState = listState,
         songGroups = songGroups,
         hasPlaceholder = placeholder != null,
+        anchor = filterAnchor,
+    )
+    RestoreScrollAfterSearch(
+        listState = listState,
+        isSearchOpen = isSearchOpen,
+        songGroups = songGroups,
         anchor = filterAnchor,
     )
     // The last row's box would otherwise end up under the Done button, which stands over the end of the list.
@@ -264,7 +220,7 @@ internal fun SongList(
                         contentType = "placeholder",
                     ) {
                         ListPlaceholder(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec).fillMaxWidth(),
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec).fillMaxWidth(),
                             placeholder = it,
                             onRetry = viewModel.libraryState::refresh,
                             onNewSong = if (isPerformanceModeEnabled) null else {
@@ -283,7 +239,7 @@ internal fun SongList(
                     }
                 }
                 groups.forEachIndexed { groupIndex, group ->
-                    // An open search collapses the headers, and the cards take their artists back from them.
+                    // An open search takes the headers away, and the cards take their artists back from them.
                     val isArtistShown = isSearchOpen || (group.header as? SongGroupHeader.Section)?.header !is SongSection.Header.Artist
                     group.header?.let { header ->
                         stickyHeader(
@@ -292,9 +248,8 @@ internal fun SongList(
                         ) { headerIndex ->
                             val headerState = rememberSectionHeaderState(listState, headerIndex)
                             SectionHeader(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                                    .anchoredTransition(filterAnchor, listState, header.itemKey)
-                                    .collapseSearchHeader { appBarOverlap().coverage },
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
+                                    .anchoredTransition(filterAnchor, listState, header.itemKey),
                                 state = { headerState.value },
                                 endPadding = headerEndPadding,
                                 text = header.displayText(selectionCount = selection.size),
@@ -313,7 +268,7 @@ internal fun SongList(
                         // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                         // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                         Box(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
                                 .anchoredTransition(filterAnchor, listState, itemKey),
                         ) {
                             // Worked out here rather than inside the row's actions, so that they capture what changes for this row
@@ -342,7 +297,7 @@ internal fun SongList(
                             )
                         }
                     }
-                    // The two parts are told apart the way the sheets tell them apart, and an open search collapses every
+                    // The two parts are told apart the way the sheets tell them apart, and an open search takes away every
                     // header there is, the Selection one included, which leaves the divider the only thing between them.
                     if (groups.hasSelectionDividerAfter(groupIndex)) {
                         item(
@@ -353,7 +308,7 @@ internal fun SongList(
                             // Faded under the top of the list like a card, or it would be drawn across the pinned header and
                             // the bar's pill as it scrolls under them.
                             HorizontalDivider(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
                                     .anchoredTransition(filterAnchor, listState, SELECTION_DIVIDER_KEY)
                                     .fadingUnderListTop(topFade)
                                     .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
@@ -374,18 +329,13 @@ internal fun SongList(
                 ) {
                     item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
                         AddSongsHintCard(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
                                 .fadingUnderListTop(topFade),
                             isEnabled = !isImporting,
                             onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
                             onImport = { viewModel.importController.importFiles(filePicker) },
                         )
                     }
-                }
-                // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
-                // Keep just that lost tail space until it has scrolled out of sight, or the search changes, or the headers return.
-                item(key = SEARCH_ANCHOR_SPACE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
-                    Spacer(Modifier.fillMaxWidth().searchAnchorSpace(searchScroll) { appBarOverlap().coverage })
                 }
             }
             // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
