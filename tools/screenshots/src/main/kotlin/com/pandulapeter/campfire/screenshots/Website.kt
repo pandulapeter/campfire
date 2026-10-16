@@ -100,14 +100,19 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
             ),
         ),
-        // Uptown Girl on a guitar in standard tuning, with the Choose chord shape sheet open over it for E.
+        // Uptown Girl on a guitar in standard tuning at 100%, with the Choose chord shape sheet open over it for E.
         Triple(
             "tablet-song-chord-shape",
             Device.IPAD,
             Shot(
                 id = "tablet-song-chord-shape",
                 uiMode = UserPreferences.UiMode.DARK,
-                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id)) },
+                preferences = {
+                    mapOf(
+                        "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
+                        "fontScale" to JsonPrimitive(1f),
+                    )
+                },
                 drive = {
                     openSong(UPTOWN_GIRL)
                     val song = checkNotNull(song(UPTOWN_GIRL))
