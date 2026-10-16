@@ -367,13 +367,13 @@ const Transpose: React.FC = () => {
             padding: "18px 44px",
             borderRadius: 999,
             background: "rgba(33,30,41,0.94)",
-            border: `2px solid ${(index < 4 ? C.lilac : C.orange)}55`,
+            border: `2px solid ${C.lilac}55`,
             fontFamily: SANS,
             fontWeight: 500,
             whiteSpace: "nowrap",
           }}
         >
-          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 120, color: C.orange, letterSpacing: -4 }}>{chord}</span>
+          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 120, color: C.lilac, letterSpacing: -4 }}>{chord}</span>
           <span style={{ fontSize: 52, color: C.lilac }}>{label}</span>
         </div>
       </Stage>

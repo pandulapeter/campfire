@@ -230,9 +230,12 @@ export const Headline: React.FC<{
   );
 };
 
-/** A headline's accented line, in the website's primary color for the theme: never a gradient, which neither the app nor the website uses. */
+/**
+ * A headline's accented line in one flat brand color, never a gradient (neither the app nor the website has one): the
+ * orange, the video's primary accent, which on the light theme's near-white gives way to the purple.
+ */
 export const Accent: React.FC<{ children: React.ReactNode; light?: boolean }> = ({ children, light }) => (
-  <span style={{ color: light ? C.purple : C.lilac }}>{children}</span>
+  <span style={{ color: light ? C.purple : C.orange }}>{children}</span>
 );
 
 /** A rounded label that springs in at [at]. */

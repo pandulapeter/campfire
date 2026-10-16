@@ -51,8 +51,9 @@ Remotion is not open source: free for individuals and companies of up to three p
   (`Device.LAPTOP`); the phones' and tablet's status bars stay.
 - Text animates by moving and fading together, never masked or clipped.
 - No gradient text or buttons (they read as AI-made, and neither the app nor the website has them): a headline's
-  accented line is the website's primary color (`Accent`: lilac on dark, purple on light), and the URL is lilac
-  text like the website's links, with nothing behind it.
+  accented line is one flat color (`Accent`), and the URL plain text with nothing behind it.
+- Two complementary accents: orange is the primary, for every headline's accented line (purple on the light scene,
+  where orange reads poorly); lilac is the secondary, for chips, the transposition badge, the off-beats, and the URL.
 - Bold only for headlines and the name; the lines under the name, the chips, the badge's label, and the platform names
   are Regular or Medium; the badge's chord is JetBrains Mono Bold.
 - The music is a backing track in A major for the owner's electric guitar: drums, bass, synths, and effects, no
