@@ -30,11 +30,15 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
   reported, and the rest render.
   Its setlists were trimmed for the shots (Frey-Tully Nuptials and Getting started); keep them that way.
 - **Screenshot Bro** running, with the `Campfire` project (`list_projects`), and **Full Disk Access for the IDE that
-  runs Claude Code** (Android Studio), without which nothing can be staged in the app's sandbox (step 3). Only the
-  owner has the project. Without it (no `screenshot-bro` tools, or no `Campfire` project), say so and make what can be
-  made without framing: steps 1 and 2, then copy `tools/screenshots/renders/` to a new
-  `~/Desktop/Campfire screenshots <date>/` (every shot unframed, at its device's pixels, no headlines) and run step 7
-  without `--link-preview`. The store images, the README banners, and the link preview need the project; skip them.
+  runs Claude Code** (Android Studio), without which nothing can be staged in the app's sandbox (step 3). The project
+  is kept in `tools/screenshots/project/` (its layout and the logos, with empty device frames). Where Screenshot Bro is
+  installed but has no `Campfire` project, quit it and run `python3 -I
+  .claude/skills/store-screenshots/scripts/screenshot_bro_project.py restore`, then reopen it; `--force` replaces a
+  project that is there, moving it to `project-backups/` in the app's folder. Without Screenshot Bro (no
+  `screenshot-bro` tools), say so and make what can be made without framing: steps 1 and 2, then copy
+  `tools/screenshots/renders/` to a new `~/Desktop/Campfire screenshots <date>/` (every shot unframed, at its device's
+  pixels, no headlines) and run step 7 without `--link-preview`. The store images, the README banners, and the link
+  preview need the project; skip them.
 - **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
 - The display does not matter: nothing is drawn on screen.
 
@@ -46,6 +50,7 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
 | README banners (GitHub - Banner 1 / 2) | `Banners.kt` → Screenshot Bro | `documentation/screenshots/01–06.webp`, 1200×900 |
 | Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` (or `../campfire-website/`) at each file's own size |
 | Website link preview | the exported `Website - Link preview` row | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
+| The Screenshot Bro project | the app's container, by step 8 | `tools/screenshots/project/`: `project.json` without the frames' screenshots, and the logos |
 
 Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on every run. Nothing is committed, in either
 repository; the user reviews and commits.
@@ -106,7 +111,10 @@ repository; the user reviews and commits.
    replaces, as WebP, and the link preview as `og-image.jpg`. It finds the website's repository as a sibling folder
    named `CampfireWebsite` (the owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where
    there is none it writes to the Desktop folder and says so. Without `--link-preview`, `og-image.jpg` is left alone.
-8. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
+8. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies
+   its layout back to `tools/screenshots/project/`, so headlines and frames moved by hand, here or in the app, show
+   up in the diff. A diff that is not the run's own changes is the user's work in the app: keep it.
+9. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
    rendered and anything that looked off.
 
 ## The shots and their rules

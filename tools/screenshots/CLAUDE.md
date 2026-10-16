@@ -36,6 +36,9 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 - **Nothing reaches outside** (`Fakes.kt`): sync shows a connected account and runs nothing, the metronome is silent and
   lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only scripted readings, the file picker
   writes nothing. Covers come from the copied cache.
+- **The Screenshot Bro project** that frames the renders is kept in `project/`: `project.json` as the app writes it,
+  less what every run changes (each frame's screenshot, the modification time), and the images its logos show. The
+  skill's `screenshot_bro_project.py` saves it from the app's container and restores it into one.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
   the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
   belong to the Screenshot Bro project, not the images.

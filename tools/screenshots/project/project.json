@@ -1,0 +1,4085 @@
+{
+  "ls": {
+    "alc": "en",
+    "l": [
+      {
+        "c": "en",
+        "l": "English"
+      }
+    ],
+    "o": {}
+  },
+  "n": "Campfire",
+  "r": [
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": null,
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 0
+          },
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 1
+          }
+        ]
+      },
+      "id": "D14A5619-01BE-4E2D-A654-187E8467999A",
+      "l": "GitHub - Banner 1",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1729.1797235023043,
+          "id": "CE37DD87-EEE5-49C8-B662-288BE21A4F2C",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2624,
+          "x": 4576,
+          "y": -14.366094957240534
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1554.298656745866,
+          "id": "D29DCFF0-2EF7-4138-8868-742627200062",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2027.3460740163473,
+          "x": 2120.095978255809,
+          "y": 180
+        },
+        {
+          "c": "#98989D",
+          "h": 500,
+          "id": "6B215E15-3084-4EA9-A4F6-B55E27168520",
+          "ifn": "6B215E15-3084-4EA9-A4F6-B55E27168520-4913D005-9101-4D1F-A3DB-3BA0156443FC.png",
+          "t": "image",
+          "w": 500,
+          "x": 52.78425558386455,
+          "y": 1255.3674264688568
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 1997.0797242135789,
+          "id": "B1C74D11-BB4D-4D76-816C-2A6874E53B7C",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 978.5690648646536,
+          "x": 1353.9245029789458,
+          "y": 25.61459779341635
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 1971.9119626740016,
+          "id": "FFADCF50-1AA0-4C27-B197-21EC8493FD7F",
+          "rot": 352,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 933.0293825317037,
+          "x": 578.4268278788724,
+          "y": 80.96945625673018
+        },
+        {
+          "c": "#000000",
+          "h": 45.78762936906355,
+          "id": "E9B0E819-774F-4AF2-8571-68874B98CEED",
+          "t": "rectangle",
+          "w": 1866.4647304268585,
+          "x": 5070.520151255419,
+          "y": 171.0663251631136
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1864.8147194116457,
+          "id": "56059381-DDA2-4955-B7E7-343662F8D17F",
+          "rot": 4,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1165.5091996322785,
+          "x": 3841.389063033,
+          "y": 38.37960847572934
+        }
+      ],
+      "span": true,
+      "th": 1800,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "25B8B17F-95A3-4636-85E6-B346CDA12EA9"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "40C84013-B2FE-464E-ADBC-F3716977BCED"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "04656FBE-0554-456D-BDC2-FD18123C6C46"
+        }
+      ],
+      "tw": 2400
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": null,
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "9B2BA297-3919-4691-A358-C90C3C2AAF95",
+      "l": "GitHub - Banner 2",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1729.2352056921452,
+          "id": "65C1B136-8DC1-44F3-A87C-FA1F0896D74A",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2624.0841932531152,
+          "x": 0,
+          "y": 35
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1554.298656745866,
+          "id": "04706C70-2FA3-4CE7-A995-2081D0EF7568",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2027.3460740163473,
+          "x": 3264.036490587302,
+          "y": 180.76477504210337
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 1997.3615930355058,
+          "id": "7AEF6479-248B-48AF-BB4C-81121DC8A7B5",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 978.7071805873979,
+          "x": 5155.129256296008,
+          "y": 7.347269030735845
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 1971.801207018598,
+          "id": "E3A06A0B-DF45-42B4-9B39-F4D1B68CAA55",
+          "rot": 8,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 932.9769774128499,
+          "x": 5988.30723231929,
+          "y": 89.60981577616639
+        },
+        {
+          "c": "#000000",
+          "h": 45.78762936906355,
+          "id": "896338E2-EB9C-4C15-B96B-83567F3B12C5",
+          "t": "rectangle",
+          "w": 1889.1897304268584,
+          "x": 266.76763478657074,
+          "y": 218.96573672875553
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1890.0561310969774,
+          "id": "086BBEE4-59C8-4A2F-95B2-E6EBA28E2FB4",
+          "rot": 356,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1181.2850819356108,
+          "x": 2296.1632422708676,
+          "y": 60.99999999999996
+        }
+      ],
+      "span": true,
+      "th": 1800,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "EA6309F4-CFDE-4F83-8C22-2F15C75619F0"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "35CCB523-7544-44A2-9737-EA81A28BEBBB"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "27023805-7C68-4661-A950-C8B140DCA764"
+        }
+      ],
+      "tw": 2400
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "6B3C94A6-A870-4A05-8687-48F7E685E388",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "7A5FC001-AC09-4857-84DC-E1349BC5CBC3",
+            "l": 1
+          }
+        ]
+      },
+      "id": "9327B4DE-2CB4-45F5-A037-9B07849FA6B0",
+      "l": "Play Store - Icon",
+      "lm": true,
+      "s": [
+        {
+          "c": "#98989D",
+          "h": 385.4594075483012,
+          "id": "73C18CF2-D17D-43A8-B937-AF0BBB21FAA1",
+          "ifn": "73C18CF2-D17D-43A8-B937-AF0BBB21FAA1.png",
+          "t": "image",
+          "w": 385.4594075483012,
+          "x": 63.27029622584939,
+          "y": 63.27029622584939
+        }
+      ],
+      "th": 512,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "81447DA6-3BA2-4C8E-B782-EB0A17DE5FED"
+        }
+      ],
+      "tw": 512
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "6B3C94A6-A870-4A05-8687-48F7E685E388",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "7A5FC001-AC09-4857-84DC-E1349BC5CBC3",
+            "l": 1
+          }
+        ]
+      },
+      "id": "7EAB3190-9E8C-478D-B18A-3AD15B16DDA1",
+      "l": "Play Store - Banner",
+      "lm": true,
+      "s": [
+        {
+          "br": 40,
+          "c": "#00000000",
+          "ct": false,
+          "dc": "pixel9",
+          "h": 843,
+          "id": "81F4F081-CE0B-4FD7-AC39-66CB51252258",
+          "rot": 347.7482689055177,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 398.87367405978785,
+          "x": 327.69959210701836,
+          "y": 40.407497486231144
+        },
+        {
+          "c": "#98989D",
+          "h": 153.7490913672852,
+          "id": "B6A6E564-14BD-4E2C-83BE-B0E0C6547063",
+          "ifn": "B6A6E564-14BD-4E2C-83BE-B0E0C6547063-DAE8E40B-D884-4885-B20E-D34DE51D4B52.png",
+          "t": "image",
+          "w": 153.7490913672852,
+          "x": 49.37003707497297,
+          "y": 308.1584061189459
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 843,
+          "id": "6B385383-9087-4407-A5F6-BCCD3507553A",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 398.87367405978785,
+          "x": 612.1012525638561,
+          "y": 6.611518921786754
+        }
+      ],
+      "th": 500,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "617B6C51-292D-4FC7-9A12-E7A08AD358EB"
+        }
+      ],
+      "tw": 1024
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "pixel9",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "961E2ED3-1432-46EA-AF1F-5738741BB18E",
+      "l": "Play Store - Android Phone",
+      "lm": true,
+      "s": [
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "3743F28F-5F34-44DF-BB62-C1344E977A82",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook,\nsynced to every screen",
+          "w": 1022.2037005337838,
+          "x": 208.89814973310786,
+          "y": -7
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "66D0D0B8-21EC-4A23-BB87-E6752A3FF055",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for\nthe whole band",
+          "w": 1022.2037005337838,
+          "x": 4528.898149733108,
+          "y": -6
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "BCA825F9-17AA-43E4-B083-B2DADC46AE6F",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or\nthe whole set",
+          "w": 1022.2037005337838,
+          "x": 8848.898149733108,
+          "y": -6
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "548C4B51-5A44-4D12-931B-0EE3BD557EF9",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready\nfor the gig",
+          "w": 1022.2037005337838,
+          "x": 5968.9,
+          "y": -6
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "FBB8B181-3E9E-4E5D-894D-54877E5EB7A2",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for\nthe way you play",
+          "w": 1022.2037005337838,
+          "x": 1648.8981497331079,
+          "y": -6
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "E0FEC851-81EC-44B6-8C8C-C8499E10661E",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 208.75874984246542,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "86C5094C-7824-48C3-A275-E77ABC609C41",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 1648.7587498424655,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "EC006B91-63B4-4E65-A612-458B33CEA364",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 8848.758749842465,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "DA524406-7F42-414F-A1BA-74CA1EF32DD6",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 4528.7587498424655,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "86ADCB5A-F951-450E-8C95-93CDFD7A4A02",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 5968.76,
+          "y": 336
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "C534D816-E105-4E71-8A82-5608E42D32FC",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar,\nukulele, and more",
+          "w": 1022.2037005337838,
+          "x": 10288.898149733108,
+          "y": -6
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "C176255B-6773-49E9-9A1F-005488045EF1",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 10288.758749842465,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "DAB6B205-C77D-4025-A341-637502238972",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 3088.76,
+          "y": 336
+        },
+        {
+          "br": 40,
+          "c": "#00000000",
+          "dc": "pixel9",
+          "h": 2160,
+          "id": "A935263D-B365-499A-BACE-80BF8DEF138E",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1022.0250723240116,
+          "x": 7408.7587498424655,
+          "y": 336
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "D0D16F2F-AD0F-4E67-A630-496929AF555C",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that\nknows each song",
+          "w": 1022.2037005337838,
+          "x": 3088.9,
+          "y": -6
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 342,
+          "id": "EE8E8DEA-7C80-497B-ABD8-084D2D201383",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 1022.2037005337838,
+          "x": 7408.898149733108,
+          "y": -6
+        }
+      ],
+      "span": true,
+      "th": 2560,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "D1A1CC08-B434-415A-AF08-B1F63EF1F6E6"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "A130E645-8333-413D-AB41-F03A976BE9DB"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "DADE7357-2969-425A-9D39-BCF7A131FDE7"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "B313D20B-C937-4308-B169-19FF14424F62"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "E156AEF0-8E7B-4A2E-B7A3-98E0F257DBC0"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "A7047206-7ED0-432F-8817-5D1461B4E3DA"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "28EF4A2F-25D5-40F5-B6A6-2B7477C5CF2E"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "E462D93E-80BE-4AE8-B627-7B94B77025C2"
+        }
+      ],
+      "tw": 1440
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "androidTablet",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "C6B36C5A-7011-4721-AD0F-CE92E91DC1F2",
+      "l": "Play Store - Android Small Tablet",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "ct": false,
+          "dbc": "#000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "4D934C51-5374-4841-811E-11D22E3B6195",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 120,
+          "y": 333
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "9E4702A5-E592-4DCE-8463-4C126DB25EFA",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 1320,
+          "y": 333
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "F8818524-DA9F-4F9A-B4DD-7D669E8DE543",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 3720,
+          "y": 333
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "978B9C35-8ED3-419B-ADD2-6897E068D7B5",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 4920,
+          "y": 333
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "546D3D62-98E3-4953-B13D-22B7C742F10D",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 7320,
+          "y": 333
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "8EE39000-AFE1-48FC-A563-006720B80855",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook,\nsynced to every screen",
+          "w": 1022.2037005337838,
+          "x": 88.89814973310808,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "38939BCB-5A4C-4A6C-A8F3-2A146EA586EF",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for\nthe whole band",
+          "w": 1022.2037005337838,
+          "x": 3688.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "5D3DCCF4-8BFD-4B95-A9A5-28EF4D1ACF23",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or\nthe whole set",
+          "w": 1022.2037005337838,
+          "x": 7288.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "D711DDE1-40A1-409F-851E-5172301D1B3F",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for\nthe way you play",
+          "w": 1022.2037005337838,
+          "x": 1288.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "E9AC1689-4C28-4C0D-87B0-E095E3A58BBE",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready\nfor the gig",
+          "w": 1022.2037005337838,
+          "x": 4888.9,
+          "y": 0
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "C6E76C96-FA8A-446E-B1F8-112971981AB0",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 8520,
+          "y": 333
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "8586E3F0-2710-41F0-832C-D57878ABDCD3",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar,\nukulele, and more",
+          "w": 1022.2037005337838,
+          "x": 8488.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "20EAAB0A-0863-4F0C-A18A-E4ADC7CABAA3",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 2520,
+          "y": 333
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 1536,
+          "id": "EBD2CD65-B695-45DB-8EDD-1843426B86DE",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 960,
+          "x": 6120,
+          "y": 333
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "F4963247-2681-41A9-A1B2-8E880C2E65A0",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that\nknows each song",
+          "w": 1022.2037005337838,
+          "x": 2488.9,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 80,
+          "fw": 400,
+          "h": 336,
+          "id": "94006E75-A1EC-4503-A70C-138490E4EB9E",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor\nwith live preview",
+          "w": 1022.2037005337838,
+          "x": 6088.898149733108,
+          "y": 0
+        }
+      ],
+      "span": true,
+      "th": 1920,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "BF921462-4AAD-4D14-8536-3B73903C0C5F"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "86D661DE-3EF9-46C1-9578-EEB2F665A848"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "12135D53-C044-4EC2-9055-F81B39316D29"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "39B49285-CAD1-48D6-BE5B-C5402CBE3EFB"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "F69D97C8-5CDA-4BEF-A3C2-3AE2D4553B4F"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "A5DC94EA-DE0B-42D5-BC5F-66E3CD158583"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "19A453D6-A0E7-4751-9AC9-E7BD3ED074D0"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "69FE00A7-0BDF-422C-9A8A-C0FBC2D604D2"
+        }
+      ],
+      "tw": 1200
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "ipadPro13",
+      "ddfi": "ipadpro13-spacegray-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "4AB75520-E483-4E51-93A8-568848CE24BB",
+      "l": "Play Store - Android Large Tablet",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "16B8DCE5-B06B-424D-A16F-10347A767CFC",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 567.3693362532188,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "4549E5BC-F0A0-43F6-B113-EDEB231B1A08",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 3319.369336253219,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "15EEFA24-20AB-4AE1-B19F-CE73EFEF9582",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 2757.858828756438,
+          "x": 0,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "2F222AD6-58E5-4CF6-B3BF-4DE6E16A8D8A",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 2757.858828756438,
+          "x": 2752,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "F8A110B0-858B-4404-9CC6-4E9C64ADED5F",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 2757.858828756438,
+          "x": 8256,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "95EF8BAF-83EA-46B1-917D-1D35FF9CF959",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 2757.858828756438,
+          "x": 16512,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "45E80E61-E7AD-4661-8FB1-DB9D46FD48A3",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 2757.858828756438,
+          "x": 11008,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "92CD458E-CCD1-4149-8D04-3F6692AE8ED8",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 8823.36933625322,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "C0F91031-10AE-4E1E-99D5-140195101739",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 17079.369336253218,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "8451FB65-C8F9-453A-91F4-55CBE9316909",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 11575.37,
+          "y": -149.49
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "3CA4E333-9893-46C7-80A3-386536E4519B",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 2757.858828756438,
+          "x": 19264,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "2614A4B6-02FA-48F0-A80B-A8E2EF3E7741",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 19831.369336253218,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "6BFCB8B7-CF67-4D02-83FA-D16E38BB6688",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 6071.37,
+          "y": -149.49
+        },
+        {
+          "c": "#00000000",
+          "dc": "androidTablet",
+          "h": 2597,
+          "id": "18EA034A-485E-4696-8780-13CB5EECBA75",
+          "rot": 270,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1623.12,
+          "x": 14327.36933625322,
+          "y": -149.48619003577403
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "A2D4F6A9-049F-4A1A-B428-EFC99C9DBC1F",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 2757.858828756438,
+          "x": 5504,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 329.8736037827182,
+          "id": "AD8D0399-245B-4E64-814A-D2F023E30EB2",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApDaG9yZFBybyBlZGl0b3Igd2l0aCBsaXZlIHByZXZpZXd9",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 2757.858828756438,
+          "x": 13760,
+          "y": -0.1508904734397163
+        }
+      ],
+      "span": true,
+      "th": 2064,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "A181051B-2A14-4B75-A443-7EB05E9AFBDE"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "696C73D1-2F06-47C7-8F23-697692BD4345"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "5C255B13-667A-494E-8D0E-8A2F1EBFDBCB"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "0BA4596E-09B5-4297-A544-A01C717CE376"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "DA6C3891-7A37-4A8F-91F1-CE30B978B68A"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "57F1DD79-9558-4026-AB47-D07499CD7ED0"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "98897F5B-5054-4D0D-A7E1-794EE48B83D0"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "37EABA8F-6DE5-40F3-B127-D675082AE287"
+        }
+      ],
+      "tw": 2752
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "ipadPro13",
+      "ddfi": "ipadpro13-spacegray-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "15F6D06E-114E-468A-BEA1-E074FA445ECA",
+      "l": "Play Store - Chromebook",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "2703B4B3-4247-48B7-9B6E-33F91AE7CD5E",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 191.17373890227742,
+          "y": 66
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "4687A423-0598-47C6-B651-CC43E949069F",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 2111.1737389022774,
+          "y": 66
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "82836993-8751-40CA-A932-BE72067DE6DC",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 5951.173738902276,
+          "y": 65.90130711466612
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "081328B3-6BCE-4CB5-8876-52BC77526730",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 7871.173738902277,
+          "y": 65.90130711466618
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "F77142DA-263F-47CE-9F8B-DBD2AB206777",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 11711.173738902278,
+          "y": 65.90130711466618
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 145.77228886406763,
+          "id": "A5214095-6365-4183-9E85-B95A79DE6AD2",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 1924.0875549463522,
+          "x": -2.043777473176034,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 146,
+          "id": "F77CB90C-99A3-410D-B9D8-F4A959C63F6B",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 1924.0875549463522,
+          "x": 1917.9562225268237,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 146,
+          "id": "6EEBD86B-3300-4296-9C57-5E640FDA7AC0",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 1924.0875549463522,
+          "x": 5757.956222526824,
+          "y": -0.07895431749752793
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 145.98837209302326,
+          "id": "917400FD-2DDE-45DF-B606-091E88D90BA9",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 1924.0875549463522,
+          "x": 11517.956222526824,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 146,
+          "id": "BD06FA5C-62BD-4FE1-84B7-0FB0DC47771C",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 1924.0875549463522,
+          "x": 7677.956222526824,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "FC0CF9E4-19E4-44A4-AE3F-FDE47D9838A4",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 369.7098622957616,
+          "y": 174.03477564789173
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "BA3E1F0C-0BC3-4AF5-A7AC-7765BDB4129A",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 2289.7098622957615,
+          "y": 174.03477564789176
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "0F17F21B-98BF-432A-ACA3-321A79286C11",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 6129.709862295761,
+          "y": 174.03477564789173
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "19709620-D856-45A3-80FB-8CEED487BAC5",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 8049.709862295762,
+          "y": 174.03477564789173
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "E75B3880-A3CB-410A-9B60-D0363A0FAEC4",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 11889.709862295762,
+          "y": 174.03477564789176
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "FAA958CB-7B8A-4576-B5B8-EC9E06114BAB",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 13631.173738902278,
+          "y": 65.90130711466618
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 145.98837209302326,
+          "id": "404EED3C-054E-422B-B9C3-F3B054AFDE98",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 1924.0875549463522,
+          "x": 13437.956222526824,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "074F84FC-1EB7-41BB-A77A-213AE5C9AC5E",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 13809.709862295762,
+          "y": 174.03477564789176
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "7BCB9F33-F39A-47BB-AA7B-A4BE04903A6C",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 4031.17,
+          "y": 66
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro14-silver-landscape",
+          "h": 999.6300879587021,
+          "id": "2AFA0C41-A745-42C5-BC9E-01D949F9616C",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1537.6525221954453,
+          "x": 9791.17,
+          "y": 66
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 146,
+          "id": "F20E6F31-231A-41D9-B868-1398C1EF456C",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 1924.0875549463522,
+          "x": 3837.96,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "B81FFAE9-DFE2-4E44-8026-8D30341E8932",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 4209.71,
+          "y": 174.03
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 64,
+          "fw": 400,
+          "h": 146,
+          "id": "32AC5D0A-D6C9-4196-8BB3-97D94A6698BE",
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczEyOCBcY2YyIENob3JkUHJvIGVkaXRvciB3aXRoIGxpdmUgcHJldmlld30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 1924.0875549463522,
+          "x": 9597.96,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 35.27920842344659,
+          "id": "EB65F35C-A3E4-4A9A-AA16-143513503862",
+          "t": "rectangle",
+          "w": 1180.5802754084766,
+          "x": 9969.71,
+          "y": 174.03
+        }
+      ],
+      "span": true,
+      "th": 1080,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "C2BFE6F4-4782-4EC9-8104-4FA599212876"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "16659421-F250-4861-BCD6-5D970FF0AF8D"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "74B8F349-BA11-4806-A64F-71BA3245D12E"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "DA10F06A-F456-41A6-9600-CDBA896AE3A1"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "B5C24ADF-EA9F-4F1B-BB43-48955C60F7A6"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "46CD83D4-585F-45D3-9C07-DC24DF7BB170"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "58A5D9A0-A586-4232-A252-444CC9D75170"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "D04B828F-EA29-4DA7-8D17-910F7BCA9879"
+        }
+      ],
+      "tw": 1920
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "ddfi": "iphone17promax-cosmicorange-portrait",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "CA8CB67F-AD3B-4CE6-95F1-1A23555C1320",
+      "l": "App Store - iPhone",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "A7AD61E8-29DB-4379-B618-00569F6D7C2F",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 1417.8719999999998,
+          "y": 481
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "B7A8D27F-2040-4E88-BA43-7404569A3040",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 4057.872,
+          "y": 481
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "6D59B067-BB93-4042-8E73-7EB9EDAC4CA0",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 5377.87,
+          "y": 481
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "5C397AA9-A8A0-4803-9E50-BE99DF3B7FEF",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 8017.872,
+          "y": 481
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "8F98F77E-CF44-4517-B496-DEDE32C86012",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 97.87199999999991,
+          "y": 481
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "65F0B80F-886D-45A1-B722-71818809A33D",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook,\nsynced to every screen",
+          "w": 1022.2037005337838,
+          "x": 148.89814973310808,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "23B007C0-6F80-4BB6-BE6C-013A98B71897",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for\nthe whole band",
+          "w": 1022.2037005337838,
+          "x": 4108.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "E273B3C1-D1C6-461B-8FB2-0B49D5EEE8EF",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or\nthe whole set",
+          "w": 1022.2037005337838,
+          "x": 8068.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "54520B76-5594-4EAD-8E87-1AE14D95DDD7",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for\nthe way you play",
+          "w": 1022.2037005337838,
+          "x": 1468.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "796B3C98-B838-4C1A-A15C-48C140D87F20",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready\nfor the gig",
+          "w": 1022.2037005337838,
+          "x": 5428.9,
+          "y": 0
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "4DE6F015-097B-43CB-8165-85551D0F86C3",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 9337.872,
+          "y": 481
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "E8D91D61-170D-4BD0-A0C5-7067D053D8AD",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar,\nukulele, and more",
+          "w": 1022.2037005337838,
+          "x": 9388.898149733108,
+          "y": 0
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "C17C5F18-CF9D-4F62-962F-95DF2F658CD7",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 2737.87,
+          "y": 481
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2294.4,
+          "id": "3193DA5F-ED32-4820-A660-4628E518EF9E",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1124.256,
+          "x": 6697.872,
+          "y": 481
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.8,
+          "id": "FBDC6417-7103-4145-B2F3-88F0B6BC2864",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that\nknows each song",
+          "w": 1022.2037005337838,
+          "x": 2788.9,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 514.798449673912,
+          "id": "3F296EB6-7A61-46A3-9837-2DCB92203A7B",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 1022.2037005337838,
+          "x": 6748.898149733108,
+          "y": 0
+        }
+      ],
+      "span": true,
+      "th": 2868,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "FF5436F3-3FB6-4DC1-86AD-16613FD96464"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "70461CB8-0E4E-495A-BD42-4F7F53A8FD9D"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "71F40706-6ACA-456E-B827-0C9DE3E03C33"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "61102915-F7B1-474D-A414-A5E95060BF50"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "B33AF913-7F0C-4D3C-B2FA-7C2BF2F034B8"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "59FFA25D-A628-4E15-905B-56132676A639"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "B9B84397-6E35-4B94-A4B5-E30298CF5AC1"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "CBD6D745-31AB-4E2C-9925-CF27CE9A403B"
+        }
+      ],
+      "tw": 1320
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "ipadPro13",
+      "ddfi": "ipadpro13-spacegray-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "755F5064-0A7F-4F17-828A-E985A26E2A8E",
+      "l": "App Store - iPhone Duo",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "856F6460-9B53-4EFD-BC6C-A7E580062A23",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 270.54840843253317,
+          "y": 289.1772423860729
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "69F4E8E2-1612-4E7E-BC76-D514727104C2",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 3123.5484084325326,
+          "y": 289.177242386073
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "ED53E033-CEBB-4DFC-A1F9-AFFB62A20F89",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 8829.548408432533,
+          "y": 289.17724238607286
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "85268884-E8F5-4D3C-BE08-93472AA4A789",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 11682.548408432533,
+          "y": 289.1772423860729
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "F03131E7-A8E6-4277-B539-84DD412BBE08",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 17388.548408432533,
+          "y": 289.17724238607286
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "A2E15B5B-E169-4446-9419-4AABA670E4B7",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 2859.0738511780955,
+          "x": -3.0369255890475984,
+          "y": -0.14672344001623416
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "00193584-ADB7-4A45-AB90-04F273671952",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 2859.0738511780955,
+          "x": 2852.999999999999,
+          "y": -0.14672344001621798
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "511A2A6F-6283-438C-A9B9-BA2A1FDA120C",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 2859.0738511780955,
+          "x": 8559,
+          "y": -0.1467234400162231
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "5C22E3F2-1CC9-4CBF-9462-D580D2ADCEB4",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 2859.0738511780955,
+          "x": 17118,
+          "y": -0.14672344001620777
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.89638081395344,
+          "id": "4A490806-3BCB-4096-A02E-2EA9587A10F1",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 2859.0738511780955,
+          "x": 11408.96307441095,
+          "y": -0.1481621107967725
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "5A487998-7174-46FC-AD2B-AB43DB7439EC",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 20238.511482843485,
+          "y": 289.1772423860729
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "40C2C536-56D2-48B9-A33F-57672A108D8D",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 2859.0738511780955,
+          "x": 19967.963074410953,
+          "y": -0.14672344001623697
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "59956D81-94ED-43EA-A222-703BBB29C354",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 5973.511482843486,
+          "y": 289.17724238607286
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphoneduo-nightsky-landscape",
+          "h": 1683.9619774010273,
+          "id": "366C96B8-13B4-4758-B16E-F5C676EF8883",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2317.9770343130294,
+          "x": 14532.511482843485,
+          "y": 289.1772423860728
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.89638081395344,
+          "id": "F17CC6D1-C85C-44EE-B2A5-17E80313D0C2",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 2859.0738511780955,
+          "x": 5702.963074410953,
+          "y": -0.14816211079679148
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 270.8935034723923,
+          "id": "31CAFE2D-3C0C-48E3-85C1-29E38695BABE",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApDaG9yZFBybyBlZGl0b3Igd2l0aCBsaXZlIHByZXZpZXd9",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 2859.0738511780955,
+          "x": 14261.963074410953,
+          "y": -0.1467234400162091
+        }
+      ],
+      "span": true,
+      "th": 2007,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "685272C7-723E-4934-B6A3-AD32CE7C6E98"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "7BBA07C2-17FA-44F7-A8C5-0848AC099AC1"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "02F8DBB6-E424-416C-B0B9-F086B0376852"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "E1B8C6EE-15BB-4234-8767-5248135FEB62"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "C0282D1A-C47E-47F6-83EE-14D3D42EB4DA"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "E4A5DF6E-C4AE-444A-BB41-C0685D804CAE"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "E7E63966-80D1-49CB-8244-C31B71D800DA"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "55425930-AA0C-43E0-A360-F5DEB0C6D0DA"
+        }
+      ],
+      "tw": 2853
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "ipadPro13",
+      "ddfi": "ipadpro13-spacegray-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "5B53E8FA-F8D5-4D72-B0A6-58D1F847CB0E",
+      "l": "App Store - iPad",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "1C89F056-8990-47C1-A02B-F2003791531F",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 221.6603260869563,
+          "y": 251
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "DC156951-2029-4052-91D1-6C5D4AF77453",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 2973.6603260869565,
+          "y": 251
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "E9637A37-FA1F-475E-9D9A-6014D7D2E09E",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 8477.660326086956,
+          "y": 251
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "F0D3D976-AE13-4926-B369-BF604691E7C1",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 11229.660326086956,
+          "y": 251
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "7F1AA89D-8E27-4423-8913-5268DA5AE123",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 16733.660326086956,
+          "y": 251
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "BC52AD19-C11E-4247-9E40-09FFACB745C7",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 2757.858828756438,
+          "x": 0,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "B6FF875C-CED6-4AEE-992C-B974B50A1B98",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 2757.858828756438,
+          "x": 2752,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "CD21889C-D539-4E81-8C4A-1D02DE240A47",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 2757.858828756438,
+          "x": 8256,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "BB295E6E-E7B8-49B0-971A-A9BFBEE774A3",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 2757.858828756438,
+          "x": 16512,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.59,
+          "id": "58E22D9F-75DF-4359-831F-B9AAC7D3EA17",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 2757.858828756438,
+          "x": 11008,
+          "y": -0.15
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "2B2AF3CD-36B0-44A1-82BF-A1ACFAC9C634",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 19485.660326086956,
+          "y": 251
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "C4D41EAB-7D53-4DAC-9674-A9F220D18B0C",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 2757.858828756438,
+          "x": 19264,
+          "y": -0.1508904734397163
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875,
+          "id": "46FDD5C8-D5AA-4473-A542-560FD3BD3C12",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 5725.66,
+          "y": 251
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1769.9875000000002,
+          "id": "1256A912-8211-4ED9-9A49-38176978EE6A",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2308.6793478260875,
+          "x": 13981.660326086956,
+          "y": 251
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.59,
+          "id": "D400EBD8-5185-4215-AD8D-B5A905B1A733",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 2757.858828756438,
+          "x": 5504,
+          "y": -0.15
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 100,
+          "fw": 400,
+          "h": 278.5870409402181,
+          "id": "6797F949-2FE5-4EAD-AF5F-0768E2125B25",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczIwMCBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApDaG9yZFBybyBlZGl0b3Igd2l0aCBsaXZlIHByZXZpZXd9",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 2757.858828756438,
+          "x": 13760,
+          "y": -0.1508904734397163
+        }
+      ],
+      "span": true,
+      "th": 2064,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "102AC8B0-4178-4355-809A-7AD2171E13FA"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "9ACC900E-7078-4EE3-BD35-F44B98BDC140"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "AB911478-B5F8-4241-AE83-6C0E750C83CB"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "3BB4AE79-31E5-443C-8A15-6012760460AA"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "04DE43E2-0810-4893-B0B0-74F1AF846C7C"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "7CF35753-EABF-4000-89C5-055ECFD86055"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "A7BC8A09-40E0-4457-BBA0-A4233FF9371F"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "136192CB-ED26-4717-BFE2-F5087F4616DC"
+        }
+      ],
+      "tw": 2752
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "3B999464-CF3B-4C8E-8797-66352D367D95",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "500D2489-804E-44B4-AC13-55B60FE559EE",
+            "l": 1
+          }
+        ]
+      },
+      "id": "AACF099E-6929-47B0-8F4E-DF44DFEEC7B2",
+      "l": "App Store - Header",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1417,
+          "id": "0AA29A5B-CB51-4E7C-A51A-2731A50CF5CE",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2150,
+          "x": 845.0000000000001,
+          "y": -46.56273369291181
+        },
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 1035,
+          "id": "314E6F12-62B3-43E6-AFC9-45AEEFC1A93B",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1350,
+          "x": 380.15376589944407,
+          "y": 511.01665928663283
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 1183.6130526693214,
+          "id": "2F9B04F3-7D8C-4620-913B-6E04AB95A586",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 580.0247731304486,
+          "x": 2761.7179874763383,
+          "y": 436.7101329519721
+        }
+      ],
+      "th": 1646,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "9F0BDF85-10D0-49A9-B244-7B84A0A663BE"
+        }
+      ],
+      "tw": 3840
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "58E3571A-1ADF-4E5A-9153-A97B46861353",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "1AB6F91A-0628-43DF-B72D-BCABB4A76A3A",
+            "l": 1
+          }
+        ]
+      },
+      "id": "D93A0DED-074D-4C47-B097-5CAC6DEC5DCA",
+      "l": "App Store - Search results",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "ipadPro13",
+          "dfi": "ipadpro13-silver-landscape",
+          "h": 2070,
+          "id": "ED8E5E00-0CFF-457A-AFA4-33AF67028484",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2700,
+          "x": 250,
+          "y": 440
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 140,
+          "fw": 400,
+          "h": 260,
+          "id": "A49AF84C-2533-4EC4-81C3-6A12843251D0",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "Lyrics, chords, and the click, wherever you play",
+          "w": 3600,
+          "x": 120,
+          "y": 80
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 2041,
+          "id": "6C521209-C873-42BB-AA97-1E99B34EB7DE",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1000,
+          "x": 2640,
+          "y": 480
+        }
+      ],
+      "th": 2560,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "66BBF4EA-682E-46E0-9B98-F994067B85C4"
+        }
+      ],
+      "tw": 3840
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "macbook",
+      "ddfi": "macbookpro16-silver-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "09A157EA-A360-4800-B9F6-72E4ED90178F",
+      "l": "Mac App Store - Mac",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "63DB7C82-EA38-4B0D-8BF9-7D6F593E5203",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 254.37299131253363,
+          "y": 211.7778270129643
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "14EF713E-EB94-4D66-8D7B-2BE58BD04058",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 3134.3729913125335,
+          "y": 202.77782701296428
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "12A7E58E-DA16-4127-B211-CF2F8CE6D188",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 11774.372991312535,
+          "y": 202.77782701296428
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "6E3DA5D2-D356-4D97-8CA9-4D709F186D85",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 8894.372991312533,
+          "y": 202.77782701296437
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "E0DDA2AD-617A-4F09-99DC-022E52EAC4D3",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 17534.372991312535,
+          "y": 202.7778270129642
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "FD393532-5219-41BB-ADE6-23CE396B862C",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 1840.1723321837587,
+          "x": 519.9138339081206,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "8D2ED49E-91A8-4B1D-9637-470D5A2ED4AF",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 2873.0552513533985,
+          "x": 2878.488272596861,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "95874928-8543-45CA-B2D5-ED2CE694619F",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 2873.0552513533985,
+          "x": 8643.4723743233,
+          "y": -1.84297022087776e-14
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "F4CD9BEF-8B70-46C8-B35C-212AE1F2FC93",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 2873.0552513533985,
+          "x": 11523.4723743233,
+          "y": -1.4210854715202004e-14
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "4617822E-CC6D-41F9-86F0-0F1A9925E98F",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 2873.0552513533985,
+          "x": 17283.4723743233,
+          "y": 2.6645352591003757e-14
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "A7E5EE91-7319-4816-B77E-E8BA362BB6EB",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 20414.372991312535,
+          "y": 202.7778270129642
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "376BE251-1063-4639-A846-2177F4E815ED",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 2873.0552513533985,
+          "x": 20163.4723743233,
+          "y": 2.6645352591003757e-14
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "50CF5A43-FD4C-4637-AA72-B1AEF94E30AC",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 6014.37,
+          "y": 202.78
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "40188829-EB1E-49FA-8B57-D9D22249EC85",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 14654.37,
+          "y": 202.78
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.55,
+          "id": "AB9DB970-5604-4A0F-8B3A-04CBDA722759",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 2873.0552513533985,
+          "x": 5758.49,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.55,
+          "id": "7DCA475A-9ED0-4D94-9261-0E6E85E58CF2",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApDaG9yZFBybyBlZGl0b3Igd2l0aCBsaXZlIHByZXZpZXd9",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 2873.0552513533985,
+          "x": 14398.49,
+          "y": 0
+        }
+      ],
+      "span": true,
+      "th": 1800,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "0CEA2249-E5E6-4900-8874-88857C5D0AB8"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "5CCBAA12-1871-4957-A2EC-4620306C94D5"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "5919FE75-5937-4411-88EC-CAA76D6B430A"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "D069FDDB-5D51-435B-8D60-8AE4897B2C4C"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "4F986C6D-657A-4C8A-A446-1BFE13809C5B"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "CCFE49FD-7F17-483A-B6D6-686C9CED3A5C"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "C682327B-826E-4E41-A854-4D08E8FADA2A"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "107EBCE5-0CCE-429B-AA85-B9F2B35E552B"
+        }
+      ],
+      "tw": 2880
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "6B3C94A6-A870-4A05-8687-48F7E685E388",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "7A5FC001-AC09-4857-84DC-E1349BC5CBC3",
+            "l": 1
+          }
+        ]
+      },
+      "id": "3727497D-ADCA-453D-AA5C-C6497A58EE75",
+      "l": "Microsoft Store - Poster Art",
+      "lm": true,
+      "s": [
+        {
+          "c": "#98989D",
+          "h": 778.6122038597587,
+          "id": "6E2C1E98-6ED2-46BA-A471-000E321E10F3",
+          "ifn": "6E2C1E98-6ED2-46BA-A471-000E321E10F3-08064BF7-AC2F-476F-ABE7-FD5F5C6CCF9B.png",
+          "t": "image",
+          "w": 724.0640856696209,
+          "x": 357.96795716518955,
+          "y": 690.6938980701207
+        }
+      ],
+      "th": 2160,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "A90C3368-301A-4EBB-860A-2372E63CFD4E"
+        }
+      ],
+      "tw": 1440
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "6B3C94A6-A870-4A05-8687-48F7E685E388",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "7A5FC001-AC09-4857-84DC-E1349BC5CBC3",
+            "l": 1
+          }
+        ]
+      },
+      "id": "19A47DEC-D234-45F4-B9C5-F95358344161",
+      "l": "Microsoft Store - Box Art",
+      "lm": true,
+      "s": [
+        {
+          "c": "#98989D",
+          "h": 1003.2846090451753,
+          "id": "AC4C2CBF-9932-4C16-91AC-99A82A596F4C",
+          "ifn": "AC4C2CBF-9932-4C16-91AC-99A82A596F4C-98C16C5F-9387-4B03-81ED-54D11FC1E0A9.png",
+          "t": "image",
+          "w": 1003.2846090451753,
+          "x": 578.3576954774123,
+          "y": 578.3576954774123
+        }
+      ],
+      "th": 2160,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "60513F63-CC07-46A9-A127-6E474F485389"
+        }
+      ],
+      "tw": 2160
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "macbook",
+      "ddfi": "macbookpro16-silver-landscape",
+      "gc": {
+        "a": 135,
+        "gt": "radial",
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "2BAB71A7-6859-4570-874F-3C0EB4E8ADF8",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "FF8F295E-AE6C-4AF7-876D-80DFC14A2F33",
+            "l": 1
+          }
+        ]
+      },
+      "id": "C369F36A-B693-46C7-A53C-E8AA13CC6D53",
+      "l": "Microsoft Store - Windows",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "ct": false,
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "17E9F1BC-8AAE-4513-B260-B283974B2603",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 254.37299131253363,
+          "y": 202.7778270129643
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "ADF48AA5-B84C-4613-BD71-6A65FA8880CB",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 3134.3729913125335,
+          "y": 202.77782701296428
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "50316045-C205-4B4E-8EE5-8BB16E46A5DF",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 11774.372991312535,
+          "y": 202.77782701296428
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "6441765D-14D3-43BB-A6B2-4DC9373E6A08",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 8894.372991312533,
+          "y": 202.77782701296437
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "20B42C8E-CA70-4261-9F0D-514CF8A0F1E9",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 17534.372991312535,
+          "y": 202.7778270129642
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "523E1C8D-DED3-41C9-B5AB-52BF98B6492A",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApZb3VyIHNvbmdib29rLCBvbiBldmVyeSBzY3JlZW59",
+          "t": "text",
+          "ta": "center",
+          "txt": "Your songbook, synced to every screen",
+          "w": 1840.1723321837587,
+          "x": 519.9138339081206,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "25BB79DB-A40E-4493-B373-5903E7D11CFB",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApSZWhlYXJzYWwgdG8gc3RhZ2UsIG9uZSB0YXAgYXdheX0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Laid out for the way you play",
+          "w": 2873.0552513533985,
+          "x": 2878.488272596861,
+          "y": 0
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "FE15AAC4-984B-4027-9381-C0C188918428",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApBIHR1bmVyIGZvciB0aGUgd2hvbGUgYmFuZH0=",
+          "t": "text",
+          "ta": "center",
+          "txt": "A tuner for the whole band",
+          "w": 2873.0552513533985,
+          "x": 8643.4723743233,
+          "y": -1.84297022087776e-14
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "C9B13F2E-C35E-43B2-AE69-0C50646005C3",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApTZXRsaXN0cyByZWFkeSBmb3IgdGhlIGdpZ30=",
+          "t": "text",
+          "ta": "center",
+          "txt": "Setlists ready for the gig",
+          "w": 2873.0552513533985,
+          "x": 11523.4723743233,
+          "y": -1.4210854715202004e-14
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "79E2CF54-D50F-4C68-B6FA-8F628C4BFA86",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Print a song or the whole set",
+          "w": 2873.0552513533985,
+          "x": 17283.4723743233,
+          "y": 2.6645352591003757e-14
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "F3AE6091-EB15-4454-857C-2BB6D1CE5232",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 489.5181143850822,
+          "y": 365.7979827832804
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "A6C00531-6ED1-4288-BB26-54974F12F8F0",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 3374.7100832426518,
+          "y": 365.7979827832804
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "FB528150-4411-4912-8377-68144EE897F2",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 9131.499145742651,
+          "y": 365.7979827832805
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "3A46CB47-3522-469E-93D4-18248A6AC9C1",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 12011.499145742653,
+          "y": 365.7979827832804
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "302CA969-DBA1-48F0-A9CE-64CD9E99680A",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 17771.49914574265,
+          "y": 365.7979827832804
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "09E4298F-6DBF-4D63-AA43-4888CB6DF490",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 20414.372991312535,
+          "y": 202.7778270129642
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.554046862603,
+          "id": "04FD4C0A-C131-4219-A364-73F353BDBF62",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApPZmZsaW5lIGZpcnN0LCBzeW5jZWQgYWNyb3NzIGRldmljZXN9",
+          "t": "text",
+          "ta": "center",
+          "txt": "Chords for guitar, ukulele, and more",
+          "w": 2873.0552513533985,
+          "x": 20163.4723743233,
+          "y": 2.6645352591003757e-14
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "5A0016A1-42C6-437E-ACCA-F364D8A946D4",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 20651.49914574265,
+          "y": 365.7979827832804
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "C4252C80-E601-4220-9093-4D03405910D3",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 6014.37,
+          "y": 201.78
+        },
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 1562.623615136476,
+          "id": "1B1C6C38-E0E4-470E-87EB-2D6E466E5584",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 2371.254017374932,
+          "x": 14654.37,
+          "y": 202.78
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.55,
+          "id": "766D4EBE-B09B-4502-B795-5F8B60A09391",
+          "lhm": 0.9,
+          "ls": -5,
+          "t": "text",
+          "ta": "center",
+          "txt": "A metronome that knows each song",
+          "w": 2873.0552513533985,
+          "x": 5758.49,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "09E56CD3-D57E-4680-95A8-91487D000257",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 6254.71,
+          "y": 365.8
+        },
+        {
+          "c": "#FFFFFF",
+          "fn": "Inter",
+          "fs": 110,
+          "fw": 400,
+          "h": 346.55,
+          "id": "26A51596-3214-40F8-AB88-1A4ECD59EA9F",
+          "lhm": 0.9,
+          "ls": -5,
+          "rt": "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyOTA3Clxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmbmlsXGZjaGFyc2V0MCBJbnRlci1SZWd1bGFyO30Ke1xjb2xvcnRibDtccmVkMjU1XGdyZWVuMjU1XGJsdWUyNTU7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O1xjc3NyZ2JcYzEwMDAwMFxjMTAwMDAwXGMxMDAwMDA7fQpccGFyZFx0eDU2MFx0eDExMjBcdHgxNjgwXHR4MjI0MFx0eDI4MDBcdHgzMzYwXHR4MzkyMFx0eDQ0ODBcdHg1MDQwXHR4NTYwMFx0eDYxNjBcdHg2NzIwXHBhcmRpcm5hdHVyYWxccWNccGFydGlnaHRlbmZhY3RvcjAKClxmMFxmczE5MiBcY2YyIFxrZXJuaW5nMVxleHBuZC0yMFxleHBuZHR3LTEwMApDaG9yZFBybyBlZGl0b3Igd2l0aCBsaXZlIHByZXZpZXd9",
+          "t": "text",
+          "ta": "center",
+          "txt": "ChordPro editor with live preview",
+          "w": 2873.0552513533985,
+          "x": 14398.49,
+          "y": 0
+        },
+        {
+          "c": "#000000",
+          "h": 46.65046558549028,
+          "id": "F522A2C1-1C26-45A1-BD1C-6F5A781C2F26",
+          "t": "rectangle",
+          "w": 1897.0017085146962,
+          "x": 14894.71,
+          "y": 365.8
+        }
+      ],
+      "span": true,
+      "th": 1800,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "632F1C53-97A2-4D48-984F-57D52460E22A"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "5F9496F7-E73D-4761-9DFC-05A577882CB9"
+        },
+        {
+          "bgc": "#0091FF",
+          "id": "E170214F-C1E4-4364-9E1F-93ABD7D21EA8"
+        },
+        {
+          "bgc": "#FF9230",
+          "id": "0B980287-A53B-4F8B-BBF5-78D0F414779B"
+        },
+        {
+          "bgc": "#30D158",
+          "id": "918CDF23-56B6-40AD-A105-B7F607706C6B"
+        },
+        {
+          "bgc": "#DB34F2",
+          "id": "1D214F84-4D42-4B73-8405-3CC1A66DAE63"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "0A9D96AB-7582-42DC-A944-5A1CBECF4F7E"
+        },
+        {
+          "bgc": "#FF375F",
+          "id": "38791F88-2845-4260-812C-4E613ADB5677"
+        }
+      ],
+      "tw": 2880
+    },
+    {
+      "bgc": "#0091FF",
+      "bgs": "gradient",
+      "ddbc": "#000000",
+      "ddc": "iphone",
+      "gc": {
+        "a": 135,
+        "s": [
+          {
+            "c": "#5A49CA",
+            "id": "37308663-CC3F-49D2-A02E-1CC4CC3293B9",
+            "l": 0
+          },
+          {
+            "c": "#F57C00",
+            "id": "5E3BCD8C-023F-40A9-957A-408F19C699FE",
+            "l": 1
+          }
+        ]
+      },
+      "id": "EB3026C2-34AF-48BA-A338-DAD16A8014B9",
+      "l": "Website - Link preview",
+      "lm": true,
+      "s": [
+        {
+          "c": "#00000000",
+          "dc": "macbook",
+          "dfi": "macbookpro16-silver-landscape",
+          "h": 671.0514026578994,
+          "id": "F0F1B6A1-0D44-4EC0-947B-185A1EA89CB3",
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 1018.3087718654835,
+          "x": 168.67554779767818,
+          "y": 88.37469469693352
+        },
+        {
+          "c": "#00000000",
+          "h": 181.25254244578292,
+          "id": "5C5B3699-0DE5-4F49-A103-A44793811B5F",
+          "ifn": "5C5B3699-0DE5-4F49-A103-A44793811B5F.png",
+          "t": "image",
+          "w": 181.25254244578292,
+          "x": 22.831259220771905,
+          "y": 419.9003960258832
+        },
+        {
+          "c": "#00000000",
+          "dc": "iphone",
+          "dfi": "iphone17promax-silver-portrait",
+          "h": 950.7712797016529,
+          "id": "7F2F4750-5878-45AF-A1D7-4007CA07394F",
+          "rot": 9.10430162255119,
+          "shd": {
+            "c": "#000000",
+            "en": true,
+            "op": 0.3,
+            "ox": 0,
+            "oy": 30,
+            "r": 40
+          },
+          "t": "device",
+          "w": 465.8779270538099,
+          "x": 768.2253584810109,
+          "y": 35.14102739794826
+        }
+      ],
+      "th": 630,
+      "tp": [
+        {
+          "bgc": "#0091FF",
+          "id": "604B01F3-88EB-41D9-97BF-6293AC116B5C"
+        }
+      ],
+      "tw": 1200
+    }
+  ]
+}
