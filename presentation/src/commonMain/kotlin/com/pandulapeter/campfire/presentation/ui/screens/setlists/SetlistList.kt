@@ -64,6 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxLi
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
+import com.pandulapeter.campfire.presentation.ui.components.list.withSectionStartRoom
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
@@ -205,7 +206,8 @@ internal fun SetlistList(
                 modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull)
                     .measuresFastScrollerColumn(column = scrollerColumn, gridState = listState, isAnimated = hasLoadedLibrary),
                 state = listState,
-                contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
+                contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding)
+                    .withSectionStartRoom(appBarOverlap),
             ) {
                 // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
                 // included, where they are simply empty and each offers to be filled. The library's own empty state belongs

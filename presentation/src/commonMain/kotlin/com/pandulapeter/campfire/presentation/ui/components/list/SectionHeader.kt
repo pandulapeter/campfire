@@ -143,9 +143,11 @@ internal fun SectionHeader(
         .graphicsLayer {
             alpha = contentOpacity()
             // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls. Coming into
-            // the pinned place it also settles down by what the row is shorter than the bar, onto the buttons' center line.
+            // the pinned place it also settles onto the buttons' center line, which is below a row stuck at the top and
+            // above one resting at the start of its section.
+            val state = state()
             translationY = pushedDistancePx() * SECTION_HEADER_CONTENT_PARALLAX_FRACTION +
-                state().pinnedFraction * ((LIST_APP_BAR_HEIGHT - SECTION_HEADER_ROW_HEIGHT) / 2).toPx()
+                state.pinnedFraction * ((LIST_APP_BAR_HEIGHT - SECTION_HEADER_ROW_HEIGHT) / 2).toPx() - state.belowPinnedPlacePx
         }
     val pillContent: @Composable () -> Unit = {
         Row(

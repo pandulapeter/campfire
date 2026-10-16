@@ -56,6 +56,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
+import com.pandulapeter.campfire.presentation.ui.components.list.withSectionStartRoom
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
@@ -211,7 +212,7 @@ internal fun SongList(
                     bottom = true,
                     extraEnd = scrollerColumnWidth,
                     extraBottom = 8.dp + selectionBottomPadding,
-                ),
+                ).withSectionStartRoom(appBarOverlap),
             ) {
                 placeholder?.let {
                     item(

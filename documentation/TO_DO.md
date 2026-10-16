@@ -10,9 +10,11 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Songs / Setlists cards too close to the FAB + floating pill
-- Setlist header too close to content
+- Sticky header pinning issues
+- Songs / Setlists header spacing should be reduced
+- Review in Claude cloud + https://github.com/skydoves/compose-performance-skills
 - Songs / Setlists floating pill touch feedback should fill the pill
+- Fix golden tests
 - Metronome header too close to window top - inconsistent between navigation rail vs bottom navigation
 - Regenerate all screenshots and the promo videos
 - Regenerate the Android baseline profiles

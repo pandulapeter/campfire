@@ -25,10 +25,17 @@ import androidx.compose.ui.unit.offset
 /**
  * The fraction of the outgoing header still visible in the grid, and how far into the pinned position at the top of
  * the grid the header has come - which is where the app bar's buttons are over it.
+ *
+ * @param pinnedFraction Measured from the start of the grid's content, below its [SECTION_START_ROOM], so that a header
+ *   resting at the start of its section counts as pinned as much as one stuck at the very top while its section is read.
+ * @param belowPinnedPlacePx How much lower the row is laid out than a header stuck at the very top, weighted by
+ *   [pinnedFraction]: a section's start is the room lower, and the row's content is drawn that much higher to stand
+ *   level with the bar's buttons all the same.
  */
 internal data class SectionHeaderState(
     val visibleFraction: Float,
     val pinnedFraction: Float,
+    val belowPinnedPlacePx: Float = 0f,
 )
 
 /** The outgoing pinned header's position in the grid, including the part already above its viewport. */
@@ -59,7 +66,8 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
                 PushedSectionHeader(
                     key = item.key,
                     index = item.index,
-                    offset = item.offset,
+                    // In the viewport's coordinates, where the copy is drawn, rather than the content's.
+                    offset = item.offset.copy(y = item.offset.y - top),
                     width = item.size.width,
                     pushedDistance = top - item.offset.y,
                     visibleFraction = (item.offset.y + item.size.height - top).toFloat() / item.size.height,
@@ -94,9 +102,14 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
                 SectionHeaderState(visibleFraction = 1f, pinnedFraction = 0f)
             } else {
                 val top = layoutInfo.viewportStartOffset
+                // Item offsets start below the top content padding, which a header stuck at the top of the viewport
+                // reaches into.
+                val pinnedFraction = 1f - (header.offset.y.toFloat() / header.size.height).coerceIn(0f, 1f)
+                val stuckDistance = (-header.offset.y).coerceIn(0, layoutInfo.beforeContentPadding)
                 SectionHeaderState(
                     visibleFraction = ((header.offset.y + header.size.height - top).toFloat() / header.size.height).coerceIn(0f, 1f),
-                    pinnedFraction = 1f - ((header.offset.y - top).toFloat() / header.size.height).coerceIn(0f, 1f),
+                    pinnedFraction = pinnedFraction,
+                    belowPinnedPlacePx = layoutInfo.beforeContentPadding * pinnedFraction - stuckDistance,
                 )
             }
         }
