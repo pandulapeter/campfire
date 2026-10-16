@@ -11,7 +11,6 @@
 ## Short-term (in this version)
 ### Improvements
 - Update store descriptions to include the chord diagram library and other new features
-- Regenerate the baseline profile
 
 ## Midterm (in the next versions)
 - Rename master branch to main

@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Rule
@@ -48,7 +49,13 @@ class BaselineProfileGenerator {
         // clearing the app's data, so only the first one sees it, and the rest wait for its Skip once.
         if (waitFor(By.text("Skip")) != null) {
             while (true) {
-                device.findObject(By.text("Next"))?.click() ?: break
+                val next = device.findObject(By.text("Next")) ?: break
+                // The pager's page change recomposes the button, which can leave the node found a moment ago stale by the
+                // time it is clicked; the loop then simply looks for it again.
+                try {
+                    next.click()
+                } catch (_: StaleObjectException) {
+                }
                 device.waitForIdle()
             }
             waitFor(By.text("Start playing"))?.click()
