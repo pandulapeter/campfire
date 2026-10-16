@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.about.AddSongsHintDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
@@ -216,6 +217,7 @@ private fun CampfireDialog(
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
         DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel, urlOpener = urlOpener)
+        DialogType.AddSongsHint -> AddSongsHintDialog(viewModel = viewModel)
 
         is DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,

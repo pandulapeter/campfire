@@ -166,6 +166,11 @@
     <string name="songs_empty_hint">Hozz létre egy dalt, illessz be egyet a vágólapról, importálj dalokat, PDF- vagy Word-dokumentumokat és zip archívumokat, vagy add hozzá a bemutató könyvtárat.</string>
     <string name="songs_create_song">Dal létrehozása</string>
     <string name="songs_paste_from_clipboard">Beillesztés a vágólapról</string>
+    <string name="add_songs_hint_title">Saját dalok hozzáadása</string>
+    <string name="add_songs_tip_paste_title">Másolj ki egy dalt bármelyik weboldalról</string>
+    <string name="add_songs_tip_paste_hint">Másold ki egy dal szövegét és akkordjait bármelyik weboldalról, akármilyen rendezetlen is, és illeszd be ide. A Campfire rendezett dalt készít belőle, amit elmenthetsz.</string>
+    <string name="add_songs_tip_import_title">Hozd át a dalaidat egy másik alkalmazásból</string>
+    <string name="add_songs_tip_import_hint">Exportáld a dalaidat egy másik daloskönyv-alkalmazásból, lehetőleg zip archívumként vagy biztonsági mentésként, és importáld ide. ChordPro-, PDF-, Word- és szövegfájlok is használhatók.</string>
     <string name="songs_paste_converted">A dalszöveg fölé írt akkordokat a Campfire a szövegbe illesztette. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
     <string name="songs_paste_chordpro">A szöveg már ChordPro formátumú, így változatlan maradt. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
     <string name="songs_paste_no_chords">Nem található benne akkord, így ez csak a dalszöveg. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
@@ -321,6 +326,7 @@
     <string name="settings_library_storage_offline_best_effort">A Campfire internetkapcsolat nélkül is megnyílik ebben a böngészőben. A böngésző megőrzi az alkalmazást és a könyvtárat, de még nem vállalta, hogy akkor is megtartja őket, ha kevés a szabad hely az eszközön. Ha könyvjelzőt teszel az oldalra, vagy rendszeresen használod, ez általában megváltozik; addig egy exportálás vagy a szinkronizálás máshol is megőriz egy másolatot a könyvtárról.</string>
     <string name="settings_library_storage_online_only">A Campfire-t nem sikerült elmenteni ebben a böngészőben, ezért csak internetkapcsolattal nyílik meg.</string>
     <string name="settings_import">Dalok, dokumentumok vagy zip archívumok importálása…</string>
+    <string name="settings_add_songs_hint_description">Másolj dalokat weboldalakról, vagy hozd át őket egy másik alkalmazásból</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_songs">Dalok</string>
     <string name="settings_features">Funkciók</string>

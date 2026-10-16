@@ -145,6 +145,8 @@ internal fun SongList(
     val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val librarySummary by viewModel.libraryState.librarySummary.collectAsStateWithLifecycle()
+    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault)
     val filePicker = LocalFilePicker.current
     val clipboardReader = rememberClipboardTextReader()
@@ -342,6 +344,27 @@ internal fun SongList(
                     }
                 }
             }
+            // After the songs rather than before them, so that the item indexes the scroller, the anchors, and the search
+            // keep for the songs hold whether or not the card is there.
+            if (
+                isAddSongsHintShown(
+                    librarySongCount = librarySummary?.songCount,
+                    hasPlaceholder = placeholder != null,
+                    isSearchOpen = isSearchOpen,
+                    isSelecting = isSelecting,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                )
+            ) {
+                item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
+                    AddSongsHintCard(
+                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                            .fadingUnderListTop(topFade),
+                        isEnabled = !isImporting,
+                        onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
+                        onImport = { viewModel.importController.importFiles(filePicker) },
+                    )
+                }
+            }
             // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
             // Keep just that lost tail space until it has scrolled out of sight, or the search changes, or the headers return.
             item(key = SEARCH_ANCHOR_SPACE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
@@ -381,6 +404,9 @@ internal fun SongList(
 
 /** The key of the divider under the Selection section. */
 private const val SELECTION_DIVIDER_KEY = "selection_divider"
+
+/** The key of [AddSongsHintCard]. */
+private const val ADD_SONGS_HINT_KEY = "add_songs_hint"
 
 /** The room above and below the divider under the Selection section. */
 private val SELECTION_DIVIDER_PADDING = 8.dp

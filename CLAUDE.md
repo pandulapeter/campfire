@@ -151,6 +151,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The Chords tab browses every drawable chord; a shape picked there applies everywhere: `ui/screens/chords`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
+- Under three songs, the songs list ends in a hint on pasting from a website and importing another app's songs; Settings
+  opens it any time: `ui/screens/songs`.
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.

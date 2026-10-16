@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -120,7 +121,8 @@ internal class ImportReviewTest {
     /** Picks [archive] from the Songs screen's New menu, and waits for its review. */
     private fun AppTestScope.startImport() {
         onNodeWithContentDescription(string(Res.string.songs_new_song)).performClick()
-        onNodeWithText(string(Res.string.import_files)).performClick()
+        // In the menu's popup: the demo library is two songs, so the list under it ends in a hint with the same button.
+        onNode(hasText(string(Res.string.import_files)) and hasAnyAncestor(isPopup())).performClick()
         waitUntil(timeoutMillis = REVIEW_TIMEOUT_MILLIS) {
             onAllNodesWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).fetchSemanticsNodes().isNotEmpty()
         }

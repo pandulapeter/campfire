@@ -166,6 +166,11 @@
     <string name="songs_empty_hint">Create a song, paste one from the clipboard, import songs, PDF or Word documents, and zip archives, or add the demo library.</string>
     <string name="songs_create_song">Create a song</string>
     <string name="songs_paste_from_clipboard">Paste from clipboard</string>
+    <string name="add_songs_hint_title">Add your own songs</string>
+    <string name="add_songs_tip_paste_title">Copy a song from any website</string>
+    <string name="add_songs_tip_paste_hint">Copy a song\'s lyrics and chords from any web page, however messy, and paste them here. Campfire tidies them into a song you can save.</string>
+    <string name="add_songs_tip_import_title">Bring your songs from another app</string>
+    <string name="add_songs_tip_import_hint">Export your songs from another songbook app, ideally as a zip archive or a backup, and import them here. ChordPro, PDF, Word, and text files work too.</string>
     <string name="songs_paste_converted">Converted from chords written over the lyrics. Check the title and the artist, then save.</string>
     <string name="songs_paste_chordpro">Kept as the ChordPro it is written in. Check the title and the artist, then save.</string>
     <string name="songs_paste_no_chords">No chords were found, so this is a song of lyrics only. Check the title and the artist, then save.</string>
@@ -321,6 +326,7 @@
     <string name="settings_library_storage_offline_best_effort">Campfire opens in this browser without a connection. Your browser keeps it and the library, but has not yet promised to hold on to them if the device runs low on space. Bookmarking this page or using it regularly usually earns that promise; until then, an export or sync keeps a copy of the library elsewhere.</string>
     <string name="settings_library_storage_online_only">Campfire could not be saved in this browser, so opening it needs a connection.</string>
     <string name="settings_import">Import songs, documents, or zip archives…</string>
+    <string name="settings_add_songs_hint_description">Copy songs from websites or bring them from another app</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_songs">Songs</string>
     <string name="settings_features">Features</string>

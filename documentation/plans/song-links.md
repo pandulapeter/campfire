@@ -9,484 +9,772 @@
 -->
 # Song links — implementation plan
 
-Written 2026-10-07 against `a0c6b7789`. A song, or a setlist with its songs, shared as a link or as a QR code that
-holds the whole file: compressed into the part of the address after the `#`, which a browser never sends to a server
-and a messenger's link preview never sees. Opening the link on a device with Campfire imports it through the ordinary
-import. There is no server, no upload and no new request: the page the link opens is a static file of the website.
+Rewritten 2026-10-16 against `87b2922a9`. This replaces the 2026-10-07 plan, which carried the song inside the link
+and so could not hold a setlist of any size. Now a song or a whole setlist is shared as a short link, backed by a zip
+in the sharer's own Dropbox that Campfire keeps current as the library changes. On a device with Campfire, opening
+the link opens the import screen, which downloads it. Without Campfire, the link leads through a landing page to the
+store, and the installed app imports it after onboarding. There is still no Campfire server.
 
-## 1. What is being built
+**Read §11 (corner cases) before writing any code.** Most of this feature is its edges.
 
-1. **A third format on the export screen**, **Link**, after PDF and ChordPro (or Zip, for a setlist): the preview is
-   the QR code with the link under it, the floating action button is **Copy link**, the app bar's Share on Android and
-   iOS shares the link as text, and **Save QR code** among the options writes it as a PNG.
-2. **The link format**: `https://campfire-songbook.com/s/#song=1.<payload>` or `#setlist=1.<payload>`, the payload a
-   zlib stream of the `.cho` file as the library holds it, or of the setlist's Zip exactly as the Zip format writes it,
-   in uppercase base32.
-3. **A landing page at `/s/`** in the `campfire-website` repository, seen only where the app is not installed or the
-   system did not hand the link over: it names what was shared, and offers the web app, the file itself and the
-   stores.
-4. **Opening a link** on Android (a verified App Link for `/s/`), on iOS (a Universal Link for `/s/`) and in the web
-   app (`/app/#song=…`, where the landing page sends it) imports it the way an "Open with" does: duplicates
-   disregarded, collisions asked about, the one song opened, everything else told by the snackbar or the report
-   screen.
-5. **Nothing on the desktop opens a link**: there the link opens the browser, and the landing page offers the
-   ChordPro file, which the desktop app opens as any other. Copy link and Save QR code work there like everywhere.
+## 1. Decisions (settled with the user; do not reopen)
 
-### What is already there, and what is not
+1. **Dropbox only.** Creating a link needs the sync connection; opening one needs no account.
+2. **Connecting from the export screen connects sync**: the same connection Settings makes, so the whole library
+   starts syncing. The screen says so plainly before the sign-in (§6.2). There is no "sharing only" connection.
+3. **A link always serves the current version.** Sync runs rebuild the shared zip whenever the setlist or any of its
+   songs changed (§5).
+   - Copies people already imported never change. Recipients update by opening the same link again, and the import
+     screen reconciles.
+   - There is no live sync to recipients and no read-only "subscribed" setlist: an imported copy is the recipient's
+     own.
+4. **One link per shared item, kept for as long as it is shared.**
+   - A rename keeps the link (§5.4).
+   - Deleting the item in Campfire stops sharing it.
+   - **Stop sharing** (export screen, Settings) deletes the shared file from Dropbox, and the link stops working.
+5. **A single song is shared as a zip too**, so both kinds take one path: download, then the import review.
+6. **Settings → Library → Shared links** lists everything shared from this Dropbox account, on every device.
+7. **The recipient's screens never mention Dropbox.** The import screen names the song or setlist, and the landing
+   page says "Download the file". The sharer's screens do mention Dropbox, since it is their account.
+8. **Install, then import:**
+   - **Android:** automatic (Play install referrer).
+   - **iOS:** one tap (the clipboard, at the end of onboarding).
+   - **Desktop:** one tap (the landing page's **Open in Campfire** after installing).
+   - **Web:** automatic.
+9. **`campfire://s/<payload>` is never the shared link.** It is only the target of the landing page's buttons and of
+   Android's `intent://` (§9): a custom scheme has no fallback when the app is missing.
 
-- The export screen (`ui/screens/export/ExportScreen.kt`) already has the format as its first option (`FormatChoice`, a
-  `SegmentedChoice` over `PrintSettings.Format`), a preview that crossfades to what the library's own files write
-  (`FilesPreview`, `ZipContents`), a setlist's song ticks shared by both formats (`chosenSongFileNames`), Save as its
-  floating action button (`SaveButton`) and Share in its app bar on the phones (`PrintTopAppBar`, `canShare`).
-- The bytes a link carries already exist: `ExportSongsUseCase` hands a song out as the `.cho` file it is, and
-  `ExportSetlistUseCase` a setlist as a stored Zip of its manifest and the chosen songs.
-- The way in already exists: `ImportController.importFiles(files)` is what every "Open with", share and drop goes
-  through, with `shouldOpenSong`, and an archive goes through `ArchiveLocalSource.unpack` with every limit an untrusted
-  zip needs.
-- **The two halves of zlib are in two modules that cannot see each other.** `PrintDeflater` (fixed Huffman codes,
-  zlib framing, its Adler-32 a private function) is `internal` to `:presentation`'s `ui/print/`, and the `Inflater`
-  (raw DEFLATE after `puff.c`) and `Crc32` are `internal` to `:data:source:local:implementation`'s `zip/`. A link has
-  to be written where the export screen is and read where the import is, and both have to be tested together.
-- **No QR encoder, no PNG writer and no clipboard** anywhere in the app. `gradle/libs.versions.toml` has no imaging or
-  barcode library, and nothing presentation draws comes from one.
-- The website already ships `.nojekyll`, so a `.well-known/` folder is published as it is, and its `404.html` keeps
-  the fragment when it sends a deep `/app/…` address on to the app.
-- Read only mode already imports what the system hands over ("not a tap that can happen by accident",
-  `presentation/CLAUDE.md`), so an opened link needs no rule of its own there.
+## 2. Facts to establish first (step 0, throwaway code, findings written back here)
 
-### Defaults this plan assumes — veto any of them before the work starts
+Each of these changes code if it comes out differently. Use a real Dropbox account and the development app
+("Campfire Sync") with `sharing.write` and `sharing.read` ticked in the App Console (§13).
 
-1. **Link is a format of the export screen**, for songs and setlists alike, remembered with the others in
-   `PrintSettings.format`. No new menu entry: "Export song" and "Export setlist" stay the one way out.
-2. **The link points at a small landing page, `/s/`, rather than at the web app.** App Links and Universal Links then
-   claim `/s/` alone, so a phone with Campfire installed still opens the web app in its browser, and a person without
-   the app downloads a page of a few kilobytes rather than sixteen megabytes before deciding anything. The web app reads
-   the same fragment at `/app/#…`, so vetoing the page is changing one constant.
-3. **Uppercase base32, not base64url.** Base32 (`A`–`Z`, `2`–`7`) is inside a QR code's alphanumeric mode, which packs
-   a character into 5.5 bits rather than 8: a code holds about 17% more song. The text of a link is 20% longer for it,
-   which costs nothing below the caps of default 5.
-4. **A setlist link is the setlist's Zip**, stored as the Zip format writes it and compressed as one stream, so every
-   rule of a setlist archive — the manifest naming only the ticked songs, a missing song still named — is the Zip's,
-   and the import reads it as one. No container of its own.
-5. **Caps**: a QR code up to version 30 (137 × 137 modules) at error correction level L, which is about 1.5 KB of
-   compressed text — a song of about 3 KB of ChordPro, which is most songs; a link up to 32,768 characters, about
-   20 KB compressed, a setlist of about a dozen songs; and above 4,096 characters (Telegram's message length) a line
-   saying that some messaging apps cut links that long. Constants, to be settled by hand (§9).
-6. **Opening a link imports at once**, with no question first, in the native apps and in the web app alike — the
-   same as an "Open with". The landing page is the question for anybody who might not want the song where the link
-   would put it.
-7. **The fixed Huffman codes of today's deflater**, unchanged. Dynamic codes would make a fifth more fit and can come
-   later with no change to the format, since every reader inflates both.
-8. **An own QR encoder and PNG writer**, pure Kotlin in `:presentation`, written from ISO/IEC 18004, with ZXing as a
-   `desktopTest`-only dependency that decodes what the encoder draws. Nothing new is shipped.
-9. **A new dependency-free module, `:zlib`**, which the deflater, the inflater, Adler-32 and CRC-32 move into, used by
-   `:presentation` (the PDF, the PNG), `:data:source:local:implementation` (the zip reader, the PDF reader) and
-   `:domain:implementation` (the link).
-10. **A song that declares no `{title}` gets one in its link**, the title the library shows for it, since the name it
-    is filed under — which titles it here — does not travel. Every other byte is the file's.
-11. **The debug build is not in `assetlinks.json`**: the debug keystore is public, so listing it would let any app
-    signed with it claim the links. Debug builds are tested with `adb` (§9).
-12. **A second web tab hands its link to the tab that owns the library** over a `BroadcastChannel`, rather than
-    asking the user to close one of them.
+1. **`sharing/create_shared_link_with_settings` on an app folder file**, with `{"requested_visibility": "public",
+   "audience": "public", "access": "viewer"}`. Record:
+   - the returned `url` shape (expected `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<key>&st=<x>&dl=0`);
+   - what a Basic account, a Plus account, and a team account whose admin forbids public links answer;
+   - `link_permissions.resolved_visibility`;
+   - the `shared_link_already_exists` error, and whether its `metadata` carries the existing link.
+2. **Which parts of that address an unauthenticated download needs.** Try `fileId` + `rlkey` without the name and
+   without `st`, and `dl=1` in place of `dl=0`. Record the redirect chain, the final host, and `Content-Disposition`.
+   The payload (§3) carries only what is needed.
+3. **Overwriting keeps the link.** Upload over the file with `update:<rev>`; the same link must serve the new bytes.
+   Record how soon (CDN caching).
+4. **Deleting the file kills the link.** Record what a download then answers: status, body, and whether it is an
+   HTML page with 200.
+5. **CORS.** From a page on `https://campfire-songbook.com` (or a local page with that origin through a tunnel),
+   `fetch` the `dl=1` address. Does every hop of the redirect chain send `Access-Control-Allow-Origin`? If not, the
+   web takes the fallback of §9.4.
+6. **What a refused or banned link answers** (a link over its traffic limit, a suspended account): status and body.
+   Whatever it is, §8.3's zip check must turn it into "This link no longer works".
+7. **`missing_scope`.** With a token granted before the new scopes were ticked, call the sharing endpoint. Record the
+   status (expected 401) and `error_summary` (expected `missing_scope/…`).
+8. **Android `intent://`** with a path payload and an `S.browser_fallback_url` to Play carrying a `referrer`:
+   - From Chrome, with and without the app installed: does it open the app, or Play?
+   - Does the referrer arrive through `InstallReferrerClient` after an install from Play's internal testing track?
+9. **iOS pasteboard.** On iOS 16+, `UIPasteboard.general.detectPatterns(for: [.probableWebURL])` must not show the
+   paste prompt. Reading `.url` or `.string` afterwards from a button tap shows "Allow Paste" once, which is
+   acceptable.
 
-## 2. Modules
+## 3. The link
 
 ```
-zlib                             dependency-free DEFLATE and zlib: the deflater, the inflater, Adler-32 and CRC-32.
-                                 Depends on nothing; used by :presentation, :data:source:local:implementation and
-                                 :domain:implementation
+https://campfire-songbook.com/s/#1.setlist.<shareId>.<fileId>.<rlkey>.<title>
+campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons' form, §9)
 ```
 
-`campfire-library`, `commonTest` with `kotlin("test")` like `:chordpro`, no Koin (stateless objects, reached directly
-by the modules that use them, as `:chordpro`'s are). `settings.gradle.kts` includes it.
-
-### 2.1 `:zlib` (`com.pandulapeter.campfire.zlib`)
-
-- `Deflater` — `PrintDeflater` moved and renamed, unchanged inside: the reused hash tables, one fixed-code block,
-  lazy matching, the yield every 256 KB. It writes into a `ByteOutput` (an interface with `byte(Int)` and
-  `bytes(ByteArray, Int, Int)`), which `PrintBytes` in `PrintPdfWriter.kt` implements, so the PDF writer changes by one
-  import. A second entry point, `zlibOf(data: ByteArray): ByteArray`, is what the link and the PNG use.
-- `Inflater` — moved from `zip/Inflater.kt`, with a `maxSize: Int` parameter next to `expectedSize` (today the limit
-  is either the declared size or `MAX_ENTRY_SIZE`), and throwing `ZlibException`. `inflateZlib(source, maxSize)` checks
-  the two header bytes (method 8, a window of at most 32 KB, `(CMF·256 + FLG) % 31 == 0`, no preset dictionary), inflates
-  and compares the Adler-32 at the end; anything after it is an error.
-- `Adler32`, out of `PrintDeflater`'s companion, and `Crc32`, moved from `zip/Crc32.kt`.
-- The callers of `Inflater.inflate` (`ZipReader.readData`, `PdfFilters`' FlateDecode) catch `ZlibException` and throw
-  what they threw before, so nothing above them changes. `Inflater.MAX_ENTRY_SIZE` stays where `PdfFilters` reads it.
-
-## 3. The link (`:domain`, `:data:model`, all of it tested)
-
-### 3.1 The format
-
-```
-https://campfire-songbook.com/s/#song=1.KBQXG4TT…
-                                 ^^^^ ^ ^^^^^^^^^
-                                 kind | payload: RFC 4648 base32, uppercase, no padding,
-                                  version   of a zlib stream (RFC 1950)
-```
-
-- **Kinds**: `song`, the UTF-8 text of one `.cho` file; `setlist`, a zip archive whose bytes start like one
-  (`LibraryFiles.isZipArchive`).
-- **Version 1** is exactly that. A later version is a new number; a reader that does not know it says so (§5.3)
+- **`1`**: the format version. A reader that does not know a version says "made by a newer version of Campfire"
   rather than calling the link broken.
-- **The fragment grammar is strict**: `^(song|setlist)=([1-9][0-9]{0,2})\.([A-Za-z2-7]+)$`, nothing before it and
-  nothing after it. Lowercase is read as uppercase, which RFC 4648 allows and the checksum makes safe; the leftover
-  bits at the end must be fewer than five and zero.
-- **Deterministic**: the same file always makes the same link, so a link opened twice is a duplicate the import
-  disregards.
+- **Kind**: `song` or `setlist`. It only chooses wording; the content decides what is imported.
+- **`shareId`**: 16 random characters `[a-z2-7]`. It is the shared file's name in Dropbox (`/shared/<shareId>.zip`),
+  fixed for the life of the share.
+- **`fileId`, `rlkey`**: from the Dropbox link, each `[A-Za-z0-9_-]+`, at most 64 characters. Step 0 may drop
+  `shareId` from the payload if the download does not need the name.
+- **`title`**: the song's or setlist's title when shared, percent-encoded UTF-8, at most 120 bytes before encoding.
+  It is for display only (landing page, import screen) and never trusted for anything else.
+- **The grammar is strict**: one regex in `ShareLinks`, and anything else is unreadable.
+- **The app never downloads from an address taken from the payload.** It builds
+  `https://www.dropbox.com/scl/fi/<fileId>/<shareId>.zip?rlkey=<rlkey>&dl=1` itself, so a crafted link cannot point
+  Campfire at another host.
+- **Why a fragment, and why a path in the scheme**: a browser never sends the part after `#`, so the ids stay out of
+  every server log. The scheme form uses a path instead because Android's `intent://` syntax claims the `#` (§9.1),
+  and a custom scheme reaches no server anyway.
+- About 130 characters: a version 7 QR code at level M.
 
-### 3.2 `:data:model`
+## 4. Dropbox (`:data:source:remote`)
 
-`domain/ShareLinks.kt`, vocabulary like `LibraryFiles`:
+### 4.1 Calls
 
-- `ShareLinks.LANDING_URL = "https://campfire-songbook.com/s/"` and `WEB_APP_URL = "https://campfire-songbook.com/app/"`.
-- `isShareAddress(url: String): Boolean` — `https`, the host exactly `campfire-songbook.com`, the path `/s/` or
-  anything under `/app/` (the site's 404 page brings a deep one back), with a fragment. What the shells ask before
-  handing an address on; whether its fragment reads is the codec's business.
-- `MAX_LINK_LENGTH = 32_768`, `LONG_LINK_LENGTH = 4_096`.
-- `ShareLinkTarget` (`Song(fileName)`, `Setlist(fileName, songFileNames: Set<String>?)`), `ShareLinkResult`
-  (`Ready(url: String)`, `TooLong(length: Int)`, `Unavailable`) and `SharedContent` (`Files(files: List<ImportedFile>)`,
-  `Unreadable`, `FromNewerVersion`).
-- `ExportedFile.PNG_MIME_TYPE`, next to `ZIP_MIME_TYPE`.
+**`SyncFolder`** (`data/source/remote/api/.../sync/SyncFolder.kt`) gains a small sharing surface, implemented in
+`DropboxSyncProvider`:
+- `uploadSharedFile(shareId, bytes, expectedRevision: String?): RemoteWriteResult`: writes `/shared/<shareId>.zip`
+  with `add` or `update:<rev>`, `autorename: false`, and `mute: true`, as `upload()` does.
+- `createSharedLink(shareId): SharedLinkResult`, one of `Created(fileId, rlkey)`, `NotPublic`, or `Refused`:
+  - calls `create_shared_link_with_settings`;
+  - reads `shared_link_already_exists`' metadata as success;
+  - parses the URL into its parts (pure, tested);
+  - a link whose resolved visibility is not public is `NotPublic`.
+- `deleteSharedFile(shareId)`: "already gone" is success, as library deletes are.
+- Documents: the registry (§4.2) uses the existing `downloadDocument` / `uploadDocument` under its own name.
 
-### 3.3 `:domain:implementation`
+**The listing**: `DropboxSyncProvider.list()` already lists the whole app folder recursively and keeps only `/songs`
+and `/setlists` (`toRemoteFiles`, around line 375).
+- It now also returns the `/shared/*.zip` entries, with their `content_hash` and revision, as a separate
+  `sharedFiles` list. That costs no extra request.
+- `PassListing` and `DeletionGuard` never see them.
 
-- `shareLink/ShareLinkCodec.kt`, an `internal object`:
-  - `encode(kind, bytes): String` — `zlibOf`, base32, the prefix.
-  - `decode(fragment: String): SharedContent` — the grammar; a payload of more than 65,536 characters (twice what this
-    version writes, so that a later one may raise its cap) is unreadable before anything is decoded; base32;
-    `inflateZlib` with `maxSize` of 1 MiB, more than fifty times anything a capped link compresses from; then a
-    `song` that is not valid UTF-8 (`decodeToString(throwOnInvalidSequence = true)`), is blank or starts like a zip,
-    and a `setlist` that does not start like a zip, are unreadable. What passes is one `ImportedFile`: `song.cho` or
-    `setlist.zip`. Those names never show for a song, which the import names by its own header, and for a setlist only
-    as the archive the report's lines are grouped under.
-- `CreateShareLinkUseCaseImpl` (`@Factory`): a `Song` target through `ExportSongsUseCase` (one file name), a `Setlist`
-  through `ExportSetlistUseCase` with the same `songFileNames` the Zip takes; a song whose text declares no `{title}`
-  (read with the `:chordpro` parser the domain already uses) gets `{title: …}` as its first line, from `Song.title`.
-  Null from either is `Unavailable`; a link over `MAX_LINK_LENGTH` is `TooLong` with its length, so the screen can say
-  by how much.
-- `ReadShareLinkUseCaseImpl` (`@Factory`): the fragment of an address (or a fragment alone, which is what the web
-  shell has) to `SharedContent`, on `Dispatchers.Default`.
-- The two interfaces in `:domain:api`, `CreateShareLinkUseCase` and `ReadShareLinkUseCase`, single `operator fun
-  invoke`s like every other.
-- `:domain:implementation` depends on `:zlib`.
+**`missing_scope`**: today `DropboxTransport.request` refreshes the token on every 401 and then throws
+`SyncAuthorizationException`, which a run turns into `ConnectionFailed(AUTHORIZATION)`.
+- **A 401 whose `error_summary` starts with `missing_scope` must not do that.** Detect it before the refresh and throw
+  a new `SyncScopeMissingException`.
+- Sharing calls catch it and report "connect again to allow links" (§6.2).
+- A run that meets it in its shared-copy step (§5) skips the step and leaves the connection alone.
+- Tested in `DropboxTransportTest` with both a plain 401 and a `missing_scope` 401.
 
-### 3.4 Tests (`desktopTest`)
+**Storage full**: `insufficient_space` already maps to `SyncRemoteStorageFullException`; sharing reports it as "Your
+Dropbox is full".
 
-- `:zlib`: `PrintDeflaterTest`, `PrintDeflaterRoundTripTest` and `InflaterTest` moved here (the last two keep checking
-  against `java.util.zip`); `inflateZlib` against JVM-made zlib streams, a wrong Adler-32, a preset dictionary, bytes
-  after the end, and a stream that would pass `maxSize` stopped as it passes it rather than once it has ended; CRC-32
-  against `java.util.zip.CRC32`.
-- `:domain:implementation`: `ShareLinkCodecTest` — round trips of the demo songs and setlist, the same link for the
-  same file, every rejection of §3.1 and §3.3 one by one (a kind, a version 0, a leading zero, a character outside the
-  alphabet, padding, non-zero leftover bits, a link cut short anywhere, one altered character, a zip bomb in each
-  kind, a song that is a zip, a setlist that is not), and the newer version; `CreateShareLinkUseCaseImplTest` with fake
-  export use cases — the title added only where there is none, the ticked songs passed through, `TooLong` at the cap.
-- `:data:model`: `ShareLinksTest` for `isShareAddress` (another host, `http`, a look-alike host such as
-  `campfire-songbook.com.example`, a path outside both, no fragment).
+### 4.2 The registry: `shared-links.json` at the app folder root
 
-## 4. The QR code (`:presentation`'s `ui/share/`, pure, tested)
+```json
+{ "version": 1, "links": [ {
+    "shareId": "k3j…", "kind": "setlist", "fileName": "summer_gig.setlist.json", "title": "Summer gig",
+    "fileId": "…", "rlkey": "…", "sharedAt": "2026-10-16", "state": "ok"
+} ] }
+```
 
-### 4.1 `QrCode.kt`
+- **`state`** is one of:
+  - `ok`;
+  - `orphaned` (§5.4): the item is no longer in the library, and nobody stopped sharing it;
+  - `tooLarge` (§5.3): the latest version could not be shared.
+- **`sharedAt`** is for display only, never a decision.
+- **Edited only as operations**: read, change, `uploadDocument(expectedRevision)`, and on `Conflict` re-read and
+  re-apply, up to 3 times.
+  - The operations are add an entry, remove an entry by `shareId`, set `fileName` / `title`, and set `state`. Each is
+    idempotent.
+  - Unlike `preferences.json`, this needs no three-way merge and no base in the index.
+- **Not under the run lock.** The share's file and the registry entry are written with revision checks, so a sharing
+  action and a run's shared-copy step never clobber each other (§11.2). Taking the lock would make the first share
+  after connecting wait for the whole first sync.
+- **The local mirror**, `preferences/shared-links.json`, is the last registry read, so the export screen and Settings
+  know what is shared without a request. It is tied to an account, like the sync index:
+  - replaced on every read and every successful operation;
+  - **excluded from device backups** (Android `res/xml` rules; iOS `FileStorage.keepOutOfDeviceBackup`);
+  - deleted on disconnect and by `forgetStoredConnection`;
+  - never exported.
+- **The local journal**, `preferences/shared-links-journal.json`: renames and deletions of shared items made on this
+  device, applied to the registry by the next run (§5.4). Same backup and forget rules as the mirror.
+- The root `CLAUDE.md` library layout gains both files.
 
-- `QrCode.encode(segments: List<QrSegment>, maxVersion: Int, minimumLevel = QrLevel.LOW): QrCode?` — null when the
-  segments do not fit `maxVersion`. The smallest version that holds them, then the highest error correction level that
-  still fits in it (free robustness, as the reference encoders do). Byte and alphanumeric segments only; the link is
-  always two: the address up to and including the `.` in byte mode, the payload in alphanumeric mode.
-- The parts of the standard: the capacity and block tables for versions 1–40, Reed–Solomon over GF(256), the
-  interleaving, the function patterns, the format and version information with their BCH codes, all eight masks and
-  the four penalty rules. About four hundred lines; no allocation per module.
-- `QrCode.size` and `isDark(x, y)`.
-- `MAX_QR_VERSION = 30`. For scale: version 30 at level L has 1,735 data codewords, which after the 40-character
-  address holds about 2,450 base32 characters, a zlib stream of about 1,530 bytes. The demo's *House of the Rising
-  Sun* (3,103 bytes) compresses to 1,536 with the fixed codes and fits; with dynamic codes it would be 1,268.
+## 5. Keeping shared copies current (`:data:sync:implementation`)
 
-### 4.2 `QrCodePng.kt`
+### 5.1 The step
 
-`qrCodePng(code: QrCode, moduleSize = 8): ByteArray` — a one-bit grayscale PNG (signature, `IHDR`, one `IDAT` from
-`Deflater.zlibOf`, `IEND`, each chunk's CRC from `:zlib`), black modules on white with the four-module quiet zone the
-standard asks for. A version 30 code is 1,160 pixels square and a few kilobytes.
+`synchronizeSharedCopies(provider, listing)` is a new step in its own package `shared/`, with a `CLAUDE.md`. It runs
+in `SyncRunner.run()`'s `SyncEngine.Result.Completed` branch, right after `synchronizePreferences` (around
+`scheduling/SyncRunner.kt:151-182`).
 
-### 4.3 Tests (`desktopTest`)
+1. **Skip it entirely** when the listing has no `/shared/` files and the local journal is empty. This is the common
+   case, and it costs no request.
+2. Read the registry (one download). Apply the journal (§5.4), then clear the journal entries that were applied.
+3. For each entry in the `ok` or `tooLarge` state:
+   1. Find the item in the local library by `fileName`. If it is missing, the entry becomes `orphaned` (§5.4), and
+      nothing is uploaded.
+   2. Build its zip (§5.2). Over `ImportLimits.MAX_IMPORT_SIZE`, the entry becomes `tooLarge` and the file is left as
+      it was, so the last version that fit keeps being served.
+   3. Compare the zip's Dropbox content hash (`crypto/ContentHash.kt`) with the listing's `content_hash` for
+      `/shared/<shareId>.zip`. If they are equal, do nothing: content decides, never a clock.
+   4. Otherwise, upload with `update:<listing revision>`.
+      - `Conflict` (another device uploaded in between) is dropped for this run.
+      - A missing file (deleted by hand in Dropbox, §11.3) makes the entry `orphaned`.
+   5. If the entry's `title` changed, update it in the registry (display only).
+4. **Errors**: follow `synchronizePreferences`. Rethrow cancellation and `SyncAuthorizationException`. Catch
+   `SyncScopeMissingException` and everything else, log it, and name it in the `SyncSummary`. A failure here never
+   fails the run.
 
-- `QrCodeTest`: what the encoder draws is rendered to a `BufferedImage` and decoded with ZXing's
-  `QRCodeReader` — every version from 1 to 40 at every level, both segment kinds and the two of them together, every
-  mask forced in turn — and the text compared; the version and level chosen at every boundary of the capacity table;
-  null one character past version 30.
-- `QrCodePngTest`: read back with `javax.imageio`, the size, the quiet zone, every module, and the result decoded
-  with ZXing again.
-- `com.google.zxing:core` goes into `libs.versions.toml` and into `:presentation`'s `desktopTest` dependencies alone.
+### 5.2 Deterministic zips
 
-## 5. `:presentation`
+- **Shared zips must be byte-identical for identical content**, or two devices would re-upload each other's copies on
+  every run. `ArchiveLocalSourceImpl.pack` stamps every entry with the current local time (around lines 46-53).
+  - Add `pack(entries, modifiedAt: DosTimestamp)`, and pass `DosTimestamp.EARLIEST` for shared copies.
+  - The export screen's own Zip keeps today's timestamp.
+- **What goes in**:
+  - A shared setlist zip is exactly `ExportSetlistUseCase(setlistFileName, songFileNames = null)`: the stored
+    setlist document plus every song it names, in setlist order.
+  - A shared song zip is `ExportSongsUseCase(listOf(fileName), isArchive = true)`, named `<shareId>.zip` regardless.
+- **What stays out**: per-device overrides (transposition, capo, and tempo outside a setlist) are not in the files, so
+  they never travel. A setlist's own entries do.
+- **Test**: two packs of the same library, minutes apart and in two time zones, give identical bytes.
 
-### 5.1 The export screen
+### 5.3 What "changed" covers
 
-- `PrintSettings.Format` gains `LINK("link")`. An older version reads `link` as PDF (`UserPreferencesMappers` falls
-  back to it), which is what it would offer anyway.
-- `FormatChoice`: three segments — PDF, ChordPro or Zip, Link — and the Link line under them.
-- **The options**, for Link: a setlist's song ticks, the same selection the Zip uses; and **Save QR code**, a list item
-  with `ic_save`, present while there is a code. Nothing else, as for the Zip.
-- **The preview**, `LinkPreview`, crossfaded in like `FilesPreview`: a card that is white in both themes with the code
-  drawn black on it (a `Canvas` of `size × size` rectangles, the quiet zone part of the card, never the theme's
-  colors — a scanner needs dark on light, and an inverted code is one many of them refuse), as large as the pane
-  allows; under it the link itself in the monospaced font, three lines with the middle left out, selectable; and a
-  line of its length. While the link is made the card shows the `LayoutIndicator` the PDF uses.
-- **What it says**, in place of the code, by `ShareLinkResult` and the code:
+Anything that changes the bytes counts:
+- the setlist's title, description, date, countdown, archive flag, or order;
+- its entries' transposition, tempo, and capo;
+- any song's text;
+- a song added or removed.
 
-  | State | The preview shows | Copy link | Save QR code |
-  | --- | --- | --- | --- |
-  | Fits a code | the code, the link, its length | yes | yes |
-  | Too long for a code | "Too long for a QR code. The link still works: copy or share it.", the link, its length | yes | no |
-  | Over `LONG_LINK_LENGTH` | the above, and "Some messaging apps cut links this long." | yes | no |
-  | Too long for a link | "Too long to share as a link. Choose fewer songs, or share the Zip." and its length against the cap | no | no |
-  | Song unreadable | what `FilesPreviewMessage` says for the ChordPro format today | no | no |
-  | A setlist with no song ticked | as the Zip: not offered unless it has no songs at all | — | — |
+Renaming a song inside a shared setlist updates the setlist document (`followSongReferences`), so the copy follows.
+Deleting a song removes it from every setlist (`DeleteSongUseCaseImpl`), so the copy loses it.
 
-- **The floating action button** is **Copy link** (`ic_content_copy`, a new drawable) for Link and leaves where there
-  is no link, as Save leaves without pages. Ctrl / Cmd + S saves the QR code where there is one (`saveShortcut`).
-- **Share** in the app bar shares the link as text on Android and iOS.
-- The link and the code are made off the main thread (`produceState` keyed by the dialog and
-  `chosenSongFileNames`, the encoder on `Dispatchers.Default`), and only while Link is the format.
+### 5.4 Renames and deletions
 
-### 5.2 The platforms' halves
+After the fact, the library cannot tell a rename from a deletion: sync sees a rename as a delete plus a create.
+**Shares are therefore never stopped by inference.** Only an explicit action, on the device that performed it, stops
+a share.
 
-- `ui/platform/Clipboard.kt`: `expect fun plainTextClipEntry(text: String): ClipEntry`, set through
-  `LocalClipboard.current.setClipEntry` — `ClipData.newPlainText` on Android, `StringSelection` on the desktop,
-  `ClipEntry.withPlainText` on iOS and the web (to be checked against Compose 1.12.1, where the last two may still be
-  experimental). `isClipboardConfirmedBySystem` is true on Android 13 and later, which shows its own confirmation and
-  asks apps not to add one.
-- `FilePicker.shareText(text: String, subject: String): Boolean`, defaulting to false with `canShare`:
-  `AndroidFilePicker` sends `ACTION_SEND` `text/plain` with `EXTRA_TEXT` and `EXTRA_SUBJECT` through a chooser;
-  `IosFilePicker` hands `UIActivityViewController` the address as an `NSURL`, so Messages and Mail show a link rather
-  than a string, with the same presentation rules its `shareFile` follows.
+- **Renames**: `RenameSongFileUseCaseImpl`, and a setlist title change (`EditSetlistUseCaseImpl` → `renameSetlist`).
+  - If the old name is in the local mirror, append `rename(old, new)` to the journal.
+  - If connected and online, also apply it to the registry at once, best effort. The next run applies whatever is
+    left.
+  - The link survives because the Dropbox file is named by `shareId`, never by the item.
+- **Deletions in Campfire**: `DeleteSongUseCaseImpl`, `DeleteSetlistUseCaseImpl`, and **Delete library**.
+  - If the name is in the mirror, append `stop(shareId)` to the journal.
+  - It is applied the same way: delete the file, then remove the entry.
+  - The delete confirmation says so (§7.3).
+- **Missing without an explicit action**: the item was deleted outside Campfire, renamed on a device without the
+  mirror, or its journal was lost with the app's data.
+  - The entry becomes `orphaned`, and the file keeps serving the last version.
+  - Settings shows "No longer in your library" with **Stop sharing**.
+  - If the item reappears under the same name (a delete-and-create still in flight from another device), the next run
+    sets it back to `ok`.
+- **Order matters**: the journal is applied before items are looked up (§5.1, step 2), so a rename arriving in the
+  same run as its library pass never orphans the entry.
+- **A rename arriving from another device**: device B renames and syncs, and its own run applies its journal right
+  after its library pass. Device A sees the new name in the registry on its next read. If B's run dies between the
+  two, A may mark the entry `orphaned` for one run, and B's next run repairs it.
 
-### 5.3 The view model
+## 6. The export screen (`ui/screens/export`)
 
-- `createShareLink(dialog: DialogType.Export, songFileNames: Set<String>?): ShareLinkResult`, through
-  `CreateShareLinkUseCase`.
-- `onShareLinkCopied()` → `Message.ShareLinkCopied`, not sent where the system confirms a copy itself.
-- `shareLink(filePicker, dialog, url)` and `saveQrCode(filePicker, dialog, png)`, through `launchFileTransfer` and
-  `save(...)` as `exportFiles` is, the PNG an `ExportedFile` named by `qrCodeFileName(source)` beside `pdfFileName` in
-  `PrintFileName.kt`; a saved code is `Message.QrCodeSaved` and leaves the screen up, since the link is likely to be
-  copied next.
-- **`importShareLink(link: String)`**: `ReadShareLinkUseCase`, then `Files` to `enqueueImport(files, shouldOpenSong =
-  true)` — the "Open with" path, so the queue, the duplicate and collision rules, the report screen and opening a
-  single song (`openImportedSong`, which leaves an editor with unsaved text alone) are all the import's own;
-  `Unreadable` to `Message.ShareLinkUnreadable`; `FromNewerVersion` to `Message.ShareLinkFromNewerVersion`.
-- `CampfireApp` takes `shareLinks: Flow<String> = emptyFlow()` next to `filesToImport`, collected into
-  `importShareLink`.
+### 6.1 The format
 
-### 5.4 The web shell
+- `PrintSettings.Format` (`data/model/.../preferences/PrintSettings.kt:42`) gains `LINK("link")`. Older versions read
+  `link` as PDF (`UserPreferencesMappers.kt:131`).
+- `FormatChoice` (`PrintOptions.kt:308`) has three segments for a setlist or one song: PDF, Zip / ChordPro, and Link.
+  - It is not offered for several songs at once (§12).
+  - It is hidden where sync is not configured in the build (`SyncProviders` empty), as Settings already handles.
+- A setlist's song ticks are hidden for Link: a link always shares the whole setlist.
+- Link is offered in read only mode, since it writes nothing to the library. Connecting follows whatever Settings' sync
+  section allows there.
 
-- **`index.html` takes the fragment out of the address before anything else happens**: `sharedLinkFragment(hash)` in
-  `<script id="campfire-launch">` (pure, so `offline.test.cjs` runs it) answers whether a hash is `song=` or
-  `setlist=` followed by something, and the main script, before `claimLibrary`, appends it to a JSON list in session
-  storage (`campfire-shared-links`) and replaces the address without it. So a reload — the user's, or the page's own
-  after downloading another build — never imports twice, and never loses a link that was not imported yet: it is still
-  in the tab's session storage, and the next start takes it. Wrapped in try/catch; where session storage is refused
-  the fragment is kept in a variable for this page alone.
-- `ui/platform/ShareLinks.wasmJs.kt`: `sharedLinks(): Flow<String>`, a promise per link like `droppedFiles()`, taking
-  one off the stored list as Kotlin hands it to the view model. `CampfireWebApp` passes it as `shareLinks`.
-- **A second tab**: `showAlreadyOpen` posts every stored link to the `BroadcastChannel` `campfire-shared-links`. The tab
-  holding the library listens from the moment it holds the lock, adds what arrives to its own stored list (so an
-  answer survives its own reload too), and answers with the link's id; the second tab then says "The song was sent to
-  Campfire in your other tab." and drops it from its own list. With no answer within two seconds (the other tab is
-  still downloading, or is a version without the listener) the link stays, and Retry imports it once the tab gets the
-  library. The page's strings are added to its English and Hungarian `text`.
-- `BrowserHistory.kt` needs nothing: its `replaceHistoryEntry` already writes path and query only, and the fragment is
-  gone before its first write. `BrowserRoutes`, `service-worker.js` and `routes.js` are untouched — the fragment is
-  never part of a request, and `/app/` is the songs.
-- Offline: a kept build opens `/app/#…` with no connection, so a link opened in the web app imports offline.
+### 6.2 Its states
 
-### 5.5 Strings
+| State | Preview | FAB | Options |
+| --- | --- | --- | --- |
+| Sync not connected | "Share a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices." | **Connect Dropbox** | — |
+| Connecting | "Waiting for the browser…" | **Cancel** | — |
+| `ConnectionFailed` | the Settings wording for it | **Connect again** | — |
+| Connected, not shared | "Anyone with the link can open this setlist and its songs in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update." | **Create link** | — |
+| Creating | `LayoutIndicator` | — | — |
+| Shared | QR code (white card, black modules), the link (monospace, selectable), "Shared on 16 October" | **Copy link** | **Save QR code**, **Stop sharing** |
+| Shared, `tooLarge` | the above, plus "The latest version is too large to share; the link gives the last one that fit." | **Copy link** | same |
+| Shared, `orphaned` | not reachable from the export screen (the item is gone) | — | — |
+| Scope missing | "Connect Dropbox again to allow Campfire to make links." | **Connect again** | — |
+| Too large to share now | "Too large to share as a link (over 24 MB)." | — | — |
+| Dropbox refuses public links | "Your Dropbox account doesn't allow public links." (the uploaded file is deleted again) | — | — |
+| Offline or unreachable | "Couldn't reach Dropbox. Check the connection and try again." | **Try again** | — |
+| Dropbox full | "Your Dropbox is full." | — | — |
 
-Every one in `values` and `values-hu`; none takes somebody else's text, except the share subject, which takes a title
-and is read with `textResource`.
+- **Share** in the app bar shares the link as text on Android and iOS (`FilePicker.shareText`, §6.4).
+- Ctrl / Cmd + S saves the QR code where there is one.
+- **Stop sharing** asks first: "Stop sharing "%1$s"? The link stops working for everyone. Copies people already
+  imported stay theirs."
 
-| Key | English | Hungarian |
-| --- | --- | --- |
-| `print_format_link` | Link | Link |
-| `print_format_link_song_description` | Ideal for sending to a phone: a link and a QR code that open the song in Campfire. The song is inside the link, and nothing is uploaded. | Telefonra küldéshez ideális: egy link és egy QR-kód, amely megnyitja a dalt a Campfire-ben. A dal magában a linkben van, semmi sem kerül feltöltésre. |
-| `print_format_link_setlist_description` | Ideal for sending to a phone: a link and a QR code that open the setlist and its songs in Campfire. Everything is inside the link, and nothing is uploaded. | Telefonra küldéshez ideális: egy link és egy QR-kód, amely megnyitja a listát és a dalait a Campfire-ben. Minden a linkben van, semmi sem kerül feltöltésre. |
-| `share_link_copy` | Copy link | Link másolása |
-| `share_link_save_qr_code` | Save QR code | QR-kód mentése |
-| `share_link_qr_code_description` | QR code of the link | A link QR-kódja |
-| `share_link_length` (plurals) | %d character / %d characters | %d karakter |
-| `share_link_too_long_for_qr_code` | Too long for a QR code. The link still works: copy or share it. | Túl hosszú egy QR-kódhoz. A link így is működik: másold ki vagy oszd meg. |
-| `share_link_long` | Some messaging apps cut links this long. | Egyes üzenetküldő alkalmazások levágják az ilyen hosszú linkeket. |
-| `share_link_too_long` | Too long to share as a link. Choose fewer songs, or share the Zip. | Túl hosszú ahhoz, hogy linkként megosszuk. Válassz kevesebb dalt, vagy oszd meg a Zip-et. |
-| `share_link_subject` | %s in Campfire | %s a Campfire-ben |
-| `message_share_link_copied` | Link copied | Link kimásolva |
-| `message_qr_code_saved` | QR code saved | QR-kód elmentve |
-| `message_share_link_unreadable` | This link could not be read. It may have been cut short on its way. | Ezt a linket nem sikerült beolvasni. Lehet, hogy útközben megrövidült. |
-| `message_share_link_from_newer_version` | This link was made by a newer version of Campfire. Update the app to open it. | Ezt a linket a Campfire egy újabb verziója készítette. Frissítsd az alkalmazást a megnyitásához. |
+### 6.3 Creating a share (`CreateShareLinkUseCase`)
 
-The Hungarian `share_link_length` has one form, as the language does after a number; both items are written anyway.
+1. Re-read the registry (into the mirror) and match by `fileName`. If this item is already shared, show that link: two
+   devices sharing one item get one link.
+2. Build the zip (§5.2). Over the limit is the "too large" state.
+3. Generate a `shareId`, then call `uploadSharedFile(shareId, bytes, null)`.
+4. Call `createSharedLink(shareId)`. On `NotPublic` or `Refused`, delete the file and report.
+5. Add the registry entry (an operation, §4.2) and update the mirror.
 
-## 6. The native shells
+A failure after step 3 deletes the uploaded file, best effort. A file left behind is unreferenced and harmless, and
+**Stop sharing everything** in Settings removes unreferenced `/shared/` files too (§7.1).
 
-### 6.1 Android (`app/android`)
+### 6.4 Connecting from here, and coming back
 
-- `AndroidManifest.xml`, on `.CampfireIntentActivity` next to the other filters:
+- `CampfireViewModel.connectSyncProvider` is the same call Settings makes. Android, iOS, and the desktop come back to
+  the same screen, since the export dialog stays open.
+- **Android after process death**: `consumePendingRedirect` restores the connection, but the export dialog is not
+  restored (dialogs are not in the back stack), so the user would land on the songs list, connected.
+  - Add a `SyncConsentOrigin.EXPORT` that carries the dialog's target (`Song(fileName)` / `Setlist(fileName)`),
+    stored with the pending authorization's origin.
+  - `showSyncConsentAnswer` then reopens the export dialog on Link.
+- **Web**: the page leaves for Dropbox and comes back to bare `/app/`.
+  - `SyncConsentOrigin` already lives in session storage (`SyncConsentOrigin.wasmJs.kt`). Give it the same `EXPORT`
+    value with the target.
+  - `Navigator.showSyncConsentAnswer` (`ui/sync/SyncConsent.kt:75`) reopens the export dialog on Link, under the same
+    "the stack is still the start" condition it uses for Settings.
+- **The first sync starts right away** (`ConnectSyncProviderUseCaseImpl` calls `synchronizeLibrary`). **Create link**
+  does not wait for it.
+- **Connecting again for the scope** while already connected: `connect()` today expects a disconnected or failed
+  state.
+  - Allow it from `Connected` for this purpose. When the account is the same, keep the index, as
+    `completePendingAuthorization` already does.
+  - A different account resets the index (existing behaviour), and the mirror and journal are cleared with it.
+- **Clipboard and text sharing**:
+  - `ui/platform/Clipboard.kt`: `expect fun plainTextClipEntry`, through `LocalClipboard.current.setClipEntry`. No
+    "copied" message on Android 13+, which confirms by itself.
+  - `FilePicker.shareText(text, subject)`: `ACTION_SEND` with `text/plain` on Android; `UIActivityViewController`
+    with an `NSURL` on iOS.
 
-  ```xml
-  <intent-filter android:autoVerify="true" android:label="@string/campfire">
-      <action android:name="android.intent.action.VIEW" />
-      <category android:name="android.intent.category.DEFAULT" />
-      <category android:name="android.intent.category.BROWSABLE" />
-      <data android:scheme="https" android:host="campfire-songbook.com" android:pathPrefix="/s/" />
-  </intent-filter>
-  ```
+### 6.5 The QR code (`ui/share/`, pure, tested)
 
-  `/s/` alone, never `/app/`, so the web app stays the web app (default 2). Fragments play no part in matching, and
-  arrive whole in `intent.data`.
-- `CampfireMainActivity.handle`: an `ACTION_VIEW` whose data `ShareLinks.isShareAddress` accepts goes to
-  `importShareLink(data.toString())` in `AndroidFileImport.kt` — a second top-level `Channel` beside `pendingImports`,
-  exposed as `shareLinksToImport` and passed through `CampfireAndroidApp` to `CampfireApp`. Everything `handle` already
-  does about a recreated activity and one reopened from Recents holds for it.
-- `importSharedTexts`: a shared text that is nothing but one share link is sent there too, rather than being reported
-  as skipped by `isOnlyLinks` — a link shared from a messenger's menu to Campfire.
-- The release build's App Link is verified at install against `assetlinks.json` (§10). The `.debug` package is not in
-  it (default 11), so on Android 12 and later its links open the browser unless approved by hand.
+- **`QrCode.encode(text, minimumLevel = M): QrCode?`**: byte mode, versions 1–40. It picks the smallest version that
+  fits, then the highest error correction level that still fits.
+  - It covers Reed–Solomon over GF(256), interleaving, the function patterns, the format and version BCH codes, all
+    eight masks, and the penalty rules.
+  - It is written from ISO/IEC 18004, without a library.
+- **`qrCodePng(code, moduleSize = 8)`**: a 1-bit grayscale PNG with a quiet zone of 4 modules.
+  - The `IDAT` is zlib from the existing `PrintDeflater` (`ui/print/`). Its Adler-32 and a CRC-32 for the chunks live
+    beside it.
+- **Tests** (`desktopTest`):
+  - decode what the encoder draws with ZXing (`com.google.zxing:core`, in `desktopTest` only, nothing shipped) at
+    every version and level, with every mask forced;
+  - read the PNG back with `javax.imageio` and decode it again.
+- **Save QR code**: an `ExportedFile` (`image/png`, `ExportedFile.PNG_MIME_TYPE`) through `save()`, named by
+  `qrCodeFileName(source)` beside `pdfFileName`.
+  - iOS `Info.plist` gains `NSPhotoLibraryAddUsageDescription`: without it, the share sheet's **Save Image** ends the
+    process.
 
-### 6.2 iOS (`app/ios`)
+## 7. Settings and the rest of the app
 
-- `iosApp/iosApp/iosApp.entitlements`, new, with `com.apple.developer.associated-domains` holding
-  `applinks:campfire-songbook.com`; `CODE_SIGN_ENTITLEMENTS` set to it in both configurations of `project.pbxproj`.
-  The app has had no entitlements file until now; `share-extension.md` creates the same file for its App Group, and
-  whichever plan lands second adds its key to the existing one.
-- The App ID gets the Associated Domains capability once, by hand (§10). `publish-ios.yml` lets xcodebuild make the
-  App Store profile with `-allowProvisioningUpdates`, so the next run's profile carries it; nothing in the workflow
-  changes.
-- `IosFileImport.kt`'s `openUrl`: an address `ShareLinks.isShareAddress` accepts goes to a `pendingShareLinks` channel
-  rather than being read as a file, exposed beside `filesToImport` and passed through `CampfireIosApp`.
-- `iOSApp.swift`: SwiftUI delivers a Universal Link to `.onOpenURL`, which already forwards to `openUrl`. If the check
-  in §9 finds otherwise, `.onContinueUserActivity(NSUserActivityTypeBrowsingWeb)` forwards `webpageURL` the same way —
-  only one of the two, or a link would be imported twice and reported as a duplicate the second time.
-- `Info.plist`: `NSPhotoLibraryAddUsageDescription`, because Save QR code goes through the share sheet, whose
-  **Save Image** ends the process without it. English, like the other usage strings: "Campfire saves the QR code of a
-  song to your photos when you ask it to."
+### 7.1 Settings → Library → Shared links
 
-### 6.3 Desktop (`app/desktop`)
+- **The row**: in `LibrarySections.kt`, "Shared links" with the count, shown while connected and the mirror is not
+  empty.
+- **The sheet**: the row opens a bottom sheet (`DialogType.SharedLinks`, `CampfireBottomSheet`). Settings has no
+  sub-screens, so a sheet is the pattern.
+- **Refreshing**: opening it refreshes the mirror from the registry (one download). The list shows the mirror at once
+  and updates when the refresh lands, with no animation over arriving data (root UI rules).
+- **Each row** shows the title, a song or setlist icon, and "Shared on 16 October".
+  - An `orphaned` row shows "No longer in your library"; a `tooLarge` row shows "Too large to update".
+  - Its three-dot menu is a popup, never a sheet. It offers **Copy link** and **Show QR code** (which opens the
+    export screen on Link for that item), neither for `orphaned` rows, and **Stop sharing** with §6.2's
+    confirmation.
+- **The sheet header** has **Stop sharing everything**, with a confirmation naming the count. It also deletes
+  unreferenced `/shared/` files.
+- **Offline**: the list shows the mirror, and **Stop sharing** says it needs a connection.
 
-Nothing. The Mac App Store build shares the App ID, but a Compose JVM app cannot take an `NSUserActivity`, and it
-claims no associated domain, so macOS keeps opening the links in the browser.
+### 7.2 Disconnect and account changes
 
-## 7. Corner cases, and what each one does
+- When the mirror is not empty, the disconnect confirmation (`settings_sync_disconnect_confirmation`) gains: "Shared
+  links keep working. Connect the same account again to manage them."
+- Disconnecting clears the mirror and the journal. The registry and the files stay in Dropbox.
+- Connecting a different account shows that account's shares.
 
-| Case | Behaviour |
+### 7.3 Delete confirmations
+
+When the item is in the mirror, the confirmation gains a line:
+- **Song**: "…The file is removed from the library and from every setlist, and its shared link stops working."
+- **Setlist**: "…The songs stay in your library. Its shared link stops working."
+- **Delete library**: "…Every shared link stops working."
+
+A song that is only inside a shared setlist needs no extra line: the setlist's copy simply loses it.
+
+### 7.4 Root `CLAUDE.md`
+
+- **Privacy: what reaches the network** gains **Shared links**:
+  - sharing uploads the item to the user's own Dropbox as a public link, and sync runs keep it current;
+  - opening a link downloads that file from Dropbox, with no account and nothing kept beyond the import.
+- **Product rules**:
+  - "never a link followed" becomes "never a link followed, except a Campfire share link";
+  - a new line points at `ui/screens/export` and `data/sync/implementation/shared`.
+- **Library layout** gains the mirror and the journal.
+- **Feature invariants**, Sync, gains: "shared copies follow the library; a share stops only by an explicit action".
+
+## 8. Opening a link (common code)
+
+### 8.1 Recognising one
+
+- **`data/model/.../share/ShareLinks.kt`**: `parse(address: String): SharedLink?`.
+  - It accepts `https://campfire-songbook.com/s/#<payload>`, `/app/#<payload>` (the web app), and
+    `campfire://s/<payload>`, plus a bare `<payload>` for the web shell.
+  - The host must be exactly `campfire-songbook.com`, never a look-alike such as `campfire-songbook.com.example`.
+  - `SharedLink(version, kind, shareId, fileId, rlkey, title)` has `downloadUrl` and `landingUrl`.
+  - **Tested**: every rejection (another host, `http`, a look-alike host, a wrong version, a bad character in any
+    part, an over-long part, `campfire://oauth?code=…`, an empty payload), and a title with every kind of character.
+- **Text that is a share link** is imported as a link, instead of becoming `Message.SharedLinkNotImported` or
+  `paste_only_links`. That covers text pasted (`PastedSongController.newSongFromClipboard`), dropped, or shared to
+  Campfire (Android `SEND`, the iOS share extension's text). A text holding a share link *and* other words is treated
+  as text, as today.
+
+### 8.2 The import
+
+- **`ImportSource.SharedLink(link: SharedLink)`**, beside `Address`:
+  - its `name` is the title from the payload, never the host;
+  - it downloads through the existing `DownloadImportFileUseCase(link.downloadUrl)`, so the DOWNLOADING phase,
+    Cancel, and Try again (which keeps the bytes) are all the import's own;
+  - `importController.importSharedLink(link)` calls `enqueueImport(..., shouldOpenSong = true)`.
+- **The review subtitle**: `plan.sourceNames` would show `<shareId>.zip`. For a `SharedLink` source, show the
+  setlist's title from the zip's setlist document, or the song's title, never a file name.
+- **Updating on purpose**: opening a link again is how a recipient updates, and Keep both would litter `_2` copies.
+  So a shared link's import defaults the conflict group choice (`ImportChoices`) to **Replace** instead.
+  - Replace still goes through `DialogType.ConfirmImportReplace`.
+  - The review shows a line above the conflicts: "This replaces your copies of the songs and setlist with the shared
+    version. Choose Keep both to keep your own changes."
+  - Untouched files are disregarded as duplicates, as today.
+- **Failures** use shared-link wording instead of the address wording:
+  - `Missing`: "This link no longer works. The person who shared it may have stopped sharing it."
+  - `Unreachable`: "Couldn't download "%1$s". Check the internet connection and try again."
+  - `TooLarge`: today's wording.
+  - Unreadable: §8.3.
+- **Waiting needs nothing new**:
+  - The queue waits for the demo library (`demoLibraryDecision`).
+  - The download runs behind onboarding.
+  - The import screen, and opening the song, wait for onboarding, dialogs, and unsaved editor text
+    (`ImportReportState.awaitNothingInTheWay`).
+  - While an import waits, onboarding shows **Next** instead of **Start playing** (`isImportWaiting`), as it already
+    does for any `Loading` report.
+
+### 8.3 What the download must be
+
+- **A zip** (`LibraryFiles.isZipArchive` on the bytes) whose contents the import reads.
+- **Anything else is "This link no longer works"**: Dropbox's HTML for a banned link, a login page for a team-only
+  link, or an empty file. It is never an "unreadable file" row named `<shareId>.zip`.
+- **The archive is untrusted input**, like any dropped file. It goes through `ArchiveLocalSource.unpack` with every
+  limit it already has: depth 3, the shared inflated budget, and hidden entries dropped.
+
+### 8.4 Messages and strings
+
+- Every string goes in `values` and `values-hu`.
+- Counted ones are `<plurals>`.
+- Titles from links are read with `textResource`, never as markup.
+
+## 9. The platforms
+
+### 9.1 Android (`app/android`)
+
+- **Manifest**: two new filters on `.CampfireIntentActivity`, beside the `campfire://oauth` filter (which stays as it
+  is):
+  - an `autoVerify` App Link: `https`, host `campfire-songbook.com`, `pathPrefix="/s/"`. Only `/s/`, never `/app/`;
+  - the scheme: `campfire`, host `s`, no `autoVerify`.
+- **`CampfireMainActivity.handle`** (lines 125-132) today sends every non-OAuth `VIEW` to the file import.
+  - Check `ShareLinks.parse` before `importFrom`. The OAuth check stays first.
+  - A match goes to a new `pendingShareLinks` channel in `AndroidFileImport.kt`, then through `CampfireAndroidApp` to
+    `CampfireApp`'s new `shareLinks: Flow<SharedLink>`.
+- **Recreated activity and Recents**: `handle` is skipped then (`FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY`), as for files,
+  so reopening the app never imports a link twice.
+- **The landing page's Android button** (§10) is
+  `intent://s/<payload>#Intent;scheme=campfire;package=com.pandulapeter.campfire;S.browser_fallback_url=<Play URL>;end`.
+  - The Play URL is
+    `https://play.google.com/store/apps/details?id=com.pandulapeter.campfire&referrer=<encoded "campfire_link=<payload>">`.
+  - With the app installed, Chrome opens it; without, Chrome opens Play.
+- **The install referrer**: `com.android.installreferrer:installreferrer`.
+  - **Credit it**: an entry in `OpenSourceComponents.kt`, its license under `androidMain/composeResources/files/licenses`,
+    and a README row.
+  - **Read it once**, on the first launch only (`IsFirstRunUseCase`), off the main thread, through
+    `InstallReferrerClient`.
+  - Play keeps answering the same referrer for 90 days, so record `UserPreferences.isInstallReferrerHandled = true`
+    whatever the answer, and never ask again.
+  - **Accept only** `campfire_link=<payload>` that `ShareLinks.parse` reads. Ignore any other referrer, such as a
+    campaign or Play's `utm_source=google-play`.
+  - On `SERVICE_UNAVAILABLE`, `FEATURE_NOT_SUPPORTED`, or no Play Store app, ignore it and record it as handled.
+  - The answer goes into the same `pendingShareLinks`, so the import queues behind the demo library and onboarding like
+    any link.
+  - The privacy section already names Play over IPC; extend that line to the install referrer.
+- **Debug builds**: the `.debug` package is not in `assetlinks.json`, because the debug keystore is public. Test with
+  `adb shell am start -a android.intent.action.VIEW -d '<link>' com.pandulapeter.campfire.debug`.
+
+### 9.2 iOS (`app/ios`)
+
+- **Universal Links**: `iosApp.entitlements` gains `com.apple.developer.associated-domains` set to
+  `applinks:campfire-songbook.com`. The App ID gets the capability by hand (§13).
+- **Delivery**: `iOSApp.swift` has only `.onOpenURL`. A SwiftUI lifecycle app gets Universal Links there too. If step
+  0 shows otherwise, add `.onContinueUserActivity(NSUserActivityTypeBrowsingWeb)` instead. **Never both**: the link
+  would import twice.
+- **`IosFileImport.openUrl`** (lines 58-67) today treats every non-OAuth URL as a file, so `campfire://s/…` would be
+  reported as skipped.
+  - After `isSyncRedirect`, check `ShareLinks.parse`.
+  - A match goes to a `pendingShareLinks` channel, then through `CampfireViewController` and `CampfireIosApp` to
+    `CampfireApp`.
+- **The scheme**: `campfire` is already declared (`Info.plist:77-89`) for the OAuth callback, and it covers
+  `campfire://s`.
+- **The share extension**: a shared text or URL that is a share link goes to the inbox as text, as today, and the app
+  side (§8.1) imports it as a link. The extension never fetches it.
+- **After an App Store install (the clipboard)**:
+  1. The landing page's App Store button copies the `https` link (`navigator.clipboard.writeText`, inside the tap),
+     then opens the App Store. The page says: "We copied the link, so Campfire can open it once it's installed."
+  2. On the **first launch only**, the app checks `detectPatterns(for: [.probableWebURL])`, which shows no prompt
+     (step 0).
+  3. If it matches, the onboarding's last page shows a card: "Did someone send you a song or setlist? **Open it**".
+  4. Tapping it reads the pasteboard (one system "Allow Paste" prompt), and `ShareLinks.parse` decides. A match is
+     imported; anything else says "That isn't a Campfire link" and nothing more.
+  - **Never read the pasteboard without the tap.** The common `ClipboardText` rule (`ClipboardText.kt:31`) stays.
+  - Record the check as done (`UserPreferences`) whatever happens, so it never shows again.
+- **Smart App Banner** on the landing page (`apple-itunes-app`, `app-id=6815160850`, `app-argument=<link>`):
+  - Safari shows it when the Universal Link did not open the app.
+  - `app-argument` reaches `.onOpenURL` only for an installed app, so it is not the install path.
+
+### 9.3 Desktop (`app/desktop`)
+
+The `https` link always opens the browser, and the landing page's **Open in Campfire** opens
+`campfire://s/<payload>`.
+
+- **macOS** (the `.dmg` and the Mac App Store build):
+  - `macos/url-types.plist`: a `CFBundleURLTypes` entry for `campfire` (role `Viewer`), joined into
+    `infoPlist.extraKeysRawXml` with the other fragments (`build.gradle.kts:166-168`).
+  - `OpenedFiles.listenForSystemRequests` also sets `Desktop.setOpenURIHandler` where `APP_OPEN_URI` is supported:
+    registered with the open-file handler, after the single-instance check, and never removed.
+  - macOS only: asking `Desktop` starts AWT, which must not happen on Linux before the display scale is set.
+- **Windows** (the Microsoft Store's `.msix`; the `.msi` is published by nothing):
+  - `AppxManifest.xml` gains
+    `<uap:Extension Category="windows.protocol"><uap:Protocol Name="campfire" /></uap:Extension>` beside the file
+    type association.
+  - A full trust app gets the address as its argument (step 0, on a Store-signed build or a sideloaded test package).
+- **Linux** (the `.deb`):
+  - The `.desktop` entry gains `MimeType=x-scheme-handler/campfire;`, and its `Exec` gains `%u` if jpackage wrote it
+    without one.
+  - This is done by the task that adds `StartupWMClass` (`AddStartupWmClassToDeb`), renamed
+    `RewriteDebDesktopEntry`, with the helper tested beside `withStartupWmClass` in `PackagingTextTest`.
+  - The `postinst` runs `update-desktop-database -q` when present. Without it, the scheme is only known after the next
+    login.
+- **`main(args)`** (`CampfireDesktopApplication.kt:65`) today makes every argument an absolute path (line 68), which
+  would mangle `campfire://s/…`. Split the arguments first:
+  - arguments `ShareLinks.parse` reads go to a `SharedLinks` channel beside `OpenedFiles` (the macOS handler sends
+    there too), passed to `CampfireDesktopApp` and on as `shareLinks`;
+  - the rest stay paths.
+- **A running instance**: `claimSingleInstance` must hand links over untouched.
+  - Today the caller resolves every argument to a path before the hand-over. Resolve only the path arguments, and let
+    the holder split what arrives the same way.
+  - The protocol (`"CAMPFIRE 1 <token>"`, one URL-encoded line per argument) needs no change.
+  - The window comes forward, as it does for a file.
+- `run --args="campfire://s/<payload>"` tests it.
+
+### 9.4 Web (`app/web`, `presentation/src/wasmJsMain`)
+
+- **Take the fragment before anything rewrites the address.** Today the hash is lost on the first `replace` or
+  `pushHistoryEntry` (`BrowserHistory.kt:335-357`), or by `clearQueryString` after an OAuth return.
+  - In `index.html`, add a pure `sharedLinkPayload(hash)` to `<script id="campfire-launch">` (tested in
+    `offline.test.cjs`).
+  - Before `claimLibrary`, append the payload to a JSON list in session storage (`campfire-shared-links`), and remove
+    it from the address with `history.replaceState`. A reload then never imports twice and never loses a link.
+  - Where session storage throws, keep the payload in a variable for this page.
+- **`ui/platform/ShareLinks.wasmJs.kt`**: `sharedLinks(): Flow<SharedLink>`, taking one entry off the stored list as
+  it is handed to the view model. `CampfireWebApp` passes it as `shareLinks`.
+- **A second tab**: `showAlreadyOpen` posts the stored payloads on a `BroadcastChannel("campfire-shared-links")`.
+  - The tab holding the library adds them to its own list, answers, and imports them.
+  - The second tab then says "Sent to Campfire in your other tab." and drops them.
+  - With no answer within 2 seconds, the payload stays for Retry.
+- **CORS (step 0, item 5)**: if the redirect chain is not readable from a page, the web app cannot download a link.
+  Then:
+  - the web app reports "This link can't be opened in the browser version. Open it in the Campfire app, or download
+    the file and import it." with the file's direct download;
+  - the landing page leads with the download on the web, and does not offer the web app as the way in;
+  - do not route downloads through the user's own Dropbox token: a recipient usually has none.
+- **No new route**: the payload rides on `/app/` and is removed before the first history write. `service-worker.js`
+  and `404.html` already keep the hash.
+- **Offline**: the app starts from the kept build, and the download fails with the Unreachable wording. The payload
+  stays in session storage until the import screen has it, and Try again works from there.
+- The web registers no scheme: `registerProtocolHandler` only takes `web+` schemes.
+
+## 10. The website (`../CampfireWebsite`, GitHub Pages, `.nojekyll` already there)
+
+- **`.well-known/assetlinks.json`**: `delegate_permission/common.handle_all_urls` for `com.pandulapeter.campfire`,
+  with the SHA-256 of Play's app signing certificate (Play Console → App signing).
+- **`.well-known/apple-app-site-association`** (no extension):
+  `{"applinks": {"details": [{"appIDs": ["N45A6ZHDGY.com.pandulapeter.campfire"], "components": [{"/": "/s/*"}]}]}}`.
+- **`s/index.html`, the landing page**:
+  - `noindex`; Open Graph says "A song or setlist shared from Campfire", which is all a link preview sees.
+  - **It never fetches anything.** It reads the fragment with the same grammar as the app (a hand-copied regex, with a
+    comment naming `ShareLinks.kt`), and shows the title as text, never markup.
+  - Its buttons, by platform:
+
+    | Visitor | First button | Then |
+    | --- | --- | --- |
+    | Android | **Open in Campfire** (`intent://…`, §9.1: the app if installed, otherwise Play with the referrer) | the web app, **Download the file** |
+    | iPhone, iPad | **Get Campfire** (copies the link, then the App Store, §9.2) | **Open in Campfire** (`campfire://s/…`), "Already installed it? Open it", the web app, **Download the file** |
+    | Mac, Windows, Linux | **Open in Campfire** (`campfire://s/…`) | "Don't have it yet?" with the store or download for the platform (the site's existing `native` map), the web app, **Download the file** |
+    | In-app browsers (Instagram, Messenger, …) | as their platform | plus "Open this page in your browser if the buttons don't work" |
+
+  - Under **Open in Campfire**: "Nothing happened? Campfire isn't installed here." No timers, no automatic redirects,
+    and no attempts to detect the app.
+  - **Download the file** is the Dropbox `dl=1` address, labelled only as the file.
+  - English and Hungarian, by `navigator.language`.
+  - An unreadable or missing fragment shows "This link is incomplete. Ask for it again." with the normal downloads.
+- **The privacy policy**:
+  - sharing a link puts the item in the sharer's own Dropbox as a public file, kept current by sync until they stop
+    sharing;
+  - opening a link downloads that file from Dropbox;
+  - the landing page reads the link in the browser and sends nothing;
+  - on Android, Play hands the link to the app after an install.
+- **The support page**: "How do I send a setlist to my band?"
+- **The website's README**: its file list.
+
+## 11. Corner cases — read these first
+
+### 11.1 Sharing
+
+| Case | What happens |
 | --- | --- |
-| A link opened twice | The same bytes: disregarded as a duplicate, as the same file opened twice is. |
-| A song the library holds a different version of | The import's question: keep both, replace, skip, cancel. |
-| A link cut short or altered by a messenger | The checksum fails: "could not be read… cut short". Nothing is written. |
-| A link made by a later format version | "made by a newer version of Campfire". |
-| The landing address with no fragment, opened in the app | Unreadable, said once. |
-| A crafted link (zip bomb, huge payload, text that is not UTF-8) | Refused by the codec's limits before the import; whatever passes meets the import's own limits, as a dropped file does. |
-| Read only mode | Imported, as "Open with" is. |
-| Setlists switched off | A setlist link still writes the setlist, as an imported Zip does; the tab stays hidden. |
-| An editor with unsaved text in front | The song is imported and announced; it is not opened over the editor (`openImportedSong`). |
-| A song opened from a setlist, exported as a link | The file as the library holds it, as ChordPro is; the setlist's key, tempo and capo travel only in a setlist link. |
-| The library's own overrides of a song | Not carried, as ChordPro does not carry them. |
-| A cover named by the song | The address travels in the file; the recipient's app downloads it, if its Cover art switch is on. |
-| A link opened in a second web tab | Sent to the tab that owns the library; without an answer, kept for Retry (§5.4). |
-| A link opened in the web app while an update is downloaded | Kept in session storage across the page's reload, imported by the build that starts. |
-| A link opened offline | The web app imports it from the kept build; the landing page is not kept, so `/s/` needs a connection. |
-| Universal Link not followed (pasted into Safari, an in-app browser) | The landing page, whose Smart App Banner opens the app with the address (§10). |
-| App Link not verified (the debug build, verification failed at install) | The browser and the landing page. |
-| A phone's camera scanning the code | It opens the address; with the app installed the system hands it over, as a tapped link. |
-| A QR code in the dark theme | Always black on white, on a white card. |
-| Ctrl / Cmd + S with no code | Nothing: there is nothing to save. |
-| The browser's history | Holds the landing page's address with its fragment, as it holds any address; a browser that syncs history carries it there. Campfire sends nothing. |
-| Baseline profile journey | Untouched: it opens no export screen. |
+| Not connected | The export screen offers Connect and says the library will sync (§6.2). |
+| Connected, but the token predates the sharing scopes | `missing_scope` → "Connect Dropbox again…"; **never** `ConnectionFailed` (§4.1). |
+| Connecting from export on Android, process killed while in the browser | The connection is restored on return, and `SyncConsentOrigin.EXPORT` reopens the export dialog on Link (§6.4). |
+| Connecting from export on the web | The page comes back to `/app/`, and the `EXPORT` origin reopens the dialog (§6.4). The OAuth return clears the query **and the hash**, so a share payload must already be in session storage (§9.4). |
+| Connecting from export with a different account than before | The index is reset (existing), the mirror and journal are cleared, and that account's shares appear. |
+| The first sync is still running after connecting | **Create link** works at once: it does not take the run lock (§4.2). |
+| The same item shared from two devices at once | Both read the registry first. A second **Create link** that loses the race finds the entry on its add-operation retry, deletes its own uploaded file, and shows the existing link. Test it. |
+| A setlist over 24 MB | Not shareable now (§6.2). One that grows over later stays at its last version, as `tooLarge` (§5.1). |
+| A team account that forbids public links | `NotPublic`: the file is deleted, and the screen says the account doesn't allow public links. |
+| Dropbox full | A message; nothing is left behind. |
+| Offline | "Couldn't reach Dropbox", with **Try again**. |
+| A failure between the upload and the registry | The uploaded file is deleted, best effort; leftovers are removed by **Stop sharing everything** (§7.1). |
+| Read only mode | Link is offered: it writes nothing to the library. |
+| Sync not configured in the build (no app key) | The Link format is hidden. |
+| A song shared alone and also inside a shared setlist | Two independent shares; both follow the song. |
 
-## 8. Order of work
+### 11.2 Keeping copies current
 
-Each step builds and tests green on its own, one commit each. The website files go out before any app that relies on
-them, since a link filter is verified at install and an association file is cached by Apple for a day or more.
+| Case | What happens |
+| --- | --- |
+| Nothing shared | The step costs nothing: no `/shared/` files and no journal means it is skipped (§5.1). |
+| Two devices rebuild the same copy | Deterministic bytes (§5.2) give the same hash, so neither uploads. If both do, the second gets `Conflict` and drops it. |
+| A run ends in `DeletionsNeedConfirmation`, or fails | No rebuild; the next completed run does it. |
+| **Stop syncing** pressed mid-run | It cancels the run, as today, so the step is skipped. |
+| Sync stays disconnected | Links keep serving the last version, and nothing updates them. The disconnect confirmation says so (§7.2). |
+| Per-device transposition, capo, and tempo | Never in the copy. A setlist entry's values are. |
+| A song edited only in its cover, tags, or links | These are directives in the file, so the copy updates. |
+| The registry hand-edited into invalid JSON | Treated as empty for this run, with a logged error. A run **never** overwrites it; only a sharing action rewrites it, and that re-reads first. |
+| A newer registry `version` | This version leaves it alone, as it does `preferences.json`, and skips the step. |
+| Stop sharing while a run uploads the same copy | The run's `update:<rev>` fails because the file is gone, and the run drops it. The entry is already removed. |
 
-1. **A measurement**, thrown away: the codec's first draft run over a real library of a few hundred songs, to see how
-   many fit a version 30 code. If fewer than four in five do, dynamic Huffman codes go into the `Deflater` before the
-   rest, which the format already allows.
-2. `:zlib`, with the code and the tests moved and nothing else changed: the PDF tests, `PrintPdfWriterTest` included,
-   pass unchanged.
-3. `:data:model`'s `ShareLinks`, the codec and the two use cases, with their tests.
-4. The QR encoder and the PNG writer, with ZXing in `desktopTest`.
-5. The export screen's Link format, the clipboard and `shareText`, on the desktop first.
-6. `importShareLink`, `shareLinks` and the messages; the web shell and `index.html`, with the Node tests.
-7. The website (§10): the association files, the landing page.
-8. Android: the filter, the channel, the shared text.
-9. iOS: the entitlement, the capability, `openUrl`, the photo library string.
-10. Docs: the root `CLAUDE.md` — a sentence in the opening paragraph that a link carries its song after the `#` and
-    reaches no server, the architecture block with `:zlib`, the Printing section's formats, a short Sharing section,
-    the test list and command — and `presentation/CLAUDE.md` (Export), `data/source/local/implementation/CLAUDE.md`
-    (the `zip/` paragraph, which loses the inflater and keeps saying why the writer stores), `app/web`, `app/android`,
-    `app/ios`, `zlib/CLAUDE.md`; the README's feature list.
+### 11.3 Renames, deletions, and things done outside Campfire
 
-## 9. Checks owed by hand
+| Case | What happens |
+| --- | --- |
+| A shared setlist's title edited (renaming its file) | A `rename` in the journal; the link is unchanged. The payload's title stays the old one (display only); the import shows the real title (§8.2). |
+| **Update file name** on a shared song | The same as above. |
+| A song inside a shared setlist renamed or deleted | The setlist document changes (`followSongReferences`), so the copy is rebuilt. |
+| A shared item deleted in Campfire | A `stop` in the journal: the file is deleted and the entry removed. The confirmation said so (§7.3). |
+| **Delete library** | Every shared item gets a `stop`. |
+| A rename made offline and synced later | The journal survives until a run applies it, before items are looked up (§5.4). |
+| An item deleted outside Campfire (a file manager, Dropbox on the web, another app) | `orphaned`: the link keeps serving the last version, and Settings offers **Stop sharing**. **Never stopped automatically.** |
+| The item reappears under its name | Back to `ok` on the next run. |
+| `/shared/<id>.zip` deleted by hand in Dropbox | The link is dead. The run finds no file and marks the entry `orphaned`; **Stop sharing** in Settings removes the entry. |
+| `/shared/` files edited by hand | The next run's hash differs, so the library's version overwrites them. |
+| App data cleared, or the app reinstalled | The mirror and journal are gone. On reconnecting, the registry is read again. Pending renames are lost, so those entries may become orphaned (Settings shows them). |
 
-- **The caps**, on the 360 × 640 dp screen: a version 30 code scanned off it by the cameras of an iPhone and a Pixel
-  at arm's length, and a version 40 one, which decides whether `MAX_QR_VERSION` moves; the three segments of the
-  format in Hungarian.
-- **Every way a link travels**, a song's and a long setlist's: WhatsApp, Messages, Telegram, Signal, Gmail, Slack, a
-  note pasted into a browser — the link arrives whole and opens; the preview shows the landing page's card, never the
-  song.
-- Android: the App Link verified (`adb shell pm get-app-links com.pandulapeter.campfire` says `verified`), a link
-  from a messenger opening the app cold and warm, a scanned code, a shared text; the debug build through
-  `adb shell am start -a android.intent.action.VIEW -d '<link>' com.pandulapeter.campfire.debug` and through
-  `pm set-app-links-user-selection`; `/app/` still opening in Chrome.
-- iOS: the association fetched by Apple's CDN
-  (`curl https://app-site-association.cdn-apple.com/a/v1/campfire-songbook.com`) — GitHub Pages serves an extensionless
-  file as `application/octet-stream`, which the CDN has been accepting, and this is where that is confirmed; a link
-  from Messages and Mail opening the app cold and warm, and whether it arrives at `.onOpenURL` (§6.2); `xcrun simctl
-  openurl booted '<link>'` on the simulator; the share sheet's Save Image with its permission prompt; a TestFlight
-  build, since the entitlement is checked against the profile there.
-- Web: a link in Chrome, Firefox and Safari, cold and with the build kept; reloading after the import; a second tab
-  with the first open, and with the first still loading; a link while an update downloads; the address bar without
-  the fragment.
-- Desktop: Copy link and Save QR code on macOS, Windows and Linux; the landing page's ChordPro file opened with the
-  desktop app.
-- The PNG printed on paper and scanned.
+### 11.4 Opening
 
-## 10. Outside the repository
+| Case | What happens |
+| --- | --- |
+| App installed (Android, iOS) | The App Link or Universal Link opens the app on the import screen, downloading. |
+| App Link not verified, or a debug build | The browser shows the landing page; **Open in Campfire** opens the app. |
+| An in-app browser that keeps `https` links | The landing page, with its buttons and the line about opening it in the browser. |
+| Desktop | The browser shows the landing page; **Open in Campfire** opens a running or new instance. |
+| Web | The landing page leads to `/app/#…`; the payload is stored and the address cleaned (§9.4). |
+| The same link opened twice | Everything is identical: "already in your library". |
+| The sharer opens their own link | Identical, so disregarded. |
+| The link opened again after the sharer changed things | Changed songs and the setlist are conflicts defaulting to **Replace** (§8.2); unchanged ones are disregarded. |
+| The recipient edited their copy, then opens the link again | Their edits are conflicts; the review line explains that Keep both keeps them. |
+| The sharer renamed the setlist's title since | The setlist arrives under a new name, so it is imported as **new**, and the old copy stays. Expected, and shown in the review. |
+| The link stopped, or its file deleted | "This link no longer works…". |
+| Dropbox answers with HTML (banned, team-only, a login page) | The zip check makes it "no longer works" (§8.3). |
+| A link from a newer format version | "made by a newer version of Campfire". |
+| A malformed or crafted payload | Unreadable; the download address is always built by the app (§3). |
+| A zip bomb, or deep nesting, in the shared file | The archive limits stop it (§8.3). |
+| Offline | The Unreachable wording, with Try again. |
+| The process killed during the download | The link is not persisted; the existing "import interrupted" message appears, and the user opens the link again. |
+| Opened during onboarding, a dialog, or with unsaved editor text | The import screen waits for them (existing). |
+| Opened while another import, or a library deletion, runs | Queued behind it (existing). |
+| Opened in read only mode | Imported, as "Open with" is (existing rule). |
+| Setlists switched off in Features | The setlist is still written, and the tab stays hidden, as with a zip. |
+| A shared song opened | A review with one row; after Import, the song opens (unless an editor holds unsaved text). |
+| Cover addresses inside shared songs | Downloaded by the recipient if their Cover art switch is on, as for any import. |
+| A second web tab | Handed to the tab that owns the library (§9.4). |
 
-- **`campfire-website`** (a sibling checkout at `../CampfireWebsite`, plain HTML on GitHub Pages, `.nojekyll` already
-  there):
-  - `.well-known/assetlinks.json`: the `delegate_permission/common.handle_all_urls` relation for
-    `com.pandulapeter.campfire`, with the SHA-256 of the certificate Play signs the app with — Play Console's App
-    signing page shows it, and the upload key's beside it where Play App Signing is in use; where it is not, the
-    release keystore's.
-  - `.well-known/apple-app-site-association`, no extension:
-    `{"applinks": {"details": [{"appIDs": ["N45A6ZHDGY.com.pandulapeter.campfire"], "components": [{"/": "/s/*"}]}]}}`.
-  - `s/index.html`, the landing page, in the site's style and with its mobile/desktop switch: `noindex`, Open Graph
-    tags that say "A song shared from Campfire" (the only thing a link preview can see); a script that reads the
-    fragment, decodes the base32 and inflates it with the browser's `DecompressionStream('deflate')`, and shows a song's
-    title and artist (or a setlist's title, from its stored manifest), always as text, never as markup — where the
-    browser has no `DecompressionStream`, the page shows its buttons without the title. The buttons: **Open in
-    Campfire for the web** (`/app/` with the same fragment), **Download the ChordPro file** (or the Zip), and the
-    stores; on iOS a Smart App Banner (`apple-itunes-app`, app id 6815160850, with the address as its `app-argument`,
-    to be verified to reach `openUrl`). English and Hungarian by `navigator.language`, as the app's `index.html` does.
-  - The privacy policy: a sentence that a shared link carries the song in the part of the address after the `#`, which
-    no browser sends to a server, and that the landing page reads it in the browser. The support page: "How do I send a
-    song to somebody?"
-  - The README's file list.
-- **Apple Developer**: the Associated Domains capability on the App ID `com.pandulapeter.campfire`. That invalidates
-  the existing profiles; the iOS one is made again by xcodebuild, and the Mac App Store one by
-  `app_store_signing.py`, which only takes an `ACTIVE` profile and makes a new one where there is none.
-- **Play Console**: the Deep links page shows the domain verified once the release is out; nothing to fill in. The
-  Data safety form is unchanged.
-- **App Store Connect**: the review notes gain how to try a link; the privacy label is unchanged.
-- A What's new message, by the prepare-release skill.
+### 11.5 Install, then import
 
-## 11. Not in this plan
+| Case | What happens |
+| --- | --- |
+| Android, installed from Play through the button | The referrer is read once on the first launch, then the demo library, onboarding, and the import screen. |
+| Android, installed from Play some other way | No referrer, so nothing happens; the landing page still has **Open in Campfire**. |
+| Android, a later launch | The referrer is never read again: first launch only, recorded as handled (§9.1). |
+| Android, a campaign's referrer | Ignored. |
+| iOS, link copied, installed from the App Store | On the first launch, `detectPatterns` matches, the onboarding's last page offers **Open it**, one paste prompt appears, and the import follows. |
+| iOS, something else copied in between | Not a Campfire link: "That isn't a Campfire link". |
+| iOS, the user declines the paste prompt | Nothing happens; the landing page's "Already installed it? Open it" remains. |
+| Desktop, installed from a store | The landing page's tab is still open; **Open in Campfire**. |
+| Onboarding skipped | The import screen follows at once: it waits only while onboarding is on the stack. |
+| The demo library | Still planted on a fresh install; the shared item arrives beside it. |
 
-- A scanner inside the app. Every phone's camera reads QR codes, and the system hands the address over.
-- Opening a link on the desktop: a `campfire://` scheme, or pasting a link into the import. The landing page's
-  ChordPro file is the desktop's way in for now.
-- The Web Share API in the web app, and a `campfire://` fallback button on the landing page.
-- A confirmation sheet before a link is imported (default 6).
-- Dynamic Huffman codes, unless step 1 asks for them.
-- A QR code printed into a PDF, a whole library as a link, several songs without a setlist.
-- Short links, expiring links, encrypted links — every one of them needs a server.
-- Universal Links for the Mac App Store build.
-- Deflating the Zip export's entries, which `:zlib` now makes possible and which would halve a library's archive; it
-  changes what the export's too-large-to-import warning compares, so it is a change of its own.
+### 11.6 Privacy and security
+
+| Case | What happens |
+| --- | --- |
+| Link previews in messengers | They see only the landing page's Open Graph text; the fragment never reaches a server. |
+| Anyone with the link | Can download the file: that is what a public link is. The export screen says "Anyone with the link". |
+| Another app registering `campfire://` (Android, macOS, Linux) | It may receive a button tap's address: the same public link, nothing more. |
+| A link making the app fetch another host | Impossible: the address is built from validated parts (§3). |
+| Backups | The mirror and journal are excluded; `library/` and `preferences.json` are backed up as today. |
+
+## 12. Not in this plan
+
+- Live updates of recipients' copies, read-only subscribed setlists, and notifications of changes (decision 3).
+- Links for a selection of several songs, or for the whole library.
+- Expiring or password-protected links (Dropbox's paid features), and view counts.
+- Sync providers other than Dropbox.
+- A QR scanner in the app: every phone's camera reads them.
+- Registering the protocol in the `.msi`, which is published by nothing.
+- Skipping the demo library when the install came from a link.
+
+## 13. Outside the repository
+
+- **Dropbox App Console** ("Campfire Sync"): tick `sharing.write` and `sharing.read`.
+  - The authorization URL sends no `scope=`, so new connections get them at once. Existing tokens do not (§4.1).
+  - Update the scope list in `data/source/remote/implementation/CLAUDE.md`.
+- **Apple Developer**: the Associated Domains capability on `com.pandulapeter.campfire`. That invalidates the
+  provisioning profiles:
+  - xcodebuild makes the iOS one again (`-allowProvisioningUpdates`);
+  - `app_store_signing.py` makes the Mac App Store one when none is active.
+- **Play Console**: nothing to fill in. Deep links shows the domain verified after the release.
+- **Microsoft Store**: the protocol is declared in the manifest; nothing to do in Partner Center.
+- **The website** (§10): it must be deployed before the first app release that relies on it, since Apple caches the
+  association file for a day or more.
+- **Store privacy answers** (the App Store's label, Play's Data safety): content goes to the user's own Dropbox at
+  their request, not to the developer. Review the answers at release time.
+- **What's new**: by the prepare-release skill.
+
+## 14. Order of work
+
+Each step builds and tests green on its own, one commit each.
+
+1. **Step 0** (§2). Write the findings into §2, and adjust §3, §4, and §9 where they differ.
+2. **Deterministic `pack`** (§5.2), with its test.
+3. **`ShareLinks`** (§8.1), with its tests.
+4. **Dropbox** (§4.1): the sharing calls, the shared files in the listing, and `missing_scope`, with
+   `DropboxTransportTest` and URL-parsing tests.
+5. **The registry, mirror, and journal** (§4.2), and `CreateShareLinkUseCase`, `StopSharingUseCase`, and
+   `GetSharedLinksUseCase` in `:domain`. Use fakes of `SyncFolder` for the races in §11.1.
+6. **The run's shared-copy step** (§5), with cases in `TwoDeviceSyncTest`:
+   - a rebuild;
+   - a rename on one device, seen by the other;
+   - a deletion;
+   - an orphan, and its return;
+   - two devices rebuilding at once.
+7. **The rename and deletion journals** in the use cases, and the confirmation strings (§5.4, §7.3).
+8. **The import side** (§8): `ImportSource.SharedLink`, the Replace default, the zip check, the wording, and links in
+   pasted, dropped, and shared text.
+9. **The QR encoder and PNG** (§6.5), with ZXing in `desktopTest`.
+10. **The export screen's Link format**, connecting from it, and `SyncConsentOrigin.EXPORT` (§6).
+11. **Settings' Shared links sheet** and the disconnect wording (§7).
+12. **The website** (§10).
+13. **Android** (§9.1): the filters, `handle`, and the install referrer.
+14. **iOS** (§9.2): associated domains, `openUrl`, and the first-launch clipboard card.
+15. **Desktop** (§9.3): the arguments, the macOS handler, and the three registrations.
+16. **Web** (§9.4): the fragment, the second tab, and the CORS outcome, with Node tests.
+17. **Docs**:
+    - the root `CLAUDE.md` (§7.4);
+    - the `CLAUDE.md` files of `data/sync/implementation` (and `shared/`), `data/source/remote/implementation`,
+      `presentation` (Export, Settings, importing), each `app/*` touched, and `domain/implementation`;
+    - the README's feature list and Third-party table.
+
+## 15. What only a device can tell
+
+Name these once in the hand-off, not as a standing list:
+- the Universal Link and the clipboard card on a real iPhone (TestFlight);
+- the install referrer, through Play's internal testing track;
+- the `.msix` protocol activation on Windows.
+
+Everything else is covered by tests, step 0, or the offscreen UI tests.
