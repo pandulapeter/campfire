@@ -82,7 +82,6 @@ internal fun CampfireContent(
         details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
         areChordsEnabled = userPreferences?.areChordsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
-        isInSetlist = false,
     )
 
     // The window's height rather than what the keyboard leaves of it, so that the grouping of the tools never flips while

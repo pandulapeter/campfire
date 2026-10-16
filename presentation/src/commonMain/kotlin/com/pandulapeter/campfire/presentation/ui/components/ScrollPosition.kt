@@ -21,9 +21,9 @@ import androidx.compose.runtime.DisposableEffect
  *
  * Navigation 3 keeps what an entry remembers for exactly as long as the entry is on the back stack, and selecting a
  * tab rebuilds the stack around the destination that was picked. The songs screen sits at the bottom of every one
- * of those stacks and so is the only screen whose own `rememberSaveable` state survives a trip to another tab; the
- * setlists and the settings screens are thrown away as they are left. All three therefore hand their position to
- * the view model, which outlives the back stack entirely.
+ * of those stacks and so is the only screen whose own `rememberSaveable` state survives a trip to another tab; every
+ * other one is thrown away as it is left. Each of them therefore hands its position to the view model, which outlives
+ * the back stack entirely, and it is restored on every return rather than reset.
  */
 internal class ScrollPosition {
 

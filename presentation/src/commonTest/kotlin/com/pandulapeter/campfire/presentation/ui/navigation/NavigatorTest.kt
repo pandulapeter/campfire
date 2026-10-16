@@ -246,6 +246,16 @@ class NavigatorTest {
     }
 
     @Test
+    fun `returning to settings from another screen keeps where each tab was scrolled to`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Settings)
+        navigator.settingsScrollPositions.getValue(SettingsTab.LIBRARY).offset = 420
+        navigator.selectTopLevelDestination(CampfireDestination.Songs)
+        navigator.selectTopLevelDestination(CampfireDestination.Settings)
+        assertEquals(420, navigator.settingsScrollPositions.getValue(SettingsTab.LIBRARY).offset)
+    }
+
+    @Test
     fun `pressing the open tool's item names the first tool for a tool at its top, but never the tool itself`() = runTest {
         val navigator = navigator(backgroundScope)
         val requests = mutableListOf<ScrollToTopRequest>()

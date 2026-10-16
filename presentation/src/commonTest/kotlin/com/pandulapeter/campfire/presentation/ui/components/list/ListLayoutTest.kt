@@ -44,24 +44,30 @@ class ListLayoutTest {
     }
 
     @Test
-    fun `the setlists screen's wider cards need a wider window for the same columns`() {
-        val twoSetlistColumns = MIN_SETLIST_COLUMN_WIDTH * 2 + FAST_SCROLLER_WIDTH
-        assertEquals(2, layout(twoSetlistColumns).setlistColumnCount)
-        val justShort = layout(twoSetlistColumns - 1.dp)
-        assertEquals(1, justShort.setlistColumnCount)
-        assertEquals(2, justShort.columnCount)
+    fun `the setlists screen flows cards showing the same details into the same columns as the songs screen`() {
+        val details = UserPreferences.CardDetails.SetlistsDefault
+        val column = minSongColumnWidth(details, areChordsEnabled = true, isMetronomeEnabled = true)
+        listOf(column * 2 + FAST_SCROLLER_WIDTH - 1.dp, column * 2 + FAST_SCROLLER_WIDTH, column * 3 + FAST_SCROLLER_WIDTH).forEach { width ->
+            val layout = ListLayout.of(
+                settledWidth = width,
+                contentPadding = noPadding,
+                layoutDirection = LayoutDirection.Ltr,
+                songColumnWidth = column,
+                setlistColumnWidth = column,
+            )
+            assertEquals(layout.columnCount, layout.setlistColumnCount)
+        }
     }
 
     @Test
     fun `a card that says less after its artist is given a narrower column`() {
         val songs = UserPreferences.CardDetails.SongsDefault
         val bare = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false)
-        val narrow = minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false)
+        val narrow = minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true)
         assertTrue(narrow < MIN_SONG_COLUMN_WIDTH)
-        assertEquals(narrow, minSongColumnWidth(songs, areChordsEnabled = false, isMetronomeEnabled = false, isInSetlist = false))
-        assertTrue(minSongColumnWidth(songs.copy(isTempoShown = true), areChordsEnabled = false, isMetronomeEnabled = false, isInSetlist = false) > narrow)
-        assertTrue(minSongColumnWidth(songs.copy(isDurationShown = true), areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false) > MIN_SONG_COLUMN_WIDTH)
-        assertTrue(minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = true) > narrow)
+        assertEquals(narrow, minSongColumnWidth(songs, areChordsEnabled = false, isMetronomeEnabled = false))
+        assertTrue(minSongColumnWidth(songs.copy(isTempoShown = true), areChordsEnabled = false, isMetronomeEnabled = false) > narrow)
+        assertTrue(minSongColumnWidth(songs.copy(isDurationShown = true), areChordsEnabled = true, isMetronomeEnabled = true) > MIN_SONG_COLUMN_WIDTH)
     }
 
     @Test
@@ -70,7 +76,6 @@ class ListLayoutTest {
             UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false),
             areChordsEnabled = true,
             isMetronomeEnabled = true,
-            isInSetlist = false,
         )
         val width = narrow * 3 + FAST_SCROLLER_WIDTH
         assertEquals(2, layout(width).columnCount)

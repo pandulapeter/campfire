@@ -50,22 +50,21 @@ internal fun columnCountForWidth(
  * its second line ([UserPreferences.CardDetails], the key only with the chords and the tempo by default only with the
  * metronome), so that a card that says
  * less is given less room and a window fits more of them side by side, while one that says more keeps its line from
- * being cut short. A setlist's card starts wider, for the slot number before its title. A window narrower than one
- * column, a phone held upright included, still gets one, as wide as the window.
+ * being cut short. The Songs and the Setlists screens work it out the same way, so that cards showing the same details
+ * flow into the same columns on both: a setlist's slot number takes its room from the title, which is cut short first
+ * anyway. A window narrower than one column, a phone held upright included, still gets one, as wide as the window.
  */
 internal fun minSongColumnWidth(
     details: UserPreferences.CardDetails,
     areChordsEnabled: Boolean,
     isMetronomeEnabled: Boolean,
-    isInSetlist: Boolean,
-) = (if (isInSetlist) SETLIST_CARD_BASE_WIDTH else SONG_CARD_BASE_WIDTH) +
+) = CARD_BASE_WIDTH +
     (if (areChordsEnabled && details.isKeyShown) CARD_KEY_WIDTH else 0.dp) +
     (if (details.isTempoShown(isMetronomeEnabled)) CARD_TEMPO_WIDTH else 0.dp) +
     (if (details.isDurationShown) CARD_DURATION_WIDTH else 0.dp)
 
 // Declared before the two defaults below, which are worked out from them as the file is initialized.
-private val SONG_CARD_BASE_WIDTH = 368.dp
-private val SETLIST_CARD_BASE_WIDTH = 392.dp
+private val CARD_BASE_WIDTH = 368.dp
 private val CARD_KEY_WIDTH = 16.dp
 private val CARD_TEMPO_WIDTH = 16.dp
 private val CARD_DURATION_WIDTH = 32.dp
@@ -75,7 +74,6 @@ internal val MIN_SONG_COLUMN_WIDTH = minSongColumnWidth(
     details = UserPreferences.CardDetails.SongsDefault,
     areChordsEnabled = true,
     isMetronomeEnabled = true,
-    isInSetlist = false,
 )
 
 /** The Setlists screen's [minSongColumnWidth] with every feature on and the cards as a fresh installation has them. */
@@ -83,7 +81,6 @@ internal val MIN_SETLIST_COLUMN_WIDTH = minSongColumnWidth(
     details = UserPreferences.CardDetails.SetlistsDefault,
     areChordsEnabled = true,
     isMetronomeEnabled = true,
-    isInSetlist = true,
 )
 
 private const val MAX_COLUMN_COUNT = 4

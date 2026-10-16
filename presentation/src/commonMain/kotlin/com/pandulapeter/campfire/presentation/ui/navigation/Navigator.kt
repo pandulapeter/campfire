@@ -95,7 +95,7 @@ internal class Navigator(
     private var isNavigationTransitionRunning = false
 
     /**
-     * Where each of the three top level screens is scrolled to - the settings screen once per tab, since each of its
+     * Where each of these top level screens is scrolled to - the settings screen once per tab, since each of its
      * tabs scrolls on its own - kept here because a tab that is left is taken off the back stack and loses everything
      * it remembered with it, see [ScrollPosition].
      */
@@ -107,8 +107,8 @@ internal class Navigator(
 
     /**
      * Which tab of the settings screen is open, kept here so that the screen's own recompositions and the sync consent
-     * can reach it. Like the other two screens' scroll positions it lasts for the session; unlike them, the tabs' scroll
-     * is thrown away when Settings is selected from another top level screen. The screen only reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
+     * can reach it. Like the scroll positions above it lasts for the session. The screen only reads it as it is composed,
+     * but it is a state because the web build's address names the tab, and follows it.
      */
     var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
@@ -338,11 +338,6 @@ internal class Navigator(
             return
         }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
-        // Settings keeps its tab for the session but is always scrolled to the top of it on arrival; the other two screens
-        // keep where they were left.
-        if (destination == CampfireDestination.Settings) {
-            settingsScrollPositions.values.forEach { it.offset = 0 }
-        }
         updateBackStack {
             clear()
             add(CampfireDestination.Songs)

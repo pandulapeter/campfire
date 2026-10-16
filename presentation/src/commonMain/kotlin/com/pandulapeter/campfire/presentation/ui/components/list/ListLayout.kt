@@ -35,10 +35,11 @@ internal fun hasRoomForSidePanel(
 
 /**
  * What a list screen decides from the width it settles at: whether its filter side panel fits, how many columns the
- * Songs screen lays out with and without that panel next to it, and how many the Setlists screen's wider cards fit
- * (see [MIN_SETLIST_COLUMN_WIDTH]). The app's `CampfireScreens` works it out and hands it down in place of the width
- * itself, so that a window being resized, whose width changes on every frame, recomposes the screens only in the
- * frames one of these decisions changes in: the value is equal everywhere between two breakpoints.
+ * Songs screen lays out with and without that panel next to it, and how many the Setlists screen's cards fit, whose
+ * details are chosen apart from the songs' (see [MIN_SETLIST_COLUMN_WIDTH]). The app's `CampfireScreens` works it out
+ * and hands it down in place of the width itself, so that a window being resized, whose width changes on every frame,
+ * recomposes the screens only in the frames one of these decisions changes in: the value is equal everywhere between
+ * two breakpoints.
  */
 @Immutable
 internal data class ListLayout(

@@ -58,7 +58,6 @@ class NavigationChromeKindTest {
                                 details = UserPreferences.CardDetails(isKeyShown = isKeyShown, isTempoShown = isTempoShown, isDurationShown = isDurationShown),
                                 areChordsEnabled = areChordsEnabled,
                                 isMetronomeEnabled = isMetronomeEnabled,
-                                isInSetlist = false,
                             )
                             assert(column, WIDTHS.map { it to hasPanel(it, column) })
                         }

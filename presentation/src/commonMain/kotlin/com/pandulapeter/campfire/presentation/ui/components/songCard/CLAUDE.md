@@ -26,5 +26,5 @@ The song card the song lists and setlists draw (`SongListItem`).
   two lines; touch targets stay.
 - **Column width** (`minSongColumnWidth`, from `UserPreferences.CardDetails` and the chords/metronome switches): 368dp
   base, +16dp each for key and tempo, +32dp for duration, so the default Songs card keeps 400dp and a phone on its side
-  stays one column. Setlists start 24dp wider for the slot number (`MIN_SETLIST_COLUMN_WIDTH`). `CampfireScreens`
-  computes both into `ListLayout.of`.
+  stays one column. Setlists use the same widths (the slot number comes out of the title), so the same details flow
+  into the same columns on both screens. `CampfireScreens` computes both into `ListLayout.of`.

@@ -47,8 +47,8 @@ breakpoint, as do the wide layout's pages.
 
 ## Navigation and scroll
 
-- `Navigator.settingsTab` (a state, since the web address names it) lasts the session;
-  `settingsScrollPositions` are reset whenever Settings is entered from another top level screen.
+- `Navigator.settingsTab` (a state, since the web address names it) and `settingsScrollPositions` last the session,
+  so Settings reopens on the tab and scroll it was left at; only a press of its own item scrolls it to the top.
 - Back from any other tab goes to General first (`isSettingsBackToGeneral`): via `navigateBack` for Escape and a
   screen-owned `NavigationBackHandler` for gestures/browser Back, so predictive back previews General (one pager scroll
   for the whole gesture; the wide layout uses a `SeekableTransitionState` at the gesture's fraction).

@@ -37,9 +37,11 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 - The key is `campfire.dropbox.appKey` → `DROPBOX_APP_KEY` in the generated `RemoteConfiguration.kt` (with
   `CAMPFIRE_VERSION` for the `User-Agent`).
 - Dropbox app setup: a *scoped access* app with the **App folder** permission; scopes `files.content.read`,
-  `files.content.write`, `account_info.read`; redirect URIs `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682`
-  (desktop), and the exact page URL per web deployment. Dropbox matches them character for character, hence the fixed
-  desktop port.
+  `files.content.write`, `account_info.read`, `sharing.read`, `sharing.write` (the last two for song links, added
+  2026-10-16: the authorization URL names no scopes, so Dropbox grants what the console ticks, and a token from before
+  then lacks them — a sharing call answers `missing_scope`, never a reason to fail sync); redirect URIs
+  `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682` (desktop), and the exact page URL per web deployment.
+  Dropbox matches them character for character, hence the fixed desktop port.
 - `MusicBrainzRemoteSource` and `ITunesRemoteSource` are each built once in `DataRemoteSourceModule` and handed to both
   the cover search and song details lists (MusicBrainz first), so both share one `MusicBrainzRateLimiter`.
 
