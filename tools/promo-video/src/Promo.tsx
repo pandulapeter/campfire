@@ -655,12 +655,10 @@ const Outro: React.FC = () => {
         <div
           style={{
             padding: "26px 54px",
-            borderRadius: 999,
-            background: `linear-gradient(90deg, ${C.purple}, ${C.deepOrange})`,
             fontFamily: SANS,
             fontWeight: 700,
             fontSize: 56,
-            color: "#fff",
+            color: C.lilac,
             transform: `scale(${url})`,
           }}
         >

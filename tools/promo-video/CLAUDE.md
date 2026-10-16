@@ -50,6 +50,9 @@ Remotion is not open source: free for individuals and companies of up to three p
 - Generic devices, so one video serves every store: no notch or island, and the laptop shows the app's window alone
   (`Device.LAPTOP`); the phones' and tablet's status bars stay.
 - Text animates by moving and fading together, never masked or clipped.
+- No gradient text or buttons (they read as AI-made, and neither the app nor the website has them): a headline's
+  accented line is the website's primary color (`Accent`: lilac on dark, purple on light), and the URL is lilac
+  text like the website's links, with nothing behind it.
 - Bold only for headlines and the name; the lines under the name, the chips, the badge's label, and the platform names
   are Regular or Medium; the badge's chord is JetBrains Mono Bold.
 - The music is a backing track in A major for the owner's electric guitar: drums, bass, synths, and effects, no

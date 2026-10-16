@@ -24,7 +24,6 @@ export const C = {
   purple: "#5A49CA",
   lilac: "#D0BCFF",
   orange: "#FE851E",
-  deepOrange: "#F57C00",
 };
 
 export const fontFaces = `
@@ -231,18 +230,9 @@ export const Headline: React.FC<{
   );
 };
 
+/** A headline's accented line, in the website's primary color for the theme: never a gradient, which neither the app nor the website uses. */
 export const Accent: React.FC<{ children: React.ReactNode; light?: boolean }> = ({ children, light }) => (
-  <span
-    key={light ? "light" : "dark"}
-    style={{
-      backgroundImage: light ? `linear-gradient(90deg, ${C.purple}, ${C.deepOrange})` : `linear-gradient(90deg, ${C.lilac}, ${C.orange})`,
-      WebkitBackgroundClip: "text",
-      backgroundClip: "text",
-      color: "transparent",
-    }}
-  >
-    {children}
-  </span>
+  <span style={{ color: light ? C.purple : C.lilac }}>{children}</span>
 );
 
 /** A rounded label that springs in at [at]. */
