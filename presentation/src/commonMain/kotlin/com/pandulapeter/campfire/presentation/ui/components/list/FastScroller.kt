@@ -488,12 +488,12 @@ private class ScrollMetrics(
 )
 
 /**
- * The width of the column a [FastScroller] takes up over its list's end padding, all of which is its touch target (and
- * the cards' outer margin next to it as well).
- * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because the column is taken
- * out of the width of the rows for as long as the list is on the screen, scrollable or not - a column that came and
- * went with the scroller would reflow every row whenever the list grew past the height of the screen or shrank below
- * it. The thumb is tall enough that the target is never short of the height it lacks in width.
+ * The width of the column a [FastScroller] takes up over its list's end padding while the list scrolls (see
+ * [fastScrollerColumnWidth]), all of which is its touch target (and the cards' outer margin next to it as well).
+ * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because it is taken
+ * out of the width of the rows. The column count leaves room for it either way, so the scroller coming and going only
+ * widens and narrows the cards rather than moving them between columns. The thumb is tall enough that the target is
+ * never short of the height it lacks in width.
  */
 internal val FAST_SCROLLER_WIDTH = 24.dp
 

@@ -88,6 +88,25 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
+        // The Chords tab on a ukulele in its standard tuning, as the store listing shows it: the chords of C in the shapes
+        // the songs would draw them with.
+        Triple(
+            "phone-chords",
+            Device.IPHONE,
+            Shot(
+                id = "phone-chords",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.UKULELE.id)) },
+                drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
+            ),
+        ),
+        // A song on a guitar in open G, so the instrument and tuning chips above the diagrams say what they are drawn for:
+        // at 120%, page one ends after Verse 3.
+        Triple(
+            "tablet-song-tuning",
+            Device.IPAD,
+            song("tablet-song-tuning", "the_proclaimers-im_gonna_be_500_miles.cho", fontScale = 1.2f, extra = openG),
+        ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
         // A song with the metronome panel open under its title, not playing.
         Triple(
@@ -135,6 +154,11 @@ private val tuner = mapOf(
         put("referencePitch", 440)
         put("hasTurnedOnMicrophone", true)
     },
+)
+
+private val openG = mapOf(
+    "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
+    "tunings" to buildJsonObject { put(UserPreferences.Instrument.GUITAR.id, "guitar_open_g") },
 )
 
 /** Has the tuner hear [reading] and settle on it, the needle come to rest. */

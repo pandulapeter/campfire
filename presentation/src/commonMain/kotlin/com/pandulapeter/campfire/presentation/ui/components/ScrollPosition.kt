@@ -29,6 +29,9 @@ internal class ScrollPosition {
 
     var index = 0
     var offset = 0
+
+    /** Whether the list was longer than the screen, which decides the width of its fast scroller's column. */
+    var isScrollable = false
 }
 
 /**

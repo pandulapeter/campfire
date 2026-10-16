@@ -56,7 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.list.FAST_SCROLLER_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.list.fastScrollerColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
@@ -227,9 +227,10 @@ internal fun SongList(
         }
     }
 
+    val scrollerColumnWidth = fastScrollerColumnWidth(gridState = listState, position = viewModel.songListState.songsScrollPosition, isAnimated = hasLoadedLibrary)
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
-    val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+    val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
@@ -239,7 +240,7 @@ internal fun SongList(
                 start = true,
                 end = true,
                 bottom = true,
-                extraEnd = FAST_SCROLLER_WIDTH,
+                extraEnd = scrollerColumnWidth,
                 extraBottom = 8.dp + selectionBottomPadding,
             ),
         ) {
@@ -384,7 +385,7 @@ internal fun SongList(
         AnimatedVisibility(
             visible = isSelecting,
             modifier = Modifier.align(Alignment.BottomEnd)
-                .padding(contentPadding.only(end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH))
+                .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
                 .padding(DONE_BUTTON_MARGIN),
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),

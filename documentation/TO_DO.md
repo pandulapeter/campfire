@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- The fast scroller should only appear if the content is longer than the screen.
 - Update website + store descriptions to include the chord diagram library and other new features
 - Regenerate the baseline profile
 

@@ -59,7 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
-import com.pandulapeter.campfire.presentation.ui.components.list.FAST_SCROLLER_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.list.fastScrollerColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
@@ -189,15 +189,16 @@ internal fun SetlistList(
         scrollToTopOnKeyChange = !isReordering,
     )
 
+    val scrollerColumnWidth = fastScrollerColumnWidth(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition, isAnimated = hasLoadedLibrary)
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
-    val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+    val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -368,7 +369,7 @@ internal fun SetlistList(
         AnimatedVisibility(
             visible = isReordering,
             modifier = Modifier.align(Alignment.BottomEnd)
-                .padding(contentPadding.only(end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH))
+                .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
                 .padding(16.dp),
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),

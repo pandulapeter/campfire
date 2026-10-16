@@ -15,8 +15,10 @@ headers.
 ### The fast scroller (`FastScroller.kt`)
 
 - The only scrollbar, on both lists; the letter bubble only on the song list. The `FAST_SCROLLER_WIDTH` column overlays
-  the grid's end padding, so cards end before it while sticky headers run under it. The column stays whether or not the
-  list scrolls, so rows never reflow.
+  the grid's end padding, so cards end before it while sticky headers run under it. The column is there only while the
+  list scrolls (`FastScrollerColumn.kt`), so a short list is balanced; it animates when the user's doing changes that,
+  and is taken as is on first measure (kept in `ScrollPosition`) and while the library arrives. The column count always
+  leaves room for it, so only card widths change.
 - A press centers the thumb: at once for a mouse, but **for touch only after a long press or a mostly vertical move past
   slop** (`awaitThumbPress`), because the column is on Android's back-gesture edge. A tap jumps only on lift, and a lift
   the system consumed for back is ignored.
