@@ -70,7 +70,8 @@ kept: drop D stays drop D).
 
 ## Layout and motion
 
-- Pages sit above center, or scroll with faded edges, max `ONBOARDING_CONTENT_WIDTH`. The mark is
+- Pages sit above center, or scroll with faded edges, max `ONBOARDING_CONTENT_WIDTH`. A window taller than a phone lifts
+  the bar off the bottom edge (`onboardingBottomMargin`, growing with the height). The mark is
   dropped under `ONBOARDING_MARK_MIN_HEIGHT` (animated when resized, absent from the start in a short window).
 - Page turns are two layers following the pager position (`LocalOnboardingPageOffset`, draw phase): the question lags
   and fades (`onboardingHeaderMotion`), the answers lead, shrink, and fade (`onboardingAnswersMotion`). The question

@@ -46,6 +46,16 @@ internal val ONBOARDING_MARK_MIN_HEIGHT = 640.dp
 internal val ONBOARDING_ROOMY_MIN_HEIGHT = 720.dp
 
 /**
+ * Room kept under the bar on top of its own padding, so that a tall window (a desktop or a browser in full screen) does
+ * not leave Next pressed against the bottom edge while the page above has space to spare. It grows with the height
+ * [height] has beyond [ONBOARDING_ROOMY_MIN_HEIGHT], so phones, which need every dp for the page, keep none of it, and
+ * follows a resize continuously rather than switching at a threshold.
+ */
+internal fun onboardingBottomMargin(height: Dp) = ((height - ONBOARDING_ROOMY_MIN_HEIGHT) / 6).coerceIn(0.dp, MAX_BOTTOM_MARGIN)
+
+private val MAX_BOTTOM_MARGIN = 48.dp
+
+/**
  * How long the mark and its place take to leave or come back as a window crosses [ONBOARDING_MARK_MIN_HEIGHT]. Slower
  * than the app's springs, since the page reflows around it and a change that size is lost if it is over in a blink.
  */

@@ -29,4 +29,18 @@ class OnboardingMetricsTest {
         assertTrue(onboardingSideMargin(400.dp) > 0.dp)
         assertEquals(onboardingSideMargin(600.dp), onboardingSideMargin(1200.dp))
     }
+
+    @Test
+    fun `phones keep no bottom margin under the bar`() {
+        assertEquals(0.dp, onboardingBottomMargin(640.dp))
+        assertEquals(0.dp, onboardingBottomMargin(ONBOARDING_ROOMY_MIN_HEIGHT))
+    }
+
+    @Test
+    fun `the bottom margin grows with the height and then stays`() {
+        val margins = listOf(720, 800, 900, 1000, 1100, 1400, 2000).map { onboardingBottomMargin(it.dp) }
+        assertTrue(margins.zipWithNext().all { (shorter, taller) -> taller >= shorter })
+        assertTrue(onboardingBottomMargin(900.dp) > 0.dp)
+        assertEquals(onboardingBottomMargin(1400.dp), onboardingBottomMargin(2000.dp))
+    }
 }

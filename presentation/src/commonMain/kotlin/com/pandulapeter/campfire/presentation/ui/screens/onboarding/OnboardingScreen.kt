@@ -29,6 +29,7 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -124,6 +125,7 @@ internal fun OnboardingScreen(
     ) {
         val isCompact = maxHeight < ONBOARDING_MARK_MIN_HEIGHT
         val sideMargin = onboardingSideMargin(maxWidth)
+        val bottomMargin = onboardingBottomMargin(maxHeight)
         val isLast = nextOnboardingStep(currentStep, steps) == null
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -168,6 +170,7 @@ internal fun OnboardingScreen(
                 )
             }
             OnboardingBottomBar(
+                modifier = Modifier.padding(bottom = bottomMargin),
                 steps = steps,
                 currentStep = currentStep,
                 pagerPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
