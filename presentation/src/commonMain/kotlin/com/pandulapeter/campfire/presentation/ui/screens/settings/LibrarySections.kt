@@ -25,13 +25,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_demo_library
-import com.pandulapeter.campfire.presentation.resources.add_songs_hint_title
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_import
-import com.pandulapeter.campfire.presentation.resources.ic_info
 import com.pandulapeter.campfire.presentation.resources.ic_songs
-import com.pandulapeter.campfire.presentation.resources.settings_add_songs_hint_description
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_group_import_export
 import com.pandulapeter.campfire.presentation.resources.settings_group_on_this_device
@@ -90,15 +87,6 @@ private fun ImportExportSection(
 ) = SettingsSection(title = stringResource(Res.string.settings_group_import_export)) {
     val demoLibraryOffer by viewModel.firstRunController.demoLibraryOffer.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
-    // Enabled in performance mode too, unlike the rows that change the library: it only explains, and its own buttons
-    // are the ones disabled.
-    ActionListItem(
-        title = stringResource(Res.string.add_songs_hint_title),
-        description = stringResource(Res.string.settings_add_songs_hint_description),
-        icon = painterResource(Res.drawable.ic_info),
-        isEmphasized = false,
-        onClick = { viewModel.dialogHost.showDialog(DialogType.AddSongsHint) },
-    )
     ActionListItem(
         title = stringResource(Res.string.settings_import),
         icon = painterResource(Res.drawable.ic_import),

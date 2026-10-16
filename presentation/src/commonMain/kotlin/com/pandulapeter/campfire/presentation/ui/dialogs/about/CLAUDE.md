@@ -9,7 +9,7 @@
 -->
 # :presentation — ui/dialogs/about
 
-The open source licenses, What's new, and the add songs hint (`AddSongsHintDialog`, see `ui/screens/songs`).
+The open source licenses and What's new.
 
 ### Open source licenses (`OpenSourceLicensesSheet.kt`)
 

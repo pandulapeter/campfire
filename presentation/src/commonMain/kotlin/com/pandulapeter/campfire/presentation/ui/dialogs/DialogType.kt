@@ -207,9 +207,6 @@ sealed interface DialogType {
     /** The languages of the interface, opened from the onboarding's first page so that it can be read from the start. */
     data object AppLanguage : DialogType
 
-    /** The songs screen's hint on filling a small library, opened from Settings → Library at any time. */
-    data object AddSongsHint : DialogType
-
     /** What Campfire is built with and under which licenses, opened from Settings → About. */
     data object OpenSourceLicenses : DialogType
 }

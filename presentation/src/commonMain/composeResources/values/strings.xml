@@ -326,7 +326,6 @@
     <string name="settings_library_storage_offline_best_effort">Campfire opens in this browser without a connection. Your browser keeps it and the library, but has not yet promised to hold on to them if the device runs low on space. Bookmarking this page or using it regularly usually earns that promise; until then, an export or sync keeps a copy of the library elsewhere.</string>
     <string name="settings_library_storage_online_only">Campfire could not be saved in this browser, so opening it needs a connection.</string>
     <string name="settings_import">Import songs, documents, or zip archives…</string>
-    <string name="settings_add_songs_hint_description">Copy songs from websites or bring them from another app</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_songs">Songs</string>
     <string name="settings_features">Features</string>

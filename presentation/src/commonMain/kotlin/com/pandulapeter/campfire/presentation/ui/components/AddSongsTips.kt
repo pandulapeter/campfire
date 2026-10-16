@@ -38,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The two ways most people fill their library, each with a button that does it: pasting a song copied off any web page,
  * which the paste converter turns into ChordPro however it was laid out, and importing what another songbook app
- * exports. Shown as a card at the end of a library too small to be anybody's own yet, and from Settings at any time.
+ * exports. Shown as a card at the end of a library too small to be anybody's own yet.
  *
  * @param isEnabled False disables both buttons, for while an import runs or performance mode is on.
  */

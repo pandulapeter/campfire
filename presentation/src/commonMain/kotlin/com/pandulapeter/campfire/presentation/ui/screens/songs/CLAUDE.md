@@ -23,7 +23,7 @@ The songs screen.
   dismiss button; the third song takes it away. Not under a placeholder, a search, the selection, or performance mode
   (`isAddSongsHintShown`).
 - It is the last grid item, never the first, so `itemIndexOf`, `SongSectionIndex`, and the search anchor need not
-  count it. Settings → Library opens the same tips (`AddSongsTips`) as `AddSongsHintDialog` at any time.
+  count it.
 
 ## Selecting songs
 

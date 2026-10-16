@@ -326,7 +326,6 @@
     <string name="settings_library_storage_offline_best_effort">A Campfire internetkapcsolat nélkül is megnyílik ebben a böngészőben. A böngésző megőrzi az alkalmazást és a könyvtárat, de még nem vállalta, hogy akkor is megtartja őket, ha kevés a szabad hely az eszközön. Ha könyvjelzőt teszel az oldalra, vagy rendszeresen használod, ez általában megváltozik; addig egy exportálás vagy a szinkronizálás máshol is megőriz egy másolatot a könyvtárról.</string>
     <string name="settings_library_storage_online_only">A Campfire-t nem sikerült elmenteni ebben a böngészőben, ezért csak internetkapcsolattal nyílik meg.</string>
     <string name="settings_import">Dalok, dokumentumok vagy zip archívumok importálása…</string>
-    <string name="settings_add_songs_hint_description">Másolj dalokat weboldalakról, vagy hozd át őket egy másik alkalmazásból</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_songs">Dalok</string>
     <string name="settings_features">Funkciók</string>
