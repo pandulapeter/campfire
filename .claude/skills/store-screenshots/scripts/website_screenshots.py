@@ -7,39 +7,66 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Copies the website's screenshots from a render of the tool's `website` set into campfire-songbook.com's repository
-(the sibling CampfireWebsite folder): every `<name>.png` of the render's Website folder that the site already has as
-`assets/screenshots/<name>.webp`, scaled to that file's own size and saved as WebP, and the link preview Screenshot Bro
-exported as `assets/og-image.jpg`, at the size of the one it replaces. Where the website's repository is not there, the
-files go to the output folder given instead, with the sizes the site has always used.
+Copies the website's screenshots from a render of the tool's `website` set into campfire-songbook.com's repository:
+every `<name>.png` of the render's Website folder that the site already has as `assets/screenshots/<name>.webp`, scaled
+to that file's own size and saved as WebP, and, when one is given, the link preview Screenshot Bro exported as
+`assets/og-image.jpg`, at the size of the one it replaces. The repository is the one passed with --website, or else a
+sibling of this one named as the owner's checkout is (CampfireWebsite) or as a plain clone is (campfire-website). Where
+none is there, the files go to the fallback folder instead, with the sizes the site has always used, and it says so.
 
-Usage: python3 -I website_screenshots.py <render folder>/Website <link preview png> <fallback folder>
+Usage: python3 -I website_screenshots.py <render folder>/Website <fallback folder> [--link-preview <png>] [--website <repo>]
 """
 
+import argparse
 import pathlib
 import sys
 
 from PIL import Image
 
-WEBSITE = pathlib.Path(__file__).resolve().parents[5] / "CampfireWebsite" / "assets"
+SIBLINGS = ("CampfireWebsite", "campfire-website")
 SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (2000, 1255)}
 OG_SIZE = (1200, 630)
 QUALITY = 86
 
 
+def website_assets(website):
+    """The website repository's assets folder: the one asked for, which has to exist, or the first sibling found."""
+    if website is not None:
+        assets = website / "assets"
+        if not assets.is_dir():
+            sys.exit(f"{website} is not the website's repository: it has no assets folder.")
+        return assets
+    projects = pathlib.Path(__file__).resolve().parents[5]
+    return next((projects / name / "assets" for name in SIBLINGS if (projects / name / "assets").is_dir()), None)
+
+
 def main():
-    renders, link_preview, fallback = (pathlib.Path(argument) for argument in sys.argv[1:4])
-    target = WEBSITE if WEBSITE.is_dir() else fallback
+    parser = argparse.ArgumentParser()
+    parser.add_argument("renders", type=pathlib.Path)
+    parser.add_argument("fallback", type=pathlib.Path)
+    parser.add_argument("--link-preview", type=pathlib.Path)
+    parser.add_argument("--website", type=pathlib.Path)
+    arguments = parser.parse_args()
+    renders = sorted(arguments.renders.glob("*.png"))
+    if not renders:
+        sys.exit(f"There are no renders in {arguments.renders}: render the website set first (--only website).")
+    target = website_assets(arguments.website)
+    if target is None:
+        target = arguments.fallback
+        print(f"The website's repository is not next to this one ({' or '.join(SIBLINGS)}), so the files go to {target}.")
     screenshots = target / "screenshots"
     screenshots.mkdir(parents=True, exist_ok=True)
-    for source in sorted(renders.glob("*.png")):
+    for source in renders:
         output = screenshots / f"{source.stem}.webp"
         size = Image.open(output).size if output.exists() else SIZES[source.stem.split("-")[0]]
         Image.open(source).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(output, "WEBP", quality=QUALITY, method=6)
         print(f"{output} {size} {output.stat().st_size // 1024} KB")
+    if arguments.link_preview is None:
+        print("No link preview given (it is framed in Screenshot Bro), so og-image.jpg is left as it was.")
+        return
     og = target / "og-image.jpg"
     size = Image.open(og).size if og.exists() else OG_SIZE
-    Image.open(link_preview).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(og, "JPEG", quality=90, optimize=True)
+    Image.open(arguments.link_preview).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(og, "JPEG", quality=90, optimize=True)
     print(f"{og} {size} {og.stat().st_size // 1024} KB")
 
 

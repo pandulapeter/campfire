@@ -26,9 +26,16 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
 - **The library**, in `tools/screenshots/library/` (gitignored, never committed): a Campfire data folder's
   `library/`, `covers/` and `preferences/preferences.json`, copied from the user's desktop library without the sync
   credentials, the sync index or the log. If it is missing, stop and ask. Never write into the user's real data folder.
+  The shots name the owner's songs and setlists; with another library, the shots that open a missing one fail and are
+  reported, and the rest render.
   Its setlists were trimmed for the shots (Frey-Tully Nuptials and Getting started); keep them that way.
 - **Screenshot Bro** running, with the `Campfire` project (`list_projects`), and **Full Disk Access for the IDE that
-  runs Claude Code** (Android Studio), without which nothing can be staged in the app's sandbox (step 3).
+  runs Claude Code** (Android Studio), without which nothing can be staged in the app's sandbox (step 3). Only the
+  owner has the project. Without it (no `screenshot-bro` tools, or no `Campfire` project), say so and make what can be
+  made without framing: steps 1 and 2, then copy `tools/screenshots/renders/` to a new
+  `~/Desktop/Campfire screenshots <date>/` (every shot unframed, at its device's pixels, no headlines) and run step 7
+  without `--link-preview`. The store images, the README banners, and the link preview need the project; skip them.
+- **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
 - The display does not matter: nothing is drawn on screen.
 
 ## Where everything goes
@@ -37,7 +44,7 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
 |---|---|---|
 | Store listings (9 rows × 8 shots), Play Store banner, link preview, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
 | README banners (GitHub - Banner 1 / 2) | `Banners.kt` → Screenshot Bro | `documentation/screenshots/01–06.webp`, 1200×900 |
-| Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` at each file's own size |
+| Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` (or `../campfire-website/`) at each file's own size |
 | Website link preview | the exported `Website - Link preview` row | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
 
 Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on every run. Nothing is committed, in either
@@ -94,10 +101,11 @@ repository; the user reviews and commits.
    banners go to the README: `python3 -I .claude/skills/store-screenshots/scripts/readme_banners.py <repo root>`
    followed by banner 1's three exported images and then banner 2's.
 7. **The website**: `python3 -I .claude/skills/store-screenshots/scripts/website_screenshots.py
-   tools/screenshots/renders/Website "<Desktop folder>/Website - Link preview — 1200x630/01_Website - Link preview_en.png"
-   "$HOME/Desktop/Campfire website images"` writes every website screenshot at the size of the file it replaces, as
-   WebP, and the link preview as `og-image.jpg`; where the sibling `CampfireWebsite` repository is missing it writes
-   them to the Desktop folder instead.
+   tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "<Desktop folder>/Website -
+   Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size of the file it
+   replaces, as WebP, and the link preview as `og-image.jpg`. It finds the website's repository as a sibling folder
+   named `CampfireWebsite` (the owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where
+   there is none it writes to the Desktop folder and says so. Without `--link-preview`, `og-image.jpg` is left alone.
 8. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
    rendered and anything that looked off.
 
