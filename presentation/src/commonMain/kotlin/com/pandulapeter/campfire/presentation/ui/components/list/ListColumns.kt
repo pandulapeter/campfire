@@ -46,25 +46,14 @@ internal fun columnCountForWidth(
 ) = (width / minColumnWidth).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 
 /**
- * The narrowest column a song card is laid out in where there are two or more, worked out from what the card says on
- * its second line ([UserPreferences.CardDetails], the key only with the chords and the tempo by default only with the
- * metronome) and from the cover thumbnail in front of its text while covers are shown, so that a card that says less is
- * given less room and a window fits more of them side by side, while one that says more keeps its artist from being cut
- * short. The cover is counted whether or not the songs on screen have one, since a column count that changed as covers
- * arrived would move every card. The Songs and the Setlists screens work it out the same way, so that cards showing the same details
- * flow into the same columns on both: a setlist's slot number takes its room from the title, which is cut short first
- * anyway. A window narrower than one column, a phone held upright included, still gets one, as wide as the window.
+ * The narrowest column a song card is laid out in where there are two or more: the room its title and artist need, and
+ * the cover thumbnail in front of them while covers are shown. The key, tempo, and duration stand on a line of their own
+ * under the artist, so they take nothing from either and add nothing here. The cover is counted whether or not the songs
+ * on screen have one, since a column count that changed as covers arrived would move every card. The Setlists screen is
+ * laid out by the same width ([ListLayout.of]): a setlist's slot number takes its room from the title, which is cut short
+ * first anyway. A window narrower than one column, a phone held upright included, still gets one, as wide as the window.
  */
-internal fun minSongColumnWidth(
-    details: UserPreferences.CardDetails,
-    areChordsEnabled: Boolean,
-    isMetronomeEnabled: Boolean,
-    isCoverArtEnabled: Boolean,
-) = CARD_BASE_WIDTH +
-    (if (isCoverArtEnabled) CARD_COVER_WIDTH else 0.dp) +
-    (if (areChordsEnabled && details.isKeyShown) CARD_KEY_WIDTH else 0.dp) +
-    (if (details.isTempoShown(isMetronomeEnabled)) CARD_TEMPO_WIDTH else 0.dp) +
-    (if (details.isDurationShown) CARD_DURATION_WIDTH else 0.dp)
+internal fun minSongColumnWidth(isCoverArtEnabled: Boolean) = CARD_BASE_WIDTH + if (isCoverArtEnabled) CARD_COVER_WIDTH else 0.dp
 
 /**
  * The narrowest column of the Songs screen's grid: [songColumnWidth], less the artist's room while the list is sorted by
@@ -78,30 +67,14 @@ internal fun songGridColumnWidth(
     sortingMode: UserPreferences.SortingMode,
 ) = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) songColumnWidth - CARD_ARTIST_WIDTH else songColumnWidth
 
-// Declared before the two defaults below, which are worked out from them as the file is initialized.
-private val CARD_BASE_WIDTH = 368.dp
-private val CARD_KEY_WIDTH = 16.dp
-private val CARD_TEMPO_WIDTH = 16.dp
-private val CARD_DURATION_WIDTH = 32.dp
-private val CARD_ARTIST_WIDTH = 120.dp
+// Declared before the default below, which is worked out from them as the file is initialized.
+private val CARD_BASE_WIDTH = 336.dp
+private val CARD_ARTIST_WIDTH = 8.dp
 
 /** The cover thumbnail and the gap after it (`CenteredSongCardContent`). */
-private val CARD_COVER_WIDTH = 56.dp
+private val CARD_COVER_WIDTH = 68.dp
 
-/** The Songs screen's [minSongColumnWidth] with every feature on and the cards as a fresh installation has them. */
-internal val MIN_SONG_COLUMN_WIDTH = minSongColumnWidth(
-    details = UserPreferences.CardDetails.SongsDefault,
-    areChordsEnabled = true,
-    isMetronomeEnabled = true,
-    isCoverArtEnabled = true,
-)
-
-/** The Setlists screen's [minSongColumnWidth] with every feature on and the cards as a fresh installation has them. */
-internal val MIN_SETLIST_COLUMN_WIDTH = minSongColumnWidth(
-    details = UserPreferences.CardDetails.SetlistsDefault,
-    areChordsEnabled = true,
-    isMetronomeEnabled = true,
-    isCoverArtEnabled = true,
-)
+/** The [minSongColumnWidth] with covers shown, as a fresh installation has it. */
+internal val MIN_SONG_COLUMN_WIDTH = minSongColumnWidth(isCoverArtEnabled = true)
 
 private const val MAX_COLUMN_COUNT = 4

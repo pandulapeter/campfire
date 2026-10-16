@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtIma
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import com.pandulapeter.campfire.presentation.ui.components.only
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,21 +29,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.sp
 
 /**
  * The body of a song card next to its actions, both centered vertically. Not a [ListItem]: Material pins the content
  * of a three-line item to its top and grows it to 88dp, so a card whose labels made it three lines left a band of
  * empty card under them, and the actions, which Material top-aligns there too, would have been measured against a
- * body they did not share a center with. The paddings, the minimum heights and the text styles are the list item's.
+ * body they did not share a center with. The paddings, the minimum heights and the text styles are the list item's,
+ * except at the end: next to actions the body runs up to them as they are drawn, moved towards the card's edge by
+ * [LocalListItemTrailingKeylineAdjustment], and stops [SONG_CARD_ACTIONS_GAP] short of them. An icon button keeps its
+ * icon well inside its touch target, so text that kept a list item's padding and gap from that target as well was cut
+ * off with a wide empty band before the icon.
  *
- * @param coverArtUrl The cover drawn at the start of the body ([CoverArtImage]), next to the headline and the supporting
- *   line only and as tall as the two of them.
+ * @param coverArtUrl The cover drawn at the start of the body ([CoverArtImage]), next to the headline, the supporting
+ *   line, and the details line only, and as tall as the lines drawn there.
+ * @param isThreeLine Whether the supporting line and the details line are both drawn. The headline then takes the
+ *   supporting line's line height, since its own leaves more room under the title than there is between the two lines
+ *   below it, and the cover grows to the three lines. A card of two lines keeps the smaller cover and the lower card
+ *   rather than standing half empty beside a cover made for three. Both follow the change as it animates, the artist
+ *   fading in or out under an artist header as the sort or the search changes.
+ * @param supportingContent The line under the headline, which a song card gives its artist alone.
+ * @param detailsContent The line under that, in the smaller type of the values it holds.
  * @param labelsContent The row of labels under both, which starts from the keyline beneath the cover rather than next
  *   to it: a row of labels is as long as somebody chose to make it, and the cover's column is room it can use.
  */
@@ -52,84 +68,105 @@ internal fun CenteredSongCardContent(
     actions: (@Composable () -> Unit)?,
     headlineContent: @Composable () -> Unit,
     supportingContent: (@Composable () -> Unit)?,
+    detailsContent: (@Composable () -> Unit)? = null,
     labelsContent: (@Composable () -> Unit)? = null,
-) = Layout(
-    modifier = modifier.fillMaxWidth(),
-    contents = listOf(
-        { actions?.let { ListItemActions(content = it) } },
-        {
-            Box(
-                modifier = Modifier
-                    .heightIn(min = if (supportingContent == null && labelsContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
-                    .padding(
-                        horizontal = songCardContentPadding,
-                        vertical = SONG_CARD_VERTICAL_CONTENT_PADDING,
-                    ),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (coverArtUrl != null) {
-                            CoverArtImage(
-                                modifier = Modifier.padding(end = SONG_CARD_COVER_GAP).size(SONG_CARD_COVER_SIZE),
-                                url = coverArtUrl,
-                                shape = MaterialTheme.shapes.small,
-                            )
-                        }
-                        Column {
-                            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                                ProvideTextStyle(MaterialTheme.typography.bodyLarge, headlineContent)
+    isThreeLine: Boolean = false,
+) {
+    val headlineStyle = MaterialTheme.typography.bodyLarge
+    val headlineLineHeight by animateFloatAsState(
+        if (isThreeLine) MaterialTheme.typography.bodyMedium.lineHeight.value else headlineStyle.lineHeight.value,
+    )
+    val coverSize by animateDpAsState(if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE)
+    val trailingKeylineAdjustment = LocalListItemTrailingKeylineAdjustment.current
+    Layout(
+        modifier = modifier.fillMaxWidth(),
+        contents = listOf(
+            { actions?.let { ListItemActions(content = it) } },
+            {
+                Box(
+                    modifier = Modifier
+                        .heightIn(min = if (supportingContent == null && detailsContent == null && labelsContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
+                        .padding(
+                            start = songCardContentPadding,
+                            end = if (actions == null) songCardContentPadding else 0.dp,
+                            top = SONG_CARD_VERTICAL_CONTENT_PADDING,
+                            bottom = SONG_CARD_VERTICAL_CONTENT_PADDING,
+                        ),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (coverArtUrl != null) {
+                                CoverArtImage(
+                                    modifier = Modifier.padding(end = SONG_CARD_COVER_GAP).size(coverSize),
+                                    url = coverArtUrl,
+                                    shape = MaterialTheme.shapes.small,
+                                )
                             }
-                            if (supportingContent != null) {
+                            Column {
+                                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                                    ProvideTextStyle(headlineStyle.copy(lineHeight = headlineLineHeight.sp), headlineContent)
+                                }
+                                if (supportingContent != null) {
+                                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                                        ProvideTextStyle(MaterialTheme.typography.bodyMedium, supportingContent)
+                                    }
+                                }
+                                if (detailsContent != null) {
+                                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                                        ProvideTextStyle(MaterialTheme.typography.labelMedium, detailsContent)
+                                    }
+                                }
+                            }
+                        }
+                        if (labelsContent != null) {
+                            // Under a title alone the labels are the second line and follow it directly, as the artist would. A line
+                            // of text carries some room under its letters and a cover carries none, so the labels keep further
+                            // away from a cover to stand as far from it as they do from an artist line.
+                            Box(
+                                modifier = Modifier.padding(
+                                    top = when {
+                                        coverArtUrl != null -> SONG_CARD_LABELS_COVER_GAP
+                                        supportingContent == null && detailsContent == null -> 0.dp
+                                        else -> SONG_CARD_LABELS_GAP
+                                    },
+                                ),
+                            ) {
                                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                                    ProvideTextStyle(MaterialTheme.typography.bodyMedium, supportingContent)
+                                    ProvideTextStyle(MaterialTheme.typography.bodyMedium, labelsContent)
                                 }
                             }
                         }
                     }
-                    if (labelsContent != null) {
-                        // Under a title alone the labels are the second line and follow it directly, as the artist would. A line
-                        // of text carries some room under its letters and a cover carries none, so the labels keep further
-                        // away from a cover to stand as far from it as they do from an artist line.
-                        Box(
-                            modifier = Modifier.padding(
-                                top = when {
-                                    coverArtUrl != null -> SONG_CARD_LABELS_COVER_GAP
-                                    supportingContent == null -> 0.dp
-                                    else -> SONG_CARD_LABELS_GAP
-                                },
-                            ),
-                        ) {
-                            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                                ProvideTextStyle(MaterialTheme.typography.bodyMedium, labelsContent)
-                            }
-                        }
-                    }
                 }
-            }
-        },
-    ),
-) { (actionMeasurables, bodyMeasurables), constraints ->
-    val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
-    val actionPlaceable = actionMeasurables.firstOrNull()?.measure(looseConstraints)
-    val actionWidth = actionPlaceable?.width ?: 0
-    val actionReservation = if (actionPlaceable == null) 0 else actionWidth + LIST_ITEM_TRAILING_GAP.roundToPx()
-    val bodyWidth = (constraints.maxWidth - actionReservation).coerceAtLeast(0)
-    val bodyPlaceable = bodyMeasurables.single().measure(looseConstraints.copy(minWidth = bodyWidth, maxWidth = bodyWidth))
-    val height = maxOf(bodyPlaceable.height, actionPlaceable?.height ?: 0)
-        .coerceIn(constraints.minHeight, constraints.maxHeight)
-    layout(constraints.maxWidth, height) {
-        bodyPlaceable.placeRelative(0, (height - bodyPlaceable.height) / 2)
-        actionPlaceable?.placeRelative(constraints.maxWidth - LIST_ITEM_KEYLINE.roundToPx() - actionWidth, (height - actionPlaceable.height) / 2)
+            },
+        ),
+    ) { (actionMeasurables, bodyMeasurables), constraints ->
+        val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+        val actionPlaceable = actionMeasurables.firstOrNull()?.measure(looseConstraints)
+        val actionWidth = actionPlaceable?.width ?: 0
+        val actionReservation = if (actionPlaceable == null) {
+            0
+        } else {
+            actionWidth + (LIST_ITEM_KEYLINE - trailingKeylineAdjustment + SONG_CARD_ACTIONS_GAP).roundToPx()
+        }
+        val bodyWidth = (constraints.maxWidth - actionReservation).coerceAtLeast(0)
+        val bodyPlaceable = bodyMeasurables.single().measure(looseConstraints.copy(minWidth = bodyWidth, maxWidth = bodyWidth))
+        val height = maxOf(bodyPlaceable.height, actionPlaceable?.height ?: 0)
+            .coerceIn(constraints.minHeight, constraints.maxHeight)
+        layout(constraints.maxWidth, height) {
+            bodyPlaceable.placeRelative(0, (height - bodyPlaceable.height) / 2)
+            actionPlaceable?.placeRelative(constraints.maxWidth - LIST_ITEM_KEYLINE.roundToPx() - actionWidth, (height - actionPlaceable.height) / 2)
+        }
     }
 }
 
 /**
  * Whatever a card carries at its end: the overflow button, with the setlist assignments button beside it on the songs
  * screen and the drag handle on the setlists screen.
- * Move the controls slightly toward the card's edge without changing the width reserved for them in the body.
+ * Moved slightly toward the card's edge, which the body's measure follows so that its text runs up to them.
  */
 @Composable
 private fun ListItemActions(
@@ -141,15 +178,22 @@ private fun ListItemActions(
     content()
 }
 
-private val LIST_ITEM_TRAILING_GAP = 16.dp
+/**
+ * The room between a card's text and the touch target of its first action, on top of the empty space the action keeps
+ * around its own icon (12dp in an icon button, 8dp in front of the drag handle).
+ */
+private val SONG_CARD_ACTIONS_GAP = 4.dp
 
 /** The height of a card that is only a title, and of one with anything under it, as Material's list items have them. */
 private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
 
-/** A card's cover as tall as its title and the line under it together: a bodyLarge and a bodyMedium line. */
-private val SONG_CARD_COVER_SIZE = 44.dp
+/** A card's cover as tall as its title and the line under it: a bodyLarge and a bodyMedium line. */
+private val SONG_CARD_TWO_LINE_COVER_SIZE = 44.dp
 
-/** The room between a card's first two lines and the labels under them. */
+/** A card's cover as tall as its three lines: the title at a bodyMedium line's height, a bodyMedium, and a labelMedium. */
+private val SONG_CARD_THREE_LINE_COVER_SIZE = 56.dp
+
+/** The room between a card's lines of text and the labels under them. */
 private val SONG_CARD_LABELS_GAP = 4.dp
 
 /** The room between a card's cover and the labels under it. */
@@ -159,4 +203,4 @@ private val SONG_CARD_LABELS_COVER_GAP = 8.dp
 private val SONG_CARD_COVER_GAP = 12.dp
 
 private val SONG_CARD_TWO_LINE_MIN_HEIGHT = 72.dp
-private val SONG_CARD_VERTICAL_CONTENT_PADDING = 12.dp
+private val SONG_CARD_VERTICAL_CONTENT_PADDING = 8.dp

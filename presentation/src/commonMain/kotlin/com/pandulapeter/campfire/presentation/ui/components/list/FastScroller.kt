@@ -94,6 +94,7 @@ import kotlin.math.roundToInt
  * while it is dragged a light tick, and every section that comes to the top, and either end of the track, a notch. A mouse is told nothing, since the
  * device under it is not the one being held.
  *
+ * @param column The column the scroller stands in, whose fade it takes ([rememberFastScrollerColumn]).
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
  *   leaves it out, and the thumb is then dragged with no bubble at all.
@@ -103,6 +104,7 @@ import kotlin.math.roundToInt
 internal fun FastScroller(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
+    column: FastScrollerColumn,
     labelForItem: (index: Int) -> String? = { null },
 ) {
     val density = LocalDensity.current
@@ -125,10 +127,7 @@ internal fun FastScroller(
     // Both derived, since what they are worked out from changes on every scrolled pixel and what they come to only
     // once in a while: read directly, they would recompose the scroller for the whole length of every scroll.
     val isVisible by remember(state) { derivedStateOf { state.isScrollable } }
-    val alpha = animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-    )
+    val alpha = column.thumbAlpha
     // Progress values instead of animated colors, so that the thumb follows the color scheme immediately while it is
     // animating between the light and the dark theme (a color animation would chase it and trail behind).
     val hoverProgress = animateFloatAsState(
@@ -489,7 +488,7 @@ private class ScrollMetrics(
 
 /**
  * The width of the column a [FastScroller] takes up over its list's end padding while the list scrolls (see
- * [fastScrollerColumnWidth]), all of which is its touch target (and the cards' outer margin next to it as well).
+ * [FastScrollerColumn]), all of which is its touch target (and the cards' outer margin next to it as well).
  * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because it is taken
  * out of the width of the rows. The column count leaves room for it either way, so the scroller coming and going only
  * widens and narrows the cards rather than moving them between columns. The thumb is tall enough that the target is

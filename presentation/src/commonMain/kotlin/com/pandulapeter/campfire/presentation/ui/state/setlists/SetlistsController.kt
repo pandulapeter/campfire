@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
@@ -110,7 +111,7 @@ internal class SetlistsController(
      */
     private val visibleSetlists = combine(setlists, indexedSongs, shouldShowArchivedSetlists) { setlists, indexed, shouldShowArchivedSetlists ->
         val songsByFileName = indexed.search.byFileName
-        setlists.filter { shouldShowArchivedSetlists || !it.isArchived }.map { setlist ->
+        val visible = setlists.filter { shouldShowArchivedSetlists || !it.isArchived }.map { setlist ->
             SetlistWithSongs(
                 setlist = setlist,
                 entries = setlist.entries.mapIndexed { index, entry ->
@@ -121,7 +122,8 @@ internal class SetlistsController(
                 },
             )
         }
-    }.flowOn(Dispatchers.Default).asState(scope, emptyList())
+        ListedSetlists(setlists = visible, isLibraryRead = indexed.isLibraryRead)
+    }.flowOn(Dispatchers.Default).asState(scope, ListedSetlists.Empty)
 
     /**
      * The setlists as the screen lists them, narrowed by its search: a setlist answers it by what it says about
@@ -136,11 +138,13 @@ internal class SetlistsController(
         if (normalizedQuery.isEmpty()) {
             setlists
         } else {
-            setlists.filter {
-                it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName, normalizeSearchText = normalizeSearchText)
-            }
+            setlists.copy(
+                setlists = setlists.setlists.filter {
+                    it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName, normalizeSearchText = normalizeSearchText)
+                },
+            )
         }
-    }.flowOn(Dispatchers.Default).asState(scope, emptyList())
+    }.flowOn(Dispatchers.Default).asState(scope, ListedSetlists.Empty)
 
     /**
      * What the setlists screen shows instead of setlists, null while it has some. Same reasoning as
@@ -151,7 +155,7 @@ internal class SetlistsController(
      * something different, and only one of them by making a setlist.
      */
     val setlistsPlaceholder = combine(screenData, setlistsWithSongs, visibleSetlists, isImporting) { screenData, setlistsWithSongs, visibleSetlists, isImporting ->
-        setlistListPlaceholder(screenData = screenData, setlistsWithSongs = setlistsWithSongs, visibleSetlists = visibleSetlists, isImporting = isImporting)
+        setlistListPlaceholder(screenData = screenData, setlistsWithSongs = setlistsWithSongs.setlists, visibleSetlists = visibleSetlists.setlists, isImporting = isImporting)
     }.asState(scope, Placeholder.LOADING)
 
     /**

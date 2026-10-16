@@ -51,7 +51,6 @@ internal fun PushedSetlistHeader(
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
         text = setlist.title,
-        subtitle = setlistWithSongs.runningTimeSubtitle(),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },

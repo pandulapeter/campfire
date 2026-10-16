@@ -17,9 +17,13 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
  *
  * @param orderKey The sort and the query alone, which put different songs at the top of the list and so send it back
  * there; a filter only takes songs out or puts them back, and the list stays where it was reading.
+ * @param isLibraryRead Whether these are the songs of the whole library rather than of a read still under way, carried
+ * with them because the songs are put together on another dispatcher and arrive after `LibraryState.isLoading` says
+ * the read is over: a list told it was loaded by that would animate the songs landing in it.
  */
 data class SongGroups(
     val filterKey: String,
     val orderKey: String,
     val groups: List<SongGroup>,
+    val isLibraryRead: Boolean,
 )

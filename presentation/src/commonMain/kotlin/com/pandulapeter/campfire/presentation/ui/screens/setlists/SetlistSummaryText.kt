@@ -9,11 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.text.style.TextOverflow
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -30,33 +27,25 @@ import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.datetime.LocalDate
 
-/** Whether [SetlistSummary] has anything to show: a description or a countdown. */
+/** Whether [SetlistSummary] has anything to show: a countdown, a running time, or a description. */
 internal val SetlistWithSongs.hasSummary
-    get() = setlist.description.isNotBlank() || setlist.isCountdownShown
+    get() = setlist.description.isNotBlank() || setlist.isCountdownShown || totalDuration != null
 
 /**
- * How long a setlist's songs take to play, as the subtitle of its header, where any of them says,
- * with a `+` where some do not ([SetlistTotalDuration.isMinimum]); null where none of them says. Named a running time,
- * so that it is not read as the time the set starts at.
+ * How long a setlist's songs take to play, where any of them says, with a `+` where some do not
+ * ([SetlistTotalDuration.isMinimum]); null where none of them says. Named a running time, so that it is not read as the
+ * time the set starts at.
  */
 @Composable
-internal fun SetlistWithSongs.runningTimeSubtitle(): (@Composable () -> Unit)? {
+internal fun SetlistWithSongs.runningTimeText(): String? {
     val duration = remember(entries) { totalDuration } ?: return null
     val total = ChordProDuration.format(duration.total)
-    val text = stringResource(
+    return stringResource(
         Res.string.setlists_total_duration,
         if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total,
     )
-    return {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }
+
 
 /**
  * How far the setlist's day is, where the user asked for it, for the summary at the top of the setlist: in performance

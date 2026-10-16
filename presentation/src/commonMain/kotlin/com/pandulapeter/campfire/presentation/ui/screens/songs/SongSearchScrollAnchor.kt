@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
-import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.list.SECTION_HEADER_ROW_HEIGHT
 import kotlin.math.roundToInt
 
 /**
@@ -129,7 +129,7 @@ internal const val SEARCH_ANCHOR_SPACE_KEY = "search_anchor_space"
 internal fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds().layout { measurable, constraints ->
     val placeable = measurable.measure(constraints)
     // Subtract the exact rounded bar inset; independently rounding both halves can move the first row by a pixel.
-    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - fraction().coerceIn(0f, 1f))).roundToInt()
+    val removedHeight = (SECTION_HEADER_ROW_HEIGHT.toPx() * (1f - fraction().coerceIn(0f, 1f))).roundToInt()
     val height = (placeable.height - removedHeight).coerceAtLeast(0)
     layout(placeable.width, height) { placeable.placeRelative(0, 0) }
 }
@@ -139,7 +139,7 @@ internal fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds
  * the bar takes away at [coverage].
  */
 internal fun Modifier.searchAnchorSpace(anchor: SongSearchScrollAnchor, coverage: () -> Float) = layout { measurable, constraints ->
-    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - coverage())).roundToInt()
+    val removedHeight = (SECTION_HEADER_ROW_HEIGHT.toPx() * (1f - coverage())).roundToInt()
     val height = anchor.trailingHeaderCount * removedHeight
     val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
     layout(placeable.width, height) { placeable.placeRelative(0, 0) }

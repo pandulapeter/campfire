@@ -60,7 +60,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.list.fastScrollerColumnWidth
+import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScrollerColumn
+import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
@@ -166,7 +167,12 @@ internal fun SongList(
     }
     val coveredHeightFraction = remember(appBarOverlap) { { appBarOverlap().coverage } }
     val firstCardIndex = remember(groups, placeholder) { groups.firstCardIndex(hasPlaceholder = placeholder != null) }
-    val topFade = rememberListTopFade(listState, coveredHeightFraction = coveredHeightFraction, firstCardIndex = firstCardIndex)
+    val topFade = rememberListTopFade(
+        listState = listState,
+        coveredHeightFraction = coveredHeightFraction,
+        firstCardIndex = firstCardIndex,
+        sectionHeaderContentType = SONG_HEADER_CONTENT_TYPE,
+    )
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade, searchScroll, listState, appBarOverlap) {
         Modifier.fillMaxSize().layout { measurable, constraints ->
@@ -231,7 +237,8 @@ internal fun SongList(
         }
     }
 
-    val scrollerColumnWidth = fastScrollerColumnWidth(gridState = listState, position = viewModel.songListState.songsScrollPosition, isAnimated = hasLoadedLibrary)
+    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.songListState.songsScrollPosition)
+    val scrollerColumnWidth = scrollerColumn.width
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
     val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
@@ -239,7 +246,8 @@ internal fun SongList(
         Box(modifier = modifier) {
             LazyVerticalGrid(
                 columns = ListColumns(columnCount),
-                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
+                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull)
+                    .measuresFastScrollerColumn(column = scrollerColumn, gridState = listState, isAnimated = hasLoadedLibrary),
                 state = listState,
                 contentPadding = contentPadding.only(
                     start = true,
@@ -406,6 +414,7 @@ internal fun SongList(
             FastScroller(
                 modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
                 gridState = listState,
+                column = scrollerColumn,
                 labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
             )
         }

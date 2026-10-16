@@ -32,7 +32,7 @@ enum class OnboardingStep {
 /**
  * The steps worth showing, given the features switched on: the notation only with the chords on, and the cloud folder only
  * where the build can connect Dropbox, since a page offering a button that does nothing is worse than no page. The
- * instrument is always asked, being asked before the features it is for. What a song card shows after its artist is
+ * instrument is always asked, being asked before the features it is for. What a song card shows under its artist is
  * not asked: the defaults follow the features, and Settings changes it.
  */
 internal fun onboardingSteps(

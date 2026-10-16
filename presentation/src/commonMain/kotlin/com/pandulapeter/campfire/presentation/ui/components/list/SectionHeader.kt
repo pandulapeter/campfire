@@ -20,8 +20,6 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
@@ -77,8 +75,10 @@ import kotlin.math.roundToInt
  * of the row leaves it to whatever is under it.
  *
  * The list screens have no title in their app bar, and the header pinned at the top of the list is what stands in its
- * place, under the bar's buttons: so the row is as tall as that bar ([LIST_APP_BAR_HEIGHT]) and the pill as tall as the
- * bar's pill, its text on one line in the style of the settings screen's tab labels. The pill is as wide as the cards,
+ * place, under the bar's buttons: so the pill is as tall as the bar's pill, its text on one line in the style of the
+ * settings screen's tab labels, and the row as tall as the pill ([SECTION_HEADER_ROW_HEIGHT]), which leaves less room
+ * around the name than the bar does; the content settles down onto the bar's center line as the row is pinned. The
+ * pill is as wide as the cards,
  * and narrows only to make room for the bar's buttons ([AppBarOverlap.reach]) as the header comes into the pinned place
  * ([SectionHeaderState.pinnedFraction], eased), so a pinned header never runs under them - its text cut off sooner,
  * and a setlist's menu, which ends the pill, carried up to the buttons. It widens again along the same eased curve as
@@ -93,9 +93,6 @@ import kotlin.math.roundToInt
  * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
  *
  * @param backgroundColor Optional backing for transitions in which cards' placement and fades can settle separately.
- * @param subtitle A second line under the name, a setlist's running time, which has to stay in sight wherever in the
- *   setlist the reader is. The row is as tall as the bar's however much it holds, so a subtitle moves nothing around the
- *   header; the name is centered with it as one block, so it stands higher than a header's that has none.
  * @param action The buttons at the end of the pill, a setlist's [SetlistActions]: handed the modifier that decides how
  *   much of the pill they may take, and the one that keeps each of them from taking the focus ([unfocusable]). The room
  *   is counted at the width the pill narrows to once pinned, whatever it is now, so that a header does not trade its
@@ -108,7 +105,6 @@ import kotlin.math.roundToInt
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
-    subtitle: (@Composable () -> Unit)? = null,
     state: () -> SectionHeaderState,
     endPadding: Dp,
     icon: Painter? = null,
@@ -129,7 +125,7 @@ internal fun SectionHeader(
         }
         .fillMaxWidth()
         .background(backgroundColor)
-        .defaultMinSize(minHeight = LIST_APP_BAR_HEIGHT),
+        .defaultMinSize(minHeight = SECTION_HEADER_ROW_HEIGHT),
     contentAlignment = Alignment.CenterStart,
 ) {
     val hasAction = action != null
@@ -146,8 +142,10 @@ internal fun SectionHeader(
         }
         .graphicsLayer {
             alpha = contentOpacity()
-            // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls.
-            translationY = pushedDistancePx() * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
+            // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls. Coming into
+            // the pinned place it also settles down by what the row is shorter than the bar, onto the buttons' center line.
+            translationY = pushedDistancePx() * SECTION_HEADER_CONTENT_PARALLAX_FRACTION +
+                state().pinnedFraction * ((LIST_APP_BAR_HEIGHT - SECTION_HEADER_ROW_HEIGHT) / 2).toPx()
         }
     val pillContent: @Composable () -> Unit = {
         Row(
@@ -210,16 +208,6 @@ internal fun SectionHeader(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    // Kept through its exit animation, like the icon, when the last song that says how long it takes leaves.
-                    var lastSubtitle by remember { mutableStateOf(subtitle) }
-                    subtitle?.let { lastSubtitle = it }
-                    AnimatedVisibility(
-                        visible = subtitle != null,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        Box { lastSubtitle?.invoke() }
-                    }
                 }
             }
             action?.invoke(
@@ -296,15 +284,13 @@ private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable,
 
 /**
  * The room a [SectionHeader] leaves between its text and the bottom of its row, where an item under it starts: the text
- * is centered in a row at least [LIST_APP_BAR_HEIGHT] tall, so the room is whatever its lines leave of that, at the
+ * is centered in a row at least [SECTION_HEADER_ROW_HEIGHT] tall, so the room is whatever its line leaves of that, at the
  * text size the system asks for.
  */
 @Composable
-internal fun sectionHeaderBottomGap(hasSubtitle: Boolean): Dp {
+internal fun sectionHeaderBottomGap(): Dp {
     val nameHeight = with(LocalDensity.current) { MaterialTheme.typography.titleSmall.lineHeight.toDp() }
-    val subtitleHeight = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
-    val textHeight = nameHeight + if (hasSubtitle) subtitleHeight else 0.dp
-    return ((LIST_APP_BAR_HEIGHT - textHeight) / 2).coerceAtLeast(0.dp)
+    return ((SECTION_HEADER_ROW_HEIGHT - nameHeight) / 2).coerceAtLeast(0.dp)
 }
 
 /**
@@ -318,6 +304,12 @@ private val SECTION_HEADER_TEXT_GAP = 4.dp
 
 /** As tall as the pill behind the app bar's buttons, which it stands next to once pinned. */
 private val SECTION_HEADER_PILL_HEIGHT = 48.dp
+
+/**
+ * The height of a [SectionHeader]'s row, which is the pill's: shorter than the app bar it stands in the place of when
+ * pinned, so that the unpinned headers waste less room around the name.
+ */
+internal val SECTION_HEADER_ROW_HEIGHT = SECTION_HEADER_PILL_HEIGHT
 
 /**
  * What the pill leaves after an action at its end. The pill ends at the cards' edge and a card's overflow button stops

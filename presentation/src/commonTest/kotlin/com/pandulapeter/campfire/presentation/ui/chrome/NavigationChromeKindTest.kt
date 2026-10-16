@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import kotlin.test.Test
@@ -46,28 +45,10 @@ class NavigationChromeKindTest {
         }
     }
 
-    /** Runs [assert] for the column width of every combination of card details and features, with the panel at every width. */
-    private fun sweep(assert: (column: Dp, widths: List<Pair<Dp, Boolean>>) -> Unit) {
-        val flags = listOf(false, true)
-        flags.forEach { isKeyShown ->
-            listOf(null, false, true).forEach { isTempoShown ->
-                flags.forEach { isDurationShown ->
-                    flags.forEach { areChordsEnabled ->
-                        flags.forEach { isMetronomeEnabled ->
-                            flags.forEach { isCoverArtEnabled ->
-                                val column = minSongColumnWidth(
-                                    details = UserPreferences.CardDetails(isKeyShown = isKeyShown, isTempoShown = isTempoShown, isDurationShown = isDurationShown),
-                                    areChordsEnabled = areChordsEnabled,
-                                    isMetronomeEnabled = isMetronomeEnabled,
-                                    isCoverArtEnabled = isCoverArtEnabled,
-                                )
-                                assert(column, WIDTHS.map { it to hasPanel(it, column) })
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    /** Runs [assert] for the column width with and without covers, with the panel at every width. */
+    private fun sweep(assert: (column: Dp, widths: List<Pair<Dp, Boolean>>) -> Unit) = listOf(false, true).forEach { isCoverArtEnabled ->
+        val column = minSongColumnWidth(isCoverArtEnabled)
+        assert(column, WIDTHS.map { it to hasPanel(it, column) })
     }
 
     /** Whether the Songs screen shows its side panel in a window this wide, beside the rail the window gets. */

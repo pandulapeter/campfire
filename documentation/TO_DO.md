@@ -10,9 +10,10 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Update store descriptions to include the chord diagram library and other new features + new title
+- Songs list sorted by artist: search mode makes the headers disappear but the columns still have gaps
 - Regenerate all screenshots and the promo videos
 - Regenerate the Android baseline profiles
+- Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)
 - Rename master branch to main

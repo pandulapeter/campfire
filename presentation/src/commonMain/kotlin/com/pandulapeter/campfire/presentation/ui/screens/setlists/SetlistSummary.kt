@@ -16,9 +16,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,17 +41,17 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_V
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTextKeyline
 
 /**
- * What there is to read about a setlist under the row naming it: its countdown, then its description. Not a
+ * What there is to read about a setlist under the row naming it: its countdown and running time, then its description. Not a
  * second line of the header, so that every header's name stands at one height whatever the setlist says about itself.
  *
  * @param countdown How far the setlist's day is, where the user asked for it ([countdownText]).
- * @param hasSubtitle Whether the header above has a subtitle, which decides how far its text stands from this one.
+ * @param runningTime How long the setlist's songs take ([runningTimeText]), after the countdown.
  */
 @Composable
 internal fun SetlistSummary(
     modifier: Modifier = Modifier,
     countdown: String?,
-    hasSubtitle: Boolean,
+    runningTime: String?,
     description: String,
     contentPadding: PaddingValues,
 ) {
@@ -65,21 +65,23 @@ internal fun SetlistSummary(
         derivedStateOf { windowInfo.containerDpSize.height - contentPadding.calculateBottomPadding() < SHORT_WINDOW_HEIGHT }
     }
     // The summary stands as far from the first card as from the header's text above it, which is centered in a row of
-    // a fixed height, so the room above depends on whether the header has a subtitle and on the text size. The card's
+    // a fixed height, so the room above depends on the text size. The card's
     // own padding counts towards it.
-    val gap = sectionHeaderBottomGap(hasSubtitle = hasSubtitle) + SUMMARY_TOP_PADDING
+    val gap = sectionHeaderBottomGap() + SUMMARY_BOTTOM_PADDING
     Column(
         modifier = modifier
             .animateContentSize()
             .padding(
                 start = songCardTextKeyline,
                 end = songCardTextKeyline,
-                top = SUMMARY_TOP_PADDING,
                 bottom = (gap - SONG_CARD_VERTICAL_PADDING).coerceAtLeast(0.dp),
             ),
-        verticalArrangement = Arrangement.spacedBy(SUMMARY_LINE_GAP),
     ) {
-        CountdownPill(text = countdown)
+        Row {
+            val hasDescription = description.isNotBlank()
+            SummaryLabel(text = countdown, mark = IconLabelMark.DATE, hasDescription = hasDescription)
+            SummaryLabel(text = runningTime, mark = IconLabelMark.DURATION, hasDescription = hasDescription)
+        }
         if (description.isNotBlank()) {
             Text(
                 modifier = Modifier.clickable(enabled = isCompactHeight) { isExpanded = !isExpanded },
@@ -93,10 +95,10 @@ internal fun SetlistSummary(
     }
 }
 
-/** The setlist's countdown, which comes and goes with the setting in its details. */
+/** One fact about the setlist, the countdown or the running time, which comes and goes with what it is made of. */
 @Composable
-private fun CountdownPill(text: String?) {
-    // Kept through its exit animation, which would otherwise run on an empty pill.
+private fun SummaryLabel(text: String?, mark: IconLabelMark, hasDescription: Boolean) {
+    // Kept through its exit animation, which would otherwise run on an empty label.
     var lastText by remember { mutableStateOf(text.orEmpty()) }
     text?.let { lastText = it }
     AnimatedVisibility(
@@ -104,12 +106,22 @@ private fun CountdownPill(text: String?) {
         enter = fadeIn() + expandHorizontally(),
         exit = fadeOut() + shrinkHorizontally(),
     ) {
-        IconLabel(text = lastText, mark = IconLabelMark.DATE, style = MaterialTheme.typography.bodyMedium)
+        // The room around it is its own rather than the column's or the row's spacing, which would also separate the
+        // description from a label that is not there and push it away from the header.
+        IconLabel(
+            modifier = Modifier.padding(end = SUMMARY_LABEL_GAP, bottom = if (hasDescription) SUMMARY_LINE_GAP else 0.dp),
+            text = lastText,
+            mark = mark,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
-/** The room between the summary and the text of the header above it, on top of what the header leaves. */
-private val SUMMARY_TOP_PADDING = 8.dp
+/** The room between the summary and the first card under it, on top of what the header's row leaves. */
+private val SUMMARY_BOTTOM_PADDING = 8.dp
 
-/** The room between the countdown and the description under it. */
+/** The room between the labels and the description under them. */
 private val SUMMARY_LINE_GAP = 8.dp
+
+/** The room between a label and the one after it. */
+private val SUMMARY_LABEL_GAP = 12.dp

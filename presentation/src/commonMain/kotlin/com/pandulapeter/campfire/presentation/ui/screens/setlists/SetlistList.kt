@@ -62,7 +62,8 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
-import com.pandulapeter.campfire.presentation.ui.components.list.fastScrollerColumnWidth
+import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScrollerColumn
+import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
@@ -106,7 +107,8 @@ internal fun SetlistList(
 ) {
     val songActions = rememberSongActionHandler(viewModel)
     val setlistActions = rememberSetlistActionHandler(viewModel)
-    val setlistsWithSongs by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
+    val listedSetlists by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
+    val setlistsWithSongs = listedSetlists.setlists
     // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
     val shownSetlists = remember(setlistsWithSongs, narrowedSetlistFileName) {
@@ -154,8 +156,7 @@ internal fun SetlistList(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
-    val isLoading by viewModel.libraryState.isLoading.collectAsStateWithLifecycle()
-    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !listedSetlists.isLibraryRead)
     val topFade = rememberListTopFade(listState, sectionHeaderContentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
@@ -192,7 +193,8 @@ internal fun SetlistList(
         scrollToTopOnKeyChange = !isReordering,
     )
 
-    val scrollerColumnWidth = fastScrollerColumnWidth(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition, isAnimated = hasLoadedLibrary)
+    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition)
+    val scrollerColumnWidth = scrollerColumn.width
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
     val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
@@ -200,7 +202,8 @@ internal fun SetlistList(
         Box(modifier = modifier) {
             LazyVerticalGrid(
                 columns = ListColumns(columnCount),
-                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
+                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull)
+                    .measuresFastScrollerColumn(column = scrollerColumn, gridState = listState, isAnimated = hasLoadedLibrary),
                 state = listState,
                 contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
             ) {
@@ -245,7 +248,6 @@ internal fun SetlistList(
                                 backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
                                 endPadding = headerEndPadding,
                                 text = setlistWithSongs.setlist.title,
-                                subtitle = setlistWithSongs.runningTimeSubtitle(),
                                 // A setlist is only ever on this screen archived because the filter was asked to show them,
                                 // so the mark is what tells it from the ones still in use.
                                 icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
@@ -284,7 +286,7 @@ internal fun SetlistList(
                                 SetlistSummary(
                                     modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
                                     countdown = setlistWithSongs.setlist.countdownText(today),
-                                    hasSubtitle = setlistWithSongs.totalDuration != null,
+                                    runningTime = setlistWithSongs.runningTimeText(),
                                     description = setlistWithSongs.setlist.description,
                                     contentPadding = contentPadding,
                                 )
@@ -384,6 +386,7 @@ internal fun SetlistList(
             FastScroller(
                 modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
                 gridState = listState,
+                column = scrollerColumn,
             )
         }
     }

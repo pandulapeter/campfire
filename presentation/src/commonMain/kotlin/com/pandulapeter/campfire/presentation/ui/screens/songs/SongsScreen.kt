@@ -12,8 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -89,7 +91,6 @@ internal fun SongsScreen(
 ) {
     val isSearchOpen by viewModel.songListState.songsSearch.isOpen.collectAsStateWithLifecycle()
     val songGroups by viewModel.songListState.songGroups.collectAsStateWithLifecycle()
-    val isLoading by viewModel.libraryState.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songListState.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -109,7 +110,7 @@ internal fun SongsScreen(
     val isSidePanelVisible = hasSongFilters && layout.hasRoomForSidePanel
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
-    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !songGroups.isLibraryRead)
     val clipboardReader = rememberClipboardTextReader()
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
@@ -227,10 +228,12 @@ internal fun SongsScreen(
                             selected = userPreferences?.sortingMode,
                             onSelected = viewModel.preferencesController::setSortingMode,
                         )
-                        // The last tag leaving the library takes the filters with it while the list is being looked at.
+                        // The last tag leaving the library takes the filters with it while the list is being looked at,
+                        // but the first one arriving with the library is no change anybody made.
                         AnimatedVisibility(
                             modifier = Modifier.overlappingAction(),
                             visible = hasSongFilters && !isSidePanelVisible,
+                            enter = if (hasLoadedLibrary) fadeIn() + expandHorizontally() else EnterTransition.None,
                         ) {
                             SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
@@ -242,6 +245,7 @@ internal fun SongsScreen(
             }
             ControlsSidePanel(
                 isVisible = isSidePanelVisible,
+                isAnimated = hasLoadedLibrary,
                 contentPadding = contentPadding,
             ) { panelModifier, panelContentPadding ->
                 SongFilters(

@@ -76,14 +76,9 @@ internal fun CampfireContent(
     )
 
     // Worked out once for both the expanded rail and the Songs screen's side panel, so that the two are never decided
-    // from different widths: a card that says less after its artist is given a narrower column, see minSongColumnWidth.
+    // from different widths, see minSongColumnWidth.
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songColumnWidth = minSongColumnWidth(
-        details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
-        areChordsEnabled = userPreferences?.areChordsEnabled != false,
-        isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
-        isCoverArtEnabled = userPreferences?.isCoverArtEnabled != false,
-    )
+    val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = userPreferences?.isCoverArtEnabled != false)
 
     // The window's height rather than what the keyboard leaves of it, so that the grouping of the tools never flips while
     // typing, and derived, so that a window being resized recomposes only in the frame it crosses the line.

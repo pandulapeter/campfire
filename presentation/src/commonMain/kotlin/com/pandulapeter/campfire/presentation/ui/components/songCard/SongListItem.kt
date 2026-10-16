@@ -20,18 +20,23 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -75,8 +80,8 @@ import kotlin.time.Duration
  * @param index The song's place in the setlist it is listed in, prefixed to its title.
  *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
  * @param key The key the song sounds in where it is listed, the transposition and the capo of that listing applied,
- *   which is a different key in every setlist that plays it differently (`SongRenderer.renderKey`), drawn next to
- *   the artist. Null for a file that declares none.
+ *   which is a different key in every setlist that plays it differently (`SongRenderer.renderKey`), drawn first on
+ *   the line under the artist. Null for a file that declares none.
  * @param tempo The tempo the song is played at where it is listed, the override of that listing applied. Null where
  *   neither the file nor an override names one, since the metronome's default says nothing about this song.
  * @param shouldShowChords False with the Chords switch off, where the row says nothing about chords at all: not the
@@ -87,8 +92,8 @@ import kotlin.time.Duration
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param isArtistShown False on a card filed under a header that names its artist already, the songs list sorted by artist,
- *   where the artist on every card would only repeat it. The artist is still drawn where nothing else is left on the
- *   second line, since a card losing that line would change height, and it is still read out, since a screen reader
+ *   where the artist on every card would only repeat it. The artist is still drawn where nothing else is left under the
+ *   title, since a card losing its only line under it would change height, and it is still read out, since a screen reader
  *   moving from card to card never hears the header again.
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
  *   library that a tag or a language could narrow, so neither says anything there about why the song is in it.
@@ -136,7 +141,7 @@ internal fun SongListItem(
 ) {
     val displayedDuration = duration?.let(ChordProDuration::format)
     // Worked out before the row is laid out rather than inside it, because it is also one of the things that decide
-    // whether the row has a second line at all: a song written in the app carries no artist, no language and no tag,
+    // whether the row has a line under the title at all: a song written in the app carries no artist, no language and no tag,
     // and its key is then the only thing there is to put under the title.
     val note = when {
         !shouldShowChords -> null
@@ -195,54 +200,61 @@ internal fun SongListItem(
             coverArtUrl = coverArtUrl,
             actions = actions,
             headlineContent = {
-                ListItemHeadline(text = songCardTitle(song.title, index))
+                ListItemHeadline(text = songCardTitle(song.titleWithoutSubtitle, index))
             },
-            // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
-            // here shares the title's line: a title is the longest thing on the row and the one that must never be
-            // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
-            // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (!hasArtist && note == null && tempoNote == null && displayedDuration == null) {
+            // The artist and the values each get a line of their own beside the cover: the artist is cut short by nothing but
+            // the card's width, and the values, which are short, never take letters off it. Songs written in the app need
+            // no artist, and an empty line would just make the row taller. Nothing here shares the title's line: a title is
+            // the longest thing on the row and the one that must never be pushed out of sight. The languages and tags go
+            // under all of them, since a row of those is as long as somebody chose to make it.
+            supportingContent = if (!hasArtist) {
+                null
+            } else {
+                {
+                    // Faded and closed up rather than dropped, since switching the sort or opening the search, which takes
+                    // the headers away, is what hides and shows it. The fade trails the room opening and leads the room
+                    // closing, so the text is never squeezed while it is still visible.
+                    AnimatedVisibility(
+                        visible = isArtistDrawn,
+                        enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) + expandVertically(),
+                        exit = fadeOut(tween(durationMillis = 100)) + shrinkVertically(),
+                    ) {
+                        Text(
+                            text = song.artist,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (!isArtistDrawn) {
+                        Box(modifier = Modifier.semantics { text = AnnotatedString(song.artist) })
+                    }
+                }
+            },
+            detailsContent = if (note == null && tempoNote == null && displayedDuration == null) {
                 null
             } else {
                 {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Faded and closed up rather than dropped, since switching the sort or opening the search, which
-                        // takes the headers away, is what hides and shows it.
-                        AnimatedVisibility(
-                            modifier = Modifier.weight(1f, fill = false),
-                            visible = isArtistDrawn,
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally(),
-                        ) {
-                            Text(
-                                text = song.artist,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        if (hasArtist && !isArtistDrawn) {
-                            Box(modifier = Modifier.semantics { text = AnnotatedString(song.artist) })
-                        }
-                        SongCardNote(note = note, separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = false))
-                        SongCardNote(note = tempoNote, separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = note != null))
+                        SongCardNote(note = note, hasGapBefore = false)
+                        SongCardNote(note = tempoNote, hasGapBefore = note != null)
                         if (displayedDuration != null) {
-                            val separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = note != null || tempoNote != null)
                             // Follows the notes, which fade and close up where they stand rather than leaving the line
                             // in one frame, so the duration slides once instead of jumping and then sliding.
                             AnimatedVisibility(
-                                visible = separator != null,
+                                visible = note != null || tempoNote != null,
                                 enter = fadeIn() + expandHorizontally(),
                                 exit = fadeOut() + shrinkHorizontally(),
                             ) {
-                                SongCardSeparator(kind = separator ?: SongCardSeparatorKind.DOT)
+                                SongCardGap()
                             }
                             IconLabel(text = displayedDuration, mark = IconLabelMark.DURATION)
                         }
                     }
                 }
             },
+            isThreeLine = isArtistDrawn && (note != null || tempoNote != null || displayedDuration != null),
             labelsContent = if (languages.isEmpty() && tags.isEmpty()) {
                 null
             } else {
@@ -295,7 +307,7 @@ internal fun draggedListItemContainerColor(isBeingDragged: Boolean): Color {
 }
 
 /**
- * One of the things a song row says about how the song is played, after the artist: the key it sounds in where it is
+ * One of the things a song row says about how the song is played, on the line under the artist: the key it sounds in where it is
  * listed, drawn in the accent color the song details header keeps for what is played, or that the file has no chords
  * at all - never both, since the viewer names no key for a song there is nothing to play and a row that named one
  * would be contradicting the screen it opens - and the tempo it is played at.
@@ -312,8 +324,8 @@ private data class SongListItemNote(
 )
 
 /**
- * A [SongListItemNote] where the song card's second line has reached it, with what separates it from whatever stands in
- * front of it.
+ * A [SongListItemNote] on the song card's details line, with the gap that separates it from whatever stands in front of
+ * it.
  *
  * The note changes under the reader: a transposition or a capo renames the key, a stepper in a setlist moves the
  * tempo, and the chords switched off take the key away altogether. So it is crossfaded where it stands and the line closes
@@ -321,13 +333,13 @@ private data class SongListItemNote(
  * by the state, since the scheme is interpolated on every frame of a theme change and each of those frames would
  * start another crossfade.
  *
- * @param separator What stands between it and what is drawn before it ([songCardSeparatorBefore]): a song that names no
- *   artist starts the line with its key itself rather than with a separator before nothing.
+ * @param hasGapBefore Whether another value stands in front of it, which the first one on the line has nothing to be
+ *   set apart from.
  */
 @Composable
 private fun SongCardNote(
     note: SongListItemNote?,
-    separator: SongCardSeparatorKind?,
+    hasGapBefore: Boolean,
 ) = AnimatedContent(
     targetState = note,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -336,14 +348,13 @@ private fun SongCardNote(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The first note's separator comes and goes with the artist in front of it, so it closes up the way the
-            // duration's does.
+            // The tempo's gap comes and goes with the key in front of it, so it closes up the way the duration's does.
             AnimatedVisibility(
-                visible = separator != null,
+                visible = hasGapBefore,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
-                SongCardSeparator(kind = separator ?: SongCardSeparatorKind.DOT)
+                SongCardGap()
             }
             val noteModifier = Modifier.semantics { contentDescription = currentNote.description }
             val noteColor = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant
@@ -365,3 +376,13 @@ private fun SongCardNote(
         }
     }
 }
+
+/**
+ * What sets two values on a song card's details line apart: only a gap, since each starts with its own mark (or is the
+ * key, in its own color). A narrow window narrows it, since there every dp of the line is one more letter.
+ */
+@Composable
+private fun SongCardGap() = Spacer(modifier = Modifier.width(if (isNarrowSongCardWindow) NARROW_SONG_CARD_GAP_WIDTH else SONG_CARD_GAP_WIDTH))
+
+private val SONG_CARD_GAP_WIDTH = 8.dp
+private val NARROW_SONG_CARD_GAP_WIDTH = 6.dp

@@ -35,8 +35,7 @@ internal fun hasRoomForSidePanel(
 
 /**
  * What a list screen decides from the width it settles at: whether its filter side panel fits, how many columns the
- * Songs screen lays out with and without that panel next to it, and how many the Setlists screen's cards fit, whose
- * details are chosen apart from the songs' (see [MIN_SETLIST_COLUMN_WIDTH]). The app's `CampfireScreens` works it out
+ * Songs screen lays out with and without that panel next to it, and how many the Setlists screen's cards fit. The app's `CampfireScreens` works it out
  * and hands it down in place of the width itself, so that a window being resized, whose width changes on every frame,
  * recomposes the screens only in the frames one of these decisions changes in: the value is equal everywhere between
  * two breakpoints.
@@ -54,9 +53,11 @@ internal data class ListLayout(
          * @param settledWidth The width of the screen once the navigation bars have finished animating.
          * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
          * @param songColumnWidth The narrowest column of the Songs screen, see [minSongColumnWidth], which the side panel
-         *   is decided by.
+         *   is decided by. The Setlists screen's cards are laid out by it too, whatever details they show: those stand on a
+         *   line of their own, under the artist, and take nothing from the title's or the artist's room, so the two screens
+         *   fit the same number of cards side by side and switching between them never reflows the grid.
          * @param songGridColumnWidth The narrowest column the Songs screen's grid is laid out in, see [songGridColumnWidth].
-         * @param setlistColumnWidth The narrowest column of the Setlists screen, the same way.
+         *   The Setlists screen is not, since its cards always show their artist.
          */
         fun of(
             settledWidth: Dp,
@@ -64,7 +65,6 @@ internal data class ListLayout(
             layoutDirection: LayoutDirection,
             songColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
             songGridColumnWidth: Dp = songColumnWidth,
-            setlistColumnWidth: Dp = MIN_SETLIST_COLUMN_WIDTH,
         ) = ListLayout(
             hasRoomForSidePanel = hasRoomForSidePanel(settledWidth, songColumnWidth),
             columnCount = songListColumnCount(
@@ -86,7 +86,7 @@ internal data class ListLayout(
                 contentPadding = contentPadding,
                 layoutDirection = layoutDirection,
                 isSidePanelVisible = false,
-                minColumnWidth = setlistColumnWidth,
+                minColumnWidth = songColumnWidth,
             ),
         )
     }

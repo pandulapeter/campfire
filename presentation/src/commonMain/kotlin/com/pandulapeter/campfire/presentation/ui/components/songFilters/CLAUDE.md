@@ -12,7 +12,8 @@
 The tag and language filters of the songs screen, in a side panel or a sheet.
 
 - `SongFilters` is a side panel or a sheet, and neither when there is nothing to filter by (`hasSongFilters`).
-  `ControlsSidePanel`: only the list feeds the bar's nested scroll.
+  `ControlsSidePanel`: only the list feeds the bar's nested scroll. Panel and bar action appear without animation while
+  the library arrives, so `hasSongFilters` is read straight from `screenData`, landing before the songs say they are read.
 - Filter chips are `CountedFilterChip` on `SelectableChip`, not Material's `FilterChip` (its state layer hugs the
   label); the `indication` sits outside the padding under a `clip`. No chip in the app is a Material `FilterChip`.
 - `hasRoomForSidePanel`: the filter panel shows only while two columns still fit beside it, the fast scroller counted;

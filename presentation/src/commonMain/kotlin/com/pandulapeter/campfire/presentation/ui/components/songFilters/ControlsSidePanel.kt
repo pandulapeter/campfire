@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTop
 import com.pandulapeter.campfire.presentation.ui.components.list.SIDE_PANEL_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,17 +32,20 @@ import androidx.compose.ui.unit.dp
  * The [SongFilters] in a panel next to the list, shown on screens that are wide enough for it, see [hasRoomForSidePanel]. The list screens' app bar spans the list alone (see
  * [SearchableTopAppBar]), so the panel reaches the top of the screen beside it.
  *
+ * @param isAnimated Whether the panel slides in, false while the library is still arriving: the panel appears with the
+ *   library's first tag, and sliding it in then would squeeze every card on screen as the app opens.
  * @param content The controls themselves, handed the modifier that gives the panel its size and the insets the panel
  *   is responsible for.
  */
 @Composable
 internal fun ControlsSidePanel(
     isVisible: Boolean,
+    isAnimated: Boolean,
     contentPadding: PaddingValues,
     content: @Composable (modifier: Modifier, contentPadding: PaddingValues) -> Unit,
 ) = AnimatedVisibility(
     visible = isVisible,
-    enter = expandHorizontally() + fadeIn(),
+    enter = if (isAnimated) expandHorizontally() + fadeIn() else EnterTransition.None,
     exit = shrinkHorizontally() + fadeOut(),
 ) {
     val endPadding = contentPadding.calculateEndPadding(LocalLayoutDirection.current)

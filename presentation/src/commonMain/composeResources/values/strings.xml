@@ -357,7 +357,7 @@
     <string name="settings_number_sections">Number sections</string>
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
     <string name="settings_song_cards">Song cards</string>
-    <string name="settings_song_cards_description">What each song shows after its artist in the lists. The fewer details a card shows, the more cards fit side by side.</string>
+    <string name="settings_song_cards_description">What each song shows under its artist in the lists.</string>
     <string name="card_detail_key">Key</string>
     <string name="card_detail_tempo">Tempo</string>
     <string name="card_detail_duration">Duration</string>

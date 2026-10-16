@@ -108,8 +108,10 @@ internal class ListTopFade(
             val distance = sectionStartDistance(
                 firstVisibleItemIndex = listState.firstVisibleItemIndex,
                 scrollOffset = listState.firstVisibleItemScrollOffset,
+                // A header collapsed to nothing, as the song list's are while its search is open, starts no section
+                // anybody can see, and counting it would thin the fade out over every card that follows one.
                 headerPositions = listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
-                    if (item.contentType == sectionHeaderContentType) item.index to item.offset.y else null
+                    if (item.contentType == sectionHeaderContentType && item.size.height > 0) item.index to item.offset.y else null
                 },
             ) ?: return strength
             return minOf(strength, (distance / fadeHeightPx).coerceIn(0f, 1f))

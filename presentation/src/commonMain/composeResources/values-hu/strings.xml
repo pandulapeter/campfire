@@ -357,7 +357,7 @@
     <string name="settings_number_sections">Szakaszok számozása</string>
     <string name="settings_number_sections_description">A saját név nélküli, ismétlődő szakaszok sorszámot kapnak, például Versszak 1 és Versszak 2</string>
     <string name="settings_song_cards">Dalkártyák</string>
-    <string name="settings_song_cards_description">Mi jelenjen meg az előadó után az egyes dalokon a listákban. Minél kevesebbet mutat egy kártya, annál több fér el egymás mellett.</string>
+    <string name="settings_song_cards_description">Mi jelenjen meg az előadó alatt az egyes dalokon a listákban.</string>
     <string name="card_detail_key">Hangnem</string>
     <string name="card_detail_tempo">Tempó</string>
     <string name="card_detail_duration">Időtartam</string>

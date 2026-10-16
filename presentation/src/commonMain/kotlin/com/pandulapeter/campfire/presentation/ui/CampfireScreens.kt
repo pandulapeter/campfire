@@ -66,7 +66,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScre
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
-import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.list.songGridColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
@@ -176,11 +175,9 @@ internal fun CampfireScreens(
     // decide from it, which stays equal between two breakpoints and lets them skip those frames. The song details
     // screen keeps the width itself: its lyrics use the difference between the settled width and the one they are
     // measured at inside their layout, which no discrete decision stands in for.
-    // A card that says less after its artist is given a narrower column, see minSongColumnWidth; the Songs screen's
-    // column width is worked out by the caller, which decides the expanded rail from the same width.
+    // The Songs screen's column width is worked out by the caller (see minSongColumnWidth), which decides the expanded
+    // rail from the same width, and the Setlists screen's cards are laid out by it too.
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val areChordsEnabled = userPreferences?.areChordsEnabled != false
-    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
@@ -190,12 +187,6 @@ internal fun CampfireScreens(
         songGridColumnWidth = songGridColumnWidth(
             songColumnWidth = songColumnWidth,
             sortingMode = userPreferences?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE,
-        ),
-        setlistColumnWidth = minSongColumnWidth(
-            details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
-            areChordsEnabled = areChordsEnabled,
-            isMetronomeEnabled = isMetronomeEnabled,
-            isCoverArtEnabled = userPreferences?.isCoverArtEnabled != false,
         ),
     )
     val settingsLayout = PageWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)

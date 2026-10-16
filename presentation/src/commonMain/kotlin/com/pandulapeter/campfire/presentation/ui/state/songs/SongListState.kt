@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 /**
@@ -74,8 +75,14 @@ internal class SongListState(
     /**
      * Whether the filter controls have anything to offer: a tag, or a choice between two languages. Without either,
      * the songs screen leaves out both the controls and the action that opens them rather than showing an empty sheet.
+     *
+     * Read from [screenData] itself rather than from [tags] and [languages], which are states of it already: one hop
+     * further, the answer for the last batch of the library would land after `LibraryState.isLoading` has gone false,
+     * and the side panel would slide in as if somebody had tagged a song.
      */
-    val hasSongFilters = combine(tags, languages) { tags, languages -> tags.isNotEmpty() || languages.size > 1 }.asState(scope, false)
+    val hasSongFilters = screenData.map { state ->
+        state.data.let { data -> data?.tags.orEmpty().isNotEmpty() || data?.languages.orEmpty().size > 1 }
+    }.asState(scope, false)
 
     /**
      * Whether the song list is narrowed by anything the filter controls show as selected, which is what the badge on
@@ -97,8 +104,9 @@ internal class SongListState(
             filterKey = "$normalizedQuery|${indexed.filterKey}",
             orderKey = "$normalizedQuery|${indexed.orderKey}",
             groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
+            isLibraryRead = indexed.isLibraryRead,
         )
-    }.flowOn(Dispatchers.Default).asState(scope, SongGroups(filterKey = "", orderKey = "", groups = emptyList()))
+    }.flowOn(Dispatchers.Default).asState(scope, SongGroups(filterKey = "", orderKey = "", groups = emptyList(), isLibraryRead = false))
 
     /**
      * What the song list has to show instead of songs, null while it has songs. A library that is empty because

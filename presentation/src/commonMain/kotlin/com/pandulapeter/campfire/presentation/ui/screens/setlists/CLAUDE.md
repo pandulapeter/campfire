@@ -15,11 +15,10 @@
 - Setlists are listed whenever any exist, an empty library included; the library's empty state belongs to the songs
   screen. A screen whose every setlist is archived says so, rather than claiming there are none.
 - The include-archived toggle sits at the end of the list, only while at least one is archived, off by default.
-- The header's subtitle is the running time in plain text ("… running time", not to be read as the start time),
-  which stays in sight while the setlist is read. Under the header row,
-  `SetlistSummary` shows the countdown, then the description; the countdown turns over at midnight on a screen
-  left open (`rememberToday`). In a short window (under 480dp, a search's keyboard counted) the
-  description starts at two lines and opens on a tap, or four lines push the first song out of sight.
+- Under the header row, `SetlistSummary` shows the countdown and the running time ("… running time", not to be read as
+  the start time; a clock mark, after the countdown), then the description; the countdown turns over at midnight on a
+  screen left open (`rememberToday`). In a short window (under 480dp, a search's keyboard counted) the description
+  starts at two lines and opens on a tap, or four lines push the first song out of sight.
 - The archived icon fades with the archiving (the menu that archives hangs from the same row).
 - "New setlist" opens the song picker right after creating (`SetlistsController.createSetlist`), only if nothing else
   was opened meanwhile and the library has songs.
