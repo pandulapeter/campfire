@@ -22,6 +22,9 @@ headers.
   the system consumed for back is ignored.
 - Thumb and track fade by draw alpha, not a `graphicsLayer`: a layer would clip the bubble, and the web build doesn't
   redraw a `ModulateAlpha` layer whose alpha alone changed.
+- The letter bubble is a surface pill reaching out of the thumb, as tall as the app bar's actions pill (48dp), the
+  letter in primary at its far end under the pill's last button (`CLOSED_PILL_LAST_ACTION_END_INSET`, which assumes
+  New is detached), so the finger on the thumb doesn't cover it.
 - Position is estimated from average item size, excluding the pinned sticky header (listed out of order).
 - Haptics (touch only): a tick per row, a notch per section letter and at the ends (`FastScrollerDetent.kt`,
   `detentNotch`), the end decided by where the finger asked the thumb to be; read once a frame.

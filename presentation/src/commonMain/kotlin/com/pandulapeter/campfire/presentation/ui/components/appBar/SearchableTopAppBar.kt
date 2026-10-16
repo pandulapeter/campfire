@@ -9,13 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.appBar
 
-import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.components.SearchState
-import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
-import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
-import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -33,20 +26,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
@@ -60,7 +51,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,27 +64,32 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.roundToInt
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
+import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.roundToInt
 
 /**
  * The app bar of a list screen that can be searched. It has no title: the navigation bar or rail already says which
@@ -565,18 +560,17 @@ private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 
 /**
  * The bar's end padding, wider than its start by the half of [ACTION_BUTTON_OVERLAP] the new item button no longer
- * takes up: that keeps [ClosedSearchActionsDivider] on the column of the song cards' overflow buttons, which the
- * [FastScroller]'s bubble runs down too.
+ * takes up: that keeps [ClosedSearchActionsDivider] on the column of the song cards' overflow buttons.
  */
 private val APP_BAR_END_PADDING = APP_BAR_HORIZONTAL_PADDING + ACTION_BUTTON_OVERLAP / 2
 
 /**
- * How far in from the end edge of a list the middle of the closed bar's [ClosedSearchActionsDivider] stands (detached
- * actions widen its room into a gap, but the selection menu's dots keep it on this line), past the
- * list's own end inset: the bar's end padding, the pill's, the one 48dp button the list's new item menu is, less the
- * half of the overlap it reaches past the line with, and the gap before the line. The [FastScroller] centers its
- * bubble on it, so that the two read as one column down the list.
+ * How far in from the end edge of a list the middle of the closed pill's last action stands while the actions after it
+ * are detached, past the list's own end inset: the bar's end padding, the pill's, the detached 48dp button less the
+ * overlap it shares with the pill's padding, the gap before it, and half of the last action, which reaches into its
+ * neighbors by half the overlap on either side. The [FastScroller] puts the letter of its bubble under it, so that the
+ * two read as one column down the list.
  */
-internal val CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET =
-    APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + 48.dp - ACTION_BUTTON_OVERLAP / 2 + CLOSED_SEARCH_ACTIONS_DIVIDER_GAP +
-        DividerDefaults.Thickness / 2
+internal val CLOSED_PILL_LAST_ACTION_END_INSET =
+    APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2 + (48.dp - ACTION_BUTTON_OVERLAP) +
+        DETACHED_CLOSED_SEARCH_ACTIONS_GAP + (48.dp - ACTION_BUTTON_OVERLAP) / 2

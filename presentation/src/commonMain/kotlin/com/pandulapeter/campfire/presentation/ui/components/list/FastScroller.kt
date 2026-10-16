@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.list
 
-import com.pandulapeter.campfire.presentation.ui.components.appBar.CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET
+import com.pandulapeter.campfire.presentation.ui.components.appBar.CLOSED_PILL_LAST_ACTION_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import androidx.compose.animation.AnimatedVisibility
@@ -209,17 +209,18 @@ internal fun FastScroller(
                     )
                 }
         )
-        // The label is level with the thumb, at the same height as the finger on it, clamped into the track near its end,
-        // and centered under the divider of the app bar's buttons. It is wider than the touch column, so measure it
-        // without the column's width.
+        // The label is level with the thumb, at the same height as the finger on it, clamped into the track near its end.
+        // It is a pill reaching out of the thumb with the letter at its far end, under the last button of the app bar's
+        // pill, since a finger on a touch screen covers more than its own width of the screen around the thumb; it is
+        // wider than the touch column, so it is measured without the column's width.
         AnimatedVisibility(
             visible = state.isDragging && label != null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .offset {
-                    val bubbleHeight = BUBBLE_SIZE.roundToPx().toFloat()
+                    val bubbleHeight = BUBBLE_HEIGHT.roundToPx().toFloat()
                     IntOffset(
-                        x = (BUBBLE_SIZE / 2 - CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET).roundToPx(),
+                        x = -(THUMB_END_PADDING + THUMB_WIDTH + BUBBLE_GAP).roundToPx(),
                         y = bubbleTop(state.thumbCenter - bubbleHeight / 2, state.trackHeight, bubbleHeight).roundToInt(),
                     )
                 }
@@ -233,16 +234,21 @@ internal fun FastScroller(
             label?.let { lastLabel = it }
             Box(
                 modifier = Modifier
-                    .size(BUBBLE_SIZE)
+                    .size(width = BUBBLE_WIDTH, height = BUBBLE_HEIGHT)
                     .shadow(elevation = BUBBLE_ELEVATION, shape = CircleShape)
-                    .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
-                contentAlignment = Alignment.Center,
+                    .background(color = MaterialTheme.colorScheme.surfaceContainerHighest, shape = CircleShape),
+                contentAlignment = Alignment.CenterStart,
             ) {
-                Text(
-                    text = lastLabel,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
+                Box(
+                    modifier = Modifier.size(BUBBLE_HEIGHT),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = lastLabel,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
         if (isVisible) {
@@ -496,8 +502,17 @@ private val TOUCH_SLACK = 8.dp
 private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
 private val MIN_THUMB_HEIGHT = 48.dp
-private val BUBBLE_SIZE = 48.dp
-private val BUBBLE_ELEVATION = 2.dp
+
+/**
+ * As tall as the pill behind the list screens' app bar buttons, whose height is their touch targets', so that the two
+ * read as one family of shapes.
+ */
+private val BUBBLE_HEIGHT = 48.dp
+private val BUBBLE_GAP = 4.dp
+
+/** As wide as it takes to center the letter, in the round end of the pill, under the app bar pill's last button. */
+private val BUBBLE_WIDTH = CLOSED_PILL_LAST_ACTION_END_INSET - THUMB_END_PADDING - THUMB_WIDTH - BUBBLE_GAP + BUBBLE_HEIGHT / 2
+private val BUBBLE_ELEVATION = 3.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
 private const val TRACK_ALPHA = 0.12f
