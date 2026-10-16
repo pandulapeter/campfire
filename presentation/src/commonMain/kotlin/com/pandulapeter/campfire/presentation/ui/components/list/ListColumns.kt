@@ -66,11 +66,24 @@ internal fun minSongColumnWidth(
     (if (details.isTempoShown(isMetronomeEnabled)) CARD_TEMPO_WIDTH else 0.dp) +
     (if (details.isDurationShown) CARD_DURATION_WIDTH else 0.dp)
 
+/**
+ * The narrowest column of the Songs screen's grid: [songColumnWidth], less the artist's room while the list is sorted by
+ * artist, where the cards leave the artist to the header above them. Only the grid is laid out by it; the side panel and
+ * the expanded rail are decided by [songColumnWidth], so that a change of sort never moves the chrome around the list.
+ * The room taken off is what gives the desktop's first window (800dp wide, its frame and the rail taken off) two
+ * columns of the default cards, covers included; the title is what is cut short for it.
+ */
+internal fun songGridColumnWidth(
+    songColumnWidth: Dp,
+    sortingMode: UserPreferences.SortingMode,
+) = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) songColumnWidth - CARD_ARTIST_WIDTH else songColumnWidth
+
 // Declared before the two defaults below, which are worked out from them as the file is initialized.
 private val CARD_BASE_WIDTH = 368.dp
 private val CARD_KEY_WIDTH = 16.dp
 private val CARD_TEMPO_WIDTH = 16.dp
 private val CARD_DURATION_WIDTH = 32.dp
+private val CARD_ARTIST_WIDTH = 120.dp
 
 /** The cover thumbnail and the gap after it (`CenteredSongCardContent`). */
 private val CARD_COVER_WIDTH = 56.dp

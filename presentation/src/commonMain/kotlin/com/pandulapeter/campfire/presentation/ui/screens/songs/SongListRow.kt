@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
  * One song of the song list: its card, which opens it, or ticks it in the selection mode, and the menu hanging from it.
  *
  * @param itemKey The row's key in the grid, which a tag or a language tapped on it keeps in place by.
+ * @param isArtistShown False under a header that names the song's artist already ([SongListItem]).
  */
 @Composable
 internal fun SongListRow(
@@ -62,6 +63,7 @@ internal fun SongListRow(
     playingOverrides: PlayingOverridesSnapshot,
     cardOptions: SongCardOptions,
     labelsOnEverySong: LabelsOnEverySong,
+    isArtistShown: Boolean,
     songFilter: SongFilter,
     isInSetlist: Boolean,
     isTicked: Boolean,
@@ -97,6 +99,7 @@ internal fun SongListRow(
         duration = song.duration?.takeIf { cardOptions.isDurationShown },
         coverArtUrl = song.coverArtUrl?.takeIf { cardOptions.isCoverArtEnabled },
         labelsOnEverySong = labelsOnEverySong,
+        isArtistShown = isArtistShown,
         songFilter = songFilter,
         onTagClicked = { onTagClicked(itemKey, it) },
         onLanguageClicked = { onLanguageClicked(itemKey, it) },

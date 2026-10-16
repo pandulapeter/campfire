@@ -27,6 +27,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,8 +48,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -83,6 +86,10 @@ import kotlin.time.Duration
  *   chords switched off.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
+ * @param isArtistShown False on a card filed under a header that names its artist already, the songs list sorted by artist,
+ *   where the artist on every card would only repeat it. The artist is still drawn where nothing else is left on the
+ *   second line, since a card losing that line would change height, and it is still read out, since a screen reader
+ *   moving from card to card never hears the header again.
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
  *   library that a tag or a language could narrow, so neither says anything there about why the song is in it.
  * @param songFilter What the song list is filtered by, whose pills are drawn selected.
@@ -113,6 +120,7 @@ internal fun SongListItem(
     shouldShowChords: Boolean = true,
     duration: Duration? = null,
     labelsOnEverySong: LabelsOnEverySong,
+    isArtistShown: Boolean = true,
     shouldShowLabels: Boolean = true,
     songFilter: SongFilter = SongFilter(),
     onTagClicked: ((String) -> Unit)? = null,
@@ -164,6 +172,8 @@ internal fun SongListItem(
             mark = IconLabelMark.TEMPO,
         )
     }
+    val hasArtist = song.artist.isNotBlank()
+    val isArtistDrawn = hasArtist && (isArtistShown || (note == null && tempoNote == null && displayedDuration == null))
     // Remembered, so that a row composed again with the same song hands the same lists on and the labels under it skip.
     val languages = remember(song.languages, labelsOnEverySong, shouldShowLabels) {
         if (shouldShowLabels) song.languages.filterNot { it in labelsOnEverySong.languages } else emptyList()
@@ -191,26 +201,34 @@ internal fun SongListItem(
             // here shares the title's line: a title is the longest thing on the row and the one that must never be
             // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
             // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (song.artist.isBlank() && note == null && tempoNote == null && displayedDuration == null) {
+            supportingContent = if (!hasArtist && note == null && tempoNote == null && displayedDuration == null) {
                 null
             } else {
                 {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (song.artist.isNotBlank()) {
+                        // Faded and closed up rather than dropped, since switching the sort or opening the search, which
+                        // takes the headers away, is what hides and shows it.
+                        AnimatedVisibility(
+                            modifier = Modifier.weight(1f, fill = false),
+                            visible = isArtistDrawn,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally(),
+                        ) {
                             Text(
-                                modifier = Modifier.weight(1f, fill = false),
                                 text = song.artist,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        val hasArtist = song.artist.isNotBlank()
-                        SongCardNote(note = note, separator = songCardSeparatorBefore(hasArtist, hasValueBefore = false))
-                        SongCardNote(note = tempoNote, separator = songCardSeparatorBefore(hasArtist, hasValueBefore = note != null))
+                        if (hasArtist && !isArtistDrawn) {
+                            Box(modifier = Modifier.semantics { text = AnnotatedString(song.artist) })
+                        }
+                        SongCardNote(note = note, separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = false))
+                        SongCardNote(note = tempoNote, separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = note != null))
                         if (displayedDuration != null) {
-                            val separator = songCardSeparatorBefore(hasArtist, hasValueBefore = note != null || tempoNote != null)
+                            val separator = songCardSeparatorBefore(isArtistDrawn, hasValueBefore = note != null || tempoNote != null)
                             // Follows the notes, which fade and close up where they stand rather than leaving the line
                             // in one frame, so the duration slides once instead of jumping and then sliding.
                             AnimatedVisibility(
@@ -318,7 +336,15 @@ private fun SongCardNote(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            separator?.let { SongCardSeparator(kind = it) }
+            // The first note's separator comes and goes with the artist in front of it, so it closes up the way the
+            // duration's does.
+            AnimatedVisibility(
+                visible = separator != null,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                SongCardSeparator(kind = separator ?: SongCardSeparatorKind.DOT)
+            }
             val noteModifier = Modifier.semantics { contentDescription = currentNote.description }
             val noteColor = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant
             if (currentNote.mark == null) {

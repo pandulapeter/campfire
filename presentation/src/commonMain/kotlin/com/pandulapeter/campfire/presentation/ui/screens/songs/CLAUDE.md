@@ -16,6 +16,9 @@ The songs screen.
   collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance
   (no mask at the real top, grows over the first 24dp, also when the first card is item 1).
 
+- Sorted by artist, cards leave their artist to the header (`isArtistShown`); the Selection group and an open search,
+  which collapses the headers, show it.
+
 ## The add songs hint
 
 - While the whole library holds fewer than three songs (the demo library is two), the list ends in `AddSongsHintCard`:

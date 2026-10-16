@@ -67,6 +67,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
+import com.pandulapeter.campfire.presentation.ui.components.list.songGridColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost
@@ -186,6 +187,10 @@ internal fun CampfireScreens(
         contentPadding = shellContentPadding,
         layoutDirection = layoutDirection,
         songColumnWidth = songColumnWidth,
+        songGridColumnWidth = songGridColumnWidth(
+            songColumnWidth = songColumnWidth,
+            sortingMode = userPreferences?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE,
+        ),
         setlistColumnWidth = minSongColumnWidth(
             details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
             areChordsEnabled = areChordsEnabled,

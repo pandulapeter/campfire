@@ -24,6 +24,8 @@ The song card the song lists and setlists draw (`SongListItem`).
   (`SongCardNote`). Tempo and duration are `IconLabel`s (metronome at rest, clock), as is a setlist's
   countdown; the tempo adds the time signature unless it is 4/4. A dot follows only the artist; values are
   set apart by a gap, since each starts with its own mark (`SongCardSeparator`).
+- **Under an artist header the artist is left off** (`isArtistShown`, Songs sorted by artist, search closed): it fades
+  and closes up, unless it is all the second line holds (the card keeps its height), and is still read out.
 - **In a window under 480dp wide** card text uses 8dp padding (and headers follow, `songCardTextKeyline`) and titles get
   two lines; touch targets stay.
 - **Column width** (`minSongColumnWidth`, from `UserPreferences.CardDetails` and the chords, metronome, and cover art
@@ -31,3 +33,5 @@ The song card the song lists and setlists draw (`SongListItem`).
   (whether or not a song has one, so arriving covers never change the count), so the default Songs card keeps 456dp and
   a phone on its side stays one column. Setlists use the same widths (the slot number comes out of the title), so the same details flow
   into the same columns on both screens. `CampfireScreens` computes both into `ListLayout.of`.
+  Sorted by artist, the Songs grid (not its side panel or the expanded rail, so sorting never moves the chrome) takes
+  120dp off (`songGridColumnWidth`): the default desktop window gets two columns, at the cost of shorter titles.

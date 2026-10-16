@@ -53,7 +53,9 @@ internal data class ListLayout(
         /**
          * @param settledWidth The width of the screen once the navigation bars have finished animating.
          * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
-         * @param songColumnWidth The narrowest column of the Songs screen, see [minSongColumnWidth].
+         * @param songColumnWidth The narrowest column of the Songs screen, see [minSongColumnWidth], which the side panel
+         *   is decided by.
+         * @param songGridColumnWidth The narrowest column the Songs screen's grid is laid out in, see [songGridColumnWidth].
          * @param setlistColumnWidth The narrowest column of the Setlists screen, the same way.
          */
         fun of(
@@ -61,6 +63,7 @@ internal data class ListLayout(
             contentPadding: PaddingValues,
             layoutDirection: LayoutDirection,
             songColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
+            songGridColumnWidth: Dp = songColumnWidth,
             setlistColumnWidth: Dp = MIN_SETLIST_COLUMN_WIDTH,
         ) = ListLayout(
             hasRoomForSidePanel = hasRoomForSidePanel(settledWidth, songColumnWidth),
@@ -69,14 +72,14 @@ internal data class ListLayout(
                 contentPadding = contentPadding,
                 layoutDirection = layoutDirection,
                 isSidePanelVisible = false,
-                minColumnWidth = songColumnWidth,
+                minColumnWidth = songGridColumnWidth,
             ),
             columnCountBesideSidePanel = songListColumnCount(
                 settledWidth = settledWidth,
                 contentPadding = contentPadding,
                 layoutDirection = layoutDirection,
                 isSidePanelVisible = true,
-                minColumnWidth = songColumnWidth,
+                minColumnWidth = songGridColumnWidth,
             ),
             setlistColumnCount = songListColumnCount(
                 settledWidth = settledWidth,

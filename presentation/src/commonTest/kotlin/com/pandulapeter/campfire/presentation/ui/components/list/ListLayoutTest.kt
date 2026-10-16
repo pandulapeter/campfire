@@ -88,6 +88,30 @@ class ListLayoutTest {
     }
 
     @Test
+    fun `sorted by artist the songs fit more columns while the side panel stays where it was`() {
+        val byArtist = songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_ARTIST)
+        assertEquals(MIN_SONG_COLUMN_WIDTH, songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_TITLE))
+        (300..3000).map { it.dp }.forEach { width ->
+            val byTitleLayout = layout(width)
+            val byArtistLayout = ListLayout.of(
+                settledWidth = width,
+                contentPadding = noPadding,
+                layoutDirection = LayoutDirection.Ltr,
+                songGridColumnWidth = byArtist,
+            )
+            assertEquals(byTitleLayout.hasRoomForSidePanel, byArtistLayout.hasRoomForSidePanel)
+            assertTrue(byArtistLayout.columnCount >= byTitleLayout.columnCount)
+            assertEquals(byTitleLayout.setlistColumnCount, byArtistLayout.setlistColumnCount)
+        }
+        val width = byArtist * 3 + FAST_SCROLLER_WIDTH
+        assertEquals(2, layout(width).columnCount)
+        assertEquals(
+            3,
+            ListLayout.of(settledWidth = width, contentPadding = noPadding, layoutDirection = LayoutDirection.Ltr, songGridColumnWidth = byArtist).columnCount,
+        )
+    }
+
+    @Test
     fun `a maximized window stops adding columns`() {
         val wide = layout(MIN_SONG_COLUMN_WIDTH * 20)
         assertEquals(wide, layout(MIN_SONG_COLUMN_WIDTH * 200))

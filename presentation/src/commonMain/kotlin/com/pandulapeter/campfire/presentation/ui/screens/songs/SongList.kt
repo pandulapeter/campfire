@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.fastScrollerColumnWidth
@@ -274,6 +275,8 @@ internal fun SongList(
                     }
                 }
                 groups.forEachIndexed { groupIndex, group ->
+                    // An open search collapses the headers, and the cards take their artists back from them.
+                    val isArtistShown = isSearchOpen || (group.header as? SongGroupHeader.Section)?.header !is SongSection.Header.Artist
                     group.header?.let { header ->
                         stickyHeader(
                             key = header.itemKey,
@@ -317,6 +320,7 @@ internal fun SongList(
                                 playingOverrides = playingOverrides,
                                 cardOptions = cardOptions,
                                 labelsOnEverySong = labelsOnEverySong,
+                                isArtistShown = isArtistShown,
                                 songFilter = songFilter,
                                 isInSetlist = song.fileName in songFileNamesInSetlists,
                                 isTicked = song.fileName in selection,
