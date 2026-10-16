@@ -247,15 +247,34 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
             ),
         ),
+        // Home on the Range's PDF, its two pages swiped through by a finger on the preview: to the second on the
+        // scene's second beat, and back to the first on its fourth.
         PromoShot(
             name = "export",
             device = Device.IPHONE,
-            isClip = false,
+            isClip = true,
             shot = Shot(
                 id = "export",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("printSettings" to printSettings(isLandscape = false)) },
-                drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
+                drive = {
+                    viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE)))
+                    settle(3_000)
+                    val y = device.heightPx * EXPORT_PAGE_Y
+                    record(frames = 110) { frame ->
+                        PAGE_SWIPES.forEach { (start, isForward) ->
+                            val progress = (frame - start) / PAGE_SWIPE_FRAMES.toFloat()
+                            val from = if (isForward) 0.8f else 0.2f
+                            val to = if (isForward) 0.2f else 0.8f
+                            val position = Offset(device.widthPx * (from + (to - from) * progress.coerceIn(0f, 1f)), y)
+                            when (frame - start) {
+                                0 -> touch(PointerEventType.Press, position)
+                                in 1..PAGE_SWIPE_FRAMES -> touch(PointerEventType.Move, position)
+                                PAGE_SWIPE_FRAMES + 1 -> touch(PointerEventType.Release, position)
+                            }
+                        }
+                    }
+                },
             ),
         ),
         // A song on the iPad held upright, in the light theme the laptop beside it turns to.
@@ -372,6 +391,16 @@ private val INSTRUMENT_CHANGES = mapOf(
 /** The sheet takes a pick only once it has slid into place, about half a second after the tap that opens it. */
 private const val SHAPE_SHEET_FRAME = 79
 private const val SHAPE_PICK_FRAME = 113
+
+/** Where the PDF preview's page is, down the phone's screen, for a finger to swipe it. */
+private const val EXPORT_PAGE_Y = 0.4f
+
+/**
+ * The export's swipes, each a finger moved across the page over [PAGE_SWIPE_FRAMES] from its frame, so that the page
+ * settles on the scene's second beat, and back on its fourth: whether each goes to the next page.
+ */
+private val PAGE_SWIPES = listOf(16 to true, 60 to false)
+private const val PAGE_SWIPE_FRAMES = 10
 
 private const val REORDER_PRESS_FRAME = 20
 private const val REORDER_START_FRAME = 26
