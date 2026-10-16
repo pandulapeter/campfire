@@ -76,8 +76,9 @@ language, theme, and system text size.
 ### Golden renders
 
 `GoldenRendersTest` renders a short list of cases (smallest phone, Hungarian at text sizes 1.3 and 2, sheets with the
-keyboard up, the rail on a phone on its side, one dark case per screen type) and compares each with
-`src/test/resources/goldens/<name>.png`, allowing a few pixels of anti-aliasing (`Goldens.kt`). Each case names the bug
+keyboard up, the rail on a phone on its side, one dark case per screen type, the onboarding's last page on a first
+run) and compares each with `src/test/resources/goldens/<name>.png`, allowing a few pixels of anti-aliasing
+(`Goldens.kt`). Each case names the bug
 it would have caught; keep the set small, so an intended change's rewritten goldens are quick to review. A run leaves
 what it drew in `build/goldens/actual` and, for a changed golden, a diff in `build/goldens/diff` (CI uploads both when
 it fails). Goldens are recorded and compared on Linux only, since each system rasterizes text its own way; elsewhere

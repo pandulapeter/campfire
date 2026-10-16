@@ -49,6 +49,7 @@ internal class GoldenRendersTest {
                     setlists = case.setlists,
                     appearance = case.appearance,
                     isCoverArtEnabled = case.isCoverArtEnabled,
+                    isFirstRun = case.isFirstRun,
                 ) {
                     case.drive(this)
                     goldens.check(case.name, settledWindow())?.let(failures::add)
@@ -137,13 +138,18 @@ internal class GoldenRendersTest {
             reason = "The cover search's field and results under the keyboard, as they were before its keyboard handling was fixed.",
             isCoverArtEnabled = true,
         ) { openCoverSearch() },
+        GoldenCase(
+            name = "onboarding-last-page",
+            reason = "Start playing broken onto two lines, then the last dot touching it, in the footer of a 360dp phone.",
+            isFirstRun = true,
+        ) { openOnboardingLastPage() },
     )
 }
 
 /**
  * One golden render: the app in [window] and [appearance], driven to a state by [drive] and compared with the golden
- * called [name], over a library that also holds [setlists] (see [runAppTest]). [reason] is the bug the case would have
- * caught, which is what earns it its place.
+ * called [name], over a library that also holds [setlists] (see [runAppTest]), or from a fresh install's empty data
+ * directory with [isFirstRun]. [reason] is the bug the case would have caught, which is what earns it its place.
  */
 private class GoldenCase(
     val name: String,
@@ -152,6 +158,7 @@ private class GoldenCase(
     val appearance: TestAppearance = TestAppearance(),
     val isCoverArtEnabled: Boolean = false,
     val setlists: List<String> = emptyList(),
+    val isFirstRun: Boolean = false,
     val drive: AppTestScope.() -> Unit,
 )
 

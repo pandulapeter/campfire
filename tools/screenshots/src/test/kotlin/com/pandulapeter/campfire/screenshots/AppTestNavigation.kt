@@ -18,6 +18,8 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.onboarding_next
+import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
@@ -71,8 +73,21 @@ internal fun AppTestScope.openSetlistDetails() {
     keyboardHeight = KEYBOARD_HEIGHT
 }
 
+/** Turns the onboarding of a first run with Next until its last page, the one Start playing finishes it from. */
+internal fun AppTestScope.openOnboardingLastPage() {
+    val startPlaying = hasText(string(Res.string.onboarding_start_playing)) and hasClickAction()
+    repeat(MAX_ONBOARDING_PAGES) {
+        if (onAllNodes(startPlaying).fetchSemanticsNodes().isNotEmpty()) return
+        tap(hasText(string(Res.string.onboarding_next)) and hasClickAction())
+    }
+    error("The onboarding did not reach Start playing in $MAX_ONBOARDING_PAGES pages.")
+}
+
 internal const val RISING_SUN_TITLE = "House of the Rising Sun"
 internal const val DATED_SETLIST = "campfire_tests-an_evening_by_the_fire.setlist.json"
 
 /** A phone keyboard's height, which leaves a 360 by 640 dp phone the 330 dp the sheets' pinned height is budgeted for. */
 internal val KEYBOARD_HEIGHT = 310.dp
+
+/** More pages than the onboarding has with every one of them shown, so that a Next that does nothing fails rather than loops. */
+private const val MAX_ONBOARDING_PAGES = 10
