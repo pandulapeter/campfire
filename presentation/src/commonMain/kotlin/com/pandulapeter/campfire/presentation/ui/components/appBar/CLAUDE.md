@@ -32,9 +32,12 @@ The top app bars of the list screens.
 - The "New" menu yields to the field (`closedSearchActions`); the selection menu stays
   (`areClosedSearchActionsKeptInSearch`). New is a filled 48dp circle **beside the pill**
   (`areClosedSearchActionsDetached`): the pill's end is cut by the closed actions' lookahead width and the divider's room
-  widens into a 22dp gap, both on the search's spring, so the button never moves. A clipped shrink would slice the
-  circle, so it fades (quickly) and scales in place while its room closes. The bar stays filled while the list has no
-  header (placeholder, ranked results). It spans the list only, never the side panel.
+  widens into a gap as wide as the circle's from the edge, both on the search's spring, so the button never moves. A
+  clipped shrink would slice the circle, so it fades (quickly) and scales in place while its room closes. The circle
+  ends on the cards' scroller-less keyline, as does the pill without it (`UNDETACHED_PILL_END_INSET`); with the
+  scroller, a card's menu is centered in the gap and its setlist button under the pill's last action, without it the
+  menu is centered under the circle (`listItemTrailingKeylineAdjustment`, following the scroller's column). The bar stays filled while the list has no header (placeholder, ranked
+  results). It spans the list only, never the side panel.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
   hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is
   layout, not a drawn translation, so `animateBounds` carries on from where the gesture left.

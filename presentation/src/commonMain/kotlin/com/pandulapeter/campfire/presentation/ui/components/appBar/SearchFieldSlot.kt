@@ -261,6 +261,6 @@ internal object TruncateSearchQuery : InputTransformation {
 /** How much of the opacity of what the field holds a back gesture dragged all the way takes away before it is let go of. */
 private const val RECEDED_ALPHA_LOSS = 0.5f
 
-private val FIELD_HEIGHT = 40.dp
+internal val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp
 private val CLEAR_ICON_SIZE = 18.dp

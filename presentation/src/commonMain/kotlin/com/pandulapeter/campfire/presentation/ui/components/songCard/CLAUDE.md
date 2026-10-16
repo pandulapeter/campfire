@@ -21,10 +21,13 @@ The song card the song lists and setlists draw (`SongListItem`).
   can read differently inside a setlist. The tempo follows (`EffectiveTempo.bpm`, 120 where nothing names one), in the
   muted color so it doesn't compete with the key. Both come from scanned metadata, never by parsing the file. "Lyrics
   only" replaces the key for a chordless song — but with the Chords switch off the place is empty. Changes crossfade
-  (`SongCardNote`).
+  (`SongCardNote`). Tempo and duration are `IconLabel`s (metronome at rest, clock), as is a setlist's
+  countdown; the tempo adds the time signature unless it is 4/4. A dot follows only the artist; values are
+  set apart by a gap, since each starts with its own mark (`SongCardSeparator`).
 - **In a window under 480dp wide** card text uses 8dp padding (and headers follow, `songCardTextKeyline`) and titles get
   two lines; touch targets stay.
-- **Column width** (`minSongColumnWidth`, from `UserPreferences.CardDetails` and the chords/metronome switches): 368dp
-  base, +16dp each for key and tempo, +32dp for duration, so the default Songs card keeps 400dp and a phone on its side
-  stays one column. Setlists use the same widths (the slot number comes out of the title), so the same details flow
+- **Column width** (`minSongColumnWidth`, from `UserPreferences.CardDetails` and the chords, metronome, and cover art
+  switches): 368dp base, +16dp each for key and tempo, +32dp for duration, +56dp for the cover while covers are on
+  (whether or not a song has one, so arriving covers never change the count), so the default Songs card keeps 456dp and
+  a phone on its side stays one column. Setlists use the same widths (the slot number comes out of the title), so the same details flow
   into the same columns on both screens. `CampfireScreens` computes both into `ListLayout.of`.

@@ -32,7 +32,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.preferences.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.components.preferences.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
@@ -67,11 +66,10 @@ internal fun GeneralSections(
 private fun SetupSection(
     onOnboardingClicked: () -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_setup)) {
-    ActionListItem(
+    LinkListItem(
         title = stringResource(Res.string.settings_onboarding),
         description = stringResource(Res.string.settings_onboarding_description),
         icon = painterResource(Res.drawable.ic_campfire),
-        isEmphasized = false,
         onClick = onOnboardingClicked,
     )
 }

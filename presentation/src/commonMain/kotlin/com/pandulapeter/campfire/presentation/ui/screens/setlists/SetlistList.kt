@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.runtime.CompositionLocalProvider
+import com.pandulapeter.campfire.presentation.ui.components.list.listItemTrailingKeylineAdjustment
+import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -193,193 +196,196 @@ internal fun SetlistList(
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
     val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-    Box(modifier = modifier) {
-        LazyVerticalGrid(
-            columns = ListColumns(columnCount),
-            modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
-            state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
-        ) {
-            // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
-            // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
-            // to the songs screen. Every state goes through the same slot, so that "still loading" turning out to be
-            // "you have no setlists" cross fades instead of being swapped in a single frame.
-            val placeholder = setlistsPlaceholder
-            when {
-                placeholder != null -> item(
-                    key = "placeholder",
-                    span = { GridItemSpan(maxLineSpan) },
-                    contentType = "placeholder",
-                ) {
-                    ListPlaceholder(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
-                        placeholder = placeholder,
-                        onRetry = viewModel.libraryState::refresh,
-                        onNewSetlist = if (isPerformanceModeEnabled) null else {
-                            { viewModel.dialogHost.showDialog(DialogType.NewSetlist) }
-                        },
-                        onImport = if (isPerformanceModeEnabled) null else {
-                            { viewModel.importController.importFiles(filePicker) }
-                        },
-                    )
-                }
-
-                else -> shownSetlists.forEach { setlistWithSongs ->
-                    stickyHeader(
-                        key = SetlistItemKey.header(setlistWithSongs.setlist.fileName),
-                        contentType = SetlistItemKey.HEADER_CONTENT_TYPE,
-                    ) { headerIndex ->
-                        val headerState = rememberSectionHeaderState(listState, headerIndex)
-                        SectionHeader(
-                            // Sticky placement belongs to the grid. Animating it as a regular item can briefly
-                            // pull an already-pinned header away when entering reorder mode changes the list.
-                            // Keep only its appearance fades.
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
-                            state = { headerState.value },
-                            // The card fade and animated placement can settle on different frames near the top.
-                            // Keep the pinned row opaque throughout reordering.
-                            backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
-                            endPadding = headerEndPadding,
-                            text = setlistWithSongs.setlist.title,
-                            subtitle = setlistWithSongs.headerSubtitle(today),
-                            // A setlist is only ever on this screen archived because the filter was asked to show them,
-                            // so the mark is what tells it from the ones still in use.
-                            icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
-                            iconContentDescription = stringResource(Res.string.setlists_archived),
-                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
-                            action = if (isPerformanceModeEnabled) null else {
-                                { actionModifier, buttonModifier ->
-                                    SetlistActions(
-                                        modifier = actionModifier,
-                                        buttonModifier = buttonModifier,
-                                        actions = setlistActions,
-                                        setlist = setlistWithSongs.setlist,
-                                        isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
-                                        onReorder = if (setlistWithSongs.entries.size > 1) {
-                                            {
-                                                onReorderingSetlistChanged(
-                                                    if (reorderingSetlistFileName == setlistWithSongs.setlist.fileName) null
-                                                    else setlistWithSongs.setlist.fileName,
-                                                )
-                                            }
-                                        } else null,
-                                    )
-                                }
+    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides listItemTrailingKeylineAdjustment(scrollerColumnWidth)) {
+        Box(modifier = modifier) {
+            LazyVerticalGrid(
+                columns = ListColumns(columnCount),
+                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
+                state = listState,
+                contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
+            ) {
+                // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
+                // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
+                // to the songs screen. Every state goes through the same slot, so that "still loading" turning out to be
+                // "you have no setlists" cross fades instead of being swapped in a single frame.
+                val placeholder = setlistsPlaceholder
+                when {
+                    placeholder != null -> item(
+                        key = "placeholder",
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "placeholder",
+                    ) {
+                        ListPlaceholder(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
+                            placeholder = placeholder,
+                            onRetry = viewModel.libraryState::refresh,
+                            onNewSetlist = if (isPerformanceModeEnabled) null else {
+                                { viewModel.dialogHost.showDialog(DialogType.NewSetlist) }
                             },
-                            opacity = { if (headerState.value.visibleFraction < 1f) 0f else 1f },
-                            appBarOverlap = appBarOverlap,
+                            onImport = if (isPerformanceModeEnabled) null else {
+                                { viewModel.importController.importFiles(filePicker) }
+                            },
                         )
                     }
-                    // Under the header: the row names the setlist, then this is the first thing to read about it.
-                    if (setlistWithSongs.setlist.description.isNotBlank()) {
-                        item(
-                            key = SetlistItemKey.description(setlistWithSongs.setlist.fileName),
-                            span = { GridItemSpan(maxLineSpan) },
-                            contentType = "setlist_description",
-                        ) {
-                            SetlistDescription(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
-                                description = setlistWithSongs.setlist.description,
-                                hasSubtitle = setlistWithSongs.headerSubtitle(today) != null,
-                                contentPadding = contentPadding,
+
+                    else -> shownSetlists.forEach { setlistWithSongs ->
+                        stickyHeader(
+                            key = SetlistItemKey.header(setlistWithSongs.setlist.fileName),
+                            contentType = SetlistItemKey.HEADER_CONTENT_TYPE,
+                        ) { headerIndex ->
+                            val headerState = rememberSectionHeaderState(listState, headerIndex)
+                            SectionHeader(
+                                // Sticky placement belongs to the grid. Animating it as a regular item can briefly
+                                // pull an already-pinned header away when entering reorder mode changes the list.
+                                // Keep only its appearance fades.
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
+                                state = { headerState.value },
+                                // The card fade and animated placement can settle on different frames near the top.
+                                // Keep the pinned row opaque throughout reordering.
+                                backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
+                                endPadding = headerEndPadding,
+                                text = setlistWithSongs.setlist.title,
+                                subtitle = setlistWithSongs.runningTimeSubtitle(),
+                                // A setlist is only ever on this screen archived because the filter was asked to show them,
+                                // so the mark is what tells it from the ones still in use.
+                                icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
+                                iconContentDescription = stringResource(Res.string.setlists_archived),
+                                onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
+                                action = if (isPerformanceModeEnabled) null else {
+                                    { actionModifier, buttonModifier ->
+                                        SetlistActions(
+                                            modifier = actionModifier,
+                                            buttonModifier = buttonModifier,
+                                            actions = setlistActions,
+                                            setlist = setlistWithSongs.setlist,
+                                            isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
+                                            onReorder = if (setlistWithSongs.entries.size > 1) {
+                                                {
+                                                    onReorderingSetlistChanged(
+                                                        if (reorderingSetlistFileName == setlistWithSongs.setlist.fileName) null
+                                                        else setlistWithSongs.setlist.fileName,
+                                                    )
+                                                }
+                                            } else null,
+                                        )
+                                    }
+                                },
+                                opacity = { if (headerState.value.visibleFraction < 1f) 0f else 1f },
+                                appBarOverlap = appBarOverlap,
                             )
                         }
-                    }
-                    val setlistRows = rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist)
-                    val rows = setlistRows.rows
-                    itemsIndexed(
-                        items = rows,
-                        key = { _, row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
-                        contentType = { _, _ -> "song" },
-                    ) { rowIndex, row ->
-                        // Built here, in the item's composition, rather than in the builder above, which runs again on
-                        // every move: there it would be a new lambda each time and keep every row from skipping the move.
-                        val songFileNames = { rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist).songFileNames }
-                        SetlistSongRow(
-                            viewModel = viewModel,
-                            songActions = songActions,
-                            setlistWithSongs = setlistWithSongs,
-                            row = row,
-                            rowIndex = rowIndex,
-                            isLastRow = rowIndex == rows.lastIndex,
-                            songFileNames = songFileNames,
-                            columnCount = columnCount,
-                            listState = listState,
-                            hasLoadedLibrary = hasLoadedLibrary,
-                            topFade = topFade,
-                            isReordering = isReordering,
-                            reorderingSetlistFileName = reorderingSetlistFileName,
-                            isPerformanceModeEnabled = isPerformanceModeEnabled,
-                            playingOverrides = playingOverrides,
-                            cardOptions = cardOptions,
-                            labelsOnEverySong = labelsOnEverySong,
-                            reorder = reorder,
-                        )
-                    }
-                    // Every setlist ends in the way to more songs, which for an empty one is also all there is under its
-                    // header, so the way to them is where the songs will be rather than behind the header's menu.
-                    if (!isPerformanceModeEnabled) {
-                        item(
-                            key = SetlistItemKey.chooseSongs(setlistWithSongs.setlist.fileName),
-                            span = { GridItemSpan(maxLineSpan) },
-                            contentType = "setlist_action",
-                        ) {
-                            // The item animation goes on the item's root layout, the only one the grid animates, which
-                            // is the visibility wrapper here rather than the row inside it.
-                            AnimatedVisibility(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary),
-                                visible = !setlistWithSongs.setlist.isArchived,
+                        // Under the header: the row names the setlist, then this is the first thing to read about it.
+                        if (setlistWithSongs.hasSummary) {
+                            item(
+                                key = SetlistItemKey.summary(setlistWithSongs.setlist.fileName),
+                                span = { GridItemSpan(maxLineSpan) },
+                                contentType = "setlist_summary",
                             ) {
-                                ActionListItem(
-                                    modifier = Modifier.fadingUnderListTop(topFade),
-                                    title = stringResource(Res.string.setlists_choose_songs),
-                                    icon = painterResource(Res.drawable.ic_add),
-                                    onClick = { viewModel.dialogHost.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                SetlistSummary(
+                                    modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
+                                    countdown = setlistWithSongs.setlist.countdownText(today),
+                                    hasSubtitle = setlistWithSongs.totalDuration != null,
+                                    description = setlistWithSongs.setlist.description,
+                                    contentPadding = contentPadding,
                                 )
+                            }
+                        }
+                        val setlistRows = rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist)
+                        val rows = setlistRows.rows
+                        itemsIndexed(
+                            items = rows,
+                            key = { _, row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
+                            contentType = { _, _ -> "song" },
+                        ) { rowIndex, row ->
+                            // Built here, in the item's composition, rather than in the builder above, which runs again on
+                            // every move: there it would be a new lambda each time and keep every row from skipping the move.
+                            val songFileNames = { rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist).songFileNames }
+                            SetlistSongRow(
+                                viewModel = viewModel,
+                                songActions = songActions,
+                                setlistWithSongs = setlistWithSongs,
+                                row = row,
+                                rowIndex = rowIndex,
+                                isLastRow = rowIndex == rows.lastIndex,
+                                songFileNames = songFileNames,
+                                columnCount = columnCount,
+                                listState = listState,
+                                hasLoadedLibrary = hasLoadedLibrary,
+                                topFade = topFade,
+                                isReordering = isReordering,
+                                reorderingSetlistFileName = reorderingSetlistFileName,
+                                isPerformanceModeEnabled = isPerformanceModeEnabled,
+                                playingOverrides = playingOverrides,
+                                cardOptions = cardOptions,
+                                labelsOnEverySong = labelsOnEverySong,
+                                reorder = reorder,
+                            )
+                        }
+                        // Every setlist ends in the way to more songs, which for an empty one is also all there is under its
+                        // header, so the way to them is where the songs will be rather than behind the header's menu.
+                        if (!isPerformanceModeEnabled) {
+                            item(
+                                key = SetlistItemKey.chooseSongs(setlistWithSongs.setlist.fileName),
+                                span = { GridItemSpan(maxLineSpan) },
+                                contentType = "setlist_action",
+                            ) {
+                                // The item animation goes on the item's root layout, the only one the grid animates, which
+                                // is the visibility wrapper here rather than the row inside it.
+                                AnimatedVisibility(
+                                    modifier = listItemAnimation(listState, hasLoadedLibrary),
+                                    visible = !setlistWithSongs.setlist.isArchived,
+                                ) {
+                                    ActionListItem(
+                                        modifier = Modifier.fadingUnderListTop(topFade),
+                                        title = stringResource(Res.string.setlists_choose_songs),
+                                        icon = painterResource(Res.drawable.ic_add),
+                                        onClick = { viewModel.dialogHost.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (narrowedSetlistFileName == null && setlists.any { it.isArchived }) {
-                item(
-                    key = "show_archived_setlists",
-                    span = { GridItemSpan(maxLineSpan) },
-                    contentType = "setlist_archive_toggle",
-                ) {
-                    CheckboxListItem(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).fillMaxWidth(),
-                        title = stringResource(Res.string.setlists_show_archived),
-                        isChecked = userPreferences?.shouldShowArchivedSetlists == true,
-                        onCheckedChange = viewModel.setlistsController::setShouldShowArchivedSetlists,
-                    )
+                if (narrowedSetlistFileName == null && setlists.any { it.isArchived }) {
+                    item(
+                        key = "show_archived_setlists",
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "setlist_archive_toggle",
+                    ) {
+                        CheckboxListItem(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).fillMaxWidth(),
+                            title = stringResource(Res.string.setlists_show_archived),
+                            isChecked = userPreferences?.shouldShowArchivedSetlists == true,
+                            onCheckedChange = viewModel.setlistsController::setShouldShowArchivedSetlists,
+                        )
+                    }
                 }
             }
+            // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
+            PushedSetlistHeader(
+                setlistActions = setlistActions,
+                listState = listState,
+                setlistsWithSongs = shownSetlists,
+                endPadding = headerEndPadding,
+                isPerformanceModeEnabled = isPerformanceModeEnabled,
+                reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },
+                appBarOverlap = appBarOverlap,
+            )
+            AnimatedVisibility(
+                visible = isReordering,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
+                    .padding(16.dp),
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+            ) {
+                DoneReorderingButton(onClick = { onReorderingSetlistChanged(null) })
+            }
+            FastScroller(
+                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
+                gridState = listState,
+            )
         }
-        // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
-        PushedSetlistHeader(
-            setlistActions = setlistActions,
-            listState = listState,
-            setlistsWithSongs = shownSetlists,
-            endPadding = headerEndPadding,
-            isPerformanceModeEnabled = isPerformanceModeEnabled,
-            reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },
-            appBarOverlap = appBarOverlap,
-        )
-        AnimatedVisibility(
-            visible = isReordering,
-            modifier = Modifier.align(Alignment.BottomEnd)
-                .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
-                .padding(16.dp),
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
-        ) {
-            DoneReorderingButton(onClick = { onReorderingSetlistChanged(null) })
-        }
-        FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
-            gridState = listState,
-        )
     }
 }
 

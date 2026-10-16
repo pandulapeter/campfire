@@ -20,7 +20,7 @@ class SetlistItemKeyTest {
         val fileName = "summer.setlist.json"
 
         assertEquals(fileName, SetlistItemKey.setlistFileNameOf(SetlistItemKey.header(fileName)))
-        assertEquals(fileName, SetlistItemKey.setlistFileNameOf(SetlistItemKey.description(fileName)))
+        assertEquals(fileName, SetlistItemKey.setlistFileNameOf(SetlistItemKey.summary(fileName)))
         assertEquals(fileName, SetlistItemKey.setlistFileNameOf(SetlistItemKey.chooseSongs(fileName)))
         assertEquals(fileName, SetlistItemKey.setlistFileNameOf(SetlistItemKey(setlistFileName = fileName, songFileName = "a.cho").string))
     }

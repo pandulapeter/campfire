@@ -70,7 +70,6 @@ import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
@@ -151,7 +150,7 @@ internal fun ChordsScreen(
             // the keyboard covers as shown: the field is scrolled to the top instead, once per focus, so that what it finds
             // is above the keyboard. It follows the keyboard as it rises, since the grid can only scroll as far as the
             // padding added so far allows, and stops just under the top fade, which would paint over the field's edge.
-            val margin = with(density) { (EDGE_FADE_SIZE - PAGE_TOP_PADDING - SEARCH_FIELD_OWN_TOP_PADDING).roundToPx() }
+            val margin = with(density) { (EDGE_FADE_SIZE - SEARCH_FIELD_OWN_TOP_PADDING).roundToPx() }
             snapshotFlow { imeState.value.getBottom(density) }.collectLatest {
                 gridState.animateScrollToItem(0, (searchFieldTop - margin).coerceAtLeast(0))
             }
@@ -173,12 +172,13 @@ internal fun ChordsScreen(
                 .bounceScrollableContent(gridState),
             state = gridState,
             columns = GridCells.Adaptive(minSize = chordCellMinWidth(shown?.tuning?.instrument ?: tuning?.instrument)),
+            // Nothing above the first row but its own room, so that its title starts where the Metronome's beats and the
+            // Tuner's note do, which the tools' tabs switch between in place.
             contentPadding = contentPadding.only(
                 start = true,
                 end = true,
                 bottom = true,
                 extraStart = CHORDS_PAGE_PADDING,
-                extraTop = PAGE_TOP_PADDING,
                 extraEnd = CHORDS_PAGE_PADDING,
                 extraBottom = CHORDS_PAGE_PADDING,
             ),

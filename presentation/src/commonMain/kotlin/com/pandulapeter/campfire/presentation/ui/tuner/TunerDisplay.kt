@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -174,7 +175,8 @@ internal fun TunerDisplay(
             // Explored as one, with the exact reading, rather than as the pieces it is drawn in.
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = if (isCompact) 4.dp else 16.dp)
+                // The large note's own line already leaves the room of its ascent above the letter, so nothing is added.
+                .padding(start = 16.dp, end = 16.dp, top = if (isCompact) 4.dp else 0.dp, bottom = if (isCompact) 4.dp else 16.dp)
                 .clearAndSetSemantics { contentDescription = exactDescription },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -188,7 +190,7 @@ internal fun TunerDisplay(
                     }
                 }
             } else {
-                noteLabel(Modifier.fillMaxWidth())
+                noteLabel(Modifier.fillMaxWidth().trimNoteAscent())
                 meter(Modifier.fillMaxWidth().padding(top = 8.dp))
                 readingLine()
                 frequencies()
@@ -209,6 +211,20 @@ private val COMPACT_NOTE_WIDTH = 128.dp
 /** The note's size on the page: as large as the display's width lets it be, down to the display style's own. */
 private val NOTE_MAX_FONT_SIZE = 96.sp
 private val NOTE_MIN_FONT_SIZE = 57.sp
+
+/**
+ * The room above a capital that the note's line keeps for taller glyphs, at the smallest the note is drawn: Inter's ascent
+ * less its cap height, a quarter of an em. Every note is a capital, so it is empty, and at the note's size it would stand
+ * as a gap under the bar above twice the one the Metronome and Chords tabs leave.
+ */
+private val NOTE_ASCENT_TRIM = NOTE_MIN_FONT_SIZE * 0.24f
+
+/** Lays the content out [NOTE_ASCENT_TRIM] shorter at its top, drawing what is cut off over the room above. */
+private fun Modifier.trimNoteAscent() = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val trim = NOTE_ASCENT_TRIM.roundToPx().coerceAtMost(placeable.height)
+    layout(placeable.width, placeable.height - trim) { placeable.place(0, -trim) }
+}
 
 private val METER_HEIGHT = 48.dp
 private val COMPACT_METER_HEIGHT = 40.dp

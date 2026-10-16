@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.components.songCard
 
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabel
+import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabelMark
 import com.pandulapeter.campfire.presentation.ui.components.labels.SongLabels
 import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -29,9 +31,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,10 +57,12 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_dot
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
+import com.pandulapeter.campfire.presentation.resources.songs_tempo_and_time
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
@@ -147,10 +149,19 @@ internal fun SongListItem(
     // A number of its own rather than a second emphasized value next to the key: the key is the one thing a player
     // has to find on a card at a glance, and a second accent colored item beside it halves that. It keeps the
     // duration's muted color, since the two are what a set is timed by.
+    // The time signature comes with it, since the metronome the mark draws is set by both, and is the file's own, which
+    // no listing overrides. Common time is left off: it is what most songs are in, and on every card it would only take
+    // letters off the artist.
+    val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }
     val tempoNote = tempo?.let {
         SongListItemNote(
-            text = stringResource(Res.string.song_details_tempo, it.toString()),
+            text = if (timeSignature == null) {
+                stringResource(Res.string.song_details_tempo, it.toString())
+            } else {
+                stringResource(Res.string.songs_tempo_and_time, it.toString(), timeSignature.toString())
+            },
             isEmphasized = false,
+            mark = IconLabelMark.TEMPO,
         )
     }
     // Remembered, so that a row composed again with the same song hands the same lists on and the labels under it skip.
@@ -195,23 +206,21 @@ internal fun SongListItem(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        SongCardNote(note = note, hasPrecedingContent = song.artist.isNotBlank())
-                        SongCardNote(note = tempoNote, hasPrecedingContent = song.artist.isNotBlank() || note != null)
+                        val hasArtist = song.artist.isNotBlank()
+                        SongCardNote(note = note, separator = songCardSeparatorBefore(hasArtist, hasValueBefore = false))
+                        SongCardNote(note = tempoNote, separator = songCardSeparatorBefore(hasArtist, hasValueBefore = note != null))
                         if (displayedDuration != null) {
+                            val separator = songCardSeparatorBefore(hasArtist, hasValueBefore = note != null || tempoNote != null)
                             // Follows the notes, which fade and close up where they stand rather than leaving the line
                             // in one frame, so the duration slides once instead of jumping and then sliding.
                             AnimatedVisibility(
-                                visible = song.artist.isNotBlank() || note != null || tempoNote != null,
+                                visible = separator != null,
                                 enter = fadeIn() + expandHorizontally(),
                                 exit = fadeOut() + shrinkHorizontally(),
                             ) {
-                                SongCardNoteDot()
+                                SongCardSeparator(kind = separator ?: SongCardSeparatorKind.DOT)
                             }
-                            Text(
-                                text = displayedDuration,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            IconLabel(text = displayedDuration, mark = IconLabelMark.DURATION)
                         }
                     }
                 }
@@ -275,16 +284,18 @@ internal fun draggedListItemContainerColor(isBeingDragged: Boolean): Color {
  *
  * @param isEmphasized Whether the note is drawn in the accent color, which is what a key is.
  * @param description What the note is read out as, since a key is two letters that say nothing on their own.
+ * @param mark What the note is drawn with in front of it ([IconLabel]), in the note's color; null for the text alone.
  */
 private data class SongListItemNote(
     val text: String,
     val isEmphasized: Boolean,
     val description: String = text,
+    val mark: IconLabelMark? = null,
 )
 
 /**
- * A [SongListItemNote] where the song card's second line has reached it, with the dot that separates it from whatever
- * stands in front of it.
+ * A [SongListItemNote] where the song card's second line has reached it, with what separates it from whatever stands in
+ * front of it.
  *
  * The note changes under the reader: a transposition or a capo renames the key, a stepper in a setlist moves the
  * tempo, and the chords switched off take the key away altogether. So it is crossfaded where it stands and the line closes
@@ -292,13 +303,13 @@ private data class SongListItemNote(
  * by the state, since the scheme is interpolated on every frame of a theme change and each of those frames would
  * start another crossfade.
  *
- * @param hasPrecedingContent Whether anything is drawn before it, which is what the dot would separate it from: a
- *   song that names no artist starts the line with its key itself rather than with a separator before nothing.
+ * @param separator What stands between it and what is drawn before it ([songCardSeparatorBefore]): a song that names no
+ *   artist starts the line with its key itself rather than with a separator before nothing.
  */
 @Composable
 private fun SongCardNote(
     note: SongListItemNote?,
-    hasPrecedingContent: Boolean,
+    separator: SongCardSeparatorKind?,
 ) = AnimatedContent(
     targetState = note,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -307,31 +318,24 @@ private fun SongCardNote(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (hasPrecedingContent) {
-                SongCardNoteDot()
+            separator?.let { SongCardSeparator(kind = it) }
+            val noteModifier = Modifier.semantics { contentDescription = currentNote.description }
+            val noteColor = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant
+            if (currentNote.mark == null) {
+                Text(
+                    modifier = noteModifier,
+                    text = currentNote.text,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = noteColor,
+                )
+            } else {
+                IconLabel(
+                    modifier = noteModifier,
+                    text = currentNote.text,
+                    mark = currentNote.mark,
+                    color = noteColor,
+                )
             }
-            Text(
-                modifier = Modifier.semantics { contentDescription = currentNote.description },
-                text = currentNote.text,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
-
-/**
- * What separates two values on a song card's second line. It carries no padding of its own: the glyph is a 4dp dot in
- * the middle of a 24dp icon, so the box it sits in is the gap already, and the same gap on both sides of it - anything
- * added here is added to one side only. A narrow window shrinks the box, and with it both gaps, since there every dp
- * of the line is one more letter of the artist.
- */
-@Composable
-private fun SongCardNoteDot() = Icon(
-    modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
-    painter = painterResource(Res.drawable.ic_dot),
-    contentDescription = null,
-)
-
-private val DOT_SIZE = 24.dp
-private val NARROW_DOT_SIZE = 16.dp

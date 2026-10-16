@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -88,6 +89,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
@@ -220,6 +222,9 @@ internal fun SearchableTopAppBar(
     val pill = remember { SearchPill() }
     val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
     val detachProgress = animateFloatAsState(targetValue = if (areClosedSearchActionsDetached) 1f else 0f, animationSpec = searchTravelSpec())
+    val hasDetachedActions = areClosedSearchActionsShown && areClosedSearchActionsDetached
+    val undetachedEndProgress = animateFloatAsState(targetValue = if (hasDetachedActions) 0f else 1f, animationSpec = searchTravelSpec())
+    val reachEndPadding = endPadding + if (hasDetachedActions) 0.dp else UNDETACHED_PILL_END_INSET
     LookaheadScope {
         val lookaheadScope = this
         val actionModifier = Modifier
@@ -251,8 +256,12 @@ internal fun SearchableTopAppBar(
                     // a back gesture's preview included, which fades what the field holds and leaves the pill alone.
                     // A detached button's room is cut off the end of the closed pill, which leaves the pill ending as far
                     // past the last action as it starts before the first one.
+                    // Thinner than the buttons' touch targets, which stay whole and reach past its top and bottom.
+                    val closedHalfHeight = CLOSED_PILL_HEIGHT.toPx() / 2
                     val closedBounds = pill.closedActions.copy(
+                        top = pill.closedActions.center.y - closedHalfHeight,
                         right = pill.closedActions.right - pill.closedSearchActionsWidth * detachProgress.value,
+                        bottom = pill.closedActions.center.y + closedHalfHeight,
                     )
                     val bounds = lerp(closedBounds, pill.openField, pillProgress.value)
                     drawRoundRect(
@@ -266,6 +275,12 @@ internal fun SearchableTopAppBar(
                     start = contentPadding.calculateStartPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING,
                     end = endPadding,
                 )
+                // Read while laying out, so that the inset following a detached button in and out recomposes nothing.
+                .layout { measurable, constraints ->
+                    val inset = (UNDETACHED_PILL_END_INSET.toPx() * undetachedEndProgress.value).roundToInt()
+                    val placeable = measurable.measure(constraints.offset(horizontal = -inset))
+                    layout(placeable.width + inset, placeable.height) { placeable.placeRelative(0, 0) }
+                }
                 .height(LIST_APP_BAR_HEIGHT),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -297,7 +312,7 @@ internal fun SearchableTopAppBar(
                     // clear, and it would otherwise shrink under the headers as the search action leaves the actions.
                     modifier = Modifier
                         .onSizeChanged {
-                            if (isClosedAndSettled) onReachChanged(with(density) { it.width.toDp() } + endPadding)
+                            if (isClosedAndSettled) onReachChanged(with(density) { it.width.toDp() } + reachEndPadding)
                         }
                         .onPlaced {
                             if (!searchTransition.targetState) {
@@ -534,8 +549,18 @@ private fun LookaheadScope.lookaheadBoundsOf(bar: LayoutCoordinates?, coordinate
  */
 private val CLOSED_FIELD_OFFSET = 52.dp
 
-/** The room the pill behind the closed bar's buttons leaves at either end of their touch targets. */
-private val ACTIONS_PILL_PADDING = 4.dp
+/**
+ * The room the pill behind the closed bar's buttons leaves at either end of their touch targets. With the gap after
+ * it, it sets the pill's last action as far from the middle of that gap as a card's setlist button is from its
+ * overflow button, which is what lines the two pairs up.
+ */
+private val ACTIONS_PILL_PADDING = 8.dp
+
+/**
+ * The height of the pill behind the closed bar's buttons: as tall as the search field it turns into, so that it only
+ * grows and shrinks along the bar, and short enough to read as the quieter of the bar's two shapes beside the New button.
+ */
+private val CLOSED_PILL_HEIGHT = FIELD_HEIGHT
 
 /** The room on either side of [ClosedSearchActionsDivider]. */
 private val CLOSED_SEARCH_ACTIONS_DIVIDER_GAP = 4.dp
@@ -545,10 +570,11 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 
 /**
  * The room [ClosedSearchActionsDivider] takes before detached actions, which leaves the pill's end (as far past the last
- * action's touch target as its start is before the first one's) 6dp short of the New button's circle, which fills its
- * touch target.
+ * action's touch target as its start is before the first one's) as far from the New button's circle, which fills its
+ * touch target, as the circle is from the end of the list. The room counts the pill's padding and the overlap the
+ * button reaches back into it by, neither of which is part of the gap that is seen.
  */
-private val DETACHED_CLOSED_SEARCH_ACTIONS_GAP = 22.dp
+private val DETACHED_CLOSED_SEARCH_ACTIONS_GAP = SONG_CARD_OUTER_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP
 
 /** How small a detached action is as it fades out of the bar and back in, see `areClosedSearchActionsDetached`. */
 private const val DETACHED_ACTION_HIDDEN_SCALE = 0.6f
@@ -560,20 +586,27 @@ private const val DETACHED_ACTION_FADE_OUT_MILLIS = 120
 private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 
 /**
- * The bar's end padding, wider than its start by the half of [ACTION_BUTTON_OVERLAP] the new item button no longer
- * takes up: that keeps [ClosedSearchActionsDivider] on the column of the song cards' overflow buttons.
+ * The bar's end padding, which with the pill's own puts the New button's circle on the cards' outer keyline: as far in
+ * from the end of the list as the cards are while it has no [FastScroller] column, and so as far as they are from its
+ * start. It does not follow the column as it comes and goes, so the button stays put while the cards narrow beside it.
  */
-private val APP_BAR_END_PADDING = APP_BAR_HORIZONTAL_PADDING + ACTION_BUTTON_OVERLAP / 2
+private val APP_BAR_END_PADDING = SONG_CARD_OUTER_PADDING - ACTIONS_PILL_PADDING
+
+/**
+ * What the bar adds to its end padding while no detached button follows the pill (read only mode, a selection, a
+ * screen with nothing to add), so that the pill itself ends on the keyline the New button's circle would.
+ */
+private val UNDETACHED_PILL_END_INSET = SONG_CARD_OUTER_PADDING - APP_BAR_END_PADDING
 
 /**
  * How far in from the end edge of a list the middle of the closed pill's last action stands while the actions after it
- * are detached, past the list's own end inset: the bar's end padding, the pill's, the detached 48dp button less the
+ * are detached, past the list's own end inset: the bar's end padding, the pill's, the detached New button less the
  * overlap it shares with the pill's padding, the gap before it, and half of the last action, which reaches into its
  * neighbors by half the overlap on either side. The [FastScroller] puts the letter of its bubble under it, so that the
  * two read as one column down the list.
  */
 internal val CLOSED_PILL_LAST_ACTION_END_INSET =
-    APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2 + (48.dp - ACTION_BUTTON_OVERLAP) +
+    APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2 + (NEW_ITEM_BUTTON_SIZE - ACTION_BUTTON_OVERLAP) +
         DETACHED_CLOSED_SEARCH_ACTIONS_GAP + (48.dp - ACTION_BUTTON_OVERLAP) / 2
 
 /**

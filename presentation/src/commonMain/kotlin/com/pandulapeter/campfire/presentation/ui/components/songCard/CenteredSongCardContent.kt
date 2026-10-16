@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components.songCard
 
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
-import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
+import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -136,7 +136,7 @@ private fun ListItemActions(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) = Box(
-    modifier = modifier.offset(x = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT),
+    modifier = modifier.offset(x = LocalListItemTrailingKeylineAdjustment.current),
 ) {
     content()
 }

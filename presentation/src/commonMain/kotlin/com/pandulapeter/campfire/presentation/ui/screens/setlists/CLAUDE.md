@@ -15,9 +15,11 @@
 - Setlists are listed whenever any exist, an empty library included; the library's empty state belongs to the songs
   screen. A screen whose every setlist is archived says so, rather than claiming there are none.
 - The include-archived toggle sits at the end of the list, only while at least one is archived, off by default.
-- The countdown subtitle turns over at midnight on a screen left open (`rememberToday`).
-- The description is the first thing under the header row. In a short window (under 480dp, a search's keyboard counted)
-  it starts at two lines and opens on a tap, or four lines push the first song out of sight.
+- The header's subtitle is the running time in plain text ("… running time", not to be read as the start time),
+  which stays in sight while the setlist is read. Under the header row,
+  `SetlistSummary` shows the countdown, then the description; the countdown turns over at midnight on a screen
+  left open (`rememberToday`). In a short window (under 480dp, a search's keyboard counted) the
+  description starts at two lines and opens on a tap, or four lines push the first song out of sight.
 - The archived icon fades with the archiving (the menu that archives hangs from the same row).
 - "New setlist" opens the song picker right after creating (`SetlistsController.createSetlist`), only if nothing else
   was opened meanwhile and the library has songs.
@@ -68,7 +70,7 @@
 - **Every setlist has a date**: an import dates a dateless setlist with today (the demo's included) unless it replaces a
   library setlist, whose day it keeps; a library file without one gets the day it is first read on and is saved right
   after that read, through the repository's locks, announcing nothing, so the next sync carries it.
-- Countdown (off by default) shows how far the day is in the sticky header's subtitle — the only place the date shows
-  outside the sheet, so the only way in performance mode. The subtitle also carries the running time from the songs'
-  `{duration}`s (`SetlistTotalDuration.kt`; label after the number so a narrow header cuts the label, not the time; `+` where some songs have none).
+- Countdown (off by default) shows how far the day is in a pill of the summary — the only place the date shows outside
+  the sheet, so the only way in performance mode. The header's running time comes from the songs' `{duration}`s
+  (`SetlistTotalDuration.kt`; `+` where some songs have none).
 - Sorting by date puts the latest day first, same-day setlists by title.

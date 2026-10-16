@@ -111,5 +111,9 @@ internal fun NewItemMenu(
     }
 }
 
-/** The New button's circle, as tall as the pill beside it, so that the two read as one row of the bar's controls. */
+/**
+ * The New button's circle, centered in the list screens' bar a little short of its height: what it leaves below,
+ * with a card's own padding, is the gap the cards keep between each other, so the first card does not run up against
+ * it. Where there is no status bar, the room above it and `MIN_TOP_EDGE` add up to the room it keeps from the side.
+ */
 internal val NEW_ITEM_BUTTON_SIZE = 48.dp

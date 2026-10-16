@@ -9,8 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.text.style.TextOverflow
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -19,7 +22,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_da
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
-import com.pandulapeter.campfire.presentation.resources.setlists_header_subtitle
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration_minimum
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
@@ -28,29 +30,37 @@ import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.datetime.LocalDate
 
+/** Whether [SetlistSummary] has anything to show: a description or a countdown. */
+internal val SetlistWithSongs.hasSummary
+    get() = setlist.description.isNotBlank() || setlist.isCountdownShown
+
 /**
- * The subtitle of a setlist's header: its countdown where the user asked for one, then its running time, how long its songs
- * take to play, where any of them says, with a `+` where some do not ([SetlistTotalDuration.isMinimum]).
+ * How long a setlist's songs take to play, as the subtitle of its header, where any of them says,
+ * with a `+` where some do not ([SetlistTotalDuration.isMinimum]); null where none of them says. Named a running time,
+ * so that it is not read as the time the set starts at.
  */
 @Composable
-internal fun SetlistWithSongs.headerSubtitle(today: LocalDate): String? {
-    val countdown = setlist.countdownText(today)
-    val duration = remember(entries) { totalDuration }?.let { duration ->
-        val total = ChordProDuration.format(duration.total)
-        stringResource(
-            Res.string.setlists_total_duration,
-            if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total,
+internal fun SetlistWithSongs.runningTimeSubtitle(): (@Composable () -> Unit)? {
+    val duration = remember(entries) { totalDuration } ?: return null
+    val total = ChordProDuration.format(duration.total)
+    val text = stringResource(
+        Res.string.setlists_total_duration,
+        if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total,
+    )
+    return {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-    }
-    return when {
-        countdown != null && duration != null -> stringResource(Res.string.setlists_header_subtitle, countdown, duration)
-        else -> countdown ?: duration
     }
 }
 
 /**
- * How far the setlist's day is, for the subtitle of its header, where the user asked for it: the header is pinned while
- * its songs are read, so the day stays in sight in performance mode too, where nothing else on the screen shows it.
+ * How far the setlist's day is, where the user asked for it, for the summary at the top of the setlist: in performance
+ * mode nothing else on the screen shows the day.
  */
 @Composable
 internal fun Setlist.countdownText(today: LocalDate): String? {

@@ -20,6 +20,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
@@ -91,9 +93,9 @@ import kotlin.math.roundToInt
  * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
  *
  * @param backgroundColor Optional backing for transitions in which cards' placement and fades can settle separately.
- * @param subtitle A second line under the name, in the type of the text under the header rather than the header's own:
- *   a setlist's countdown, which has to stay in sight wherever in the setlist the reader is. The pill is as tall as the
- *   bar's, which holds both lines, so a subtitle moves nothing around the header.
+ * @param subtitle A second line under the name, a setlist's running time, which has to stay in sight wherever in the
+ *   setlist the reader is. The row is as tall as the bar's however much it holds, so a subtitle moves nothing around the
+ *   header; the name is centered with it as one block, so it stands higher than a header's that has none.
  * @param action The buttons at the end of the pill, a setlist's [SetlistActions]: handed the modifier that decides how
  *   much of the pill they may take, and the one that keeps each of them from taking the focus ([unfocusable]). The room
  *   is counted at the width the pill narrows to once pinned, whatever it is now, so that a header does not trade its
@@ -106,7 +108,7 @@ import kotlin.math.roundToInt
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
-    subtitle: String? = null,
+    subtitle: (@Composable () -> Unit)? = null,
     state: () -> SectionHeaderState,
     endPadding: Dp,
     icon: Painter? = null,
@@ -131,13 +133,14 @@ internal fun SectionHeader(
     contentAlignment = Alignment.CenterStart,
 ) {
     val hasAction = action != null
+    val actionEndPadding = sectionHeaderPillActionEndPadding(LocalListItemTrailingKeylineAdjustment.current)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val nameAlpha by animateFloatAsState(if (isPressed) PRESSED_HEADING_ALPHA else 1f)
     val pillModifier = Modifier
         .padding(start = SONG_CARD_OUTER_PADDING)
         .layout { measurable, constraints ->
-            val width = (constraints.maxWidth - sectionHeaderEndInsets(state(), appBarOverlap(), endPadding).current).coerceAtLeast(0)
+            val width = (constraints.maxWidth - sectionHeaderEndInsets(state(), appBarOverlap(), endPadding, actionEndPadding).current).coerceAtLeast(0)
             val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
             layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
         }
@@ -150,7 +153,7 @@ internal fun SectionHeader(
         Row(
             modifier = Modifier
                 .heightIn(min = SECTION_HEADER_PILL_HEIGHT)
-                .padding(end = if (hasAction) SECTION_HEADER_PILL_ACTION_END_PADDING else 0.dp),
+                .padding(end = if (hasAction) actionEndPadding else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // The name is the touch target, filling the pill up to the action, which keeps it at the end of the row
@@ -207,14 +210,15 @@ internal fun SectionHeader(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    subtitle?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    // Kept through its exit animation, like the icon, when the last song that says how long it takes leaves.
+                    var lastSubtitle by remember { mutableStateOf(subtitle) }
+                    subtitle?.let { lastSubtitle = it }
+                    AnimatedVisibility(
+                        visible = subtitle != null,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        Box { lastSubtitle?.invoke() }
                     }
                 }
             }
@@ -222,7 +226,7 @@ internal fun SectionHeader(
                 Modifier.layout { measurable, constraints ->
                     // What the pill is narrower by once pinned is taken off what it holds now; both insets are
                     // rounded the way the pill rounds its own, so the room does not flicker by a pixel as it narrows.
-                    val insets = sectionHeaderEndInsets(state(), appBarOverlap(), endPadding)
+                    val insets = sectionHeaderEndInsets(state(), appBarOverlap(), endPadding, actionEndPadding)
                     val maxWidth = (constraints.maxWidth + insets.current - insets.pinned - (SECTION_HEADER_MIN_TEXT_WIDTH + SECTION_HEADER_TEXT_GAP).roundToPx())
                         .coerceAtLeast(SECTION_HEADER_PILL_HEIGHT.roundToPx())
                         .coerceAtMost(constraints.maxWidth)
@@ -256,12 +260,13 @@ private fun Density.sectionHeaderEndInsets(
     state: SectionHeaderState,
     overlap: AppBarOverlap,
     endPadding: Dp,
+    actionEndPadding: Dp,
 ): SectionHeaderEndInsets {
     // The cards end at the scroller's column, and a pinned header's action ends where the bar's pill begins: its touch
     // target keeps the icon off the pill by as much as two neighboring buttons keep their icons apart, and the header's
     // own pill, which draws nothing, reaches that little way in under the bar.
     val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach - SECTION_HEADER_PILL_ACTION_END_PADDING).toPx())
+    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach - actionEndPadding).toPx())
     // Eased rather than linear, since the fraction is the scroll position itself: the header gives way gently as it
     // starts coming into the bar's place and settles into the room it has left the same way. The list moving down
     // under an opening search takes a pinned header out of that place, so the same curve is run on how much of it the
@@ -296,10 +301,9 @@ private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable,
  */
 @Composable
 internal fun sectionHeaderBottomGap(hasSubtitle: Boolean): Dp {
-    val typography = MaterialTheme.typography
-    val textHeight = with(LocalDensity.current) {
-        typography.titleSmall.lineHeight.toDp() + if (hasSubtitle) typography.bodyMedium.lineHeight.toDp() else 0.dp
-    }
+    val nameHeight = with(LocalDensity.current) { MaterialTheme.typography.titleSmall.lineHeight.toDp() }
+    val subtitleHeight = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
+    val textHeight = nameHeight + if (hasSubtitle) subtitleHeight else 0.dp
     return ((LIST_APP_BAR_HEIGHT - textHeight) / 2).coerceAtLeast(0.dp)
 }
 
@@ -317,8 +321,8 @@ private val SECTION_HEADER_PILL_HEIGHT = 48.dp
 
 /**
  * What the pill leaves after an action at its end. The pill ends at the cards' edge and a card's overflow button stops
- * where [LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT] moves it from [LIST_ITEM_KEYLINE], so the two menus stand on one keyline.
+ * where [trailingKeylineAdjustment] moves it from [LIST_ITEM_KEYLINE], so the two menus stand on one keyline.
  */
-private val SECTION_HEADER_PILL_ACTION_END_PADDING = LIST_ITEM_KEYLINE - LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
+private fun sectionHeaderPillActionEndPadding(trailingKeylineAdjustment: Dp) = LIST_ITEM_KEYLINE - trailingKeylineAdjustment
 
 private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.5f

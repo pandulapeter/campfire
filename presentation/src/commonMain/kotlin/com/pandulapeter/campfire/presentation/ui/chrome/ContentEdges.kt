@@ -29,10 +29,11 @@ internal val WindowInsets.Companion.contentEdges: WindowInsets
 /**
  * The least room the navigation rail and the top level screens keep above what they hold. A status bar or the desktop
  * title bar's strip already leaves more than this, but a window with neither - the web, Linux, a desktop window in full
- * screen - would have the rail's first indicator and the list app bar's pill start 4dp from its top edge, closer than
- * either is to the window's sides. The rail and the screens take the same amount, so the two stay level.
+ * screen - would have the list app bar's New button touch its top edge. With the room the button leaves inside the
+ * bar, this puts it as far from the top as it is from the window's side. The rail and the screens take the same
+ * amount, so the two stay level.
  */
-private val MIN_TOP_EDGE = 8.dp
+private val MIN_TOP_EDGE = 4.dp
 
 internal val WindowInsets.withMinTopEdge: WindowInsets
     get() = union(WindowInsets(top = MIN_TOP_EDGE))

@@ -190,6 +190,7 @@ internal fun CampfireScreens(
             details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
             areChordsEnabled = areChordsEnabled,
             isMetronomeEnabled = isMetronomeEnabled,
+            isCoverArtEnabled = userPreferences?.isCoverArtEnabled != false,
         ),
     )
     val settingsLayout = PageWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)

@@ -27,7 +27,6 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActio
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
-import com.pandulapeter.campfire.presentation.ui.components.rememberToday
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -49,11 +48,10 @@ internal fun PushedSetlistHeader(
     val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { SetlistItemKey.header(it.setlist.fileName) } }
     val setlistWithSongs = key?.let { setlistsByKey[it] } ?: return
     val setlist = setlistWithSongs.setlist
-    val today by rememberToday()
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
         text = setlist.title,
-        subtitle = setlistWithSongs.headerSubtitle(today),
+        subtitle = setlistWithSongs.runningTimeSubtitle(),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },

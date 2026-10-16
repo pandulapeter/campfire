@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import androidx.compose.runtime.CompositionLocalProvider
+import com.pandulapeter.campfire.presentation.ui.components.list.listItemTrailingKeylineAdjustment
+import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -231,175 +234,177 @@ internal fun SongList(
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column.
     val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-    Box(modifier = modifier) {
-        LazyVerticalGrid(
-            columns = ListColumns(columnCount),
-            modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
-            state = listState,
-            contentPadding = contentPadding.only(
-                start = true,
-                end = true,
-                bottom = true,
-                extraEnd = scrollerColumnWidth,
-                extraBottom = 8.dp + selectionBottomPadding,
-            ),
-        ) {
-            placeholder?.let {
-                item(
-                    key = "placeholder",
-                    span = { GridItemSpan(maxLineSpan) },
-                    contentType = "placeholder",
-                ) {
-                    ListPlaceholder(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec).fillMaxWidth(),
-                        placeholder = it,
-                        onRetry = viewModel.libraryState::refresh,
-                        onNewSong = if (isPerformanceModeEnabled) null else {
-                            { viewModel.dialogHost.showDialog(DialogType.NewSong) }
-                        },
-                        onDemoLibrary = if (isPerformanceModeEnabled) null else {
-                            { viewModel.firstRunController.importDemoLibrary() }
-                        },
-                        onImport = if (isPerformanceModeEnabled) null else {
-                            { viewModel.importController.importFiles(filePicker) }
-                        },
-                        onPaste = if (isPerformanceModeEnabled) null else {
-                            { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) }
-                        },
-                    )
-                }
-            }
-            groups.forEachIndexed { groupIndex, group ->
-                group.header?.let { header ->
-                    stickyHeader(
-                        key = header.itemKey,
-                        contentType = SONG_HEADER_CONTENT_TYPE,
-                    ) { headerIndex ->
-                        val headerState = rememberSectionHeaderState(listState, headerIndex)
-                        SectionHeader(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                                .anchoredTransition(filterAnchor, listState, header.itemKey)
-                                .collapseSearchHeader { appBarOverlap().coverage },
-                            state = { headerState.value },
-                            endPadding = headerEndPadding,
-                            text = header.displayText(selectionCount = selection.size),
-                            onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
-                            opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
-                            appBarOverlap = appBarOverlap,
-                        )
-                    }
-                }
-                itemsIndexed(
-                    items = group.songs,
-                    key = { _, song -> group.itemKey(song) },
-                    contentType = { _, _ -> "song" },
-                ) { songIndex, song ->
-                    val itemKey = group.itemKey(song)
-                    // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
-                    // the row, it would be a new modifier each time, and the whole row would be composed again with it.
-                    Box(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                            .anchoredTransition(filterAnchor, listState, itemKey),
-                    ) {
-                        // Worked out here rather than inside the row's actions, so that they capture what changes for this row
-                        // alone rather than the set that is new on every write to any setlist.
-                        SongListRow(
-                            viewModel = viewModel,
-                            songActions = songActions,
-                            song = song,
-                            itemKey = itemKey,
-                            cardPadding = songCardPadding(songIndex, columnCount),
-                            topFade = topFade,
-                            playingOverrides = playingOverrides,
-                            cardOptions = cardOptions,
-                            labelsOnEverySong = labelsOnEverySong,
-                            songFilter = songFilter,
-                            isInSetlist = song.fileName in songFileNamesInSetlists,
-                            isTicked = song.fileName in selection,
-                            isSelecting = isSelecting,
-                            isPerformanceModeEnabled = isPerformanceModeEnabled,
-                            areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-                            selectMultipleTitle = selectMultipleTitle,
-                            selectSongsIcon = selectSongsIcon,
-                            onTagClicked = onTagClicked,
-                            onLanguageClicked = onLanguageClicked,
-                        )
-                    }
-                }
-                // The two parts are told apart the way the sheets tell them apart, and an open search collapses every
-                // header there is, the Selection one included, which leaves the divider the only thing between them.
-                if (groups.hasSelectionDividerAfter(groupIndex)) {
-                    item(
-                        key = SELECTION_DIVIDER_KEY,
-                        span = { GridItemSpan(maxLineSpan) },
-                        contentType = "selection_divider",
-                    ) {
-                        // Faded under the top of the list like a card, or it would be drawn across the pinned header and
-                        // the bar's pill as it scrolls under them.
-                        HorizontalDivider(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                                .anchoredTransition(filterAnchor, listState, SELECTION_DIVIDER_KEY)
-                                .fadingUnderListTop(topFade)
-                                .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
-                        )
-                    }
-                }
-            }
-            // After the songs rather than before them, so that the item indexes the scroller, the anchors, and the search
-            // keep for the songs hold whether or not the card is there.
-            if (
-                isAddSongsHintShown(
-                    librarySongCount = librarySummary?.songCount,
-                    hasPlaceholder = placeholder != null,
-                    isSearchOpen = isSearchOpen,
-                    isSelecting = isSelecting,
-                    isPerformanceModeEnabled = isPerformanceModeEnabled,
-                )
+    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides listItemTrailingKeylineAdjustment(scrollerColumnWidth)) {
+        Box(modifier = modifier) {
+            LazyVerticalGrid(
+                columns = ListColumns(columnCount),
+                modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
+                state = listState,
+                contentPadding = contentPadding.only(
+                    start = true,
+                    end = true,
+                    bottom = true,
+                    extraEnd = scrollerColumnWidth,
+                    extraBottom = 8.dp + selectionBottomPadding,
+                ),
             ) {
-                item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
-                    AddSongsHintCard(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                            .fadingUnderListTop(topFade),
-                        isEnabled = !isImporting,
-                        onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
-                        onImport = { viewModel.importController.importFiles(filePicker) },
+                placeholder?.let {
+                    item(
+                        key = "placeholder",
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "placeholder",
+                    ) {
+                        ListPlaceholder(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec).fillMaxWidth(),
+                            placeholder = it,
+                            onRetry = viewModel.libraryState::refresh,
+                            onNewSong = if (isPerformanceModeEnabled) null else {
+                                { viewModel.dialogHost.showDialog(DialogType.NewSong) }
+                            },
+                            onDemoLibrary = if (isPerformanceModeEnabled) null else {
+                                { viewModel.firstRunController.importDemoLibrary() }
+                            },
+                            onImport = if (isPerformanceModeEnabled) null else {
+                                { viewModel.importController.importFiles(filePicker) }
+                            },
+                            onPaste = if (isPerformanceModeEnabled) null else {
+                                { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) }
+                            },
+                        )
+                    }
+                }
+                groups.forEachIndexed { groupIndex, group ->
+                    group.header?.let { header ->
+                        stickyHeader(
+                            key = header.itemKey,
+                            contentType = SONG_HEADER_CONTENT_TYPE,
+                        ) { headerIndex ->
+                            val headerState = rememberSectionHeaderState(listState, headerIndex)
+                            SectionHeader(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                    .anchoredTransition(filterAnchor, listState, header.itemKey)
+                                    .collapseSearchHeader { appBarOverlap().coverage },
+                                state = { headerState.value },
+                                endPadding = headerEndPadding,
+                                text = header.displayText(selectionCount = selection.size),
+                                onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
+                                opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
+                                appBarOverlap = appBarOverlap,
+                            )
+                        }
+                    }
+                    itemsIndexed(
+                        items = group.songs,
+                        key = { _, song -> group.itemKey(song) },
+                        contentType = { _, _ -> "song" },
+                    ) { songIndex, song ->
+                        val itemKey = group.itemKey(song)
+                        // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
+                        // the row, it would be a new modifier each time, and the whole row would be composed again with it.
+                        Box(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                .anchoredTransition(filterAnchor, listState, itemKey),
+                        ) {
+                            // Worked out here rather than inside the row's actions, so that they capture what changes for this row
+                            // alone rather than the set that is new on every write to any setlist.
+                            SongListRow(
+                                viewModel = viewModel,
+                                songActions = songActions,
+                                song = song,
+                                itemKey = itemKey,
+                                cardPadding = songCardPadding(songIndex, columnCount),
+                                topFade = topFade,
+                                playingOverrides = playingOverrides,
+                                cardOptions = cardOptions,
+                                labelsOnEverySong = labelsOnEverySong,
+                                songFilter = songFilter,
+                                isInSetlist = song.fileName in songFileNamesInSetlists,
+                                isTicked = song.fileName in selection,
+                                isSelecting = isSelecting,
+                                isPerformanceModeEnabled = isPerformanceModeEnabled,
+                                areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
+                                selectMultipleTitle = selectMultipleTitle,
+                                selectSongsIcon = selectSongsIcon,
+                                onTagClicked = onTagClicked,
+                                onLanguageClicked = onLanguageClicked,
+                            )
+                        }
+                    }
+                    // The two parts are told apart the way the sheets tell them apart, and an open search collapses every
+                    // header there is, the Selection one included, which leaves the divider the only thing between them.
+                    if (groups.hasSelectionDividerAfter(groupIndex)) {
+                        item(
+                            key = SELECTION_DIVIDER_KEY,
+                            span = { GridItemSpan(maxLineSpan) },
+                            contentType = "selection_divider",
+                        ) {
+                            // Faded under the top of the list like a card, or it would be drawn across the pinned header and
+                            // the bar's pill as it scrolls under them.
+                            HorizontalDivider(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                    .anchoredTransition(filterAnchor, listState, SELECTION_DIVIDER_KEY)
+                                    .fadingUnderListTop(topFade)
+                                    .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
+                            )
+                        }
+                    }
+                }
+                // After the songs rather than before them, so that the item indexes the scroller, the anchors, and the search
+                // keep for the songs hold whether or not the card is there.
+                if (
+                    isAddSongsHintShown(
+                        librarySongCount = librarySummary?.songCount,
+                        hasPlaceholder = placeholder != null,
+                        isSearchOpen = isSearchOpen,
+                        isSelecting = isSelecting,
+                        isPerformanceModeEnabled = isPerformanceModeEnabled,
                     )
+                ) {
+                    item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
+                        AddSongsHintCard(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                .fadingUnderListTop(topFade),
+                            isEnabled = !isImporting,
+                            onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
+                            onImport = { viewModel.importController.importFiles(filePicker) },
+                        )
+                    }
+                }
+                // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
+                // Keep just that lost tail space until it has scrolled out of sight, or the search changes, or the headers return.
+                item(key = SEARCH_ANCHOR_SPACE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
+                    Spacer(Modifier.fillMaxWidth().searchAnchorSpace(searchScroll) { appBarOverlap().coverage })
                 }
             }
-            // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
-            // Keep just that lost tail space until it has scrolled out of sight, or the search changes, or the headers return.
-            item(key = SEARCH_ANCHOR_SPACE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
-                Spacer(Modifier.fillMaxWidth().searchAnchorSpace(searchScroll) { appBarOverlap().coverage })
+            // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
+            // past that edge under the transparent app bar rather than ending at it; a bar that has filled in is drawn
+            // over it.
+            PushedSongSectionHeader(
+                listState = listState,
+                sectionIndex = sectionIndex,
+                endPadding = headerEndPadding,
+                selectionCount = selection.size,
+                appBarOverlap = appBarOverlap,
+            )
+            AnimatedVisibility(
+                visible = isSelecting,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
+                    .padding(DONE_BUTTON_MARGIN),
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+            ) {
+                SongSelectionDoneButton(
+                    count = selection.size,
+                    onClick = viewModel.songSelection::end,
+                )
             }
-        }
-        // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
-        // past that edge under the transparent app bar rather than ending at it; a bar that has filled in is drawn
-        // over it.
-        PushedSongSectionHeader(
-            listState = listState,
-            sectionIndex = sectionIndex,
-            endPadding = headerEndPadding,
-            selectionCount = selection.size,
-            appBarOverlap = appBarOverlap,
-        )
-        AnimatedVisibility(
-            visible = isSelecting,
-            modifier = Modifier.align(Alignment.BottomEnd)
-                .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
-                .padding(DONE_BUTTON_MARGIN),
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
-        ) {
-            SongSelectionDoneButton(
-                count = selection.size,
-                onClick = viewModel.songSelection::end,
+            FastScroller(
+                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
+                gridState = listState,
+                labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
             )
         }
-        FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
-            gridState = listState,
-            labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
-        )
     }
 }
 

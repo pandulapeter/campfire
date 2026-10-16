@@ -222,6 +222,8 @@
     <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
     <string name="songs_key">Hangnem: %1$s</string>
+    <!-- A song card's tempo and the time signature it is counted in, which the metronome mark in front of them stands for. -->
+    <string name="songs_tempo_and_time">%1$s BPM %2$s</string>
     <string name="songs_tags">Címkék</string>
     <string name="songs_filters_show_all">Mind a(z) %1$d megjelenítése</string>
     <string name="songs_filters_show_less">Kevesebb</string>
@@ -280,8 +282,6 @@
     <string name="setlists_total_duration">%1$s játékidő</string>
     <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
     <string name="setlists_total_duration_minimum">%1$s+</string>
-    <!-- A setlist header's subtitle holding both the countdown and the total duration. -->
-    <string name="setlists_header_subtitle">%1$s · %2$s</string>
     <string name="setlists_duplicate_setlist">Lista megkettőzése</string>
     <string name="setlists_duplicate_title">%1$s (másolat)</string>
     <string name="setlists_archive">Lista archiválása</string>
