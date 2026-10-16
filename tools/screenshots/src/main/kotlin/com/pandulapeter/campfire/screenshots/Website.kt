@@ -100,12 +100,20 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
             ),
         ),
-        // A song on a guitar in open G, so the instrument and tuning chips above the diagrams say what they are drawn for:
-        // at 120%, page one ends after Verse 3.
+        // Uptown Girl on a guitar in standard tuning, with the Choose chord shape sheet open over it for E.
         Triple(
-            "tablet-song-tuning",
+            "tablet-song-chord-shape",
             Device.IPAD,
-            song("tablet-song-tuning", "the_proclaimers-im_gonna_be_500_miles.cho", fontScale = 1.2f, extra = openG),
+            Shot(
+                id = "tablet-song-chord-shape",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id)) },
+                drive = {
+                    openSong(UPTOWN_GIRL)
+                    val song = checkNotNull(song(UPTOWN_GIRL))
+                    viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = null, chordName = "E"))
+                },
+            ),
         ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
         // A song with the metronome panel open under its title, not playing.
@@ -156,10 +164,7 @@ private val tuner = mapOf(
     },
 )
 
-private val openG = mapOf(
-    "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
-    "tunings" to buildJsonObject { put(UserPreferences.Instrument.GUITAR.id, "guitar_open_g") },
-)
+private const val UPTOWN_GIRL = "billy_joel-uptown_girl.cho"
 
 /** Has the tuner hear [reading] and settle on it, the needle come to rest. */
 private suspend fun PrepareScope.hear(reading: TunerReading) {

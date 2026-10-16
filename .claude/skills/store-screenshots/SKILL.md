@@ -145,8 +145,7 @@ results image the iPad's 2 and the iPhone's 3, all dark.
 
 The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
 Alive 95% (page one ends after Bridge 2), Accidentally in Love 100% with the metronome panel open (after Prechorus 2),
-I'll Be There for You 100% on the laptop (the whole song, in four columns), I'm Gonna Be (500 Miles) 120% on a guitar
-in open G (after Verse 3). A song longer than a page is cut wherever
+I'll Be There for You 100% on the laptop (the whole song, in four columns). A song longer than a page is cut wherever
 a column ends, so these were found by rendering every size from 80% to 130% in steps of 2.5% and reading where page
 one ends; if a song, a device or the layout changes, try again the same way. **Never fold the Chords section (or
 anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
