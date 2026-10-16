@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 
 /**
- * One group of settings. Every one on the settings screen has a [title]: each tab is a column of these, so the pages read
- * alike whichever is open, and the title says what the rows have in common rather than which tab they are on. The
- * Metronome and the Tuner leave theirs untitled, since there the tab names the one group of controls a page has.
+ * One group of settings, under its [title]: each tab of the settings screen is a column of these, and so are the
+ * Metronome's and the Tuner's pages, so that every page of rows reads alike, and the title says what the rows have in
+ * common rather than which tab they are on.
  *
  * The rows lie on the screen itself rather than on a card of their own, so a row's ripple and its text keep the
  * keylines of the app bar and of every list in the app.
@@ -29,12 +29,12 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLI
 @Composable
 internal fun SettingsSection(
     modifier: Modifier = Modifier,
-    title: String? = null,
+    title: String,
     content: @Composable ColumnScope.() -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
     // Close to the first row, which pads itself like a list item: the gap between two stacked sections is what sets
     // the title apart from the section above it.
-    title?.let { SettingsSectionTitle(text = it, contentPadding = TITLE_PADDING) }
+    SettingsSectionTitle(text = title, contentPadding = TITLE_PADDING)
     content()
 }
 

@@ -304,6 +304,7 @@ internal fun CampfireScreens(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
                                 scrollPosition = viewModel.navigator.metronomeScrollPosition,
+                                isUnderTabs = groupedTools.isNotEmpty(),
                                 contentPadding = shellContentPadding,
                             )
                         }

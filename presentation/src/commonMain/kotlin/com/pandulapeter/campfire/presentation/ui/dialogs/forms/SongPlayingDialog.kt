@@ -192,10 +192,12 @@ internal fun SongPlayingDialog(
                     }
                 }
                 if (shouldShowTempo) {
+                    // Named as the Metronome tab names the same picker, as a settings row's title.
                     Text(
                         modifier = Modifier.padding(top = 8.dp),
                         text = stringResource(Field.TIME.label),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     TimeSignaturePicker(
                         timeSignature = timeSignature,

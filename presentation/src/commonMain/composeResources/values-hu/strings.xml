@@ -475,6 +475,8 @@
     <string name="metronome_stop">Leállítás</string>
     <string name="metronome_tempo_slider">Tempó, ütés percenként</string>
     <string name="metronome_tap_description">Tempó megadása koppintással</string>
+    <string name="metronome_group_rhythm">Ritmus</string>
+    <string name="metronome_group_playback">Lejátszás</string>
     <string name="metronome_time_signature">Ütemmutató</string>
     <string name="metronome_accent_hint">Koppints egy ütésre a fenti ütemben a hangsúlyozásához vagy némításához.</string>
     <string name="metronome_beats_decrease">Kevesebb ütés</string>
@@ -541,6 +543,8 @@
     <string name="tuner_reading_coarse_flat">%1$s, mély</string>
     <string name="tuner_reading_coarse_sharp">%1$s, magas</string>
     <string name="tuner_reading_far_sharp">%1$s, nagyon magas</string>
+    <string name="tuner_group_tuning">Hangolás</string>
+    <string name="tuner_group_calibration">Kalibrálás</string>
     <string name="tuner_chromatic">Kromatikus</string>
     <string name="tuner_chromatic_description">A legközelebbi hangot olvassa le a legközelebbi húr helyett.</string>
     <string name="tuner_tuning_standard">Normál</string>

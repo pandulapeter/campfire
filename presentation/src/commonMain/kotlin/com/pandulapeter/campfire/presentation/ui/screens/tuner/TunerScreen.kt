@@ -33,6 +33,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.tuner_group_calibration
+import com.pandulapeter.campfire.presentation.resources.tuner_group_tuning
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
@@ -45,7 +49,6 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScro
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
@@ -66,8 +69,10 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  * what is reached for most while tuning, then the Chromatic switch and the instrument ([TunerInstrumentSetting]) and the
  * reference pitch ([ReferencePitchSetting]), offered here rather than on the sheet over a song, which tunes to what they
  * are set to.
- * Where the window has room for two columns the strings span both, as the header of the page, and the reference pitch
- * stands on a card beside the instrument; a narrower window stacks all of it in that order in one column. While the
+ * The settings are two titled sections, as on every settings page: Tuning (the strings, Chromatic, and the instrument)
+ * and Calibration (the reference pitch). Where the window has room for two columns the strings span both, untitled, as
+ * the header of the page, and the two sections stand side by side under them; a narrower window stacks all of it in
+ * that order in one column. While the
  * microphone cannot be listened to, the display gives way to a notice that is the page's first item ([TunerNoticeCard])
  * and scrolls with it, which costs a short window nothing; its tones still play then.
  *
@@ -146,15 +151,7 @@ internal fun TunerScreen(
                 isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
             )
         }
-        val playing: @Composable ColumnScope.() -> Unit = {
-            AnimatedSettingsRow(value = notice) { shownNotice ->
-                TunerNoticeCard(
-                    notice = shownNotice,
-                    permission = permission,
-                    onListen = viewModel.tunerController::requestMicrophone,
-                )
-            }
-            TunerInputIssueMessage(issue = issue, permission = permission)
+        val strings: @Composable ColumnScope.() -> Unit = {
             TunerStringsSetting(
                 config = config,
                 notation = notation,
@@ -164,24 +161,26 @@ internal fun TunerScreen(
                 onToggleTone = viewModel.tunerController::toggleTunerTone,
             )
         }
-        val referencePitch: @Composable () -> Unit = {
-            ReferencePitchSetting(
-                referencePitch = config.referencePitch,
-                notation = notation,
-                isReferenceTonePlaying = tone == REFERENCE_NOTE,
-                onReferencePitchChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(referencePitch = value) } },
-                onToggleReferenceTone = { viewModel.tunerController.toggleTunerTone(REFERENCE_NOTE) },
-            )
-        }
         SettingsPage(
             modifier = Modifier.weight(1f),
             sectionColumns = layout.sectionColumns,
             scrollState = scrollState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true),
-            header = if (isWide) playing else null,
+            // What stands in for the display, or says why it hears nothing, stands above the sections as the display does.
+            header = {
+                AnimatedSettingsRow(value = notice) { shownNotice ->
+                    TunerNoticeCard(
+                        notice = shownNotice,
+                        permission = permission,
+                        onListen = viewModel.tunerController::requestMicrophone,
+                    )
+                }
+                TunerInputIssueMessage(issue = issue, permission = permission)
+                if (isWide) strings()
+            },
             section = {
-                SettingsSection {
-                    if (!isWide) playing()
+                SettingsSection(title = stringResource(Res.string.tuner_group_tuning)) {
+                    if (!isWide) strings()
                     userPreferences?.let { preferences ->
                         TunerInstrumentSetting(
                             instrument = preferences.instrument,
@@ -193,13 +192,18 @@ internal fun TunerScreen(
                             onChromaticChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(isChromatic = value) } },
                         )
                     }
-                    if (!isWide) referencePitch()
                 }
             },
-            secondSection = if (isWide) {
-                { SettingsCard { referencePitch() } }
-            } else {
-                null
+            secondSection = {
+                SettingsSection(title = stringResource(Res.string.tuner_group_calibration)) {
+                    ReferencePitchSetting(
+                        referencePitch = config.referencePitch,
+                        notation = notation,
+                        isReferenceTonePlaying = tone == REFERENCE_NOTE,
+                        onReferencePitchChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(referencePitch = value) } },
+                        onToggleReferenceTone = { viewModel.tunerController.toggleTunerTone(REFERENCE_NOTE) },
+                    )
+                }
             },
         )
     }

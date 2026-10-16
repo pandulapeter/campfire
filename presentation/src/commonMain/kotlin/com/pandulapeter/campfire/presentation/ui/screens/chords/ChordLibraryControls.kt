@@ -22,8 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -33,11 +31,11 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.chords_search
-import com.pandulapeter.campfire.presentation.resources.instrument
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentChipRow
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
@@ -68,23 +66,23 @@ internal fun ChordLibraryControls(
         .bleedHorizontally(CHORDS_PAGE_PADDING)
         .padding(bottom = 8.dp),
 ) {
-    ControlTitle(text = stringResource(Res.string.instrument))
-    InstrumentChipRow(
-        modifier = Modifier.padding(horizontal = 16.dp),
+    // Titled the way the Tuner tab and Settings title their instrument and every other control set under its name.
+    InstrumentSetting(
         instrument = instrument,
         tuning = instrumentTuning,
         notation = notation,
         onInstrumentClicked = onInstrumentClicked,
         onTuningClicked = onTuningClicked,
     )
-    ControlTitle(text = stringResource(Res.string.chords_key))
-    ChipRow {
-        keys.forEachIndexed { index, key ->
-            ChoiceChip(
-                text = ChordProNotation.shownName(key, notation),
-                isSelected = index == selectedKeyIndex,
-                onClick = { onKeySelected(index) },
-            )
+    SettingsSubsection(title = stringResource(Res.string.chords_key)) {
+        ChipRow {
+            keys.forEachIndexed { index, key ->
+                ChoiceChip(
+                    text = ChordProNotation.shownName(key, notation),
+                    isSelected = index == selectedKeyIndex,
+                    onClick = { onKeySelected(index) },
+                )
+            }
         }
     }
     SearchField(
@@ -94,16 +92,6 @@ internal fun ChordLibraryControls(
         onQueryChange = onQueryChanged,
     )
 }
-
-/** The name of a row of controls, a heading as every section title is. */
-@Composable
-private fun ControlTitle(text: String) = Text(
-    modifier = Modifier
-        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
-        .semantics { heading() },
-    text = text,
-    style = MaterialTheme.typography.titleSmall,
-)
 
 /** A wrapping row of chips that is a radio group, padded as the page's headings are. */
 @OptIn(ExperimentalLayoutApi::class)

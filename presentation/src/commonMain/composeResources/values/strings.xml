@@ -475,6 +475,8 @@
     <string name="metronome_stop">Stop</string>
     <string name="metronome_tempo_slider">Tempo in beats per minute</string>
     <string name="metronome_tap_description">Tap the tempo</string>
+    <string name="metronome_group_rhythm">Rhythm</string>
+    <string name="metronome_group_playback">Playback</string>
     <string name="metronome_time_signature">Time signature</string>
     <string name="metronome_accent_hint">Tap a beat in the bar above to accent or mute it.</string>
     <string name="metronome_beats_decrease">Fewer beats</string>
@@ -541,6 +543,8 @@
     <string name="tuner_reading_coarse_flat">%1$s, flat</string>
     <string name="tuner_reading_coarse_sharp">%1$s, sharp</string>
     <string name="tuner_reading_far_sharp">%1$s, far sharp</string>
+    <string name="tuner_group_tuning">Tuning</string>
+    <string name="tuner_group_calibration">Calibration</string>
     <string name="tuner_chromatic">Chromatic</string>
     <string name="tuner_chromatic_description">Reads the nearest note rather than the nearest string.</string>
     <string name="tuner_tuning_standard">Standard</string>

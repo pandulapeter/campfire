@@ -86,6 +86,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import kotlinx.coroutines.flow.collectLatest
@@ -574,3 +575,11 @@ private val APP_BAR_END_PADDING = APP_BAR_HORIZONTAL_PADDING + ACTION_BUTTON_OVE
 internal val CLOSED_PILL_LAST_ACTION_END_INSET =
     APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2 + (48.dp - ACTION_BUTTON_OVERLAP) +
         DETACHED_CLOSED_SEARCH_ACTIONS_GAP + (48.dp - ACTION_BUTTON_OVERLAP) / 2
+
+/**
+ * Where the New button's circle stands in the list screens' bar, past the list's own insets: centered in the bar's
+ * height, and in from the end by the bar's end padding and the pill's, less the half of [ACTION_BUTTON_OVERLAP] the
+ * button reaches past its slot by. The Metronome tab's play button stands on the same spot, see `MetronomePanel`.
+ */
+internal val NEW_ITEM_BUTTON_TOP_INSET = (LIST_APP_BAR_HEIGHT - NEW_ITEM_BUTTON_SIZE) / 2
+internal val NEW_ITEM_BUTTON_END_INSET = APP_BAR_END_PADDING + ACTIONS_PILL_PADDING

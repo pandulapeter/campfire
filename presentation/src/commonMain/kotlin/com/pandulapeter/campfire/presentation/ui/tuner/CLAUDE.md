@@ -74,7 +74,7 @@ at app start (`CampfireWebApp`) and follows its change events; the desktop is al
 
 ## Layout
 
-The tab pins the display above a `SettingsPage` (notice, issue line, strings, Chromatic, instrument, reference pitch),
-two columns where there is room, following the Metronome tab; it keeps the screen on while it hears. The sheet scrolls
+The tab pins the display above a `SettingsPage` of two titled sections, Tuning (notice, issue line, strings, Chromatic,
+instrument) and Calibration (reference pitch), two columns where there is room, following the Metronome tab; it keeps the screen on while it hears. The sheet scrolls
 everything under its header: the same display at the same size (compact only in a short window), then the issue line and
 strings.

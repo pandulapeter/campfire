@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  * A page holds no more than two sections, so the columns are either all of them or one: a section never moves to
  * another column because the one above it grew, which is what would happen to a staggered grid when a section changes
  * height. The settings tabs pass one column whatever the width (see [SettingsTabPage]); the Metronome and the Tuner,
- * whose two sections are a page of controls and a card beside it, are the pages that spread out.
+ * whose two sections are both about the one instrument on screen, are the pages that spread out.
  *
  * It is a plain scrolling layout rather than a lazy list. A lazy list has no notion of a section that holds several
  * rows, a tab is a few dozen rows that are cheap to keep composed, and rows that come and go inside a section

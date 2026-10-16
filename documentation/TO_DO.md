@@ -11,7 +11,6 @@
 ## Short-term (in this version)
 ### Improvements
 - Update website + website screenshots + store screenshots + store descriptions to include the chord diagram library
-- Review UI consistency (FAB appearance for example on Metronome vs Songs / Setlists, or section header appearance in Settings vs Tuner / Metronome or Tuner vs Chords like the "Instrument" text)
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code

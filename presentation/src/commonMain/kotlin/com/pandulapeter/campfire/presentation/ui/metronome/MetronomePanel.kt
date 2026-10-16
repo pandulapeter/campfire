@@ -18,6 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
@@ -43,6 +46,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
+import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
+import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -61,8 +66,11 @@ import kotlinx.coroutines.flow.Flow
  * @param beats One item per click as it is heard, which the flash follows.
  * @param onBeatLevelsChanged Called with the bar's accents once one of its beats is tapped.
  * @param onPlayStop Starts or stops the click.
- * @param isProminent Draws the row and the button at the size of an instrument rather than of a bar's own row, and at
- * a settings page's margins: the tab's, where the panel is what the screen is for and heads the rows under it.
+ * @param isProminent Draws the accents as tall as the button rather than inside a bar's own row, starting at a settings
+ * page's margin and the button where the list screens keep their New button: the tab's, where the panel is what the
+ * screen is for and heads the rows under it.
+ * @param pageMaxWidth How wide the page a prominent panel heads grows at most, its insets left out: the accents end
+ *   where its rows end, while the button keeps to the end of the window, as the New button does.
  * @param visibleState Where the panel's showing and hiding is followed, for a caller that has to know when it has
  *   come to rest: the song details screen, whose pages decide their grid only once the room the panel leaves them has
  *   stopped changing. Its target is kept at [isVisible] here.
@@ -78,6 +86,7 @@ internal fun MetronomePanel(
     onPlayStop: () -> Unit,
     isVisible: Boolean,
     isProminent: Boolean = false,
+    pageMaxWidth: Dp = Dp.Infinity,
     contentPadding: PaddingValues,
     visibleState: MutableTransitionState<Boolean>? = null,
 ) = AnimatedVisibility(
@@ -102,7 +111,7 @@ internal fun MetronomePanel(
     ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_START_PADDING
-    val endPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_END_PADDING
+    val endPadding = if (isProminent) NEW_ITEM_BUTTON_END_INSET else PANEL_END_PADDING
     val height = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_HEIGHT
     Row(
         modifier = Modifier
@@ -121,16 +130,21 @@ internal fun MetronomePanel(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(PANEL_PADDING),
     ) {
-        BeatRow(
-            modifier = Modifier.weight(1f),
-            beatLevels = beatLevels,
-            beats = beats,
-            isPlaying = isPlaying,
-            isFlashEnabled = isFlashEnabled,
-            blockHeight = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_BEAT_HEIGHT,
-            blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
-            onBeatLevelsChanged = onBeatLevelsChanged,
-        )
+        Box(modifier = Modifier.weight(1f)) {
+            BeatRow(
+                // Ending where the rows under a prominent panel end, on the keyline their ends keep.
+                modifier = Modifier
+                    .widthIn(max = pageMaxWidth - startPadding - PROMINENT_PANEL_HORIZONTAL_PADDING)
+                    .fillMaxWidth(),
+                beatLevels = beatLevels,
+                beats = beats,
+                isPlaying = isPlaying,
+                isFlashEnabled = isFlashEnabled,
+                blockHeight = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_BEAT_HEIGHT,
+                blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
+                onBeatLevelsChanged = onBeatLevelsChanged,
+            )
+        }
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         FilledIconButton(
             modifier = Modifier
@@ -142,7 +156,7 @@ internal fun MetronomePanel(
         ) {
             PlayStopMark(
                 isPlaying = isPlaying,
-                size = if (isProminent) PROMINENT_PLAY_MARK_SIZE else PLAY_MARK_SIZE,
+                size = PLAY_MARK_SIZE,
             )
         }
     }
@@ -177,10 +191,11 @@ private val PANEL_BEAT_GAP = 3.dp
 private val PLAY_MARK_SIZE = 24.dp
 
 /**
- * The panel as the Metronome tab's header: the accents and the button as tall as each other, a thumb wide, and starting
- * and ending where the rows of the page under them do.
+ * The panel as the Metronome tab's header: the accents and the button as tall as each other, the accents starting and
+ * ending where the rows of the page under them do. The button is the list screens' New button in size, mark, and place
+ * at the window's end, the one other filled circle a top level screen leads with, so that the two read as the same kind
+ * of control.
  */
-private val PROMINENT_PANEL_HEIGHT = 56.dp
+private val PROMINENT_PANEL_HEIGHT = NEW_ITEM_BUTTON_SIZE
 private val PROMINENT_PANEL_HORIZONTAL_PADDING = 16.dp
 private val PROMINENT_PANEL_BEAT_GAP = 6.dp
-private val PROMINENT_PLAY_MARK_SIZE = 32.dp
