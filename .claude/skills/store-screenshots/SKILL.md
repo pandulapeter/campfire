@@ -113,14 +113,14 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 
 | # | Headline | Shot |
 |---|---|---|
-| 1 | Your songbook, on any screen | Songs, English only, by artist, scrolled to Bob Dylan (pinned), "+" menu open |
+| 1 | Your songbook, synced to every screen | Songs, English only, by artist, scrolled to Bob Dylan (pinned), "+" menu open |
 | 2 | Laid out for the way you play | House of the Rising Sun (Traditional American); phones at 100% text with the Picking pattern folded, Chromebook at 100%, so the whole first verse shows |
 | 3 | A metronome that knows each song | Metronome tab playing 6/8 at 236, beats 1 and 4 accented, caught on beat 1 |
 | 4 | A tuner for the whole band | Tuner tab on a guitar: E2 and A2 ticked off in tune, D3 heard 12 cents flat |
 | 5 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
 | 6 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
 | 7 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
-| 8 | Offline first, synced across devices | Settings → Library, sync connected |
+| 8 | Chords for guitar, ukulele, and more | Chords tab on a ukulele in standard tuning, the chords of C |
 
 The README banners are shots 1, 3, 2, 5, 6 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
 banner 1, light and in reverse order in banner 2. The Play Store banner is the Android phone's shots 1 and 2; the link

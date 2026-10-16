@@ -24,7 +24,6 @@ import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.tuner.api.Tuner
@@ -314,13 +313,13 @@ internal val shots = listOf(
         },
         drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
     ),
-    // Sync and the library: Settings' Library tab, the Dropbox account connected and synchronized a few minutes ago,
-    // what the library holds, the covers it keeps and the ways in and out of it.
+    // The chord diagrams: the Chords tab on a ukulele in its standard tuning, so that the listing shows the app drawing
+    // more than the guitar the other shots play, with the chords of C in the shapes the songs would draw them with.
     Shot(
-        id = "08-sync",
+        id = "08-chords",
         uiMode = UserPreferences.UiMode.LIGHT,
-        prepare = { viewModel.navigator.settingsTab = SettingsTab.LIBRARY },
-        drive = { viewModel.selectTopLevelDestination(CampfireDestination.Settings) },
+        preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.UKULELE.id)) },
+        drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
     ),
 )
 
