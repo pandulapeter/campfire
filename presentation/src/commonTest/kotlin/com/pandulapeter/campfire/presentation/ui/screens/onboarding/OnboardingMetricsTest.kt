@@ -32,15 +32,30 @@ class OnboardingMetricsTest {
 
     @Test
     fun `phones keep no bottom margin under the bar`() {
-        assertEquals(0.dp, onboardingBottomMargin(640.dp))
-        assertEquals(0.dp, onboardingBottomMargin(ONBOARDING_ROOMY_MIN_HEIGHT))
+        assertEquals(0.dp, onboardingBottomMargin(width = 360.dp, height = 640.dp))
+        assertEquals(0.dp, onboardingBottomMargin(width = 1400.dp, height = ONBOARDING_ROOMY_MIN_HEIGHT))
+        assertEquals(0.dp, onboardingBottomMargin(width = 412.dp, height = 915.dp))
+    }
+
+    @Test
+    fun `there is no bottom margin while the bar spans the window`() {
+        assertEquals(0.dp, onboardingBottomMargin(width = ONBOARDING_CONTENT_WIDTH, height = 2000.dp))
     }
 
     @Test
     fun `the bottom margin grows with the height and then stays`() {
-        val margins = listOf(720, 800, 900, 1000, 1100, 1400, 2000).map { onboardingBottomMargin(it.dp) }
+        val margins = listOf(720, 800, 900, 1000, 1100, 1400, 2000).map { onboardingBottomMargin(width = 1400.dp, height = it.dp) }
         assertTrue(margins.zipWithNext().all { (shorter, taller) -> taller >= shorter })
-        assertTrue(onboardingBottomMargin(900.dp) > 0.dp)
-        assertEquals(onboardingBottomMargin(1400.dp), onboardingBottomMargin(2000.dp))
+        assertTrue(onboardingBottomMargin(width = 1400.dp, height = 900.dp) > 0.dp)
+        assertEquals(onboardingBottomMargin(width = 1400.dp, height = 1400.dp), onboardingBottomMargin(width = 1400.dp, height = 2000.dp))
+    }
+
+    @Test
+    fun `the bottom margin grows with the width once the bar stops spanning the window`() {
+        val widths = listOf(0, 20, 40, 80, 160, 800).map { ONBOARDING_CONTENT_WIDTH + it.dp }
+        val margins = widths.map { onboardingBottomMargin(width = it, height = 2000.dp) }
+        assertTrue(margins.zipWithNext().all { (narrower, wider) -> wider >= narrower })
+        assertTrue(margins[2] > 0.dp)
+        assertTrue(margins[2] < margins.last())
     }
 }

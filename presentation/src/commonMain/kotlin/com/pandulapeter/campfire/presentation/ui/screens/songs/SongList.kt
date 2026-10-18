@@ -372,8 +372,8 @@ internal fun SongList(
             AnimatedVisibility(
                 visible = isSelecting,
                 modifier = Modifier.align(Alignment.BottomEnd)
-                    .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
-                    .padding(DONE_BUTTON_MARGIN),
+                    .padding(contentPadding.only(end = true, bottom = true))
+                    .padding(end = DONE_BUTTON_END_MARGIN, bottom = DONE_BUTTON_MARGIN),
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
@@ -382,8 +382,10 @@ internal fun SongList(
                     onClick = viewModel.songSelection::end,
                 )
             }
+            // The track ends above the Done button, so that neither the thumb nor its letter bubble passes over it.
             FastScroller(
-                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
+                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap)
+                    .padding(contentPadding.only(top = true, end = true, bottom = true, extraBottom = selectionBottomPadding)),
                 gridState = listState,
                 column = scrollerColumn,
                 labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
@@ -404,8 +406,14 @@ private const val ADD_SONGS_HINT_KEY = "add_songs_hint"
 /** The room above and below the divider under the Selection section. */
 private val SELECTION_DIVIDER_PADDING = 8.dp
 
-/** How far the Done button stands from the list's edges, as the setlist reorder mode's does. */
+/** How far the Done button stands from the list's bottom edge, as the setlist reorder mode's does. */
 private val DONE_BUTTON_MARGIN = 16.dp
+
+/**
+ * How far the Done button stands from the list's end edge, as the setlist reorder mode's does: beside the fast scroller's
+ * thumb rather than its whole column, which only reaches down to the button's top.
+ */
+private val DONE_BUTTON_END_MARGIN = 24.dp
 
 /** What the Done button takes of the end of the list: an extended button's height and its margin. */
 private val DONE_BUTTON_ROOM = 56.dp + DONE_BUTTON_MARGIN

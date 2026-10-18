@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import com.pandulapeter.campfire.presentation.ui.components.preferences.THEME_COLOR_CHOICE_WIDTH
 
 /**
@@ -46,12 +47,19 @@ internal val ONBOARDING_MARK_MIN_HEIGHT = 640.dp
 internal val ONBOARDING_ROOMY_MIN_HEIGHT = 720.dp
 
 /**
- * Room kept under the bar on top of its own padding, so that a tall window (a desktop or a browser in full screen) does
- * not leave Next pressed against the bottom edge while the page above has space to spare. It grows with the height
- * [height] has beyond [ONBOARDING_ROOMY_MIN_HEIGHT], so phones, which need every dp for the page, keep none of it, and
- * follows a resize continuously rather than switching at a threshold.
+ * Room kept under the bar on top of its own padding, so that a large window (a desktop or a browser in full screen) does
+ * not leave Next pressed against the bottom edge while the page above has space to spare. It grows only with the room
+ * the window has both beyond [ONBOARDING_ROOMY_MIN_HEIGHT] in [height] and beyond the bar's widest in [width], so a
+ * phone keeps none of it: held upright, its bar spans the screen and a gap under it reads as a mistake, and on its side
+ * it needs every dp for the page. Both terms follow a resize continuously rather than switching at a threshold.
  */
-internal fun onboardingBottomMargin(height: Dp) = ((height - ONBOARDING_ROOMY_MIN_HEIGHT) / 6).coerceIn(0.dp, MAX_BOTTOM_MARGIN)
+internal fun onboardingBottomMargin(
+    width: Dp,
+    height: Dp,
+) = min(
+    (width - ONBOARDING_CONTENT_WIDTH - MAX_SIDE_MARGIN * 2) / 2,
+    (height - ONBOARDING_ROOMY_MIN_HEIGHT) / 6,
+).coerceIn(0.dp, MAX_BOTTOM_MARGIN)
 
 private val MAX_BOTTOM_MARGIN = 48.dp
 

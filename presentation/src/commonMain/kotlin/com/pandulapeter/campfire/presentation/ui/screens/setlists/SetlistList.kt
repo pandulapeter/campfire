@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemTrailingKeylineAdjustment
 import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -194,6 +195,8 @@ internal fun SetlistList(
         scrollToTopOnKeyChange = !isReordering,
     )
 
+    // The fast scroller's track ends above the Done button, so that the thumb never passes over it.
+    val doneButtonRoom by animateDpAsState(if (isReordering) DONE_BUTTON_ROOM else 0.dp)
     val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition)
     val scrollerColumnWidth = scrollerColumn.width
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
@@ -378,15 +381,16 @@ internal fun SetlistList(
             AnimatedVisibility(
                 visible = isReordering,
                 modifier = Modifier.align(Alignment.BottomEnd)
-                    .padding(contentPadding.only(end = true, bottom = true, extraEnd = scrollerColumnWidth))
-                    .padding(16.dp),
+                    .padding(contentPadding.only(end = true, bottom = true))
+                    .padding(end = DONE_BUTTON_END_MARGIN, bottom = DONE_BUTTON_MARGIN),
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
                 DoneReorderingButton(onClick = { onReorderingSetlistChanged(null) })
             }
             FastScroller(
-                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
+                modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap)
+                    .padding(contentPadding.only(top = true, end = true, bottom = true, extraBottom = doneButtonRoom)),
                 gridState = listState,
                 column = scrollerColumn,
             )
@@ -405,3 +409,12 @@ private fun DoneReorderingButton(onClick: () -> Unit) {
         text = { Text(label) },
     )
 }
+
+/** How far the Done button stands from the list's bottom edge, as the song selection's does. */
+private val DONE_BUTTON_MARGIN = 16.dp
+
+/** How far the Done button stands from the list's end edge: beside the fast scroller's thumb rather than its whole column. */
+private val DONE_BUTTON_END_MARGIN = 24.dp
+
+/** What the Done button takes of the end of the list: an extended button's height and its margin. */
+private val DONE_BUTTON_ROOM = 56.dp + DONE_BUTTON_MARGIN

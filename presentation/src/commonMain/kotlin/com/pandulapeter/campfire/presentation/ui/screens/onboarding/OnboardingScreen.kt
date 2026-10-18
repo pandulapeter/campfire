@@ -125,7 +125,7 @@ internal fun OnboardingScreen(
     ) {
         val isCompact = maxHeight < ONBOARDING_MARK_MIN_HEIGHT
         val sideMargin = onboardingSideMargin(maxWidth)
-        val bottomMargin = onboardingBottomMargin(maxHeight)
+        val bottomMargin = onboardingBottomMargin(width = maxWidth, height = maxHeight)
         val isLast = nextOnboardingStep(currentStep, steps) == null
         Column(
             modifier = Modifier.fillMaxSize(),

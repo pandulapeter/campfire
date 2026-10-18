@@ -10,8 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Onboarding footer position on Android feels weird
-- Songs / Setlists header spacing should be reduced
 - Review in Claude cloud + https://github.com/skydoves/compose-performance-skills
 - Songs / Setlists floating pill touch feedback should fill the pill
 - Fix golden tests
