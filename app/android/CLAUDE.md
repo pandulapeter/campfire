@@ -35,7 +35,8 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
   - Older: `pathPattern`, whose `.*` never backtracks, so one pattern per number of dots in the path, up to four; lower
     case only. `pathAdvancedPattern` doesn't backtrack either.
   - A second filter takes `text/plain` and `application/octet-stream` without a path, for URIs with no file name
-    (Downloads' `msf:` ids, attachments). Unrelated files offered this way are skipped by display name.
+    (Downloads' `msf:` ids, attachments). Unrelated files offered this way are reported as skipped (an unknown name is
+    kept only if its bytes are a zip).
   - No `application/zip` Open with filter.
 - **Share**: `text/plain` (also shared text), `application/octet-stream`, the two zip types, PDF, and `.docx`.
 - Shared text (`EXTRA_TEXT`, named by `EXTRA_SUBJECT`) reaches `CampfireAndroidApp` as `sharedTexts`; what it becomes
