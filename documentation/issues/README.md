@@ -127,9 +127,9 @@ Every plan was challenged by an agent that did not write it (section 1, step 7),
    `Song.subtitle` / `titleWithoutSubtitle` / `displaySubtitle`, which only served the short title, removed with it.
 2. **Card widths** (`CARD_BASE_WIDTH = 336.dp`, `CARD_ARTIST_WIDTH = 8.dp` against docs saying 320dp, 40dp, and two columns
    on the default desktop window). **Answered:** the code is right — the notes and the KDoc corrected (`0e0fb0f`).
-3. **The language is applied a composition late** (awaiting the user) (`ApplyLanguagePreference`'s `LaunchedEffect`), costing one extra full
+3. **The language is applied a composition late** (`ApplyLanguagePreference`'s `LaunchedEffect`), costing one extra full
    composition at cold start for everyone whose app language is not the system's. Writing `currentLanguage` in the body
-   (a forward write) would remove it, but breaks the "no side effects in the body" rule. Recommended: leave it.
+   (a forward write) would remove it, but breaks the "no side effects in the body" rule. **Answered:** leave it.
 
 ## Checked and found solid
 
