@@ -21,7 +21,6 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
@@ -36,7 +35,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 
 /**
  * The children of [SongLyrics]' [SongSectionsLayout], in the order its measure slices them by: the chunks of the
- * sections, then the cards behind them, then the dividers between the pages.
+ * sections, then the cards behind them. The dividers between the pages are drawn by the layout itself.
  *
  * A composable of its own rather than the layout's content lambda, which captures what [SongLyrics] computes and so is
  * a new lambda on every composition: [SongLyrics] is composed again on every frame of an app bar collapsing, the
@@ -127,8 +126,4 @@ internal fun LookaheadScope.SongSectionChildren(
     // The cards the pieces of the sections on a card are drawn on, as many as each could be cut into; the ones a layout
     // has no piece for stay unmeasured.
     SectionCards(cardKeys = cardKeys) { card, cardKey -> Modifier.movedBy(cardKey, animations[units.unitSections.size + card]) }
-    // The dividers between the pages, one for every place a page can start at - a section, or a place a section may be
-    // cut at - since that is as many as there can be; the ones a song laid out on fewer pages has no place for stay
-    // unmeasured.
-    repeat((sections.size - 1 + units.isCuttableBefore.count { it }).coerceAtLeast(0)) { HorizontalDivider() }
 }

@@ -49,7 +49,8 @@ builds what it draws, `grid/` places it.
   They show tempo and time changes as lines.
 - **Every row shorter than the screen is followed by space down to its bottom** (`minRowPitch`, `minLastRowHeight`), so
   a rest shows one row; only where the song scrolls anyway, never in the preview.
-- A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece.
+- A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece. The page dividers
+  are drawn by the layout over both, at the main pass's tops, not composed.
 - **Motion** (`SectionMotion`): a single change springs with `animateBounds`; continuous changes (pinch, resize, title
   row collapse, metronome panel) follow directly, only a new grid's jump glided (`SectionGlides`).
 - `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px: animated sections are measured no
