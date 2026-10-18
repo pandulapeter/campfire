@@ -232,13 +232,18 @@ internal fun ChordsScreen(
                         // Cells held from another tuning are on their way out: their chords name that tuning's shapes.
                         val isCurrent = heldTuning == tuning
                         items(items = results.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { chord ->
-                            ChordLibraryCell(
-                                modifier = listItemAnimation(gridState),
-                                chord = chord,
-                                tuning = heldTuning,
-                                selection = selectShape(chord, heldTuning, storedShapes),
-                                onClick = { if (isCurrent) viewModel.dialogHost.showDialog(DialogType.ChordReference(chord)) },
-                            )
+                            // The item is composed again as every scroll starts and ends (listItemAnimation), so the shape is
+                            // remembered and the placement animation goes on a box of its own: on the cell, it would be a new
+                            // modifier each time, and every visible diagram would be composed again with it.
+                            val selection = remember(chord, heldTuning, storedShapes) { selectShape(chord, heldTuning, storedShapes) }
+                            Box(modifier = listItemAnimation(gridState)) {
+                                ChordLibraryCell(
+                                    chord = chord,
+                                    tuning = heldTuning,
+                                    selection = selection,
+                                    onClick = { if (isCurrent) viewModel.dialogHost.showDialog(DialogType.ChordReference(chord)) },
+                                )
+                            }
                         }
                     }
                 }
