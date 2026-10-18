@@ -63,10 +63,14 @@ object LibraryFiles {
     /** Whether an import knows a file called [name] by its extension, and so never has to look at its bytes to decide. */
     fun isImportableFileName(name: String) = IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
 
+    /** Whether a file called [name] is a document by its extension, the obsolete binary Word format included. */
+    fun isDocumentFileName(name: String) = (DOCUMENT_EXTENSIONS + LEGACY_DOCUMENT_EXTENSION).any { name.endsWith(it, ignoreCase = true) }
+
     /**
      * Whether [bytes] start the way a zip archive does: with a local file header, or with the end of the central
-     * directory where the archive is empty. Asked only of a file whose name says nothing an import knows, since the
-     * other apps' library backups are mostly zip archives under a name of their own; a `.docx` is one too, and is read
+     * directory where the archive is empty. Asked of every file but a document, whatever its name says: the other
+     * apps' library backups are mostly zip archives under a name of their own, and a backup renamed `.txt` or `.json`
+     * on its way over is still one, where no text starts with these bytes. A `.docx` is a zip archive too, and is read
      * as the document its name says it is.
      */
     fun isZipArchive(bytes: ByteArray) = bytes.size >= 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte() &&

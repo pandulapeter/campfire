@@ -164,9 +164,15 @@ class ImportFilesUseCaseImplTest {
         assertEquals(listOf(5, 2), unpacked)
         assertEquals(listOf("notes.bin"), plan.skippedFileNames)
         assertEquals(listOf("a.cho", "a.cho"), plan.songs.map { it.sourceFileName })
+        // A backup renamed to a text file's extension on its way over is still the archive its bytes say it is.
+        val renamed = prepare(FakeSongRepository(mutableMapOf()), archive = archive)(
+            listOf(ImportedFile("library.txt", zip), ImportedFile("songs.cho", zip), ImportedFile("backup.json", zip)),
+        )
+        assertEquals(listOf(5, 2, 5, 5, 5), unpacked)
+        assertEquals(listOf("a.cho", "a.cho", "a.cho"), renamed.songs.map { it.sourceFileName })
         // A Word document is a zip archive too, and is read as the document it says it is.
         prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("sheet.docx", zip)))
-        assertEquals(listOf(5, 2), unpacked)
+        assertEquals(listOf(5, 2, 5, 5, 5), unpacked)
     }
 
     @Test

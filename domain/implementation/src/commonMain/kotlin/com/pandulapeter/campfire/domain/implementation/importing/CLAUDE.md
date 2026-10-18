@@ -11,8 +11,10 @@
 
 ### Preparing
 
-- Unpacks archives recursively. An archive is known by name or, for an unknown name, by bytes (`isZipArchive`) —
-  never a `.docx`.
+- Unpacks archives (nested ones through `ArchiveLocalSource`). An archive is known by name or, under any name but a
+  document's, by bytes (`isZipArchive`) — never a `.docx`. One known only by its bytes that holds nothing importable
+  is reported as the one unsupported file it was, since OpenDocument files, e-books, and spreadsheets are zips too; a
+  bare `.json` does not count (inside another app's container it is that app's configuration).
 - Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.
   The arrival name is only a fallback *title*, and is used to recognise a library file of exactly that name holding
   the same text (exports carry library names, possibly from an older naming rule).

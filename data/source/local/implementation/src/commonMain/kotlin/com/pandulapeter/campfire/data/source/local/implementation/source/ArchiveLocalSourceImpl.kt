@@ -93,7 +93,10 @@ internal class ArchiveLocalSourceImpl(
             SongbookProBackup.Result.NotABackup -> Unit
         }
         val read = entries.flatMap { file ->
-            if (depth < MAX_DEPTH && LibraryFiles.isArchiveFileName(file.name)) {
+            // An archive by its name, or by its bytes under any name but a document's, as the import decides for a
+            // picked file: a backup zipped up with the songs next to it is as often renamed as not.
+            val isArchive = LibraryFiles.isArchiveFileName(file.name) || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
+            if (depth < MAX_DEPTH && isArchive) {
                 // A nested archive that cannot be read is reported rather than failing the whole import: the files
                 // next to it are still perfectly good.
                 try {

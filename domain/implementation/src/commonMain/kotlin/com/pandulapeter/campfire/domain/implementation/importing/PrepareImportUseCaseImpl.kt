@@ -93,10 +93,12 @@ internal class PrepareImportUseCaseImpl(
         files.forEachIndexed { index, file ->
             yield()
             onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
-            // An archive by its name, or a file under a name nothing here knows whose bytes are an archive's: the library
-            // backups of other apps are zip archives of their own extension, and the songs in them are worth looking for.
+            // An archive by its name, or a file of any other name but a document's whose bytes are an archive's: the
+            // library backups of other apps are zip archives of their own extension, or renamed to a text file's on their
+            // way over, and the songs in them are worth looking for. Only a document is taken at its name's word, since
+            // a Word file is a zip archive of its parts.
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
-            val isArchive = isArchiveByName || (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
+            val isArchive = isArchiveByName || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
                 !isArchive -> sort(file = file, origin = null)
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> triage.oversizedFileNames += file.name

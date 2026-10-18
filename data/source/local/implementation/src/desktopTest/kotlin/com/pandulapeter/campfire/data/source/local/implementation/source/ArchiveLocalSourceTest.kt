@@ -102,6 +102,24 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `unpacks an archive inside an archive by its bytes under any name but a document's`() = runBlocking {
+        val inner = ZipWriter.write(listOf(ZipEntry("songs/b.cho", "{title: B}".encodeToByteArray())))
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("a.cho", "{title: A}".encodeToByteArray()),
+                ZipEntry("backup.txt", inner),
+                ZipEntry("library.json", inner),
+                ZipEntry("sheet.docx", inner),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("a.cho", "b.cho", "b.cho", "sheet.docx"), files.map { it.name })
+        assertContentEquals(inner, files.last().bytes)
+    }
+
+    @Test
     fun `reads a SongbookPro backup inside an archive as its songs and sets, without its bookkeeping`() = runBlocking {
         val data = """1.0
             {"songs": [{"Id": 1, "name": "A", "content": "[C]La"}],

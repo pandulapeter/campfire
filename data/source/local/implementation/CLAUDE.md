@@ -116,11 +116,10 @@ No document type leaves this module.
 
 ## Other apps' libraries
 
-Other apps' libraries are archives under names of their own. A file with an unknown extension is read within the
-selection's budget (`ImportBudget`) and kept only if its bytes start like a zip; it is then unpacked like a `.zip`
-(or, holding nothing importable, reported as one unsupported file), otherwise reported unsupported and its budget
-returned. SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so pickers offer
-them. None is registered as an Open with type.
+SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so the web's picker offers
+them; none is registered as an Open with type. Other names are recognised by their bytes (`ImportBudget` in
+`:data:model`, `:domain:implementation`'s `importing`), and so is an entry inside an archive, under any name but a
+document's, since an entry under an unknown name is never read.
 
 `backup/SongbookProBackup` translates `dataFile.txt` (a version line plus one JSON document, read up to
 `ImportLimits.MAX_IMPORT_SIZE`) into `.cho` songs and `*.setlist.json` setlists, then the ordinary import:
