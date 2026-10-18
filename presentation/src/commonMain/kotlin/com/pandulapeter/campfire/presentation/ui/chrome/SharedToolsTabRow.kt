@@ -50,7 +50,7 @@ internal fun SharedToolsTabRow(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     tools: List<CampfireDestination.TopLevel>,
-    railWidth: Dp,
+    railWidth: () -> Dp,
     contentPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
@@ -66,7 +66,7 @@ internal fun SharedToolsTabRow(
     ) {
         ToolsTabRow(
             modifier = Modifier
-                .padding(start = railWidth)
+                .padding(ChromeRoomPadding(start = railWidth, bottom = NoChromeRoom))
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
                 .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)

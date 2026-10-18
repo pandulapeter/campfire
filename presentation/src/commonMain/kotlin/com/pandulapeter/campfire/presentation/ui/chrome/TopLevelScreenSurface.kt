@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -41,12 +40,13 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 internal fun TopLevelScreenSurface(
     scrim: NavigationScrim,
     windowSize: WindowSize,
-    railWidth: Dp,
-    navigationBarHeight: Dp,
+    railWidth: () -> Dp,
+    navigationBarHeight: () -> Dp,
     chrome: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
 ) {
     val scrimCoverage = rememberScrimCoverage(scrim)
+    val chromeRoom = ChromeRoomPadding(start = railWidth, bottom = navigationBarHeight)
     val scrimColor = MaterialTheme.colorScheme.scrim
     Box(
         modifier = Modifier
@@ -63,9 +63,9 @@ internal fun TopLevelScreenSurface(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = railWidth, bottom = navigationBarHeight)
+                .padding(chromeRoom)
                 // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
-                .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
+                .consumeWindowInsets(chromeRoom),
             color = MaterialTheme.colorScheme.background,
         ) {
             Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)) {

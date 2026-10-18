@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -68,6 +69,13 @@ internal fun NavigationChromeScaffold(
 ) {
     val transition = remember { NavigationChromeTransition() }
     val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val density = LocalDensity.current
+    val railWidth = remember(transition, density) {
+        { with(density) { lerp(transition.fromRailWidth, transition.toRailWidth, transition.progress).toDp() } }
+    }
+    val barHeight = remember(transition, density) {
+        { with(density) { lerp(transition.fromBarHeight, transition.toBarHeight, transition.progress).toDp() } }
+    }
     LaunchedEffect(transition.generation) {
         if (transition.generation > 0) {
             animate(initialValue = 0f, targetValue = 1f, animationSpec = spec) { value, _ -> transition.progress = value }
@@ -84,16 +92,19 @@ internal fun NavigationChromeScaffold(
         transition.update(kind = kind, railWidth = if (kind.isRail) chromePlaceable.width else 0, barHeight = if (kind.isRail) 0 else chromePlaceable.height)
         val outgoingKind = transition.outgoingKind
         val outgoingPlaceable = outgoingKind?.let { subcompose(ChromeSlot.OUTGOING_CHROME) { chrome(it) }.single().measure(looseConstraints) }
-        val progress = transition.progress
+        // Equal from one frame of a handover to the next, so that the content is not composed again for it: what moves
+        // is read by the layouts that use it.
         val chromeSize = NavigationChromeSize(
-            railWidth = lerp(transition.fromRailWidth, transition.toRailWidth, progress).toDp(),
-            barHeight = lerp(transition.fromBarHeight, transition.toBarHeight, progress).toDp(),
-            settledRailWidth = transition.toRailWidth.toDp(),
+            railWidth = railWidth,
+            barHeight = barHeight,
+            settledRailWidth = (if (kind.isRail) chromePlaceable.width else 0).toDp(),
         )
         val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, kind, chromeSize) }
             .single()
             .measure(constraints)
         layout(constraints.maxWidth, constraints.maxHeight) {
+            // Read while placing rather than while measuring, so that the frames of a handover only place the chrome again.
+            val progress = transition.progress
             // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
             // on the left one.
             if (isChromePlaced) {
@@ -136,23 +147,25 @@ private fun Placeable.PlacementScope.placeChrome(
 private enum class ChromeSlot { CHROME, OUTGOING_CHROME, CONTENT }
 
 /**
- * Where [NavigationChromeScaffold] is in handing the window from one [NavigationChromeKind] to another. Plain fields
- * where only the layout reads them, state where the composition does (the running number that restarts the animation)
- * or where a change has to lay the scaffold out again (the progress, the chrome on its way out): the scaffold writes
- * to it from its measure block, since that is where the window's width first becomes known.
+ * Where [NavigationChromeScaffold] is in handing the window from one [NavigationChromeKind] to another. State wherever
+ * something else reads it - the composition the running number that restarts the animation, the scaffold the chrome on
+ * its way out, and the screens' layouts the sizes and the progress, which a bar re-measured to another height without a
+ * change of kind (a font scale, the system's navigation bar) has to reach as much as a handover does - and a plain field
+ * only for the kind, which nothing but [update] reads. The scaffold writes to it from its measure block, since that is
+ * where the window's width first becomes known, and only what differs, so that a frame with nothing new writes nothing.
  *
  * The sizes are in pixels, the chrome being measured there, and [progress] is how far the room the chrome takes has
  * come from the `from` sizes, what was on screen when the kind changed, to the `to` ones.
  */
 private class NavigationChromeTransition {
     private var kind: NavigationChromeKind? = null
-    var fromRailWidth = 0f
+    var fromRailWidth by mutableFloatStateOf(0f)
         private set
-    var fromBarHeight = 0f
+    var fromBarHeight by mutableFloatStateOf(0f)
         private set
-    var toRailWidth = 0f
+    var toRailWidth by mutableFloatStateOf(0f)
         private set
-    var toBarHeight = 0f
+    var toBarHeight by mutableFloatStateOf(0f)
         private set
     var progress by mutableFloatStateOf(1f)
     var outgoingKind by mutableStateOf<NavigationChromeKind?>(null)
@@ -171,11 +184,11 @@ private class NavigationChromeTransition {
             generation++
         }
         this.kind = kind
-        toRailWidth = railWidth.toFloat()
-        toBarHeight = barHeight.toFloat()
+        if (toRailWidth != railWidth.toFloat()) toRailWidth = railWidth.toFloat()
+        if (toBarHeight != barHeight.toFloat()) toBarHeight = barHeight.toFloat()
         if (previousKind == null) {
-            fromRailWidth = toRailWidth
-            fromBarHeight = toBarHeight
+            fromRailWidth = railWidth.toFloat()
+            fromBarHeight = barHeight.toFloat()
         }
     }
 }

@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationScrim
+import com.pandulapeter.campfire.presentation.ui.chrome.NoChromeRoom
 import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsTabRow
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
@@ -116,7 +117,8 @@ internal fun CampfireScreens(
     val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigator.navigationGeneration)
 
     // What the chrome takes out of the window on this frame, which follows it while it changes shape, and what it will
-    // have taken out once it has settled. The insets are the first and the column counts the second.
+    // have taken out once it has settled. The insets are the first, read only by the layouts that use them so that a
+    // handover does not compose this again on each of its frames, and the column counts the second.
     val railWidth = chromeSize.railWidth
     val navigationBarHeight = chromeSize.barHeight
 
@@ -138,6 +140,7 @@ internal fun CampfireScreens(
         start = if (windowSize.usesNavigationRail) 0.dp else systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
         bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
+        chromeHeight = NoChromeRoom,
         // The keyboard covers the navigation bar instead of pushing it away, so only what is left of it counts.
         coveredHeight = navigationBarHeight,
         ime = ime,
@@ -147,7 +150,8 @@ internal fun CampfireScreens(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
         bottom = systemBars.calculateBottomPadding(),
-        coveredHeight = 0.dp,
+        chromeHeight = NoChromeRoom,
+        coveredHeight = NoChromeRoom,
         ime = ime,
         density = density,
     )
@@ -165,9 +169,10 @@ internal fun CampfireScreens(
     val messagesPadding: PaddingValues = KeyboardAwarePadding(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
+        bottom = systemBars.calculateBottomPadding(),
         // The navigation chrome's measured height already includes its bottom system inset.
-        bottom = maxOf(navigationBarHeight, systemBars.calculateBottomPadding()),
-        coveredHeight = 0.dp,
+        chromeHeight = navigationBarHeight,
+        coveredHeight = NoChromeRoom,
         ime = ime,
         density = density,
     )

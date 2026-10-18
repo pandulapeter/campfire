@@ -33,10 +33,15 @@ internal enum class NavigationChromeKind {
  * them nothing, and both something while the chrome changes shape - and [settledRailWidth], what the rail will take
  * once it has arrived. Anything a screen has to decide once is decided from the settled one, so that the column
  * counts do not change a dozen times as the chrome moves.
+ *
+ * The two that move are read when they are used, by the layouts the screens are inset by, rather than handed over as
+ * values: they change on every frame of a handover, and the composition these are handed to holds the whole app. The
+ * two readers stay the same instances for as long as the scaffold does, so a size is equal to the one before it for as
+ * long as nothing but the handover has moved.
  */
 internal data class NavigationChromeSize(
-    val railWidth: Dp,
-    val barHeight: Dp,
+    val railWidth: () -> Dp,
+    val barHeight: () -> Dp,
     val settledRailWidth: Dp,
 )
 

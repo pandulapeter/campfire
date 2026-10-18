@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.dp
  * made in holds the whole app - the navigation display, every screen on it and the song list with them. What
  * uses a padding is a layout, and a layout that reads a state that has changed is only laid out again.
  *
+ * The navigation chrome's height is asked about when the padding is used too, for the same reason: it changes on every
+ * frame of a handover between a bar and a rail (see [NavigationChromeSize]).
+ *
+ * @param chromeHeight A floor for the bottom, for content laid out over the navigation bar rather than next to it.
  * @param coveredHeight How much of the keyboard's height is taken by chrome it slides over rather than pushes
  *   away, which is the navigation bar's.
  * @param ime Held as a state because the platforms other than Android hand out a new instance on every
@@ -38,7 +42,8 @@ internal class KeyboardAwarePadding(
     private val start: Dp,
     private val end: Dp,
     private val bottom: Dp,
-    private val coveredHeight: Dp,
+    private val chromeHeight: () -> Dp,
+    private val coveredHeight: () -> Dp,
     private val ime: State<WindowInsets>,
     private val density: Density,
 ) : PaddingValues {
@@ -49,15 +54,16 @@ internal class KeyboardAwarePadding(
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) end else start
 
-    override fun calculateBottomPadding() = maxOf(bottom, with(density) { ime.value.getBottom(this).toDp() } - coveredHeight)
+    override fun calculateBottomPadding() = maxOf(bottom, chromeHeight(), with(density) { ime.value.getBottom(this).toDp() } - coveredHeight())
 
     override fun equals(other: Any?) = other is KeyboardAwarePadding &&
             start == other.start &&
             end == other.end &&
             bottom == other.bottom &&
-            coveredHeight == other.coveredHeight &&
+            chromeHeight === other.chromeHeight &&
+            coveredHeight === other.coveredHeight &&
             ime === other.ime &&
             density == other.density
 
-    override fun hashCode() = listOf(start, end, bottom, coveredHeight, density).hashCode()
+    override fun hashCode() = listOf(start, end, bottom, chromeHeight, coveredHeight, density).hashCode()
 }
