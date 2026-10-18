@@ -16,10 +16,10 @@
   is reported as the one unsupported file it was, since OpenDocument files, e-books, and spreadsheets are zips too; a
   bare `.json` does not count (inside another app's container it is that app's configuration).
 - Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.
-  The arrival name is only a fallback *title*, and is used to recognise a library file of exactly that name holding
-  the same text (exports carry library names, possibly from an older naming rule).
-- Planner compares a song with its whole name family, records batch repeats by entry index, raises one conflict per
-  library name, and leaves numbering to the write. Recorded names are the library's own spellings (case / Unicode
+  The arrival name is only a fallback *title* (and a match for a library file of exactly that name with the same
+  text: exports carry library names, possibly from an older naming rule).
+- Planner records batch repeats by entry index, raises one conflict per library name, and leaves numbering to the
+  write. Recorded names are the library's own spellings (case / Unicode
   form) as listed (`ImportPlan.SongEntry.replacesFileName`), so no setlist points at a name the song list lacks.
 - Songs compare by text, setlists by fields, never by stored document. An undated setlist file
   (`ImportPlan.SetlistEntry.isDated` false) is compared without date or countdown (parsing gives it today; a
@@ -43,8 +43,7 @@
   re-plan is written numbered (no choice was offered), unless unticked.
 - An unticked entry is left alone with its repeats; a new song left out is still pointed at by its batch's setlists
   under its arrival name (shown as missing). Identical entries are disregarded whatever the choices say.
-- A write failure stops before any dependent setlist and returns written names, the failed source, and the remainder;
-  cancellation propagates. What was written is adopted in one change (`adoptImported`, also after failure or
-  cancellation), from the models built, not by rescanning.
+- A write failure stops before any dependent setlist. What was written is adopted in one change (`adoptImported`, also
+  after failure or cancellation), from the models built, not by rescanning.
 - Result lists: duplicates name each library file once, and a repeat of a song this import wrote is not "already in
   the library"; `convertedSongToOpen` only for a lone converted song with no other entries or errors.
