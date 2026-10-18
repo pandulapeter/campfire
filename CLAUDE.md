@@ -27,7 +27,8 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   over IPC (Play Store app); Android/iOS system backup copies `library/` and `preferences.json` — never the sync
   credentials, the sync index, the editor draft, the iOS share inbox, or `covers/` (`app/android/src/main/res/xml`; on
-  iOS a device-bound Keychain item and `FileStorage.keepOutOfDeviceBackup`). A launch with no preferences document
+  iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch
+  with no preferences document
   forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
 ## Architecture
@@ -161,8 +162,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
 - The app links only to the website's downloads and its own store's rating page: `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
-- Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`.
-- Other apps' backups are read as archives (SongbookPro translated): `data/source/local/implementation`.
+- Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordpro/convert`.
+- Other apps' backups are read as archives (SongbookPro translated): `domain/implementation`,
+  `data/source/local/implementation`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
@@ -173,8 +175,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   a link followed: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), never in read
   only mode: `presentation`.
-- A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; a shared web
-  page is answered, never fetched; the extension never opens the app: `presentation`, `app/ios`.
+- A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
+  extension never opens the app: `presentation`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.
