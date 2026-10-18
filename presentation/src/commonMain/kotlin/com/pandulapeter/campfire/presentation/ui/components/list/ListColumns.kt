@@ -59,8 +59,8 @@ internal fun minSongColumnWidth(isCoverArtEnabled: Boolean) = CARD_BASE_WIDTH + 
  * The narrowest column of the Songs screen's grid: [songColumnWidth], less the artist's room while the list is sorted by
  * artist, where the cards leave the artist to the header above them. Only the grid is laid out by it; the side panel and
  * the expanded rail are decided by [songColumnWidth], so that a change of sort never moves the chrome around the list.
- * The room taken off is what gives the desktop's first window (800dp wide, its frame and the rail taken off) two
- * columns of the default cards, covers included; the title is what is cut short for it.
+ * The room taken off is only what the card's artist line no longer needs, so a column is gained only where the window is
+ * within that much of fitting one more.
  */
 internal fun songGridColumnWidth(
     songColumnWidth: Dp,

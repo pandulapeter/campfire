@@ -34,10 +34,9 @@ The song card the song lists and setlists draw (`SongListItem`).
   and closes up, unless nothing else is under the title (the card keeps its height), and is still read out.
 - **In a window under 480dp wide** card text uses 8dp padding (and headers follow, `songCardTextKeyline`) and titles get
   two lines; touch targets stay.
-- **Column width** (`minSongColumnWidth`): a 320dp base, +68dp for the cover while covers are on (whether or not a song
-  has one, so arriving covers never change the count), so the default card keeps 388dp and a phone on its side stays one
+- **Column width** (`minSongColumnWidth`): a 336dp base, +68dp for the cover while covers are on (whether or not a song
+  has one, so arriving covers never change the count), so the default card keeps 404dp and a phone on its side stays one
   column. The key, tempo, and duration stand on a line of their own and add nothing. Setlists are laid out by the same
   width (the slot number comes out of the title), so both screens fit the same columns. `CampfireScreens` computes it
   into `ListLayout.of`. Sorted by artist, the Songs grid (not its side panel or the expanded rail, so sorting never
-  moves the chrome) takes 40dp off (`songGridColumnWidth`): the default desktop window gets two columns, at the cost of
-  shorter titles.
+  moves the chrome) takes 8dp off (`songGridColumnWidth`), the room the card's artist line no longer needs.
