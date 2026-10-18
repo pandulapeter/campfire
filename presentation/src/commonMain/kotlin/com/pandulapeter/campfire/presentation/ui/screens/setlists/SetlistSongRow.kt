@@ -16,6 +16,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
@@ -183,7 +184,11 @@ internal fun LazyGridItemScope.SetlistSongRow(
             ),
         ) { isBeingDragged -> rowContent(this, isBeingDragged, Modifier) }
     } else {
-        rowContent(null, false, listItemAnimation(listState = listState, isEnabled = hasLoadedLibrary))
+        // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on the card, it
+        // would be a new modifier each time, and every visible card would be composed again with it.
+        Box(modifier = listItemAnimation(listState = listState, isEnabled = hasLoadedLibrary)) {
+            rowContent(null, false, Modifier)
+        }
     }
 }
 
