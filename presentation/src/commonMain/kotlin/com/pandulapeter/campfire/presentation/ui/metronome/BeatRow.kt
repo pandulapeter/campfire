@@ -119,6 +119,10 @@ internal fun BeatRow(
         if (index < shownLevels.size) shownLevels[index] = level else shownLevels.add(level)
     }
     val slotCount = maxOf(beatLevels.size, ceil(animatedCount).toInt())
+    // Read when a block is tapped rather than captured by it: the bar arrives as a new list, and its callback as a new
+    // lambda, on every step of the tempo slider, which would otherwise compose every block again with nothing changed.
+    val currentLevels by rememberUpdatedState(beatLevels)
+    val currentOnBeatLevelsChanged by rememberUpdatedState(onBeatLevelsChanged)
     Layout(
         modifier = modifier.fillMaxWidth().heightIn(min = blockHeight),
         content = {
@@ -132,7 +136,7 @@ internal fun BeatRow(
                     maxHeight = blockHeight,
                     isLeaving = isLeaving,
                     flash = { if (litBeat == index) flash.value else 0f },
-                    onClick = { onBeatLevelsChanged(beatLevels.toMutableList().apply { set(index, level.next()) }) },
+                    onClick = { currentOnBeatLevelsChanged(currentLevels.toMutableList().apply { set(index, level.next()) }) },
                 )
             }
         },
