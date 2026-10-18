@@ -45,8 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
@@ -117,7 +116,7 @@ internal fun Stepper(
     Surface(
         modifier = modifier
             .height(height)
-            .then(if (entry != null) Modifier.onGloballyPositioned { entryBounds.rect = it.boundsInRoot() } else Modifier),
+            .then(if (entry != null) Modifier.onPlaced { entryBounds.coordinates = it } else Modifier),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {

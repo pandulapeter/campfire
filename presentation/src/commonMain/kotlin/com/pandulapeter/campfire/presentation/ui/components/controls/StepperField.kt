@@ -82,6 +82,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInRoot
 
 /**
  * A [Stepper]'s value as a field its number is typed into, see [StepperEntry]. It reads exactly like the plain value
@@ -267,9 +269,13 @@ private fun EndsTypingWhenLeft(
     }
 }
 
-/** Where a [Stepper] with a [StepperField] is, written as it is laid out and read only at a press: no state. */
+/**
+ * Where a [Stepper] with a [StepperField] is, worked out only at a press from the coordinates its placement leaves here:
+ * no state, and nothing to work out on every frame the screen around it scrolls.
+ */
 internal class StepperBounds {
-    var rect = Rect.Zero
+    var coordinates: LayoutCoordinates? = null
+    val rect: Rect get() = coordinates?.takeIf { it.isAttached }?.boundsInRoot() ?: Rect.Zero
 }
 
 /**
