@@ -173,6 +173,7 @@ internal fun SongList(
     KeepCardsInPlaceUnderTick(
         listState = listState,
         songGroups = songGroups,
+        groups = groups,
         hasPlaceholder = placeholder != null,
         anchor = filterAnchor,
     )

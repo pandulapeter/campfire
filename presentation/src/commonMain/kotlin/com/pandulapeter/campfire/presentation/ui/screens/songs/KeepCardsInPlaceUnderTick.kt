@@ -33,6 +33,9 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
  * was, and what was not fades in. A request for the position the grid is already at resets nothing, and the grid's own
  * item animation is left to it.
  *
+ * The card is looked up in [groups], the ones the grid shows, which an open search has taken the headers out of; what
+ * changed is told from [songGroups].
+ *
  * Called after [com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged], so that its request is
  * the one the grid measures with. A change of the search, the sorting or a filter is that one's to answer, and a list
  * being scrolled is left alone, since a request would cancel the scroll.
@@ -41,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 internal fun KeepCardsInPlaceUnderTick(
     listState: LazyGridState,
     songGroups: SongGroups,
+    groups: List<SongGroup>,
     hasPlaceholder: Boolean,
     anchor: ListAnchor,
 ) {
@@ -62,7 +66,7 @@ internal fun KeepCardsInPlaceUnderTick(
         val cards = visibleItems.filter { it.contentType == SONG_CONTENT_TYPE }
             .sortedWith(compareBy({ it.key in lastSelectionKeys }, { it.offset.y < 0 }))
         cards.firstNotNullOfOrNull { card ->
-            songGroups.groups.itemIndexOf(card.key, hasPlaceholder = hasPlaceholder)?.let { index -> index to card.offset.y }
+            groups.itemIndexOf(card.key, hasPlaceholder = hasPlaceholder)?.let { index -> index to card.offset.y }
         }?.let { (index, offset) ->
             val isJump = index != listState.firstVisibleItemIndex || -offset != listState.firstVisibleItemScrollOffset
             listState.requestScrollToItem(index = index, scrollOffset = -offset)
