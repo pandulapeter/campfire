@@ -13,6 +13,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandHorizontally
@@ -39,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -74,6 +76,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songFilters.besideSi
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
+import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -184,11 +187,12 @@ internal fun SongsScreen(
                         AnimatedContent(
                             targetState = isSelecting,
                             // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
-                            // menu, and scaled, so that it is out of the way of the menu fading in where it stood.
+                            // menu, and scaled, so that it is out of the way of the menu fading in where it stood. Resized on the
+                            // search's spring, which the bar moves the search action and the pill's end on as the two swap.
                             transitionSpec = {
                                 fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
                                     fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
-                                    SizeTransform(clip = false)
+                                    SizeTransform(clip = false) { _, _ -> searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold) }
                             },
                         ) { isShowingSelectionMenu ->
                             if (isShowingSelectionMenu) {

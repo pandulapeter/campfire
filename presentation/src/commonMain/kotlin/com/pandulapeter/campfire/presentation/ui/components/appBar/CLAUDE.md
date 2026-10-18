@@ -36,7 +36,9 @@ The top app bars of the list screens.
   widens into a gap as wide as the circle's from the edge, both on the search's spring, so the button never moves. A
   clipped shrink would slice the circle, so it fades (quickly) and scales in place while its room closes. The circle
   ends on the cards' scroller-less keyline, as does the pill without it (`UNDETACHED_PILL_END_INSET`); without the
-  scroller, a card's menu is centered under the circle (`listItemTrailingKeylineAdjustment`). The bar stays filled while the list has no header (placeholder, ranked
+  scroller, a card's menu is centered under the circle (`listItemTrailingKeylineAdjustment`). New and the selection
+  menu swap by a size animation the lookahead skips, so meanwhile the closed pill follows the buttons' current bounds
+  (`closedBoundsOf`) and the search action travels on the swap's spring rather than snapping. The bar stays filled while the list has no header (placeholder, ranked
   results). It spans the list only, never the side panel.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
   hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is

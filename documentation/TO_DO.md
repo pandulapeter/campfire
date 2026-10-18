@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Fix golden tests
 - Metronome header too close to window top - inconsistent between navigation rail vs bottom navigation
 - Regenerate all screenshots and the promo videos
 - Regenerate the Android baseline profiles

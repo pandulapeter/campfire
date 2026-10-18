@@ -51,6 +51,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -197,9 +198,17 @@ internal fun SearchableTopAppBar(
             }
         }
     }
+    val detachProgress = animateFloatAsState(targetValue = if (areClosedSearchActionsDetached) 1f else 0f, animationSpec = searchTravelSpec())
+    val detachTarget by rememberUpdatedState(if (areClosedSearchActionsDetached) 1f else 0f)
     val travelSpec = searchTravelSpec(visibilityThreshold = Rect.VisibilityThreshold)
-    val boundsTransform = remember(searchTransition, travelSpec) {
-        BoundsTransform { _, _ -> if (searchTransition.currentState != searchTransition.targetState) travelSpec else snap() }
+    val boundsTransform = remember(searchTransition, travelSpec, detachProgress) {
+        BoundsTransform { _, _ ->
+            // The closed actions changing (New giving way to the selection menu) resize the row the search action leads
+            // on the same spring, but only outside the lookahead: snapped to its lookahead bounds, the action would jump
+            // to where the row ends up and pass over the buttons still sliding there.
+            val isTravelling = searchTransition.currentState != searchTransition.targetState || detachProgress.value != detachTarget
+            if (isTravelling) travelSpec else snap()
+        }
     }
     val searchAction = remember(searchState) {
         movableContentOf { actionModifier: Modifier, actionPlaceholder: String, isEnabled: Boolean ->
@@ -223,7 +232,6 @@ internal fun SearchableTopAppBar(
     val pill = remember { SearchPill() }
     val closedPillHeight = with(density) { CLOSED_PILL_HEIGHT.toPx() }
     val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
-    val detachProgress = animateFloatAsState(targetValue = if (areClosedSearchActionsDetached) 1f else 0f, animationSpec = searchTravelSpec())
     val hasDetachedActions = areClosedSearchActionsShown && areClosedSearchActionsDetached
     val undetachedEndProgress = animateFloatAsState(targetValue = if (hasDetachedActions) 0f else 1f, animationSpec = searchTravelSpec())
     val reachEndPadding = endPadding + if (hasDetachedActions) 0.dp else UNDETACHED_PILL_END_INSET
@@ -323,7 +331,7 @@ internal fun SearchableTopAppBar(
                                 }
                                 .onPlaced {
                                     if (!searchTransition.targetState) {
-                                        pill.closedActions = lookaheadScope.lookaheadBoundsOf(pill.bar, it)
+                                        pill.closedActions = lookaheadScope.closedBoundsOf(pill.bar, it, isClosing = searchTransition.currentState)
                                     }
                                 }
                                 .padding(horizontal = ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2),
@@ -342,7 +350,8 @@ internal fun SearchableTopAppBar(
                             AnimatedVisibility(
                                 modifier = Modifier.onPlaced {
                                     if (!searchTransition.targetState) {
-                                        pill.closedSearchActionsWidth = lookaheadScope.lookaheadBoundsOf(pill.bar, it).width
+                                        pill.closedSearchActionsWidth =
+                                            lookaheadScope.closedBoundsOf(pill.bar, it, isClosing = searchTransition.currentState).width
                                     }
                                 },
                                 visible = areClosedSearchActionsShown,
@@ -557,6 +566,18 @@ private fun LookaheadScope.lookaheadBoundsOf(bar: LayoutCoordinates?, coordinate
         offset = bar.localLookaheadPositionOf(coordinates),
         size = coordinates.toLookaheadCoordinates().size.toSize(),
     )
+
+/**
+ * Where a part of the closed bar is, in the coordinates of the [bar] that holds it: where it is heading to while the
+ * search is closing, which the pill sets out for from the field, and where it is on this frame once the search is closed,
+ * so that the pill follows the buttons as the closed actions change (New giving way to the selection menu) instead of
+ * jumping to where they end up and leaving them outside it on the way.
+ */
+private fun LookaheadScope.closedBoundsOf(bar: LayoutCoordinates?, coordinates: LayoutCoordinates, isClosing: Boolean) = when {
+    isClosing -> lookaheadBoundsOf(bar, coordinates)
+    bar == null || !bar.isAttached -> Rect.Zero
+    else -> bar.localBoundingBoxOf(coordinates, clipBounds = false)
+}
 
 /**
  * How far past the end of the field slot the search action ends while the search is closed: the slot's own end
