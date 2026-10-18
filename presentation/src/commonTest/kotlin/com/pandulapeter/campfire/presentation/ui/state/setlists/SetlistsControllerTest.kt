@@ -115,6 +115,9 @@ class SetlistsControllerTest {
     @Test
     fun `the listed setlists carry the query they were narrowed by, not the text of a closed search`() = runTest {
         val controller = controller()
+        // The listing is combined on another thread, so a query typed before the setlists are read would narrow the empty
+        // listing the state starts with.
+        controller.setlistsWithSongs.first { it.setlists.isNotEmpty() }
         val search = controller.setlistsSearch
         search.open()
         search.textFieldState.setTextAndPlaceCursorAtEnd("GIG")
