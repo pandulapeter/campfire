@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionTagsShe
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongLanguagesDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongTagsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDatePickerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongMetadataDialog
@@ -152,6 +153,21 @@ private fun CampfireDialog(
                     isCountdownShown = isCountdownShown,
                 )
             },
+        )
+
+        is DialogType.SetlistDate -> SetlistDatePickerSheet(
+            date = dialog.setlist.date,
+            // The other details are the ones offered, so the edit writes the day and nothing else.
+            onDateChange = { date ->
+                viewModel.setlistsController.editSetlist(
+                    offered = dialog.setlist,
+                    title = dialog.setlist.title,
+                    description = dialog.setlist.description,
+                    date = date,
+                    isCountdownShown = dialog.setlist.isCountdownShown,
+                )
+            },
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         )
 
         // Named before it is made rather than after: two setlists can carry the same title (a setlist is identified

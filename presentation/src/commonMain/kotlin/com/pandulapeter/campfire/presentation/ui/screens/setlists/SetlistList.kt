@@ -291,6 +291,10 @@ internal fun SetlistList(
                                 SetlistSummary(
                                     modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
                                     countdown = setlistWithSongs.setlist.countdownText(today),
+                                    // An archived setlist is not edited, as its menu offers no Edit either.
+                                    onCountdownClick = if (isPerformanceModeEnabled || setlistWithSongs.setlist.isArchived) null else {
+                                        { viewModel.dialogHost.showDialog(DialogType.SetlistDate(setlistWithSongs.setlist)) }
+                                    },
                                     runningTime = setlistWithSongs.runningTimeText(),
                                     description = setlistWithSongs.setlist.description,
                                     contentPadding = contentPadding,

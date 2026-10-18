@@ -33,6 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.offset
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabel
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabelMark
@@ -45,12 +53,15 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTex
  * second line of the header, so that every header's name stands at one height whatever the setlist says about itself.
  *
  * @param countdown How far the setlist's day is, where the user asked for it ([countdownText]).
+ * @param onCountdownClick Opens the calendar of the setlist's date; null where it cannot be changed (read only mode, an
+ *   archived setlist).
  * @param runningTime How long the setlist's songs take ([runningTimeText]), after the countdown.
  */
 @Composable
 internal fun SetlistSummary(
     modifier: Modifier = Modifier,
     countdown: String?,
+    onCountdownClick: (() -> Unit)?,
     runningTime: String?,
     description: String,
     contentPadding: PaddingValues,
@@ -68,19 +79,23 @@ internal fun SetlistSummary(
     // a fixed height, so the room above depends on the text size. The card's
     // own padding counts towards it.
     val gap = sectionHeaderBottomGap() + SUMMARY_BOTTOM_PADDING
+    // The outset leaves the countdown's pressed highlight the room above it that animateContentSize would clip away,
+    // without moving anything in the list.
     Column(
         modifier = modifier
+            .outset(vertical = LABEL_TOUCH_VERTICAL_PADDING)
             .animateContentSize()
             .padding(
                 start = songCardTextKeyline,
+                top = LABEL_TOUCH_VERTICAL_PADDING,
                 end = songCardTextKeyline,
-                bottom = (gap - SONG_CARD_VERTICAL_PADDING).coerceAtLeast(0.dp),
+                bottom = (gap - SONG_CARD_VERTICAL_PADDING).coerceAtLeast(0.dp) + LABEL_TOUCH_VERTICAL_PADDING,
             ),
     ) {
         Row {
             val hasDescription = description.isNotBlank()
-            SummaryLabel(text = countdown, mark = IconLabelMark.DATE, hasDescription = hasDescription)
-            SummaryLabel(text = runningTime, mark = IconLabelMark.DURATION, hasDescription = hasDescription)
+            SummaryLabel(text = countdown, mark = IconLabelMark.DATE, hasDescription = hasDescription, onClick = onCountdownClick)
+            SummaryLabel(text = runningTime, mark = IconLabelMark.DURATION, hasDescription = hasDescription, onClick = null)
         }
         if (description.isNotBlank()) {
             Text(
@@ -95,13 +110,19 @@ internal fun SetlistSummary(
     }
 }
 
-/** One fact about the setlist, the countdown or the running time, which comes and goes with what it is made of. */
+/**
+ * One fact about the setlist, the countdown or the running time, which comes and goes with what it is made of. One that
+ * does something on a tap lights up in a pill around it, laid out in its own size so that it stands where a label that
+ * does nothing would.
+ */
 @Composable
-private fun SummaryLabel(text: String?, mark: IconLabelMark, hasDescription: Boolean) {
+private fun SummaryLabel(text: String?, mark: IconLabelMark, hasDescription: Boolean, onClick: (() -> Unit)?) {
     // Kept through its exit animation, which would otherwise run on an empty label.
     var lastText by remember { mutableStateOf(text.orEmpty()) }
     text?.let { lastText = it }
+    // The pill's room is inside the AnimatedVisibility, whose expansion clips to its bounds, and taken back outside it.
     AnimatedVisibility(
+        modifier = Modifier.outset(horizontal = LABEL_TOUCH_HORIZONTAL_PADDING, vertical = LABEL_TOUCH_VERTICAL_PADDING),
         visible = text != null,
         enter = fadeIn() + expandHorizontally(),
         exit = fadeOut() + shrinkHorizontally(),
@@ -109,11 +130,28 @@ private fun SummaryLabel(text: String?, mark: IconLabelMark, hasDescription: Boo
         // The room around it is its own rather than the column's or the row's spacing, which would also separate the
         // description from a label that is not there and push it away from the header.
         IconLabel(
-            modifier = Modifier.padding(end = SUMMARY_LABEL_GAP, bottom = if (hasDescription) SUMMARY_LINE_GAP else 0.dp),
+            modifier = Modifier
+                .padding(end = SUMMARY_LABEL_GAP, bottom = if (hasDescription) SUMMARY_LINE_GAP else 0.dp)
+                .clip(CircleShape)
+                .then(if (onClick == null) Modifier else Modifier.clickable(onClickLabel = stringResource(Res.string.setlists_pick_date), onClick = onClick))
+                .padding(horizontal = LABEL_TOUCH_HORIZONTAL_PADDING, vertical = LABEL_TOUCH_VERTICAL_PADDING),
             text = lastText,
             mark = mark,
             style = MaterialTheme.typography.bodyMedium,
         )
+    }
+}
+
+/**
+ * Draws the content [horizontal] and [vertical] past every edge of the room it is laid out in, which is the room the
+ * content would take without them.
+ */
+private fun Modifier.outset(horizontal: Dp = 0.dp, vertical: Dp) = layout { measurable, constraints ->
+    val horizontalOutset = horizontal.roundToPx()
+    val verticalOutset = vertical.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = horizontalOutset * 2, vertical = verticalOutset * 2))
+    layout(placeable.width - horizontalOutset * 2, placeable.height - verticalOutset * 2) {
+        placeable.placeRelative(-horizontalOutset, -verticalOutset)
     }
 }
 
@@ -125,3 +163,9 @@ private val SUMMARY_LINE_GAP = 8.dp
 
 /** The room between a label and the one after it. */
 private val SUMMARY_LABEL_GAP = 12.dp
+
+/** The room around a label for its pressed highlight, beside its text. */
+private val LABEL_TOUCH_HORIZONTAL_PADDING = 8.dp
+
+/** The room around a label for its pressed highlight, above and below its text. */
+private val LABEL_TOUCH_VERTICAL_PADDING = 4.dp

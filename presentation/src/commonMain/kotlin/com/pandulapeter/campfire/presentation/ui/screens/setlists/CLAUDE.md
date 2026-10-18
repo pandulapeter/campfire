@@ -69,6 +69,9 @@
 - **Every setlist has a date**: an import dates a dateless setlist with today (the demo's included) unless it replaces a
   library setlist, whose day it keeps; a library file without one gets the day it is first read on and is saved right
   after that read, through the repository's locks, announcing nothing, so the next sync carries it.
-- Countdown (off by default) is the only place the date shows outside the sheet, so the only way in performance mode.
-  The running time is summed from the songs' `{duration}`s (`SetlistTotalDuration.kt`; `+` where some songs have none).
+- Countdown (off by default) is  the only place the date shows outside
+  the sheet, so the only way in performance mode. A tap on it opens the details sheet's calendar alone
+  (`DialogType.SetlistDate`, writing only the day), outside read only mode and on a setlist not archived; its pressed
+  pill is drawn in an outset, so the label stands where it would without it. The running time is summed from the
+  songs' `{duration}`s (`SetlistTotalDuration.kt`; `+` where some songs have none).
 - Sorting by date puts the latest day first, same-day setlists by title.

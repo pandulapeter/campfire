@@ -71,6 +71,10 @@ sealed interface DialogType {
     data class DeleteSetlist(val setlist: Setlist) : DialogType
     data class RemoveSongFromSetlist(val songFileName: String, val songTitle: String, val setlistFileName: String) : DialogType
     data class EditSetlist(val setlist: Setlist) : DialogType
+
+    /** The calendar of [setlist]'s date alone, opened from its countdown, whose Save writes only the day. */
+    data class SetlistDate(val setlist: Setlist) : DialogType
+
     data class DuplicateSetlist(val setlist: Setlist) : DialogType
     data class DeleteSong(val song: Song) : DialogType
     /**
