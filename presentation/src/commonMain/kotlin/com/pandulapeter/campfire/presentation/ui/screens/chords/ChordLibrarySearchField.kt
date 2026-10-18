@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_search
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The Chords tab's search, under the controls and pinned at the top of the page once the chords are scrolled under it, so
@@ -39,6 +40,7 @@ internal fun LazyGridScope.chordLibrarySearchField(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
     query: String,
+    focusRequests: Flow<Unit>,
     onQueryChanged: (String) -> Unit,
 ) = stickyHeader(key = SEARCH_FIELD_KEY, contentType = SEARCH_FIELD_KEY) {
     val backgroundColor = MaterialTheme.colorScheme.background
@@ -74,6 +76,7 @@ internal fun LazyGridScope.chordLibrarySearchField(
             modifier = modifier,
             query = query,
             placeholder = stringResource(Res.string.chords_search),
+            focusRequests = focusRequests,
             onQueryChange = onQueryChanged,
         )
     }

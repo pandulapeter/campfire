@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -42,6 +43,7 @@ class NavigatorTest {
     private val savedStateHandle = SavedStateHandle()
     private val songsSearch = SearchState()
     private val setlistsSearch = SearchState()
+    private val chordLibrary = ChordLibraryState()
 
     private fun navigator(scope: CoroutineScope, dialogHost: DialogHost = DialogHost(scope)) = Navigator(
         savedStateStore = SavedStateStore(savedStateHandle, scope),
@@ -49,6 +51,7 @@ class NavigatorTest {
         songsSearch = { songsSearch },
         setlistsSearch = { setlistsSearch },
         importReportSearch = { SearchState(isInitiallyOpen = true) },
+        chordLibrary = { chordLibrary },
         onboardingSteps = { onboardingSteps },
         topLevelDestinations = { topLevelDestinations },
         userPreferences = { null as UserPreferences? },
@@ -231,6 +234,43 @@ class NavigatorTest {
         navigator.selectTopLevelDestination(CampfireDestination.Songs)
         assertFalse(songsSearch.isOpen.value)
         assertEquals(listOf<CampfireDestination.TopLevel>(CampfireDestination.Songs), requests)
+    }
+
+    @Test
+    fun `ctrl f on the chords tab asks its search field for the caret`() = runTest {
+        val navigator = navigator(backgroundScope)
+        var requests = 0
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { chordLibrary.searchFocusRequests.collect { requests++ } }
+        navigator.selectTopLevelDestination(CampfireDestination.Chords)
+        assertTrue(navigator.searches.openCurrentSearch())
+        assertEquals(1, requests)
+        navigator.selectTopLevelDestination(CampfireDestination.Metronome)
+        assertFalse(navigator.searches.openCurrentSearch())
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `a step back empties the chords tab's search before leaving the tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Chords)
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+        chordLibrary.query = "D/F#"
+        assertTrue(navigator.searches.isCurrentSearchOpen)
+        navigator.searches.closeCurrentSearch()
+        assertEquals("", chordLibrary.query)
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+    }
+
+    @Test
+    fun `the chords tab's search is no other screen's to empty`() = runTest {
+        val navigator = navigator(backgroundScope)
+        chordLibrary.query = "D/F#"
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+        songsSearch.open()
+        assertTrue(navigator.searches.isCurrentSearchOpen)
+        navigator.searches.closeCurrentSearch()
+        assertFalse(songsSearch.isOpen.value)
+        assertEquals("D/F#", chordLibrary.query)
     }
 
     @Test

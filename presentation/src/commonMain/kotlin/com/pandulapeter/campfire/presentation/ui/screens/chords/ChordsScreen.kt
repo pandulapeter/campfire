@@ -43,6 +43,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -60,6 +63,7 @@ import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -202,6 +206,7 @@ internal fun ChordsScreen(
                 modifier = Modifier.onFocusChanged { isSearchFocused = it.hasFocus },
                 gridState = gridState,
                 query = query,
+                focusRequests = state.searchFocusRequests,
                 onQueryChanged = { state.query = it },
             )
             val held = shown
@@ -264,6 +269,15 @@ internal fun ChordsScreen(
             }
         }
     }
+    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    // A search the tab is narrowed by goes before the tab, as an open search goes before a list screen. The desktop never
+    // reaches this: its window key handler sees Escape first, and empties the field there (ScreenSearches.closeCurrentSearch).
+    NavigationBackHandler(
+        state = backGesture,
+        isBackEnabled = query.isNotEmpty() && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
+        onBackCompleted = { state.query = "" },
+    )
 }
 
 /**

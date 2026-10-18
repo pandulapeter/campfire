@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.nextOnboardingStep
@@ -52,7 +53,8 @@ internal class Navigator(
     private val dialogHost: DialogHost,
     private val songsSearch: () -> SearchState,
     private val setlistsSearch: () -> SearchState,
-    private val importReportSearch: () -> SearchState,
+    importReportSearch: () -> SearchState,
+    chordLibrary: () -> ChordLibraryState,
     private val onboardingSteps: () -> List<OnboardingStep>,
     private val topLevelDestinations: () -> List<CampfireDestination.TopLevel>,
     private val userPreferences: () -> UserPreferences?,
@@ -149,44 +151,20 @@ internal class Navigator(
      */
     private val songDetailsCurrentSongs = mutableStateMapOf<String, String>()
 
-    /**
-     * The search a back gesture is about, which is the one belonging to the screen that is on top. Only the two list
-     * screens have one that opens and closes, and a search left open on a list screen is no business of the song that
-     * was opened from it: there, back is back. The import screen's field is always there, so there is nothing for a
-     * back gesture to close before the screen.
-     *
-     * The screens answer their own back gesture with a navigation event handler registered inside them, which is
-     * composed after the navigation's own and therefore wins on its own; this is here for the desktop, whose window
-     * key handler decides what Escape means from outside the composition entirely.
-     */
-    val currentSearch: SearchState?
-        get() = when (backStack.lastOrNull()) {
-            CampfireDestination.Songs -> songsSearch()
-            CampfireDestination.Setlists -> setlistsSearch()
-            else -> null
-        }
+    /** The searches of the screens, as the keys that reach them from outside the composition see them. */
+    val searches = ScreenSearches(
+        top = { backStack.lastOrNull() },
+        dialogHost = dialogHost,
+        songsSearch = songsSearch,
+        setlistsSearch = setlistsSearch,
+        importReportSearch = importReportSearch,
+        chordLibrary = chordLibrary,
+        isSetlistReordering = isSetlistReordering,
+    )
 
     /** Emitted when the item of the top level screen that is already open is pressed, see [ScrollToTopRequest]. */
     private val _scrollToTopRequests = MutableSharedFlow<ScrollToTopRequest>(extraBufferCapacity = 1)
     val scrollToTopRequests = _scrollToTopRequests.asSharedFlow()
-
-    /**
-     * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
-     * does: nothing on a list screen is focused while its search is closed, and a key event only travels along the
-     * focus path. It opens the search of the list screen that is on top, or brings the caret back into it if it is
-     * open already - the import screen's field, which is always there, being given the caret the same way - and
-     * answers whether it did, so that the key is left to whoever else wants it everywhere else - the
-     * browser's own find bar among them. A dialog, a sheet or an overflow menu keeps it from reaching the screen under
-     * it, the way it keeps Escape from reaching it.
-     */
-    fun openCurrentSearch(): Boolean {
-        if (dialogHost.visibleDialog.value != null || dialogHost.overlayState.isAnyMenuOpen || isSetlistReordering()) return false
-        val search = currentSearch
-            ?: importReportSearch().takeIf { backStack.lastOrNull() == CampfireDestination.ImportReport }
-            ?: return false
-        search.openOrFocus()
-        return true
-    }
 
     /** Reported by the UI whenever the state of the navigation transition changes, see [navigationGeneration]. */
     fun setNavigationTransitionRunning(isRunning: Boolean) {
@@ -333,7 +311,7 @@ internal class Navigator(
         if (destination !in topLevelDestinations()) return
         if (backStack.lastOrNull() == destination) {
             // Pressing the item of the screen that is already open takes that screen back to its resting state.
-            if (destination != CampfireDestination.Settings) currentSearch?.close()
+            if (destination != CampfireDestination.Settings) searches.currentSearch?.close()
             _scrollToTopRequests.tryEmit(ScrollToTopRequest(destination, destinationWhenAtTop?.takeIf { it != destination }))
             return
         }

@@ -282,6 +282,7 @@ class CampfireViewModel(
         songsSearch = { songListState.songsSearch },
         setlistsSearch = { setlistsController.setlistsSearch },
         importReportSearch = { importReportState.search },
+        chordLibrary = { chordLibrary },
         // The view model's copy of the preferences, which is what the onboarding's pages draw their dots from.
         onboardingSteps = { onboardingSteps(userPreferences.value) },
         topLevelDestinations = { preferencesController.topLevelDestinations.value },

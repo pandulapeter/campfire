@@ -35,8 +35,8 @@ The desktop shell, called by `:app:desktop`.
   - "Open on top" is `visibleDialog` plus `overlayState.isAnyMenuOpen` (`LocalOverlayState`, also given to sheets a
     screen hosts itself, like the editor's search). A window key handler runs before Compose turns Escape into a back
     event, so missing one here pops the stack behind the modal.
-  - Search before the back stack: selecting a tab rebuilds the stack with the songs under it, so Escape would otherwise
-    leave the tab with its search open.
+  - Search before the back stack (`isCurrentSearchOpen`, the Chords tab's query included, which is emptied): selecting
+    a tab rebuilds the stack with the songs under it, so Escape would otherwise leave the tab with its search open.
   - `handlePreviewKeyEvent` swallows held-Escape repeats, which would close every screen and then the app.
 - **Ctrl/Cmd + F** → `openCurrentSearch` (opens it, or refocuses an open one with its text selected), not under a
   dialog, sheet, or menu. It must be a window handler: nothing on a list screen is focused while its search is closed.

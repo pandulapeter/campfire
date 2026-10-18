@@ -21,7 +21,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * Opens the search of the list screen that is on top on Ctrl / Cmd + F (`Navigator.openCurrentSearch`), and
+ * Opens the search of the list screen that is on top on Ctrl / Cmd + F (`ScreenSearches.openCurrentSearch`), and
  * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
  * one canvas with none. With the song editor on top, Ctrl / Cmd + F and R are the editor's Find and Find and replace
  * (`editorSearchShortcuts`), so there the browser is kept from its find bar and from reloading the page under the text

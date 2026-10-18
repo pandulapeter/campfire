@@ -126,7 +126,7 @@ fun CampfireDesktopApp(
 
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
- * search of the list screen that is on top (`Navigator.openCurrentSearch`); it is answered here because this
+ * search of the list screen that is on top (`ScreenSearches.openCurrentSearch`); it is answered here because this
  * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
  * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
  * (`FontScaleController.zoomSongText`), the shortcuts a browser zooms a page with. Space and M start and stop the
@@ -162,15 +162,14 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         if (dialogHost.visibleDialog.value != null || dialogHost.overlayState.isAnyMenuOpen) return false
         // The search is closed from here rather than by the back handler the field registers, since this handler sees
         // the key first and would consume it either way.
-        val search = navigator.currentSearch
         val step = escapeStepOf(
             isReordering = setlistsController.isSetlistReordering,
-            isSearchOpen = search?.isOpen?.value == true,
+            isSearchOpen = navigator.searches.isCurrentSearchOpen,
             isSelecting = songSelection.isSongSelecting,
             stackSize = navigator.backStack.size,
         )
         when (step) {
-            EscapeStep.CLOSE_SEARCH -> search?.close()
+            EscapeStep.CLOSE_SEARCH -> navigator.searches.closeCurrentSearch()
             EscapeStep.END_REORDERING, EscapeStep.END_SELECTION, EscapeStep.GO_BACK -> navigator.navigateBack()
             EscapeStep.EXIT -> appExitController.confirmExit(onExit)
         }

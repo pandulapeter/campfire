@@ -34,14 +34,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -50,6 +60,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.songs_clear
+import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -60,12 +71,16 @@ import org.jetbrains.compose.resources.painterResource
  * clear button, so that every search in the app reads as one control. Unlike the bar's, it carries the search mark
  * itself, since no search action stands next to it to say what it is. The whole pill is the text field, so a tap
  * anywhere on it places the caret, not only one on the text.
+ *
+ * @param focusRequests Ctrl / Cmd + F's requests for the caret, each answered with the query selected, so that typing
+ *   replaces it the way it does in the find bar of any other application.
  */
 @Composable
 internal fun SearchField(
     modifier: Modifier = Modifier,
     query: String,
     placeholder: String,
+    focusRequests: Flow<Unit>? = null,
     onQueryChange: (String) -> Unit,
 ) = Surface(
     modifier = modifier
@@ -76,10 +91,27 @@ internal fun SearchField(
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+    // The query is the caller's, and the selection the field's own, which a focus request selects the query with: a
+    // query changed from outside, cleared or restored, puts the caret at its end.
+    var fieldValue by remember { mutableStateOf(TextFieldValue(query, TextRange(query.length))) }
+    val shownValue = if (fieldValue.text == query) fieldValue else TextFieldValue(query, TextRange(query.length))
+    val currentQuery by rememberUpdatedState(query)
+    LaunchedEffect(focusRequests) {
+        focusRequests?.collect {
+            fieldValue = TextFieldValue(currentQuery, TextRange(0, currentQuery.length))
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
     BasicTextField(
-        modifier = Modifier.fillMaxSize(),
-        value = query,
-        onValueChange = { onQueryChange(it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)) },
+        modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+        value = shownValue,
+        onValueChange = {
+            val text = it.text.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)
+            fieldValue = if (text == it.text) it else TextFieldValue(text, TextRange(text.length))
+            onQueryChange(text)
+        },
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),

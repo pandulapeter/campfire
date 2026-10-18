@@ -14,6 +14,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * Where the Chords tab was left: the key, the search, the results and the scroll position, held by the view model for the
@@ -26,6 +29,19 @@ internal class ChordLibraryState {
     var keyIndex by mutableIntStateOf(0)
 
     var query by mutableStateOf("")
+
+    private val _searchFocusRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /**
+     * Asks the search field for the caret, with what it holds selected, see [focusSearch]. Events rather than state, for
+     * the reason `SearchState.focusRequests` gives.
+     */
+    val searchFocusRequests: Flow<Unit> = _searchFocusRequests.asSharedFlow()
+
+    /** What Ctrl / Cmd + F does on the tab, see `ScreenSearches.openCurrentSearch`. */
+    fun focusSearch() {
+        _searchFocusRequests.tryEmit(Unit)
+    }
 
     val scrollPosition = ScrollPosition()
 

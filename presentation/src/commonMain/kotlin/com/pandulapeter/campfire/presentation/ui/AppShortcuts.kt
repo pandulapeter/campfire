@@ -22,7 +22,7 @@ internal enum class ShortcutKey {
 /** What an app-wide shortcut asks of the view model, see [appShortcutOf]. */
 internal sealed interface AppShortcut {
 
-    /** Ctrl / Cmd + F, see `Navigator.openCurrentSearch`. */
+    /** Ctrl / Cmd + F, see `ScreenSearches.openCurrentSearch`. */
     data object OpenSearch : AppShortcut
 
     /** Ctrl / Cmd + plus, minus or zero, see `FontScaleController.zoomSongText`; null [steps] resets. */
@@ -49,7 +49,7 @@ internal fun appShortcutOf(key: ShortcutKey, isCtrlOrMeta: Boolean, isAlt: Boole
 
 /** Carries [shortcut] out, and answers whether it did anything, which is when the shells consume the key. */
 internal fun CampfireViewModel.perform(shortcut: AppShortcut): Boolean = when (shortcut) {
-    AppShortcut.OpenSearch -> navigator.openCurrentSearch()
+    AppShortcut.OpenSearch -> navigator.searches.openCurrentSearch()
     is AppShortcut.ZoomSongText -> fontScaleController.zoomSongText(shortcut.steps)
     is AppShortcut.ToggleMetronome -> metronomeController.toggleMetronomeByKey(isSpace = shortcut.isSpace)
 }

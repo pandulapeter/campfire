@@ -19,8 +19,10 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 - One lazy grid whose first item is the instrument and the key (`ChordLibraryControls`), so they scroll away and a phone
   on its side keeps a row of diagrams above the keyboard. The search under them is a sticky item
   (`chordLibrarySearchField`): the way to every chord the key leaves out, so it stays reachable. The chords fade under
-  it, and the page's top fade gives way as it pins. It never takes focus on its own; once focused with the keyboard up
-  it is pinned once per focus.
+  it, and the page's top fade gives way as it pins. It never takes focus on its own; Ctrl / Cmd + F gives it the caret
+  with its query selected (`ChordLibraryState.focusSearch`). Once focused with the keyboard up it is pinned once per
+  focus. Escape and Back empty a filled query before leaving the tab (the screen's back handler; the desktop's window
+  handler through `ScreenSearches.closeCurrentSearch`).
 - **The instrument and tuning chips are the app-wide preference** (the one the songs' diagrams and the tuner follow),
   written at once. The key, search, last results, and scroll position are session state (`ChordLibraryState`, in the
   view model, since the tab leaves the back stack whenever another is picked).
