@@ -34,6 +34,14 @@ class SetlistItemKeyTest {
     }
 
     @Test
+    fun `a setlist whose name starts like another item's prefix keeps every item its own`() {
+        assertEquals("setlist_x.setlist.json", SetlistItemKey.setlistFileNameOf(SetlistItemKey.summary("setlist_x.setlist.json")))
+        assertEquals("summary_x.setlist.json", SetlistItemKey.setlistFileNameOf(SetlistItemKey.header("summary_x.setlist.json")))
+        assertEquals("summary_x.setlist.json", SetlistItemKey.setlistFileNameOf(SetlistItemKey.chooseSongs("summary_x.setlist.json")))
+        assertEquals("choose_songs_x.setlist.json", SetlistItemKey.setlistFileNameOf(SetlistItemKey.summary("choose_songs_x.setlist.json")))
+    }
+
+    @Test
     fun `an item of no setlist belongs to none`() {
         assertNull(SetlistItemKey.setlistFileNameOf("placeholder"))
         assertNull(SetlistItemKey.setlistFileNameOf("show_archived_setlists"))
