@@ -159,6 +159,15 @@ internal class SongbookProBackupTest {
         assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile("2.0\n{\"library\": {}}"))))
     }
 
+    @Test
+    fun `a document named in another case or starting with a blank line is still the library`() {
+        val library = ImportedFile(name = "DataFile.txt", bytes = "\n1.0\n{\"songs\": [{\"Id\": 1, \"name\": \"A\", \"content\": \"La\"}]}".encodeToByteArray())
+
+        val files = assertIs<SongbookProBackup.Result.Library>(SongbookProBackup.read(listOf(library))).files
+
+        assertEquals(listOf("A.cho"), files.map { it.name })
+    }
+
     private fun dataFile(text: String) = ImportedFile(name = SongbookProBackup.DATA_FILE_NAME, bytes = text.encodeToByteArray())
 
     private fun read(vararg songs: String, folders: String = "[]", sets: String = "[]") = assertIs<SongbookProBackup.Result.Library>(

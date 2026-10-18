@@ -73,7 +73,7 @@ internal object SongbookProBackup {
      * document with, a document that cannot be read is an ordinary file.
      */
     fun read(entries: List<ImportedFile>): Result {
-        val data = entries.singleOrNull { it.name == DATA_FILE_NAME } ?: return Result.NotABackup
+        val data = entries.singleOrNull { it.name.equals(DATA_FILE_NAME, ignoreCase = true) } ?: return Result.NotABackup
         val text = data.bytes.decodeLibraryText()
         val library = parse(text)
         val songs = library?.array("songs")
@@ -141,7 +141,8 @@ internal object SongbookProBackup {
 
     /** The document after its version line (`1.0`), or null where the text is not one. */
     private fun parse(text: String): JsonObject? {
-        val json = if (text.trimStart().startsWith("{")) text else text.substringAfter('\n', missingDelimiterValue = "")
+        val trimmed = text.trimStart()
+        val json = if (trimmed.startsWith("{")) trimmed else trimmed.substringAfter('\n', missingDelimiterValue = "")
         return parseObject(json)
     }
 

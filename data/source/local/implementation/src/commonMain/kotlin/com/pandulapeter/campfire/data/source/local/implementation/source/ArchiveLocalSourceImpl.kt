@@ -72,7 +72,7 @@ internal class ArchiveLocalSourceImpl(
             limitOf = { name ->
                 when {
                     name.isHidden -> null
-                    name.fileName == SongbookProBackup.DATA_FILE_NAME -> ImportLimits.MAX_IMPORT_SIZE
+                    name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) -> ImportLimits.MAX_IMPORT_SIZE
                     else -> ImportLimits.maxSizeOf(name.fileName).takeIf { it > 0 }
                 }
             },
@@ -89,7 +89,7 @@ internal class ArchiveLocalSourceImpl(
             SongbookProBackup.Result.Unreadable -> return listOf(
                 ImportedFile.unread(
                     name = SongbookProBackup.DATA_FILE_NAME,
-                    isTooLarge = content.unread.any { it.name.fileName == SongbookProBackup.DATA_FILE_NAME && it.reason == UnreadZipEntry.Reason.TOO_LARGE },
+                    isTooLarge = content.unread.any { it.name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) && it.reason == UnreadZipEntry.Reason.TOO_LARGE },
                 ),
             )
             SongbookProBackup.Result.NotABackup -> Unit
