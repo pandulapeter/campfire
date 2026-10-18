@@ -15,8 +15,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import org.jetbrains.compose.resources.painterResource
@@ -36,7 +36,7 @@ internal fun ExpandChevron(
 ) {
     val rotation by animateFloatAsState(if (isExpanded) 180f else 0f)
     Icon(
-        modifier = modifier.rotate(rotation),
+        modifier = modifier.graphicsLayer { rotationZ = rotation },
         painter = painterResource(Res.drawable.ic_expand),
         contentDescription = contentDescription,
         tint = tint,
