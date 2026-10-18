@@ -94,7 +94,9 @@ internal fun TunerDisplay(
     val reading = (tunerState.listening as? TunerListening.Hearing)?.reading?.takeIf { tone == null }
     val note = tone ?: reading?.note
     val isInTune = reading?.isInTune == true
-    val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface).value
+    // Kept as the state and read only by the texts, so that a frame of the color's spring recomposes them alone rather
+    // than the whole display, which already recomposes with every reading.
+    val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface)
     val exactDescription = when {
         tone != null -> stringResource(Res.string.tuner_reading_tone, spokenNoteName(tone, notation))
         reading == null -> stringResource(Res.string.tuner_play_a_note)
@@ -143,7 +145,9 @@ internal fun TunerDisplay(
             modifier = meterModifier,
             cents = reading?.cents,
             isInTune = isInTune,
-            accentColor = accent,
+            // The target rather than the animated accent, so the meter's parameters hold still through the spring; its
+            // notch eases to it on its own.
+            accentColor = LocalSecondAccentColor.current,
             height = if (isCompact) COMPACT_METER_HEIGHT else METER_HEIGHT,
         )
     }
@@ -240,7 +244,7 @@ private fun TunerNoteLabel(
     modifier: Modifier,
     note: Int?,
     notation: ChordNotation,
-    color: Color,
+    color: State<Color>,
     isCompact: Boolean,
 ) = AnimatedContent(
     modifier = modifier,
@@ -287,7 +291,7 @@ private fun TunerNoteName(
     modifier: Modifier = Modifier,
     note: Int,
     notation: ChordNotation,
-    color: Color,
+    color: State<Color>,
     isCompact: Boolean,
 ) = Row(
     modifier = modifier.fillMaxWidth(),
@@ -299,7 +303,7 @@ private fun TunerNoteName(
             text = noteName(note, notation),
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
-            color = color,
+            color = color.value,
             softWrap = false,
             maxLines = 1,
         )
@@ -312,7 +316,7 @@ private fun TunerNoteName(
             text = noteName(note, notation),
             style = MaterialTheme.typography.displayLarge,
             fontWeight = FontWeight.Bold,
-            color = color,
+            color = color.value,
             softWrap = false,
             maxLines = 1,
             autoSize = TextAutoSize.StepBased(
@@ -325,7 +329,7 @@ private fun TunerNoteName(
         modifier = Modifier.padding(start = 2.dp, bottom = if (isCompact) 8.dp else 14.dp),
         text = noteOctave(note).toString(),
         style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
-        color = color,
+        color = color.value,
         softWrap = false,
         maxLines = 1,
     )
@@ -336,7 +340,7 @@ private fun TunerNoteName(
 private fun TunerReadingLine(
     cents: Float?,
     isInTune: Boolean,
-    color: Color,
+    color: State<Color>,
 ) {
     // The crossfade is for the line changing what it says, so it is keyed by the kind of reading; the number of a reading
     // changes in place, read from here by the shown content alone. A fading-out reading keeps the last number heard once
@@ -358,7 +362,7 @@ private fun TunerReadingLine(
                 TunerReadingKind.CENTS -> pluralStringResource(Res.plurals.tuner_cents, abs(lastCents.roundToInt()), signedCents(lastCents))
             },
             style = MaterialTheme.typography.titleMedium,
-            color = if (isInTune) color else MaterialTheme.colorScheme.onSurface,
+            color = if (isInTune) color.value else MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )

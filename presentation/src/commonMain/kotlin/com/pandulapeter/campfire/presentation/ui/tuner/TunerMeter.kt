@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -77,9 +78,11 @@ internal fun TunerMeter(
     val minorTickColor = MaterialTheme.colorScheme.outlineVariant
     val majorTickColor = MaterialTheme.colorScheme.outline
     val needleColor = MaterialTheme.colorScheme.onSurface
-    val notchColor = animateColorAsState(if (isInTune) accentColor else MaterialTheme.colorScheme.onSurfaceVariant, label = "tunerNotch").value
+    val notchColor = animateColorAsState(if (isInTune) accentColor else MaterialTheme.colorScheme.onSurfaceVariant, label = "tunerNotch")
     EndLabel(text = stringResource(Res.string.tuner_flat))
-    Canvas(modifier = Modifier.weight(1f).height(height)) {
+    // A layer of its own, so that the needle's redraws on every frame of its spring re-record only the meter, not the
+    // layer that holds the large note and the reading.
+    Canvas(modifier = Modifier.weight(1f).height(height).graphicsLayer {}) {
         val needleWidth = NEEDLE_WIDTH.toPx()
         val usable = size.width - needleWidth
         fun xOf(fraction: Float) = needleWidth / 2 + usable * (fraction + 1) / 2
@@ -106,17 +109,17 @@ internal fun TunerMeter(
         val centerX = xOf(0f)
         val notchHeight = size.height * NOTCH_HEIGHT
         if (check.value < 1f) {
-            drawTick(centerX, centerY, notchHeight, NOTCH_WIDTH.toPx(), notchColor.copy(alpha = 1f - check.value))
+            drawTick(centerX, centerY, notchHeight, NOTCH_WIDTH.toPx(), notchColor.value.copy(alpha = 1f - check.value))
         }
         if (check.value > 0f) {
             val unit = notchHeight / 4
-            checkPath.reset()
+            checkPath.rewind()
             checkPath.moveTo(centerX - unit * 1.4f, centerY + unit * 0.1f)
             checkPath.lineTo(centerX - unit * 0.3f, centerY + unit * 1.2f)
             checkPath.lineTo(centerX + unit * 1.6f, centerY - unit * 1.2f)
             drawPath(
                 path = checkPath,
-                color = notchColor.copy(alpha = check.value),
+                color = notchColor.value.copy(alpha = check.value),
                 style = Stroke(width = CHECK_WIDTH.toPx(), cap = StrokeCap.Round),
             )
         }

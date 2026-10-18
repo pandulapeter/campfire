@@ -56,6 +56,9 @@ at app start (`CampfireWebApp`) and follows its change events; the desktop is al
   hears.
 - The display reads the tuner's state itself, so thirty readings a second recompose only it; screens pass the rest of
   the page only what changes with a note or a setting.
+- The in-tune color's spring is handed down as a `State`, read only by the note's and the reading's `Text`s; the meter
+  gets the target color and eases its notch in the draw phase, in a `Canvas` with a layer of its own, so a needle frame
+  re-records only the meter.
 
 ## Strings and settings
 
