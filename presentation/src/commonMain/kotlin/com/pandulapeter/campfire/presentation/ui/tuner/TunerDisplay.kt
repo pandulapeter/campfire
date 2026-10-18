@@ -214,8 +214,9 @@ private val NOTE_MIN_FONT_SIZE = 57.sp
 
 /**
  * The room above a capital that the note's line keeps for taller glyphs, at the smallest the note is drawn: Inter's ascent
- * less its cap height, a quarter of an em. Every note is a capital, so it is empty, and at the note's size it would stand
- * as a gap under the bar above twice the one the Metronome and Chords tabs leave.
+ * less its cap height, a quarter of an em. Every note starts with a capital, and what rises past one (the `l` and the `i` of
+ * Latin notation's `Sol` and `Si`) only reaches a sliver into it, so it is all but empty, and at the note's size it would
+ * stand as a gap under the bar above twice the one the Metronome and Chords tabs leave.
  */
 private val NOTE_ASCENT_TRIM = NOTE_MIN_FONT_SIZE * 0.24f
 
