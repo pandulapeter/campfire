@@ -10,8 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Make the paste from clipboard feature rock solid
-- Regenerate all screenshots and the promo videos
+- Follow documentation/issues/EXECUTION.md
 - Regenerate the Android baseline profiles
 - Update store descriptions to include the chord diagram library and other new features + new title
 
