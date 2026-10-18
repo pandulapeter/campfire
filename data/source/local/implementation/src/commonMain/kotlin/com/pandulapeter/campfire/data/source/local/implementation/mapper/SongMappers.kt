@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
-import com.pandulapeter.campfire.chordpro.model.displaySubtitle
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.normalizedTags
@@ -52,6 +51,5 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         tempo = ChordProTempo.parse(summary.metadata.tempo),
         time = summary.metadata.time?.takeIf { it.isNotBlank() },
         capo = summary.metadata.capo,
-        subtitle = summary.metadata.displaySubtitle(fallback = name.withoutExtension()),
     )
 }

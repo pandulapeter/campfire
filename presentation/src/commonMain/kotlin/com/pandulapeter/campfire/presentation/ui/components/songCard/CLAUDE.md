@@ -16,8 +16,8 @@ The song card the song lists and setlists draw (`SongListItem`).
   `bodyMedium`'s line height (its own leaves a wider gap under it than between the others) and the cover is 56dp; with
   two (under an artist header, typically) the cover is 44dp and the card lower. Both animate (`isThreeLine`).
 - A song inside a setlist prefixes its one-based place, missing files included.
-- The title is the song's own, without the `{subtitle}` every other place puts after it in parentheses
-  (`Song.titleWithoutSubtitle`): the card has the least room for it.
+- The title carries its `{subtitle}` in parentheses, as everywhere else: a song's "Live" copy by the same artist is told
+  apart by nothing else.
 - `CenteredSongCardContent` lays the body out by hand rather than as a `ListItem`, which pins a three-line item to its
   top and grows it to 88dp.
 - `DragHandle` is a plain icon, narrower than the overflow button, so the button lands exactly where it does on the

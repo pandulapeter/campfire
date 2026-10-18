@@ -81,15 +81,7 @@ data class Song(
      * knows what a reset goes back to before the song's text has been read.
      */
     val capo: Int? = null,
-    /**
-     * The `{subtitle}` part of [title], null where the title carries none, see `ChordProMetadata.displaySubtitle`. Kept
-     * apart so that the song cards, which name a song by its title alone, can leave it off ([titleWithoutSubtitle]).
-     */
-    val subtitle: String? = null,
 ) {
-
-    /** [title] without the subtitle in parentheses after it. */
-    val titleWithoutSubtitle get() = if (subtitle == null) title else title.removeSuffix(" ($subtitle)")
 
     companion object {
         /** The frets a capo can be put on, and so the only values a stored override may hold; 0 is no capo. */

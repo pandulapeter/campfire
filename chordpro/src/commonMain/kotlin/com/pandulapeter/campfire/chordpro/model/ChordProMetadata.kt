@@ -69,15 +69,6 @@ public data class ChordProMetadata(
  */
 public fun ChordProMetadata.displayTitle(fallback: String): String {
     val name = title?.takeIf { it.isNotBlank() } ?: fallback
-    val suffix = displaySubtitle(fallback) ?: return name
+    val suffix = subtitle?.takeIf { it.isNotBlank() && !it.equals(name, ignoreCase = true) } ?: return name
     return "$name ($suffix)"
-}
-
-/**
- * The `{subtitle}` that [displayTitle] puts after the title in parentheses, or null where it puts none, for the few
- * places tight enough on room to name a song by its title alone.
- */
-public fun ChordProMetadata.displaySubtitle(fallback: String): String? {
-    val name = title?.takeIf { it.isNotBlank() } ?: fallback
-    return subtitle?.takeIf { it.isNotBlank() && !it.equals(name, ignoreCase = true) }
 }

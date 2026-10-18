@@ -47,15 +47,6 @@ internal class SongMappersTest {
     }
 
     @Test
-    fun `a song keeps its title without the subtitle apart`() {
-        val song = song(fileName = "bar.cho", text = "{title: Bar (Remix)}\n{subtitle: Live}")
-
-        assertEquals("Bar (Remix) (Live)", song.title)
-        assertEquals("Bar (Remix)", song.titleWithoutSubtitle)
-        assertEquals("Bar", song(fileName = "bar.cho", text = "{title: Bar}\n{subtitle: bar}").titleWithoutSubtitle)
-    }
-
-    @Test
     fun `a blank artist leaves the name to the title alone`() {
         val song = song(fileName = "bar.cho", text = "{title: Bar}\n{artist:  }")
 
