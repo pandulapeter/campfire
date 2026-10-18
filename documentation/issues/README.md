@@ -120,18 +120,14 @@ Every plan was challenged by an agent that did not write it (section 1, step 7),
 
 **Dropped:** 12 (below).
 
-## Decisions (awaiting the user)
+## Decisions
 
-1. **Song cards no longer show a title's subtitle** (`SongListItem`: `songCardTitle(song.titleWithoutSubtitle, index)`), so
-   "Wagon Wheel" and its "Live" copy by the same artist read as two identical cards, in the Songs list and in setlists,
-   and a screen reader no longer hears the subtitle. Recommended: show the subtitle on the supporting line
-   ("Artist · Live").
-2. **Card widths**: `ListColumns.kt` now has `CARD_BASE_WIDTH = 336.dp` and `CARD_ARTIST_WIDTH = 8.dp`, while
-   `components/songCard/CLAUDE.md` and the `songGridColumnWidth` KDoc say 320dp, 40dp off by artist, and "the default
-   desktop window gets two columns", which the new numbers no longer give (an 800dp window less the rail leaves ~680–700dp,
-   under the 816dp two columns need). Recommended: say which numbers are intended; the doc and the KDoc are then corrected
-   to match, or the artist allowance restored.
-3. **The language is applied a composition late** (`ApplyLanguagePreference`'s `LaunchedEffect`), costing one extra full
+1. **Song cards no longer showed a title's subtitle**, so a song and its "Live" copy by the same artist read as two
+   identical cards. **Answered:** put it back after the title in parentheses — done in the review (`2c8c1c8`), and
+   `Song.subtitle` / `titleWithoutSubtitle` / `displaySubtitle`, which only served the short title, removed with it.
+2. **Card widths** (`CARD_BASE_WIDTH = 336.dp`, `CARD_ARTIST_WIDTH = 8.dp` against docs saying 320dp, 40dp, and two columns
+   on the default desktop window). **Answered:** the code is right — the notes and the KDoc corrected (`0e0fb0f`).
+3. **The language is applied a composition late** (awaiting the user) (`ApplyLanguagePreference`'s `LaunchedEffect`), costing one extra full
    composition at cold start for everyone whose app language is not the system's. Writing `currentLanguage` in the body
    (a forward write) would remove it, but breaks the "no side effects in the body" rule. Recommended: leave it.
 
