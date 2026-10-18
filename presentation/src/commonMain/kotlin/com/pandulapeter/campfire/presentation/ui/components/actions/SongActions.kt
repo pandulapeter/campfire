@@ -58,6 +58,7 @@ import org.jetbrains.compose.resources.painterResource
  *   of its bar's buttons the bar has no room for: the setlist assignments and the tuner.
  * @param fileEditItems Entries kept after the editor in the menu: on a song card, the metadata editors (tags and
  *   languages) and then the way into the selection mode.
+ * @param isAfterButton Whether a [SetlistAssignmentsButton] stands right before the menu, see [ActionsMenu].
  * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
  */
 @Composable
@@ -72,6 +73,7 @@ internal fun SongActions(
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
+    isAfterButton: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
     val editItems = listOf(editSongAction(actions = actions, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty()
@@ -79,6 +81,7 @@ internal fun SongActions(
         modifier = modifier,
         state = state,
         isExpandable = false,
+        isAfterButton = isAfterButton,
         menuFooter = menuFooter,
         items = leadingItems + editItems + listOfNotNull(
             // Only where it would do something: a file already named after its own metadata, or one with no title to

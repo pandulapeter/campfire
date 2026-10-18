@@ -18,6 +18,10 @@ The top app bars of the list screens.
 - Closed, it holds the actions on a tonal pill (`SearchPill`), the pinned `SectionHeader` standing where a title would.
   The pill animates between the buttons' row and the field as **lookahead rectangles of each settled state**, so each
   edge only travels one way.
+- **A press fills the button's share of the pill** (`searchPillSegment`), not Material's circle: `PillIconButton`
+  turns its own ripple off and `SearchPillPresses` draws it under the icons, closing into a circle as the search opens.
+  The pill ends 24dp past its outer icons, more than half their 36dp spacing, since against the rounded end an icon only
+  looks centered with extra room. The divider takes no room on it, and nothing on it lines up with the cards' buttons.
 - The pinned header's pill narrows to the room the buttons leave (`onReachChanged`, measured before the list via
   `ListUnderAppBar` so the first frame is right) and along `AppBarOverlap.coverage` as the search opens and closes.
 - Cards fade out under the header row and back in over 24dp (`ListTopFade.kt`): each card masks itself, since an overlay
@@ -31,9 +35,8 @@ The top app bars of the list screens.
   (`areClosedSearchActionsDetached`): the pill's end is cut by the closed actions' lookahead width and the divider's room
   widens into a gap as wide as the circle's from the edge, both on the search's spring, so the button never moves. A
   clipped shrink would slice the circle, so it fades (quickly) and scales in place while its room closes. The circle
-  ends on the cards' scroller-less keyline, as does the pill without it (`UNDETACHED_PILL_END_INSET`); with the
-  scroller, a card's menu is centered in the gap and its setlist button under the pill's last action, without it the
-  menu is centered under the circle (`listItemTrailingKeylineAdjustment`, following the scroller's column). The bar stays filled while the list has no header (placeholder, ranked
+  ends on the cards' scroller-less keyline, as does the pill without it (`UNDETACHED_PILL_END_INSET`); without the
+  scroller, a card's menu is centered under the circle (`listItemTrailingKeylineAdjustment`). The bar stays filled while the list has no header (placeholder, ranked
   results). It spans the list only, never the side panel.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
   hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is

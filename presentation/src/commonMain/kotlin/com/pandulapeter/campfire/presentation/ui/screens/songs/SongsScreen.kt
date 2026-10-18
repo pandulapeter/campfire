@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songs.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
@@ -280,7 +280,7 @@ private fun SongFiltersAction(
     modifier: Modifier = Modifier,
     isSongFilterActive: Boolean,
     onClick: () -> Unit,
-) = IconButton(
+) = PillIconButton(
     modifier = modifier,
     onClick = onClick,
 ) {

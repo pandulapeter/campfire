@@ -13,7 +13,8 @@ Overflow menus, their expansion into buttons, and the sort menus.
 
 - **An overflow menu expands into buttons wherever there is room** (`ActionsMenu`), one at a time in menu order, the
   overflow button going last. Neighboring icon buttons overlap touch targets by 12dp (`ActionOverlap.kt`'s
-  `overlappingAction`).
+  `overlappingAction`); an overflow button reaches 8dp further into the button before it, since its dots are a sliver
+  of ink (`OVERFLOW_BUTTON_EXTRA_OVERLAP`; `ActionsMenu.isAfterButton` for a button the caller stands before it).
 - **Some entries stay in the menu whatever the room** (`ActionsMenuItem.isAlwaysInMenu`): a setlist's Edit details,
   Reorder, Archive, Duplicate, Export, and Delete; a song's Update file name and Duplicate; the editor's Revert. A song
   card never expands (`isExpandable = false`).

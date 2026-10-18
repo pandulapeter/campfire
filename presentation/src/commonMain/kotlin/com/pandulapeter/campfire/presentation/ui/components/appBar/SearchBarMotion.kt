@@ -20,6 +20,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
@@ -73,6 +74,23 @@ internal class SearchPill {
 
     /** How wide the closed search's own actions and the divider before them are, which a detached button takes off [closedActions]. */
     var closedSearchActionsWidth by mutableFloatStateOf(0f)
+
+    /** Where the line between the closed search's own actions and the rest stands in the bar, null while there is none. */
+    var divider by mutableStateOf<Rect?>(null)
+
+    /** The buttons standing on the pill, whose presses it draws (see [PillIconButton]), in no particular order. */
+    val buttons = mutableStateListOf<SearchPillButton>()
+
+    /**
+     * Where the pill stands while the search is closed: [height] tall around the middle of the buttons' row, with a
+     * detached button's room cut off its end by [detachProgress], which leaves the pill ending as far past the last
+     * action as it starts before the first one.
+     */
+    fun closedBounds(height: Float, detachProgress: Float) = closedActions.copy(
+        top = closedActions.center.y - height / 2,
+        right = closedActions.right - closedSearchActionsWidth * detachProgress,
+        bottom = closedActions.center.y + height / 2,
+    )
 }
 
 /**

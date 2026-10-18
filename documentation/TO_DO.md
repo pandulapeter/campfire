@@ -11,7 +11,6 @@
 ## Short-term (in this version)
 ### Improvements
 - Review in Claude cloud + https://github.com/skydoves/compose-performance-skills
-- Songs / Setlists floating pill touch feedback should fill the pill
 - Fix golden tests
 - Metronome header too close to window top - inconsistent between navigation rail vs bottom navigation
 - Regenerate all screenshots and the promo videos

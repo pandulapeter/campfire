@@ -52,6 +52,8 @@ internal fun EditorMenu(
     onOpenChordProReference: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
+    // Save always stands before it.
+    isAfterButton = true,
     items = listOf(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_find),

@@ -25,6 +25,20 @@ import androidx.compose.ui.unit.dp
 internal val ACTION_BUTTON_OVERLAP = 12.dp
 
 /**
+ * How much further than [ACTION_BUTTON_OVERLAP] an overflow button reaches into the button before it: its three dots
+ * are a sliver of ink in the middle of their icon, so at the usual spacing they stand twice as far from their neighbor
+ * as the icons of a row stand from each other, and the two read as unrelated. Each button still keeps a strip of its
+ * own wider than an icon, and a press on the overlap goes to the overflow button, which is drawn last.
+ */
+internal val OVERFLOW_BUTTON_EXTRA_OVERLAP = 8.dp
+
+/** What an overflow button on a pill gives back of [OVERFLOW_BUTTON_EXTRA_OVERLAP], where the dots looked crowded. */
+internal val PILL_OVERFLOW_BUTTON_ROOM = 2.dp
+
+/** Material's icon button container, which its touch target is added around. */
+internal val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
+
+/**
  * Lays an action out narrower than it is by [start] and [end], drawing and taking presses past those edges, so that it
  * reaches into its neighbors by that much (see [ACTION_BUTTON_OVERLAP]). By default half the overlap on either side,
  * for a row that pads its ends by that half so its first and last buttons stay where they were.

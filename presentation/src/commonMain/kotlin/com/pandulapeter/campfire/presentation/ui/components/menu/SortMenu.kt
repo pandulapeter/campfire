@@ -14,12 +14,12 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLI
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_sort
+import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import org.jetbrains.compose.resources.painterResource
 
@@ -43,7 +43,7 @@ internal fun <T> SortMenu(
 ) = OverflowMenu(
     modifier = modifier,
     button = { open ->
-        IconButton(onClick = open, enabled = isEnabled) {
+        PillIconButton(onClick = open, enabled = isEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.ic_sort),
                 contentDescription = title,

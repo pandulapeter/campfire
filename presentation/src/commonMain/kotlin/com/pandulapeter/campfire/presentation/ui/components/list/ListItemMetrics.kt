@@ -28,10 +28,9 @@ internal const val PRESSED_HEADING_ALPHA = 0.5f
 
 /**
  * How far a card's trailing controls move toward its edge from the inset `ListItem` gives them, in a list whose fast
- * scroller takes a column [scrollerColumnWidth] wide ([FastScrollerColumn]). In the last column of cards, with the
- * scroller's column the overflow button stands in the middle of the gap between the app bar's pill and the New button,
- * and the setlist button beside it under the pill's last action; without it the cards end where the New button does,
- * and the overflow button stands under the button's center. While the column opens or closes the controls follow it.
+ * scroller takes a column [scrollerColumnWidth] wide ([FastScrollerColumn]). Without the scroller's column the cards
+ * in the last column end where the app bar's New button does, and the overflow button stands under the button's
+ * center. While the column opens or closes the controls follow it.
  */
 internal fun listItemTrailingKeylineAdjustment(scrollerColumnWidth: Dp) = lerp(
     start = SCROLLER_LESS_TRAILING_KEYLINE_ADJUSTMENT,

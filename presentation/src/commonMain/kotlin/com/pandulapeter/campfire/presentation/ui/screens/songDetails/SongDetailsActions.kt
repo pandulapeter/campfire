@@ -116,6 +116,7 @@ internal fun RowScope.SongDetailsActions(
             isDeletable = setlistFileName == null,
             isEditAndExportOnly = isReadOnly,
             setlistFileName = setlistFileName,
+            isAfterButton = showsSetlistAssignmentsInBar,
             leadingItems = listOfNotNull(
                 if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
                     null

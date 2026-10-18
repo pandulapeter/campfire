@@ -65,6 +65,8 @@ internal fun SetlistActions(
         modifier = modifier,
         buttonModifier = buttonModifier,
         contentDescription = stringResource(Res.string.setlists_actions),
+        // Only ever on a section header's pill.
+        isOnPill = true,
         isDecorative = isDecorative,
         items = listOfNotNull(
             ActionsMenuItem(

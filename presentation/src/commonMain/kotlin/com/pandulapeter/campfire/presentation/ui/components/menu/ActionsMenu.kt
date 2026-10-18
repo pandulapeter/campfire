@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,12 +25,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -44,6 +45,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.songs_actions
+import com.pandulapeter.campfire.presentation.ui.components.appBar.LocalSearchPill
+import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -75,6 +78,10 @@ import org.jetbrains.compose.resources.painterResource
  * @param isExpandable False keeps every item in the menu however much room there is, which is what a song card does:
  *   a list of cards each ending in a row of buttons is a wall of icons, so a card keeps its menu and only the button
  *   in front of it.
+ * @param isAfterButton Whether the caller stands a button right before the menu, which the overflow button then reaches
+ *   further into, as it does into the last of the menu's own buttons (see [OVERFLOW_BUTTON_EXTRA_OVERLAP]).
+ * @param isOnPill Whether the menu stands on a pill (the list screens' app bar, a setlist's section header), where the
+ *   overflow button keeps a little more room before it (see [PILL_OVERFLOW_BUTTON_ROOM]).
  * @param isDecorative Draws the icons alone, for the copy of a section header that is only ever seen being pushed away
  *   and takes no touches.
  * @param menuFooter Drawn at the end of the menu, after its entries: controls that are adjusted rather than chosen, so
@@ -89,6 +96,8 @@ internal fun ActionsMenu(
     contentDescription: String = stringResource(Res.string.songs_actions),
     items: List<ActionsMenuItem>,
     isExpandable: Boolean = true,
+    isAfterButton: Boolean = false,
+    isOnPill: Boolean = LocalSearchPill.current != null,
     isDecorative: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
@@ -150,6 +159,13 @@ private fun ActionsRow(
     }
     val menuItems = visibleItems.filterNot { it in buttonItems }
     val hasMenu = menuItems.isNotEmpty() || menuFooter != null
+    val overflowButtonExtraOverlap by animateDpAsState(
+        when {
+            !isAfterButton && buttonItems.isEmpty() -> 0.dp
+            isOnPill -> OVERFLOW_BUTTON_EXTRA_OVERLAP - PILL_OVERFLOW_BUTTON_ROOM
+            else -> OVERFLOW_BUTTON_EXTRA_OVERLAP
+        },
+    )
     // A menu the room has just emptied, or one a long press asked for with nothing left in it, would otherwise be left
     // open in its state and drop down on its own the next time the row narrows.
     LaunchedEffect(hasMenu, state.isExpanded) {
@@ -184,7 +200,7 @@ private fun ActionsRow(
             }
         }
         AnimatedVisibility(
-            modifier = Modifier.overlappingAction(),
+            modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP / 2 + overflowButtonExtraOverlap),
             visible = hasMenu,
             enter = fadeIn() + expandHorizontally(),
             exit = fadeOut() + shrinkHorizontally(),
@@ -275,7 +291,7 @@ private fun ActionButton(
         ActionIcon(icon = icon, contentDescription = null, animateIconChange = animateIconChange, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 } else {
-    IconButton(
+    PillIconButton(
         modifier = modifier,
         enabled = isEnabled,
         onClick = onClick,
@@ -300,6 +316,3 @@ private fun ActionIcon(
         Icon(painter = icon, contentDescription = contentDescription, tint = tint)
     }
 }
-
-/** Material's icon button container, which its touch target is added around. */
-private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp

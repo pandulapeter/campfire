@@ -190,6 +190,7 @@ private fun SongRowActions(
                 song = song,
                 isDeletable = true,
                 isDuplicable = true,
+                isAfterButton = areSetlistsEnabled,
                 // After the song's own metadata editors, the row's way into the
                 // mode, which starts with this song ticked.
                 fileEditItems = songLabelActions(
