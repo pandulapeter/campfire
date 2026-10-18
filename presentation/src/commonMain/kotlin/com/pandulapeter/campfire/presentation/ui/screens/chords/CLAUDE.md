@@ -25,9 +25,10 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 - Keys follow the reader's accidentals preference (`chordLibraryKeys`) and notation (a numbering by its letters). A key
   lists `CHORD_LIBRARY_QUALITIES`, omitting any the instrument has no shape for (`chordLibraryResults`,
   `ChordLibrary.kt`, tested).
-- The key is picked first and the search only narrows its chords by name, ignoring case (`sus`, `cmaj`): with C
-  picked, `Emaj7` finds nothing. Names are always the key row's, whatever case was typed. An instrument without shapes
-  shows a line pointing at the chip.
+- The key is picked first and the search narrows its chords by name, ignoring case (`sus`, `cmaj`). A search that is a
+  whole chord name in the reader's notation is that chord too, first, in any key and with any bass (`D/F#`, `Emaj7`
+  with C picked), its root read as a capital so `d/f#` is not a minor; a chord the key also lists is drawn once. Names
+  are always the key row's, whatever case was typed. An instrument without shapes shows a line pointing at the chip.
 
 ## Cells and the sheet
 

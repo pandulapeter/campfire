@@ -47,7 +47,7 @@ internal sealed interface ChordLibraryResults {
     /** The chords to draw, each with the shape the app shows it with where nothing else says how it is played. */
     data class Chords(val chords: List<SongChord>) : ChordLibraryResults
 
-    /** A search that is part of the name of none of the chords the key lists. */
+    /** A search that is no chord's name and part of the name of none of the chords the key lists. */
     data class NoChord(val query: String) : ChordLibraryResults
 }
 
@@ -90,11 +90,12 @@ internal fun initialChordLibraryShown(
 
 /**
  * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
- * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`): the key is picked
- * first and the search only narrows it, so a chord of another key is never found. Every name is the one the key row
- * writes, its root in capitals (in title case in the Latin notation), whatever case the search was typed in. A chord
- * with no shape on the instrument is left out of a key, since every cell is there to be played. A numbering names the
- * chords by their letters, as it names a chord with no song around it everywhere.
+ * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`). A search that is a
+ * whole chord name is that chord too, first, whatever key it is in and whether or not the key lists it ([searchedChord]):
+ * a song's `D/F#` or `Emaj7` is then found by typing it, since no key lists every bass a chart puts under a chord. Every
+ * name is the one the key row writes, its root in capitals (in title case in the Latin notation), whatever case the
+ * search was typed in. A chord with no shape on the instrument is left out, since every cell is there to be played. A
+ * numbering names the chords by their letters, as it names a chord with no song around it everywhere.
  *
  * This looks shapes up, and runs the search for the ones the tables lack, so it is called on the main thread only
  * without [searchesShapes], where it answers null for anything the tables cannot answer alone: what the tab opens on is
@@ -110,14 +111,22 @@ internal fun chordLibraryResults(
 ): ChordLibraryResults? {
     val typed = query.trim()
     val key = keys[keyIndex.coerceIn(keys.indices)]
-    val chords = CHORD_LIBRARY_QUALITIES.mapNotNull { quality ->
-        val name = key + quality
-        val shownName = ChordProNotation.shownName(name, notation)
-        if (!shownName.contains(typed, ignoreCase = true)) return@mapNotNull null
+    val names = listOfNotNull(searchedChord(typed, notation)) + CHORD_LIBRARY_QUALITIES.map { key + it }.filter { name ->
+        ChordProNotation.shownName(name, notation).contains(typed, ignoreCase = true)
+    }
+    val chords = names.mapNotNull { name ->
         val chord = ChordProChords.parse(name) ?: return@mapNotNull null
         if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
         val shape = ChordVoicings.default(chord, tuning) ?: return@mapNotNull null
-        SongChord(name = shownName, chord = chord, spelling = name, defaultShape = shape)
-    }
+        SongChord(name = ChordProNotation.shownName(name, notation), chord = chord, spelling = name, defaultShape = shape)
+    }.distinctBy { it.chord }
     return if (chords.isEmpty() && typed.isNotEmpty()) ChordLibraryResults.NoChord(typed) else ChordLibraryResults.Chords(chords)
 }
+
+/**
+ * The chord [typed] names in [notation], in the standard notation, or null where it names none. The root is read as a
+ * capital whatever case it was typed in, as the rest of the search ignores case: a lowercase root would otherwise be read
+ * as a minor (`d/f#` as `Dm/F#`), which a chart writes but nobody searching for `D/F#` means.
+ */
+private fun searchedChord(typed: String, notation: ChordNotation) = typed.takeIf { it.isNotEmpty() }
+    ?.let { ChordProNotation.standardName(it.replaceFirstChar(Char::uppercaseChar), notation) }

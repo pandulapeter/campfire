@@ -71,13 +71,35 @@ internal class ChordLibraryTest {
 
     @Test
     fun `a found chord keeps the name the key row gives it, whatever case was typed`() {
-        assertEquals("Lam7", assertIs<ChordLibraryResults.Chords>(results(query = "LAM7", keyIndex = 9, notation = ChordNotation.LATIN)).chords.first().name)
+        assertTrue("Lam7" in assertIs<ChordLibraryResults.Chords>(results(query = "LAM7", keyIndex = 9, notation = ChordNotation.LATIN)).chords.map { it.name })
         assertEquals("F#m7b5", assertIs<ChordLibraryResults.Chords>(results(query = "f#m7b5", keyIndex = 6)).chords.single().name)
     }
 
     @Test
-    fun `a search never finds a chord of another key`() {
-        assertEquals(ChordLibraryResults.NoChord("Emaj7"), results(query = "Emaj7"))
+    fun `a search that names a chord finds it first, whatever key is picked`() {
+        val chords = assertIs<ChordLibraryResults.Chords>(results(query = "d/f#")).chords
+        assertEquals(listOf("D/F#"), chords.map { it.name })
+        assertEquals("2 x 0 2 3 2", chords.single().defaultShape?.let(ChordVoicings::write))
+        assertEquals(listOf("Emaj7"), assertIs<ChordLibraryResults.Chords>(results(query = "Emaj7")).chords.map { it.name })
+        assertEquals(listOf("D", "Cadd9", "Cmadd9"), assertIs<ChordLibraryResults.Chords>(results(query = "d")).chords.take(3).map { it.name })
+    }
+
+    @Test
+    fun `a searched chord is read and named in the reader's notation`() {
+        val chord = assertIs<ChordLibraryResults.Chords>(results(query = "B/D", notation = ChordNotation.GERMAN)).chords.first()
+        assertEquals("B/D", chord.name)
+        assertEquals("Bb/D", chord.spelling)
+    }
+
+    @Test
+    fun `a searched chord the key lists is drawn once`() {
+        val chords = assertIs<ChordLibraryResults.Chords>(results(query = "Cm7")).chords
+        assertEquals(chords.map { it.chord }.distinct(), chords.map { it.chord })
+        assertEquals("Cm7", chords.first().name)
+    }
+
+    @Test
+    fun `a search that names no chord and is in no listed name finds nothing`() {
         assertEquals(ChordLibraryResults.NoChord("xyz"), results(query = "xyz"))
     }
 

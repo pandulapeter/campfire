@@ -361,6 +361,15 @@ class ChordProNotationTest {
         assertEquals("G", ChordProNotation.canonicalName("G", ChordNotation.NASHVILLE))
     }
 
+    @Test
+    fun `a typed chord's standard name is the one a file stores, whatever notation it was typed in`() {
+        assertEquals("Bb/D", ChordProNotation.standardName("B/D", ChordNotation.GERMAN))
+        assertEquals("B7/F#", ChordProNotation.standardName("H7/F#", ChordNotation.GERMAN))
+        assertEquals("D/F#", ChordProNotation.standardName("Re/Fa#", ChordNotation.LATIN))
+        assertEquals("Am", ChordProNotation.standardName("a", ChordNotation.STANDARD))
+        assertNull(ChordProNotation.standardName("xyz", ChordNotation.STANDARD))
+    }
+
     private fun ChordProSong.lines() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
 
     private fun ChordProSong.chordNames() = lines().flatMap { line ->

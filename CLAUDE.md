@@ -213,7 +213,7 @@ compiles every platform (iOS on macOS) on every PR, on every push to `master` th
 
 - **A shipped dependency is credited in the same change**, transitive ones included: an entry in
   `ui/dialogs/about/OpenSourceComponents.kt`, its license and NOTICE under `composeResources/files/licenses` of the source
-  sets that ship it, and a row in the README's Third-party software table.
+  sets that ship it, and a row in the table in `documentation/THIRD_PARTY_SOFTWARE.md`.
 - Versions in `gradle/libs.versions.toml`. `campfire.versionName` / `campfire.buildNumber` serve every platform (the
   Xcode build phase writes them into `Info.plist`).
 - **Everything configurable is a `campfire.*` property** with a default in `gradle.properties`, read with

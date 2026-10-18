@@ -80,12 +80,18 @@ public object ChordProNotation {
      * the case of a quality is part of what it says (`CM7` is not `Cm7`). In a numbering it is read and named in letters,
      * as [ChordProChords.parse] reads it. Null where [name] is no chord.
      */
-    public fun canonicalName(name: String, notation: ChordNotation): String? {
+    public fun canonicalName(name: String, notation: ChordNotation): String? = standardName(name, notation)?.let { shownName(it, notation) }
+
+    /**
+     * The chord [name] stands for, typed in [notation], named as [canonicalName] names it but in the standard notation,
+     * which is what a file stores and what the chord's notes are spelled from. Null where [name] is no chord.
+     */
+    public fun standardName(name: String, notation: ChordNotation): String? {
         val standard = read(name.trim(), isGerman = notation == ChordNotation.GERMAN)
         if (!ChordProChordNames.isChordName(standard)) return null
         val notes = ChordProChordNames.notes(standard)
         val bass = notes.getOrNull(1)?.let { it.first().uppercaseChar() + it.substring(1) }
-        return shownName(listOfNotNull(notes.first(), bass).joinToString("/"), notation)
+        return listOfNotNull(notes.first(), bass).joinToString("/")
     }
 
     /**
