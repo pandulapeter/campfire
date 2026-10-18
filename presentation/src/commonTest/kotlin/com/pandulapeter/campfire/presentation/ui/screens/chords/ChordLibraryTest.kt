@@ -76,26 +76,29 @@ internal class ChordLibraryTest {
     }
 
     @Test
-    fun `a search that names a chord finds it first, whatever key is picked`() {
-        val chords = assertIs<ChordLibraryResults.Chords>(results(query = "d/f#")).chords
-        assertEquals(listOf("D/F#"), chords.map { it.name })
-        assertEquals("2 x 0 2 3 2", chords.single().defaultShape?.let(ChordVoicings::write))
-        assertEquals(listOf("Emaj7"), assertIs<ChordLibraryResults.Chords>(results(query = "Emaj7")).chords.map { it.name })
-        assertEquals(listOf("D", "Cadd9", "Cmadd9"), assertIs<ChordLibraryResults.Chords>(results(query = "d")).chords.take(3).map { it.name })
+    fun `a search that names a chord the key does not list finds it apart from the key's, whatever key is picked`() {
+        val slash = assertIs<ChordLibraryResults.Chords>(results(query = "d/f#"))
+        assertEquals("D/F#", slash.searched?.name)
+        assertEquals("2 x 0 2 3 2", slash.searched?.defaultShape?.let(ChordVoicings::write))
+        assertEquals(emptyList(), slash.chords)
+        assertEquals("Emaj7", assertIs<ChordLibraryResults.Chords>(results(query = "Emaj7")).searched?.name)
+        val d = assertIs<ChordLibraryResults.Chords>(results(query = "d"))
+        assertEquals("D", d.searched?.name)
+        assertEquals(listOf("Cadd9", "Cmadd9"), d.chords.take(2).map { it.name })
     }
 
     @Test
     fun `a searched chord is read and named in the reader's notation`() {
-        val chord = assertIs<ChordLibraryResults.Chords>(results(query = "B/D", notation = ChordNotation.GERMAN)).chords.first()
+        val chord = assertNotNull(assertIs<ChordLibraryResults.Chords>(results(query = "B/D", notation = ChordNotation.GERMAN)).searched)
         assertEquals("B/D", chord.name)
         assertEquals("Bb/D", chord.spelling)
     }
 
     @Test
-    fun `a searched chord the key lists is drawn once`() {
-        val chords = assertIs<ChordLibraryResults.Chords>(results(query = "Cm7")).chords
-        assertEquals(chords.map { it.chord }.distinct(), chords.map { it.chord })
-        assertEquals("Cm7", chords.first().name)
+    fun `a searched chord the key lists is drawn once, among the key's`() {
+        val results = assertIs<ChordLibraryResults.Chords>(results(query = "Cm7"))
+        assertNull(results.searched)
+        assertEquals(1, results.chords.count { it.name == "Cm7" })
     }
 
     @Test

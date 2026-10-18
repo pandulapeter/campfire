@@ -44,10 +44,17 @@ internal val CHORD_LIBRARY_QUALITIES = listOf(
 @Immutable
 internal sealed interface ChordLibraryResults {
 
-    /** The chords to draw, each with the shape the app shows it with where nothing else says how it is played. */
-    data class Chords(val chords: List<SongChord>) : ChordLibraryResults
+    /**
+     * The chords to draw, each with the shape the app shows it with where nothing else says how it is played: [searched],
+     * the chord the search names where the key does not list it, and the key's own [chords], under a heading that says
+     * they are its common ones rather than all there are.
+     */
+    data class Chords(
+        val searched: SongChord?,
+        val chords: List<SongChord>,
+    ) : ChordLibraryResults
 
-    /** A search that is no chord's name and part of the name of none of the chords the key lists. */
+    /** A search that names no chord and is part of the name of none of the chords the key lists. */
     data class NoChord(val query: String) : ChordLibraryResults
 }
 
@@ -59,7 +66,10 @@ internal data class ChordLibraryInputs(
     val query: String,
     val notation: ChordNotation,
     val tuning: ChordTuning,
-)
+) {
+    /** The key the results are the chords of, in the standard notation. */
+    val key get() = keys[keyIndex.coerceIn(keys.indices)]
+}
 
 /**
  * The results the Chords tab draws, with the [inputs] they were found for: results held on screen while the next ones are
@@ -91,7 +101,7 @@ internal fun initialChordLibraryShown(
 /**
  * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
  * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`). A search that is a
- * whole chord name is that chord too, first, whatever key it is in and whether or not the key lists it ([searchedChord]):
+ * whole chord name the key does not list is that chord too, apart from the key's, whatever key it is in ([searchedChord]):
  * a song's `D/F#` or `Emaj7` is then found by typing it, since no key lists every bass a chart puts under a chord. Every
  * name is the one the key row writes, its root in capitals (in title case in the Latin notation), whatever case the
  * search was typed in. A chord with no shape on the instrument is left out, since every cell is there to be played. A
@@ -111,16 +121,24 @@ internal fun chordLibraryResults(
 ): ChordLibraryResults? {
     val typed = query.trim()
     val key = keys[keyIndex.coerceIn(keys.indices)]
-    val names = listOfNotNull(searchedChord(typed, notation)) + CHORD_LIBRARY_QUALITIES.map { key + it }.filter { name ->
+    val searchedName = searchedChord(typed, notation)
+    val names = listOfNotNull(searchedName) + CHORD_LIBRARY_QUALITIES.map { key + it }.filter { name ->
         ChordProNotation.shownName(name, notation).contains(typed, ignoreCase = true)
     }
-    val chords = names.mapNotNull { name ->
+    val found = names.mapNotNull { name ->
         val chord = ChordProChords.parse(name) ?: return@mapNotNull null
         if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
         val shape = ChordVoicings.default(chord, tuning) ?: return@mapNotNull null
         SongChord(name = ChordProNotation.shownName(name, notation), chord = chord, spelling = name, defaultShape = shape)
-    }.distinctBy { it.chord }
-    return if (chords.isEmpty() && typed.isNotEmpty()) ChordLibraryResults.NoChord(typed) else ChordLibraryResults.Chords(chords)
+    }
+    val searched = found.firstOrNull()?.takeIf { searchedName != null && it.spelling == searchedName }
+    val chords = if (searched == null) found else found.drop(1)
+    val separate = searched?.takeIf { chords.none { listed -> listed.chord == it.chord } }
+    return if (separate == null && chords.isEmpty() && typed.isNotEmpty()) {
+        ChordLibraryResults.NoChord(typed)
+    } else {
+        ChordLibraryResults.Chords(searched = separate, chords = chords)
+    }
 }
 
 /**

@@ -149,7 +149,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - One instrument preference, picked with its tuning from song details, Tuner, Chords, Settings, and onboarding: `ui`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:
   `ui/chords`.
-- The Chords tab browses every drawable chord; a shape picked there applies everywhere: `ui/screens/chords`.
+- The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
+  shape picked there applies everywhere: `ui/screens/chords`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
 - Under three songs, the songs list ends in a hint on pasting from a website and importing another app's songs:

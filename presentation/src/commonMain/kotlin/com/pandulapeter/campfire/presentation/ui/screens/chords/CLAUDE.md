@@ -16,19 +16,23 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 
 ## What it shows
 
-- One lazy grid whose first item is the controls (`ChordLibraryControls`), so they scroll away and a phone on its side
-  keeps a row of diagrams above the keyboard. The search field never takes focus on its own; once focused with the
-  keyboard up it is scrolled to the top once per focus.
+- One lazy grid whose first item is the instrument and the key (`ChordLibraryControls`), so they scroll away and a phone
+  on its side keeps a row of diagrams above the keyboard. The search under them is a sticky item
+  (`chordLibrarySearchField`): the way to every chord the key leaves out, so it stays reachable. The chords fade under
+  it, and the page's top fade gives way as it pins. It never takes focus on its own; once focused with the keyboard up
+  it is pinned once per focus.
 - **The instrument and tuning chips are the app-wide preference** (the one the songs' diagrams and the tuner follow),
   written at once. The key, search, last results, and scroll position are session state (`ChordLibraryState`, in the
   view model, since the tab leaves the back stack whenever another is picked).
 - Keys follow the reader's accidentals preference (`chordLibraryKeys`) and notation (a numbering by its letters). A key
   lists `CHORD_LIBRARY_QUALITIES`, omitting any the instrument has no shape for (`chordLibraryResults`,
   `ChordLibrary.kt`, tested).
-- The key is picked first and the search narrows its chords by name, ignoring case (`sus`, `cmaj`). A search that is a
-  whole chord name in the reader's notation is that chord too, first, in any key and with any bass (`D/F#`, `Emaj7`
-  with C picked), its root read as a capital so `d/f#` is not a minor; a chord the key also lists is drawn once. Names
-  are always the key row's, whatever case was typed. An instrument without shapes shows a line pointing at the chip.
+- The key's chords stand under a "Common C chords" heading, so nobody takes them for all there are; the placeholder
+  names a slash chord as an example of what the search finds. The search narrows them by name, ignoring case (`sus`,
+  `cmaj`). A search that is a whole chord name the key does not list, in the reader's notation, is that chord too,
+  above the heading, in any key and with any bass (`D/F#`, `Emaj7` with C picked), its root read as a capital so
+  `d/f#` is not a minor. Names are always the key row's, whatever case was typed. An instrument without shapes shows a
+  line pointing at the chip.
 
 ## Cells and the sheet
 

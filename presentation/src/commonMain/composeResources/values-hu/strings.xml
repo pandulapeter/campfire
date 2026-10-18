@@ -595,7 +595,9 @@
     <string name="tools">Eszközök</string>
     <!-- The row of chips picking the note the chords listed are built on. -->
     <string name="chords_key">Alaphang</string>
-    <string name="chords_search">Akkord keresése</string>
+    <string name="chords_search">Bármely akkord keresése, pl. D/F#</string>
+    <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
+    <string name="chords_common">Gyakori %1$s akkordok</string>
     <string name="chords_instrument_other">Válassz hangszert, hogy lásd, hogyan kell lefogni az akkordjait.</string>
     <string name="chords_instrument_without_diagrams">%1$s: nincsenek akkordábrák. Válassz másik hangszert, hogy lásd, hogyan kell lefogni az akkordjait.</string>
     <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->

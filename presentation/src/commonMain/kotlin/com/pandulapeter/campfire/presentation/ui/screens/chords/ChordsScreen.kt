@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -38,22 +38,23 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.chords_common
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_other
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_without_diagrams
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
@@ -71,7 +72,6 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
@@ -79,12 +79,14 @@ import kotlinx.coroutines.withContext
 /**
  * The Chords tab: every chord the app can draw, for the instrument in the player's hands and its tuning, which the chip
  * at the top of the page changes for the songs and the tuner too, since a player browsing ukulele chords has a ukulele in
- * hand. An instrument without shapes gets a line naming it instead, which points at the chip. Under them the chords of one key, in the order of [CHORD_LIBRARY_QUALITIES], each a cell with the shape the
- * songs draw it with, or a search for one chord by name ([chordLibraryResults]). A tap on a cell opens every shape of
- * that chord ([DialogType.ChordReference]), the one settled on becoming the player's for that chord in every song.
+ * hand. An instrument without shapes gets a line naming it instead, which points at the chip. Under them the search,
+ * and the common chords of one key under a heading that calls them that, in the order of [CHORD_LIBRARY_QUALITIES], each
+ * a cell with the shape the songs draw it with; a search that names a chord the key does not list finds it above them
+ * ([chordLibraryResults]). A tap on a cell opens every shape of that chord ([DialogType.ChordReference]), the one
+ * settled on becoming the player's for that chord in every song.
  *
- * The controls scroll with the chords rather than staying pinned, so that a phone on its side still has room for a row
- * of diagrams under the keyboard.
+ * The instrument and the key scroll with the chords rather than staying pinned, so that a phone on its side still has
+ * room for a row of diagrams under the keyboard; only the search stays, which is the way to any chord the key leaves out.
  */
 @Composable
 internal fun ChordsScreen(
@@ -134,7 +136,6 @@ internal fun ChordsScreen(
         onSelectDestination = viewModel::selectTopLevelDestination,
     )
     var isSearchFocused by remember { mutableStateOf(false) }
-    var searchFieldTop by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val ime = WindowInsets.ime
     // Derived, so that the page recomposes as the keyboard comes and goes rather than on every frame it slides.
@@ -147,16 +148,16 @@ internal fun ChordsScreen(
     LaunchedEffect(isTypingSearch) {
         if (isTypingSearch) {
             // The page is laid out under the keyboard, which only pads the grid, so the field's bring-into-view counts what
-            // the keyboard covers as shown: the field is scrolled to the top instead, once per focus, so that what it finds
+            // the keyboard covers as shown: the field is pinned at the top instead, once per focus, so that what it finds
             // is above the keyboard. It follows the keyboard as it rises, since the grid can only scroll as far as the
-            // padding added so far allows, and stops just under the top fade, which would paint over the field's edge.
-            val margin = with(density) { (EDGE_FADE_SIZE - SEARCH_FIELD_OWN_TOP_PADDING).roundToPx() }
+            // padding added so far allows.
             snapshotFlow { imeState.value.getBottom(density) }.collectLatest {
-                gridState.animateScrollToItem(0, (searchFieldTop - margin).coerceAtLeast(0))
+                gridState.animateScrollToItem(SEARCH_FIELD_INDEX)
             }
         }
     }
     val backgroundColor = MaterialTheme.colorScheme.background
+    val fadeHeight = with(density) { EDGE_FADE_SIZE.roundToPx() }
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -166,7 +167,7 @@ internal fun ChordsScreen(
                 .widthIn(max = layout.pageMaxWidth(sections = 2))
                 .fillMaxSize()
                 .fadingTopEdge(
-                    scrolled = { if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset },
+                    scrolled = { chordLibraryTopFade(gridState, fadeHeight) },
                     backgroundColor = backgroundColor,
                 )
                 .bounceScrollableContent(gridState),
@@ -192,16 +193,17 @@ internal fun ChordsScreen(
                     notation = notation,
                     keys = keys,
                     selectedKeyIndex = keyIndex,
-                    query = query,
-                    searchFieldModifier = Modifier
-                        .onFocusChanged { isSearchFocused = it.hasFocus }
-                        .onPlaced { searchFieldTop = it.positionInParent().y.roundToInt() },
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                     onKeySelected = { state.keyIndex = it },
-                    onQueryChanged = { state.query = it },
                 )
             }
+            chordLibrarySearchField(
+                modifier = Modifier.onFocusChanged { isSearchFocused = it.hasFocus },
+                gridState = gridState,
+                query = query,
+                onQueryChanged = { state.query = it },
+            )
             val held = shown
             // An instrument without shapes says so at once, whatever the last tuning's results still hold.
             if (tuning == null) {
@@ -231,7 +233,7 @@ internal fun ChordsScreen(
                         val storedShapes = userPreferences?.storedChordShapes(heldTuning).orEmpty()
                         // Cells held from another tuning are on their way out: their chords name that tuning's shapes.
                         val isCurrent = heldTuning == tuning
-                        items(items = results.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { chord ->
+                        val cell: @Composable LazyGridItemScope.(SongChord) -> Unit = { chord ->
                             // The item is composed again as every scroll starts and ends (listItemAnimation), so the shape is
                             // remembered and the placement animation goes on a box of its own: on the cell, it would be a new
                             // modifier each time, and every visible diagram would be composed again with it.
@@ -245,12 +247,41 @@ internal fun ChordsScreen(
                                 )
                             }
                         }
+                        results.searched?.let { chord ->
+                            item(key = chord.name to chord.chord.id, contentType = CELL_CONTENT_TYPE) { cell(chord) }
+                        }
+                        if (results.chords.isNotEmpty()) {
+                            item(key = HEADING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = HEADING_KEY) {
+                                ChordLibraryHeading(
+                                    modifier = listItemAnimation(gridState),
+                                    text = stringResource(Res.string.chords_common, ChordProNotation.shownName(held.inputs.key, held.inputs.notation)),
+                                )
+                            }
+                        }
+                        items(items = results.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { cell(it) }
                     }
                 }
             }
         }
     }
 }
+
+/**
+ * What stands over the key's chords: that they are its common ones, so that nobody takes them for every chord there is,
+ * set the way the controls' titles are.
+ */
+@Composable
+private fun ChordLibraryHeading(
+    modifier: Modifier = Modifier,
+    text: String,
+) = Text(
+    modifier = modifier
+        .fillMaxWidth()
+        .padding(top = 8.dp),
+    text = text,
+    style = MaterialTheme.typography.bodyLarge,
+    color = MaterialTheme.colorScheme.onSurface,
+)
 
 /** What stands in place of the chords: why there are none to show. */
 @Composable
@@ -269,8 +300,6 @@ private fun ChordLibraryMessage(
 
 private const val CELL_CONTENT_TYPE = "chord"
 private const val CONTROLS_KEY = "controls"
+private const val HEADING_KEY = "heading"
 private const val MESSAGE_KEY = "message"
 private val CELL_GAP = 8.dp
-
-/** The room `SearchField` leaves above its pill, inside the modifier it is handed. */
-private val SEARCH_FIELD_OWN_TOP_PADDING = 8.dp
