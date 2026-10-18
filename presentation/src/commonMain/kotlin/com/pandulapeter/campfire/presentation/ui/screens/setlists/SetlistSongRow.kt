@@ -184,11 +184,8 @@ internal fun LazyGridItemScope.SetlistSongRow(
             ),
         ) { isBeingDragged -> rowContent(this, isBeingDragged, Modifier) }
     } else {
-        // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on the card, it
-        // would be a new modifier each time, and every visible card would be composed again with it.
-        Box(modifier = listItemAnimation(listState = listState, isEnabled = hasLoadedLibrary)) {
-            rowContent(null, false, Modifier)
-        }
+        // On a box of its own, since the animation changes as a scroll starts and ends and would compose the card again.
+        Box(modifier = listItemAnimation(listState = listState, isEnabled = hasLoadedLibrary)) { rowContent(null, false, Modifier) }
     }
 }
 
