@@ -63,7 +63,9 @@ the option). The setlist date uses the date picker's formatter in the app's lang
 ### Renderer
 
 `PrintRenderer` draws the preview and the file and measures for the layout, with the same fonts: the file is the
-preview at 216 dpi. Export reuses one bitmap, read back in bands, checking cancellation between them.
+preview at 216 dpi. Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts
+are cached by page (`PrintPageCache`, the 8 pages drawn last, matched by identity), never by text: a frame's pages
+always fit, while a frame drawing more texts than a per-text bound misses every one of them.
 `selectableText` takes each cluster's rectangle from the same `TextLayoutResult` (surrogate pairs and combining marks
 kept). Diagrams use the screen's `drawChordDiagram` in black (root mid gray), thinnest line one page pixel
 (`minimumStroke`).

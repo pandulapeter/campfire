@@ -44,8 +44,8 @@ internal class PrintRenderer(
     private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
     private val textFontFamily: FontFamily = FontFamily.Default,
 ) {
-    /** The laid out texts the preview draws, bounded, since a page is drawn again on every frame of a zoom or a fade. */
-    private val cache = mutableMapOf<Pair<String, PrintStyle>, TextLayoutResult>()
+    /** The laid out texts of the pages drawn last, one for each of a page's [PrintPage.texts]. */
+    private val layouts = PrintPageCache { page -> page.texts.map { text(it.text, it.style) } }
 
     private fun PrintStyle.toTextStyle() = TextStyle(
         color = Color(gray, gray, gray),
@@ -56,30 +56,19 @@ internal class PrintRenderer(
         fontFeatureSettings = "liga=0",
     )
 
-    private fun text(value: String, style: PrintStyle): TextLayoutResult {
-        if (cache.size >= 512) cache.clear()
-        return cache.getOrPut(value to style) {
-            measurer.measure(
-                text = value,
-                style = style.toTextStyle(),
-                softWrap = false,
-                density = Density(1f, 1f),
-                layoutDirection = LayoutDirection.Ltr,
-            )
-        }
-    }
-
-    /**
-     * The width of [value] in PDF points, which the layout measures by. Not cached: the wrapping measures many
-     * intermediate substrings, and keeping all of them alive for the life of a large setlist would cost more than it saves.
-     */
-    fun width(value: String, style: PrintStyle): Float = measurer.measure(
+    private fun text(value: String, style: PrintStyle) = measurer.measure(
         text = value,
         style = style.toTextStyle(),
         softWrap = false,
         density = Density(1f, 1f),
         layoutDirection = LayoutDirection.Ltr,
-    ).size.width.toFloat()
+    )
+
+    /**
+     * The width of [value] in PDF points, which the layout measures by. Not cached: the wrapping measures many
+     * intermediate substrings, and keeping all of them alive for the life of a large setlist would cost more than it saves.
+     */
+    fun width(value: String, style: PrintStyle): Float = text(value, style).size.width.toFloat()
 
     /** Draws [page] on white, [scale] being the size of a PDF point in the pixels of [scope]. */
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
@@ -92,7 +81,7 @@ internal class PrintRenderer(
                     size = Size(rule.width, rule.height),
                 )
             }
-            page.texts.forEach { item -> drawText(text(item.text, item.style), topLeft = Offset(item.x, item.y)) }
+            page.texts.zip(layouts.of(page)) { item, layout -> drawText(layout, topLeft = Offset(item.x, item.y)) }
             page.diagrams.forEach { diagram ->
                 translate(diagram.x, diagram.y) {
                     drawChordDiagram(
@@ -115,9 +104,11 @@ internal class PrintRenderer(
     /** The same shaping as drawText, including fallback glyphs, surrogate pairs and combining characters. */
     internal suspend fun selectableText(page: PrintPage): List<PrintPdfText> = buildList {
         var characters = 0
+        // The page was just drawn, so its layouts are the ones drawn.
+        val pageLayouts = layouts.of(page)
         for ((run, item) in page.texts.withIndex()) {
             if (!item.isSelectable) continue
-            val layout = text(item.text, item.style)
+            val layout = pageLayouts[run]
             var offset = 0
             while (offset < item.text.length) {
                 if (++characters % 256 == 0) yield()
