@@ -166,8 +166,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
-- Imports are reviewed before writing; existing files are skipped, collisions numbered or replaced after confirmation:
-  `domain/implementation`.
+- Imports are reviewed before writing (a lone song file opened, shared, or dropped only when its name is taken);
+  existing files are skipped, collisions numbered or replaced after confirmation: `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
   included, with placeholders for a missing title and artist; nothing is written before Save, which needs a title; never
   a link followed: `presentation`.

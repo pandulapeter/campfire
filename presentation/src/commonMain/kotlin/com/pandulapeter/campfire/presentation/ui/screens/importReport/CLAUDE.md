@@ -17,8 +17,8 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 
 - The view model puts it on the back stack only once no dialog is up, no editor with unsaved text is on the stack, and
   the onboarding is not (`ImportReportState.show`); reading runs meanwhile.
-- Not reviewed: the demo library (`shouldReview = false`) and a single song file the system handed over, which is
-  written and opened directly. Each shows the screen only for a taken name, as a one-row review. A song picked from
+- Not reviewed: the demo library (`shouldReview = false`) and a single song file opened with, shared to, or dropped on
+  the app, which is written and opened directly. Each shows the screen only for a taken name, as a one-row review. A song picked from
   the app's own Import files *is* reviewed.
 
 ## Stages
