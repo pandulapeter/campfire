@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.random.Random
@@ -53,7 +54,8 @@ internal fun OnboardingCelebration(
         currentOnFinished()
     }
     Canvas(
-        modifier = modifier.fillMaxSize(),
+        // A layer of its own, so that each frame records the embers alone rather than the screens drawn beside them.
+        modifier = modifier.fillMaxSize().graphicsLayer {},
     ) {
         embers.forEach { ember ->
             val frame = ember.frameAt(progress.value) ?: return@forEach
