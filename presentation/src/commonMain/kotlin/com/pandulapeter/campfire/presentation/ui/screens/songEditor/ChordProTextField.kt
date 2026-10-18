@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,6 +74,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  *
  * @param fieldModifier Applied innermost, right over the field's own focus target: the sideways scrolling container
  * around it is a focus group, so a focus callback or requester outside it would see that group rather than the field.
+ * @param text The text of [textFieldState] as one string, the editor's copy of it, which the highlighting reads rather
+ *   than copying the text again.
  * @param scrollState How far the field is scrolled down, hoisted so that it survives the pane being composed again.
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  * @param searchHighlights The matches of the editor's search while its sheet is open, drawn behind the text; the current
@@ -86,6 +89,7 @@ internal fun ChordProTextField(
     modifier: Modifier = Modifier,
     fieldModifier: Modifier = Modifier,
     textFieldState: TextFieldState,
+    text: State<String>,
     isCompactTyping: Boolean,
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
@@ -95,7 +99,7 @@ internal fun ChordProTextField(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val secondAccentColor = LocalSecondAccentColor.current
-    val tokenCache = remember { ChordProTokenCache() }
+    val tokenCache = remember(text) { ChordProTokenCache(editorText = text::value) }
     val outputTransformation = remember(colorScheme, secondAccentColor, tokenCache, searchHighlights) {
         ChordProOutputTransformation.of(
             tokenCache = tokenCache,

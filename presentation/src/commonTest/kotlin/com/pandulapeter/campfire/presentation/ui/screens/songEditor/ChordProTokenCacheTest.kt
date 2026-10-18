@@ -19,7 +19,8 @@ class ChordProTokenCacheTest {
 
     @Test
     fun `unchanged content does not copy or retokenize`() {
-        val cache = ChordProTokenCache()
+        // The editor's string lags behind here, so every change is copied by the cache itself.
+        val cache = ChordProTokenCache(editorText = { "" })
         val song = "{title: Verse}\n[C]Sing [G]along"
         val first = ObservedText(song)
         val initialTokens = cache.tokensOf(first)
@@ -40,6 +41,24 @@ class ChordProTokenCacheTest {
         assertNotSame(shiftedTokens, extendedTokens)
         assertEquals(1, editAtEnd.toStringCalls)
         assertEquals(ChordProHighlighter.tokenize(editAtEnd.content), extendedTokens)
+    }
+
+    @Test
+    fun `the string the editor keeps is taken where it holds the text shown`() {
+        var editorText = "{title: Verse}\n[C]Sing [G]along"
+        val cache = ChordProTokenCache(editorText = { editorText })
+        val first = ObservedText(editorText)
+        assertEquals(ChordProHighlighter.tokenize(first.content), cache.tokensOf(first))
+        assertEquals(0, first.toStringCalls)
+
+        editorText = "{title: Verse}\n[C]Sing [Am]along"
+        val edited = ObservedText(editorText)
+        assertEquals(ChordProHighlighter.tokenize(edited.content), cache.tokensOf(edited))
+        assertEquals(0, edited.toStringCalls)
+
+        val ahead = ObservedText("$editorText\n[F]More")
+        assertEquals(ChordProHighlighter.tokenize(ahead.content), cache.tokensOf(ahead))
+        assertEquals(1, ahead.toStringCalls)
     }
 
     private class ObservedText(val content: String) : CharSequence {

@@ -47,9 +47,16 @@ internal object ChordProLineScanner {
     fun scan(text: String) = scan(ChordProLines.splitLines(text))
 
     /** Every line of [lines], read lazily, so a caller that stops early does not match the rest. */
-    fun scan(lines: List<String>): Sequence<ScannedLine> = sequence {
-        var environment: String? = null
-        lines.forEachIndexed { index, raw ->
+    fun scan(lines: List<String>): Sequence<ScannedLine> = scan(lines, fromIndex = 0, openEnvironment = null)
+
+    /**
+     * The lines of [lines] from [fromIndex] on, the walk resumed with [openEnvironment] open before that line: the
+     * [ScannedLine.environmentAfter] of the line above it, which is what an incremental reader kept from its last walk.
+     */
+    fun scan(lines: List<String>, fromIndex: Int, openEnvironment: String?): Sequence<ScannedLine> = sequence {
+        var environment = openEnvironment
+        for (index in fromIndex until lines.size) {
+            val raw = lines[index]
             val trimmed = raw.trim()
             val isDelegated = environment in ChordProEnvironments.delegateEnvironments
             val isSourceComment = !isDelegated && trimmed.startsWith(SOURCE_COMMENT)

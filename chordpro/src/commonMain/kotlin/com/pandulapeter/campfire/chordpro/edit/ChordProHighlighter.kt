@@ -82,58 +82,165 @@ public object ChordProHighlighter {
         val end: Int,
     )
 
-    public fun tokenize(text: String): List<Token> {
-        val tokens = mutableListOf<Token>()
-        // The kinds a line has said something for, and whether the header has a key line, which the parser takes the
-        // song's key from even where it is empty.
-        val saidOnce = mutableSetOf<String>()
-        var hasHeaderKey = false
+    public fun tokenize(text: String): List<Token> = highlight(text).tokens
+
+    /**
+     * The tokens of [text] with what [highlight] needs to read the next version of it, re-reading only the lines an
+     * edit changed: [previous] is the highlighting of the version before, whatever the edit between the two was.
+     * The tokens are always those [tokenize] finds in [text].
+     *
+     * Where the edit is comes from the longest prefix and suffix the two texts share. The lines above the first
+     * changed character are kept as they were, and the line it follows a `\r` on is read again too, since a `\n`
+     * typed or deleted after one changes where its line ends. From there every line is read until one past the
+     * edit is the same line of the old text, at the same place in the unchanged suffix, read in the same state (the
+     * open environment, the once-only kinds already said, whether the header has a key) and on the same side of the
+     * body's start: everything below it then reads as it did, and its tokens are only moved by the change in length.
+     */
+    public fun highlight(text: String, previous: ChordProHighlighting? = null): ChordProHighlighting {
+        if (previous != null && previous.text == text) return previous
         // The lines and their offsets come from ChordProLines rather than from a walk of their own, so that a file
-        // written with any of the three line endings is highlighted the way it is parsed.
+        // written with any of the three line endings is highlighted the way it is parsed. The body's start is found
+        // anew for the whole text, cheaply since it stops at the first line of the body, as an edit in the header
+        // can move it and a line's tokens depend on which side of it the line is.
         val lines = ChordProLines.splitLines(text)
         val lineStarts = ChordProLines.lineStartOffsets(text)
         val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
-        ChordProLineScanner.scan(lines).forEach { scanned ->
+        val edit = previous?.let { TextEdit.between(it.text, text) }
+        val from = if (previous == null || edit == null) 0 else minOf(lineAt(lineStarts, edit.firstReadOffset(text)), previous.lines.size)
+        val tokens = ArrayList<Token>()
+        val tokenEnds = IntArray(lines.size)
+        val statesAfter = ArrayList<HighlightState>(lines.size)
+        if (previous != null && from > 0) {
+            tokens.addAll(previous.tokens.subList(0, previous.tokenEnds[from - 1]))
+            previous.tokenEnds.copyInto(tokenEnds, endIndex = from)
+            statesAfter.addAll(previous.statesAfter.subList(0, from))
+        }
+        var state = previous?.stateBefore(from) ?: HighlightState.START
+        for (scanned in ChordProLineScanner.scan(lines, from, state.environment)) {
             val index = scanned.index
-            val line = scanned.raw
-            val lineStart = lineStarts[index]
-            val directive = scanned.directive
-            when {
-                scanned.isSourceComment -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
-
-                directive != null -> {
-                    // A directive that opens or closes an environment is read by the environment it leaves open, which
-                    // is how a `{start_of_abc: …}` line is left alone like the notation after it.
-                    val isInDelegate = scanned.isDelegatedAfter
-                    val isUnreadable = !isInDelegate && directive.isUnreadable()
-                    val onceOnlyKind = if (isInDelegate || isUnreadable) null else directive.onceOnlyKind()
-                    val isReadPast = onceOnlyKind != null &&
-                        (onceOnlyKind in saidOnce || (onceOnlyKind == KEY && index >= bodyStart && hasHeaderKey))
-                    if (onceOnlyKind == KEY && index < bodyStart) hasHeaderKey = true
-                    if (onceOnlyKind != null && directive.valueText().isNotEmpty()) saidOnce += onceOnlyKind
-                    tokens += when {
-                        isUnreadable -> listOf(Token(TokenType.INVALID, lineStart, lineStart + line.length))
-                        isReadPast -> listOf(Token(TokenType.DUPLICATE, lineStart, lineStart + line.length))
-                        else -> directive.tokens(
-                            line = line,
-                            lineStart = lineStart,
-                            valueStart = ChordProDirectives.directiveValueStart(scanned.trimmed),
-                        )
-                    }
+            val oldIndex = index - lines.size + (previous?.lines?.size ?: 0)
+            if (previous != null && edit != null && oldIndex in previous.lines.indices &&
+                lineStarts[index] >= edit.suffixStart &&
+                previous.lineStarts[oldIndex] == lineStarts[index] - edit.lengthDelta &&
+                previous.lines[oldIndex] == scanned.raw &&
+                previous.stateBefore(oldIndex) == state &&
+                (index < bodyStart) == (oldIndex < previous.bodyStart)
+            ) {
+                val oldTokenStart = previous.tokenStart(oldIndex)
+                val tokenDelta = tokens.size - oldTokenStart
+                previous.tokens.subList(oldTokenStart, previous.tokens.size).mapTo(tokens) { token ->
+                    if (edit.lengthDelta == 0) token else token.copy(start = token.start + edit.lengthDelta, end = token.end + edit.lengthDelta)
                 }
+                for (line in index until lines.size) {
+                    tokenEnds[line] = previous.tokenEnds[line - index + oldIndex] + tokenDelta
+                    statesAfter += previous.statesAfter[line - index + oldIndex]
+                }
+                break
+            }
+            state = tokenizeLine(scanned, state, lineStarts[index], bodyStart, tokens)
+            tokenEnds[index] = tokens.size
+            statesAfter += state
+        }
+        return ChordProHighlighting(
+            text = text,
+            tokens = tokens,
+            lines = lines,
+            lineStarts = lineStarts,
+            bodyStart = bodyStart,
+            tokenEnds = tokenEnds,
+            statesAfter = statesAfter,
+        )
+    }
 
-                // Chords are not chords on the staff of a tab or inside an environment handed to another program: the
-                // brackets there are part of the tablature or of the notation, and the viewer leaves them alone too. The
-                // other lines of a tab are rows of chord names, whose brackets the transposition renames. A grid has no
-                // brackets at all: its cells are chords as they are, and the transposition renames them.
-                scanned.environment == GRID -> tokens += gridChordTokens(line, lineStart)
+    /** The index of the line [offset] is on, [lineStarts] being the offsets the lines start at. */
+    private fun lineAt(lineStarts: IntArray, offset: Int): Int {
+        var low = 0
+        var high = lineStarts.lastIndex
+        while (low < high) {
+            val middle = (low + high + 1) / 2
+            if (lineStarts[middle] <= offset) low = middle else high = middle - 1
+        }
+        return low
+    }
 
-                !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
-                    bracket.token(lineStart)?.let { tokens += it }
+    /**
+     * Adds the tokens of one line to [tokens] and answers the state the line leaves for the next one: [before] itself
+     * where it changes nothing, which is most lines, so that the state of a long song is a handful of objects.
+     */
+    private fun tokenizeLine(
+        scanned: ChordProLineScanner.ScannedLine,
+        before: HighlightState,
+        lineStart: Int,
+        bodyStart: Int,
+        tokens: MutableList<Token>,
+    ): HighlightState {
+        // The kinds a line has said something for, and whether the header has a key line, which the parser takes the
+        // song's key from even where it is empty.
+        var saidOnce = before.saidOnce
+        var hasHeaderKey = before.hasHeaderKey
+        val index = scanned.index
+        val line = scanned.raw
+        val directive = scanned.directive
+        when {
+            scanned.isSourceComment -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
+
+            directive != null -> {
+                // A directive that opens or closes an environment is read by the environment it leaves open, which
+                // is how a `{start_of_abc: …}` line is left alone like the notation after it.
+                val isInDelegate = scanned.isDelegatedAfter
+                val isUnreadable = !isInDelegate && directive.isUnreadable()
+                val onceOnlyKind = if (isInDelegate || isUnreadable) null else directive.onceOnlyKind()
+                val isReadPast = onceOnlyKind != null &&
+                    (onceOnlyKind in saidOnce || (onceOnlyKind == KEY && index >= bodyStart && hasHeaderKey))
+                if (onceOnlyKind == KEY && index < bodyStart) hasHeaderKey = true
+                if (onceOnlyKind != null && onceOnlyKind !in saidOnce && directive.valueText().isNotEmpty()) saidOnce = saidOnce + onceOnlyKind
+                tokens += when {
+                    isUnreadable -> listOf(Token(TokenType.INVALID, lineStart, lineStart + line.length))
+                    isReadPast -> listOf(Token(TokenType.DUPLICATE, lineStart, lineStart + line.length))
+                    else -> directive.tokens(
+                        line = line,
+                        lineStart = lineStart,
+                        valueStart = ChordProDirectives.directiveValueStart(scanned.trimmed),
+                    )
                 }
             }
+
+            // Chords are not chords on the staff of a tab or inside an environment handed to another program: the
+            // brackets there are part of the tablature or of the notation, and the viewer leaves them alone too. The
+            // other lines of a tab are rows of chord names, whose brackets the transposition renames. A grid has no
+            // brackets at all: its cells are chords as they are, and the transposition renames them.
+            scanned.environment == GRID -> tokens += gridChordTokens(line, lineStart)
+
+            !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
+                bracket.token(lineStart)?.let { tokens += it }
+            }
         }
-        return tokens
+        return if (scanned.environmentAfter == before.environment && saidOnce === before.saidOnce && hasHeaderKey == before.hasHeaderKey) {
+            before
+        } else {
+            HighlightState(environment = scanned.environmentAfter, saidOnce = saidOnce, hasHeaderKey = hasHeaderKey)
+        }
+    }
+
+    /**
+     * Where two versions of a text differ: [suffixStart] is where the suffix they share starts in the new one, and
+     * [lengthDelta] how much longer the new one is.
+     */
+    private class TextEdit(val prefixLength: Int, val suffixStart: Int, val lengthDelta: Int) {
+
+        /** The first character of the new text whose line has to be read again, see [highlight]. */
+        fun firstReadOffset(text: String) = if (prefixLength > 0 && text[prefixLength - 1] == '\r') prefixLength - 1 else prefixLength
+
+        companion object {
+            fun between(old: String, new: String): TextEdit {
+                val shorter = minOf(old.length, new.length)
+                var prefix = 0
+                while (prefix < shorter && old[prefix] == new[prefix]) prefix++
+                var suffix = 0
+                while (suffix < shorter - prefix && old[old.length - 1 - suffix] == new[new.length - 1 - suffix]) suffix++
+                return TextEdit(prefixLength = prefix, suffixStart = new.length - suffix, lengthDelta = new.length - old.length)
+            }
+        }
     }
 
     /**

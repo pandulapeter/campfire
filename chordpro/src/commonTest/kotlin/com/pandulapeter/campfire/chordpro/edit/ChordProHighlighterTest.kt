@@ -22,6 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class ChordProHighlighterTest {
 
@@ -476,5 +477,103 @@ class ChordProHighlighterTest {
             assertNull(metadata.coverArt, line)
             assertEquals(emptyList(), metadata.links, line)
         }
+    }
+
+    /** Highlights [old], then [new] from it, and checks that the result is what a reading of [new] alone finds. */
+    private fun assertIncremental(old: String, new: String) {
+        val highlighting = ChordProHighlighter.highlight(new, ChordProHighlighter.highlight(old))
+        assertEquals(new, highlighting.text)
+        assertEquals(ChordProHighlighter.tokenize(new), highlighting.tokens, "from \"$old\" to \"$new\"")
+    }
+
+    private val longSong = buildString {
+        append("{title: Long}\n{artist: Someone}\n{key: Am}\n\n")
+        repeat(4) { verse ->
+            append("{start_of_verse: Verse ${verse + 1}}\n[Am]There is a [C]house\n{comment: softly [G]}\n{end_of_verse}\n\n")
+            append("{start_of_chorus}\n[C]Oh mother [G]tell\n{end_of_chorus}\n\n")
+        }
+        append("{start_of_tab}\ne|--[C]--|\n[C]  [G]\n{end_of_tab}\n{start_of_grid}\n| C . G . |\n{end_of_grid}\n")
+        append("{start_of_abc}\nX:1\n{title: Tune}\n# not a comment\n{end_of_abc}\n[F]End\n")
+    }
+
+    @Test
+    fun `an edit inside a directive is highlighted as a full reading would`() {
+        assertIncremental(longSong, longSong.replace("{artist: Someone}", "{artist: Someone Else}"))
+        assertIncremental(longSong, longSong.replace("{comment: softly [G]}", "{comment: softly [G"))
+        assertIncremental("{title: A}\n{time: 3/4}\n[C]la", "{title: A}\n{time: 3/}\n[C]la")
+    }
+
+    @Test
+    fun `an edit that opens or closes an environment is read on into the lines it changes`() {
+        assertIncremental(longSong, longSong.replace("{start_of_tab}", "{start_of_ta}"))
+        assertIncremental(longSong, longSong.replaceFirst("{start_of_chorus}", "{start_of_chorus"))
+        assertIncremental(longSong, longSong.replace("{end_of_grid}", ""))
+        assertIncremental(longSong, longSong.replace("{start_of_abc}", "{start_of_abd}"))
+        assertIncremental(longSong, longSong.replace("{end_of_abc}", "{end_of_ab}"))
+        assertIncremental(longSong, longSong.replace("X:1", "X:[C]1"))
+    }
+
+    @Test
+    fun `deleting the first of a once-only directive makes the next one the one read`() {
+        val song = "{title: First}\n{title: Second}\n{artist: A}\n\n[C]Line\n{title: Third}\n[G]Line"
+        assertIncremental(song, song.replace("{title: First}\n", ""))
+        assertIncremental(song, song.replace("{title: First}", "{title: }"))
+        assertIncremental(song.replace("{title: First}\n", ""), song)
+    }
+
+    @Test
+    fun `an edit that moves the start of the body is read on past it`() {
+        // The empty key in the header makes the key in the body a second one, until it is the header's too.
+        val song = "{key}\nla\n{key: D}\n[C]Line\n{key: E}\n[G]Line"
+        assertIncremental(song, song.replace("la\n", ""))
+        assertIncremental(song.replace("la\n", ""), song)
+        assertIncremental(song, song.replace("la", "{tempo: 90}"))
+        assertIncremental("{title: T}\nla\n{key: G}\n{key: D}\n[C]x", "{title: T}\n{key: C}\n{key: G}\n{key: D}\n[C]x")
+    }
+
+    @Test
+    fun `an edit between a carriage return and its line feed splits or joins the lines`() {
+        val song = "{title: A}\r\n{title: B}\r\n[C]la\r\n"
+        assertIncremental(song, song.replaceFirst("\r\n", "\rx\n"))
+        assertIncremental(song, song.replaceFirst("\r\n", "\r"))
+        assertIncremental(song.replaceFirst("\r\n", "\r"), song)
+        assertIncremental(song, song.replaceFirst("\r\n", "\r\n\n"))
+        assertIncremental("a\rb", "a\r\nb")
+    }
+
+    @Test
+    fun `typing and deleting a song one character at a time keeps every highlighting whole`() {
+        var highlighting = ChordProHighlighter.highlight("")
+        for (end in 1..longSong.length) {
+            val text = longSong.substring(0, end)
+            highlighting = ChordProHighlighter.highlight(text, highlighting)
+            assertEquals(ChordProHighlighter.tokenize(text), highlighting.tokens, "typed up to $end")
+        }
+        for (start in 1..longSong.length) {
+            val text = longSong.substring(start)
+            highlighting = ChordProHighlighter.highlight(text, highlighting)
+            assertEquals(ChordProHighlighter.tokenize(text), highlighting.tokens, "deleted up to $start")
+        }
+    }
+
+    @Test
+    fun `a character typed or deleted anywhere in a song is highlighted as a full reading would`() {
+        val base = ChordProHighlighter.highlight(longSong)
+        for (index in 0..longSong.length) {
+            listOf("{", "}", "\n", "#", "x").forEach { typed ->
+                val text = longSong.substring(0, index) + typed + longSong.substring(index)
+                assertEquals(ChordProHighlighter.tokenize(text), ChordProHighlighter.highlight(text, base).tokens, "\"$typed\" typed at $index")
+            }
+            if (index < longSong.length) {
+                val text = longSong.removeRange(index, index + 1)
+                assertEquals(ChordProHighlighter.tokenize(text), ChordProHighlighter.highlight(text, base).tokens, "deleted at $index")
+            }
+        }
+    }
+
+    @Test
+    fun `the same text is answered with the same highlighting`() {
+        val highlighting = ChordProHighlighter.highlight(longSong)
+        assertSame(highlighting, ChordProHighlighter.highlight(longSong, highlighting))
     }
 }

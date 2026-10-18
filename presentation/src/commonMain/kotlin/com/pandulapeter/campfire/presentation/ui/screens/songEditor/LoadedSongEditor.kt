@@ -325,6 +325,7 @@ internal fun LoadedSongEditor(
                     .focusRequester(fieldFocusRequester)
                     .onFocusChanged { fieldFocus.hasFocus = it.hasFocus },
                 textFieldState = textFieldState,
+                text = text,
                 isCompactTyping = isTypingInShortWindow,
                 scrollState = fieldScrollState,
                 horizontalScrollState = fieldHorizontalScrollState,

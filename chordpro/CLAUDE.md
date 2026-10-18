@@ -17,9 +17,9 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 
 ## Rules that span the module
 
-- **The dialect is defined once, in `syntax/`.** `ChordProLineScanner` is the one walk over lines; only
-  `ChordProSummaryCache.safeLineAt` and `ChordProPrettifier` (a stack: an end closes only the innermost environment it
-  names) keep their own. `MetadataKind` describes every metadata directive once, in header order, for every reader.
+- **The dialect is defined once, in `syntax/`.** `ChordProLineScanner` is the one walk over lines (resumable from a
+  line, for the highlighter's incremental reading); only `ChordProSummaryCache.safeLineAt` and `ChordProPrettifier` (a
+  stack: an end closes only the innermost environment it names) keep their own. `MetadataKind` describes every metadata directive once, in header order, for every reader.
 - **Whitespace is `Char.isWhitespace`, never regex `\s`**: the platforms' regex engines disagree, and pasted charts are
   full of non-breaking spaces.
 - **Text edits keep every other byte.** Tags, languages, links, cover, metadata fields, transposition, and notation

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
+import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighting
 
 /**
  * Colours the text as it is typed. Only styles are added, no characters are inserted or removed, so the offsets the
@@ -106,30 +107,31 @@ internal class ChordProOutputTransformation(
  * The tokens of the text the editor holds, kept from one run of [ChordProOutputTransformation] to the next. The
  * field runs its output transformation for every new value of its state, and most of those differ from the one
  * before only in where the caret is: a tap, an arrow key, every pointer event of a selection being dragged. The
- * tokens depend on the text alone, so they are only worked out again once that has changed.
+ * tokens depend on the text alone, so they are only worked out again once that has changed, and then only for the
+ * lines the edit changed (see [ChordProHighlighter.highlight]).
  *
  * It is a holder of its own rather than a field of the transformation, because the transformation carries the
  * colours and is made anew on every frame of a theme change, while this has to outlive all of them.
+ *
+ * @param editorText The editor's text as one string, which the editor copies once per edit for everything that
+ * follows it: taken instead of a copy of its own wherever it holds what the field shows.
  */
-internal class ChordProTokenCache {
+internal class ChordProTokenCache(private val editorText: () -> String) {
 
-    private var text: String? = null
-    private var tokens = emptyList<ChordProHighlighter.Token>()
+    private var highlighting: ChordProHighlighting? = null
 
     /** A selection change may supply a different [CharSequence] with the same content. */
     fun tokensOf(text: CharSequence): List<ChordProHighlighter.Token> {
-        if (!text.matches(this.text)) {
-            val changedText = text.toString()
-            tokens = ChordProHighlighter.tokenize(changedText)
-            this.text = changedText
-        }
-        return tokens
+        val cached = highlighting
+        if (cached != null && text.matches(cached.text)) return cached.tokens
+        val changedText = editorText().takeIf { text.matches(it) } ?: text.toString()
+        return ChordProHighlighter.highlight(changedText, cached).also { highlighting = it }.tokens
     }
 
-    private fun CharSequence.matches(cached: String?): Boolean {
-        if (cached == null || length != cached.length) return false
+    private fun CharSequence.matches(other: String): Boolean {
+        if (length != other.length) return false
         for (index in indices) {
-            if (this[index] != cached[index]) return false
+            if (this[index] != other[index]) return false
         }
         return true
     }

@@ -93,7 +93,9 @@ numbers nothing to count from.
   a field being typed in keeps focus across a change that still shows it (rotation, resize across Split).
 - Insertion rows leave whenever only the preview shows.
 - `ChordProOutputTransformation` colours tokens like the viewer (and draws search matches); unreadable directive values
-  (`{time: 5/7}`) are drawn whole in the error colour. It runs on every caret move, hence `ChordProTokenCache`.
+  (`{time: 5/7}`) are drawn whole in the error colour. It runs on every caret move, hence `ChordProTokenCache`, which
+  keeps the last `ChordProHighlighting` so an edit re-reads only the lines it changes, and takes `LoadedSongEditor`'s
+  derived string rather than copying the text a second time.
 
 ## Preview
 
