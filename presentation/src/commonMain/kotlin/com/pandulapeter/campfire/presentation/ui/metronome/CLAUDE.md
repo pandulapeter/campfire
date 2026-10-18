@@ -67,6 +67,9 @@ a beat not muted, which plays on (iOS has no background haptics).
   and by a click started there, left alone when the screen is left, so the next song and the next launch keep it.
   Opening it starts nothing; closing it stops a playing click; stopping the click leaves it up.
 - Performance mode keeps the play button; the song's read only line says the tempo.
+- The pulsing mark (`MetronomeIcon.kt`: the navigation item, the song's button) tints from a table of filters at 32
+  pulse steps, keyed on its two colors, so a playing click makes no filter per frame. Not a second draw at the pulse's
+  alpha: that blends in sRGB where `lerp` mixes in Oklab.
 
 ### Accents
 

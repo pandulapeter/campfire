@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.roundToInt
 
 /**
  * The metronome mark following the click as [beat] says: its pendulum where the swing puts it, and the whole mark
@@ -70,8 +71,15 @@ internal fun MetronomeIcon(
     val pendulum = painterResource(Res.drawable.ic_metronome_pendulum)
     val pulseColor = MaterialTheme.colorScheme.primary
     // Read while drawing rather than while composing, so that a pulse repaints the mark instead of recomposing it on
-    // every frame. The two layers stand in for Material's Icon, which takes the tint as a composition parameter.
-    val colorFilter = { ColorFilter.tint(lerp(tint, pulseColor, beat.pulse.coerceIn(0f, 1f))) }
+    // every frame. The two layers stand in for Material's Icon, which takes the tint as a composition parameter. The
+    // filters are kept per step of the pulse, so that a playing click allocates none once a pulse's steps have been
+    // seen; drawing the pulse color at alpha over the tint instead would blend in sRGB, where lerp mixes in Oklab.
+    val colorFilters = remember(tint, pulseColor) { arrayOfNulls<ColorFilter>(PULSE_STEPS + 1) }
+    val colorFilter = {
+        val step = (beat.pulse.coerceIn(0f, 1f) * PULSE_STEPS).roundToInt()
+        colorFilters[step]
+            ?: ColorFilter.tint(lerp(tint, pulseColor, step / PULSE_STEPS.toFloat())).also { colorFilters[step] = it }
+    }
     Box(
         modifier = modifier
             .graphicsLayer {
@@ -175,6 +183,9 @@ private val ICON_SIZE = 24.dp
 
 /** How much larger the mark is at the height of an accent's pulse. */
 private const val PULSE_SCALE = 0.25f
+
+/** How many colors the pulse passes through, each well under a visible step; the scale still follows it continuously. */
+private const val PULSE_STEPS = 32
 
 /** A pendulum's own motion, slowest at the ends of the arc and fastest through the middle. */
 private val PendulumEasing = Easing { fraction -> (1f - cos(PI.toFloat() * fraction)) / 2f }
