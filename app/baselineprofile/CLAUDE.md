@@ -14,10 +14,14 @@ plugin, targeting `nonMinifiedRelease`. Not a test: it asserts nothing and CI ne
 
 ## The journey (`BaselineProfileGenerator`)
 
-- One `BaselineProfileRule.collect` with `includeInStartupProfile`: cold start (a first run plants the demo library and
-  walks the onboarding with **Next** to **Start playing**), song list flings, a demo song opened and flung, Setlists and
+- Two collections, run in name order (`@FixMethodOrder`; JUnit's default is a hash order). `a_journeys`, for the Baseline
+  Profile only: cold start (a first run plants the demo library and walks the onboarding with **Next** to **Start
+  playing**), song list flings, a demo song opened and flung, Setlists and
   the demo setlist, the tools (**Tools** on a phone's bar opens the Metronome, then its Tuner and Chords tabs; a tall
-  rail gives each its own item; the tuner asks for nothing without a tap), and Settings.
+  rail gives each its own item; the tuner asks for nothing without a tap), and Settings. `b_startup`, with
+  `includeInStartupProfile`: a cold start until the first demo card, nothing else, so the startup profile (which lays out
+  the DEX with `dexLayoutOptimization`) holds only what a launch needs. Data is never cleared between them, so the walk
+  must run first to be the one that sees the first run; an onboarding left for `b_startup` is skipped, not walked.
 - Screens are found by their visible **English** text (no test tags). Each step waits up to 5 s and is skipped if the
   text never appears, so a renamed string costs a step, not the run. The journey repeats without clearing data, so the
   onboarding is only looked for, not expected.

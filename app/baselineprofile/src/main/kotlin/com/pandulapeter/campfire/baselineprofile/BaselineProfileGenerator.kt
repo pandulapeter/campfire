@@ -18,9 +18,11 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import org.junit.FixMethodOrder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 
 /**
  * Records the Baseline Profile and the startup profile of the release build, walking the screens every launch goes
@@ -31,17 +33,25 @@ import org.junit.runner.RunWith
  * The screens are found by their visible English text, which Compose exposes to UI Automator, so the app carries no test
  * tags for it. Every step waits for its text and is skipped where the text never appears, so that a renamed string
  * costs the profile a step rather than the run.
+ *
+ * The walk is collected for the Baseline Profile only, and the startup profile from a cold start of its own: with dex
+ * layout optimization the startup profile decides which classes share the first pages of the DEX, and the screens a
+ * launch never opens - the onboarding and the demo library's planting, which run once per installation, above all -
+ * would only spread the ones it needs over more of them. The two run in a fixed order, the walk first: JUnit's default
+ * order is a hash order, and the app's data is never cleared between them, so only the first one ever sees the first
+ * run, which belongs to the walk.
  */
 @RunWith(AndroidJUnit4::class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class BaselineProfileGenerator {
 
     @get:Rule
     val rule = BaselineProfileRule()
 
     @Test
-    fun generate() = rule.collect(
+    fun a_journeys() = rule.collect(
         packageName = PACKAGE_NAME,
-        includeInStartupProfile = true,
+        includeInStartupProfile = false,
     ) {
         pressHome()
         startActivityAndWait()
@@ -92,6 +102,20 @@ class BaselineProfileGenerator {
         device.waitForIdle()
         waitFor(By.text("Settings"))?.click()
         device.waitForIdle()
+    }
+
+    @Test
+    fun b_startup() = rule.collect(
+        packageName = PACKAGE_NAME,
+        includeInStartupProfile = true,
+    ) {
+        pressHome()
+        startActivityAndWait()
+        // Only there if the walk was skipped, and then dismissed rather than walked, since it is no part of a cold start.
+        waitFor(By.text("Skip"))?.click()
+        // The first frame is all startActivityAndWait waits for; the library read, its indexing and the cards' first
+        // composition come after it, and are as much a part of the start up.
+        waitFor(By.textContains("Rising Sun"))
     }
 
     private fun MacrobenchmarkScope.waitFor(selector: BySelector): UiObject2? = device.wait(Until.findObject(selector), STEP_TIMEOUT)
