@@ -267,6 +267,11 @@ internal fun SongDetailsPage(
             // Computed here rather than in onRowsPlaced, which would otherwise read the constraints of this scope and be a
             // new lambda on every frame of the height, recomposing the lyrics of a page that does not follow it.
             val viewport = with(density) { IntSize(maxWidth.roundToPx(), viewportHeight.roundToPx()) }
+            // Both are read through a state rather than captured, since a lambda capturing the value itself is a new one
+            // on every frame of the height changing: only then does the song skip being composed again on those frames,
+            // the layout reading the live height where it measures and the rows reading the viewport as they are placed.
+            val latestViewport by rememberUpdatedState(viewport)
+            val liveViewportHeight by rememberUpdatedState(viewportHeight)
             val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
             val readingWindow = with(density) {
                 ReadingWindow(
@@ -314,10 +319,10 @@ internal fun SongDetailsPage(
                 onRowsPlaced = { rows ->
                     flingBehavior.onRowsPlaced(
                         placedRows = rows.belowPadding(topPaddingPx),
-                        viewport = viewport,
+                        viewport = latestViewport,
                     )
                 },
-                rowViewportHeight = viewportHeight,
+                rowViewportHeight = { liveViewportHeight },
                 rowViewportTopPadding = topPadding,
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave

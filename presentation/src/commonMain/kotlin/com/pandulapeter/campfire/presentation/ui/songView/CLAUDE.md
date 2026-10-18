@@ -56,3 +56,5 @@ builds what it draws, `grid/` places it.
   taller than half that (`maxAnimatedSectionHeight`).
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.
 - `availableHeight` comes from the caller: inside `verticalScroll` height is infinite.
+- `SongSectionChildren` takes only remembered values (styles too), so it skips while `SongLyrics` recomposes on each
+  frame of a bar, panel, or rail; the live viewport height reaches the measure as a provider reading a state.

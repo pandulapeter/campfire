@@ -32,34 +32,28 @@ import com.pandulapeter.campfire.presentation.ui.songView.grid.fitScalesFor
 import com.pandulapeter.campfire.presentation.ui.songView.grid.fitsNarrowColumns
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowLikeAMagazine
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -128,7 +122,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * dividers between the rows: every row is then followed by empty space down to the bottom of that viewport, so that
  * a scroll resting on a divider shows no row but the one under it, in the middle of the screen, and the last one can be
  * brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview. It is the live
- * height, followed frame by frame, where [availableHeight] waits for the viewport to settle.
+ * height, followed frame by frame, where [availableHeight] waits for the viewport to settle, so it is read only by the
+ * layout's measure: handed over as a provider that reads a snapshot state, it is the same lambda on every one of those
+ * frames, and the song is measured again on them without being composed again.
  * @param rowViewportTopPadding How much the scroll holds above this composable, which a song that fits the screen
  * leaves above the room it is spread out over.
  * @param rowViewportBottomPadding How much the scroll holds under this composable, which is part of the room the last
@@ -144,7 +140,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * lays them out. The editor's preview next to the text sets it: half a window flows a song into columns that the
  * next keystroke reshuffles, and the lines being typed are only easy to find in the order they are written.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
@@ -164,7 +159,7 @@ internal fun SongLyrics(
     shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
-    rowViewportHeight: Dp = Dp.Unspecified,
+    rowViewportHeight: () -> Dp = { Dp.Unspecified },
     rowViewportTopPadding: Dp = 0.dp,
     rowViewportBottomPadding: Dp = 0.dp,
     stepButtonInset: Dp = 0.dp,
@@ -243,14 +238,20 @@ internal fun SongLyrics(
     // every frame of a theme cross-fade while the size of the text does not.
     // The direction of a line is its own content's rather than the app's, so that a Hebrew or Arabic line is a right to
     // left paragraph starting at the right edge, as its reader expects, and the chords above it are laid out that way.
-    val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge).scaled(fontScale).copy(
-        color = Color.Unspecified,
-        textDirection = TextDirection.Content,
-    )
-    val headerStyle = MaterialTheme.typography.titleSmall.scaled(fontScale)
-    val chordStyle = lyricsStyle.copy(fontWeight = FontWeight.Bold)
+    // Remembered, so that every comparison of them below and in the sections is one of identity (TextStyle.equals checks
+    // that first) rather than a deep one on every composition.
+    val localTextStyle = LocalTextStyle.current
+    val typography = MaterialTheme.typography
+    val lyricsStyle = remember(localTextStyle, typography, fontScale) {
+        localTextStyle.merge(typography.bodyLarge).scaled(fontScale).copy(
+            color = Color.Unspecified,
+            textDirection = TextDirection.Content,
+        )
+    }
+    val headerStyle = remember(typography, fontScale) { typography.titleSmall.scaled(fontScale) }
+    val chordStyle = remember(lyricsStyle) { lyricsStyle.copy(fontWeight = FontWeight.Bold) }
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
-    val annotationStyle = lyricsStyle.copy(fontStyle = FontStyle.Italic)
+    val annotationStyle = remember(lyricsStyle) { lyricsStyle.copy(fontStyle = FontStyle.Italic) }
     // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
     // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the
     // sections it changed. The folds are not one of its keys but part of each chunk's content (UnitContent.foldedKeys),
@@ -309,6 +310,8 @@ internal fun SongLyrics(
     } else {
         rememberColumnCenteringHold(foldedSections, chordDiagrams?.isFolded)
     }
+    // A boolean rather than the width itself, which changes on every frame of a navigation rail animating.
+    val isResizing = extraWidth > 0.dp
     Box(modifier = modifier) {
         LookaheadScope {
             SongSectionsLayout(
@@ -343,63 +346,34 @@ internal fun SongLyrics(
                 centeringHold = centeringHold,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
-                // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps
-                // coming or a navigation transition, not where it is too tall for it (see maxAnimatedSectionHeight), and
-                // not while it is still gliding from a change that kept coming, since the spring would start at the place
-                // the glide has not reached yet. Nor while the grid on screen still waits to be fitted: the pass that fits
-                // it is the first one after a change stopped coming, and an animateBounds attached in that pass has no
-                // bounds to animate from, so the fitted grid would land in one frame rather than be glided to.
-                fun Modifier.movedBy(key: Any, animation: SectionAnimation): Modifier {
-                    val isGliding = sectionGlides?.isGliding(key) == true
-                    val isHeldStill = sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || fitDeferral.isPending
-                    return if (isHeldStill || animation.isTooTallToAnimate || isGliding) {
-                        this
-                    } else {
-                        animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
-                    }
-                }
-                units.itemRanges.forEachIndexed { unit, items ->
-                    val section = sections[units.unitSections[unit]]
-                    key(unitKeys[unit]) {
-                        // Each chunk is read as a whole and in the order the song declares, whatever column it was put in:
-                        // the reading order is otherwise worked out from the geometry, line by line across the page, which
-                        // with two columns reads the first line of each, then the second line of each.
-                        val unitModifier = Modifier.movedBy(unitKeys[unit], animations[unit]).semantics {
-                            isTraversalGroup = true
-                            traversalIndex = unit.toFloat()
-                        }
-                        SongSectionItem(
-                            modifier = unitModifier,
-                            section = section,
-                            items = items,
-                            notation = model.notation,
-                            isSongInfoShown = isSongInfoShown,
-                            songInfoEditing = songInfoEditing,
-                            playingControls = shownPlayingControls,
-                            playingTools = playingTools,
-                            animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
-                            chordDiagrams = chordDiagrams,
-                            tuningChipVisibility = tuningChipVisibility,
-                            chordLayouts = chordLayouts,
-                            onChordFoldToggled = onChordFoldToggled,
-                            isChordsSectionFadingIn = hasChordFoldBeenToggled,
-                            headerStyle = headerStyle,
-                            lyricsStyle = lyricsStyle,
-                            chordStyle = chordStyle,
-                            textMeasurements = textMeasurements,
-                            foldedRuns = foldedRuns,
-                            defaultLabels = defaultLabels,
-                            fontScale = fontScale,
-                        )
-                    }
-                }
-                // The cards the pieces of the sections on a card are drawn on, as many as each could be cut into; the
-                // ones a layout has no piece for stay unmeasured.
-                SectionCards(cardKeys = cardKeys) { card, cardKey -> Modifier.movedBy(cardKey, animations[units.unitSections.size + card]) }
-                // The dividers between the pages, one for every place a page can start at - a section, or a place a section
-                // may be cut at - since that is as many as there can be; the ones a song laid out on fewer pages has no
-                // place for stay unmeasured.
-                repeat((sections.size - 1 + units.isCuttableBefore.count { it }).coerceAtLeast(0)) { HorizontalDivider() }
+                SongSectionChildren(
+                    sections = sections,
+                    units = units,
+                    unitKeys = unitKeys,
+                    cardKeys = cardKeys,
+                    animations = animations,
+                    sectionGlides = sectionGlides,
+                    fitDeferral = fitDeferral,
+                    sectionMotion = sectionMotion,
+                    isResizing = isResizing,
+                    notation = model.notation,
+                    isSongInfoShown = isSongInfoShown,
+                    songInfoEditing = songInfoEditing,
+                    playingControls = shownPlayingControls,
+                    playingTools = playingTools,
+                    chordDiagrams = chordDiagrams,
+                    tuningChipVisibility = tuningChipVisibility,
+                    chordLayouts = chordLayouts,
+                    onChordFoldToggled = onChordFoldToggled,
+                    hasChordFoldBeenToggled = hasChordFoldBeenToggled,
+                    headerStyle = headerStyle,
+                    lyricsStyle = lyricsStyle,
+                    chordStyle = chordStyle,
+                    textMeasurements = textMeasurements,
+                    foldedRuns = foldedRuns,
+                    defaultLabels = defaultLabels,
+                    fontScale = fontScale,
+                )
             }
         }
         if (model.isCut) {
