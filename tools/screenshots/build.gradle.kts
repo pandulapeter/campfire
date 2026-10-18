@@ -9,6 +9,7 @@
  */
 import java.net.URI
 import java.security.MessageDigest
+import java.time.Duration
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -94,6 +95,9 @@ val downloadFonts by tasks.registering {
 
 tasks.test {
     useJUnitPlatform()
+    // The whole suite takes a few minutes. A screen that never stops animating keeps the test clock from ever idling, and
+    // without a bound it holds CI's runner for hours rather than failing with the reports uploaded.
+    timeout = Duration.ofMinutes(20)
     val isUpdatingGoldens = project.property("campfire.updateGoldens").toString().toBoolean()
     // Rewriting the goldens is asked for with a property, which a run that changed nothing else would not repeat.
     outputs.upToDateWhen { !isUpdatingGoldens }
