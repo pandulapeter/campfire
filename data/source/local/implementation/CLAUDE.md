@@ -134,7 +134,6 @@ document's, since an entry under an unknown name is never read.
 
 ## A song is named by its header
 
-A song is named by its own `{artist}`, `{title}`, and `{subtitle}` (the subtitle joins the title half), whether written
-in the editor, imported (`importFileName`, see `:data:source:local:api`), or exported (`ExportFileNames.kt`). **A file
-name is reproducible from its header alone**; `Song.canUpdateFileName` notices where that stopped being true. Inside an
-exported archive entries keep their library names, since setlists point at songs by file name.
+**A file name is reproducible from its header alone** (`{artist}`, `{title}`, `{subtitle}` joining the title half) in
+the editor, `importFileName`, and `ExportFileNames.kt`; `Song.canUpdateFileName` notices where that stopped being true.
+Entries in an exported archive keep their library names, since setlists point at songs by file name.
