@@ -53,6 +53,9 @@ import org.jetbrains.compose.resources.painterResource
  *   of it rather than removed from every setlist and the library at once.
  * @param isDuplicable Whether the menu offers a copy of the song, which only the songs screen's cards do: a copy is a
  *   new song of the library, so it is made where the library's songs are made.
+ * The entries are built only while the menu is up (see [ActionsMenu]), and so are [leadingItems] and [fileEditItems]:
+ * a list composes one of these for every card it shows.
+ *
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
  *   of its bar's buttons the bar has no room for: the setlist assignments and the tuner.
@@ -71,58 +74,56 @@ internal fun SongActions(
     isEditAndExportOnly: Boolean = false,
     isDuplicable: Boolean = false,
     setlistFileName: String? = null,
-    leadingItems: List<ActionsMenuItem> = emptyList(),
-    fileEditItems: List<ActionsMenuItem> = emptyList(),
+    leadingItems: @Composable () -> List<ActionsMenuItem> = { emptyList() },
+    fileEditItems: @Composable () -> List<ActionsMenuItem> = { emptyList() },
     isAfterButton: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
+) = ActionsMenu(
+    modifier = modifier,
+    state = state,
+    isAfterButton = isAfterButton,
+    menuFooter = menuFooter,
 ) {
-    val editItems = listOf(editSongAction(actions = actions, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty()
-    ActionsMenu(
-        modifier = modifier,
-        state = state,
-        isExpandable = false,
-        isAfterButton = isAfterButton,
-        menuFooter = menuFooter,
-        items = leadingItems + editItems + listOfNotNull(
-            // Only where it would do something: a file already named after its own metadata, or one with no title to
-            // be named after, has nothing to update and the action would be an offer that never comes to anything.
-            if (song.canUpdateFileName && !isEditAndExportOnly) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.songs_update_file_name),
-                    icon = painterResource(Res.drawable.ic_rename),
-                    isAlwaysInMenu = true,
-                    onClick = { actions.updateFileName(song) },
-                )
-            } else {
-                null
-            },
-            if (isDuplicable && !isEditAndExportOnly) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.songs_duplicate_song),
-                    icon = painterResource(Res.drawable.ic_duplicate),
-                    isAlwaysInMenu = true,
-                    onClick = { actions.duplicate(song) },
-                )
-            } else {
-                null
-            },
+    val editItems = listOf(editSongAction(actions = actions, song = song)) + if (isEditAndExportOnly) emptyList() else fileEditItems()
+    leadingItems() + editItems + listOfNotNull(
+        // Only where it would do something: a file already named after its own metadata, or one with no title to
+        // be named after, has nothing to update and the action would be an offer that never comes to anything.
+        if (song.canUpdateFileName && !isEditAndExportOnly) {
             ActionsMenuItem(
-                title = stringResource(Res.string.songs_export_song),
-                icon = painterResource(Res.drawable.ic_export),
+                title = stringResource(Res.string.songs_update_file_name),
+                icon = painterResource(Res.drawable.ic_rename),
                 isAlwaysInMenu = true,
-                onClick = { actions.export(song, setlistFileName) },
-            ),
-            if (isDeletable && !isEditAndExportOnly) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.songs_delete_song),
-                    icon = painterResource(Res.drawable.ic_delete),
-                    isAlwaysInMenu = true,
-                    onClick = { actions.delete(song) },
-                )
-            } else {
-                null
-            },
+                onClick = { actions.updateFileName(song) },
+            )
+        } else {
+            null
+        },
+        if (isDuplicable && !isEditAndExportOnly) {
+            ActionsMenuItem(
+                title = stringResource(Res.string.songs_duplicate_song),
+                icon = painterResource(Res.drawable.ic_duplicate),
+                isAlwaysInMenu = true,
+                onClick = { actions.duplicate(song) },
+            )
+        } else {
+            null
+        },
+        ActionsMenuItem(
+            title = stringResource(Res.string.songs_export_song),
+            icon = painterResource(Res.drawable.ic_export),
+            isAlwaysInMenu = true,
+            onClick = { actions.export(song, setlistFileName) },
         ),
+        if (isDeletable && !isEditAndExportOnly) {
+            ActionsMenuItem(
+                title = stringResource(Res.string.songs_delete_song),
+                icon = painterResource(Res.drawable.ic_delete),
+                isAlwaysInMenu = true,
+                onClick = { actions.delete(song) },
+            )
+        } else {
+            null
+        },
     )
 }
 

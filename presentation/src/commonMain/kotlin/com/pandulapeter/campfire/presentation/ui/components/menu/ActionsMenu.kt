@@ -30,7 +30,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -75,9 +74,6 @@ import org.jetbrains.compose.resources.painterResource
  * @param buttonModifier Put on every button, which a section header uses to keep them from taking the focus.
  * @param state Whether the menu is open, hoisted by a row that opens the same menu from a long press as well. A long
  *   press on a row that has room for every button opens nothing, since there is no menu left to open.
- * @param isExpandable False keeps every item in the menu however much room there is, which is what a song card does:
- *   a list of cards each ending in a row of buttons is a wall of icons, so a card keeps its menu and only the button
- *   in front of it.
  * @param isAfterButton Whether the caller stands a button right before the menu, which the overflow button then reaches
  *   further into, as it does into the last of the menu's own buttons (see [OVERFLOW_BUTTON_EXTRA_OVERLAP]).
  * @param isOnPill Whether the menu stands on a pill (the list screens' app bar, a setlist's section header), where the
@@ -95,45 +91,66 @@ internal fun ActionsMenu(
     state: OverflowMenuState = rememberOverflowMenuState(),
     contentDescription: String = stringResource(Res.string.songs_actions),
     items: List<ActionsMenuItem>,
-    isExpandable: Boolean = true,
     isAfterButton: Boolean = false,
     isOnPill: Boolean = LocalSearchPill.current != null,
     isDecorative: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
     val buttonWidth = actionButtonWidth()
-    // Only a menu that lets its items out measures the room it has: one that keeps them all in, which is every song card's,
-    // would otherwise pay a subcomposition and a hidden animation per item on every card scrolled into a list.
-    if (isExpandable) {
-        BoxWithConstraints(modifier = modifier) {
-            ActionsRow(
-                buttonModifier = buttonModifier,
+    BoxWithConstraints(modifier = modifier) {
+        ActionsRow(
+            buttonModifier = buttonModifier,
+            state = state,
+            contentDescription = contentDescription,
+            items = items,
+            isAfterButton = isAfterButton,
+            isOnPill = isOnPill,
+            isDecorative = isDecorative,
+            menuFooter = menuFooter,
+            buttonWidth = buttonWidth,
+            slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1),
+        )
+    }
+}
+
+/**
+ * An [ActionsMenu] that keeps every item in its menu however much room there is, which is what a song card does: a
+ * list of cards each ending in a row of buttons is a wall of icons, so a card keeps its menu and only the button in
+ * front of it. It measures no room and composes no button per item, and its [items] are built only while the menu is
+ * up, since a card's dozen or so painters and strings would otherwise be loaded for every card scrolled into a list and
+ * drawn on none of them. The menu stays composed through its exit animation, so the entries do too.
+ *
+ * The overflow button is always there, which assumes [items] always holds an entry (a song's always holds Export, a
+ * missing setlist row's always holds Remove from setlist): with nothing built before the menu opens, nothing can tell
+ * an empty menu apart.
+ */
+@Composable
+internal fun ActionsMenu(
+    modifier: Modifier = Modifier,
+    state: OverflowMenuState = rememberOverflowMenuState(),
+    contentDescription: String = stringResource(Res.string.songs_actions),
+    isAfterButton: Boolean = false,
+    isOnPill: Boolean = LocalSearchPill.current != null,
+    menuFooter: (@Composable () -> Unit)? = null,
+    items: @Composable () -> List<ActionsMenuItem>,
+) = Box(modifier = modifier) {
+    Row(
+        modifier = Modifier.padding(horizontal = ACTION_BUTTON_OVERLAP / 2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier.overlappingAction(
+                start = ACTION_BUTTON_OVERLAP / 2 + overflowButtonExtraOverlap(isAfterButton = isAfterButton, hasButtons = false, isOnPill = isOnPill),
+            ),
+        ) {
+            OverflowButton(
+                buttonModifier = Modifier,
                 state = state,
                 contentDescription = contentDescription,
-                items = items,
-                isExpandable = true,
-                isAfterButton = isAfterButton,
-                isOnPill = isOnPill,
-                isDecorative = isDecorative,
+                isDecorative = false,
+                buttonWidth = actionButtonWidth(),
+                menuItems = { items().filter { it.isVisible } },
                 menuFooter = menuFooter,
-                buttonWidth = buttonWidth,
-                slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1),
-            )
-        }
-    } else {
-        Box(modifier = modifier) {
-            ActionsRow(
-                buttonModifier = buttonModifier,
-                state = state,
-                contentDescription = contentDescription,
-                items = items,
-                isExpandable = false,
-                isAfterButton = isAfterButton,
-                isOnPill = isOnPill,
-                isDecorative = isDecorative,
-                menuFooter = menuFooter,
-                buttonWidth = buttonWidth,
-                slotCount = 1,
             )
         }
     }
@@ -146,7 +163,6 @@ private fun ActionsRow(
     state: OverflowMenuState,
     contentDescription: String,
     items: List<ActionsMenuItem>,
-    isExpandable: Boolean,
     isAfterButton: Boolean,
     isOnPill: Boolean,
     isDecorative: Boolean,
@@ -154,9 +170,8 @@ private fun ActionsRow(
     buttonWidth: Dp,
     slotCount: Int,
 ) {
-    val icon = painterResource(Res.drawable.ic_more)
     val visibleItems = items.filter { it.isVisible }
-    val expandableItems = if (isExpandable) visibleItems.filterNot { it.isAlwaysInMenu } else emptyList()
+    val expandableItems = visibleItems.filterNot { it.isAlwaysInMenu }
     val buttonItems = if (menuFooter == null && expandableItems.size == visibleItems.size && visibleItems.size <= slotCount) {
         visibleItems
     } else {
@@ -165,13 +180,7 @@ private fun ActionsRow(
     }
     val menuItems = visibleItems.filterNot { it in buttonItems }
     val hasMenu = menuItems.isNotEmpty() || menuFooter != null
-    val overflowButtonExtraOverlap by animateDpAsState(
-        when {
-            !isAfterButton && buttonItems.isEmpty() -> 0.dp
-            isOnPill -> OVERFLOW_BUTTON_EXTRA_OVERLAP - PILL_OVERFLOW_BUTTON_ROOM
-            else -> OVERFLOW_BUTTON_EXTRA_OVERLAP
-        },
-    )
+    val overflowButtonExtraOverlap = overflowButtonExtraOverlap(isAfterButton = isAfterButton, hasButtons = buttonItems.isNotEmpty(), isOnPill = isOnPill)
     // A menu the room has just emptied, or one a long press asked for with nothing left in it, would otherwise be left
     // open in its state and drop down on its own the next time the row narrows.
     LaunchedEffect(hasMenu, state.isExpanded) {
@@ -181,8 +190,7 @@ private fun ActionsRow(
         modifier = Modifier.padding(horizontal = ACTION_BUTTON_OVERLAP / 2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // A menu that keeps every item in never has a button for one, so it has no visibility to compose for each.
-        if (isExpandable) items.forEach { item ->
+        items.forEach { item ->
             // Keyed by what the action is rather than by its place, since an action that comes and goes (Update file
             // name, Set cover art) moves every one after it along.
             key(item.key) {
@@ -211,37 +219,77 @@ private fun ActionsRow(
             enter = fadeIn() + expandHorizontally(),
             exit = fadeOut() + shrinkHorizontally(),
         ) {
-            if (isDecorative) {
+            OverflowButton(
+                buttonModifier = buttonModifier,
+                state = state,
+                contentDescription = contentDescription,
+                isDecorative = isDecorative,
+                buttonWidth = buttonWidth,
+                menuItems = { menuItems },
+                menuFooter = menuFooter,
+            )
+        }
+    }
+}
+
+/**
+ * How much further the overflow button reaches into what stands before it: into a button, the caller's
+ * ([isAfterButton]) or the menu's own, and less of the way on a pill.
+ */
+@Composable
+private fun overflowButtonExtraOverlap(
+    isAfterButton: Boolean,
+    hasButtons: Boolean,
+    isOnPill: Boolean,
+): Dp = animateDpAsState(
+    when {
+        !isAfterButton && !hasButtons -> 0.dp
+        isOnPill -> OVERFLOW_BUTTON_EXTRA_OVERLAP - PILL_OVERFLOW_BUTTON_ROOM
+        else -> OVERFLOW_BUTTON_EXTRA_OVERLAP
+    },
+).value
+
+/** The overflow button of an [ActionsMenu] and the dropdown it opens, whose entries [menuItems] builds once it is up. */
+@Composable
+private fun OverflowButton(
+    buttonModifier: Modifier,
+    state: OverflowMenuState,
+    contentDescription: String,
+    isDecorative: Boolean,
+    buttonWidth: Dp,
+    menuItems: @Composable () -> List<ActionsMenuItem>,
+    menuFooter: (@Composable () -> Unit)?,
+) {
+    val icon = painterResource(Res.drawable.ic_more)
+    if (isDecorative) {
+        ActionButton(
+            icon = icon,
+            contentDescription = null,
+            isDecorative = true,
+            size = buttonWidth,
+        )
+    } else {
+        OverflowMenu(
+            state = state,
+            button = { open ->
                 ActionButton(
+                    modifier = buttonModifier,
                     icon = icon,
-                    contentDescription = null,
-                    isDecorative = true,
+                    contentDescription = contentDescription,
                     size = buttonWidth,
+                    onClick = open,
                 )
-            } else {
-                OverflowMenu(
-                    state = state,
-                    button = { open ->
-                        ActionButton(
-                            modifier = buttonModifier,
-                            icon = icon,
-                            contentDescription = contentDescription,
-                            size = buttonWidth,
-                            onClick = open,
-                        )
-                    },
-                ) { select ->
-                    menuItems.forEach { item ->
-                        DropdownMenuItem(
-                            text = { Text(item.title) },
-                            leadingIcon = { ActionIcon(icon = item.icon, contentDescription = null, animateIconChange = item.animateIconChange) },
-                            enabled = item.isEnabledInMenu?.invoke() ?: item.isEnabled,
-                            onClick = { select(item.onClick) },
-                        )
-                    }
-                    menuFooter?.invoke()
-                }
+            },
+        ) { select ->
+            menuItems().forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(item.title) },
+                    leadingIcon = { ActionIcon(icon = item.icon, contentDescription = null, animateIconChange = item.animateIconChange) },
+                    enabled = item.isEnabledInMenu?.invoke() ?: item.isEnabled,
+                    onClick = { select(item.onClick) },
+                )
             }
+            menuFooter?.invoke()
         }
     }
 }

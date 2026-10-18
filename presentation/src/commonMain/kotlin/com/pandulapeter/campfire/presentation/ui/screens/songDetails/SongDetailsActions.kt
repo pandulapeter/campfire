@@ -117,19 +117,21 @@ internal fun RowScope.SongDetailsActions(
             isEditAndExportOnly = isReadOnly,
             setlistFileName = setlistFileName,
             isAfterButton = showsSetlistAssignmentsInBar,
-            leadingItems = listOfNotNull(
-                if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
-                    null
-                } else {
-                    setlistAssignmentsAction(
-                        actions = songActions,
-                        song = song,
-                        isInSetlist = isInSetlist,
-                        setlistFileName = setlistFileName,
-                    )
-                },
-                tunerAction,
-            ),
+            leadingItems = {
+                listOfNotNull(
+                    if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
+                        null
+                    } else {
+                        setlistAssignmentsAction(
+                            actions = songActions,
+                            song = song,
+                            isInSetlist = isInSetlist,
+                            setlistFileName = setlistFileName,
+                        )
+                    },
+                    tunerAction,
+                )
+            },
             // The transposition, the capo and the tempo are set in the song's own first section now; what
             // is left for the menu is the text size, which belongs to the reader rather than to the song.
             menuFooter = if (showsFontScaleInBar) {

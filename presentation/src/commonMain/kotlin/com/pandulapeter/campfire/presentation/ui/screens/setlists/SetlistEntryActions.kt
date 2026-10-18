@@ -66,25 +66,23 @@ internal fun SetlistEntryActions(
             isDeletable = false,
             isEditAndExportOnly = isArchived,
             setlistFileName = setlistFileName,
-            leadingItems = if (isArchived) {
-                emptyList()
-            } else {
-                // The song is in this setlist by definition, so the star is always filled. This setlist's box is not
-                // locked the way the song details screen locks it: unticking it takes the row out from under the sheet,
-                // which leaves nothing behind it to pull the reader away from.
-                setlistRowActions(onMoveUp, onMoveDown, onRemove) + setlistAssignmentsAction(
-                    actions = songActions,
-                    song = entry.song,
-                    isInSetlist = true,
-                )
+            leadingItems = {
+                if (isArchived) {
+                    emptyList()
+                } else {
+                    // The song is in this setlist by definition, so the star is always filled. This setlist's box is not
+                    // locked the way the song details screen locks it: unticking it takes the row out from under the sheet,
+                    // which leaves nothing behind it to pull the reader away from.
+                    setlistRowActions(onMoveUp, onMoveDown, onRemove) + setlistAssignmentsAction(
+                        actions = songActions,
+                        song = entry.song,
+                        isInSetlist = true,
+                    )
+                }
             },
         )
 
-        is SetlistWithSongs.Entry.Missing -> ActionsMenu(
-            state = state,
-            isExpandable = false,
-            items = setlistRowActions(onMoveUp, onMoveDown, onRemove),
-        )
+        is SetlistWithSongs.Entry.Missing -> ActionsMenu(state = state) { setlistRowActions(onMoveUp, onMoveDown, onRemove) }
     }
 }
 

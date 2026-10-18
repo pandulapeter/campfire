@@ -193,16 +193,18 @@ private fun SongRowActions(
                 isAfterButton = areSetlistsEnabled,
                 // After the song's own metadata editors, the row's way into the
                 // mode, which starts with this song ticked.
-                fileEditItems = songLabelActions(
-                    viewModel = viewModel,
-                    song = song,
-                    target = SongEditTarget.File(song.fileName),
-                ) + ActionsMenuItem(
-                    title = selectMultipleTitle,
-                    icon = selectSongsIcon,
-                    isAlwaysInMenu = true,
-                    onClick = { viewModel.songSelection.start(song.fileName) },
-                ),
+                fileEditItems = {
+                    songLabelActions(
+                        viewModel = viewModel,
+                        song = song,
+                        target = SongEditTarget.File(song.fileName),
+                    ) + ActionsMenuItem(
+                        title = selectMultipleTitle,
+                        icon = selectSongsIcon,
+                        isAlwaysInMenu = true,
+                        onClick = { viewModel.songSelection.start(song.fileName) },
+                    )
+                },
             )
         }
     }
