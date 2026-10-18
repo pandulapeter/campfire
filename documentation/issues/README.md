@@ -103,6 +103,23 @@ after lane B has merged, cut from the main checkout's `HEAD`.
 **Shared files:** `ui/screens/CLAUDE.md` (plans 08 and 13) and `ui/components/CLAUDE.md` (plans 01 and 04): each lane edits
 only its own paragraph, and the merge keeps both. No plan adds strings.
 
+## Challenge
+
+Every plan was challenged by an agent that did not write it (section 1, step 7), checked against Compose Multiplatform
+1.12.1's sources where a plan relies on its internals. **Sound:** 13. **Amended:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10,
+11, 14, 15, 16. Each amended plan says what changed under its title; the largest changes:
+
+- 03 no longer releases a hold set by closing the search (that would send the list to the top, against the documented
+  closing behaviour); it re-resolves its card, and stops only the anchor transition it started.
+- 05 provides the menu's room through a composition local, not the view model's `OverlayState`, which outlives the
+  Android view the insets belong to.
+- 10 keeps the documented synchronous first frame and adds a cooperative variant for the background paths only.
+- 14 keeps the Oklab `lerp` (a second draw at the pulse's alpha would shift the color) with a table of 33 filters.
+- 16 replaces the bounded cache with one per page, since an LRU misses as badly as `clear()` once a frame draws more texts
+  than the bound, and `LinkedHashMap`'s access order is JVM-only.
+
+**Dropped:** 12 (below).
+
 ## Decisions (awaiting the user)
 
 1. **Song cards no longer show a title's subtitle** (`SongListItem`: `songCardTitle(song.titleWithoutSubtitle, index)`), so

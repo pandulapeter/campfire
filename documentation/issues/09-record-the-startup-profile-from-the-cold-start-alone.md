@@ -10,7 +10,7 @@
 
 # Record the startup profile from the cold start alone
 
-**Challenged:** amended — JUnit 4 does not run `@Test`s in declaration order and the collections share the app's data, so whichever runs first gets the one-time first run (demo planting, onboarding); pin the order so `journeys()` takes it and `startup()` records an ordinary cold start, and have `startup()` wait for the list's first card, not only the first frame.
+**Challenged:** amended — JUnit 4 does not run `@Test`s in declaration order and the collections share the app's data, so whichever runs first gets the one-time first run (demo planting, onboarding); pin the order so `journeys()` takes it and `startup()` records an ordinary cold start, and have `startup()` wait for the list's first card, not only the first frame; the `screens/settings` check narrowed, since `LibrarySummary` from that package is read at startup.
 
 **Kind:** performance  ·  **Severity:** low  ·  **Platforms:** Android
 **Files:** `app/baselineprofile/src/main/kotlin/com/pandulapeter/campfire/baselineprofile/BaselineProfileGenerator.kt`,
