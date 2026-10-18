@@ -61,6 +61,9 @@ internal fun SongLabels(
     val scrollState = rememberScrollState()
     val sortedTags = remember(tags) { tags.sortedAlphabeticallyBy { it } }
     val sortedLanguages = languages.map { code -> code to languageLabel(code) }.sortedAlphabeticallyBy { it.second }
+    // One painter for every pill of a kind, since each is a vector of its own to build and cache for every card scrolled in.
+    val tagIcon = painterResource(Res.drawable.ic_label)
+    val languageIcon = painterResource(Res.drawable.ic_language)
     Row(
         modifier = modifier
             .horizontalFadingEdges(scrollState)
@@ -72,7 +75,7 @@ internal fun SongLabels(
                 text = tag,
                 isSelected = onTagClicked != null && selectedTags.any { tagKey(it) == tagKey(tag) },
                 onClick = onTagClicked?.let { { it(tag) } },
-                leadingIcon = painterResource(Res.drawable.ic_label),
+                leadingIcon = tagIcon,
                 leadingIconFill = tagColor(tag)?.color() ?: Color.Unspecified,
             )
         }
@@ -83,7 +86,7 @@ internal fun SongLabels(
                 text = label,
                 isSelected = onLanguageClicked != null && code in selectedLanguages,
                 onClick = onLanguageClicked?.let { { it(code) } },
-                leadingIcon = painterResource(Res.drawable.ic_language),
+                leadingIcon = languageIcon,
             )
         }
     }
