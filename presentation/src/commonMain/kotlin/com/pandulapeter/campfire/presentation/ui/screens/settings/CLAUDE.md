@@ -23,8 +23,7 @@ breakpoint, as do the wide layout's pages.
   both chords and tuner are off (the tuner and the keyboard's capo reading use it without diagrams). Accidentals stay
   enabled under a numbering notation (they still spell its key). Examples, strings, and tuning notes are written in the
   picked notation, never in the language.
-- **Library**: Sync, Import and export (led by "Add your own songs", the songs screen's hint as a dialog, enabled in
-  read only mode since only its buttons change anything), then On this device last, since its rows can't be undone. Deleting the library
+- **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
   goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
 - `BackgroundWarmthSlider` and `LanguageChoice` are shared with the onboarding's first page.
 
