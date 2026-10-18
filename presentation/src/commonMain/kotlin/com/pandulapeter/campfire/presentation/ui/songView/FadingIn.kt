@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 internal fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {
     val alpha = remember { Animatable(if (isFadingIn) 0f else 1f) }
     val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-    LaunchedEffect(alpha) { alpha.animateTo(1f, spec) }
+    // Every line of a song carries this, and nearly none of them fade, so the ones already in place start no animation.
+    LaunchedEffect(alpha) { if (alpha.value < 1f) alpha.animateTo(1f, spec) }
     return graphicsLayer { this.alpha = alpha.value }
 }
