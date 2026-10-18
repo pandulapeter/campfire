@@ -38,6 +38,23 @@ class SearchSongGroupsTest {
     }
 
     @Test
+    fun `the results of a query stay listed after the selection that leads them`() {
+        val selection = SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("s1")))
+        val results = SongGroup(header = null, songs = listOf(song("a1"), song("b1")))
+        val merged = listOf(selection, results).withoutSectionHeaders()
+        assertEquals(listOf(true, false), merged.map { it.isSelection })
+        assertEquals(listOf(null, null), merged.map { it.header })
+        assertEquals(listOf("a1.cho", "b1.cho"), merged[1].songs.map { it.fileName })
+    }
+
+    @Test
+    fun `a selection alone loses its header and stays the selection`() {
+        val merged = listOf(SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("s1")))).withoutSectionHeaders()
+        assertEquals(null, merged.single().header)
+        assertEquals(true, merged.single().isSelection)
+    }
+
+    @Test
     fun `results without sections are left as they are`() {
         val results = listOf(SongGroup(header = null, songs = listOf(song("a1"))))
         assertSame(results, results.withoutSectionHeaders())

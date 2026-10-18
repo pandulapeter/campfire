@@ -24,8 +24,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 internal fun List<SongGroup>.withoutSectionHeaders(anchor: SongCardSlot? = null): List<SongGroup> {
     if (none { it.header != null }) return this
     val selection = filter { it.isSelection }.map { it.copy(header = null) }
-    val sections = filter { it.header is SongGroupHeader.Section }
-    val merged = if (sections.isEmpty()) selection else selection + SongGroup(header = null, songs = sections.flatMap { it.songs })
+    // Whatever is not the selection, the ranked results of a query (which have no header) as well as the sections.
+    val rest = filterNot { it.isSelection }
+    val merged = if (rest.isEmpty()) selection else selection + SongGroup(header = null, songs = rest.flatMap { it.songs })
     if (anchor == null) return merged
     return merged.map { group ->
         val position = group.indexOfItem(anchor.key)
