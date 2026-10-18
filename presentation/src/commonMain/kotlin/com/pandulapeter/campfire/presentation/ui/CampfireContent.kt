@@ -77,8 +77,12 @@ internal fun CampfireContent(
 
     // Worked out once for both the expanded rail and the Songs screen's side panel, so that the two are never decided
     // from different widths, see minSongColumnWidth.
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = userPreferences?.isCoverArtEnabled != false)
+    // The two preferences read here are derived from the rest, so that a transposition or a fold written while a song is
+    // read does not compose the app's root again.
+    val userPreferences = viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isCoverArtEnabled by remember(userPreferences) { derivedStateOf { userPreferences.value?.isCoverArtEnabled != false } }
+    val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
+    val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = isCoverArtEnabled)
 
     // The window's height rather than what the keyboard leaves of it, so that the grouping of the tools never flips while
     // typing, and derived, so that a window being resized recomposes only in the frame it crosses the line.
@@ -99,7 +103,7 @@ internal fun CampfireContent(
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 metronomeBeat = metronomeBeat,
                 lastTool = viewModel.navigator.lastTool,
-                isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
+                isKeyboard = isKeyboard,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
                 onToolsItemSelected = viewModel::selectToolsItem,
             )

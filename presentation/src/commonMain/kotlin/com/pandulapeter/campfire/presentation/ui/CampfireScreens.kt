@@ -177,8 +177,11 @@ internal fun CampfireScreens(
     // measured at inside their layout, which no discrete decision stands in for.
     // The Songs screen's column width is worked out by the caller (see minSongColumnWidth), which decides the expanded
     // rail from the same width, and the Setlists screen's cards are laid out by it too.
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD
+    // Derived from the rest of the preferences, so that a transposition or a fold written while a song is read does not
+    // compose every screen's entry again.
+    val userPreferences = viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
+    val sortingMode by remember(userPreferences) { derivedStateOf { userPreferences.value?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE } }
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
         contentPadding = shellContentPadding,
@@ -186,7 +189,7 @@ internal fun CampfireScreens(
         songColumnWidth = songColumnWidth,
         songGridColumnWidth = songGridColumnWidth(
             songColumnWidth = songColumnWidth,
-            sortingMode = userPreferences?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE,
+            sortingMode = sortingMode,
         ),
     )
     val settingsLayout = PageWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
