@@ -38,6 +38,9 @@ the plain indicator (the launch screen covers their first read).
 
 - Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use
   `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ContentOverscroll.kt`),
-  offering drags to parents first so a fitting sheet still drags down. The vertical form draws its own top fade while
+  offering drags to parents first so a fitting sheet still drags down. Installed whether or not the content fits (only
+  a measure knows, so a decision while composing would compose every list and label row twice); the connection asks at
+  each drag, and the clip is set in a layer only while it fits, since a scrolling container must not clip its cross
+  axis. The vertical form draws its own top fade while
   pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
   `OverscrollPull` instead.

@@ -31,8 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -62,19 +62,24 @@ internal fun Modifier.bounceScrollableContent(
     orientation: Orientation = Orientation.Vertical,
     pull: OverscrollPull? = null,
 ): Modifier {
-    val effect = rememberOverscrollEffect()
-    if (effect == null || state.canScrollForward || state.canScrollBackward) return this
+    val effect = rememberOverscrollEffect() ?: return this
+    // Installed whether or not the content fits, which is only known once it has been measured: decided here, a list or
+    // a row of labels would be composed a second time as the first measure told it otherwise. The connection asks at
+    // every drag instead, and leaves content that scrolls to Foundation.
     val dispatcher = remember { NestedScrollDispatcher() }
     val scope = rememberCoroutineScope()
     val ownPull = remember { OverscrollPull() }
     val usedPull = pull ?: ownPull
-    // A pull handed in outlives this branch, which the content leaves as soon as it can scroll: leaving it mid-drag or
-    // mid-release, with the spring cancelled with the scope, would leave the cards carried up once it is short again.
+    // A pull handed in outlives this modifier, and the screen holding it may take it away mid-drag or mid-release, with
+    // the spring cancelled with the scope: the cards would be left carried up.
     DisposableEffect(usedPull) { onDispose { usedPull.towardsStart = 0f } }
     val connection = remember(state, effect, orientation, dispatcher, scope, usedPull) {
         ShortContentOverscroll(state, effect, orientation, dispatcher, scope, usedPull)
     }
-    return clipToBounds()
+    // Content that fits is clipped to keep its stretch inside the container. Content that scrolls is clipped along its
+    // main axis by its own container and not across it, where the chips' ripples and focus rings and a sheet's sideways
+    // overflow are drawn past the bounds, so it is left unclipped; asked while drawing, as whether it fits changes.
+    return graphicsLayer { clip = !(state.canScrollForward || state.canScrollBackward) }
         .then(if (orientation == Orientation.Vertical && pull == null) Modifier.fadingTopEdge { ownPull.towardsStart.toInt() } else Modifier)
         .overscroll(effect)
         .nestedScroll(connection, dispatcher)
