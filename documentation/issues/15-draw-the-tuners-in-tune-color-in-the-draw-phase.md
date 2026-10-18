@@ -10,6 +10,11 @@
 
 # Draw the tuner's in-tune color in the draw phase
 
+**Challenged:** amended — the text keeps Material's `Text` (the note's is `autoSize`d, and a `BasicText` rewrite would have
+to reproduce `Text`'s style merging): the animated color is handed down as a `State` and read only by the `Text` calls,
+which recomposes those alone. The meter is handed the target accent rather than the animated one, which otherwise
+recomposes it every frame and has its own notch spring chase a moving target.
+
 **Kind:** performance  ·  **Severity:** low  ·  **Platforms:** all
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/TunerDisplay.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/TunerMeter.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md`
 
@@ -23,9 +28,18 @@ the reading text.
 
 ## Fix
 
-Meter: read `notchColor` inside the Canvas (pass the `State`) and give the Canvas `.graphicsLayer {}`. Note label and reading
-text: pass a `ColorProducer` through `BasicText` (or tint in draw), which changes the `Text` call shape — keep the font, style
-and semantics identical. Also replace `checkPath.reset()` with `rewind()` and remember the `Stroke`.
+1. `TunerDisplay`: keep `val accent = animateColorAsState(...)` as the `State` (do not read `.value` there), and hand it
+   to `TunerNoteLabel` → `TunerNoteName` and `TunerReadingLine`, which read `accent.value` at their `Text` calls. The
+   display then recomposes only with the readings (30 Hz, documented in `ui/tuner/CLAUDE.md`), and each frame of the
+   spring recomposes those `Text`s only; a color-only change of `Text` invalidates draw, not the note's `autoSize`
+   layout. Font, style, `autoSize` and semantics stay as they are.
+2. `TunerMeter`: pass `accentColor = LocalSecondAccentColor.current` (the target), not the animated accent, so the
+   meter's parameters hold still through the spring; its own `notchColor` spring already eases the notch to it. Keep
+   that as the `State` and read `.value` inside the `Canvas` draw lambda, and give the `Canvas` `.graphicsLayer {}` so
+   the needle's per-frame redraws (`position`, `needleAlpha`, `check` are already read in draw) re-record only its own
+   layer, not the one holding the 96sp note.
+3. `checkPath.rewind()` instead of `reset()`; the `Stroke` may be remembered keyed on density, or left (it is a small
+   value object).
 
 ## Tests
 

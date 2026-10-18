@@ -10,6 +10,11 @@
 
 # Keep the print renderer's text layouts cached on dense pages
 
+**Challenged:** amended — an LRU does not fix the stated case: a frame drawing more distinct texts than the bound is a
+cyclic access, where LRU misses every entry just as `clear()` does, so only a bound above one frame's working set helps,
+and `LinkedHashMap(accessOrder = true)` is JVM-only (shared code is JVM-free). The fix is now a cache keyed by the
+pages drawn, whose working set (at most ~6 pages a frame) is known.
+
 **Kind:** performance  ·  **Severity:** low  ·  **Platforms:** all
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/print/PrintRenderer.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/print/CLAUDE.md`
 
@@ -28,10 +33,20 @@ measures everything again (the `TextMeasurer`'s own cache is 256), so the previe
 
 ## Fix
 
-Evict the least recently used entries instead of clearing (a `LinkedHashMap` in access order) at a bound of 2,048 —
-recommended, after measuring the preview's memory with a dense setlist, since a `TextLayoutResult` holds a paragraph — or
-only raise the bound.
+Cache the layouts per drawn page instead of per `(text, style)`:
+
+- `draw(scope, page, scale)` looks `page` up in a short list of `(PrintPage, List<TextLayoutResult>)` entries matched by
+  identity (`===`; `PrintPage` is a data class whose `equals`/`hashCode` walk all its texts on every call), the most
+  recently drawn first, and on a miss lays out `page.texts` once and puts the entry in front.
+- Keep 8 pages: a frame draws at most the pager's current and neighbouring pages of two documents during an options
+  crossfade (`PrintPages`' `AnimatedContent`), so the working set always fits, and memory is bounded by pages rather
+  than by fragment count. A re-layout makes new `PrintPage` objects, so the old entries simply age out.
+- The preview renderer is only drawn on the main thread; the layout and the PDF export each use their own
+  `newRenderer()` (`LaidOutDocumentProducer`, `ExportScreen`), so the list needs no locking. `selectableText` (export
+  only) can keep a plain uncached `text()` or use the same page lookup.
 
 ## Tests
 
-Pull the cache into a small class and test that it never exceeds its bound and keeps the most recently used entries.
+Pull the page cache into a small class: a page drawn again returns the same layouts (no second measure, counted through
+the measure function it is handed), a ninth page evicts the least recently drawn, and an equal-but-new `PrintPage`
+misses.

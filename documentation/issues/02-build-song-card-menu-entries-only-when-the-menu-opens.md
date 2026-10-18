@@ -10,17 +10,21 @@
 
 # Build a song card's menu entries only when its menu opens
 
+**Challenged:** amended — `SetlistActions` is an expandable header menu and stays on the `List` overload; `SongActions`' `leadingItems` / `fileEditItems` (built per card by `SongListRow` and `SetlistEntryActions`) must become builders too or most of the saving is lost; the scroll start/end rebuild claim corrected; `hasMenu` for each non-expandable caller checked.
+
 **Kind:** performance  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/menu/ActionsMenu.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/actions/SongActions.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/actions/SetlistActions.kt`,
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongListRow.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/SetlistEntryActions.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/menu/CLAUDE.md`,
-`presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/actions/CLAUDE.md`
+`presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/actions/CLAUDE.md`, `.../ui/screens/songDetails/SongDetailsActions.kt`
 
 ## Problem
 
 Every song card composes its whole menu up front: `SongActions.kt` calls `painterResource(Res.drawable.ic_rename)` and its
 siblings (about seven) plus a `stringResource` per entry, and `SongListRow` adds `songLabelActions` (two more). For XML
-vectors each `painterResource` builds a `VectorPainter`. They are drawn only once the menu opens, yet built for every card
-scrolled in and again at every scroll start and end (the row recomposes for `listItemAnimation`). `SongListRow` already
+vectors each `painterResource` builds a `VectorPainter`. They are drawn only once the menu opens, yet built for every song card scrolled in, on Songs and in every setlist (whose
+rows use `SongActions` through `SetlistEntryActions`, adding `setlistRowActions` and `setlistAssignmentsAction`: up to four
+more). (`SongList` keeps `listItemAnimation` on a `Box` of its own so that a scroll start and end do not recompose the row;
+the remembered painters would be cheap then anyway, so the cost is the first composition of each card.) `SongListRow` already
 hoists `selectSongsIcon` and `selectMultipleTitle` for this reason.
 
 The review already spared non-expandable menus the `BoxWithConstraints` and the per-item `AnimatedVisibility`
@@ -28,14 +32,23 @@ The review already spared non-expandable menus the `BoxWithConstraints` and the 
 
 ## Fix
 
-Let `ActionsMenu` take its items as a builder, `items: @Composable () -> List<ActionsMenuItem>`, invoked only where they are
-needed: inside the `DropdownMenu` content, and up front only for a menu that lets items out (`isExpandable`), which needs
-them to count buttons. `SongActions` and `SetlistActions` pass builders. Keep the `LaunchedEffect(hasMenu, …)` dismissal
-working: for a non-expandable menu `hasMenu` becomes "the builder may return something, or there is a footer", which
-every song card's menu always has (Export is always visible).
+Add an `ActionsMenu` overload for non-expandable menus whose items are a builder, `items: @Composable () -> List<ActionsMenuItem>`,
+invoked only inside the `DropdownMenu` content (it stays composed through the exit animation, so the entries do too). Keep
+the `List` overload for every expandable caller: the song details app bar's own `ActionsMenu`s, the editor's `EditorMenu`,
+`SongSelectionMenu`, and `SetlistActions`, which is a setlist header's menu (`isExpandable` by default: Choose songs becomes a
+button) and so needs its items up front to count buttons; it is one per header, not per card, and is left alone.
 
-Recommended: keep the `List` overload for the expandable callers (song details app bar, editor) and add the builder
-overload for the non-expandable ones, so the larger callers are untouched.
+Only `SongActions` (always `isExpandable = false`) and `SetlistEntryActions`' `Entry.Missing` menu move to the builder. For
+the saving to reach the cards, `SongActions`' `leadingItems` and `fileEditItems` become builders as well
+(`@Composable () -> List<ActionsMenuItem>`, default `{ emptyList() }`), so `SongListRow` passes
+`{ songLabelActions(...) + ActionsMenuItem(selectMultipleTitle, ...) }` and `SetlistEntryActions` passes
+`{ setlistRowActions(...) + setlistAssignmentsAction(...) }` without calling them while composing the card;
+`SongDetailsActions` wraps its list the same way.
+
+`hasMenu`: for the builder overload it is simply true. Both of its callers always have an entry (`SongActions` always
+holds Export; a missing row always holds Remove from setlist), so the overflow button and the long press / right click
+(`OverflowMenuState.open()`) behave as today, and the `LaunchedEffect(hasMenu, …)` dismissal is only kept on the `List`
+path. State the "always has an entry" assumption in the overload's KDoc.
 
 ## Tests
 

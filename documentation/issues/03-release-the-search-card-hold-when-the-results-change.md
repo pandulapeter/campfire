@@ -10,6 +10,8 @@
 
 # Release the search card hold when the results change under it
 
+**Challenged:** amended — do not stop the shared `ListAnchor` transition unconditionally (a tag tap's own narration, started by `ScrollToTopWhenChanged` earlier in the same frame, would be killed); a hold set by *closing* the search must follow its card into the arriving full list rather than release to the top, which is what `songs/CLAUDE.md` documents; ordering confirmed.
+
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all (mostly desktop and web, Ctrl / Cmd + F)
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/KeepCardsInPlaceAcrossSearch.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongList.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/CLAUDE.md`,
 a test in `presentation/src/commonTest/.../screens/songs/`
@@ -30,18 +32,33 @@ around the old position with the best matches above the viewport. A tag tap insi
 
 ## Fix
 
-Release the hold when the groups it was set for are no longer the ones shown: store the `filterKey` (and `orderKey`) it was
-set for in `SearchCardHold`, and in `KeepCardsInPlaceAcrossSearch`'s `SideEffect` call a new `SearchCardHold.release()`
-(and stop the anchor's transition if `ListAnchor` offers it) when `songGroups.filterKey` / `orderKey` differ. Recommended over
-having `apply` ignore itself silently, since releasing also stops narrating a jump that no longer applies.
+Store in `SearchCardHold` what it was set for: `songGroups.filterKey`, the held card's item key, and the anchor
+transition it started (add a running number to `ListAnchor`, bumped by `animateFrom`, and keep the one `keep()`'s
+`animateFrom` produced). In `KeepCardsInPlaceAcrossSearch`'s `SideEffect`, when `songGroups.filterKey` differs from the
+held one:
 
-Check the ordering against `ScrollToTopWhenChanged` (called before `KeepCardsInPlaceUnderTick` and
-`KeepCardsInPlaceAcrossSearch` in `SongList`): the release must happen in the composition the new key arrives in, before
-the grid measures, or the hold wins once more.
+- **If `ListAnchor`'s number is no longer the hold's**, a row anchor (a tag or language tap) has started its own narration
+  in `ScrollToTopWhenChanged` this very frame: release the hold and leave the transition alone. `filterAnchor` is shared by
+  both, so a blanket `stopTransition()` here would cancel the tag tap's narration right after it began.
+- **Else, with the search open** (a query typed or pasted, results re-ranked): release the hold and stop the transition
+  (it narrates offsets of a layout that is gone); `ScrollToTopWhenChanged`'s request for item 0 then stands.
+- **Else, the hold was set by closing**: `activeQuery` turns empty at once but the full list arrives frames later, inside
+  the narration, so the hold's index is one into the results list. Re-resolve the held card's key in the new `groups`
+  (`itemIndexOf(key, hasPlaceholder)`) and hold that index with the same offset, which keeps the documented closing
+  behaviour ("the top left card then is kept"); release if the card is not in the new list. (Today it holds an index into
+  the wrong list; a plain release would send the list to the top instead.)
+
+Ordering, checked: `ScrollToTopWhenChanged`, `KeepCardsInPlaceUnderTick` and `KeepCardsInPlaceAcrossSearch` all act in
+`SideEffect`s, which run in composition order after the composition that brought the new `songGroups` is applied and
+before the grid measures it, and `holdingSearchCard`'s `apply` runs in that measure. So the release (or re-key) above
+lands after `ScrollToTopWhenChanged`'s request and before the hold could repeat its old one. `orderKey` need not be
+stored: `filterKey` already holds the query and the sorting mode (`LibraryState`), so it changes whenever `orderKey` does.
 
 ## Tests
 
-Pull the hold's decision into a pure function (`shouldHold(heldFor, current, isScrollInProgress, progress)`) and test: same
-keys and progress → hold; different filterKey → release; scroll in progress → release; progress null → release. A UI test in
+Pull the hold's decision into a pure function and test: same filterKey and progress → hold; different filterKey with the
+search open → release and stop; different filterKey after a newer anchor transition → release, transition kept; different
+filterKey on closing → re-hold at the card's new index, or release where it is gone; scroll in progress → release; progress
+null → release. A UI test in
 `tools/screenshots` (songs package) can open the search on a scrolled list and type at once, then assert that the first
 result is the first visible item.

@@ -10,6 +10,15 @@
 
 # Match the song picker's search off the main thread
 
+**Challenged:** dropped — the gain does not pay for the asynchrony. On wasmJs `Dispatchers.Default` is the page's one
+thread (plan 10's premise), so "the web most" gets nothing; elsewhere it saves 1–3 ms of a 16 ms frame at 2,000 songs
+while the lazy list's own recomposition of the new rows stays on the main thread. In exchange the list would lag the
+query by a frame or more, so `refreshKey`, `revealRowsKey`, `ChecklistOrder` and the no-results text (all keyed on the
+live `query`) would have to be re-keyed on the query the matches were computed for. The plan's premises are also off:
+the query is a `rememberSaveable` `String`, not a `TextFieldState`, and is sheet-local while `SongPickerState` lives
+for the session ("search starts empty each time"); and the first value is not the unfiltered list, since the tag and
+language chips survive reopening. Revisit only if a measurement shows the match itself over ~8 ms per keystroke.
+
 **Kind:** performance  ·  **Severity:** low  ·  **Platforms:** all (large libraries; the web most)
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/pickers/SongPicker.kt`, `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/search/SongPickerIndex.kt`, the picker's state holder (`SongPickerState`),
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/pickers/CLAUDE.md`
