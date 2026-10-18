@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components.list
 
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -79,18 +80,31 @@ internal class ListAnchor {
 
     fun take() = item.also { item = null }
 
-    fun animateFrom(visibleOffsets: Map<Any, IntOffset>, coroutineScope: CoroutineScope) {
+    /**
+     * Narrates a jump from [visibleOffsets], the items' offsets before it, on [animationSpec]: a change that the list
+     * also moves under, as the app bar fills in, is narrated on that movement's spring, so that what stands still on
+     * screen does.
+     */
+    fun animateFrom(
+        visibleOffsets: Map<Any, IntOffset>,
+        coroutineScope: CoroutineScope,
+        animationSpec: AnimationSpec<Float> = ITEM_FADE_SPEC,
+    ) {
         transitionJob?.cancel()
         val newTransition = AnchorTransition(visibleOffsets)
         transition = newTransition
         transitionJob = coroutineScope.launch {
             try {
-                newTransition.progress.animateTo(1f, ITEM_FADE_SPEC)
+                newTransition.progress.animateTo(1f, animationSpec)
             } finally {
                 if (transition === newTransition) transition = null
             }
         }
     }
+
+    /** How far the running transition is, null while none runs: read on every frame of one by whoever reads it. */
+    val transitionProgress: Float?
+        get() = transition?.progress?.value
 
     fun stopTransition() {
         transitionJob?.cancel()

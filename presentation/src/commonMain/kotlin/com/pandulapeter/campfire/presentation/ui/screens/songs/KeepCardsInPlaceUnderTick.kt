@@ -59,7 +59,7 @@ internal fun KeepCardsInPlaceUnderTick(
         // first card whose top is in sight is what is held. A card the change took away (a copy) is not in the new
         // groups, and the next one stands in for it.
         val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val cards = visibleItems.filter { it.contentType == "song" }
+        val cards = visibleItems.filter { it.contentType == SONG_CONTENT_TYPE }
             .sortedWith(compareBy({ it.key in lastSelectionKeys }, { it.offset.y < 0 }))
         cards.firstNotNullOfOrNull { card ->
             songGroups.groups.itemIndexOf(card.key, hasPlaceholder = hasPlaceholder)?.let { index -> index to card.offset.y }

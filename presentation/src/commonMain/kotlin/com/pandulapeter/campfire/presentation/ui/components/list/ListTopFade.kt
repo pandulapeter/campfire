@@ -60,7 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.components.OverscrollPull
  * with them.
  *
  * A list whose sections each start with a header of [sectionHeaderContentType] measures the fade from the start of the
- * section being read instead (see [sectionStartDistance]), so a list brought to one of its headers - which is where a
+ * section being read instead (see [sectionStart]), so a list brought to one of its headers - which is where a
  * tap on a header takes it - shows that section's first card whole, as it shows the first section's at the top.
  */
 @Stable
@@ -92,30 +92,37 @@ internal class ListTopFade(
     /** Where the top of the list is in the window, which the cards place themselves against. */
     var viewportTop by mutableFloatStateOf(0f)
 
-    /** How strong the fade is, which grows with how far the list has been scrolled from its top. */
-    val strength: Float
-        get() {
-            val strength = listTopFadeStrength(
-                canScrollBackward = listState.canScrollBackward,
-                firstVisibleItemIndex = listState.firstVisibleItemIndex,
-                scrollOffset = listState.firstVisibleItemScrollOffset,
-                firstCardIndex = firstCardIndex,
-                coveredHeightPx = coveredHeightPx,
-                fadeHeightPx = fadeHeightPx,
-                overscrollPullPx = pullPx,
-            )
-            if (sectionHeaderContentType == null || strength == 0f) return strength
-            val distance = sectionStartDistance(
-                firstVisibleItemIndex = listState.firstVisibleItemIndex,
-                scrollOffset = listState.firstVisibleItemScrollOffset,
-                // A header collapsed to nothing, as the song list's are while its search is open, starts no section
-                // anybody can see, and counting it would thin the fade out over every card that follows one.
-                headerPositions = listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
-                    if (item.contentType == sectionHeaderContentType && item.size.height > 0) item.index to item.offset.y else null
-                },
-            ) ?: return strength
-            return minOf(strength, (distance / fadeHeightPx).coerceIn(0f, 1f))
-        }
+    /**
+     * How strong the fade is over a card whose top is [cardTop] below the top of the list, which grows with how far the
+     * list has been scrolled from its top. Thinned out near the start of a section for the cards of that section only:
+     * the end of the section before, above its header, is still under the row of the header pinned at the top, or in the
+     * room above the start of the section the list rests at ([SECTION_START_ROOM]), and is never shown there.
+     */
+    fun strengthAt(cardTop: Float): Float {
+        val strength = listTopFadeStrength(
+            canScrollBackward = listState.canScrollBackward,
+            firstVisibleItemIndex = listState.firstVisibleItemIndex,
+            scrollOffset = listState.firstVisibleItemScrollOffset,
+            firstCardIndex = firstCardIndex,
+            coveredHeightPx = coveredHeightPx,
+            fadeHeightPx = fadeHeightPx,
+            overscrollPullPx = pullPx,
+        )
+        if (sectionHeaderContentType == null || strength == 0f) return strength
+        val layoutInfo = listState.layoutInfo
+        val sectionStart = sectionStart(
+            firstVisibleItemIndex = listState.firstVisibleItemIndex,
+            scrollOffset = listState.firstVisibleItemScrollOffset,
+            // A header collapsed to nothing, as the song list's are while its search is open, starts no section
+            // anybody can see, and counting it would thin the fade out over every card that follows one.
+            headerPositions = layoutInfo.visibleItemsInfo.mapNotNull { item ->
+                if (item.contentType == sectionHeaderContentType && item.size.height > 0) item.index to item.offset.y else null
+            },
+        ) ?: return strength
+        // Item offsets start below the content padding, and the cards' tops below the top of the list.
+        if (cardTop < sectionStart.top + layoutInfo.beforeContentPadding) return strength
+        return minOf(strength, (sectionStart.distance / fadeHeightPx).coerceIn(0f, 1f))
+    }
 }
 
 /** The covered row recedes as the app bar takes its place; headerless lists fade directly below the bar. */
@@ -167,18 +174,21 @@ internal fun listTopFadeStrength(
  *
  * @param headerPositions The index and the laid out top of every section header on screen, the pinned one included.
  */
-internal fun sectionStartDistance(
+internal fun sectionStart(
     firstVisibleItemIndex: Int,
     scrollOffset: Int,
     headerPositions: List<Pair<Int, Int>>,
-): Int? = headerPositions.mapNotNull { (index, top) ->
+): SectionStart? = headerPositions.mapNotNull { (index, top) ->
     when {
         // A pinned header is drawn at the top whatever its place, so only how far the list is scrolled into it counts.
-        index == firstVisibleItemIndex -> scrollOffset
-        index > firstVisibleItemIndex -> top.coerceAtLeast(0)
+        index == firstVisibleItemIndex -> SectionStart(distance = scrollOffset, top = top)
+        index > firstVisibleItemIndex -> SectionStart(distance = top.coerceAtLeast(0), top = top)
         else -> null
     }
-}.minOrNull()
+}.minByOrNull { it.distance }
+
+/** How far the list is from the start of a section ([sectionStart]), and where that section's header is laid out. */
+internal data class SectionStart(val distance: Int, val top: Int)
 
 /** Marks the list whose top [fade] is measured from. */
 internal fun Modifier.listTopFadeViewport(fade: ListTopFade) = onPlaced { fade.viewportTop = it.positionInWindow().y }
@@ -194,7 +204,7 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
         .onPlaced { position.top = minOf(it.positionInWindow().y - fade.viewportTop, 2 * fade.heightPx) }
         // The card's own position is read first, so that only a card under the fade reads the scroll offset at all.
         .graphicsLayer {
-            compositingStrategy = if (position.top - fade.pullPx < fade.heightPx && fade.strength > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+            compositingStrategy = if (position.top - fade.pullPx < fade.heightPx && fade.strengthAt(position.top) > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
         }
         .drawWithCache {
             // Keep the shader in viewport coordinates and move the canvas beneath it. Rebuilding the gradient
@@ -209,7 +219,7 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
                 // A pulled list draws its cards higher than they are laid out, so the gradient is drawn as much lower.
                 val top = position.top - fade.pullPx
                 if (top < fade.heightPx) {
-                    val strength = fade.strength
+                    val strength = fade.strengthAt(position.top)
                     if (strength > 0f) {
                         translate(top = -top) {
                             drawRect(
@@ -232,7 +242,7 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                 // A card below the fade holds twice the fade's own height as its top, which no press inside it adds up
                 // to less than the fade's height, so the clamp leaves the answer as it would be with the real position.
-                if (fade.strength > 0f && position.top + down.position.y < fade.heightPx) {
+                if (fade.strengthAt(position.top) > 0f && position.top + down.position.y < fade.heightPx) {
                     down.consume()
                 }
             }

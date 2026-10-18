@@ -46,7 +46,6 @@ internal fun SetlistWithSongs.runningTimeText(): String? {
     )
 }
 
-
 /**
  * How far the setlist's day is, where the user asked for it, for the summary at the top of the setlist: in performance
  * mode nothing else on the screen shows the day.

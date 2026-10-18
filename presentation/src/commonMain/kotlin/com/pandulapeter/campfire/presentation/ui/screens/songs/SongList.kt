@@ -99,10 +99,12 @@ internal fun SongList(
     val songActions = rememberSongActionHandler(viewModel)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
     val selectSongsIcon = painterResource(Res.drawable.ic_select)
-    // An open search runs the sections together, so no section ends in a short row. The grid's own item animation moves
-    // the cards into the gaps and fades the headers out as the bar makes room for the field, all on one spring; nothing
-    // here asks the grid for a position, since a request is a jump the grid forgets every running item animation over.
-    val groups = remember(songGroups, isSearchOpen) { if (isSearchOpen) songGroups.groups.withoutSectionHeaders() else songGroups.groups }
+    // An open search runs the sections together, so no section ends in a short row, keeping the card at the top left of
+    // the list in its column; KeepCardsInPlaceAcrossSearch keeps its row.
+    val searchOpening = rememberSearchOpening(listState, songGroups, isSearchOpen, columnCount)
+    val groups = remember(songGroups, isSearchOpen, searchOpening, columnCount) {
+        if (isSearchOpen) songGroups.groups.withoutSectionHeaders(anchor = searchOpening?.slotFor(songGroups, columnCount)) else songGroups.groups
+    }
     val coroutineScope = rememberCoroutineScope()
     val filterAnchor = remember { ListAnchor() }
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
@@ -122,7 +124,10 @@ internal fun SongList(
     val sectionIndex = remember(groups) {
         SongSectionIndex(
             groups.mapIndexed { index, group ->
-                SongSectionIndex.Group(itemCount = group.songs.size + if (groups.hasSelectionDividerAfter(index)) 1 else 0, header = group.header)
+                SongSectionIndex.Group(
+                    itemCount = group.songs.size + (if (group.leadingGap > 0) 1 else 0) + if (groups.hasSelectionDividerAfter(index)) 1 else 0,
+                    header = group.header,
+                )
             },
         )
     }
@@ -135,7 +140,10 @@ internal fun SongList(
         sectionHeaderContentType = SONG_HEADER_CONTENT_TYPE,
     )
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
-    val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
+    val searchCardHold = remember { SearchCardHold() }
+    val gridModifier = remember(topFade) {
+        Modifier.fillMaxSize().listTopFadeViewport(topFade).holdingSearchCard(searchCardHold, listState, filterAnchor)
+    }
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
@@ -168,11 +176,16 @@ internal fun SongList(
         hasPlaceholder = placeholder != null,
         anchor = filterAnchor,
     )
-    RestoreScrollAfterSearch(
+    KeepCardsInPlaceAcrossSearch(
         listState = listState,
         isSearchOpen = isSearchOpen,
         songGroups = songGroups,
+        groups = groups,
+        opening = searchOpening,
+        hasPlaceholder = placeholder != null,
+        appBarOverlap = appBarOverlap,
         anchor = filterAnchor,
+        hold = searchCardHold,
     )
     // The last row's box would otherwise end up under the Done button, which stands over the end of the list.
     val selectionBottomPadding by animateDpAsState(if (isSelecting) DONE_BUTTON_ROOM else 0.dp)
@@ -260,10 +273,17 @@ internal fun SongList(
                             )
                         }
                     }
+                    if (group.leadingGap > 0) {
+                        item(
+                            key = SEARCH_GAP_KEY,
+                            span = { GridItemSpan(group.leadingGap.coerceAtMost(maxLineSpan)) },
+                            contentType = "search_gap",
+                        ) {}
+                    }
                     itemsIndexed(
                         items = group.songs,
                         key = { _, song -> group.itemKey(song) },
-                        contentType = { _, _ -> "song" },
+                        contentType = { _, _ -> SONG_CONTENT_TYPE },
                     ) { songIndex, song ->
                         val itemKey = group.itemKey(song)
                         // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
@@ -279,7 +299,7 @@ internal fun SongList(
                                 songActions = songActions,
                                 song = song,
                                 itemKey = itemKey,
-                                cardPadding = songCardPadding(songIndex, columnCount),
+                                cardPadding = songCardPadding(group.leadingGap + songIndex, columnCount),
                                 topFade = topFade,
                                 playingOverrides = playingOverrides,
                                 cardOptions = cardOptions,
@@ -371,6 +391,9 @@ internal fun SongList(
         }
     }
 }
+
+/** The key of the empty cells that keep a card in its column as the search opens ([SongGroup.leadingGap]). */
+private const val SEARCH_GAP_KEY = "search_gap"
 
 /** The key of the divider under the Selection section. */
 private const val SELECTION_DIVIDER_KEY = "selection_divider"

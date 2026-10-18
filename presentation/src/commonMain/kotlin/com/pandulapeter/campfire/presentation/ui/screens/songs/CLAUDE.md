@@ -17,13 +17,15 @@ The songs screen.
   (no mask at the real top, grows over the first 24dp, also when the first card is item 1).
 
 - An open search runs the sections together (`withoutSectionHeaders`), so cards fill the columns a section's last row
-  left open; the Selection group loses its header too and keeps the divider (`SongGroup.isSelection`). It happens in
-  the composition that opens or closes the search, and the grid's own item animation narrates it: cards slide, headers
-  fade, while the bar moves the list. **Nothing asks the grid for a position then**: a request is a jump the grid
-  forgets every running item animation over, so the cards would snap.
-- Closing a search over the same songs, unscrolled since it opened, returns to the position it opened at
-  (`RestoreScrollAfterSearch`); the grid alone would keep the first card in place and the returning headers above it
-  would leave the list scrolled. That one jump is narrated by `ListAnchor`.
+  left open; the Selection group loses its header too and keeps the divider (`SongGroup.isSelection`).
+- **The top left card in sight stays where it is on screen** as the search opens and closes
+  (`KeepCardsInPlaceAcrossSearch`). Opening, the results start with empty cells (`SongGroup.leadingGap`) that keep it in
+  its column, kept while the search shows those songs; its row is asked for 48dp higher, by as much as the filling bar
+  moves the list down, and `ListAnchor` narrates the jump on the bar's spring, so the rest slides while it stands still
+  (headers vanish at once: a request makes the grid forget its item animation). `SearchCardHold` asks again while that
+  runs, since the cards above it grow by their artist line. Closing over the songs it opened over, neither scrolled nor
+  shown other songs since (a query typed and cleared counts), puts it back where it was; otherwise the top left card
+  then is kept the same way, its column the one its section gives it.
 
 - Sorted by artist, cards leave their artist to the header (`isArtistShown`); the Selection group and an open search,
   which takes the headers away, show it.

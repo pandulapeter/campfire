@@ -142,8 +142,8 @@ internal fun SongsScreen(
     val appBarProgress = remember(appBarReveal, isSearchOpen, hasOpenedSearch, isHeaderless) {
         { if (isSearchOpen || hasOpenedSearch) appBarReveal.value else if (isHeaderless) 1f else 0f }
     }
-    // The list inset and header height read one spring. A scroll anchor compensates the inset exactly,
-    // keeping the active section's cards still as later sections close up around them.
+    // The list inset and header height read one spring, which KeepCardsInPlaceAcrossSearch narrates its jump on, so
+    // that the card it keeps stands still as the list moves under the bar.
     val appBarOverlap: () -> AppBarOverlap = remember(appBarProgress) {
         { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarProgress()) }
     }

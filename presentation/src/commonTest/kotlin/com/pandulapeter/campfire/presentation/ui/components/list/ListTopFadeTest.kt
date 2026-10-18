@@ -11,8 +11,19 @@ package com.pandulapeter.campfire.presentation.ui.components.list
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ListTopFadeTest {
+
+    @Test
+    fun `a section start is the nearer of the pinned header scrolled into and the next one coming up`() {
+        val start = sectionStart(firstVisibleItemIndex = 4, scrollOffset = 30, headerPositions = listOf(4 to -30, 9 to 20))
+        assertEquals(SectionStart(distance = 20, top = 20), start)
+    }
+
+    @Test
+    fun `a header above the first item starts no section`() =
+        assertNull(sectionStart(firstVisibleItemIndex = 4, scrollOffset = 0, headerPositions = listOf(2 to -100)))
 
     @Test
     fun `unscrolled list has no fade with expanded or collapsed headers`() {

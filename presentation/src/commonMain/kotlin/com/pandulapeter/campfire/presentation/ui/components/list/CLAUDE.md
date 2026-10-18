@@ -41,7 +41,9 @@ headers.
   a lazy grid keeps a focused item placed after scrolling away, which stops it drawing later pinned headers.
 - The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it, keeping its pinned
   width. The row extends behind the fast scroller so pill and app bar reach measure from one edge.
-- Clicking a header scrolls to its section start.
+- Clicking a header scrolls to its section start, where the list keeps `SECTION_START_ROOM` above it. Nothing of the
+  section before shows in that room: the pushed header's fraction is measured to the content's start
+  (`pushedHeaderVisibleFraction`), and `ListTopFade` thins its fade near a section start only for that section's cards.
 
 ### Scrolling performance
 

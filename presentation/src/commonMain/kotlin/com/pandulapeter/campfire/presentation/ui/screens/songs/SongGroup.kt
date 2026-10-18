@@ -17,12 +17,15 @@ import com.pandulapeter.campfire.data.model.song.Song
  *   divider even where an open search has taken their header away.
  * @param copiedFileNames The songs of the Selection section that are still listed in their own section too, having
  *   been ticked since the list was last refreshed ([withSelectionLeading]). A copy is an item of its own to the grid.
+ * @param leadingGap The empty cells before the first song, an item of their own to the grid, which an open search puts
+ *   there to keep the card that was at the top left of the list in its column ([withoutSectionHeaders]).
  */
 data class SongGroup(
     val header: SongGroupHeader?,
     val songs: List<Song>,
     val copiedFileNames: Set<String> = emptySet(),
     val isSelection: Boolean = header == SongGroupHeader.Selection,
+    val leadingGap: Int = 0,
 ) {
     /** The key of the grid item that shows [song] in this group: its own one, or its copy's. */
     fun itemKey(song: Song) = if (song.fileName in copiedFileNames) "$SONG_COPY_ITEM_KEY_PREFIX${song.fileName}" else songItemKey(song)
@@ -50,3 +53,6 @@ private const val SONG_ITEM_KEY_PREFIX = "song_"
 
 /** What [SongGroup.itemKey] puts in front of the file name of a copy, a prefix no [songItemKey] can start with. */
 private const val SONG_COPY_ITEM_KEY_PREFIX = "copy_song_"
+
+/** What a song's card is to the grid. */
+internal const val SONG_CONTENT_TYPE = "song"

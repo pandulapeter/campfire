@@ -29,8 +29,8 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_V
 
 /**
  * [AddSongsTips] under the songs of a library too small to be anybody's own yet ([isAddSongsHintShown]), which is
- * where the onboarding leaves a user with only the demo songs. Drawn in a stronger tone than the song cards, so that it
- * reads as something the app says rather than one more song.
+ * where the onboarding leaves a user with only the demo songs. Drawn in the song cards' color; its primary title and
+ * buttons tell it apart from one more song.
  */
 @Composable
 internal fun AddSongsHintCard(
@@ -41,7 +41,7 @@ internal fun AddSongsHintCard(
 ) = Surface(
     modifier = modifier.fillMaxWidth().padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING + 8.dp),
     shape = MaterialTheme.shapes.medium,
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     Column(modifier = Modifier.padding(20.dp)) {
         Text(

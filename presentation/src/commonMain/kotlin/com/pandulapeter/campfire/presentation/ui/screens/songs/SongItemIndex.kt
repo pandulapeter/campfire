@@ -14,6 +14,7 @@ internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int
     var index = if (hasPlaceholder) 1 else 0
     forEachIndexed { groupIndex, group ->
         if (group.header != null) index++
+        if (group.leadingGap > 0) index++
         val songIndex = group.indexOfItem(key)
         if (songIndex >= 0) return index + songIndex
         index += group.songs.size
@@ -27,7 +28,8 @@ internal fun List<SongGroup>.hasSelectionDividerAfter(index: Int) = this[index].
 
 /**
  * The grid index of the first card, counted the way [SongList] emits its items: zero-height header slots are not scroll
- * distance, so the first card can be item 1 at the exact top.
+ * distance, so the first card can be item 1 at the exact top. A group's [SongGroup.leadingGap] is the first item of the
+ * row its first card is in, and is where that row starts.
  */
 internal fun List<SongGroup>.firstCardIndex(hasPlaceholder: Boolean): Int {
     var index = if (hasPlaceholder) 1 else 0

@@ -53,6 +53,13 @@ class SongItemIndexTest {
     }
 
     @Test
+    fun `the gap that keeps a card in its column is one item`() {
+        val results = listOf(SongGroup(header = null, songs = listOf(song("a1"), song("b1")), leadingGap = 2))
+        assertEquals(2, results.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
+        assertEquals(0, results.firstCardIndex(hasPlaceholder = false))
+    }
+
+    @Test
     fun `the divider under the selection is counted`() {
         val selected = listOf(SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("b1")))) + groups
         assertEquals(1, selected.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))

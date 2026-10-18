@@ -70,7 +70,7 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
                     offset = item.offset.copy(y = item.offset.y - top),
                     width = item.size.width,
                     pushedDistance = top - item.offset.y,
-                    visibleFraction = (item.offset.y + item.size.height - top).toFloat() / item.size.height,
+                    visibleFraction = pushedHeaderVisibleFraction(item.offset.y, item.size.height, layoutInfo.beforeContentPadding),
                 )
             }
         }
@@ -101,16 +101,26 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
             if (header == null || header.size.height <= 0) {
                 SectionHeaderState(visibleFraction = 1f, pinnedFraction = 0f)
             } else {
-                val top = layoutInfo.viewportStartOffset
                 // Item offsets start below the top content padding, which a header stuck at the top of the viewport
                 // reaches into.
                 val pinnedFraction = 1f - (header.offset.y.toFloat() / header.size.height).coerceIn(0f, 1f)
                 val stuckDistance = (-header.offset.y).coerceIn(0, layoutInfo.beforeContentPadding)
                 SectionHeaderState(
-                    visibleFraction = ((header.offset.y + header.size.height - top).toFloat() / header.size.height).coerceIn(0f, 1f),
+                    visibleFraction = pushedHeaderVisibleFraction(header.offset.y, header.size.height, layoutInfo.beforeContentPadding),
                     pinnedFraction = pinnedFraction,
                     belowPinnedPlacePx = layoutInfo.beforeContentPadding * pinnedFraction - stuckDistance,
                 )
             }
         }
     }
+
+/**
+ * How much of a header the next one pushes away is left to show, from all of it while it is stuck at the top of the
+ * viewport to none once the next one rests at the start of its section. Measured to the start of the grid's content
+ * rather than to the viewport's, which is [beforeContentPadding] higher: that room ([SECTION_START_ROOM]) is above the
+ * start of the section a header rests at, and nothing of the section before may show in it.
+ *
+ * @param offset Where the header is laid out, in the grid's content coordinates.
+ */
+internal fun pushedHeaderVisibleFraction(offset: Int, height: Int, beforeContentPadding: Int): Float =
+    ((offset + height).toFloat() / (height - beforeContentPadding).coerceAtLeast(1)).coerceIn(0f, 1f)

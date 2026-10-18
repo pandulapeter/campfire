@@ -43,6 +43,36 @@ class SearchSongGroupsTest {
         assertSame(results, results.withoutSectionHeaders())
     }
 
+    @Test
+    fun `the card kept in place keeps its column and the cards before it close up on it`() {
+        val sections = listOf(section('A', "a1"), section('B', "b1", "b2", "b3"))
+        // b3 starts the second row of B in two columns; run together after a1, it would be in the second column.
+        val merged = sections.withoutSectionHeaders(anchor = SongCardSlot(key = songItemKey(song("b3")), column = 0, columnCount = 2))
+        assertEquals(1, merged.single().leadingGap)
+        assertEquals(SongCardSlot(key = songItemKey(song("b3")), column = 0, columnCount = 2), merged.slotOf(songItemKey(song("b3")), columnCount = 2))
+    }
+
+    @Test
+    fun `a card already in its column needs no gap`() {
+        val merged = listOf(section('A', "a1", "a2"), section('B', "b1")).withoutSectionHeaders(
+            anchor = SongCardSlot(key = songItemKey(song("b1")), column = 0, columnCount = 2),
+        )
+        assertEquals(0, merged.single().leadingGap)
+    }
+
+    @Test
+    fun `the gap goes before the group the card is in`() {
+        val selection = SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("s1")))
+        val merged = listOf(selection, section('A', "a1"), section('B', "b1")).withoutSectionHeaders(
+            anchor = SongCardSlot(key = songItemKey(song("b1")), column = 0, columnCount = 3),
+        )
+        assertEquals(listOf(0, 2), merged.map { it.leadingGap })
+    }
+
+    @Test
+    fun `a slot is where a card is in its section`() =
+        assertEquals(1, listOf(section('A', "a1", "a2", "a3")).slotOf(songItemKey(song("a2")), columnCount = 2)?.column)
+
     private fun song(name: String) = Song(
         fileName = "$name.cho",
         title = name,
