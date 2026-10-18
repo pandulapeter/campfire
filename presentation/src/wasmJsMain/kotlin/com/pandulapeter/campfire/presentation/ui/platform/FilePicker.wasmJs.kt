@@ -39,7 +39,7 @@ import kotlin.js.Promise
 internal object WebFilePicker : FilePicker {
 
     override suspend fun pickFiles(): List<ImportedFile> =
-        pickFiles(ACCEPTED_TYPES).await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+        openFileInput().await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
 
     /**
      * A download rather than a dialog: the browser decides where it lands, and there is no way to hear whether the
@@ -49,9 +49,6 @@ internal object WebFilePicker : FilePicker {
         downloadFile(name = file.name, mimeType = file.mimeType, bytes = file.bytes.toInt8Array())
         return true
     }
-
-    /** Extensions rather than MIME types: `.cho` and friends have none, so a type filter would hide them all. */
-    private val ACCEPTED_TYPES = LibraryFiles.IMPORTABLE_EXTENSIONS.joinToString(separator = ",")
 }
 
 /**
@@ -60,13 +57,12 @@ internal object WebFilePicker : FilePicker {
  * `change` following it is taken to mean one - after a wait long enough for a large selection, which some browsers
  * deliver well after the window already has its focus back, to arrive first.
  */
-private fun pickFiles(accept: String): Promise<JsArray<JsAny>?> = js(
+private fun openFileInput(): Promise<JsArray<JsAny>?> = js(
     """(function () {
         return new Promise(function (resolve) {
             var input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
-            input.accept = accept;
             input.style.display = 'none';
             document.body.appendChild(input);
             var isDone = false;

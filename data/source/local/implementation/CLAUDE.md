@@ -116,8 +116,8 @@ No document type leaves this module.
 
 ## Other apps' libraries
 
-SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so the web's picker offers
-them; none is registered as an Open with type. Other names are recognised by their bytes (`ImportBudget` in
+SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an archive holding one
+is looked inside; none is registered as an Open with type, and no platform's picker filters by name. Other names are recognised by their bytes (`ImportBudget` in
 `:data:model`, `:domain:implementation`'s `importing`), and so is an entry inside an archive, under any name but a
 document's, since an entry under an unknown name is never read.
 

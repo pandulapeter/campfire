@@ -37,9 +37,8 @@ object LibraryFiles {
 
     /**
      * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
-     * `.sbpbackup` and the `.sbp` it shares a set or a song as. Named so that a picker offers them and an archive is
-     * looked inside when it holds one; a file under any other unknown name is still unpacked when its bytes are a zip
-     * archive (see [isZipArchive]), so this list is about being offered, not about being understood.
+     * `.sbpbackup` and the `.sbp` it shares a set or a song as. Named so that an archive is looked inside when it holds
+     * one; a file under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
      */
     val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp")
 
