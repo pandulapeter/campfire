@@ -196,20 +196,25 @@ internal fun SetlistList(
     )
 
     // The fast scroller's track ends above the Done button, so that the thumb never passes over it.
-    val doneButtonRoom by animateDpAsState(if (isReordering) DONE_BUTTON_ROOM else 0.dp)
+    // Read by its padding while it is laid out, never here: it changes on every frame of its spring.
+    val doneButtonRoomState = animateDpAsState(if (isReordering) DONE_BUTTON_ROOM else 0.dp)
+    val doneButtonRoom = remember(doneButtonRoomState) { { doneButtonRoomState.value } }
     val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition)
-    val scrollerColumnWidth = scrollerColumn.width
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
-    // cards stop before the scroller's touch column.
-    val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides listItemTrailingKeylineAdjustment(scrollerColumnWidth)) {
+    // cards stop before the scroller's touch column. Both follow the column's spring, so they are read while laid out.
+    val layoutDirection = LocalLayoutDirection.current
+    val headerEndPadding = remember(scrollerColumn, contentPadding, layoutDirection) {
+        { scrollerColumn.width() + contentPadding.calculateEndPadding(layoutDirection) }
+    }
+    val trailingKeylineAdjustment = remember(scrollerColumn) { { listItemTrailingKeylineAdjustment(scrollerColumn.width()) } }
+    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides trailingKeylineAdjustment) {
         Box(modifier = modifier) {
             LazyVerticalGrid(
                 columns = ListColumns(columnCount),
                 modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull)
                     .measuresFastScrollerColumn(column = scrollerColumn, gridState = listState, isAnimated = hasLoadedLibrary),
                 state = listState,
-                contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = scrollerColumnWidth, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding)
+                contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding, deferredExtraEnd = scrollerColumn.width)
                     .withSectionStartRoom(appBarOverlap),
             ) {
                 // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
@@ -394,7 +399,7 @@ internal fun SetlistList(
             }
             FastScroller(
                 modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap)
-                    .padding(contentPadding.only(top = true, end = true, bottom = true, extraBottom = doneButtonRoom)),
+                    .padding(contentPadding.only(top = true, end = true, bottom = true, deferredExtraBottom = doneButtonRoom)),
                 gridState = listState,
                 column = scrollerColumn,
             )

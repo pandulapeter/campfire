@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHe
 internal fun PushedSongSectionHeader(
     listState: LazyGridState,
     sectionIndex: SongSectionIndex,
-    endPadding: Dp,
+    endPadding: () -> Dp,
     selectionCount: Int,
     appBarOverlap: () -> AppBarOverlap,
 ) {

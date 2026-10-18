@@ -60,6 +60,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -106,7 +109,7 @@ internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
     state: () -> SectionHeaderState,
-    endPadding: Dp,
+    endPadding: () -> Dp,
     icon: Painter? = null,
     iconContentDescription: String? = null,
     onClick: (() -> Unit)?,
@@ -129,7 +132,8 @@ internal fun SectionHeader(
     contentAlignment = Alignment.CenterStart,
 ) {
     val hasAction = action != null
-    val actionEndPadding = sectionHeaderPillActionEndPadding(LocalListItemTrailingKeylineAdjustment.current)
+    val trailingKeylineAdjustment = LocalListItemTrailingKeylineAdjustment.current
+    val actionEndPadding = remember(trailingKeylineAdjustment) { { sectionHeaderPillActionEndPadding(trailingKeylineAdjustment()) } }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val nameAlpha by animateFloatAsState(if (isPressed) PRESSED_HEADING_ALPHA else 1f)
@@ -153,7 +157,7 @@ internal fun SectionHeader(
         Row(
             modifier = Modifier
                 .heightIn(min = SECTION_HEADER_PILL_HEIGHT)
-                .padding(end = if (hasAction) actionEndPadding else 0.dp),
+                .then(if (hasAction) Modifier.deferredEndPadding(actionEndPadding) else Modifier),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // The name is the touch target, filling the pill up to the action, which keeps it at the end of the row
@@ -249,14 +253,14 @@ private class SectionHeaderEndInsets(
 private fun Density.sectionHeaderEndInsets(
     state: SectionHeaderState,
     overlap: AppBarOverlap,
-    endPadding: Dp,
-    actionEndPadding: Dp,
+    endPadding: () -> Dp,
+    actionEndPadding: () -> Dp,
 ): SectionHeaderEndInsets {
     // The cards end at the scroller's column, and a pinned header's action ends where the bar's pill begins: its touch
     // target keeps the icon off the pill by as much as two neighboring buttons keep their icons apart, and the header's
     // own pill, which draws nothing, reaches that little way in under the bar.
-    val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach - actionEndPadding).toPx())
+    val cardsEndInset = (endPadding() + SONG_CARD_OUTER_PADDING).toPx()
+    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach - actionEndPadding()).toPx())
     // Eased rather than linear, since the fraction is the scroll position itself: the header gives way gently as it
     // starts coming into the bar's place and settles into the room it has left the same way. The list moving down
     // under an opening search takes a pinned header out of that place, so the same curve is run on how much of it the
@@ -269,6 +273,16 @@ private fun Density.sectionHeaderEndInsets(
 }
 
 /**
+ * `Modifier.padding(end = …)` with the padding read while laying out, since it follows the fast scroller's column on
+ * every frame of its spring.
+ */
+private fun Modifier.deferredEndPadding(end: () -> Dp) = layout { measurable, constraints ->
+    val endPx = end().roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = -endPx))
+    layout(constraints.constrainWidth(placeable.width + endPx), constraints.constrainHeight(placeable.height)) { placeable.placeRelative(0, 0) }
+}
+
+/**
  * Keeps a [SectionHeader]'s pill and its actions from taking the focus, which a click hands them on the desktop and the
  * web: a lazy grid keeps its focused item composed and placed after it has scrolled away, and a header held that way
  * upsets how the grid pins the ones after it, which are then drawn nowhere once they reach the top. The pill only
@@ -277,8 +291,8 @@ private fun Density.sectionHeaderEndInsets(
 private fun Modifier.unfocusable() = focusProperties { canFocus = false }
 
 /** Paint the header into the grid's end padding without changing the width the grid assigns its item. */
-private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable, constraints ->
-    val extraWidth = endPadding.roundToPx()
+private fun Modifier.extendIntoEndPadding(endPadding: () -> Dp) = layout { measurable, constraints ->
+    val extraWidth = endPadding().roundToPx()
     val width = constraints.maxWidth
     val placeable = measurable.measure(constraints.copy(minWidth = width + extraWidth, maxWidth = width + extraWidth))
     layout(width, placeable.height) { placeable.placeRelative(0, 0) }

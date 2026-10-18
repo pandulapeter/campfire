@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
@@ -159,7 +160,7 @@ internal fun CenteredSongCardContent(
         val actionReservation = if (actionPlaceable == null) {
             0
         } else {
-            actionWidth + (LIST_ITEM_KEYLINE - trailingKeylineAdjustment + SONG_CARD_ACTIONS_GAP).roundToPx()
+            actionWidth + (LIST_ITEM_KEYLINE - trailingKeylineAdjustment() + SONG_CARD_ACTIONS_GAP).roundToPx()
         }
         val bodyWidth = (constraints.maxWidth - actionReservation).coerceAtLeast(0)
         val bodyPlaceable = bodyMeasurables.single().measure(looseConstraints.copy(minWidth = bodyWidth, maxWidth = bodyWidth))
@@ -175,14 +176,17 @@ internal fun CenteredSongCardContent(
 /**
  * Whatever a card carries at its end: the overflow button, with the setlist assignments button beside it on the songs
  * screen and the drag handle on the setlists screen.
- * Moved slightly toward the card's edge, which the body's measure follows so that its text runs up to them.
+ * Moved slightly toward the card's edge, which the body's measure follows so that its text runs up to them; both read
+ * the move while laying out, since it follows the fast scroller's column on every frame of its spring.
  */
 @Composable
 private fun ListItemActions(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) = Box(
-    modifier = modifier.offset(x = LocalListItemTrailingKeylineAdjustment.current),
+    modifier = LocalListItemTrailingKeylineAdjustment.current.let { adjustment ->
+        modifier.offset { IntOffset(x = adjustment().roundToPx(), y = 0) }
+    },
 ) {
     content()
 }

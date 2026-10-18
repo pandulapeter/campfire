@@ -41,8 +41,14 @@ internal fun listItemTrailingKeylineAdjustment(scrollerColumnWidth: Dp) = lerp(
 /**
  * The [listItemTrailingKeylineAdjustment] of the list the cards are in, provided by the list along with its scroller.
  * Outside a list the cards keep the room a scroller would take.
+ *
+ * A function, read only while the cards and headers are laid out or placed: the adjustment follows the scroller's
+ * column on every frame of its spring, and a value read while composing would compose every card again on each. The
+ * list provides one instance for the life of its column, so the local itself never changes.
  */
-internal val LocalListItemTrailingKeylineAdjustment = compositionLocalOf { listItemTrailingKeylineAdjustment(FAST_SCROLLER_WIDTH) }
+internal val LocalListItemTrailingKeylineAdjustment = compositionLocalOf { ScrollerColumnTrailingKeylineAdjustment }
+
+private val ScrollerColumnTrailingKeylineAdjustment: () -> Dp = { listItemTrailingKeylineAdjustment(FAST_SCROLLER_WIDTH) }
 
 private val SCROLLER_TRAILING_KEYLINE_ADJUSTMENT = 12.dp
 private val SCROLLER_LESS_TRAILING_KEYLINE_ADJUSTMENT = 16.dp

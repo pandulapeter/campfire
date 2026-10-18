@@ -23,6 +23,11 @@ headers.
   `SongGroups.isLibraryRead` / `ListedSetlists.isLibraryRead`, since songs are indexed off the main thread and land
   after `isLoading` turns off. The
   column count always leaves room for it, so only card widths change.
+- **The column's width is read only while laying out** (`FastScrollerColumn.width` is a reader): the grid's end padding
+  (`only(deferredExtraEnd = …)`), the headers' `endPadding`, and `LocalListItemTrailingKeylineAdjustment` (a `() -> Dp`
+  provided once per column) all read it in measure or placement, as do the Done buttons' animated bottom rooms
+  (`deferredExtraBottom`), so the spring re-lays out the cards and composes nothing. Readers are compared by identity
+  and remembered, so the grid keeps its measure policy.
 - A press centers the thumb: at once for a mouse, but **for touch only after a long press or a mostly vertical move past
   slop** (`awaitThumbPress`), because the column is on Android's back-gesture edge. A tap jumps only on lift, and a lift
   the system consumed for back is ignored.

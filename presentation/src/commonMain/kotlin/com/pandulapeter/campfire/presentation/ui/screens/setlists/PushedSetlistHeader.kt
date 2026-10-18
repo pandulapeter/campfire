@@ -38,7 +38,7 @@ internal fun PushedSetlistHeader(
     setlistActions: SetlistActionHandler,
     listState: LazyGridState,
     setlistsWithSongs: List<SetlistWithSongs>,
-    endPadding: Dp,
+    endPadding: () -> Dp,
     isPerformanceModeEnabled: Boolean,
     reorderingSetlistFileName: String?,
     appBarOverlap: () -> AppBarOverlap,

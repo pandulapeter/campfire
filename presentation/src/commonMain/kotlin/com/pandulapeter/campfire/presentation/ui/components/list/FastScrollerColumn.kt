@@ -49,8 +49,13 @@ internal class FastScrollerColumn(
     private var lastIsScrollable: Boolean? = null
     private val changes = Channel<Change>(Channel.UNLIMITED)
 
-    /** A spatial spring overshoots its target, which below zero would be a negative padding. */
-    val width: Dp get() = widthAnimatable.value.coerceAtLeast(0.dp)
+    /**
+     * The column's width, read where it is used: by the layouts that size the cards and the headers to it, never while
+     * composing, since it changes on every frame of its spring and a read there would compose the whole list again on
+     * each. One instance for the column's life, so that the paddings comparing it by identity stay equal. A spatial
+     * spring overshoots its target, which below zero would be a negative padding.
+     */
+    val width: () -> Dp = { widthAnimatable.value.coerceAtLeast(0.dp) }
 
     val thumbAlpha = Animatable(if (position.isScrollable) 1f else 0f)
 

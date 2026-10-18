@@ -188,8 +188,10 @@ internal fun SongList(
         anchor = filterAnchor,
         hold = searchCardHold,
     )
-    // The last row's box would otherwise end up under the Done button, which stands over the end of the list.
-    val selectionBottomPadding by animateDpAsState(if (isSelecting) DONE_BUTTON_ROOM else 0.dp)
+    // The last row's box would otherwise end up under the Done button, which stands over the end of the list. Read by
+    // the paddings while they are laid out, never here: it changes on every frame of its spring.
+    val selectionBottomPaddingState = animateDpAsState(if (isSelecting) DONE_BUTTON_ROOM else 0.dp)
+    val selectionBottomPadding = remember(selectionBottomPaddingState) { { selectionBottomPaddingState.value } }
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
     // an edit and wrong for the library arriving: the read publishes a batch at a time in the order the files are
@@ -209,11 +211,14 @@ internal fun SongList(
     }
 
     val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.songListState.songsScrollPosition)
-    val scrollerColumnWidth = scrollerColumn.width
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
-    // cards stop before the scroller's touch column.
-    val headerEndPadding = scrollerColumnWidth + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides listItemTrailingKeylineAdjustment(scrollerColumnWidth)) {
+    // cards stop before the scroller's touch column. Both follow the column's spring, so they are read while laid out.
+    val layoutDirection = LocalLayoutDirection.current
+    val headerEndPadding = remember(scrollerColumn, contentPadding, layoutDirection) {
+        { scrollerColumn.width() + contentPadding.calculateEndPadding(layoutDirection) }
+    }
+    val trailingKeylineAdjustment = remember(scrollerColumn) { { listItemTrailingKeylineAdjustment(scrollerColumn.width()) } }
+    CompositionLocalProvider(LocalListItemTrailingKeylineAdjustment provides trailingKeylineAdjustment) {
         Box(modifier = modifier) {
             LazyVerticalGrid(
                 columns = ListColumns(columnCount),
@@ -224,8 +229,9 @@ internal fun SongList(
                     start = true,
                     end = true,
                     bottom = true,
-                    extraEnd = scrollerColumnWidth,
-                    extraBottom = 8.dp + selectionBottomPadding,
+                    extraBottom = 8.dp,
+                    deferredExtraEnd = scrollerColumn.width,
+                    deferredExtraBottom = selectionBottomPadding,
                 ).withSectionStartRoom(appBarOverlap),
             ) {
                 placeholder?.let {
@@ -386,7 +392,7 @@ internal fun SongList(
             // The track ends above the Done button, so that neither the thumb nor its letter bubble passes over it.
             FastScroller(
                 modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap)
-                    .padding(contentPadding.only(top = true, end = true, bottom = true, extraBottom = selectionBottomPadding)),
+                    .padding(contentPadding.only(top = true, end = true, bottom = true, deferredExtraBottom = selectionBottomPadding)),
                 gridState = listState,
                 column = scrollerColumn,
                 labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
