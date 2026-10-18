@@ -27,9 +27,6 @@ The songs screen.
   shown other songs since (a query typed and cleared counts), puts it back where it was; otherwise the top left card
   then is kept the same way, its column the one its section gives it.
 
-- Sorted by artist, cards leave their artist to the header (`isArtistShown`); the Selection group and an open search,
-  which takes the headers away, show it.
-
 ## The add songs hint
 
 - While the whole library holds fewer than three songs (the demo library is two), the list ends in `AddSongsHintCard`:
