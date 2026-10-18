@@ -83,15 +83,16 @@ internal class ListAnchor {
     /**
      * Narrates a jump from [visibleOffsets], the items' offsets before it, on [animationSpec]: a change that the list
      * also moves under, as the app bar fills in, is narrated on that movement's spring, so that what stands still on
-     * screen does.
+     * screen does. Called before [listState] measures the change, whose layout until then is the one before it.
      */
     fun animateFrom(
+        listState: LazyGridState,
         visibleOffsets: Map<Any, IntOffset>,
         coroutineScope: CoroutineScope,
         animationSpec: AnimationSpec<Float> = ITEM_FADE_SPEC,
     ) {
         transitionJob?.cancel()
-        val newTransition = AnchorTransition(visibleOffsets)
+        val newTransition = AnchorTransition(previousLayoutInfo = listState.layoutInfo, previousOffsets = visibleOffsets)
         transition = newTransition
         transitionJob = coroutineScope.launch {
             try {
@@ -142,17 +143,33 @@ internal fun Modifier.anchoredTransition(anchor: ListAnchor, listState: LazyGrid
 /** An item of the grid, how far below the start of the viewport its top was, in pixels, and where the rest were. */
 internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: Map<Any, IntOffset>)
 
-private class AnchorTransition(val previousOffsets: Map<Any, IntOffset>) {
+private class AnchorTransition(
+    private val previousLayoutInfo: LazyGridLayoutInfo,
+    val previousOffsets: Map<Any, IntOffset>,
+) {
     val progress = Animatable(0f)
     private var layoutInfo: LazyGridLayoutInfo? = null
-    private var offsets = emptyMap<Any, IntOffset>()
+    private val offsets = mutableMapOf<Any, IntOffset>()
 
-    /** Worked out once per layout rather than once per item, since every visible item asks while the change runs. */
+    /**
+     * Where the grid first placed the item with [key] after the change, kept for the rest of it rather than read off every
+     * layout: cards above or between others grow or shrink while the change runs (an artist line folding out), and the
+     * grid moves the items under them as they do. Measured from the layout of the moment, the slide would take only its
+     * own progress' share of that movement, which leaves an item that the two move in opposite directions overshooting
+     * and coming back. Measured from the first, the item moves by the slide and by all of the growth, which run on one
+     * spring, so it travels once, straight to where it ends.
+     *
+     * Null until the grid has measured the change: the state that starts it has the items' layers read it at once, still
+     * over the layout from before, where every item is where it was and has nothing to slide from.
+     *
+     * Worked out once per layout rather than once per item, since every visible item asks while the change runs.
+     */
     fun offsetOf(listState: LazyGridState, key: Any): IntOffset? {
         val currentLayoutInfo = listState.layoutInfo
+        if (currentLayoutInfo === previousLayoutInfo) return null
         if (currentLayoutInfo !== layoutInfo) {
             layoutInfo = currentLayoutInfo
-            offsets = currentLayoutInfo.visibleItemsInfo.associate { it.key to it.offset }
+            currentLayoutInfo.visibleItemsInfo.forEach { offsets.getOrPut(it.key) { it.offset } }
         }
         return offsets[key]
     }

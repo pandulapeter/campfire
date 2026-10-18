@@ -14,11 +14,13 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabel
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabelMark
 import com.pandulapeter.campfire.presentation.ui.components.labels.SongLabels
+import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.localization.textResource
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -59,6 +61,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.song.Song
@@ -213,11 +216,14 @@ internal fun SongListItem(
                 {
                     // Faded and closed up rather than dropped, since switching the sort or opening the search, which takes
                     // the headers away, is what hides and shows it. The fade trails the room opening and leads the room
-                    // closing, so the text is never squeezed while it is still visible.
+                    // closing, so the text is never squeezed while it is still visible. The room moves on the search's
+                    // spring, as the rest of the card's height does ([CenteredSongCardContent]).
                     AnimatedVisibility(
                         visible = isArtistDrawn,
-                        enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) + expandVertically(),
-                        exit = fadeOut(tween(durationMillis = 100)) + shrinkVertically(),
+                        enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) +
+                            expandVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
+                        exit = fadeOut(tween(durationMillis = 100)) +
+                            shrinkVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
                     ) {
                         Text(
                             text = song.artist,

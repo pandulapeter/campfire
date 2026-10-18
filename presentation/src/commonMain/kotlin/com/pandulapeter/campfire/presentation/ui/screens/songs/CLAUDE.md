@@ -23,9 +23,10 @@ The songs screen.
   its column, kept while the search shows those songs; its row is asked for 48dp higher, by as much as the filling bar
   moves the list down, and `ListAnchor` narrates the jump on the bar's spring, so the rest slides while it stands still
   (headers vanish at once: a request makes the grid forget its item animation). `SearchCardHold` asks again while that
-  runs, since the cards above it grow by their artist line. Closing over the songs it opened over, neither scrolled nor
-  shown other songs since (a query typed and cleared counts), puts it back where it was; otherwise the top left card
-  then is kept the same way, its column the one its section gives it.
+  runs, since the cards above it grow by their artist line; a card's height changes on the bar's spring too, and
+  `ListAnchor` slides each item from its first layout, so growth and slide add up to one movement. Closing over the
+  songs it opened over, neither scrolled nor shown other songs since (a query typed and cleared counts), puts it back
+  where it was; otherwise the top left card then is kept the same way, its column the one its section gives it.
 
 ## The add songs hint
 

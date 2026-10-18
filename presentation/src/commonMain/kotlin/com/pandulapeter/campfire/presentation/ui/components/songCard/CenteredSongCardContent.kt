@@ -9,10 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
+import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import com.pandulapeter.campfire.presentation.ui.components.only
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
@@ -73,10 +75,17 @@ internal fun CenteredSongCardContent(
     isThreeLine: Boolean = false,
 ) {
     val headlineStyle = MaterialTheme.typography.bodyLarge
+    // On the spring the artist line folds out on and the search moves the list on, since the card's height follows all
+    // three: the song list keeps the card at its top left still and slides the rest by that same spring, and a card that
+    // grew on a faster one would push the cards under it ahead of the slide and let them drift back.
     val headlineLineHeight by animateFloatAsState(
-        if (isThreeLine) MaterialTheme.typography.bodyMedium.lineHeight.value else headlineStyle.lineHeight.value,
+        targetValue = if (isThreeLine) MaterialTheme.typography.bodyMedium.lineHeight.value else headlineStyle.lineHeight.value,
+        animationSpec = searchTravelSpec(),
     )
-    val coverSize by animateDpAsState(if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE)
+    val coverSize by animateDpAsState(
+        targetValue = if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE,
+        animationSpec = searchTravelSpec(visibilityThreshold = Dp.VisibilityThreshold),
+    )
     val trailingKeylineAdjustment = LocalListItemTrailingKeylineAdjustment.current
     Layout(
         modifier = modifier.fillMaxWidth(),

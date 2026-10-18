@@ -117,7 +117,7 @@ internal fun KeepCardsInPlaceAcrossSearch(
             val isJump = index != listState.firstVisibleItemIndex || offset != listState.firstVisibleItemScrollOffset
             listState.requestScrollToItem(index = index, scrollOffset = offset)
             if (isJump) {
-                anchor.animateFrom(visibleOffsets, coroutineScope, animationSpec = searchTravelSpec())
+                anchor.animateFrom(listState, visibleOffsets, coroutineScope, animationSpec = searchTravelSpec())
                 hold.hold(index = index, offset = offset)
             }
         }
