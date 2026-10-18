@@ -27,6 +27,9 @@ The songs screen.
   `ListAnchor` slides each item from its first layout, so growth and slide add up to one movement. Closing over the
   songs it opened over, neither scrolled nor shown other songs since (a query typed and cleared counts), puts it back
   where it was; otherwise the top left card then is kept the same way, its column the one its section gives it.
+  A list arriving inside the narration ends the hold (`SearchCardHold.follow`): re-ranked results let go to the top and
+  stop it, a tag tap's own newer narration is left running (`ListAnchor.transitionNumber`), and the full list arriving
+  after closing holds the same card at its new index.
 
 ## The add songs hint
 

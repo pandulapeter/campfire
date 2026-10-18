@@ -66,6 +66,13 @@ internal class ListAnchor {
     private var transition by mutableStateOf<AnchorTransition?>(null)
     private var transitionJob: Job? = null
 
+    /**
+     * Counts the transitions [animateFrom] has started, so that whoever started one can tell whether the one running is
+     * still theirs. Not state: it is read by effects, never drawn.
+     */
+    var transitionNumber = 0
+        private set
+
     /** Remembers where the item with [key] is on screen, if it is on screen at all, and where every item around it is. */
     fun set(listState: LazyGridState, key: Any) {
         val visibleItems = listState.layoutInfo.visibleItemsInfo
@@ -92,6 +99,7 @@ internal class ListAnchor {
         animationSpec: AnimationSpec<Float> = ITEM_FADE_SPEC,
     ) {
         transitionJob?.cancel()
+        transitionNumber++
         val newTransition = AnchorTransition(previousLayoutInfo = listState.layoutInfo, previousOffsets = visibleOffsets)
         transition = newTransition
         transitionJob = coroutineScope.launch {

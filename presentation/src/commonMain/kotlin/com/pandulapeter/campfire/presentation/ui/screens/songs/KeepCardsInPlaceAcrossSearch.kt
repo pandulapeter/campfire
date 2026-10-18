@@ -18,8 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
@@ -82,7 +80,7 @@ internal fun rememberSearchOpening(
  *
  * The cards above the one kept grow or shrink by the artist line an open search shows on them meanwhile, and a grid
  * keeps the first row it shows rather than the card, so the position is asked for again as long as the jump is narrated
- * ([hold]).
+ * ([hold]), and followed into a list that arrives meanwhile ([SearchCardHold.follow]).
  *
  * Called after [KeepCardsInPlaceUnderTick], so that its request is the one the grid measures with.
  */
@@ -102,6 +100,13 @@ internal fun KeepCardsInPlaceAcrossSearch(
     val coroutineScope = rememberCoroutineScope()
     val listShiftPx = with(LocalDensity.current) { SEARCH_LIST_SHIFT.toPx() }
     SideEffect {
+        hold.follow(
+            filterKey = songGroups.filterKey,
+            isSearchOpen = isSearchOpen,
+            anchor = anchor,
+            listState = listState,
+            indexOf = { key -> groups.itemIndexOf(key, hasPlaceholder) },
+        )
         // A search that has shown other songs since it opened has sent the list to the top, and its gap with it.
         if (state.opening?.songGroups?.filterKey != songGroups.filterKey) state.opening?.hasShownOtherSongs = true
         if (isSearchOpen == state.wasOpen) return@SideEffect
@@ -113,28 +118,36 @@ internal fun KeepCardsInPlaceAcrossSearch(
         val coverage = appBarOverlap().coverage
         val targetCoverage = if (isSearchOpen || hasPlaceholder || groups.none { it.header != null }) 0f else 1f
         val listShift = (listShiftPx * (coverage - targetCoverage)).roundToInt()
-        fun keep(index: Int, offset: Int) {
+        fun keep(key: Any, index: Int, offset: Int) {
             val isJump = index != listState.firstVisibleItemIndex || offset != listState.firstVisibleItemScrollOffset
             listState.requestScrollToItem(index = index, scrollOffset = offset)
             if (isJump) {
                 anchor.animateFrom(listState, visibleOffsets, coroutineScope, animationSpec = searchTravelSpec())
-                hold.hold(index = index, offset = offset)
+                hold.hold(
+                    HeldSearchCard(
+                        index = index,
+                        offset = offset,
+                        filterKey = songGroups.filterKey,
+                        itemKey = key,
+                        transitionNumber = anchor.transitionNumber,
+                    ),
+                )
             }
         }
         if (isSearchOpen) {
             state.opening = opening
             if (opening == null || listState.isScrollInProgress) return@SideEffect
-            groups.itemIndexOf(opening.slot.key, hasPlaceholder)?.let { index -> keep(index, listShift - opening.cardOffset) }
+            groups.itemIndexOf(opening.slot.key, hasPlaceholder)?.let { index -> keep(opening.slot.key, index, listShift - opening.cardOffset) }
             return@SideEffect
         }
         val last = state.opening
         state.opening = null
         if (listState.isScrollInProgress) return@SideEffect
         if (last != null && !last.hasBeenScrolled && !last.hasShownOtherSongs && last.songGroups == songGroups) {
-            groups.itemIndexOf(last.slot.key, hasPlaceholder)?.let { index -> keep(index, -last.cardOffset) }
+            groups.itemIndexOf(last.slot.key, hasPlaceholder)?.let { index -> keep(last.slot.key, index, -last.cardOffset) }
         } else {
             val card = layoutInfo.visibleItemsInfo.topLeftCard(visibleTop = 0) ?: return@SideEffect
-            groups.itemIndexOf(card.key, hasPlaceholder)?.let { index -> keep(index, listShift - card.offset.y) }
+            groups.itemIndexOf(card.key, hasPlaceholder)?.let { index -> keep(card.key, index, listShift - card.offset.y) }
         }
     }
     LaunchedEffect(listState) {
@@ -169,41 +182,6 @@ internal class SearchOpening(
     fun slotFor(current: SongGroups, columnCount: Int) = slot.takeIf {
         !hasShownOtherSongs && current.filterKey == songGroups.filterKey && it.columnCount == columnCount
     }
-}
-
-/**
- * The position of the card [KeepCardsInPlaceAcrossSearch] keeps in place, asked for again every time the grid is measured
- * while the narration of the change runs ([holdingSearchCard]), and let go of at its end or at the first scroll.
- */
-internal class SearchCardHold {
-    private var index = -1
-    private var offset = 0
-
-    fun hold(index: Int, offset: Int) {
-        this.index = index
-        this.offset = offset
-    }
-
-    fun apply(listState: LazyGridState, anchor: ListAnchor) {
-        // Read whether or not a card is held, so that the narration that starts with a hold measures the grid again.
-        val progress = anchor.transitionProgress
-        if (index < 0) return
-        if (progress == null || listState.isScrollInProgress) {
-            index = -1
-        } else {
-            listState.requestScrollToItem(index = index, scrollOffset = offset)
-        }
-    }
-}
-
-/**
- * Asks for the position [hold] keeps before the grid it is applied to is measured. The narration's progress is read in
- * the measuring, so it measures again on every frame of the narration, as the cards above the held one change height.
- */
-internal fun Modifier.holdingSearchCard(hold: SearchCardHold, listState: LazyGridState, anchor: ListAnchor) = layout { measurable, constraints ->
-    hold.apply(listState, anchor)
-    val placeable = measurable.measure(constraints)
-    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
 }
 
 private class SearchTransitionState(var wasOpen: Boolean) {
