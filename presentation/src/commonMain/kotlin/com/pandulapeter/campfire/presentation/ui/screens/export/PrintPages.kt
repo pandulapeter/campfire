@@ -24,13 +24,13 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -101,7 +101,7 @@ internal fun PrintPages(
     magnifications: Flow<Float>,
     pageView: () -> PageView,
     onPageViewChanged: (PageView) -> Unit,
-) = BoxWithConstraints(Modifier.fillMaxSize()) {
+) = Box(Modifier.fillMaxSize()) {
     val pageCount = laidOut.document.pages.size
     val coroutineScope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -208,6 +208,9 @@ internal fun PrintPages(
                 true
             },
     ) {
+        // The view changes on every frame of a pinch, a pan or a zoom animation, and only the page's own drawing follows it
+        // there: the pager is told only when the page leaves or comes back to its resting size.
+        val isAtRest by remember(pageView) { derivedStateOf { pageView().zoom == 1f } }
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
@@ -219,7 +222,7 @@ internal fun PrintPages(
                 )
                 .then(if (areOptionsBelow) Modifier else Modifier.fadingUnderStartOverlay(scrolledFromStart = ::pastStart, overlayWidth = 0.dp)),
             pageSpacing = PAGE_MARGIN,
-            userScrollEnabled = pageView().zoom == 1f,
+            userScrollEnabled = isAtRest,
         ) { index ->
             val isShownPage = index == pagerState.currentPage
             val pageLabel = stringResource(Res.string.print_page, index + 1, pageCount)
@@ -256,7 +259,7 @@ internal fun PrintPages(
                     page = shownPage,
                     renderer = renderer,
                     fit = fit,
-                    pageView = if (isShownPage) pageView() else PageView(),
+                    pageView = if (isShownPage) pageView else ::restingPageView,
                     description = pageLabel,
                 )
             }
@@ -354,3 +357,6 @@ private val QUICK_ZOOM_DOUBLING_DISTANCE = 120.dp
 
 /** The zoom of one notch of the scroll wheel, towards the user zooming out. */
 private const val WHEEL_ZOOM_BASE = 1.15f
+
+/** The view of every page but the one being looked at, which is always drawn whole. */
+private fun restingPageView() = PageView()

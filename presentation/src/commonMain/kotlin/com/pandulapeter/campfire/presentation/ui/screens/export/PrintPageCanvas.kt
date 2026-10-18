@@ -41,7 +41,7 @@ internal fun PrintPageCanvas(
     page: PrintPage,
     renderer: PrintRenderer,
     fit: PageFit,
-    pageView: PageView,
+    pageView: () -> PageView,
     description: String,
 ) {
     val borderColor = MaterialTheme.colorScheme.outlineVariant
@@ -56,7 +56,7 @@ internal fun PrintPageCanvas(
             },
     ) {
         val area = fit.area(size, this, layoutDirection)
-        val bounds = pageBounds(size, area, document.width / document.height, pageView)
+        val bounds = pageBounds(size, area, document.width / document.height, pageView())
         clipRect(bounds.left, bounds.top, bounds.right, bounds.bottom) {
             drawRect(Color.White, bounds.topLeft, bounds.size)
             translate(bounds.left, bounds.top) { renderer.draw(this, page, bounds.width / document.width) }
