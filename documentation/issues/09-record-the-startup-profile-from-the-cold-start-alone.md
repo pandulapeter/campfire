@@ -45,7 +45,8 @@ picks up the review's fix that walks the tools behind a phone's Tools item.
 ## Tests
 
 None; the generator asserts nothing. The re-recorded `startup-prof.txt` must be much smaller than `baseline-prof.txt`, hold no
-`screens/settings` rules, and `baseline-prof.txt` must hold rules for `screens/metronome`, `screens/tuner` and `screens/chords`.
+rules for the Settings screen's composables (`screens/settings/SettingsScreen*` and its tabs; `LibrarySummary` and
+`DemoLibraryOffer` live in that package but are read at startup, so a bare `screens/settings` match is no failure), and `baseline-prof.txt` must hold rules for `screens/metronome`, `screens/tuner` and `screens/chords`.
 
 ## Manual check
 

@@ -28,7 +28,7 @@ The brief for the orchestrating agent, started with *"Follow `documentation/issu
 | A | 03, 01, 02, 04, 05, 13 | `../campfire-lane-a` |
 | B | 06, 07 | `../campfire-lane-b` |
 | C | 08, 09 | `../campfire-lane-c` |
-| D | 10, 11, 12, 16 | `../campfire-lane-d` (after B merged if plan 10 touches `ui/songView/`) |
+| D | 10, 11, 16 | `../campfire-lane-d` (after B merged if plan 10 touches `ui/songView/`) |
 | E | 14, 15 | `../campfire-lane-e` |
 
 `git worktree add --detach ../campfire-lane-<x> $START` per lane; at most two Gradle builds at once, so start B and E,

@@ -80,7 +80,6 @@ its callee, and compiled the doubtful Kotlin typing questions as stand-alone sni
 | 09 | Record the startup profile from the cold start alone | low | C |
 | 10 | Let the editor's preview give the web page's thread back | medium (web) | D |
 | 11 | Re-highlight only the edited lines in the editor | low | D |
-| 12 | Match the song picker's search off the main thread | low | D |
 | 13 | Key the setlists screen's scroll to the top on the list it arrives with | low | A |
 | 14 | Tint the pulsing metronome mark without a filter per frame | low | E |
 | 15 | Draw the tuner's in-tune color in the draw phase | low | E |
@@ -93,7 +92,7 @@ its callee, and compiled the doubtful Kotlin typing questions as stand-alone sni
 | A | Song list, components, setlists | 03, 01, 02, 04, 05, 13 | `ui/screens/songs/`, `ui/screens/setlists/`, `ui/state/setlists/`, `ui/components/` (list, songCard, menu, actions, labels, `ContentOverscroll.kt`) |
 | B | Song view | 06, 07 | `ui/songView/`, `ui/screens/songDetails/SongDetailsPage.kt` |
 | C | Chrome and the Android profile | 08, 09 | `ui/chrome/`, `ui/CampfireScreens.kt`, `app/baselineprofile/`, `app/android/src/main/generated/` |
-| D | Editor, picker, print | 10, 11, 12, 16 | `ui/screens/songEditor/`, `ui/dialogs/pickers/`, `ui/search/SongPickerIndex.kt`, `ui/print/` |
+| D | Editor, print | 10, 11, 16 | `ui/screens/songEditor/`, `ui/print/`, `chordpro/.../edit/` (the highlighter, plan 11) |
 | E | Metronome and tuner | 14, 15 | `ui/metronome/`, `ui/tuner/` |
 
 **Merge order:** B, E, D, C, A. B, E and D touch nothing another lane does; C changes the padding contract the list
@@ -144,4 +143,7 @@ checklist headings).
 
 ## Dropped after verification
 
-None so far.
+- **12, match the song picker's search off the main thread** (dropped by the challenge): on the web `Dispatchers.Default`
+  is the page's one thread, so the platform it was for gains nothing; elsewhere it saves 1–3 ms of a frame while making the
+  list lag the query and needing the picker's refresh, reveal and no-results keys rebuilt. Revisit only if the match itself
+  measures over ~8 ms per keystroke.
