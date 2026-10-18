@@ -22,11 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.union
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -54,13 +49,10 @@ internal fun OverflowMenu(
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) {
-    // Read the app window before entering the popup: its scrolling content needs a finite height even when
-    // the iOS popup layer supplies unbounded constraints after rotation. Overlapping keyboard and safe-area
-    // insets are counted once, and the limit follows window resizing and keyboard changes. The inset values are read
-    // while the menu is measured rather than here, so the keyboard's animation relayouts an open menu instead of
-    // recomposing every closed one on screen, a song card's among them, on each of its frames.
-    val windowHeight = LocalWindowInfo.current.containerSize.height
-    val insets = WindowInsets.safeDrawing.union(WindowInsets.ime)
+    // Read the app window before entering the popup: its scrolling content needs a finite height even when the iOS popup
+    // layer supplies unbounded constraints after rotation. Overlapping keyboard and safe-area insets are counted once,
+    // and the limit follows window resizing and keyboard changes, read while the menu is measured (see MenuRoom).
+    val menuRoom = LocalMenuRoom.current ?: rememberMenuRoom()
     // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
     // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
     val overlayState = LocalOverlayState.current
@@ -79,7 +71,7 @@ internal fun OverflowMenu(
         button(state::open)
         DropdownMenu(
             modifier = Modifier.layout { measurable, constraints ->
-                val limit = (windowHeight - insets.getTop(this) - insets.getBottom(this)).coerceAtLeast(0)
+                val limit = menuRoom.heightPx(this)
                 val placeable = measurable.measure(
                     constraints.copy(
                         minHeight = minOf(constraints.minHeight, limit),

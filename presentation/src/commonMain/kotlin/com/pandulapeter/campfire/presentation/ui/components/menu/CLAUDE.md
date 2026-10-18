@@ -25,4 +25,7 @@ Overflow menus, their expansion into buttons, and the sort menus.
 - `OverflowMenu` counts open menus (the desktop Escape handler is outside the composition) and acts through
   `OverflowMenuState.select`, which runs an entry once per opening: a `DropdownMenu` stays tappable during its exit, and
   a double tap on Export would export twice.
+- A dropdown is bounded by the window less the system bars and the keyboard (`MenuRoom`), resolved once in `CampfireApp`
+  (`LocalMenuRoom`, its own local: `OverlayState` outlives an Android activity, the insets belong to its view) and read
+  only while the dropdown is measured, so no closed menu resolves insets and a resize recomposes nothing.
 - `SortMenu` (`SongSortMenu`, `SetlistSortMenu`) is shared by each screen and its picker sheet.
