@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
@@ -114,7 +115,10 @@ internal fun Modifier.measuresFastScrollerColumn(
     isAnimated: Boolean,
 ) = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints)
-    column.onGridMeasured(gridState, isAnimated)
+    // The grid writes its layout info on every measure of this same node, so a read observed here would ask for the node
+    // to be measured again after every measure, and the list would never settle. The node is measured whenever the grid
+    // is, so nothing is missed.
+    Snapshot.withoutReadObservation { column.onGridMeasured(gridState, isAnimated) }
     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
 }
 
