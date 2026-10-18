@@ -33,7 +33,7 @@ platform types. One multiplatform implementation, with platform differences in `
   returns the setlist with its new file size, so the cache never lists.
 - `ArchiveLocalSource`: nested archives (by name, or by bytes under a name an import reads) are unpacked in place,
   three levels deep, within one inflation budget; unpacking drops tools' hidden files (macOS AppleDouble
-  `._name.cho`); every other unread entry
+  `._name.cho`) and everything inside a hidden folder, unreported; every other unread entry
   (not importable, too large, unreadable) comes back as `ImportedFile.unread`, and one bad entry never fails the archive.
 - `DocumentLocalSource`: local, bounded PDF/Word text extraction on `Dispatchers.Default`; null means unsupported or
   unreadable, cancellation propagates. Nothing stored, no network.

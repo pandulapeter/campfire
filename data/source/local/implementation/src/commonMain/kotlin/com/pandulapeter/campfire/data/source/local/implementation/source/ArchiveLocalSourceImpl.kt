@@ -65,13 +65,15 @@ internal class ArchiveLocalSourceImpl(
             // ".DS_Store" into every directory, and the first of those carries the extension of the file it belongs
             // to: an archive of three hundred songs arrives as six hundred entries, half of them binary, and an import
             // that took them at their word would offer to import as many unreadable files as there are songs. A file
-            // somebody means to import is never a hidden one, so these are never read, and neither is anything an
-            // import would not look inside: both cost nothing and cannot fail the archive.
+            // somebody means to import is never a hidden one, nor inside a hidden folder (a ".Trash" of deleted songs,
+            // a ".dropbox.cache"), so these are never read, and neither is anything an import would not look inside:
+            // both cost nothing and cannot fail the archive.
             // SongbookPro keeps a whole library in one document, which is read whatever its size within the import's.
             limitOf = { name ->
-                when (val fileName = name.fileName) {
-                    SongbookProBackup.DATA_FILE_NAME -> ImportLimits.MAX_IMPORT_SIZE
-                    else -> fileName.takeUnless(LibraryFiles::isHiddenFileName)?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 }
+                when {
+                    name.isHidden -> null
+                    name.fileName == SongbookProBackup.DATA_FILE_NAME -> ImportLimits.MAX_IMPORT_SIZE
+                    else -> ImportLimits.maxSizeOf(name.fileName).takeIf { it > 0 }
                 }
             },
         )
@@ -111,7 +113,7 @@ internal class ArchiveLocalSourceImpl(
         }
         // Hidden entries stay unreported, see above; everything else that was not read is handed over by name.
         val unread = content.unread
-            .filterNot { LibraryFiles.isHiddenFileName(it.name.fileName) }
+            .filterNot { it.name.isHidden }
             .map { ImportedFile.unread(name = it.name.fileName, isTooLarge = it.reason == UnreadZipEntry.Reason.TOO_LARGE) }
         return read + unread
     }
@@ -121,6 +123,12 @@ internal class ArchiveLocalSourceImpl(
      * backslash separates as well, since Windows PowerShell 5.1 writes one; no file name the library holds has one.
      */
     private val String.fileName get() = substringAfterLast('/').substringAfterLast('\\')
+
+    /**
+     * Whether the entry is a hidden file or sits inside a hidden folder, as the dropped-folder walks decide it. A "."
+     * segment is the current directory, which some archivers write a path through, not a hidden folder.
+     */
+    private val String.isHidden get() = split('/', '\\').any { it != "." && LibraryFiles.isHiddenFileName(it) }
 
     /** How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they may. */
     private class InflatedBytes(val limit: Long) {

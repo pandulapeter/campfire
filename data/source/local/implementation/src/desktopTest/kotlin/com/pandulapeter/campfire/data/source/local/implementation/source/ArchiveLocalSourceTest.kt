@@ -78,12 +78,17 @@ class ArchiveLocalSourceTest {
                 ZipEntry("b.cho", "{title: B}".encodeToByteArray()),
                 ZipEntry("__MACOSX/._b.cho", byteArrayOf(0, 5, 22, 7, 0, 2)),
                 ZipEntry(".DS_Store", byteArrayOf(0, 0, 0, 1)),
+                // What a folder's own bookkeeping holds is not part of the library either, however it is named, while a
+                // path written through the current directory is an ordinary one.
+                ZipEntry(".Trash/old.cho", "{title: Old}".encodeToByteArray()),
+                ZipEntry(".dropbox.cache/c.cho", "{title: C}".encodeToByteArray()),
+                ZipEntry("./songs/d.cho", "{title: D}".encodeToByteArray()),
             ),
         )
 
         val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        assertEquals(listOf("a.cho", "b.cho"), files.map { it.name })
+        assertEquals(listOf("a.cho", "b.cho", "d.cho"), files.map { it.name })
     }
 
     @Test
