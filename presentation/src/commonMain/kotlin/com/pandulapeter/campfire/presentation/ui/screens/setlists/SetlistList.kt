@@ -386,7 +386,7 @@ internal fun SetlistList(
                 visible = isReordering,
                 modifier = Modifier.align(Alignment.BottomEnd)
                     .padding(contentPadding.only(end = true, bottom = true))
-                    .padding(end = DONE_BUTTON_END_MARGIN, bottom = DONE_BUTTON_MARGIN),
+                    .padding(DONE_BUTTON_MARGIN),
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
@@ -414,11 +414,8 @@ private fun DoneReorderingButton(onClick: () -> Unit) {
     )
 }
 
-/** How far the Done button stands from the list's bottom edge, as the song selection's does. */
+/** How far the Done button stands from the list's bottom and end edges, as the song selection's does. */
 private val DONE_BUTTON_MARGIN = 16.dp
-
-/** How far the Done button stands from the list's end edge: beside the fast scroller's thumb rather than its whole column. */
-private val DONE_BUTTON_END_MARGIN = 24.dp
 
 /** What the Done button takes of the end of the list: an extended button's height and its margin. */
 private val DONE_BUTTON_ROOM = 56.dp + DONE_BUTTON_MARGIN

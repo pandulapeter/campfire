@@ -49,6 +49,23 @@ class SearchPillSegmentTest {
     }
 
     @Test
+    fun `a divider between two buttons keeps both shares off its room`() {
+        val divider = Rect(left = 166f, top = 18f, right = 170f, bottom = 42f)
+        fun dividedSegment(index: Int) = searchPillSegment(
+            closedPill = pill,
+            centers = centers,
+            index = index,
+            containerRadius = 20f,
+            openProgress = 0f,
+            dividers = listOf(divider),
+        )
+
+        assertEquals(Rect(left = 138f, top = 10f, right = 166f, bottom = 50f), dividedSegment(1).bounds)
+        assertEquals(Rect(left = 170f, top = 10f, right = 200f, bottom = 50f), dividedSegment(2).bounds)
+        assertEquals(segment(0).bounds, dividedSegment(0).bounds)
+    }
+
+    @Test
     fun `with the search open each button has its own circle`() {
         assertEquals(
             SearchPillSegment(Rect(left = 136f, top = 10f, right = 176f, bottom = 50f), leftRadius = 20f, rightRadius = 20f),

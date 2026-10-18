@@ -586,7 +586,7 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
  * The room [ClosedSearchActionsDivider] takes on the pill, the line in the middle of it: what keeps the presses of the
  * buttons on either side off the line, and the button before it in line with the checkboxes of a selection.
  */
-private val CLOSED_SEARCH_ACTIONS_DIVIDER_ROOM = 2.dp
+private val CLOSED_SEARCH_ACTIONS_DIVIDER_ROOM = 4.dp
 
 /**
  * The room [ClosedSearchActionsDivider] takes before detached actions, which leaves the pill's end as far from the New

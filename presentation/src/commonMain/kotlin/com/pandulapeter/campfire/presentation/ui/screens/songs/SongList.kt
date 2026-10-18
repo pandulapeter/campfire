@@ -374,7 +374,7 @@ internal fun SongList(
                 visible = isSelecting,
                 modifier = Modifier.align(Alignment.BottomEnd)
                     .padding(contentPadding.only(end = true, bottom = true))
-                    .padding(end = DONE_BUTTON_END_MARGIN, bottom = DONE_BUTTON_MARGIN),
+                    .padding(DONE_BUTTON_MARGIN),
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
@@ -407,14 +407,8 @@ private const val ADD_SONGS_HINT_KEY = "add_songs_hint"
 /** The room above and below the divider under the Selection section. */
 private val SELECTION_DIVIDER_PADDING = 8.dp
 
-/** How far the Done button stands from the list's bottom edge, as the setlist reorder mode's does. */
+/** How far the Done button stands from the list's bottom and end edges, as the setlist reorder mode's does. */
 private val DONE_BUTTON_MARGIN = 16.dp
-
-/**
- * How far the Done button stands from the list's end edge, as the setlist reorder mode's does: beside the fast scroller's
- * thumb rather than its whole column, which only reaches down to the button's top.
- */
-private val DONE_BUTTON_END_MARGIN = 24.dp
 
 /** What the Done button takes of the end of the list: an extended button's height and its margin. */
 private val DONE_BUTTON_ROOM = 56.dp + DONE_BUTTON_MARGIN
