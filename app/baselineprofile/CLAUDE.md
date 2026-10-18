@@ -16,7 +16,8 @@ plugin, targeting `nonMinifiedRelease`. Not a test: it asserts nothing and CI ne
 
 - One `BaselineProfileRule.collect` with `includeInStartupProfile`: cold start (a first run plants the demo library and
   walks the onboarding with **Next** to **Start playing**), song list flings, a demo song opened and flung, Setlists and
-  the demo setlist, Metronome, Tuner (asks for nothing without a tap), and Settings.
+  the demo setlist, the tools (**Tools** on a phone's bar opens the Metronome, then its Tuner and Chords tabs; a tall
+  rail gives each its own item; the tuner asks for nothing without a tap), and Settings.
 - Screens are found by their visible **English** text (no test tags). Each step waits up to 5 s and is skipped if the
   text never appears, so a renamed string costs a step, not the run. The journey repeats without clearing data, so the
   onboarding is only looked for, not expected.

@@ -24,7 +24,8 @@ import org.junit.runner.RunWith
 
 /**
  * Records the Baseline Profile and the startup profile of the release build, walking the screens every launch goes
- * through: the start up itself, the song list, a song, a setlist, the Metronome and Tuner tabs and Settings. It is not a test: it asserts nothing, CI
+ * through: the start up itself, the song list, a song, a setlist, the tools (Metronome, Tuner, and Chords, behind the
+ * Tools item on a phone) and Settings. It is not a test: it asserts nothing, CI
  * never runs it, and it is started by hand on an emulator, see this module's `CLAUDE.md`.
  *
  * The screens are found by their visible English text, which Compose exposes to UI Automator, so the app carries no test
@@ -80,10 +81,14 @@ class BaselineProfileGenerator {
                 device.waitForIdle()
             }
         }
-        waitFor(By.text("Metronome"))?.click()
+        // With six screens on, a phone's bar groups Metronome, Tuner, and Chords behind one Tools item, which opens the
+        // Metronome on a fresh install with a row of tabs over the tools; a taller rail gives each its own item instead.
+        (waitFor(By.text("Tools")) ?: waitFor(By.text("Metronome")))?.click()
         device.waitForIdle()
         // Nothing on the tab asks for anything without a tap, so it is visited like the others.
         waitFor(By.text("Tuner"))?.click()
+        device.waitForIdle()
+        waitFor(By.text("Chords"))?.click()
         device.waitForIdle()
         waitFor(By.text("Settings"))?.click()
         device.waitForIdle()
