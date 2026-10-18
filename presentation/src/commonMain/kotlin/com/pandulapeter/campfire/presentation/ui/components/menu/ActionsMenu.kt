@@ -91,12 +91,55 @@ internal fun ActionsMenu(
     isExpandable: Boolean = true,
     isDecorative: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
-) = BoxWithConstraints(
-    modifier = modifier,
 ) {
     val buttonWidth = actionButtonWidth()
+    // Only a menu that lets its items out measures the room it has: one that keeps them all in, which is every song card's,
+    // would otherwise pay a subcomposition and a hidden animation per item on every card scrolled into a list.
+    if (isExpandable) {
+        BoxWithConstraints(modifier = modifier) {
+            ActionsRow(
+                buttonModifier = buttonModifier,
+                state = state,
+                contentDescription = contentDescription,
+                items = items,
+                isExpandable = true,
+                isDecorative = isDecorative,
+                menuFooter = menuFooter,
+                buttonWidth = buttonWidth,
+                slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1),
+            )
+        }
+    } else {
+        Box(modifier = modifier) {
+            ActionsRow(
+                buttonModifier = buttonModifier,
+                state = state,
+                contentDescription = contentDescription,
+                items = items,
+                isExpandable = false,
+                isDecorative = isDecorative,
+                menuFooter = menuFooter,
+                buttonWidth = buttonWidth,
+                slotCount = 1,
+            )
+        }
+    }
+}
+
+/** What an [ActionsMenu] lays out once it knows how many buttons there is room for. */
+@Composable
+private fun ActionsRow(
+    buttonModifier: Modifier,
+    state: OverflowMenuState,
+    contentDescription: String,
+    items: List<ActionsMenuItem>,
+    isExpandable: Boolean,
+    isDecorative: Boolean,
+    menuFooter: (@Composable () -> Unit)?,
+    buttonWidth: Dp,
+    slotCount: Int,
+) {
     val icon = painterResource(Res.drawable.ic_more)
-    val slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1)
     val visibleItems = items.filter { it.isVisible }
     val expandableItems = if (isExpandable) visibleItems.filterNot { it.isAlwaysInMenu } else emptyList()
     val buttonItems = if (menuFooter == null && expandableItems.size == visibleItems.size && visibleItems.size <= slotCount) {
@@ -116,7 +159,8 @@ internal fun ActionsMenu(
         modifier = Modifier.padding(horizontal = ACTION_BUTTON_OVERLAP / 2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        items.forEach { item ->
+        // A menu that keeps every item in never has a button for one, so it has no visibility to compose for each.
+        if (isExpandable) items.forEach { item ->
             // Keyed by what the action is rather than by its place, since an action that comes and goes (Update file
             // name, Set cover art) moves every one after it along.
             key(item.key) {
