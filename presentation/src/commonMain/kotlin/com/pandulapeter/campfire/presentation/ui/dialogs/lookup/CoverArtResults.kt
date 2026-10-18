@@ -128,6 +128,7 @@ internal fun CoverArtResults(
             if (scrollingControls != null) {
                 item(
                     key = MODE_CONTROLS_ITEM_KEY,
+                    contentType = MODE_CONTROLS_ITEM_KEY,
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     scrollingControls()
@@ -136,6 +137,7 @@ internal fun CoverArtResults(
             if (!pinFields) {
                 item(
                     key = FIELDS_ITEM_KEY,
+                    contentType = FIELDS_ITEM_KEY,
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     fields()
@@ -145,6 +147,8 @@ internal fun CoverArtResults(
                 items(
                     items = candidates,
                     key = { it.key },
+                    // The tiles hold images, so a tile scrolled in reuses another tile rather than the fields or a message.
+                    contentType = { TILE_CONTENT_TYPE },
                 ) { candidate ->
                     CoverArtTile(
                         modifier = Modifier.animateItem(),
@@ -157,6 +161,7 @@ internal fun CoverArtResults(
                 if (results?.isComplete == false) {
                     item(
                         key = LOADING_ITEM_KEY,
+                        contentType = LOADING_ITEM_KEY,
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
                         Box(
@@ -171,6 +176,7 @@ internal fun CoverArtResults(
                 item(
                     // Keyed by what it says, so that one message fades out as the next fades in rather than being swapped.
                     key = content.name,
+                    contentType = MESSAGE_CONTENT_TYPE,
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     when (content) {
@@ -204,6 +210,7 @@ internal fun CoverArtResults(
             }
             item(
                 key = ATTRIBUTION_ITEM_KEY,
+                contentType = ATTRIBUTION_ITEM_KEY,
                 span = { GridItemSpan(maxLineSpan) },
             ) {
                 CoverArtAttribution(modifier = Modifier.animateItem())
@@ -332,3 +339,7 @@ private const val FIELDS_ITEM_KEY = "fields"
 private const val LOADING_ITEM_KEY = "loading"
 
 private const val ATTRIBUTION_ITEM_KEY = "attribution"
+
+private const val TILE_CONTENT_TYPE = "tile"
+
+private const val MESSAGE_CONTENT_TYPE = "message"
