@@ -32,9 +32,9 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   review. The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog,
   unsaved editor text, and the onboarding, replaces an editor with nothing unsaved, and holds the queue until no editor
   is left, so texts arriving together (an iOS inbox drained at once) open one after another.
-- A blank, links-only (a page's address, alone or beside a one-line title), or over-8 MB paste is a snackbar before
-  anything is prepared; a blank share goes to the import, reported as skipped; several shared texts are one import.
-  Nothing is fetched.
+- A blank, links-only (a page's address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar
+  before anything is prepared, except that a blank share goes to the import, reported as skipped; several shared texts
+  are one import. Nothing is fetched.
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
   and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.

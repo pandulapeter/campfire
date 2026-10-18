@@ -31,7 +31,7 @@ platform types. One multiplatform implementation, with platform differences in `
 
 - `SetlistLocalSource`: `renameSetlist` saves and moves the file when the title changes the derived name. Every write
   returns the setlist with its new file size, so the cache never lists.
-- `ArchiveLocalSource`: nested archives (by name, or by bytes under a name an import reads) are unpacked in place,
+- `ArchiveLocalSource`: nested archives (by name, or by bytes under any name but a document's) are unpacked in place,
   three levels deep, within one inflation budget; unpacking drops tools' hidden files (macOS AppleDouble
   `._name.cho`) and everything inside a hidden folder, unreported; every other unread entry
   (not importable, too large, unreadable) comes back as `ImportedFile.unread`, and one bad entry never fails the archive.
