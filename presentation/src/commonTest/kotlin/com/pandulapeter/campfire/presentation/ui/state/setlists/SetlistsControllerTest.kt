@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.setlists
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -20,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -33,7 +36,11 @@ class SetlistsControllerTest {
 
     private val gig = setlist("gig.setlist.json", "a.cho", "b.cho", "c.cho")
     private val played = setlist("played.setlist.json", "a.cho", "b.cho", isArchived = true)
-    private val files = FakeSetlistFiles(gig, played)
+    private val rehearsal = setlist("rehearsal.setlist.json", "d.cho")
+    private val files = FakeSetlistFiles(gig, played, rehearsal)
+    private val indexedSongs = MutableStateFlow(
+        LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", orderKey = "", sorted = emptyList(), isLibraryRead = true),
+    )
 
     @Test
     fun `an archived setlist is not changed by an edit of its songs`() = runTest {
@@ -105,6 +112,41 @@ class SetlistsControllerTest {
         assertTrue(files[played.fileName]?.entries?.isNotEmpty() == true)
     }
 
+    @Test
+    fun `the listed setlists carry the query they were narrowed by, not the text of a closed search`() = runTest {
+        val controller = controller()
+        val search = controller.setlistsSearch
+        search.open()
+        search.textFieldState.setTextAndPlaceCursorAtEnd("GIG")
+        Snapshot.sendApplyNotifications()
+        val narrowed = controller.setlistsWithSongs.first { it.filterKey.isNotEmpty() }
+        assertEquals("gig", narrowed.filterKey)
+        assertEquals(listOf(gig.fileName), narrowed.setlists.map { it.setlist.fileName })
+        search.close()
+        Snapshot.sendApplyNotifications()
+        controller.setlistsWithSongs.first { it.filterKey.isEmpty() }
+        search.textFieldState.setTextAndPlaceCursorAtEnd("rehearsal")
+        Snapshot.sendApplyNotifications()
+        indexedSongs.value = indexedSongs.value.copy(isLibraryRead = false)
+        val unnarrowed = controller.setlistsWithSongs.first { !it.isLibraryRead }
+        assertEquals("", unnarrowed.filterKey)
+        assertEquals(listOf(gig.fileName, rehearsal.fileName), unnarrowed.setlists.map { it.setlist.fileName }.sorted())
+    }
+
+    @Test
+    fun `the search keeps whether the library has been read`() = runTest {
+        indexedSongs.value = indexedSongs.value.copy(isLibraryRead = false)
+        val controller = controller()
+        controller.setlistsSearch.open()
+        controller.setlistsSearch.textFieldState.setTextAndPlaceCursorAtEnd("gig")
+        Snapshot.sendApplyNotifications()
+        assertFalse(controller.setlistsWithSongs.first { it.filterKey == "gig" }.isLibraryRead)
+        indexedSongs.value = indexedSongs.value.copy(isLibraryRead = true)
+        val read = controller.setlistsWithSongs.first { it.isLibraryRead }
+        assertEquals("gig", read.filterKey)
+        assertEquals(listOf(gig.fileName), read.setlists.map { it.setlist.fileName })
+    }
+
     private fun songsOf(fileName: String) = files[fileName]?.entries?.map { it.songFileName }
 
     private fun setlist(fileName: String, vararg songs: String, isArchived: Boolean = false) = Setlist(
@@ -124,9 +166,7 @@ class SetlistsControllerTest {
         userPreferences = MutableStateFlow(null),
         setlists = files.setlists,
         allSongs = MutableStateFlow(emptyList()),
-        indexedSongs = MutableStateFlow(
-            LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", orderKey = "", sorted = emptyList(), isLibraryRead = true),
-        ),
+        indexedSongs = indexedSongs,
         screenData = MutableStateFlow<DataState<ScreenData>>(DataState.Loading(null)),
         isImporting = MutableStateFlow(false),
         dialogHost = DialogHost(backgroundScope),

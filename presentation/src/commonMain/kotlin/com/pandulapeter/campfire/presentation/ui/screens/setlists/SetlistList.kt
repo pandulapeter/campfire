@@ -181,15 +181,13 @@ internal fun SetlistList(
     val rowsCache = remember { SetlistRowsCache() }
     rowsCache.retainOnly(setlistsWithSongs)
 
-    val isSearchOpen by viewModel.setlistsController.setlistsSearch.isOpen.collectAsStateWithLifecycle()
-    val query = if (isSearchOpen) viewModel.setlistsController.setlistsSearch.textFieldState.text.toString() else ""
-    val searchedQuery = remember(query) { viewModel.songRenderer.normalizeForSearch(query) }
     ScrollToTopWhenChanged(
         listState = listState,
-        // A closed search narrows nothing whatever its field still holds, as on the songs screen, and the query is
-        // the one searched for there too. Sorting sends the list to its new first setlist, but the archive toggle
-        // lives at the end and must stay within reach there.
-        key = "$searchedQuery|${userPreferences?.setlistSortingMode?.name}",
+        // The query the list was narrowed by rather than the field's text, which changes frames before the list does
+        // and would compose the screen on every character typed; a closed search narrows nothing, as on the songs
+        // screen. Sorting sends the list to its new first setlist, but the archive toggle lives at the end and must
+        // stay within reach there.
+        key = "${listedSetlists.filterKey}|${userPreferences?.setlistSortingMode?.name}",
         contents = setlistsWithSongs,
         // Closing search to rearrange restores the full list around its visible item, not from the top.
         scrollToTopOnKeyChange = !isReordering,

@@ -22,6 +22,8 @@
 - The archived icon fades with the archiving (the menu that archives hangs from the same row).
 - "New setlist" opens the song picker right after creating (`SetlistsController.createSetlist`), only if nothing else
   was opened meanwhile and the library has songs.
+- A search sends the list to the top when the list narrowed by it arrives: the folded query travels with the setlists
+  (`ListedSetlists.filterKey`, as `SongGroups.filterKey` does), so the screen never reads the field's text.
 
 ### A setlist's rows are dragged only in its reorder mode
 

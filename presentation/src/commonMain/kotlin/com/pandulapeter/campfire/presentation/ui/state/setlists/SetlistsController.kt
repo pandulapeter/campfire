@@ -122,7 +122,7 @@ internal class SetlistsController(
                 },
             )
         }
-        ListedSetlists(setlists = visible, isLibraryRead = indexed.isLibraryRead)
+        ListedSetlists(setlists = visible, isLibraryRead = indexed.isLibraryRead, filterKey = "")
     }.flowOn(Dispatchers.Default).asState(scope, ListedSetlists.Empty)
 
     /**
@@ -139,6 +139,7 @@ internal class SetlistsController(
             setlists
         } else {
             setlists.copy(
+                filterKey = normalizedQuery,
                 setlists = setlists.setlists.filter {
                     it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName, normalizeSearchText = normalizeSearchText)
                 },
