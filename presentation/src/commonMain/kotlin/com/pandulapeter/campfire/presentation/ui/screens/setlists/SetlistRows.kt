@@ -79,7 +79,7 @@ internal fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int
     var index = 0
     forEach { setlistWithSongs ->
         if (setlistWithSongs.setlist.fileName == setlistFileName) return index
-        index += 2 + setlistWithSongs.entries.size + if (setlistWithSongs.setlist.description.isNotBlank()) 1 else 0
+        index += 2 + setlistWithSongs.entries.size + if (setlistWithSongs.hasSummary) 1 else 0
     }
     return null
 }

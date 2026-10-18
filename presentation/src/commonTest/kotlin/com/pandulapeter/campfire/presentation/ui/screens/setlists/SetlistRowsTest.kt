@@ -40,13 +40,19 @@ class SetlistRowsTest {
         assertEquals(listOf("c", "a"), first.rows(dragOrder = listOf("c", "gone", "a")).map { it.entry.songFileName })
 
     @Test
-    fun `a header counts the headers entries and descriptions before it`() {
+    fun `a header counts the headers entries and summaries before it`() {
         val setlists = listOf(second, first)
         assertEquals(0, setlists.headerIndexOf("second.setlist.json"))
         assertEquals(4, setlists.headerIndexOf("first.setlist.json"))
         assertEquals(5, listOf(first, second).headerIndexOf("second.setlist.json"))
         assertNull(setlists.headerIndexOf("third.setlist.json"))
         assertNull(setlists.headerIndexOf(null))
+    }
+
+    @Test
+    fun `a countdown counts as a summary before a header even without a description`() {
+        val counted = setlistWithSongs("counted", description = "", "a", "b", "c", isCountdownShown = true)
+        assertEquals(6, listOf(counted, second).headerIndexOf("second.setlist.json"))
     }
 
     @Test
@@ -101,12 +107,18 @@ class SetlistRowsTest {
 
     private fun key(setlist: String, song: String) = SetlistItemKey(setlistFileName = "$setlist.setlist.json", songFileName = song)
 
-    private fun setlistWithSongs(name: String, description: String, vararg songFileNames: String) = SetlistWithSongs(
+    private fun setlistWithSongs(
+        name: String,
+        description: String,
+        vararg songFileNames: String,
+        isCountdownShown: Boolean = false,
+    ) = SetlistWithSongs(
         setlist = Setlist(
             fileName = "$name.setlist.json",
             title = name,
             description = description,
             date = LocalDate(2026, 1, 1),
+            isCountdownShown = isCountdownShown,
             isArchived = false,
             entries = songFileNames.map { Setlist.Entry(songFileName = it) },
             size = 0,
