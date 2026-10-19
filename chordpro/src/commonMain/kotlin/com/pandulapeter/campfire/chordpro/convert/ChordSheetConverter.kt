@@ -397,28 +397,68 @@ public object ChordSheetConverter {
         omitted: MutableSet<Int>,
     ) {
         val first = kinds.indexOfFirst { it != Kind.BLANK }
-        if (first >= 0 && kinds[first] == Kind.LYRIC && !isChordLine(lines[first].text) && (isTitle(lines[first], lines) ||
-                kinds.getOrNull(first + 1) == Kind.BLANK && kinds.indexOf(Kind.CHORD) in (first + 2)..(first + 4))) {
-            // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
-            // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
-            var last = first
-            while (kinds.getOrNull(last + 1) == Kind.LYRIC && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
-            val title = (first..last).joinToString(" ") { lines[it].text.trim() }
-            val split = title.split(Regex(" +[-\u2013\u2014] +"), limit = 2)
-            if (split.size == 2) {
-                header.add(0, "{artist: ${headerValue(split[0])}}")
-                header.add(0, "{title: ${headerValue(split[1])}}")
-            } else header.add(0, "{title: ${headerValue(title)}}")
-            omitted += first..last
-            val artist = last + 1
-            // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
-            val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
-            if (split.size == 1 && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || lines[artist].text.length < title.length &&
-                    lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
-                header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
-                omitted += artist
-            }
+        if (first < 0 || kinds[first] != Kind.LYRIC || isChordLine(lines[first].text)) return
+        if (!isTitle(lines[first], lines)) return extractPlainTitle(lines, kinds, first, header, omitted)
+        // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
+        // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
+        var last = first
+        while (kinds.getOrNull(last + 1) == Kind.LYRIC && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
+        val title = (first..last).joinToString(" ") { lines[it].text.trim() }
+        val (name, named) = ChordSheetTitles.split(title)
+        addTitle(header, name, named)
+        omitted += first..last
+        val artist = last + 1
+        // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
+        val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
+        if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || lines[artist].text.length < title.length &&
+                lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
+            header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
+            omitted += artist
         }
+    }
+
+    /**
+     * The title of a text with no type to tell it by: a first line that the song's structure follows closely, after
+     * its credit and the metadata lines the page heads the song with, either straight away or after a blank line. A
+     * line that opens with markup, a summary of the chords used, or a bare "Chords" is the page's furniture instead.
+     */
+    private fun extractPlainTitle(
+        lines: List<Rendered>,
+        kinds: List<Kind>,
+        first: Int,
+        header: MutableList<String>,
+        omitted: MutableSet<Int>,
+    ) {
+        val text = lines[first].text.trim()
+        if (text.startsWith('[') || text.startsWith('{') || isChordSummary(text) || text.lowercase() in pageWords) return
+        val (name, named) = ChordSheetTitles.split(text)
+        val credit = lines.getOrNull(first + 1)?.let { credit.matchEntire(it.text.trim()) }
+        val creditAt = (first + 1).takeIf {
+            named == null && kinds.getOrNull(it) == Kind.LYRIC && (credit != null ||
+                lines[it].text.trim().length < text.length && kinds.getOrNull(it + 1).let { next -> next == Kind.BLANK || next == Kind.METADATA })
+        }
+        var next = (creditAt ?: first) + 1
+        while (kinds.getOrNull(next) == Kind.METADATA) next++
+        val structure = kinds.indices.firstOrNull { kinds[it] == Kind.CHORD || kinds[it] == Kind.SECTION } ?: return
+        if (kinds.getOrNull(next) !in listOf(Kind.BLANK, Kind.CHORD, Kind.SECTION) || structure !in (first + 1)..(first + 5)) return
+        addTitle(header, name, named)
+        omitted += first
+        if (creditAt != null) {
+            header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[creditAt].text.trim())}}"
+            omitted += creditAt
+        }
+    }
+
+    private fun addTitle(header: MutableList<String>, title: String, artist: String?) {
+        artist?.let { header.add(0, "{artist: ${headerValue(it)}}") }
+        header.add(0, "{title: ${headerValue(title)}}")
+    }
+
+    /** `Chords used: G D Em C`: a label whose value is mostly chords lists them rather than naming the song. */
+    private fun isChordSummary(text: String): Boolean {
+        val colon = text.indexOf(':').takeIf { it >= 0 } ?: return false
+        val words = tokens(text.substring(colon + 1))
+        return words.isNotEmpty() && words.count { chord(it.text) } * 2 >= words.size
     }
 
     private fun writeBody(
@@ -628,6 +668,7 @@ public object ChordSheetConverter {
     private val timeSignature = Regex("[0-9]+/[0-9]+")
     private val timingNames = setOf("tempo", "time")
     private val labelGap = Regex("\\s{2,}")
+    private val pageWords = setOf("chords", "tab", "lyrics")
     private val credit = Regex("^(?:words and music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")

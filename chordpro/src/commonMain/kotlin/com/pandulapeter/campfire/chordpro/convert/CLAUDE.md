@@ -20,3 +20,5 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   has its own header. Only a paste with a chord row is converted.
 - The heading vocabulary lives in `ChordSheetHeadings`. A heading word that is also sung (`Hook`, `Tag`, `Coro`, `R`)
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
+- The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
+  documented limit, since both orders are common on the web.

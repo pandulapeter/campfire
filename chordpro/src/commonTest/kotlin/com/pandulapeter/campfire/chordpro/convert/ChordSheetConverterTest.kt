@@ -402,6 +402,51 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a UG title line names the title and the artist`() {
+        val chords = "\n\nAm     C\nHello world"
+        assertTrue(convert("Riverlight Chords by The Invented Band$chords").startsWith("{title: Riverlight}\n{artist: The Invented Band}\n\n"))
+        assertTrue(convert("Riverlight chords$chords").startsWith("{title: Riverlight}\n\n"))
+        assertTrue(convert("Riverlight Chords (ver 2) by Someone$chords").startsWith("{title: Riverlight}\n{artist: Someone}\n\n"))
+        assertTrue(convert("The Invented Band - Riverlight Chords$chords").startsWith("{title: Riverlight}\n{artist: The Invented Band}\n\n"))
+        assertTrue(convert("Stand by Me$chords").startsWith("{title: Stand by Me}\n\n"))
+        assertTrue(convert("Hallelujah (Live)$chords").startsWith("{title: Hallelujah (Live)}\n\n"))
+    }
+
+    @Test
+    fun `a title above metadata lines is still the title`() {
+        val result = convert("Riverlight Chords by Someone\nCapo: 2nd fret\nKey: G\n\n[Verse 1]\nAm     C\nHello world")
+        val header = ChordProParser.parse(result).metadata
+        assertEquals("Riverlight", header.title, result)
+        assertEquals("Someone", header.artist, result)
+        assertEquals(2, header.capo, result)
+        assertEquals("G", header.key, result)
+    }
+
+    @Test
+    fun `a title, its credit, and a blank line before the chords`() {
+        assertTrue(convert("Riverlight\nby The Invented Band\n\nAm     C\nHello world").startsWith("{title: Riverlight}\n{artist: The Invented Band}\n\n"))
+        assertTrue(convert("Down by the Riverlight\nSomeone\n\nAm     C\nHello world").startsWith("{title: Down by the Riverlight}\n{artist: Someone}\n\n"))
+        assertTrue(convert("Riverlight\nAm     C\nHello world").startsWith("{title: Riverlight}\n\n[Am]Hello [C]world"))
+    }
+
+    @Test
+    fun `a lyrics-only paste with headings gets its title`() {
+        val result = convert("Riverlight\n\n[Verse 1]\nThe river runs\nbeside the road\nall the way\nback home")
+        assertTrue(result.startsWith("{title: Riverlight}\n\n{start_of_verse: Verse 1}\nThe river runs"), result)
+    }
+
+    @Test
+    fun `a chord summary line is not a title`() {
+        assertFalse(convert("Chords used: G D Em C\n\n[Verse]\nAm     C\nHello world").contains("{title"))
+        assertFalse(convert("Chords\n\nAm     C\nHello world").contains("{title"))
+    }
+
+    @Test
+    fun `a lyric line that looks like a title is left alone without structure`() {
+        assertEquals("Riverlight\n\nThe river runs\nbeside the road\nall the way\nback home\n", convert("Riverlight\n\nThe river runs\nbeside the road\nall the way\nback home"))
+    }
+
+    @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
         assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
     }
