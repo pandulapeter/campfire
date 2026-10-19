@@ -11,8 +11,6 @@
 
 The bottom sheet every sheet goes through (`CampfireBottomSheet`) and its header, height, and Save shortcut.
 
-Every sheet goes through it. Rules a change must keep:
-
 - Drawn edge to edge, background `sheetContainerColor()`; the date picker passes the same color to
   `DatePickerDefaults.colors(containerColor = …)`.
 - `ModalBottomSheet`'s own bottom-inset padding is replaced: the sheet keeps the top inset, centers between the
