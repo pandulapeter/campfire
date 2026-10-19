@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetStructure
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -76,6 +77,17 @@ internal class PrepareImportUseCaseImpl(
                 // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
                 // carries the extension of the file it belongs to, and decoded as a song it would be a screen of binary.
                 LibraryFiles.isHiddenFileName(file.name) -> triage.skippedFileNames += file.name
+                // Kept for reading as text under a name that says nothing (see ImportedFile.isPlainTextByContent), so
+                // held to the text limit, and a song only where it has the structure of one: a README or a licence
+                // next to the songs is not one, and as a text nobody chose it must not become prose that is.
+                file.isPlainTextByContent -> when {
+                    file.isTooLarge || file.bytes.size > minOf(ImportLimits.MAX_TEXT_FILE_SIZE, remaining) -> triage.oversizedFileNames += file.name
+                    !ChordSheetStructure.hasSongStructure(file.bytes.decodeLibraryText()) -> triage.skippedFileNames += file.name
+                    else -> {
+                        remaining -= file.bytes.size
+                        songFiles += IncomingFile(file = file, origin = origin)
+                    }
+                }
                 extension !in SONG_EXTENSIONS && extension !in DOCUMENT_EXTENSIONS && extension != SETLIST_EXTENSION -> triage.skippedFileNames += file.name
                 file.isTooLarge || file.bytes.size > minOf(ImportLimits.maxSizeOf(file.name), remaining) -> triage.oversizedFileNames += file.name
                 else -> {
@@ -156,7 +168,7 @@ internal class PrepareImportUseCaseImpl(
                     }
                     ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
                 }
-                file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) -> ChordSheetConverter.convert(ChordSheet.ofPlainText(original!!), String::normalizedToNfc)
+                file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) || file.isPlainTextByContent -> ChordSheetConverter.convert(ChordSheet.ofPlainText(original!!), String::normalizedToNfc)
                 else -> listOf(original!!)
             }
             if (converted.sumOf { it.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
@@ -174,7 +186,7 @@ internal class PrepareImportUseCaseImpl(
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
                 // only worth anything where the song inside it declares no title: then it is what titles the song,
                 // and a collection's parts do not even have that, since the file they came from named none of them.
-                val fallbackTitle = if (parts.size == 1) file.name.substringBeforeLast('.') else ""
+                val fallbackTitle = if (parts.size == 1) file.fallbackTitle() else ""
                 // All sources share the same formatter after conversion and splitting, and before naming or
                 // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
                 val text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD))
@@ -232,15 +244,32 @@ internal class PrepareImportUseCaseImpl(
     }
 
     /**
+     * The name a file came under without its extension. A file kept for its text under a name that says nothing loses
+     * only an extension with no space in it: `riverlight.onsong` is "riverlight", but `Mr. Brightside` is a title whose
+     * dot ends an abbreviation.
+     */
+    private fun ImportedFile.fallbackTitle(): String {
+        if (!isPlainTextByContent) return name.substringBeforeLast('.')
+        val extension = name.substringAfterLast('.', "")
+        return if (extension.isNotEmpty() && extension.none(Char::isWhitespace)) name.substringBeforeLast('.') else name
+    }
+
+    /**
      * Whether this is a file an import would read anything from: not hidden, a song, a document or a setlist by its
      * name, and actually read. A bare `.json` does not count, since inside another app's container it is that app's
-     * configuration, and neither does an entry handed over unread, or an empty one, which holds nothing to import.
+     * configuration, and neither does an entry handed over unread, or an empty one, which holds nothing to import. A
+     * text kept for its bytes, and a `.txt`, count only with the structure of a song (or a `.txt` too large to tell):
+     * an e-book's chapters and a licence are texts too, and the container they came in is the one file that was picked.
      */
     private fun ImportedFile.isImportable(): Boolean {
-        val extension = name.substringAfterLast('.', "").lowercase()
-        return !LibraryFiles.isHiddenFileName(name) &&
-                (bytes.isNotEmpty() || isTooLarge) &&
-                (extension in SONG_EXTENSIONS || extension in DOCUMENT_EXTENSIONS || name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true))
+        val extension = name.substringAfterLast('.', "")
+        return !LibraryFiles.isHiddenFileName(name) && (bytes.isNotEmpty() || isTooLarge) && when {
+            isPlainTextByContent -> ChordSheetStructure.hasSongStructure(bytes.decodeLibraryText())
+            extension.equals(LibraryFiles.TEXT_EXTENSION.removePrefix("."), ignoreCase = true) ->
+                isTooLarge || ChordSheetStructure.hasSongStructure(bytes.decodeLibraryText())
+            else -> extension.lowercase() in SONG_EXTENSIONS || extension.lowercase() in DOCUMENT_EXTENSIONS ||
+                name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
+        }
     }
 
     /** The files of the batch that are left out, by why, as the preparation comes across them. */

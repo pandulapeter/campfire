@@ -137,6 +137,17 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `a chord sheet under an unknown name inside an archive is read`() = runBlocking {
+        val sheet = "G         D\nDown by the river light\n".encodeToByteArray()
+        val archive = ZipWriter.write(listOf(ZipEntry("songs/x.onsong", sheet), ZipEntry("songs/Riverlight", sheet)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("x.onsong", "Riverlight"), files.map { it.name })
+        assertTrue(files.all { it.isPlainTextByContent && it.bytes.contentEquals(sheet) })
+    }
+
+    @Test
     fun `a nested docx is still a document`() = runBlocking {
         val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))

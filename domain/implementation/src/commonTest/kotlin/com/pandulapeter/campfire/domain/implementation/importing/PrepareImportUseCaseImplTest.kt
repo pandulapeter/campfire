@@ -110,7 +110,49 @@ class PrepareImportUseCaseImplTest {
         )
     }
 
+    @Test
+    fun `a text of unknown name with song structure is planned as a converted song`() = runTest {
+        val plan = prepare()(listOf(ImportedFile("riverlight.onsong", SHEET.encodeToByteArray(), isPlainTextByContent = true)))
+
+        assertEquals(listOf("riverlight.onsong"), plan.songs.map { it.sourceFileName })
+        assertEquals("riverlight", plan.songs.single().title)
+        assertTrue(plan.songs.single().text.contains("[G]Down"), plan.songs.single().text)
+        assertEquals(emptyList(), plan.oversizedFileNames)
+    }
+
+    @Test
+    fun `a README under an unknown name is reported skipped, not imported as prose`() = runTest {
+        val readme = "# Campfire\nSee [C](https://example.com) for the details.\n- A\n- B\n"
+
+        val plan = prepare()(listOf(ImportedFile("README.md", readme.encodeToByteArray(), isPlainTextByContent = true)))
+
+        assertEquals(listOf("README.md"), plan.skippedFileNames)
+        assertTrue(plan.songs.isEmpty())
+    }
+
+    @Test
+    fun `a bytes-only archive of a licence text is reported as one file`() = runTest {
+        val licence = "Permission is hereby granted, free of charge, to any person obtaining a copy.\n"
+        val archive = FakeArchiveRepository { _, _ -> listOf(ImportedFile("LICENSE.txt", licence.encodeToByteArray())) }
+
+        val plan = prepare(archive = archive)(listOf(ImportedFile("book.epub", byteArrayOf(0x50, 0x4B, 3, 4, 0))))
+
+        assertEquals(listOf("book.epub"), plan.skippedFileNames)
+        assertTrue(plan.songs.isEmpty())
+    }
+
+    @Test
+    fun `an unknown name with a dot in it keeps its whole name as the title`() = runTest {
+        val plan = prepare()(listOf(ImportedFile("Mr. Brightside", SHEET.encodeToByteArray(), isPlainTextByContent = true)))
+
+        assertEquals("Mr. Brightside", plan.songs.single().title)
+    }
+
     private fun song(name: String) = ImportedFile(name, "{title: ${name.substringBeforeLast('.')}}\n".encodeToByteArray())
+
+    private companion object {
+        const val SHEET = "G         D\nDown by the river light\nC         G\nWe sang until morning\n"
+    }
 
     /** An import into an empty library, which leaves what the preparation left out the only thing two plans differ by. */
     private fun prepare(

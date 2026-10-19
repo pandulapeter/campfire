@@ -70,29 +70,41 @@ internal class ArchiveLocalSourceImpl(
             // songs, a ".dropbox.cache"), so these are never read: they cost nothing and cannot fail the archive.
             // SongbookPro keeps a whole library in one document, which is read whatever its size within the import's.
             // A name the import does not know, and a text name larger than any text, is peeked at instead: another app's
-            // backup in a zipped cloud folder is a zip under a name of its own as often as not.
+            // backup in a zipped cloud folder is a zip under a name of its own as often as not, and its chord sheets are
+            // texts under that app's extension. What is never text by its name is not even peeked at.
             limitOf = { name, declaredSize ->
                 val ownLimit = ImportLimits.maxSizeOf(name.fileName)
                 when {
                     name.isHidden -> EntryPolicy.Skip
                     name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) -> EntryPolicy.Read(ImportLimits.MAX_IMPORT_SIZE)
+                    ownLimit == 0L && LibraryFiles.isBinaryFileName(name.fileName) -> EntryPolicy.Skip
                     ownLimit == 0L -> EntryPolicy.Sniff
                     ImportLimits.isReadAsText(name.fileName) && declaredSize > ownLimit -> EntryPolicy.Sniff
                     else -> EntryPolicy.Read(ownLimit)
                 }
             },
-            // A zip is read within what is left of the import (the reader's own limit), and a text name that is no zip
-            // within its own limit, which a text over it is then reported against.
+            // A zip is read within what is left of the import (the reader's own limit), and a text name that is no zip,
+            // or an unknown one that reads as text, within the text limit, which a text over it is then reported against.
             sniffedLimitOf = { name, prefix ->
                 when {
                     LibraryFiles.isZipArchive(prefix) -> ImportLimits.MAX_IMPORT_SIZE
                     ImportLimits.isReadAsText(name.fileName) -> ImportLimits.MAX_TEXT_FILE_SIZE
+                    ImportLimits.maxSizeOf(name.fileName) == 0L && LibraryFiles.isTextLike(prefix) -> ImportLimits.MAX_TEXT_FILE_SIZE
                     else -> null
                 }
             },
         )
         inflated.count += content.chargedSize
-        val entries = content.entries.map { entry -> ImportedFile(name = entry.name.fileName, bytes = entry.bytes) }
+        // An entry does not say why it was read, so one under a name the import does not know is flagged here: what is
+        // not an archive of such a name was read for being text.
+        val entries = content.entries.map { entry ->
+            val name = entry.name.fileName
+            ImportedFile(
+                name = name,
+                bytes = entry.bytes,
+                isPlainTextByContent = ImportLimits.maxSizeOf(name) == 0L && !LibraryFiles.isZipArchive(entry.bytes),
+            )
+        }
         // Another app's library is translated into the files of one of Campfire's own, and what else its archive holds is
         // that app's bookkeeping rather than anything the user would recognise in a report of files that were left out.
         // The entries that were not read are named to it too, since that bookkeeping is never read, and neither is a

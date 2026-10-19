@@ -110,28 +110,39 @@ class ImportBudget {
 
     /**
      * A file whose name the import does not know is read as an archive would be, since another app's library backup is
-     * often a zip archive under a name of its own, and kept only where its bytes say it is one. Anything else - the
-     * photo or the recording picked with the songs - is handed back unread and gives back what it took, so that it
-     * neither crowds the files after it out of the selection nor is reported as too large rather than as unsupported:
-     * nothing says it was ever meant to be imported.
+     * often a zip archive under a name of its own, and kept where its bytes say it is one. One whose bytes read as text
+     * within [ImportLimits.MAX_TEXT_FILE_SIZE] is kept too, flagged [ImportedFile.isPlainTextByContent], since a chord
+     * sheet saved by another app is as often named for that app; whether it is one is the import's question. Anything
+     * else - the photo or the recording picked with the songs - is handed back unread and gives back what it took, so
+     * that it neither crowds the files after it out of the selection nor is reported as too large rather than as
+     * unsupported: nothing says it was ever meant to be imported.
      */
     @PublishedApi
     internal inline fun readUnknown(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
         val limit = remaining
         if (size != null && size > limit) return ImportedFile.unread(name)
         val bytes = readBytes(limit) ?: return null
-        if (bytes.size > limit || !LibraryFiles.isZipArchive(bytes)) return ImportedFile.unread(name)
+        if (bytes.size > limit) return ImportedFile.unread(name)
+        val isArchive = LibraryFiles.isZipArchive(bytes)
+        val isText = !isArchive && isTextOfUnknownName(name, bytes)
+        if (!isArchive && !isText) return ImportedFile.unread(name)
         remaining -= bytes.size
-        return ImportedFile(name = name, bytes = bytes)
+        return ImportedFile(name = name, bytes = bytes, isPlainTextByContent = isText)
     }
+
+    /** Whether [bytes] of a file called [name], a name the import does not know, are kept as a text to look at. */
+    @PublishedApi
+    internal fun isTextOfUnknownName(name: String, bytes: ByteArray) = bytes.size <= ImportLimits.MAX_TEXT_FILE_SIZE &&
+        !LibraryFiles.isBinaryFileName(name) && LibraryFiles.isTextLike(bytes.copyOf(minOf(bytes.size, ImportLimits.SNIFF_LENGTH)))
 
     companion object {
 
         /**
          * Whether a file under a name the import does not know is worth reading whole, judged by its first
-         * [ImportLimits.SNIFF_LENGTH] bytes ([head]). Asked by the folder walks, which read nothing of a file that is
-         * not, so that a dropped folder of photos costs a peek at each rather than a read of each.
+         * [ImportLimits.SNIFF_LENGTH] bytes ([head]): an archive, or a text that may be a chord sheet. Asked by the
+         * folder walks, which read nothing of a file that is not, so that a dropped folder of photos costs a peek at
+         * each rather than a read of each; a file of one of the [LibraryFiles.BINARY_EXTENSIONS] is not even peeked at.
          */
-        fun isWorthReadingUnknown(head: ByteArray) = LibraryFiles.isZipArchive(head)
+        fun isWorthReadingUnknown(head: ByteArray) = LibraryFiles.isZipArchive(head) || LibraryFiles.isTextLike(head)
     }
 }

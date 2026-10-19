@@ -31,10 +31,12 @@ repository.
 ## Import
 
 `ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside
-is never kept (an unknown type is read only to check for a zip signature), and an oversized one is reported rather than
-loaded (a text name over its limit is read only to be kept as a zip, `ImportLimits.isReadAsText`). Limits are in `ImportLimits` (sized for an Android heap). `ImportPlan` is computed before anything is written;
-`ImportChoices` answers it (unticked `ImportEntryKey`s, Keep both or Replace for all and per row; changing the for-all
-choice leaves per-row ones alone). `ExtractedDocument` is transient; no original file is stored with a song.
+is never kept (an unknown type is read only to check for a zip signature or text, kept flagged
+`isPlainTextByContent`), and an oversized one is reported rather than loaded (a text name over its limit is read only
+to be kept as a zip, `ImportLimits.isReadAsText`). Limits are in `ImportLimits` (sized for an Android heap).
+`ImportPlan` is computed before anything is written; `ImportChoices` answers it (unticked `ImportEntryKey`s, Keep both
+or Replace for all and per row; changing the for-all choice leaves per-row ones alone). `ExtractedDocument` is
+transient; no original file is stored with a song.
 
 ## Other
 

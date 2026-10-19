@@ -16,6 +16,7 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ReadAsImportedFilesTest {
 
@@ -75,6 +76,16 @@ class ReadAsImportedFilesTest {
         assertEquals(listOf("backup.bak", "photo.heic"), files.map { it.name })
         assertContentEquals(zip, files.first().bytes)
         assertEquals(ImportedFile.unread("photo.heic"), files.last())
+    }
+
+    @Test
+    fun `a folder reads an extensionless chord sheet as text`() {
+        val root = folder { file("Riverlight", text = "G   D\nDown by the river\n") }
+
+        val file = listOf(root.absolutePath).readAsImportedFiles().single()
+
+        assertEquals("Riverlight", file.name)
+        assertTrue(file.isPlainTextByContent)
     }
 
     @Test

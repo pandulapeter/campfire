@@ -26,3 +26,6 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
   Guitar's page furniture (`Difficulty:`, `Author:`, a rating) is many lines in no fixed shape and is not filtered.
+- `ChordSheetStructure.hasSongStructure` is the one answer to "is this text a chord sheet at all", stricter than the
+  converter (a single-token row, a Markdown link, a lone `(a)` never count): the import's rule for text under an
+  unknown name, where a README or a licence must stay skipped rather than become prose.

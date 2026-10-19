@@ -16,17 +16,25 @@ package com.pandulapeter.campfire.data.model.importing
  * A file that was not read is handed over all the same, with no bytes, so that it is reported rather than lost: one
  * the import would not look inside reads as skipped by its extension, one that could not be read holds nothing to
  * import, and one that was left unread for its size says so through [isTooLarge], see [ImportLimits].
+ *
+ * [isPlainTextByContent] marks a file kept for its bytes alone, under a name the import does not know: read as plain
+ * text, and only where it has the structure of a chord sheet. The flag is carried rather than the name changed, since
+ * the import reports a file under the name it came under.
  */
 data class ImportedFile(
     val name: String,
     val bytes: ByteArray,
     val isTooLarge: Boolean = false,
+    val isPlainTextByContent: Boolean = false,
 ) {
 
-    override fun equals(other: Any?) =
-        this === other || (other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge && bytes.contentEquals(other.bytes))
+    override fun equals(other: Any?) = this === other || (
+        other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
+            isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes)
+        )
 
-    override fun hashCode() = 31 * (31 * name.hashCode() + isTooLarge.hashCode()) + bytes.contentHashCode()
+    override fun hashCode() =
+        31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()
 
     companion object {
 

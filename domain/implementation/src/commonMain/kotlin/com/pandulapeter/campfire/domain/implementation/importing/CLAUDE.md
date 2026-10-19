@@ -13,7 +13,11 @@
 
 - Unpacks archives (nested ones through `ArchiveLocalSource`). An archive is known by name or, under any name but a
   document's, by bytes (`isZipArchive`) — never a `.docx`; inside an archive or a dropped folder an unknown name is
-  first peeked at, and a text name over `MAX_TEXT_FILE_SIZE` is kept only as a zip. One known only by its bytes that holds nothing importable
+  first peeked at, and a text name over `MAX_TEXT_FILE_SIZE` is kept only as a zip.
+- A file under an unknown name whose bytes read as text arrives flagged `isPlainTextByContent`; it is a song (converted
+  as a `.txt`, titled by its name less an extension without a space) only with `ChordSheetStructure.hasSongStructure`,
+  else reported skipped. In a bytes-only archive such an entry, and a `.txt`, count toward the gate only with structure
+  (a `.txt` also when too large), so an e-book or a licence stays one skipped file. One known only by its bytes that holds nothing importable
   is reported as the one unsupported file it was, since OpenDocument files, e-books, and spreadsheets are zips too; a
   bare `.json` does not count (inside another app's container it is that app's configuration).
 - Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.

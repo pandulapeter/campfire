@@ -177,7 +177,9 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boole
     } catch (_: Throwable) {
         return null
     }
-    if (isInFolder && !LibraryFiles.isImportableFileName(name) && !isWorthReading()) return ImportedFile.unread(name)
+    if (isInFolder && !LibraryFiles.isImportableFileName(name) && (LibraryFiles.isBinaryFileName(name) || !isWorthReading())) {
+        return ImportedFile.unread(name)
+    }
     return budget.read(name = name, size = size) {
         try {
             fileBytes(this).await<Int8Array?>()?.toByteArray()

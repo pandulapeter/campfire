@@ -76,6 +76,42 @@ object LibraryFiles {
         ((bytes[2] == 3.toByte() && bytes[3] == 4.toByte()) || (bytes[2] == 5.toByte() && bytes[3] == 6.toByte()))
 
     /**
+     * Whether [prefix], the first bytes of a file, read as text: a UTF-16 byte order mark (which [decodeLibraryText]
+     * decodes), or no NUL byte and at most one in fifty C0 control characters other than tab, line feed, carriage return
+     * and form feed. Asked of a file under a name the import does not know, which may still be a chord sheet.
+     */
+    fun isTextLike(prefix: ByteArray): Boolean {
+        if (prefix.size >= 2) {
+            val first = prefix[0].toInt() and 0xFF
+            val second = prefix[1].toInt() and 0xFF
+            if ((first == 0xFF && second == 0xFE) || (first == 0xFE && second == 0xFF)) return true
+        }
+        var controls = 0
+        for (byte in prefix) {
+            val value = byte.toInt() and 0xFF
+            if (value == 0) return false
+            if (value < 0x20 && value != 0x09 && value != 0x0A && value != 0x0D && value != 0x0C) controls++
+        }
+        return controls * 50 <= prefix.size
+    }
+
+    /**
+     * The extensions of what sits next to songs in a folder or an archive and is never text: images, recordings,
+     * videos, databases, programs and fonts. A file of such a name is left unread without even a peek at its bytes.
+     */
+    val BINARY_EXTENSIONS = listOf(
+        ".png", ".jpg", ".jpeg", ".gif", ".heic", ".heif", ".webp", ".bmp", ".tif", ".tiff", ".ico",
+        ".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".opus", ".aif", ".aiff", ".mid", ".midi",
+        ".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm",
+        ".db", ".sqlite", ".sqlite3", ".hive",
+        ".exe", ".dll", ".so", ".apk", ".jar",
+        ".ttf", ".otf", ".woff", ".woff2",
+    )
+
+    /** Whether a file called [name] is one of the [BINARY_EXTENSIONS]. */
+    fun isBinaryFileName(name: String) = BINARY_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
+
+    /**
      * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an
      * AppleDouble `._name.cho` next to every file it copies to a volume that cannot hold extended attributes, under
      * the extension of the file it belongs to, and a `.DS_Store` in every folder it has shown. Every system marks

@@ -39,6 +39,22 @@ internal class ImportLimitsTest {
     }
 
     @Test
+    fun `an unknown loose file that is text is kept flagged, a binary one is not`() {
+        val budget = ImportBudget()
+        val sheet = "G   D\nDown by the river\n".encodeToByteArray()
+        val binary = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte(), 0, 1, 2)
+
+        val text = budget.read(name = "riverlight.onsong", size = sheet.size.toLong()) { sheet }
+        val program = budget.read(name = "riverlight", size = binary.size.toLong()) { binary }
+        val photo = budget.read(name = "cover.png", size = sheet.size.toLong()) { sheet }
+
+        assertTrue(text!!.isPlainTextByContent)
+        assertContentEquals(sheet, text.bytes)
+        assertEquals(ImportedFile.unread("riverlight"), program)
+        assertEquals(ImportedFile.unread("cover.png"), photo)
+    }
+
+    @Test
     fun `a file of an unknown type larger than the selection is not read`() {
         val file = ImportBudget().read(name = "video.mp4", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
 
