@@ -18,6 +18,10 @@ import kotlin.test.assertTrue
 
 class PlayableScalesTest {
 
+    private fun firstOf(name: String, count: Int) = PlayableScales.over(ChordProChords.parse(name)!!).take(count).map { it.id }
+
+    private fun isBlues(root: Int, vararg names: String) = PlayableScales.isDominantBlues(root, names.map { ChordProChords.parse(it)!! })
+
     private fun over(root: Int, vararg names: String) = PlayableScales.over(root, names.map { ChordProChords.parse(it)!! }).map { it.id }
 
     @Test
@@ -109,4 +113,35 @@ class PlayableScalesTest {
         assertEquals("E", groups.single().rootName)
         assertEquals("minor_pentatonic", groups.single().scales.first().id)
     }
+
+    @Test
+    fun `an altered dominant is not a blues`() {
+        listOf("G7#5", "G7b9").forEach { assertFalse(isBlues(7, it), it) }
+        listOf("C7b5", "C7b13").forEach { assertFalse(isBlues(0, it), it) }
+        listOf("C7#9", "C9", "C13").forEach { assertTrue(isBlues(0, it), it) }
+        assertFalse("blues" in firstOf("G7#5", 5))
+    }
+
+    @Test
+    fun `an altered turnaround keeps a song's blues`() {
+        assertTrue(isBlues(4, "E7", "A7", "E7", "B7b9"))
+        assertFalse(isBlues(4, "E7b9", "A7", "B7"))
+    }
+
+    @Test
+    fun `a chord's sheet starts with its quality's textbook scales`() {
+        assertEquals(listOf("locrian", "locrian_natural_2"), firstOf("Cm7b5", 2))
+        assertEquals(listOf("diminished"), firstOf("Cdim7", 1))
+        assertEquals(listOf("mixolydian", "dorian"), firstOf("C7sus4", 2))
+        assertEquals(listOf("dorian", "melodic_minor"), firstOf("Cm6", 2))
+        assertEquals(listOf("dorian", "natural_minor"), firstOf("Cm7", 2))
+        assertEquals(listOf("whole_tone", "altered"), firstOf("G7#5", 2))
+        assertEquals(listOf("dominant_diminished", "phrygian_dominant"), firstOf("G7b9", 2))
+        assertEquals(listOf("lydian"), firstOf("Cmaj7#11", 1))
+        assertEquals(listOf("major", "lydian"), firstOf("Cmaj7", 2))
+        assertEquals(listOf("mixolydian"), firstOf("C7", 1))
+    }
+
+    @Test
+    fun `a first choice the chord's notes rule out is skipped`() = assertEquals(listOf("mixolydian_flat_6"), firstOf("C7b13", 1))
 }
