@@ -21,9 +21,9 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
 - The browser's media session is cleared from the engine's own playback state, not only from the composition, since a
   hidden tab's composition stops collecting.
 - Dropped files are imported; a dropped folder is read to the bottom like the desktop's (`FilePicker.wasmJs.kt`), its
-  files under unknown names peeked at (`fileHead`) and read only as a zip. An unreadable file arrives empty and is
-  reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song where
-  `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`, a page flag) the listeners still
+  files under unknown names peeked at (`fileHead`) and read only as an archive or a text (never a binary name). An
+  unreadable file arrives empty and is reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song
+  where `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`, a page flag) the listeners still
   prevent the browser's default, which would navigate to the file, but set `dropEffect` to `none` and drop nothing.
 
 ### Keys
@@ -56,12 +56,10 @@ fire it on tab close.
 
 ## Addresses and history (`ui/navigation/`)
 
-- Every screen has an address and the browser's history is the app's back stack: `/` (songs), `search`, `setlists`,
-  `setlists/search`, `metronome`, `tuner`, `chords`, `settings/{general,features,songs,library,about}`, `song/{song}`,
-  `song/{song}/edit`, `setlist/{setlist}/{song}`, and `import`. A dialog, sheet, or menu, the reorder mode, the selection
-  mode, and the onboarding each get an entry repeating the address under it. The unsaved changes question gets none
-  (it answers a Back). An address naming nothing in the library opens the songs, resolved behind the launch screen.
-- `BrowserRoutes` maps entries to paths and back: `ui/navigation/CLAUDE.md`.
+- Every screen has an address (`BrowserRoutes`, `ui/navigation/CLAUDE.md`) and the browser's history is the app's back
+  stack. A dialog, sheet, or menu, the reorder mode, the selection mode, and the onboarding each get an entry repeating
+  the address under it; the unsaved changes question gets none (it answers a Back). An address naming nothing in the
+  library opens the songs, resolved behind the launch screen.
 - `BrowserHistoryEffect` (`wasmJsMain/.../navigation/BrowserHistory.kt`): the app decides, the history follows via
   `pushState`, `replaceState` (settings tab to tab, setlist paging, renamed file), or `history.go`. Each entry is
   stamped with its depth, which is how `popstate` tells where the browser went.
