@@ -84,13 +84,11 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
   key-shaped names (64 lowercase hex), since the directory also holds an in-progress temp file.
 - `SongLocalSourceImpl`: reads the ChordPro family (`LibraryFiles.SONG_EXTENSIONS`, hidden files excluded via
   `isSongFileName`) but writes only `.cho`, `importFileName` included. Metadata comes from one `:chordpro` `summarize`
-  call; the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan reads in batches
-  (bounding concurrency), reads the next batch while parsing, and publishes after the first batch and then each time
-  the list doubles. Unreadable or oversized (`ImportLimits.MAX_TEXT_FILE_SIZE`) files are skipped; an unlistable
-  *directory* throws, so an unreachable library never looks empty.
+  call; the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan publishes in batches
+  so a large library appears before it is fully read. Unreadable or oversized (`ImportLimits.MAX_TEXT_FILE_SIZE`) files
+  are skipped; an unlistable *directory* throws, so an unreachable library never looks empty.
 - `DocumentLocalSourceImpl` / `ArchiveLocalSourceImpl` wrap `:data:formats`. Documents: 16 MiB limit, null for
-  unreadable input, cancellation rethrown. `desktopTest/resources/document` holds third-party fixtures with goldens
-  (provenance in its README).
+  unreadable input, cancellation rethrown.
 
 ## Documents (`model/`, `mapper/`)
 
@@ -116,12 +114,8 @@ No document type leaves this module.
 
 ## Other apps' libraries
 
-SongbookPro's `.sbpbackup` / `.sbp` and OpenSongApp's `.osb` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so
-an archive holding one is looked inside (`.osb` is not offered to the iOS share extension, which has no type to name);
-none is registered as an Open with type, and no platform's picker filters by name. Other names are recognised by their
-bytes (`ImportBudget` in `:data:model`, `:domain:implementation`'s `importing`), and so is an entry inside an archive
-under any name but a document's: one under an unknown name, or a text name over `MAX_TEXT_FILE_SIZE`, is sniffed
-(`EntryPolicy.Sniff`) and read only when its first bytes are a zip's or text's.
+SongbookPro's `.sbpbackup` / `.sbp` and OpenSongApp's `.osb` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an
+archive holding one is looked inside; none is registered as an Open with type, and no platform's picker filters by name.
 
 `backup/SongbookProBackup` translates `dataFile.txt` (a version line plus one JSON document, read up to
 `ImportLimits.MAX_IMPORT_SIZE`) into `.cho` songs and `*.setlist.json` setlists, then the ordinary import:
@@ -134,24 +128,19 @@ under any name but a document's: one under an unknown name, or a text name over 
 - A recognised backup whose document cannot be read is reported as one unread `dataFile.txt`; the rest of the archive
   is dropped unreported.
 
-`backup/JsonSongs` reads any other JSON document (a `.json` that is no setlist, or a sniffed text starting with `{` or
-`[`), inside an archive after the SongbookPro check and loose through `songsIn`: an object is a song only with a
-one-line title and a content with `ChordSheetStructure`, or four lines under `lyrics` (a notes export's `{title,
-content}` is not). Bounded to the text limit, 32 levels, and 200,000 nodes; no setlists. Both readers write their
-headers and batch names through `ForeignSongHeader`.
+`backup/JsonSongs`, `OpenSongSong`, and `OnSongFile` turn another app's document (a `.json` that is no setlist or a
+sniffed text starting with `{` or `[`; an OpenSong XML song, `.xml` or a sniffed text starting with `<`; an `.onsong`)
+into `.cho` songs, inside an archive after the SongbookPro check and loose through `songsIn`; their input shapes are in
+their KDoc. JSON is bounded to the text limit, 32 levels, and 200,000 nodes; none of them writes setlists; all write
+headers and batch names through `ForeignSongHeader`. What their KDoc does not say:
 
-`backup/OpenSongSong` reads one OpenSong XML song (root `song` whose `lyrics` is text; OpenLyrics' element lyrics are
-not), from a sniffed text or `.xml` starting with `<`, into a `.cho` of the name it came under: section tags become
-environments or comments, `.` chord rows are set over the lyric rows under them by `convertFragment`, numbered lyric
-lines are one verse each over shared chord rows, and a block with no chord row is `ChordSheetLyrics.escaped`.
-
-`backup/OnSongFile` reads an OnSong `.onsong` (text-like bytes only) into a `.cho` of its base name, so a bytes-only
-OnSong `.backup` passes the import's gate: the header up to the first blank line (labelled lines, or a bare title and
-artist first; a first chord row means no header unless it is the file's own name; a third bare line ends it), then the
-body cut at its directive lines, each run converted, kept as inline ChordPro, or escaped.
+- OpenSong: a `.cho` of the name it came under; section tags become environments or comments, `.` chord rows are set
+  over the lyric rows under them by `convertFragment`, and a block with no chord row is `ChordSheetLyrics.escaped`.
+- OnSong (text-like bytes only): a `.cho` of its base name; a first chord row means no header unless it is the file's
+  own name, and a third bare line ends the header; the body is cut at its directive lines, each run converted, kept as
+  inline ChordPro, or escaped.
 
 ## A song is named by its header
 
 **A file name is reproducible from its header alone** (`{artist}`, `{title}`, `{subtitle}` joining the title half) in
 the editor, `importFileName`, and `ExportFileNames.kt`; `Song.canUpdateFileName` notices where that stopped being true.
-Entries in an exported archive keep their library names, since setlists point at songs by file name.
