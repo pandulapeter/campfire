@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
@@ -42,7 +43,9 @@ import androidx.compose.ui.unit.dp
  * the state layer is drawn as a plain rectangle and is bound by nothing else, which is what let it spill past the
  * rounded corners on the web.
  *
- * @param role [Role.Checkbox] for a chip that is one filter of several, [Role.RadioButton] for one choice of a group.
+ * @param role [Role.Checkbox] for a chip that is one filter of several, [Role.RadioButton] for one choice of a group,
+ *   [Role.Button] for one that only opens something: that one is clickable rather than selectable, since a selectable
+ *   node is always read as selected or not, and a screen reader would say "not selected" of a plain button.
  * @param content The chip's label, handed the color it is drawn in.
  */
 @Composable
@@ -69,13 +72,25 @@ internal fun SelectableChip(
             .background(if (isSelected) colors.selectedContainerColor else colors.containerColor)
             .border(FilterChipDefaults.filterChipBorder(enabled = isEnabled, selected = isSelected), FilterChipDefaults.shape)
             .indication(interactionSource, ripple(color = contentColor))
-            .selectable(
-                selected = isSelected,
-                enabled = isEnabled,
-                interactionSource = interactionSource,
-                indication = null,
-                role = role,
-                onClick = onClick,
+            .then(
+                if (role == Role.Button) {
+                    Modifier.clickable(
+                        enabled = isEnabled,
+                        interactionSource = interactionSource,
+                        indication = null,
+                        role = role,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier.selectable(
+                        selected = isSelected,
+                        enabled = isEnabled,
+                        interactionSource = interactionSource,
+                        indication = null,
+                        role = role,
+                        onClick = onClick,
+                    )
+                },
             )
             .defaultMinSize(minHeight = FilterChipDefaults.Height)
             .padding(horizontal = CHIP_PADDING),
