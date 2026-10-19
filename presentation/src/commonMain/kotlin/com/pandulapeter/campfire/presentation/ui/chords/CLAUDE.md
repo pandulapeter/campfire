@@ -22,11 +22,6 @@ chips head the song's first section for every song with chords, even an instrume
 be brought back (`RenderSection.Metadata.instrumentChips`). On the keyboard the page is already in the sounding chords
 (see `ui/instrument/CLAUDE.md`), so diagrams count no capo.
 
-- The section's content holds what the chips name (`InstrumentChipsContent`), since label widths decide line count and a
-  section's measured size is keyed by its content; a leaving tuning chip is named until it has faded out.
-- Chips reach out of their column like a section's pill, so a line-starting chip's name sits on the lyrics' keyline; a
-  chip that doesn't fit goes under the other whole.
-
 ## Which shape a chord is drawn with
 
 `selectShape` (`ChordSelection.kt`, tested), in order:
@@ -69,8 +64,7 @@ Definitions:
   follow from `Dispatchers.Default` (`withSearchedShapes`), keeping the same sections so only the Chords section
   re-measures.
 - **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the row
-  its index names at the measured width, the last holding the rest. Cells are *drawn*, not composed
-  (`ChordCellLayouts`), so an intrinsic measurement at a candidate width already counts the rows they wrap into.
+  its index names at the measured width, the last holding the rest.
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
 - One fold for every song (`UserPreferences.isChordSectionFolded`), read only mode included.
 - **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
@@ -83,23 +77,9 @@ Definitions:
 
 ## The chord sheet
 
-`ChordShapeSheet` (`DialogType.ChordShape`; grid `ChordShapeGrid.kt`, shared with the Chords tab's sheet): titled with
-the canonical name (`ChordProNotation.canonicalName`), subtitled with the pinned chord notes. It finds the chord by name
-in the song as the page plays it, and closes if it is gone.
+`ChordShapeSheet` (`DialogType.ChordShape`) finds the chord by name in the song as the page plays it, and closes if it
+is gone.
 
-- All shapes via `ChordVoicings.all`, searched off the main thread before the sheet opens, so it slides up whole
-  (`rememberChordShapes`); a stored shape the app doesn't list goes first.
-- A tap writes the player's choice at once (`setChordVoicing`); picking the app's first shape removes the entry. No
-  reset button.
+- Shapes are searched before the sheet opens, so it slides up whole; a stored shape the app doesn't list goes first.
+- A tap writes the player's choice at once; picking the app's first shape removes the entry.
 - A chord the song defines shows its definition alone, not pickable.
-
-## The editor
-
-Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row and, like Tab, asks which instrument first
-(`chordShapeInstruments`: every one with shapes, the twelve-string being the guitar). It writes a `{define}` for the
-chord at the caret into the header, **always the standard-tuning shape** whatever the player's tuning (ChordPro gives a
-definition none): their choice under that instrument's key, else the app's first, frets selected; or it moves the caret
-to an existing line's frets for that instrument. With the caret in no chord it writes a whole placeholder (a C, name
-selected), since a line to edit teaches the syntax and an empty `{define: }` does not; a C already defined for that
-instrument is selected instead, as the last line would replace it. The preview's Chords section
-shows every definition in the text, each on its own instrument, whatever the switches.

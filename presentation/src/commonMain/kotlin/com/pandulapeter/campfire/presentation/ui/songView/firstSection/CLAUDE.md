@@ -30,3 +30,8 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
   neck); split around the tools.
 - In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under
   one key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
+- The section's content holds what the instrument and tuning chips name (`InstrumentChipsContent`), since label widths
+  decide line count and a section's measured size is keyed by its content; a leaving tuning chip is named until it has
+  faded out.
+- Chips reach out of their column like a section's pill, so a line-starting chip's name sits on the lyrics' keyline; a
+  chip that doesn't fit goes under the other whole.

@@ -35,7 +35,13 @@ The editor's Shortcuts toolbar and its control row.
   `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor`: that instrument's strings in standard tuning
   (Any: the player's instrument's, a guitar's for a fretless one), whatever the player's own tuning. With a selection
   it only wraps it (likely a pasted tab).
-- Chord shape asks which instrument (no Any) and always writes a standard-tuning shape: see `ui/chords/CLAUDE.md`.
+- Chord shape (`chordShapeInsertion`) ends the first Shortcuts row and asks which instrument (`chordShapeInstruments`:
+  every one with shapes, no Any, the twelve-string a guitar). It writes a `{define}` for the chord at the caret into the
+  header, **always the standard-tuning shape** (ChordPro gives a definition no tuning): the player's choice for that
+  instrument, else the app's first, frets selected; or it moves the caret to an existing line's frets. With the caret in
+  no chord it writes a placeholder C, name selected (a line to edit teaches the syntax), or selects a C already defined
+  for that instrument. The preview's Chords section shows every definition, each on its own instrument, whatever the
+  switches.
 
 ### Folding
 
