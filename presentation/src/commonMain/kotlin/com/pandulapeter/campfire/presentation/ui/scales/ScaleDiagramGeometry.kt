@@ -32,7 +32,8 @@ internal sealed interface ScaleDiagramGeometry {
      *   drone, whose peg stands at the fifth fret.
      * @property stringWeights Per row, how thick the string is drawn, from 0 for the highest one to 1 for the lowest.
      * @property notes Every note of the scale on every string, a string's open note at the fret it starts at.
-     * @property markers The frets marked with an inlay, the twelfth with a double one.
+     * @property markers The frets numbered under the neck and, where it has frets, marked with an inlay, the twelfth
+     *   with a double one: the guitar's and bass's at 3, 5, 7, 9 and 12, the shorter necks' at 10 rather than 9.
      */
     data class Fretboard(
         val strings: Int,
@@ -97,7 +98,10 @@ internal fun scaleDiagramGeometryOf(
         stringStarts = starts,
         stringWeights = pitchRanks.map { rank -> if (rows.size > 1) rank / (rows.size - 1f) else 0f },
         notes = notes,
-        markers = listOf(3, 5, 7, 9, 12),
+        markers = when (instrument) {
+            UserPreferences.Instrument.UKULELE, UserPreferences.Instrument.BANJO, UserPreferences.Instrument.MANDOLIN -> SHORT_NECK_MARKERS
+            else -> GUITAR_MARKERS
+        },
     )
 }
 
@@ -108,4 +112,6 @@ internal fun scaleDiagramGeometryOf(
 internal const val FRET_COUNT = 12
 
 private const val KEYBOARD_OCTAVES = 2
+private val GUITAR_MARKERS = listOf(3, 5, 7, 9, 12)
+private val SHORT_NECK_MARKERS = listOf(3, 5, 7, 10, 12)
 private const val BANJO_DRONE_FRET = 5

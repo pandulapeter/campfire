@@ -103,7 +103,8 @@ private fun DrawScope.drawFretboard(
     fun y(row: Int) = (row + 0.5f) * rowGap
     fun fretLine(fret: Int) = nut + fret * fretGap
     fun center(fret: Int) = if (fret == 0) nut / 2f else fretLine(fret) - fretGap / 2f
-    geometry.markers.forEach { fret ->
+    // A fretless neck has no inlays; its markers only number the positions under it.
+    if (!geometry.isFretless) geometry.markers.forEach { fret ->
         val markerColor = mutedColor.copy(alpha = INLAY_ALPHA)
         if (fret % 12 == 0) {
             drawCircle(markerColor, radius = radius * INLAY_RADIUS, center = Offset(center(fret), boardBottom * 0.25f))

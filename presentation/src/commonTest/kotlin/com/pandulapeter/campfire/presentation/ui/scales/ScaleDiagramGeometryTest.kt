@@ -69,6 +69,14 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
+    fun `the short necks are marked at the tenth fret, the guitar's at the ninth`() {
+        assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.UKULELE.strings, UserPreferences.Instrument.UKULELE).markers)
+        assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.MANDOLIN.strings, UserPreferences.Instrument.MANDOLIN).markers)
+        assertEquals(listOf(3, 5, 7, 9, 12), fretboard(InstrumentTuning.GUITAR.strings).markers)
+        assertEquals(listOf(3, 5, 7, 9, 12), fretboard(InstrumentTuning.BASS.strings, UserPreferences.Instrument.BASS).markers)
+    }
+
+    @Test
     fun `the keyboard and other instruments draw the scale over two octaves`() {
         listOf(UserPreferences.Instrument.KEYBOARD, UserPreferences.Instrument.OTHER).forEach { instrument ->
             val keyboard = assertIs<ScaleDiagramGeometry.Keyboard>(scaleDiagramGeometryOf(major, 0, null, instrument)).keyboard
