@@ -35,7 +35,10 @@ class SongScaleGroupsTest {
         shouldNumberSections = true,
     )
 
-    private fun groups(text: String) = songScaleGroupsOf(ChordProParser.parse(text.trimIndent()), labels, ChordNotation.STANDARD)
+    private fun groups(text: String, labels: DefaultSectionLabels = this.labels) =
+        songScaleGroupsOf(ChordProParser.parse(text.trimIndent()), labels, ChordNotation.STANDARD)
+
+    private val unnumbered = labels.copy(shouldNumberSections = false)
 
     private val verse = "{start_of_verse}\n[C]One [F]two [G]three\n{end_of_verse}\n"
     private val chorus = "{start_of_chorus}\n[F]Four [G]five [C]six\n{end_of_chorus}\n"
@@ -102,12 +105,55 @@ class SongScaleGroupsTest {
             ChordNotation.STANDARD,
         ).map { it.label }
         assertEquals(listOf("Verse, Chorus", "Final chorus"), labelsOf("{chorus: Final chorus}"))
-        assertEquals(listOf("Verse, Chorus", "Chorus"), labelsOf("{chorus}"))
+        assertEquals(listOf("Verse, Chorus (1)", "Chorus (2)"), labelsOf("{chorus}"))
+    }
+
+    @Test
+    fun `verses split between groups are told apart without numbering`() {
+        val lastVerse = "{start_of_verse}\n[D]One [G]two [A]three\n{end_of_verse}\n"
+        assertEquals(listOf("Verse (1, 2)", "Verse (3)"), groups("{key: C}\n" + verse + verse + lastVerse, unnumbered).map { it.label })
+    }
+
+    @Test
+    fun `a repeated label the numbering does not reach is numbered by occurrence`() {
+        val refrain = "{start_of_verse: Refrain}\n[C]One [F]two [G]three\n{end_of_verse}\n"
+        val modulatedRefrain = "{start_of_verse: Refrain}\n[D]One [G]two [A]three\n{end_of_verse}\n"
+        assertEquals(listOf("Refrain (1, 2)", "Refrain (3)"), groups("{key: C}\n" + refrain + refrain + modulatedRefrain).map { it.label })
+    }
+
+    @Test
+    fun `a kind is said once only where the group holds all of it`() {
+        val outside = "{start_of_verse}\n[G]One [B]two [C]three [Cm]four\n{end_of_verse}\n"
+        val groups = groups("{key: C}\n" + verse + verse + outside + modulated, unnumbered)
+        assertEquals("Verse (1, 2)", groups.first().label)
+    }
+
+    @Test
+    fun `a chorus recalled a step up is told from the chorus`() {
+        val song = ChordProParser.parse("{key: C}\n$verse$chorus{chorus}\n{transpose: 2}\n{chorus}")
+        val groups = songScaleGroupsOf(ChordProTransposer.transpose(song, 0), labels, ChordNotation.STANDARD)
+        assertEquals(listOf("Verse, Chorus (1, 2)", "Chorus (3)"), groups.map { it.label })
+    }
+
+    @Test
+    fun `several headless groups are named by their first words`() {
+        val groups = groups("[C]Here comes the opening line of a long song [F]to [G]sing\n\n[D]Then [G]a [A]modulation")
+        assertEquals(listOf(null, null), groups.map { it.label })
+        assertEquals(listOf("Here comes the opening line of a…", "Then a modulation"), groups.map { it.opening })
+    }
+
+    @Test
+    fun `a group with named and unnamed parts says so`() {
+        val unnamed = "[C]One [F]two [G]three\n\n"
+        val chorusFirst = groups("{key: C}\n" + chorus + unnamed + modulated).first()
+        assertEquals("Chorus" to (true to false), chorusFirst.label to (chorusFirst.hasUnnamed to chorusFirst.joinsSeveral))
+        val withVerse = groups("{key: C}\n" + verse + chorus + unnamed + modulated).first()
+        assertEquals("Verse, Chorus" to (true to true), withVerse.label to (withVerse.hasUnnamed to withVerse.joinsSeveral))
     }
 
     @Test
     fun `the scales section stands after the chords, else after the metadata, else first`() {
-        val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList())
+        val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null)
         val scales = RenderSection.Scales(listOf(group), isFolded = false)
         val sections = emptyList<RenderSection>()
         assertEquals(listOf(scales), withScalesSection(sections, listOf(group), isFolded = false))

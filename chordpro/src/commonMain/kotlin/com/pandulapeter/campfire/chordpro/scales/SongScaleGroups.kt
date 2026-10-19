@@ -69,6 +69,16 @@ public object SongScaleGroups {
     }
 
     /**
+     * Whether [block] plays a chord [of] reads: a section with one among its lines, or a chorus recall whose sections
+     * have one. What a viewer counts a song's parts over, so that a part no group holds is counted the same way.
+     */
+    public fun playsChords(block: ChordProBlock): Boolean = when (block) {
+        is ChordProBlock.Section -> playedIn(listOf(block)).isNotEmpty()
+        is ChordProBlock.ChorusRecall -> playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>()).isNotEmpty()
+        else -> false
+    }
+
+    /**
      * Whether a group fit as [group] and a part fit as [part] are one group fit as [combined]. Two parts each in a key
      * of their own stay apart unless one key holds both, so that a major verse and a Mixolydian chorus are two answers,
      * though a home scale would hold most of both. A part only a home scale with exceptions fits joins one the same

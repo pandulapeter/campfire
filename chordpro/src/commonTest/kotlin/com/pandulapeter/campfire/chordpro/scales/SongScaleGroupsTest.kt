@@ -232,4 +232,26 @@ class SongScaleGroupsTest {
     @Test
     fun `an untransposed song reads its recall as written`() =
         assertEquals(listOf("C"), SongScaleGroups.of(ChordProParser.parse("$modulatedChorus\n{transpose: 2}\n{chorus}")).map { it.rootName })
+
+    @Test
+    fun `a section plays chords where any of its lines do`() {
+        val blocks = ChordProParser.parse(
+            """
+            {start_of_chorus}
+            Words
+            [C]More [G]words
+            {end_of_chorus}
+            {start_of_verse}
+            Only words
+            {end_of_verse}
+            {start_of_grid}
+            | C . . . | G . . . |
+            {end_of_grid}
+            {chorus}
+            """.trimIndent(),
+        ).blocks
+        assertEquals(listOf(true, false, true, true), blocks.map(SongScaleGroups::playsChords))
+        val silent = ChordProParser.parse("{start_of_chorus}\nWords\n{end_of_chorus}\n{chorus}").blocks.last()
+        assertTrue(silent is ChordProBlock.ChorusRecall && !SongScaleGroups.playsChords(silent))
+    }
 }

@@ -36,8 +36,8 @@ class RenderSectionTest {
     @Test
     fun `a scales section has a slot for every row its groups can wrap into`() {
         val groups = listOf(
-            SongScaleGroup(label = "Verse", rootName = "C", scales = Scales.all.take(3), exceptions = emptyList()),
-            SongScaleGroup(label = "Solo", rootName = "D", scales = Scales.all.take(2), exceptions = emptyList()),
+            SongScaleGroup(label = "Verse", rootName = "C", scales = Scales.all.take(3), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null),
+            SongScaleGroup(label = "Solo", rootName = "D", scales = Scales.all.take(2), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null),
         )
         assertEquals(1, RenderSection.Scales(groups = groups, isFolded = true).itemCount)
         val unfolded = RenderSection.Scales(groups = groups, isFolded = false)
@@ -49,7 +49,7 @@ class RenderSectionTest {
     @Test
     fun `a scales section has a slot for every chip of every row`() {
         val exception = SongScaleException(chordName = "A7", rootName = "A", scales = Scales.all.take(2))
-        val group = SongScaleGroup(label = null, rootName = "C", scales = Scales.all.take(3), exceptions = listOf(exception))
+        val group = SongScaleGroup(label = null, rootName = "C", scales = Scales.all.take(3), exceptions = listOf(exception), joinsSeveral = false, hasUnnamed = false, opening = null)
         val scales = RenderSection.Scales(groups = listOf(group), isFolded = false)
         assertContentEquals(intArrayOf(0, 3, 5), scales.rowStarts)
         assertEquals(5, scales.itemCount)
