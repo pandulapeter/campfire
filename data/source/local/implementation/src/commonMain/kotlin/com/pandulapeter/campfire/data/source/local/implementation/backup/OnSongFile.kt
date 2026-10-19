@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetLyrics
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
@@ -77,7 +78,7 @@ internal object OnSongFile {
             run.clear()
             if (text.isBlank()) return
             written += when {
-                INLINE_CHORD.containsMatchIn(text) -> text
+                INLINE_CHORD.findAll(text).any { ChordProChords.parse(it.groupValues[1]) != null } -> text
                 else -> ChordSheetConverter.convertFragment(text, String::normalizedToNfc)?.trimEnd() ?: ChordSheetLyrics.escaped(text)
             }
         }
@@ -99,5 +100,6 @@ internal object OnSongFile {
 
     private val LABELLED_LINE = Regex("""([A-Za-z]+):\s*(.*)""")
 
-    private val INLINE_CHORD = Regex("""\[[A-G][^\]\s]*]""")
+    /** A bracket that may hold a chord: a section heading such as `[Chorus]` or `[Bridge]` has the same shape, so a match is checked. */
+    private val INLINE_CHORD = Regex("""\[([A-G][^\]\s]*)]""")
 }
