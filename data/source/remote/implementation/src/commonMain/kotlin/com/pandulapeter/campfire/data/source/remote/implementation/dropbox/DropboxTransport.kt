@@ -33,6 +33,8 @@ import kotlin.random.Random
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationException
 
 /**
  * How a call reaches Dropbox: retried while the service asks it to slow down or does not answer, and sent once more
@@ -44,11 +46,17 @@ internal class DropboxTransport(
 ) {
 
     /**
-     * A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body.
+     * A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body, which is decoded
+     * with [deserializer] (see [decodeAnswer]).
      *
      * @param browserTimeoutMillis The bound on the whole exchange in the browser, see [BrowserCallTimeout].
      */
-    suspend fun rpc(url: String, body: String?, browserTimeoutMillis: Long = RPC_BROWSER_TIMEOUT_MILLIS): String {
+    suspend fun <T> rpc(
+        url: String,
+        body: String?,
+        deserializer: DeserializationStrategy<T>,
+        browserTimeoutMillis: Long = RPC_BROWSER_TIMEOUT_MILLIS,
+    ): T {
         val response = request { accessToken ->
             httpClientHolder.client().post(url) {
                 attributes.put(BrowserCallTimeout, browserTimeoutMillis)
@@ -60,7 +68,7 @@ internal class DropboxTransport(
             }
         }
         response.ensureSuccessful()
-        return transport { response.bodyAsText() }
+        return decodeAnswer(deserializer, transport { response.bodyAsText() })
     }
 
     /**
@@ -204,9 +212,20 @@ internal class DropboxTransport(
 }
 
 /**
+ * A successful answer of Dropbox's, decoded. One that is not in any of Dropbox's documented shapes - a TLS-intercepting
+ * proxy's block page, a captive portal's login page, a body cut mid-JSON - comes from something between the device
+ * and Dropbox rather than from Dropbox, and is the network's failure, not the programming error it would otherwise be.
+ */
+internal fun <T> decodeAnswer(deserializer: DeserializationStrategy<T>, text: String): T = try {
+    json.decodeFromString(deserializer, text)
+} catch (exception: SerializationException) {
+    throw SyncNetworkException("Dropbox's answer could not be read.", exception)
+}
+
+/**
  * Anything the transport throws - no route to the host, a dropped connection, a timeout - is one thing to the
  * user: the service could not be reached, and trying again later is worth doing. Only the call itself is
- * wrapped, so that a body Campfire cannot make sense of stays the programming error it is. The browser engine
+ * wrapped; an answer that cannot be decoded is taken for the network's failure by [decodeAnswer]. The browser engine
  * reports a failed `fetch` as a `kotlin.Error`, not an `Exception`, so the last branch takes any `Throwable`:
  * everything `block` can throw that is not a cancellation is the call failing.
  *

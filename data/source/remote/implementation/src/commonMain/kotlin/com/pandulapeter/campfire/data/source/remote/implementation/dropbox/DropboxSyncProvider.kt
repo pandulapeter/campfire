@@ -162,7 +162,7 @@ internal class DropboxSyncProvider(
     override suspend fun loadAccount(): SyncAccount? {
         val credentials = credentialsStore.load()?.takeIf { it.providerId == id.id } ?: return null
         return try {
-            val account = json.decodeFromString<DropboxAccountResponse>(requests.rpc(ACCOUNT_URL, body = null))
+            val account = requests.rpc(ACCOUNT_URL, body = null, deserializer = DropboxAccountResponse.serializer())
             credentialsStore.update { current ->
                 current?.copy(
                     accountId = account.accountId,
@@ -212,21 +212,19 @@ internal class DropboxSyncProvider(
 
     override suspend fun list(): RemoteListing {
         val files = mutableListOf<RemoteFile>()
-        var response = json.decodeFromString<DropboxListFolderResponse>(
-            requests.rpc(
-                url = LIST_FOLDER_URL,
-                body = """{"path":"","recursive":true,"include_deleted":false}""",
-                browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
-            ),
+        var response = requests.rpc(
+            url = LIST_FOLDER_URL,
+            body = """{"path":"","recursive":true,"include_deleted":false}""",
+            deserializer = DropboxListFolderResponse.serializer(),
+            browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
         )
         files += response.entries.toRemoteFiles()
         while (response.hasMore) {
-            response = json.decodeFromString(
-                requests.rpc(
-                    url = LIST_FOLDER_CONTINUE_URL,
-                    body = """{"cursor":${response.cursor.toAsciiJsonString()}}""",
-                    browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
-                ),
+            response = requests.rpc(
+                url = LIST_FOLDER_CONTINUE_URL,
+                body = """{"cursor":${response.cursor.toAsciiJsonString()}}""",
+                deserializer = DropboxListFolderResponse.serializer(),
+                browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
             )
             files += response.entries.toRemoteFiles()
         }
@@ -394,12 +392,14 @@ internal class DropboxSyncProvider(
                 append("}")
             }
         }
-        var response = json.decodeFromString<DropboxDeleteBatchResponse>(requests.rpc(DELETE_BATCH_URL, body))
+        var response = requests.rpc(DELETE_BATCH_URL, body = body, deserializer = DropboxDeleteBatchResponse.serializer())
         val jobId = response.asyncJobId
         while (response.tag == "async_job_id" || response.tag == "in_progress") {
             delay(DELETE_BATCH_POLL_MILLIS)
-            response = json.decodeFromString<DropboxDeleteBatchResponse>(
-                requests.rpc(DELETE_BATCH_CHECK_URL, """{"async_job_id":${jobId.toAsciiJsonString()}}"""),
+            response = requests.rpc(
+                url = DELETE_BATCH_CHECK_URL,
+                body = """{"async_job_id":${jobId.toAsciiJsonString()}}""",
+                deserializer = DropboxDeleteBatchResponse.serializer(),
             )
         }
         if (response.tag == "complete") return response.entries

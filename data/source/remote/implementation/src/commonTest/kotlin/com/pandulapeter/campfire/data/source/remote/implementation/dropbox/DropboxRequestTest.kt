@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSy
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -436,6 +437,35 @@ class DropboxRequestTest {
         provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(uploadSize), expectedRevision = null)
         return bounds
     }
+
+    /** A captive portal or a TLS-intercepting proxy answering for Dropbox, with a page of its own. */
+    @Test
+    fun `a listing answered with a page that is not Dropbox's is the network failing`() = runTest {
+        val provider = dropboxProvider { portalPage() }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+    }
+
+    @Test
+    fun `an account read answered with a portal page is the account stored last time`() = runTest {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(extraFields = STORED_NAME))) { portalPage() }
+        assertEquals(
+            expected = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Jane", email = "jane@example.com"),
+            actual = provider.loadAccount(),
+        )
+    }
+
+    @Test
+    fun `an authorization whose token answer is a portal page is the network failing and stores nothing`() = runTest {
+        val storage = StoredSyncCredentials()
+        val provider = dropboxProvider(storage = storage) { portalPage() }
+        assertFailsWith<SyncNetworkException> {
+            provider.completeAuthorization(RemoteAuthorizationResponse(code = "code", state = "state"), verifier = "verifier", redirectUri = null)
+        }
+        assertNull(storage.credentials)
+    }
+
+    private fun MockRequestHandleScope.portalPage() =
+        respond(content = "<html>portal</html>", status = HttpStatusCode.OK, headers = headersOf(HttpHeaders.ContentType, "text/html"))
 
     private companion object {
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"

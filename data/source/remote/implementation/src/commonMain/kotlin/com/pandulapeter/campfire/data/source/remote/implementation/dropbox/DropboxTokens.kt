@@ -86,7 +86,7 @@ internal class DropboxTokens(
                 else -> SyncNetworkException("Dropbox could not be asked for a token: ${response.status.value} ${response.oAuthError()}")
             }
         }
-        return json.decodeFromString(response.bodyAsText())
+        return decodeAnswer(DropboxTokenResponse.serializer(), transport { response.bodyAsText() })
     }
 
     /** The token endpoint speaks standard OAuth rather than the API's own `error_summary`. */

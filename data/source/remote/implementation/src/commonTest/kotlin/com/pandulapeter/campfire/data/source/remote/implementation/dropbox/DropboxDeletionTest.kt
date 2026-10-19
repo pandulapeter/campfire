@@ -10,10 +10,15 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
+import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -21,6 +26,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -98,6 +104,15 @@ class DropboxDeletionTest {
         assertEquals(expected = emptyMap(), actual = provider.delete(deletions))
         assertTrue(sentPaths.all { it.size <= DropboxSyncProvider.DELETE_BATCH_LIMIT }, "A job was sent ${sentPaths.maxOf { it.size }} files.")
         assertEquals(expected = deletions.map { "/songs/${it.name}" }, actual = sentPaths.flatten())
+    }
+
+    /** A page that is not Dropbox's comes from something in between, and says nothing about any one file. */
+    @Test
+    fun `a deletion answered with a page that is not Dropbox's is the network failing`() = runTest {
+        val provider = dropboxProvider {
+            respond(content = "<html>portal</html>", status = HttpStatusCode.OK, headers = headersOf(HttpHeaders.ContentType, "text/html"))
+        }
+        assertFailsWith<SyncNetworkException> { provider.delete(songDeletions(2)) }
     }
 
     @Test
