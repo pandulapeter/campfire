@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -24,9 +23,9 @@ import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 
 /**
- * Scales suggested for something to play over, under [title] where there is one: a [ScaleChip] per scale, centered under
- * a chord's sheet, whose grid is centered. A song's page lays the same chips out in rows of its own (`ScaleChipRows`),
- * which its columns can be cut between.
+ * Scales suggested for something to play over, under [title] where there is one: a [ScaleChip] per scale, wrapped from
+ * the start edge under a chord's sheet. A song's page lays the same chips out in rows of its own (`ScaleChipRows`), which
+ * its columns can be cut between.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -44,12 +43,12 @@ internal fun ScaleChips(
         ScaleChipsTitle(
             modifier = Modifier.padding(bottom = SCALE_CHIPS_TITLE_GAP),
             title = title,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
         )
     }
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(CHIP_GAP, alignment = Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
         verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
         scales.forEach { scale ->
