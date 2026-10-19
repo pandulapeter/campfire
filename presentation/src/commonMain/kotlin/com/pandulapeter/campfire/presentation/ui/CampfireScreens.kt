@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsTabRow
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
 import com.pandulapeter.campfire.presentation.ui.chrome.TopLevelScreenSurface
+import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
 import com.pandulapeter.campfire.presentation.ui.chrome.areToolsGrouped
 import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
@@ -103,6 +104,7 @@ internal fun CampfireScreens(
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
     isShortWindow: Boolean,
+    railCapacity: RailCapacity,
     songColumnWidth: Dp,
     chromeInScreens: Boolean,
     exportTransition: ExportTransition,
@@ -206,6 +208,7 @@ internal fun CampfireScreens(
                     kind = chromeKind,
                     destinations = topLevelDestinations,
                     isShortWindow = isShortWindow,
+                    railCapacity = railCapacity,
                     currentTopLevelDestination = destination,
                     metronomeBeat = metronomeBeat,
                     lastTool = viewModel.navigator.lastTool,
@@ -221,7 +224,7 @@ internal fun CampfireScreens(
     // The tools the chrome offers behind its Tools item, and so the tabs their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
     // over between the two, so that the tabs come and go once as a window crosses from the bar to a taller rail.
-    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations, isShortWindow)) {
+    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations, isShortWindow, railCapacity.of(chromeKind))) {
         CampfireDestination.TopLevel.tools.filter { it in topLevelDestinations }
     } else {
         emptyList()
