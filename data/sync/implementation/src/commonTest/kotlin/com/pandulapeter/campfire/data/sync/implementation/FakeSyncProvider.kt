@@ -37,8 +37,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  * how many times each file was fetched and [deleteCalls] what each deletion request asked for; the names in
  * [refusedDeletions] are answered as refused. A deletion whose expected revision is no longer the file's leaves the
  * file and reports nothing, as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a
- * file "elsewhere". [connected] says whether credentials are stored, and [onDisconnect] runs once a disconnect has
- * cleared them; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
+ * file "elsewhere". [connected] says whether credentials are stored, and [onDisconnect] is the revocation a disconnect
+ * answers once it has cleared them, which the caller runs in the background; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
  * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
  * what finishing an authorization does, which is where a test stores credentials and then gives up or fails.
  */
@@ -100,9 +100,9 @@ internal class FakeSyncProvider(
         redirectUri: String?,
     ): SyncAccount = onCompleteAuthorization()
 
-    override suspend fun disconnect() {
+    override suspend fun disconnect(): suspend () -> Unit {
         connected = false
-        onDisconnect()
+        return { onDisconnect() }
     }
 
     override suspend fun forgetStoredCredentials() {

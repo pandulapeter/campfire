@@ -134,21 +134,27 @@ internal class DropboxSyncProvider(
 
     override suspend fun forgetStoredCredentials() = credentialsStore.save(null)
 
-    override suspend fun disconnect() {
-        // Dropbox revokes the whole grant through a valid access token, and a stored one is expired after four idle
-        // hours, so it is renewed first if needed. Nothing connected, or no answer in time, leaves nothing to revoke
-        // with; the time limit is what keeps a dead network from keeping the user connected.
-        val accessToken = try {
-            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { tokens.accessToken() }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            null
-        }
-        credentialsStore.save(null)
-        if (accessToken.isNullOrEmpty()) return
-        // Best effort: the local credentials are already gone, and a token that cannot be revoked simply expires.
+    override suspend fun disconnect(): (suspend () -> Unit)? {
+        // Captured and forgotten in one step, so that no renewal can land between the read and the forget and store
+        // the connection again.
+        val credentials = credentialsStore.update { current -> null to current?.takeIf { it.providerId == id.id } } ?: return null
+        return { revoke(credentials) }
+    }
+
+    /**
+     * Tells Dropbox to drop the grant behind [credentials], which are no longer stored. Dropbox revokes it through a
+     * valid access token, and a stored one is expired after four idle hours, so it is renewed first if needed - from
+     * the captured refresh token, and never written back: a renewal stored now would bring the connection back, or
+     * overwrite the credentials of an account connected in the meantime. Best effort: a token that cannot be revoked
+     * simply expires.
+     */
+    private suspend fun revoke(credentials: SyncCredentialsDocument) {
         try {
+            val accessToken = if (tokens.hasUsableAccessToken(credentials)) {
+                credentials.accessToken
+            } else {
+                withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { tokens.renew(credentials.refreshToken).accessToken }
+            } ?: return
             withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) {
                 transport { httpClientHolder.client().post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") } }
             }
@@ -440,7 +446,7 @@ internal class DropboxSyncProvider(
         const val UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload"
         const val DOWNLOAD_RESULT_HEADER = "Dropbox-API-Result"
 
-        /** How long disconnecting waits for Dropbox, first to renew the token and then to revoke it. */
+        /** How long the revocation a disconnect answers waits for Dropbox, first to renew the token and then to revoke it. */
         const val REVOKE_TIMEOUT_MILLIS = 10_000L
 
         /** The most entries Dropbox takes in one `delete_batch`. */

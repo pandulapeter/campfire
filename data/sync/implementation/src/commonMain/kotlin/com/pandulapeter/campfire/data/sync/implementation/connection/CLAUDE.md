@@ -22,5 +22,7 @@
   abandoned authorization is never restored next launch.
 - A run refused by the service (after renewal fails) sets `ConnectionFailed`, not a failed outcome: Disconnect would
   delete the index, Connect keeps it.
-- Disconnecting cancels and awaits a running run, then deletes the index under the run lock, completing regardless of
-  caller cancellation. A run writes its outcome only into a state still `Connected`.
+- Disconnecting cancels and awaits a running run, then deletes the index under the run lock and shows Disconnected,
+  completing regardless of caller cancellation; the service is told afterwards, in the background, with the token
+  captured before the credentials were forgotten. A new authorization cancels a revocation still going. A run writes
+  its outcome only into a state still `Connected`.

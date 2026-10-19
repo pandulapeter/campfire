@@ -35,14 +35,12 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParam
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -82,7 +80,9 @@ internal class SyncConnectionManager(
     /** Nothing launched here may close the app, see [SyncEnvironment.scopeFor]. */
     private val scope = environment.scopeFor("sync")
 
-    private var accountRefreshJob: Job? = null
+    private val revocations = SyncRevocations(scope)
+
+    private val accountRefresh = SyncAccountRefresh(scope = scope, stateHolder = stateHolder, logger = environment.logger)
 
     /** The failed connection a [connect] started from, which backing out of it returns to, see [stateAfterBackingOut]. */
     private var stateBeforeConnecting: SyncState? = null
@@ -183,7 +183,7 @@ internal class SyncConnectionManager(
             indexStore.saveQuietly(document.markedAsFinished())
         }
         if (storedAccount != null) {
-            refreshAccount(connected)
+            accountRefresh.start(connected)
         }
         return SyncRepository.RestoreResult(
             isConnected = true,
@@ -203,7 +203,10 @@ internal class SyncConnectionManager(
         onReturnedFromAuthorization: () -> Unit,
     ) = coroutineScope {
         // Published before Connecting is shown: a Cancel that sees Connecting must find something to cancel.
-        val exchange = async(start = CoroutineStart.LAZY) { completePendingAuthorization(redirectUri) }
+        val exchange = async(start = CoroutineStart.LAZY) {
+            revocations.cancelAll()
+            completePendingAuthorization(redirectUri)
+        }
         restoreExchange = exchange
         stateHolder.update { SyncState.Connecting(providerId) }
         onReturnedFromAuthorization()
@@ -226,6 +229,7 @@ internal class SyncConnectionManager(
         stateBeforeConnecting = stateHolder.value.takeIf { it is SyncState.ConnectionFailed && hasStoredCredentials(provider) }
         stateHolder.update { SyncState.Connecting(providerId) }
         return try {
+            revocations.cancelAll()
             val redirectUri = authenticator.prepareRedirectUri()
             val request = provider.buildAuthorizationRequest(redirectUri)
             // Written down before the browser is opened: on the web the app stops existing at the next line, and
@@ -293,23 +297,23 @@ internal class SyncConnectionManager(
     /**
      * Carried to its end once it has started taking the connection apart: the credentials go first, and a disconnect
      * stopped after that would leave an account on screen that nothing can sync. What comes before - waiting for a
-     * run to stop - can still be cancelled with the caller. The part that cannot is bounded by the provider's own time
-     * limits on renewing and revoking the token.
+     * run to stop - can still be cancelled with the caller. The part that cannot is local; telling the service, which
+     * a dead network can stretch to many seconds, happens after Disconnected is shown, see [SyncRevocations].
      */
     suspend fun disconnect() {
         // An answer still on its way belongs to the account that is about to go, and loadAccount writes the name it
         // reads into whatever credentials are stored by then - which could be the next account's.
-        accountRefreshJob?.cancel()
+        accountRefresh.cancel()
         // A run that is still going would carry on against an account that is gone, fail, and report that failure
         // onto an account the user just disconnected.
         scheduler.stopForDisconnect()
         withContext(NonCancellable) {
-            providers.forEach { provider ->
+            val pendingRevocations = providers.mapNotNull { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
                 environment.logger.recovering(
                     describe = { "Could not disconnect from ${provider.id}: ${it.message}" },
-                    fallback = {},
-                ) { if (provider.isConnected()) provider.disconnect() }
+                    fallback = { null },
+                ) { if (provider.isConnected()) provider.disconnect() else null }
             }
             // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
             // folder's every file as a deletion the next time something connects. Under the run lock, because a run
@@ -320,6 +324,7 @@ internal class SyncConnectionManager(
                 stateBeforeConnecting = null
                 stateHolder.update { SyncState.Disconnected }
             }
+            revocations.start(pendingRevocations)
         }
     }
 
@@ -369,29 +374,6 @@ internal class SyncConnectionManager(
     /** For the clean-ups whose failure is worth a line in the log and nothing more. */
     private inline fun quietly(action: String, block: () -> Unit) =
         environment.logger.recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
-
-    /**
-     * Asks the service who the account is behind a start up that has already shown what was stored. The answer only
-     * ever changes a state that is still connected to the same provider: a new name replaces the stored one, and a
-     * refusal - the grant was revoked elsewhere - takes the connection down the way a start up that waited would
-     * have. Anything else, a dead network above all, leaves what is on screen alone.
-     */
-    private fun refreshAccount(provider: SyncProvider) {
-        if (accountRefreshJob?.isActive == true) return
-        accountRefreshJob = scope.launch {
-            val account = environment.logger.recovering(
-                describe = { "Could not refresh the ${provider.id} account: ${it.message}" },
-                fallback = { return@launch },
-            ) { provider.loadAccount() }
-            stateHolder.updateConnected { connected ->
-                when {
-                    connected.account.providerId != provider.id -> connected
-                    account == null -> SyncState.ConnectionFailed(provider.id, SyncFailureReason.AUTHORIZATION)
-                    else -> connected.copy(account = account)
-                }
-            }
-        }
-    }
 
     /**
      * Forgets the authorization that was started, for the ways out that have already decided how they end. Clearing

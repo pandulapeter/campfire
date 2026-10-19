@@ -14,6 +14,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsDocument
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
@@ -49,13 +50,10 @@ internal class DropboxTokens(
         if (credentials == null || credentials.providerId != providerId.id) {
             throw SyncAuthorizationException("Dropbox is not connected.")
         }
-        if (credentials.accessToken != refused &&
-            credentials.accessToken.isNotEmpty() &&
-            Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS
-        ) {
+        if (credentials.accessToken != refused && hasUsableAccessToken(credentials)) {
             return@update credentials to credentials.accessToken
         }
-        val token = exchange("grant_type=refresh_token&refresh_token=${credentials.refreshToken.urlEncode()}&client_id=${appKey.urlEncode()}")
+        val token = renew(credentials.refreshToken)
         credentials.copy(
             accessToken = token.accessToken,
             expiresAt = expiryOf(token.expiresInSeconds),
@@ -63,6 +61,15 @@ internal class DropboxTokens(
             refreshToken = token.refreshToken ?: credentials.refreshToken,
         ) to token.accessToken
     }
+
+    /** Whether the access token of [credentials] is there and not about to expire. */
+    fun hasUsableAccessToken(credentials: SyncCredentialsDocument) =
+        credentials.accessToken.isNotEmpty() &&
+            Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS
+
+    /** Exchanges [refreshToken] for a new access token. Stores nothing: what becomes of the answer is the caller's. */
+    suspend fun renew(refreshToken: String) =
+        exchange("grant_type=refresh_token&refresh_token=${refreshToken.urlEncode()}&client_id=${appKey.urlEncode()}")
 
     suspend fun exchange(form: String): DropboxTokenResponse {
         val response = transport {

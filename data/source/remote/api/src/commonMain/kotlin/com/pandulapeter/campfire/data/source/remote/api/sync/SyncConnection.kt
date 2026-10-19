@@ -43,8 +43,14 @@ interface SyncConnection {
         redirectUri: String?,
     ): SyncAccount
 
-    /** Forgets the stored credentials, and tells the service to drop them too where that is possible. */
-    suspend fun disconnect()
+    /**
+     * Forgets the stored credentials at once, without a request, and answers the request that tells the service to drop
+     * them too, for the caller to run in the background: the user's part of a disconnect is local, and only that
+     * courtesy needs the network. The request may take as long as the network does, never throws but cancellation, and
+     * stores nothing - what it needs was captured before the credentials were forgotten. Null when there is nothing to
+     * revoke.
+     */
+    suspend fun disconnect(): (suspend () -> Unit)?
 
     /**
      * Forgets the stored credentials and tells the service nothing. [disconnect] is the user's disconnect, which

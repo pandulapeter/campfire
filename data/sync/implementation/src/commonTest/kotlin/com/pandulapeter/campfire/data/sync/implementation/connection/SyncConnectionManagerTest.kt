@@ -130,6 +130,79 @@ class SyncConnectionManagerTest {
     }
 
     @Test
+    fun `a disconnect shows disconnected before the service has answered`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
+        val revocationStarted = CompletableDeferred<Unit>()
+        val provider = reconnectingProvider {
+            revocationStarted.complete(Unit)
+            awaitCancellation()
+        }
+        val repository = syncRepository(provider = provider, authenticator = RECONNECTING, stateLocalSource = stateLocalSource)
+        repository.restore {}
+
+        repository.disconnect()
+        runCurrent()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(stateLocalSource.index)
+        assertFalse(provider.connected)
+        assertTrue(revocationStarted.isCompleted)
+        assertTrue(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+        runCurrent()
+        assertTrue(provider.connected)
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+    }
+
+    @Test
+    fun `a second disconnect while the first is going does nothing more`() = runTest {
+        var revocationsStarted = 0
+        val provider = reconnectingProvider {
+            revocationsStarted++
+            awaitCancellation()
+        }
+        val repository = syncRepository(provider = provider)
+        repository.restore {}
+
+        repository.disconnect()
+        repository.disconnect()
+        runCurrent()
+
+        assertEquals(1, revocationsStarted)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `connecting again cancels a revocation still going`() = runTest {
+        var isRevocationCancelled = false
+        val provider = reconnectingProvider {
+            try {
+                awaitCancellation()
+            } finally {
+                isRevocationCancelled = true
+            }
+        }
+        val repository = syncRepository(provider = provider, authenticator = RECONNECTING)
+        repository.restore {}
+        repository.disconnect()
+        runCurrent()
+        assertFalse(isRevocationCancelled)
+
+        assertTrue(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+
+        assertTrue(isRevocationCancelled)
+        assertTrue(provider.connected)
+    }
+
+    /** A connected provider whose disconnect answers [revocation], and which stores credentials again when reconnected. */
+    private fun reconnectingProvider(revocation: suspend () -> Unit) = FakeSyncProvider(account = TEST_ACCOUNT).apply {
+        onDisconnect = revocation
+        onCompleteAuthorization = {
+            connected = true
+            TEST_ACCOUNT
+        }
+    }
+
+    @Test
     fun `backing out of reconnecting a refused connection keeps it failed`() = runTest {
         val repository = syncRepository(
             provider = FakeSyncProvider(
@@ -609,5 +682,8 @@ class SyncConnectionManagerTest {
 
         /** The authorization [FakeSyncProvider] starts, as it is written down before the consent page opens. */
         val PENDING = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+
+        /** A consent page that answers yes at once, for connecting again after a disconnect. */
+        val RECONNECTING = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(TEST_REDIRECT))
     }
 }

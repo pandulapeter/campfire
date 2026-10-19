@@ -102,8 +102,8 @@ Silent failures go to the injected `Logger`.
     `error=access_denied` is a refusal. The redirect URI is the `<base>` folder (not the address bar), ending in `/`,
     without `index.html`; registered: `https://campfire-songbook.com/app/` (the custom domain, not the `github.io`
     address that redirects to it) and `http://localhost:8080/`.
-- `disconnect` renews the token if needed, forgets the local credentials, then revokes best effort; renewal and
-  revocation each wait at most 10 s, so a dead network never keeps the user connected.
+- `disconnect` forgets the local credentials at once and answers the revocation for the caller to run in the
+  background: a renewal from the captured refresh token if needed (never stored) and the revoke, each bounded at 10 s.
 
 ## Downloads
 

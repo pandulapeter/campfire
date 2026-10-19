@@ -26,12 +26,14 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 
 /**
  * A [DropboxSyncProvider] whose service is [handler], connected through [storage].
  *
- * @param engineDispatcher Where the engine runs, and with it the client's request timeout: a test whose bound has to
- *   expire passes the test's own dispatcher, or the bound is waited in real time.
+ * @param engineDispatcher Where the engine runs and the client is built, and with them the client's request timeout: a
+ *   test whose bound has to expire passes the test's own dispatcher, or the bound is waited in real time, and so does
+ *   one whose request runs under a virtual time bound, which would otherwise expire before the request was answered.
  */
 internal fun dropboxProvider(
     configure: HttpClientConfig<*>.() -> Unit = {},
@@ -39,7 +41,7 @@ internal fun dropboxProvider(
     engineDispatcher: CoroutineDispatcher? = null,
     handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ) = DropboxSyncProvider(
-    httpClientHolder = HttpClientHolder {
+    httpClientHolder = HttpClientHolder(dispatcher = engineDispatcher ?: Dispatchers.Default) {
         val engine = MockEngineConfig().apply {
             if (engineDispatcher != null) dispatcher = engineDispatcher
             addHandler(handler)

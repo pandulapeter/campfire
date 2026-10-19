@@ -25,7 +25,8 @@ KDoc of `SyncFolder` and `SyncConnection`.
 - `download` returns the revision it actually fetched (`RemoteDocument`), which may be newer than the listing's.
 - `upload` takes the expected revision and returns `RemoteWriteResult.Conflict` rather than overwriting.
 - `contentHashOf` hashes in the service's own format, keeping service hashes out of the engine.
-- `disconnect` revokes the token; `forgetStoredCredentials` only drops local storage (no request).
+- `disconnect` forgets the credentials at once and answers the revocation for the caller to run in the background;
+  `forgetStoredCredentials` only drops local storage (no request).
 - `downloadDocument` / `uploadDocument`: folder-level documents by name (only `preferences.json`), never in `list`,
   same conflict rule as `upload`.
 - `SyncAuthorizationException`, `SyncNetworkException`, and `SyncRemoteStorageFullException` (subclasses of sealed

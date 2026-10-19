@@ -93,8 +93,12 @@ internal class SyncController(
         }
     }
 
-    fun disconnectSyncProvider() = messageSink.launchLibraryChange {
-        disconnectSyncProvider.invoke()
+    /** A disconnect that is still going, which a second confirmation leaves to finish rather than starting another. */
+    private var disconnectJob: Job? = null
+
+    fun disconnectSyncProvider() {
+        if (disconnectJob?.isActive == true) return
+        disconnectJob = messageSink.launchLibraryChange { disconnectSyncProvider.invoke() }
     }
 
     /**

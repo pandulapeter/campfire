@@ -220,17 +220,6 @@ class DropboxRequestTest {
     }
 
     @Test
-    fun `disconnecting while the browser cannot send the revocation still disconnects`() = runTest {
-        val storage = StoredSyncCredentials(connectedCredentials())
-        val provider = dropboxProvider(storage = storage) { request ->
-            if (request.url.toString() == REVOKE_URL) throw Error("Fail to fetch")
-            error("No other request was expected.")
-        }
-        provider.disconnect()
-        assertNull(storage.credentials)
-    }
-
-    @Test
     fun `the stored account is answered without a request`() = runTest {
         val provider = dropboxProvider(
             storage = StoredSyncCredentials(connectedCredentials(extraFields = ""","displayName":"Jane","email":"jane@example.com"""")),
@@ -468,7 +457,6 @@ class DropboxRequestTest {
         respond(content = "<html>portal</html>", status = HttpStatusCode.OK, headers = headersOf(HttpHeaders.ContentType, "text/html"))
 
     private companion object {
-        const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
         const val STORED_NAME = ""","accountId":"dbid:1","displayName":"Jane","email":"jane@example.com""""
     }
 }
