@@ -40,9 +40,7 @@ A new target or platform-wide compiler setting goes here, never in a module's bu
 
 ## Tasks
 
-`tasks/` holds task classes registered by app build files, kept here so packaging decisions are testable:
-`RecordClassDataArchive`, `AddStartupWmClassToDeb`, `AddLaunchAfterInstallToMsi`, and `PackageMsix` for
-`:app:desktop`; `FinishWebDistribution` for `:app:web`. Registration and wiring stay in the consuming build file, and
-every project value is a task input set there, so no task action reaches a script object. Pure parts
-(`PackagingText.kt`, `WebBuildManifest.kt`) are tested with `./gradlew -p gradle :build-logic:test`. `:app:desktop` and
-`:app:web` see these classes because they apply `campfire-style`.
+`tasks/` holds the task classes `:app:desktop` and `:app:web` register, kept here so packaging decisions are testable;
+registration and wiring stay in the consuming build file, every project value is a task input set there (so no task
+action reaches a script object), and pure parts are tested with `./gradlew -p gradle :build-logic:test`. The apps see
+these classes because they apply `campfire-style`.
