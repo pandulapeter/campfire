@@ -69,6 +69,18 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
+    fun `every scale puts each of its notes on every string of every tuning`() {
+        InstrumentTuning.entries.forEach { tuning ->
+            Scales.all.forEach { scale ->
+                val neck = assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(scale, root = 7, strings = tuning.strings, instrument = UserPreferences.Instrument.GUITAR))
+                repeat(neck.strings) { row ->
+                    assertEquals(scale.intervals.indices.toSet(), neck.notes.filter { it.row == row }.map { it.degree }.toSet(), "${tuning.name} ${scale.id} $row")
+                }
+            }
+        }
+    }
+
+    @Test
     fun `the short necks are marked at the tenth fret, the guitar's at the ninth`() {
         assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.UKULELE.strings, UserPreferences.Instrument.UKULELE).markers)
         assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.MANDOLIN.strings, UserPreferences.Instrument.MANDOLIN).markers)
