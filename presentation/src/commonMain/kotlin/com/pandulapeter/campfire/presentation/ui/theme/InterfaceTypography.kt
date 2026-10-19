@@ -35,9 +35,9 @@ internal expect fun interfaceTypography(): Typography?
  * lines and pages in the same places on a phone, a computer and paper. Bundled in the three weights Material's type
  * scale and the app use: Regular, Medium and Bold. The files are subset to the Latin, Greek and Cyrillic scripts,
  * punctuation and arrows, and keep only the default layout features, which takes them to a sixth of their size; a
- * character outside that falls back to the system's fonts (on the web, to the Roboto Skia carries). Inter has no music
- * accidentals, so a ♯ or ♭ typed into a title is one of those; the app itself writes accidentals as # and b. Italic is
- * left to the text engine to slant.
+ * character outside that falls back to the system's fonts (on the web, to the Roboto Skia carries). The ♭ ♮ ♯ signs,
+ * which Inter lacks, are drawn into the bundled files by `tools/fonts`, so a scale's degrees and a title's accidentals
+ * are set in the same face as the rest. Italic is left to the text engine to slant.
  */
 @Composable
 internal fun interFontFamily() = FontFamily(
