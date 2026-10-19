@@ -21,7 +21,6 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistD
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -145,7 +144,7 @@ internal object SongbookProBackup {
         return parseObject(json)
     }
 
-    private fun parseObject(text: String) = runCatching { Json.parseToJsonElement(text) as? JsonObject }.getOrNull()
+    private fun parseObject(text: String) = ShallowJson.parse(text) as? JsonObject
 
     private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>) =
         ForeignSongHeader.songText(content) {
@@ -182,7 +181,7 @@ internal object SongbookProBackup {
     /** A list of names or ids, as an array or as the text of one, its members plain values or objects with a name. */
     private fun JsonObject.textList(key: String): List<String> {
         val element: JsonElement = this[key] as? JsonArray
-            ?: text(key)?.let { runCatching { Json.parseToJsonElement(it) }.getOrNull() }
+            ?: text(key)?.let(ShallowJson::parse)
             ?: return emptyList()
         return (element as? JsonArray).orEmpty().mapNotNull { member ->
             when (member) {

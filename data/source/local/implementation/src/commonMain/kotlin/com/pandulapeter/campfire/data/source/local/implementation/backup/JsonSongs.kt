@@ -20,8 +20,6 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -46,14 +44,8 @@ internal object JsonSongs {
     /** The songs of [text] as ChordPro files under names unique within the batch, empty where there are none. */
     fun read(text: String): List<ImportedFile> {
         if (text.length > ImportLimits.MAX_TEXT_FILE_SIZE) return emptyList()
-        val root = parse(text) ?: return emptyList()
+        val root = ShallowJson.parse(text) ?: return emptyList()
         return Walk().apply { visit(root, depth = 0, nesting = 0) }.files
-    }
-
-    private fun parse(text: String) = try {
-        Json.parseToJsonElement(text)
-    } catch (_: SerializationException) {
-        null
     }
 
     private class Walk {
@@ -74,7 +66,7 @@ internal object JsonSongs {
                     // SongbookPro and others write some nested values as JSON inside a string.
                     val content = element.takeIf { it.isString }?.content?.trimStart() ?: return
                     if (nesting < MAX_NESTING && (content.startsWith("{") || content.startsWith("["))) {
-                        parse(content)?.let { visit(it, depth + 1, nesting + 1) }
+                        ShallowJson.parse(content)?.let { visit(it, depth + 1, nesting + 1) }
                     }
                 }
             }

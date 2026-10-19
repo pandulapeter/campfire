@@ -131,8 +131,9 @@ archive holding one is looked inside; none is registered as an Open with type, a
 `backup/JsonSongs`, `OpenSongSong`, and `OnSongFile` turn another app's document (a `.json` that is no setlist or a
 sniffed text starting with `{` or `[`; an OpenSong XML song, `.xml` or a sniffed text starting with `<`; an `.onsong`)
 into `.cho` songs, inside an archive after the SongbookPro check and loose through `songsIn`; their input shapes are in
-their KDoc. JSON is bounded to the text limit, 32 levels, and 200,000 nodes; none of them writes setlists; all write
-headers and batch names through `ForeignSongHeader`. What their KDoc does not say:
+their KDoc. JSON is bounded to the text limit, 64 levels of brackets before parsing (`ShallowJson`; deeper overflows
+the parser's stack), and 32 levels and 200,000 nodes when walked; none of them writes setlists; all write headers and
+batch names through `ForeignSongHeader`. What their KDoc does not say:
 
 - OpenSong: a `.cho` of the name it came under; section tags become environments or comments, `.` chord rows are set
   over the lyric rows under them as marked (`ChordSheetConverter.setChordRows`, nothing re-guessed), and a block with no

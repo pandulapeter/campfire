@@ -80,6 +80,15 @@ class JsonSongsTest {
     }
 
     @Test
+    fun `brackets nested past the parser's stack read as nothing, and brackets inside a text do not count`() {
+        val bracketsInText = song("One", extra = """, "notes": "${"[".repeat(5_000)}"""")
+
+        assertEquals(emptyList(), JsonSongs.read("[".repeat(200_000)))
+        assertEquals(emptyList(), JsonSongs.read("""{"songs": "${"[".repeat(5_000)}"}"""))
+        assertEquals(listOf("One.cho"), JsonSongs.read(bracketsInText).map { it.name })
+    }
+
+    @Test
     fun `chords over lyrics come out as ChordPro with the title and artist in the header`() {
         val text = texts(song("Riverlight", extra = """, "author": "The Invented Band"""")).single()
 
