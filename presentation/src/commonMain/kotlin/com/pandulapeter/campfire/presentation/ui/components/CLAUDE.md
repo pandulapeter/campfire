@@ -24,8 +24,8 @@ covers the generic pieces at the root.
 
 ### `DelayedLoadingIndicator.kt`
 
-Song details and editor only: fades in after 300ms, since one local file is nearly always read before then. Lists keep
-the plain indicator (the launch screen covers their first read).
+Song details, the editor, and the export screen and its preview: fades in after 300ms, since one local file is nearly
+always read before then. Lists keep the plain indicator (the launch screen covers their first read).
 
 ### Edge fades (`EdgeFade.kt`)
 
