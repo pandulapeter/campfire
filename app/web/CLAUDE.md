@@ -90,10 +90,10 @@ One Cache Storage cache, `campfire-web-app`, holds every file of a build under i
 the folder's address. Once the page holds the Web Lock (so one tab writes the cache) it registers `service-worker.js`
 and fetches `build.json` (`no-store`; `navigator.onLine` is not trusted). The cache is inspected once; `build.json` is
 waited for 3 s, or until 0.8 s into the launch when the kept build is whole (`answerWindow`). A late answer naming
-another build is noted (`campfire-update-waiting`) and the next launch waits the full 3 s, so an always-slow network
-still gets a release one launch later. The same build fills what the cache lacks and starts; another build is
-downloaded, its page stored last, and the page reloads once per build id per tab; no answer, or a failed update, starts
-the kept build. Downloads give up after 15 s without data (`STALL_TIMEOUT`), never on a total time.
+another build is noted (`campfire-update-waiting`) so the next launch waits the full 3 s. The same build fills what the
+cache lacks and starts; another build is downloaded, its page stored last, and the page reloads once per build id per
+tab; no answer, or a failed update, starts the kept build. Downloads give up after 15 s without data (`STALL_TIMEOUT`),
+never on a total time.
 
 Rules:
 - **Storing the page last is the commit**: a kept build = kept page + every file its map names, so an interrupted update
@@ -114,10 +114,6 @@ from its exact cache entry, else the network.
 - The worker's address is permanent, registered with `updateViaCache: 'none'`. Fix a broken kept page by publishing a
   worker that sends navigations to the network; remove offline support by publishing one that deletes the cache and
   unregisters — never by deleting the file.
-
-`node --test app/web/tests/offline.test.cjs` runs `campfireRoute` and `<script id="campfire-launch">` as shipped.
-
-Unmeasured: whether a cached binary keeps Chromium's compiled-code cache; if not, the binaries are worth an exception.
 
 ## Other resources
 
