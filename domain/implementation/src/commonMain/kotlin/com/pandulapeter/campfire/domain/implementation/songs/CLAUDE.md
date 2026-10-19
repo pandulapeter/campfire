@@ -17,9 +17,9 @@
   one entry.
 - The new song template (`NewSongTemplate.kt`) carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`:
   the values a song declaring none plays by. `CreateSongUseCaseImpl` writes it with the New song form's values.
-- A pasted, dropped, or shared text is never written by a form: `DraftSongFromTextUseCaseImpl` gives it placeholders for
-  a missing or blank title and artist, then each template line it has no line of (`ChordProMetadataFields.declare`), and
-  prettifies it, for the editor to open on; `CreateSongFromTextUseCaseImpl` writes the editor's text byte for byte at
-  its Save, named by its header.
+- A pasted, dropped, or shared text is never written by a form: `DraftSongFromTextUseCaseImpl` gives a missing or blank
+  title and artist the suggested one (a shared page's title), else a placeholder, then each template line it has no line
+  of (`ChordProMetadataFields.declare`), and prettifies it, for the editor to open on; `CreateSongFromTextUseCaseImpl`
+  writes the editor's text byte for byte at its Save, named by its header.
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.
