@@ -43,6 +43,17 @@ class SharedTextNameTest {
     }
 
     @Test
+    fun `a page word inside a title is the title's own, and one ending a part of it is the page's`() {
+        assertEquals(
+            SharedTextTitle(title = "The Lost Chord", artist = "The Invented Band"),
+            sharedTextTitle("The Lost Chord Chords by The Invented Band @ Ultimate-Guitar.Com"),
+        )
+        assertEquals("Three Chords and the Truth", sharedTextTitle("Three Chords and the Truth Chords by The Invented Band")?.title)
+        assertEquals("Riverlight - The Invented Band", sharedTextTitle("Riverlight Chords - The Invented Band")?.title)
+        assertEquals("Riverlight", sharedTextTitle("Chords: Riverlight")?.title)
+    }
+
+    @Test
     fun `a subject of nothing but those words is kept rather than lost`() {
         assertEquals("chords", sharedTextName("Chords"))
     }

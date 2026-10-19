@@ -28,7 +28,7 @@ internal object ChordSheetTitles {
 
     private const val VERSION = "(?:\\(ver(?:sion)? *[0-9]+\\)|v[0-9]+)"
     private val pageKind = Regex(
-        "^(.+?)(?: +$VERSION)? +(?:chords and lyrics|lyrics and chords|chords?|tabs?|lyrics|akkordok|akkord|dalsz\u00f6vege|" +
+        "^(.+?)(?: +$VERSION)? +(?:chords and lyrics|lyrics and chords|chords|tabs?|lyrics|akkordok|akkord|dalsz\u00f6vege|" +
             "dalsz\u00f6veg|acordes|cifra|accordi|akkorde|akordy)(?: +$VERSION)?(?: +(?:by|[-\u2013\u2014]) +(.+))?$",
         RegexOption.IGNORE_CASE,
     )

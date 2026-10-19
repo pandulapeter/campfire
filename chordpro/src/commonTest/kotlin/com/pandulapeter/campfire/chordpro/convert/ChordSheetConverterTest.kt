@@ -402,6 +402,15 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a title ending in Chord keeps it`() {
+        assertTrue(convert("The Lost Chord\n\nAm     C\nHello world").startsWith("{title: The Lost Chord}\n\n"))
+        assertTrue(
+            convert("The Lost Chord Chords by The Invented Band\n\nAm     C\nHello world")
+                .startsWith("{title: The Lost Chord}\n{artist: The Invented Band}\n\n")
+        )
+    }
+
+    @Test
     fun `a UG title line names the title and the artist`() {
         val chords = "\n\nAm     C\nHello world"
         assertTrue(convert("Riverlight Chords by The Invented Band$chords").startsWith("{title: Riverlight}\n{artist: The Invented Band}\n\n"))

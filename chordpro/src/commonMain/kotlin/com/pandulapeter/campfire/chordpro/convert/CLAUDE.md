@@ -24,7 +24,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - The heading vocabulary lives in `ChordSheetHeadings`. A heading word that is also sung (`Hook`, `Tag`, `Coro`, `R`)
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
-  documented limit, since both orders are common on the web.
+  documented limit, since both orders are common on the web; a title ending in a page word with no credit after it
+  (`Three Chords`) loses that word, the same documented limit.
 - A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
