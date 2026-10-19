@@ -120,7 +120,7 @@ internal fun FeaturesStep(
             isEnabled = features.areScalesEnabled,
             onEnabledChange = onScalesEnabledChange,
         )
-        DependentFeatureCard(target = Unit.takeIf { features.areScalesEnabled }) {
+        DependentFeatureCard(target = Unit.takeIf { features.areScalesEnabled && features.areChordsEnabled }) {
             FeatureCard(
                 modifier = Modifier.padding(top = FEATURE_CARD_GAP),
                 title = stringResource(Res.string.settings_scale_suggestions),

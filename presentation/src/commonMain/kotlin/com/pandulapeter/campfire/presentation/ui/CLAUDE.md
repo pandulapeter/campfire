@@ -153,8 +153,8 @@ The view model facade, the composition root, and the product rules every screen 
     capo rule, tuner).
   - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet; independent of both chord switches. The
     scale sheet's chord rows follow Chord diagrams.
-  - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales are off, as Chord diagrams is with chords;
-    takes the song's Scales section and the chord sheets' scales.
+  - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, as Chord diagrams is
+    with chords, since a suggestion is read off the chords; takes the song's Scales section and the chord sheets' scales.
   - **Metronome**: takes its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
   - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
   - **Setlists**: takes their tab and every way into one; setlist files still travel through import, export, and sync.

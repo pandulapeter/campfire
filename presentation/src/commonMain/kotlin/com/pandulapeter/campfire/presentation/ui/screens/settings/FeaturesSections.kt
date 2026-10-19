@@ -90,12 +90,13 @@ private fun PlayingSection(
         isChecked = userPreferences?.areScalesEnabled != false,
         onCheckedChange = viewModel.preferencesController::setScalesEnabled,
     )
-    // Disabled rather than hidden with the scales off, as the chord diagrams are with the chords off.
+    // Disabled rather than hidden with the scales or the chords off, as the chord diagrams are with the chords off: a
+    // suggestion is read off a song's chords, so without them there is nothing it could show.
     SwitchListItem(
         title = stringResource(Res.string.settings_scale_suggestions),
         description = stringResource(Res.string.settings_scale_suggestions_description),
         isChecked = userPreferences?.areScaleSuggestionsEnabled != false,
-        isEnabled = userPreferences?.areScalesEnabled != false,
+        isEnabled = userPreferences?.areScalesEnabled != false && userPreferences?.areChordsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
     )
     SwitchListItem(
