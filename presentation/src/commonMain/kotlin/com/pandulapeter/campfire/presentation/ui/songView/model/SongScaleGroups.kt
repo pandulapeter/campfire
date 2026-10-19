@@ -32,10 +32,11 @@ internal data class SongScaleGroup(
 
 /**
  * The groups of scales [song] (in the standard notation) is played over ([SongScaleGroups]), each named by the headings
- * of its sections in the order the song plays them, numbered the way the page numbers them. A heading every section of a
- * kind shares once its number is left off is said once where the group holds all of them ("Verse" for both verses), and
- * the numbered ones are named where the verses are split between groups ("Verse 3" for the one after a modulation). At
- * most [MAX_GROUP_SCALES] scales a group, the common ones first, since a long row of rarities buries the answer.
+ * of its sections in the order the song plays them, numbered the way the page numbers them. Where a group holds every
+ * section of a kind, and more than one, the kind is said once, at the first of them ("Verse" for both verses); a lone
+ * one keeps its heading ("Take 5"), and the numbered ones are named where the verses are split between groups ("Verse 3"
+ * for the one after a modulation). At most [MAX_GROUP_SCALES] scales a group, the common ones first, since a long row of
+ * rarities buries the answer.
  */
 internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels): List<SongScaleGroup> {
     val groups = SongScaleGroups.of(song.copy(blocks = song.blocks.withNumberedSections(labels)))
@@ -43,8 +44,10 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels)
     val headers = groups.map { group -> group.sections.filter { !it.isContinuation }.map { it.header(labels) }.filter { it.isNotEmpty() } }
     val kindCounts = headers.flatten().groupingBy(::kindOf).eachCount()
     return groups.mapIndexed { index, group ->
-        val names = headers[index].groupBy(::kindOf).flatMap { (kind, ofKind) ->
-            if (kindCounts[kind] == ofKind.size) listOf(kind) else ofKind.distinct()
+        val ofKind = headers[index].groupingBy(::kindOf).eachCount()
+        val names = headers[index].map { header ->
+            val kind = kindOf(header)
+            if (ofKind.getValue(kind) > 1 && kindCounts[kind] == ofKind[kind]) kind else header
         }
         SongScaleGroup(
             label = names.distinct().joinToString(", ").ifEmpty { null },
@@ -54,7 +57,12 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels)
     }
 }
 
-/** A heading without the number after it ("Verse" for "Verse 2"), or the heading itself where it is nothing but one. */
-private fun kindOf(header: String) = header.trimEnd { it.isDigit() }.trimEnd().ifEmpty { header }
+/**
+ * A heading without the number the page counts its kind by ("Verse" for "Verse 2"): one after a space, as
+ * `withNumberedSections` numbers them, so that "Take 5" and "Chorus x2" are headings of their own.
+ */
+private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
+
+private val KIND_NUMBER = Regex("""\s+\d{1,4}$""")
 
 internal const val MAX_GROUP_SCALES = 5

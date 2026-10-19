@@ -60,6 +60,19 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a group names its sections in the order the song plays them, a kind once at its first`() {
+        val groups = groups("{key: C}\n" + chorus + verse + modulated + verse)
+        assertEquals(listOf("Chorus, Verse", "Bridge"), groups.map { it.label })
+    }
+
+    @Test
+    fun `a lone heading keeps its number, and a number without a space before it is the heading's own`() {
+        val take = "{start_of_verse: Take 5}\n[C]One [F]two\n{end_of_verse}\n"
+        val twice = "{start_of_chorus: Chorus x2}\n[C]One [F]two\n{end_of_chorus}\n"
+        assertEquals(listOf("Take 5, Chorus x2", "Bridge"), groups("{key: C}\n" + take + twice + modulated).map { it.label })
+    }
+
+    @Test
     fun `a group offers at most a handful of scales`() =
         assertEquals(MAX_GROUP_SCALES, groups("[C]One [G]two").single().scales.size)
 
