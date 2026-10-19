@@ -20,6 +20,9 @@ a no-op actual elsewhere. The gate wraps the whole app inside `CampfireApp`, so 
   `AppUpdate.android.kt`. The priority also tells which flow an in-progress update is (Play's answer does not), so a
   recreated Activity resumes the download rather than offering it again. Set by `publish-android.yml`'s
   `update_priority` input, from a `<!-- play-store update-priority: N -->` comment in the release description, default 0.
+  Offline (no validated network, `DefaultNetworkWatcher`), the blocking screen also offers Continue offline, which lifts
+  it until a connection returns and Play answers again; online there is no way past it. A screen that comes back waits
+  for unsaved editor text again.
 - The blocking screen is drawn **over** the app, so a required update that fails to install leaves the user where they
   were. Back on it closes the app (the gesture must be taken, not passed through).
 - Dialogs, sheets, and menus are separate windows on Android that the screen cannot cover, so none is composed while
@@ -29,7 +32,7 @@ a no-op actual elsewhere. The gate wraps the whole app inside `CampfireApp`, so 
   Restart wait for an editor with unsaved text (`hasUnsavedEditorChanges`). Restart also waits for a sync run and a
   playing click; a required update does not (a cut-off run is reported as interrupted).
 - What Play last said is saved with the activity, so a rotation keeps the blocking screen up; a carried-over state the
-  first check cannot confirm is dropped.
+  first check cannot confirm is dropped. The Continue offline choice is saved too.
 - Play is first asked once the app is on screen (`LaunchState.isAppOnScreen`), so a cold start does not bind its
   service under the splash; a recreated activity asks on resume.
 - A build Play did not install (debug, sideloaded, no Play) answers every check with an error, so the flow can only be

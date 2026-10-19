@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.app_update_available
 import com.pandulapeter.campfire.presentation.resources.app_update_available_hint
+import com.pandulapeter.campfire.presentation.resources.app_update_continue_offline
 import com.pandulapeter.campfire.presentation.resources.app_update_downloaded
 import com.pandulapeter.campfire.presentation.resources.app_update_downloaded_hint
 import com.pandulapeter.campfire.presentation.resources.app_update_later
@@ -51,7 +52,6 @@ import com.pandulapeter.campfire.presentation.resources.app_update_update
 import com.pandulapeter.campfire.presentation.resources.ic_update
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
-import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -74,7 +74,8 @@ internal val LocalIsCoveredByRequiredUpdate = compositionLocalOf { false }
  * process is put in the user's way while the editor holds text that has not been written: the blocking screen, the
  * immediate flow it starts and the Restart offer all wait until that text has been saved or let go of, and Restart
  * waits for a sync run as well, which a required update does not - a run it cuts off is reported as interrupted the
- * ordinary way.
+ * ordinary way. The blocking screen goes when the update stops being required, which offline includes the user
+ * choosing to continue without it, and one that comes back waits for unsaved text again.
  */
 @Composable
 internal fun AppUpdateGate(
@@ -91,10 +92,13 @@ internal fun AppUpdateGate(
     val isMetronomePlaying = viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
     // A required update ends with the process being replaced, and the screen it puts up leaves no way back to
     // the app, so neither is allowed near an editor holding text that has not been written: both wait until it
-    // has been saved or let go of. Once the screen is up it stays up - the text can only become unsaved behind
-    // it by the file changing underneath an editor nobody typed into - and a rotation must not uncover the app.
+    // has been saved or let go of. While the update stays required the screen stays up - the text can only become
+    // unsaved behind it by the file changing underneath an editor nobody typed into - and a rotation must not uncover
+    // the app. Once it stops being required (continued offline) the flag goes with it, so that a screen coming back
+    // waits for the editor again rather than appearing over text typed in the meantime.
     var isRequiredUpdateInTheWay by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state, hasUnsavedEditorChanges) {
+        if (state != AppUpdateState.Required) isRequiredUpdateInTheWay = false
         if (state == AppUpdateState.Required && !hasUnsavedEditorChanges) isRequiredUpdateInTheWay = true
     }
     val isRequiredScreenVisible = isRequiredUpdateInTheWay && state == AppUpdateState.Required
@@ -114,6 +118,7 @@ internal fun AppUpdateGate(
         ) {
             AppUpdateRequiredScreen(
                 onUpdate = controller::startUpdate,
+                onContinueOffline = if (controller.canContinueOffline) controller::continueOffline else null,
                 onClose = controller::closeApp,
             )
         }
@@ -157,6 +162,7 @@ internal fun AppUpdateGate(
 private fun AppUpdateRequiredScreen(
     modifier: Modifier = Modifier,
     onUpdate: () -> Unit,
+    onContinueOffline: (() -> Unit)?,
     onClose: () -> Unit,
 ) = Surface(
     modifier = modifier.fillMaxSize(),
@@ -174,7 +180,12 @@ private fun AppUpdateRequiredScreen(
             icon = painterResource(Res.drawable.ic_update),
             title = stringResource(Res.string.app_update_required),
             hint = stringResource(Res.string.app_update_required_hint),
-            actions = listOf(EmptyStateAction(text = stringResource(Res.string.app_update_update), onClick = onUpdate)),
+            actions = requiredUpdateActions(
+                updateLabel = stringResource(Res.string.app_update_update),
+                continueOfflineLabel = stringResource(Res.string.app_update_continue_offline),
+                onUpdate = onUpdate,
+                onContinueOffline = onContinueOffline,
+            ),
         )
     }
 }

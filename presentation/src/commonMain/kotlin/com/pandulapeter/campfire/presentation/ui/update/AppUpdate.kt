@@ -65,6 +65,20 @@ internal interface AppUpdateController {
     /** Answers "later": nothing more is said about this update for as long as the app stays open. */
     fun postponeUpdate()
 
+    /**
+     * Whether the user may get past a [AppUpdateState.Required] update for now, which is only while the device has
+     * no validated network: there is no way to download the update then, and the library should not be out of reach
+     * for it. Online there is no way past the update at all, since the priority that makes it required is kept for
+     * builds that damage the library. False once the update is being waited out, and when it is not required.
+     */
+    val canContinueOffline: Boolean
+
+    /**
+     * Lifts a required update while [canContinueOffline] says it may be, until a connection returns and the store
+     * answers again, or the app is closed. Does nothing otherwise.
+     */
+    fun continueOffline()
+
     /** Restarts the app into the update that has already been downloaded. */
     fun installUpdate()
 
@@ -85,6 +99,10 @@ internal object NoAppUpdates : AppUpdateController {
     override fun startRequiredUpdateOnce() = Unit
 
     override fun postponeUpdate() = Unit
+
+    override val canContinueOffline = false
+
+    override fun continueOffline() = Unit
 
     override fun installUpdate() = Unit
 

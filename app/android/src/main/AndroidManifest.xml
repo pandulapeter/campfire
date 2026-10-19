@@ -18,6 +18,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!--
+      Whether the device has a working connection, which only decides whether the screen of a required update offers
+      to continue offline. A normal permission, granted without a prompt; it reads the device's state and sends nothing.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
       A sync run has to survive the user leaving the app, which on Android means a foreground service, which in
       turn means a notification. The notification permission is only ever asked for when sync is switched on; a
       refusal costs the notification, not the sync.

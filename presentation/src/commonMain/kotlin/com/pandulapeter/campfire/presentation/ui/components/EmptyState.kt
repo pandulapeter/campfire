@@ -9,6 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -37,10 +44,12 @@ import androidx.compose.ui.unit.dp
  *
  * @param onClick Null leaves the button visible but disabled, for an action the app will be able to offer but
  *   cannot yet.
+ * @param isVisible False hides the button, animated, for an action that comes and goes while the state is on screen.
  */
 internal data class EmptyStateAction(
     val text: String,
     val onClick: (() -> Unit)?,
+    val isVisible: Boolean = true,
 )
 
 /**
@@ -89,27 +98,46 @@ internal fun EmptyState(
             // One under the other and all the same width, which is what a portrait window has room for: side by
             // side these wrap into a ragged two and one, and three labels this long read as a list rather than as
             // a row anyway.
+            // The gap is each button's own padding rather than the column's spacing, so that it comes and goes with
+            // a button that animates in or out instead of the buttons below jumping by it.
             Column(
                 modifier = Modifier.padding(top = 16.dp).widthIn(max = EMPTY_STATE_ACTION_WIDTH),
-                verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
             ) {
                 actions.forEachIndexed { index, action ->
-                    EmptyStateActionButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        action = action,
-                        isEmphasized = index == 0,
-                    )
+                    AnimatedVisibility(
+                        visible = action.isVisible,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        EmptyStateActionButton(
+                            modifier = Modifier.padding(top = if (index == 0) 0.dp else EMPTY_STATE_ACTION_GAP).fillMaxWidth(),
+                            action = action,
+                            isEmphasized = index == 0,
+                        )
+                    }
                 }
             }
         } else {
             // Wrapped rather than cut off: four labels this long are wider than a phone on its side.
+            // Half the gap on either side of every button, for the same reason as the column's padding, which keeps
+            // a wrapped line centered too.
             FlowRow(
                 modifier = Modifier.padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.Center,
                 verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
             ) {
                 actions.forEachIndexed { index, action ->
-                    EmptyStateActionButton(action = action, isEmphasized = index == 0)
+                    AnimatedVisibility(
+                        visible = action.isVisible,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        EmptyStateActionButton(
+                            modifier = Modifier.padding(horizontal = EMPTY_STATE_ACTION_GAP / 2),
+                            action = action,
+                            isEmphasized = index == 0,
+                        )
+                    }
                 }
             }
         }

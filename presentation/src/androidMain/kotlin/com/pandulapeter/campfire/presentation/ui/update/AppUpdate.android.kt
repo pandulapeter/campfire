@@ -57,16 +57,19 @@ internal actual fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpda
     // remembered against it, is recreated, while a "later" the user already gave should still stand, an
     // immediate flow they already backed out of should not open itself again, and what Play last said should be
     // on screen from the first frame rather than a few hundred milliseconds later - long enough for a rotation to
-    // uncover an app the blocking screen was keeping the user out of.
+    // uncover an app the blocking screen was keeping the user out of. A required update the user chose to wait out
+    // offline stays waited out the same way, whatever Play answers the recreated activity while still offline.
     val isPostponed = rememberSaveable { mutableStateOf(false) }
     val hasStartedImmediateFlow = rememberSaveable { mutableStateOf(false) }
     val lastKnownState = rememberSaveable { mutableStateOf(AppUpdateState.NotAvailable) }
+    val isWaitingForConnection = rememberSaveable { mutableStateOf(false) }
     val controller = remember(activity) {
         AndroidAppUpdateController(
             activity = activity,
             isPostponed = isPostponed,
             hasStartedImmediateFlow = hasStartedImmediateFlow,
             lastKnownState = lastKnownState,
+            isWaitingForConnection = isWaitingForConnection,
         )
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -89,7 +92,12 @@ internal actual fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpda
             controller.checkForUpdate()
         }
     }
-    DisposableEffect(controller) { onDispose(controller::release) }
+    // Watched from here rather than from the controller's creation, because a remembered value whose composition is
+    // abandoned never reaches onDispose, and its network callback would never be unregistered.
+    DisposableEffect(controller) {
+        controller.startWatchingNetwork()
+        onDispose(controller::release)
+    }
     return controller
 }
 
@@ -99,6 +107,7 @@ private class AndroidAppUpdateController(
     isPostponed: MutableState<Boolean>,
     hasStartedImmediateFlow: MutableState<Boolean>,
     lastKnownState: MutableState<AppUpdateState>,
+    isWaitingForConnection: MutableState<Boolean>,
 ) : AppUpdateController {
 
     private val appUpdateManager = AppUpdateManagerFactory.create(activity.applicationContext)
@@ -108,6 +117,11 @@ private class AndroidAppUpdateController(
     private var launcher: ActivityResultLauncher<IntentSenderRequest>? = null
     private var isListenerRegistered = false
     private var hasStartedImmediateFlow by hasStartedImmediateFlow
+    private var isWaitingForConnection by isWaitingForConnection
+    private val networkWatcher = DefaultNetworkWatcher(
+        context = activity.applicationContext,
+        onBecameOnline = { if (this.isWaitingForConnection) checkForUpdate() },
+    )
 
     /**
      * Play's answer to a check is not tied to the activity that asked: it can arrive after this controller has left
@@ -116,14 +130,18 @@ private class AndroidAppUpdateController(
     private var isReleased = false
 
     /**
-     * Starts from what the controller of the previous activity knew, which Play corrects with the first answer.
-     * A download is the exception: it draws nothing, and the first answer is what registers a listener for its end.
+     * What Play said, which every decision in here reads; [state] is only what the gate is shown of it. Starts from
+     * what the controller of the previous activity knew, which Play corrects with the first answer. A download is the
+     * exception: it draws nothing, and the first answer is what registers a listener for its end.
      */
-    override var state by lastKnownState
-        private set
+    private var realState by lastKnownState
+
+    override val state get() = visibleAppUpdateState(realState, isWaitingForConnection)
+
+    override val canContinueOffline get() = realState == AppUpdateState.Required && !isWaitingForConnection && !networkWatcher.isOnline
 
     init {
-        if (state == AppUpdateState.Downloading) state = AppUpdateState.NotAvailable
+        if (realState == AppUpdateState.Downloading) realState = AppUpdateState.NotAvailable
     }
 
     /** Only a composition can register one, so the launcher arrives after the controller rather than with it. */
@@ -138,7 +156,7 @@ private class AndroidAppUpdateController(
             // could do about a real failure either: the app simply stays the version it is. A state carried over
             // from the previous activity is only believed until Play has been asked, though, and one it has not
             // confirmed is not left standing - above all not a blocking screen whose button needs Play's answer.
-            .addOnFailureListener { if (!isReleased && availableUpdate == null) state = AppUpdateState.NotAvailable }
+            .addOnFailureListener { if (!isReleased && availableUpdate == null) realState = AppUpdateState.NotAvailable }
     }
 
     fun onUpdateFlowResult(isSuccessful: Boolean) {
@@ -146,15 +164,18 @@ private class AndroidAppUpdateController(
         // declined - an immediate one is re-offered by the next check, which does not ask whether it was postponed.
         // The state is not asked whether it is a download: a sheet that was open while the activity was recreated
         // answers to a controller that has not heard from Play yet.
-        if (!isSuccessful && state != AppUpdateState.Required) {
+        if (!isSuccessful && realState != AppUpdateState.Required) {
             unregisterInstallListener()
             postponeUpdate()
         }
     }
 
+    fun startWatchingNetwork() = networkWatcher.start()
+
     fun release() {
         isReleased = true
         launcher = null
+        networkWatcher.stop()
         unregisterInstallListener()
     }
 
@@ -162,7 +183,7 @@ private class AndroidAppUpdateController(
         val appUpdateInfo = availableUpdate ?: return
         val launcher = launcher ?: return
         isPostponed = false
-        when (state) {
+        when (realState) {
             AppUpdateState.Required -> {
                 hasStartedImmediateFlow = true
                 // The blocking screen stays whatever happens here, and its button is the way to try again.
@@ -172,10 +193,10 @@ private class AndroidAppUpdateController(
             AppUpdateState.Optional -> {
                 registerInstallListener()
                 // Said before Play is asked, so that the hint is gone by the time its sheet is over the app.
-                state = AppUpdateState.Downloading
+                realState = AppUpdateState.Downloading
                 if (!launchUpdateFlow(appUpdateInfo, launcher, AppUpdateType.FLEXIBLE)) {
                     unregisterInstallListener()
-                    state = AppUpdateState.NotAvailable
+                    realState = AppUpdateState.NotAvailable
                     checkForUpdate()
                 }
             }
@@ -200,12 +221,16 @@ private class AndroidAppUpdateController(
     }
 
     override fun startRequiredUpdateOnce() {
-        if (state == AppUpdateState.Required && !hasStartedImmediateFlow) startUpdate()
+        if (realState == AppUpdateState.Required && !hasStartedImmediateFlow) startUpdate()
     }
 
     override fun postponeUpdate() {
         isPostponed = true
-        state = AppUpdateState.NotAvailable
+        realState = AppUpdateState.NotAvailable
+    }
+
+    override fun continueOffline() {
+        if (canContinueOffline) isWaitingForConnection = true
     }
 
     override fun installUpdate() {
@@ -219,11 +244,14 @@ private class AndroidAppUpdateController(
     private fun onAppUpdateInfoReceived(appUpdateInfo: AppUpdateInfo) {
         if (isReleased) return
         availableUpdate = appUpdateInfo
+        // Play can answer offline from what it knows on the device, which must not put the blocking screen back
+        // before a connection could have changed anything; an answer given online decides again.
+        isWaitingForConnection = isStillWaitingForConnection(isWaitingForConnection, isOnline = networkWatcher.isOnline)
         val newState = appUpdateInfo.toAppUpdateState()
         // Play takes a moment to notice a download it has just been asked for, and the check that runs as its sheet
         // closes can still be answered with the offer. The offer has been taken, so it is not made again.
-        if (state == AppUpdateState.Downloading && newState == AppUpdateState.Optional) return
-        state = newState
+        if (realState == AppUpdateState.Downloading && newState == AppUpdateState.Optional) return
+        realState = newState
         // A download this controller did not start - one that was going when the activity was recreated - has
         // nobody listening for its end yet.
         if (newState == AppUpdateState.Downloading) registerInstallListener()
@@ -231,16 +259,16 @@ private class AndroidAppUpdateController(
 
     private fun onInstallStateChanged(installState: InstallState) {
         when (installState.installStatus()) {
-            InstallStatus.DOWNLOADING -> state = AppUpdateState.Downloading
+            InstallStatus.DOWNLOADING -> realState = AppUpdateState.Downloading
 
             InstallStatus.DOWNLOADED -> {
                 unregisterInstallListener()
-                state = AppUpdateState.ReadyToInstall
+                realState = AppUpdateState.ReadyToInstall
             }
 
             InstallStatus.CANCELED, InstallStatus.FAILED -> {
                 unregisterInstallListener()
-                state = AppUpdateState.NotAvailable
+                realState = AppUpdateState.NotAvailable
             }
 
             else -> Unit

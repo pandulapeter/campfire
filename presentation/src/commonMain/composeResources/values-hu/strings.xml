@@ -918,6 +918,7 @@
     <string name="app_update_available">Elérhető frissítés</string>
     <string name="app_update_available_hint">A Campfire újabb verziója letölthető. A háttérben érkezik, így addig is folytathatod.</string>
     <string name="app_update_update">Frissítés</string>
+    <string name="app_update_continue_offline">Folytatás offline</string>
     <string name="app_update_later">Később</string>
     <string name="app_update_downloaded">A frissítés letöltődött</string>
     <string name="app_update_downloaded_hint">A telepítés befejezéséhez a Campfire újraindul.</string>

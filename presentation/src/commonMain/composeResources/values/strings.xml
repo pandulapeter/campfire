@@ -918,6 +918,7 @@
     <string name="app_update_available">Update available</string>
     <string name="app_update_available_hint">A newer version of Campfire is ready to download. It arrives in the background, so you can carry on in the meantime.</string>
     <string name="app_update_update">Update</string>
+    <string name="app_update_continue_offline">Continue offline</string>
     <string name="app_update_later">Later</string>
     <string name="app_update_downloaded">Update downloaded</string>
     <string name="app_update_downloaded_hint">Campfire needs to restart to finish installing it.</string>
