@@ -25,20 +25,17 @@ What every screen shares; each destination's package has its own notes.
 
 ## List screen app bars
 
-- "New song" / "New setlist" sit in the app bar, not a FAB, leaving the corner to the fast scroller; a filled
-  (primary) circle beside the pill of the bar's icons, so the way to fill the list stands out. Each opens a dropdown
-  (`components/menu/NewItemMenu.kt`): how the item is made is asked first; only "Create…" opens the naming sheet. Import
-  is the same on both screens (an archive holds songs and setlists alike). Songs adds Paste from clipboard third.
-- The divider before it (`ClosedSearchActionsDivider`, shown with `areClosedSearchActionsShown`) animates on the search
-  action's spring, not inside the button's exit, whose clipped shrink would cut it off on the first frame.
+- "New song" / "New setlist" sit in the app bar, not a FAB, leaving the corner to the fast scroller (styling in
+  `components/appBar/CLAUDE.md`). Each opens a dropdown (`components/menu/NewItemMenu.kt`): how the item is made is
+  asked first; only "Create…" opens the naming sheet. Import is the same on both screens (an archive holds songs and
+  setlists alike). Songs adds Paste from clipboard third.
 - The menu leaves the bar while the empty state, loading indicator, or error is up (`allowsNewItemMenu`); each offers
   its own buttons. Both empty states start with the menu's buttons, same labels, same order.
 
 ## Searching the list screens
 
-- **Both list screens are searched from a button, not an ever-present field** (`components/appBar/SearchableTopAppBar.kt`):
-  the bar has no title (the pinned section header stands in), and the search icon morphs into the close button. On the
-  desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar.
+- **Both list screens are searched from a button, not an ever-present field** (`components/appBar/`). On the desktop and
+  the web Ctrl / Cmd + F opens it, in place of the browser's find bar.
 - Songs match by title, artist, and tags through `NormalizeSearchTextUseCase` on both sides (case, accents, spaces, and
   punctuation ignored: `ymca` finds `Y.M.C.A.`); tag-only matches rank after title/artist ones. The pickers and "Manage
   tags" search the same way.
