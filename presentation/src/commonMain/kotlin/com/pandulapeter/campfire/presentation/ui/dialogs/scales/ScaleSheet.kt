@@ -190,14 +190,16 @@ private fun ScaleSheetDiagram(
 
 /**
  * The header's choice between a neck's degrees and its notes. A segmented row fills the width it is given, which in the
- * header would leave the title none, so it is held to the width its labels need.
+ * header would leave the title none, so it is held to the width its labels need. The header leaves an action 4 dp from
+ * the edge, room an icon button's own inset fills; the row's outline has none, so it adds the 12 dp that put it as far
+ * from the end as the close button's glyph is from the start.
  */
 @Composable
 private fun ScaleLabelsChoice(
     labels: ScaleLabels,
     onLabelsSelected: (ScaleLabels) -> Unit,
 ) = SegmentedChoice(
-    modifier = Modifier.width(IntrinsicSize.Max),
+    modifier = Modifier.padding(end = 12.dp).width(IntrinsicSize.Max),
     options = listOf(
         ScaleLabels.DEGREES to stringResource(Res.string.scales_labels_degrees),
         ScaleLabels.NOTES to stringResource(Res.string.scales_labels_notes),
