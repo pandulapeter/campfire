@@ -16,8 +16,9 @@ its editors.
 - **The one place a song's description is edited**: each group is a tile opening its own sheet; the cover opens the
   cover search. Key, capo, tempo, and time stay on the page; the sheet only reads what the file declares and opens Song
   defaults. No menu lists the sheet's editors one by one; Edit song file is the details menu's first own entry.
-- `DialogType.SongInfo`, read live from the song's text and closed with the song; opened only by the title (below). The
-  sheet and the preview's card share `SongInfoBody`; `songPlayingOverrides` is shared with the Song defaults sheet.
+- `DialogType.SongInfo`, read live from the song's text and closed with the song; opened by the song details title
+  (`screens/songDetails/CLAUDE.md`) and over the draft from the editor's menu. The sheet and the preview's card share
+  `SongInfoBody`; `songPlayingOverrides` is shared with the Song defaults sheet.
 - Group titles are always plural, so a title does not change wording under the finger adding the first item.
 - Chips in a tile are labels; the tile takes the tap. An empty group's call to action (`SongInfoAction`) is exactly
   `tagPillHeight` tall, so the tile keeps its height as its first chip arrives.
