@@ -12,20 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.presentation.resources.tuner
+import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
-import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
@@ -51,17 +48,14 @@ internal class ReferencePitchEntryTest {
         tap(hasSetTextAction())
         onNode(hasSetTextAction()).performTextInput("432")
         waitForIdle()
-        // The stepper's buttons carry what it reads as their state, for a screen reader.
+        // The stepper's buttons carry what it reads as their state, for a screen reader: the note it tunes to with its pitch.
         val state = onNode(hasContentDescription(string(Res.string.tuner_reference_pitch_increase)))
             .fetchSemanticsNode().config.getOrNull(SemanticsProperties.StateDescription)
-        assertEquals(string(Res.string.tuner_reference_pitch_value, 432), state)
+        assertEquals(string(Res.string.tuner_reference_pitch, "A4", 432), state)
     }
 
     private fun AppTestScope.openReferencePitch() {
         tap(hasText(string(Res.string.tools)) and hasClickAction())
         tap(hasText(string(Res.string.tuner)) and hasClickAction())
-        // The tools' tab row above the tuner scrolls too, sideways, where its tabs are wider than the window.
-        onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasSetTextAction())
-        waitForIdle()
     }
 }
