@@ -1045,13 +1045,10 @@
     <string name="onboarding_instrument_strings">The tuner will listen for %1$s</string>
     <string name="onboarding_notation_title">How do you write chords?</string>
     <string name="onboarding_notation_message">Pick how chords are shown. Songs are always saved the standard way, so they read the same in every app.</string>
-    <string name="onboarding_feature_chords_description">Chords above the lyrics, in any key. Only singing? Untick it for lyrics only.</string>
-    <string name="onboarding_feature_chord_diagrams_description">Every chord fingered for your instrument, in songs and on a screen of its own</string>
-    <string name="onboarding_feature_setlists_description">Songs in order for a gig or a rehearsal</string>
+    <string name="onboarding_feature_chords_description">Chords above the lyrics, in any key, with diagrams drawn for your instrument. Only singing? Untick it for lyrics only.</string>
     <string name="onboarding_feature_metronome_description">Keeps the beat at each song\'s tempo, in songs and on a screen of its own</string>
     <string name="onboarding_feature_tuner_description">Tunes your instrument through the microphone, in songs and on a screen of its own</string>
-    <string name="onboarding_feature_scales_description">Every scale and mode, drawn on your instrument, on a screen of its own</string>
-    <string name="onboarding_feature_scale_suggestions_description">The scales each part of a song is played over, right under its chords</string>
+    <string name="onboarding_feature_scales_description">Every scale and mode drawn for your instrument, and the ones that fit each song</string>
     <string name="onboarding_sync_title">Your songs, everywhere</string>
     <string name="onboarding_sync_message">Connect Dropbox to keep the same library on all your devices. There is no server in between: your files go straight to your own storage.</string>
     <string name="welcome_get_started">Get started</string>

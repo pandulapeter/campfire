@@ -251,12 +251,9 @@ private fun OnboardingStepPage(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val features = OnboardingFeatures(
         areChordsEnabled = userPreferences?.areChordsEnabled != false,
-        areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false,
-        areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
         isTunerEnabled = userPreferences?.isTunerEnabled != false,
         areScalesEnabled = userPreferences?.areScalesEnabled != false,
-        areScaleSuggestionsEnabled = userPreferences?.areScaleSuggestionsEnabled != false,
     )
     val notation = userPreferences?.chordSpelling?.notation
     when (step) {
@@ -292,15 +289,11 @@ private fun OnboardingStepPage(
         OnboardingStep.FEATURES -> FeaturesStep(
             markModifier = markModifier,
             features = features,
-            chordTuning = userPreferences?.chordTuning(),
             isCompact = isCompact,
-            onChordsEnabledChange = viewModel.preferencesController::setChordsEnabled,
-            onChordDiagramsEnabledChange = viewModel.preferencesController::setChordDiagramsEnabled,
+            onChordsEnabledChange = viewModel.preferencesController::setChordsWithDiagramsEnabled,
             onMetronomeEnabledChange = viewModel.preferencesController::setMetronomeEnabled,
             onTunerEnabledChange = viewModel.preferencesController::setTunerEnabled,
-            onScalesEnabledChange = viewModel.preferencesController::setScalesEnabled,
-            onScaleSuggestionsEnabledChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
-            onSetlistsEnabledChange = viewModel.preferencesController::setSetlistsEnabled,
+            onScalesEnabledChange = viewModel.preferencesController::setScalesWithSuggestionsEnabled,
         )
 
         OnboardingStep.NOTATION -> NotationStep(

@@ -12,10 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 /** The features of Settings → Features that the onboarding asks about, as the app is set now. */
 internal data class OnboardingFeatures(
     val areChordsEnabled: Boolean,
-    val areChordDiagramsEnabled: Boolean,
-    val areSetlistsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isTunerEnabled: Boolean,
     val areScalesEnabled: Boolean,
-    val areScaleSuggestionsEnabled: Boolean,
 )

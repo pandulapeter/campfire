@@ -78,7 +78,7 @@ internal fun OnboardingChordPreview(
 
 /** The diagram of the chord called [name] in [tuning], with the shape a song draws it with first, null where it has none. */
 @Composable
-internal fun rememberChordGeometry(name: String, tuning: ChordTuning): ChordDiagramGeometry? = remember(name, tuning) {
+private fun rememberChordGeometry(name: String, tuning: ChordTuning): ChordDiagramGeometry? = remember(name, tuning) {
     ChordProChords.parse(name)?.let { chord ->
         ChordVoicings.default(chord, tuning)?.let { shape -> chordDiagramGeometryOf(shape, tuning, chord.root) }
     }

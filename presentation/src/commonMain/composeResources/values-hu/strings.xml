@@ -1044,13 +1044,10 @@
     <string name="onboarding_instrument_strings">A hangoló ezekre a húrokra figyel: %1$s</string>
     <string name="onboarding_notation_title">Hogyan írod az akkordokat?</string>
     <string name="onboarding_notation_message">Válaszd ki, hogyan jelenjenek meg az akkordok. A dalok mindig a szabványos módon kerülnek mentésre, így minden alkalmazásban ugyanúgy olvashatók.</string>
-    <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, bármelyik hangnemben. Csak énekelsz? Vedd ki a pipát, és csak a dalszöveg marad.</string>
-    <string name="onboarding_feature_chord_diagrams_description">Minden akkord lefogása a hangszeredre rajzolva, a dalokban és egy saját képernyőn</string>
-    <string name="onboarding_feature_setlists_description">Sorba rendezett dalok egy fellépéshez vagy próbához</string>
+    <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, bármelyik hangnemben, a hangszeredre rajzolt fogásokkal. Csak énekelsz? Vedd ki a pipát, és csak a dalszöveg marad.</string>
     <string name="onboarding_feature_metronome_description">Tartja az ütemet a dal tempójában, a dalokban és egy saját képernyőn</string>
     <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül, a dalokban és egy saját képernyőn</string>
-    <string name="onboarding_feature_scales_description">Minden skála és modus a hangszereden ábrázolva, egy saját képernyőn</string>
-    <string name="onboarding_feature_scale_suggestions_description">Az egyes dalrészekhez illő skálák, közvetlenül az akkordok alatt</string>
+    <string name="onboarding_feature_scales_description">Minden skála és modus a hangszeredre rajzolva, és azok, amelyek az egyes dalokhoz illenek</string>
     <string name="onboarding_sync_title">A dalaid mindenhol</string>
     <string name="onboarding_sync_message">Csatlakoztasd a Dropboxot, hogy minden eszközödön ugyanaz a könyvtár legyen elérhető. Nincs köztes szerver: a fájljaid egyenesen a saját tárhelyedre kerülnek.</string>
     <string name="welcome_get_started">Kezdjük</string>

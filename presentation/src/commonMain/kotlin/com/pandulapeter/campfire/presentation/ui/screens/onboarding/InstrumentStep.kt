@@ -42,8 +42,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 /**
  * "What do you play?", the one instrument the chord diagrams and the tuner are set up for ([UserPreferences.instrument])
  * and its tuning, picked through the same two chips and sheets the song details screen, the Tuner, the Chords tab, and
- * Settings offer, so that the onboarding teaches the control the player will meet again rather than one of its own. It
- * is asked before the features, since the next page offers the chord diagrams only for an instrument they are drawn for.
+ * Settings offer, so that the onboarding teaches the control the player will meet again rather than one of its own.
  * The chips show what the app is set to now, a fresh installation's six-string guitar included.
  *
  * Under them the answer is shown on what it changes: a few chords drawn for it in [chordTuning], where it has diagrams,

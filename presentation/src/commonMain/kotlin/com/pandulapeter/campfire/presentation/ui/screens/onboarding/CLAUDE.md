@@ -17,9 +17,10 @@ Campfire again") opens it again.
 
 Welcome carries the one note that everything can be changed in Settings; no later page repeats it.
 
-- **Instrument is asked before features**, which depend on it. Uses the app-wide chips (`InstrumentChipRow`).
-- **Features** cards are the Features switches, in order; chord diagrams only with chords on and an instrument that has
-  them. No roles (singer / player) are asked: the page asks about features, not people.
+- **Instrument** uses the app-wide chips (`InstrumentChipRow`).
+- **Features** cards are the coarse Features switches, in order: chords, scales, metronome, tuner. Chords also switch
+  chord diagrams, scales also switch scale suggestions (one write each), and setlists are left to Settings, to keep the
+  list short. No roles (singer / player) are asked: the page asks about features, not people.
 - **Notation**: only with chords on. The preview (Amazing Grace) is in E so German turns B into H and a C#m shows the
   accidentals; accidentals aren't asked, but the preview uses Settings' (`onboardingPreviewChordNames`).
 - **Sync**: only where the build can connect Dropbox.

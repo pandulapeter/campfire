@@ -45,8 +45,6 @@ import org.jetbrains.compose.resources.painterResource
  * of the colors, and to somebody who cannot tell the container colors apart.
  *
  * @param icon Drawn in the content color at the start, decoration only: the title says what the card is.
- * @param preview Drawn before the mark at the end, an example of what the answer changes, kept out of the icon's place
- *   so that a preview wider than an icon does not push its card's text out of line with the other cards'.
  */
 @Composable
 internal fun OnboardingChoiceCard(
@@ -54,7 +52,6 @@ internal fun OnboardingChoiceCard(
     title: String,
     description: String? = null,
     icon: (@Composable () -> Unit)? = null,
-    preview: (@Composable () -> Unit)? = null,
     isSelected: Boolean,
     role: Role,
     onClick: () -> Unit,
@@ -92,7 +89,6 @@ internal fun OnboardingChoiceCard(
                     )
                 }
             }
-            preview?.invoke()
             SelectionMark(isSelected = isSelected)
         }
     }

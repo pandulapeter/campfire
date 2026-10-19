@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Onboarding feature list should be simplified
 - Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)

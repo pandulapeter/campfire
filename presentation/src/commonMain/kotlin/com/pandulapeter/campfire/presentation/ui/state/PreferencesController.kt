@@ -117,6 +117,9 @@ internal class PreferencesController(
 
     fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
 
+    /** The onboarding's chords card, which stands for the chord diagrams too; one write, so neither change is lost. */
+    fun setChordsWithDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordsEnabled = value, areChordDiagramsEnabled = value) }
+
     fun setInstrument(value: UserPreferences.Instrument) = changeUserPreferences { withInstrument(value) }
 
     fun setTuning(tuning: InstrumentTuning) = changeUserPreferences { withTuning(tuning) }
@@ -142,6 +145,9 @@ internal class PreferencesController(
     fun setScalesEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value) }
 
     fun setScaleSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScaleSuggestionsEnabled = value) }
+
+    /** The onboarding's scales card, which stands for the scale suggestions too; one write, so neither change is lost. */
+    fun setScalesWithSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value, areScaleSuggestionsEnabled = value) }
 
     fun toggleScaleSectionFold() = changeUserPreferences { copy(isScaleSectionFolded = !isScaleSectionFolded) }
 

@@ -13,8 +13,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * The pages of the onboarding, in the order they are shown. Each asks one thing, and the answers to the earlier ones
- * decide whether the later ones are asked at all ([onboardingSteps]). The instrument comes before the features, since
- * whether the chord diagrams are a feature worth offering depends on it, and the features before everything that depends
+ * decide whether the later ones are asked at all ([onboardingSteps]). The features come before everything that depends
  * on them. The welcome and the look are two pages rather than one, so that neither is a page too long for a window
  * while the next is a page with almost nothing on it. Serializable because the page is saved with the back stack, see
  * `Navigator.onboardingStep`.
