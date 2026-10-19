@@ -15,10 +15,11 @@ Overflow menus, their expansion into buttons, and the sort menus.
   overflow button going last. Neighboring icon buttons overlap touch targets by 12dp (`ActionOverlap.kt`'s
   `overlappingAction`); an overflow button reaches 8dp further into the button before it, since its dots are a sliver
   of ink (`OVERFLOW_BUTTON_EXTRA_OVERLAP`; `ActionsMenu.isAfterButton` for a button the caller stands before it).
-- **Some entries stay in the menu whatever the room** (`ActionsMenuItem.isAlwaysInMenu`): a setlist's Edit details,
-  Reorder, Archive, Duplicate, Export, and Delete; a song's Update file name and Duplicate; the editor's Revert. A song
-  card never expands: its menu is `ActionsMenu`'s builder overload (`items: @Composable () -> List<…>`), which builds
-  its entries only once the menu opens and so assumes there is always one (a song's Export, a missing row's Remove).
+- **Some entries stay in the menu whatever the room** (`ActionsMenuItem.isAlwaysInMenu`): a setlist's every entry but
+  Choose songs; a song's Update file name, Duplicate, Export, and Delete; every editor entry but Find and Find and
+  replace. A song card never expands: its menu is `ActionsMenu`'s builder overload (`items: @Composable () -> List<…>`),
+  which builds its entries only once the menu opens and so assumes there is always one (a song's Export, a missing row's
+  Remove).
 - **Every overflow button opens a dropdown**, touch included. Long press (touch) and right click (`ContextClick.kt`,
   which beats the row's clickable since Android clickables answer a right click like a left) open the same dropdown from
   the row's button (`OverflowMenuState`); the button is always there, since a gesture announces itself to nobody.
