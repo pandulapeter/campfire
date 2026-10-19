@@ -14,13 +14,11 @@ The open source licenses and What's new.
 ### Open source licenses (`OpenSourceLicensesSheet.kt`)
 
 - **A build lists only what it ships** (`OpenSourceComponent.builds` against `appBuild`, which follows the screenshot
-  tool's impersonation); the README lists every build's.
-- **The list is kept by hand**: see the root `CLAUDE.md`'s Build section. License texts live under
-  `composeResources/files/licenses` of the source set of the builds that show them (Google's 220 KB Play list is the
-  Android build's alone). `OpenSourceComponentsTest` checks every build has every text it lists, and the order.
-- The list was compiled from every artifact on the Android, desktop, and web runtime classpaths (jars and AARs searched
-  for NOTICE and license files) and from Skiko's native libraries (Skia `third_party`, found with `strings`): Windows
-  and the web lack the raw image readers (piex, DNG SDK), and only Linux and the web carry FreeType.
+  tool's impersonation); `documentation/THIRD_PARTY_SOFTWARE.md` lists every build's.
+- Google's 220 KB Play license list is the Android build's alone. `OpenSourceComponentsTest` checks every build has
+  every text it lists, and the order.
+- Skiko's native libraries differ: Windows and the web lack piex and the DNG SDK, and only Linux and the web carry
+  FreeType.
 - An open entry's texts are list items cut at blank lines (`licenseTextChunks`): some run to thousands of lines.
 
 ### What's new
