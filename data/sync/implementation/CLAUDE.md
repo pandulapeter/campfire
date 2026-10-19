@@ -14,9 +14,6 @@ Implements `SyncRepository` and `DemoLibraryRepository`. Everything is `internal
 `DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks
 them up by.
 
-The module-wide rules are here; each package (`run`, `scheduling`, `connection`, `index`, `preferences`) has its own
-`CLAUDE.md` for the rest.
-
 ## Locks
 
 - `SyncConnectionManager`'s restore lock: never held across a run; forgetting the stored connection runs under it.
@@ -37,6 +34,5 @@ The module-wide rules are here; each package (`run`, `scheduling`, `connection`,
 A rename reaches sync as a deletion plus a new file (`SyncPlanner` knows no moves). By "an edit beats a deletion", a
 device that edited the old name since the last run puts it back, leaving both.
 
-Tests: `./gradlew :data:sync:implementation:desktopTest`. A behaviour that spans devices (renames, conflicts, deletions,
-synced preferences) gets a case in `TwoDeviceSyncTest`, which runs two `Device`s against one fake cloud folder through
-the real engine.
+A behaviour that spans devices (renames, conflicts, deletions, synced preferences) gets a case in `TwoDeviceSyncTest`,
+which runs two `Device`s against one fake cloud folder through the real engine.
