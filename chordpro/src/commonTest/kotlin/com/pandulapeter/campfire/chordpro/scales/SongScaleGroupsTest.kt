@@ -21,6 +21,14 @@ class SongScaleGroupsTest {
 
     private val ScaleGroup.labels get() = sections.map { it.label ?: it.type.toString() }
 
+    private fun rootAndFirst(text: String) = groups(text).map { it.rootName to it.scales.first().id }
+
+    /** A song of one section per entry of [sections], each chord a word of its own, under [key] where there is one. */
+    private fun song(vararg sections: String, key: String? = null) = (listOfNotNull(key?.let { "{key: $it}" }) +
+        sections.mapIndexed { index, chords ->
+            "{start_of_verse: Part ${index + 1}}\n" + chords.split(' ').joinToString(" ") { "[$it]x" } + "\n{end_of_verse}"
+        }).joinToString("\n")
+
     @Test
     fun `a song one scale fits is one group of every section that plays a chord`() {
         val groups = groups(
@@ -106,4 +114,54 @@ class SongScaleGroupsTest {
 
     @Test
     fun `a song without chords has no groups`() = assertTrue(groups("Just words\nand more words").isEmpty())
+
+    @Test
+    fun `a key is read from the chords, not from the first chord`() {
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("F G C Am")))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("F G C F G C")))
+        assertEquals(listOf("D" to "major"), rootAndFirst(song("G A D Bm")))
+        assertEquals(listOf("G" to "major"), rootAndFirst(song("C D Am G D C Am G Em G Em G Em A7sus4")))
+    }
+
+    @Test
+    fun `a mode is the answer only on a root that outweighs the home key`() {
+        assertEquals(listOf("E" to "mixolydian"), rootAndFirst(song("E D A E")))
+        assertEquals(listOf("D" to "mixolydian"), rootAndFirst(song("D C G")))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("F C G F")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am F C G")))
+    }
+
+    @Test
+    fun `the key names the centre only where its scale holds the section`() {
+        assertEquals(listOf("C" to "major", "G" to "major"), rootAndFirst(song("C F G C", "G D Em C", key = "C")))
+        assertEquals(listOf("C" to "major", "F" to "major"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", key = "D")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm Em", key = "Am")))
+    }
+
+    @Test
+    fun `a mode needs the part to start on its root or the key to name it`() {
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am G F G")))
+        assertEquals(listOf("G" to "mixolydian"), rootAndFirst(song("G F C G")))
+        assertEquals(listOf("E" to "mixolydian"), rootAndFirst(song("D A E E", key = "E")))
+        assertEquals(listOf("A" to "major"), rootAndFirst(song("D A E E")))
+    }
+
+    @Test
+    fun `a Dorian vamp of triads is Dorian, not melodic minor`() {
+        assertEquals(listOf("A" to "dorian"), rootAndFirst(song("Am D")))
+        assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G")))
+        assertEquals(listOf("E" to "dorian"), rootAndFirst(song("Em G D A")))
+    }
+
+    @Test
+    fun `a minor key is read from its m`() {
+        assertEquals(listOf("A" to "harmonic_minor"), rootAndFirst(song("Am Dm E", key = "A minor")))
+        assertEquals(listOf("A" to "harmonic_minor"), rootAndFirst(song("Am Dm E", key = "Am")))
+        assertEquals(listOf("A" to "major"), rootAndFirst(song("A D E", key = "Amaj")))
+    }
+
+    @Test
+    fun `an eight-note answer is never taken on another root`() =
+        assertTrue(groups(song("Am Am/G# Am/G D/F# Fmaj7 G Am", key = "Am")).none { it.rootName == "D" })
 }

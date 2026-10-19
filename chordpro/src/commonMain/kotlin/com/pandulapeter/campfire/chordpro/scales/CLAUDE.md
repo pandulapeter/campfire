@@ -21,7 +21,9 @@
   play order, the first group they still share a scale with (their own kind's, then the last, then any), so a verse
   after a modulated solo goes back to the verses. Groups are decided on scales of at most seven notes: an eight-note
   scale's passing tone would let a major verse and a Mixolydian chorus share one. Roots: the key in force (`{key}`, or
-  the key a `{transpose}` names), then the first, last, and most played chord roots. **The song is read as it stands**:
+  the key a `{transpose}` names) where its scale holds the chords, else the best scored root (chords on it, the first
+  and last, cadences into it) a major or minor scale holds them on, a Mixolydian or Dorian centre only where the part
+  starts on it or the key names it. **The song is read as it stands**:
   the transposer has moved the chords after a `{transpose}` and renamed its key before a page shows them, so a
   `{transpose}` is never applied here, or a modulated verse would read two steps up. Chorus recalls are not counted
   again; a section no scale holds is left out.
