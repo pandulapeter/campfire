@@ -133,6 +133,22 @@ internal fun normalizedCollisionSuffix(index: Int) = LibraryFiles.NAME_SEPARATOR
 internal fun arrivingCollisionSuffix(index: Int) = " ($index)"
 
 /**
+ * The number [arrivingCollisionSuffix] gave this name as a variant of [name] in [uniqueName], under any case or Unicode
+ * form ([LibraryFiles.identityKey]), or null if it is not such a variant. Read loosely and then checked by building the
+ * variant again, so the naming rule stays the one [uniqueName] follows.
+ */
+internal fun String.arrivingVariantNumberOf(name: String): Int? {
+    val extension = name.knownExtension()
+    val base = name.removeSuffix(extension)
+    val key = LibraryFiles.identityKey(this)
+    val withoutExtension = key.removeSuffix(LibraryFiles.identityKey(extension))
+    val number = ARRIVING_VARIANT_NUMBER.find(withoutExtension)?.groupValues?.get(1)?.toIntOrNull() ?: return null
+    return number.takeIf { it >= 2 && LibraryFiles.identityKey(base + arrivingCollisionSuffix(it) + extension) == key }
+}
+
+private val ARRIVING_VARIANT_NUMBER = Regex("""\((\d+)\)$""")
+
+/**
  * Whether this file is already named [desired], the number a collision may have added included: a file that had to
  * make way for another one is named as well as it can be, and an offer to rename it again would be one that never
  * goes away however often it is taken.

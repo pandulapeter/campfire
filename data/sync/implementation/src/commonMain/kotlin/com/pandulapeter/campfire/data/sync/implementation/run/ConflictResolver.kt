@@ -94,11 +94,22 @@ internal class ConflictResolver(
         // Under the lock like every other write: the repositories pick a free name and write under it in two steps too,
         // and would otherwise be given the one this is. The write and its notice finish together once started, so a Stop
         // never leaves a copy on disk that the library does not list.
-        val copyName = libraryFileLock.withLock {
+        val (copyName, isReused) = libraryFileLock.withLock {
             withContext(NonCancellable) {
-                libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) { name ->
-                    SyncKey(kind = key.kind, name = name).folded().name in remoteNames
-                }.also { onLocalFileChanged(SyncKey(kind = key.kind, name = it)) }
+                // A copy an earlier attempt left - one the network cut off before the file was settled - already holds
+                // the incoming version, and another one each attempt would pile up identical songs on every device.
+                // Not one the folder lost since it went up: this pass deletes it here, and the version with it.
+                val reusable = libraryFileLocalSource.numberedVariantHolding(key.kind, key.name, remote)
+                    ?.takeUnless { name -> SyncKey(kind = key.kind, name = name).isDeletedElsewhere(pass, remoteNames) }
+                if (reusable != null) {
+                    reusable to true
+                } else {
+                    val written = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) { name ->
+                        SyncKey(kind = key.kind, name = name).folded().name in remoteNames
+                    }
+                    onLocalFileChanged(SyncKey(kind = key.kind, name = written))
+                    written to false
+                }
             }
         }
         val copyKey = SyncKey(kind = key.kind, name = copyName)
@@ -111,15 +122,17 @@ internal class ConflictResolver(
             throw exception
         } catch (exception: Exception) {
             // The service answered, and the answer was no. The remote version is where it was, and a copy kept now would
-            // be joined by another one every time this file is resolved again.
-            discardCopy(copyKey, remote, onLocalFileChanged)
+            // be joined by another one every time this file is resolved again. A reused copy is never taken back: the
+            // file may have been overwritten since it was made, and it may already be indexed and uploaded, where a
+            // deletion here would become one in the folder.
+            if (!isReused) discardCopy(copyKey, remote, onLocalFileChanged)
             throw exception
         }
         if (uploaded !is RemoteWriteResult.Written) {
             // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
             // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
             val isOwnWrite = provider.download(key.kind, key.name).bytes.contentEquals(localBytes)
-            if (!isOwnWrite) discardCopy(copyKey, remote, onLocalFileChanged)
+            if (!isOwnWrite && !isReused) discardCopy(copyKey, remote, onLocalFileChanged)
             return SyncEngine.OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),
                 isUnresolved = true,
@@ -136,6 +149,12 @@ internal class ConflictResolver(
             entries = entries,
             summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
         )
+    }
+
+    /** Whether the folder held this file once (the pass's index has it) and no longer lists it: deleted elsewhere. */
+    private fun SyncKey.isDeletedElsewhere(pass: SyncPass, remoteNames: Set<String>): Boolean {
+        val folded = folded()
+        return folded.name !in remoteNames && pass.index.keys.any { it.folded() == folded }
     }
 
     /**

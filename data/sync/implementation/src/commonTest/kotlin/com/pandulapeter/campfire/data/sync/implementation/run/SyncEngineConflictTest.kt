@@ -289,6 +289,89 @@ class SyncEngineConflictTest {
     }
 
     @Test
+    fun `retries cut off by the network leave one copy`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { key -> if (key == song(1)) throw SyncNetworkException("Offline") }
+        // What the runner keeps of an attempt that fails: the index as the engine last reported it.
+        var index = indexOf(song(1) to ORIGINAL)
+        val keepIndex: suspend (() -> SyncIndexDocument) -> Unit = { snapshot -> index = snapshot() }
+
+        repeat(3) {
+            assertFailsWith<SyncNetworkException> { synchronize(local, provider, index, onIndexChanged = keepIndex) }
+        }
+        provider.onUpload = {}
+        assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, index, onIndexChanged = keepIndex))
+
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        assertEquals(setOf(song(1), copy), local.files.keys)
+        assertEquals(setOf(song(1), copy), provider.files.keys)
+        assertContentEquals(THERE, local.files[copy])
+        assertContentEquals(THERE, provider.files.getValue(copy).first)
+        assertContentEquals(HERE, local.files[song(1)])
+        assertContentEquals(HERE, provider.files.getValue(song(1)).first)
+    }
+
+    @Test
+    fun `a contested upload whose check is cut off by the network leaves one copy`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        // Another device writes the file again under the upload, and the download that checks what is there now fails.
+        provider.onUpload = { key -> if (key == song(1)) provider.files[key] = THERE to "r9" }
+        var downloads = 0
+        provider.onDownload = { key -> if (key == song(1) && ++downloads == 2) throw SyncNetworkException("Offline") }
+
+        assertFailsWith<SyncNetworkException> { synchronize(local, provider, indexOf(song(1) to ORIGINAL)) }
+        provider.onUpload = {}
+        provider.onDownload = {}
+        synchronize(local, provider, indexOf(song(1) to ORIGINAL))
+
+        assertEquals(setOf("song_1.cho", "song_1 (2).cho"), local.files.keys.map { it.name }.toSet())
+        assertEquals(setOf("song_1.cho", "song_1 (2).cho"), provider.files.keys.map { it.name }.toSet())
+    }
+
+    @Test
+    fun `a reused copy is not taken back when the service refuses the upload`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        // Left by an earlier attempt that the network cut off.
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to THERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
+
+        synchronize(local, provider, indexOf(song(1) to ORIGINAL))
+
+        assertContentEquals(THERE, local.files[copy])
+    }
+
+    @Test
+    fun `a copy deleted on another device is not reused`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to THERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+
+        val first = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, indexOf(song(1) to ORIGINAL, copy to THERE)))
+        synchronize(local, provider, first.index)
+
+        val copies = local.files.filter { (key, bytes) -> key != song(1) && bytes.contentEquals(THERE) }.keys
+        assertEquals(1, copies.size)
+        assertContentEquals(THERE, provider.files.getValue(copies.single()).first)
+        assertContentEquals(HERE, local.files[song(1)])
+        assertContentEquals(HERE, provider.files.getValue(song(1)).first)
+    }
+
+    @Test
+    fun `a numbered file with other bytes is not reused`() = runTest {
+        val other = "Another song".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, song("song_1 (2)") to other))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+
+        synchronize(local, provider, indexOf(song(1) to ORIGINAL))
+
+        assertContentEquals(other, local.files[song("song_1 (2)")])
+        assertContentEquals(THERE, local.files[song("song_1 (3)")])
+    }
+
+    @Test
     fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {
         val another = "Another song".encodeToByteArray()
         val local = FakeLibraryFileLocalSource(files = mapOf(song("x") to HERE))

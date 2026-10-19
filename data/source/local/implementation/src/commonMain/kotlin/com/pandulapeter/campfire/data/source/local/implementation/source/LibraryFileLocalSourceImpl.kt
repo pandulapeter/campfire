@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.F
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
 import com.pandulapeter.campfire.data.source.local.implementation.arrivingCollisionSuffix
+import com.pandulapeter.campfire.data.source.local.implementation.arrivingVariantNumberOf
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -49,6 +50,14 @@ internal class LibraryFileLocalSourceImpl(
         fileStorage.writeBytes(kind.directory, name, bytes)
         return name
     }
+
+    override suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String? = fileStorage
+        .listNames(kind.directory)
+        .mapNotNull { candidate -> candidate.arrivingVariantNumberOf(name)?.let { number -> number to candidate } }
+        .sortedBy { (number, _) -> number }
+        // Bytes rather than a hash from the pass's listing: the file may have changed since, and this runs under the lock.
+        .firstOrNull { (_, candidate) -> fileStorage.readBytes(kind.directory, candidate)?.contentEquals(bytes) == true }
+        ?.second
 
     override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.delete(kind.directory, name)
 

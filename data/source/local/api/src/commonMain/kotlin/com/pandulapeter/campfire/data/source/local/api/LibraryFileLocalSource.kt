@@ -51,6 +51,13 @@ interface LibraryFileLocalSource {
         isTaken: (name: String) -> Boolean = { false },
     ): String
 
+    /**
+     * The first existing numbered variant of [name] - a name [writeLibraryFileToFreeName] could have given a copy of it,
+     * under any case or Unicode form - whose bytes are exactly [bytes], or null. Sync asks before writing a conflict
+     * copy, so that one incoming version gets one copy however many attempts it takes to settle the file.
+     */
+    suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String?
+
     suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String)
 
     /**

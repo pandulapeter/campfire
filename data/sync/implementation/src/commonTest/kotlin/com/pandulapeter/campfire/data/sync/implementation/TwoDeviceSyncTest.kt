@@ -14,9 +14,11 @@ import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferences
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Two devices taking turns against one cloud folder, each run seeing what the other device's did, through the real
@@ -85,6 +87,25 @@ class TwoDeviceSyncTest {
         a.sync(cloud)
 
         // The device that found the other's edit in the folder keeps its own under the name and the other's as the copy.
+        val expected = sharedContents() + ("song_1.cho" to "Edited on B") + ("song_1 (2).cho" to "Edited on A")
+        assertEverywhere(expected, a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `a conflict settled over a failing network leaves one copy on both devices`() = runTest {
+        val (a, b) = devicesInStep()
+        a.library.files[song(1)] = "Edited on A".encodeToByteArray()
+        b.library.files[song(1)] = "Edited on B".encodeToByteArray()
+        a.sync(cloud)
+        cloud.onUpload = { key -> if (key == song(1)) throw SyncNetworkException("Offline") }
+        repeat(2) {
+            assertFailsWith<SyncNetworkException> { b.syncResult(cloud, SyncDeletionPolicy.ASK) }
+        }
+        cloud.onUpload = {}
+        b.sync(cloud)
+        a.sync(cloud)
+
         val expected = sharedContents() + ("song_1.cho" to "Edited on B") + ("song_1 (2).cho" to "Edited on A")
         assertEverywhere(expected, a, b)
         assertConverges(a, b)

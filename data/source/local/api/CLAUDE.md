@@ -42,7 +42,8 @@ platform types. One multiplatform implementation, with platform differences in `
   unreadable, cancellation propagates. Nothing stored, no network.
 - `LibraryFileLocalSource`: the library as bytes for sync. Never looks inside files, so unparseable songs still travel;
   lists with the same rule as the scan (`LibraryFiles.isSongFileName` / `isSetlistFileName`). `writeLibraryFileToFreeName`
-  lands a conflict copy as ` (2)` on a name also free in the cloud folder.
+  lands a conflict copy as ` (2)` on a name also free in the cloud folder; `numberedVariantHolding` finds one that
+  already holds the incoming bytes, so sync reuses it instead of writing another.
 - `SetlistComparison`: sync's one look inside a file (setlists differing only in their day, and a file before a read
   dated it). False or null for non-setlist bytes.
 - `CoverArtLocalSource`: bytes under a caller-derived key, outside `library/` (never exported, synced, or backed up).

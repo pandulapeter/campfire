@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /** The copy sync brings down of a file changed on both sides lands next to what is there, never over it. */
 class LibraryFileLocalSourceImplTest {
@@ -68,6 +69,35 @@ class LibraryFileLocalSourceImplTest {
 
         assertEquals("Song (3).cho", name)
         assertContentEquals(OTHER, localSource.readLibraryFile(LibraryFileKind.SONG, "song (2).cho"))
+    }
+
+    @Test
+    fun `a numbered variant holding the incoming bytes is found past one holding others`() = runTest {
+        val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (2).cho", OTHER)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (3).cho", REMOTE)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (4).cho", REMOTE)
+
+        assertEquals("song_1 (3).cho", localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+    }
+
+    @Test
+    fun `a numbered variant is matched under another case`() = runTest {
+        val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "SONG_1 (2).CHO", REMOTE)
+
+        assertEquals("SONG_1 (2).CHO", localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+    }
+
+    @Test
+    fun `names that only look like numbered variants are not`() = runTest {
+        val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1.cho", REMOTE)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_12.cho", REMOTE)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (2) copy.cho", REMOTE)
+
+        assertNull(localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
     }
 
     private companion object {

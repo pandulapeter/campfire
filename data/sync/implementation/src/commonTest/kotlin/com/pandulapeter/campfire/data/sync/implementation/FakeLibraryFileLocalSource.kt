@@ -64,6 +64,20 @@ internal class FakeLibraryFileLocalSource(
         return name
     }
 
+    /** The variants [writeLibraryFileToFreeName] names, compared by their exact spelling. */
+    override suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String? {
+        val extension = name.substringAfter('.', "")
+        val base = name.substringBefore('.')
+        val variant = Regex("""${Regex.escape(base)} \((\d+)\)\.${Regex.escape(extension)}""")
+        return files.entries
+            .filter { (key, _) -> key.kind == kind }
+            .mapNotNull { (key, stored) -> variant.matchEntire(key.name)?.let { it.groupValues[1].toInt() to (key.name to stored) } }
+            .sortedBy { (number, _) -> number }
+            .firstOrNull { (_, file) -> file.second.contentEquals(bytes) }
+            ?.second
+            ?.first
+    }
+
     override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) {
         val key = SyncKey(kind = kind, name = name)
         onDelete(key)
