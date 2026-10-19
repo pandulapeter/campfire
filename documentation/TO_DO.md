@@ -15,14 +15,13 @@
 
 ## Midterm (in the next versions)
 - Rename master branch to main
-- Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
+- Shared setlists via Dropbox public links -> deeplink to Campfire: documentation/plans/song-links.md - allow scanning deep links via QR code
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
+- Scale / mode library
 - Global sync status display
 
 ## Long-term
 - Streaming zip writer on all platforms
-- More backup importers (OnSong and other songbook apps)
-- Scale / mode library
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
