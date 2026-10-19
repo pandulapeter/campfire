@@ -118,7 +118,10 @@ internal fun AppUpdateGate(
         ) {
             AppUpdateRequiredScreen(
                 onUpdate = controller::startUpdate,
-                onContinueOffline = if (controller.canContinueOffline) controller::continueOffline else null,
+                // Continuing offline is what hides the screen, and it stops being possible in the same frame: the
+                // button is kept through the fade out, or the centred content would slide while it leaves.
+                // continueOffline does nothing once it is no longer possible.
+                onContinueOffline = if (controller.canContinueOffline || !isRequiredScreenVisible) controller::continueOffline else null,
                 onClose = controller::closeApp,
             )
         }
