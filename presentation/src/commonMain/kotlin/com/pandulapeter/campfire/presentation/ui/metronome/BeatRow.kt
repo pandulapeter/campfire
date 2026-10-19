@@ -64,7 +64,7 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
- * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
+ * One block per beat of the bar, centered in its column and as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
  * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
  *
@@ -157,7 +157,7 @@ internal fun BeatRow(
             (placeable to x.roundToInt()).also { x += width }
         }
         layout(constraints.maxWidth, height) {
-            placed.forEach { (placeable, offset) -> placeable.placeRelative(offset, height - placeable.height) }
+            placed.forEach { (placeable, offset) -> placeable.placeRelative(offset, (height - placeable.height) / 2) }
         }
     }
 }
@@ -231,7 +231,7 @@ private fun BeatBlock(
                     }
                 },
             ),
-        contentAlignment = Alignment.BottomCenter,
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
