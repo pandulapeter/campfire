@@ -61,7 +61,7 @@ Remotion is not open source: free for individuals and companies of up to three p
   guitars, recorded rather than synthesized drums, no bells.
 - Bar 16 is one thing a beat: the laptop in dark on the downbeat (where the music goes to E), the light theme sweeping
   across it on the second with the whoosh alone (`LIGHT_FROM`), then the iPad and the phone. Dark everywhere else.
-- The whoosh is clearly heard: `whoosh(..., 3.0)`, about 9.5 dB over the first level, which was too quiet.
+- The whoosh is clearly heard: `whoosh(..., 3.0)` (`soundtrack.py`).
 
 ## Known limits
 
