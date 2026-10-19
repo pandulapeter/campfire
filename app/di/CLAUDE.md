@@ -9,12 +9,12 @@
 -->
 # :app:di
 
-The Koin application, in `CampfireDependencyGraph.kt`: a `campfire-library` module called by all four entry points,
-and the one shared module allowed to depend on `implementation` modules, so their list is written once.
+The Koin application, in `CampfireDependencyGraph.kt`: a `campfire-library` module called by the four entry points and
+`:tools:screenshots`, and the one shared module allowed to depend on `implementation` modules, so their list is written
+once.
 
 - `CampfireDependencyGraph` (`@KoinApplication`) names every module object; adding a Koin module means adding it there.
-  The compiler plugin validates the whole graph here (so this module recompiles every build — the `strictSafety` line
-  in the Gradle output).
+  The compiler plugin validates the whole graph here (so this module recompiles every build).
 - `startCampfireDependencyGraph(configuration)` starts Koin globally (not the `KoinApplication` composable: the graph
   belongs to the process, and `koinViewModel()` finds the global instance). Android passes `androidContext` (the one
   `@Provided` dependency); the others pass nothing.
