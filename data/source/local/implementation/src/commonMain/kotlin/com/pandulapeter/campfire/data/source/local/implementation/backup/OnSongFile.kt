@@ -78,7 +78,7 @@ internal object OnSongFile {
             run.clear()
             if (text.isBlank()) return
             written += when {
-                INLINE_CHORD.findAll(text).any { ChordProChords.parse(it.groupValues[1]) != null } -> text
+                INLINE_CHORD.findAll(text).any { it.groupValues[2].isNotEmpty() || ChordProChords.parse(it.groupValues[1]) != null } -> text
                 else -> ChordSheetConverter.convertFragment(text, String::normalizedToNfc)?.trimEnd() ?: ChordSheetLyrics.escaped(text)
             }
         }
@@ -100,6 +100,10 @@ internal object OnSongFile {
 
     private val LABELLED_LINE = Regex("""([A-Za-z]+):\s*(.*)""")
 
-    /** A bracket that may hold a chord: a section heading such as `[Chorus]` or `[Bridge]` has the same shape, so a match is checked. */
-    private val INLINE_CHORD = Regex("""\[([A-G][^\]\s]*)]""")
+    /**
+     * A bracket that may hold a chord. A section heading such as `[Chorus]` or `[Bridge]` has the same shape, so one is
+     * taken for a chord only where it is set against a syllable or reads as a chord name, which keeps an annotated
+     * `[G*]Down` as it is written.
+     */
+    private val INLINE_CHORD = Regex("""\[([A-G][^\]\s]*)](\S?)""")
 }

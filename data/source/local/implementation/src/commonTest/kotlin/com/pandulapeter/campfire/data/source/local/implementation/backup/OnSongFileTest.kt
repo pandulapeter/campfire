@@ -90,6 +90,13 @@ class OnSongFileTest {
     }
 
     @Test
+    fun `a chord set against a syllable is kept as written even where it reads as no chord name`() {
+        val text = read("Riverlight\nThe Invented Band\n\n[G*]Down by the river")
+
+        assertTrue("[G*]Down by the river" in text, text)
+    }
+
+    @Test
     fun `a body of lyrics only is escaped`() {
         val text = read("Riverlight\n\nDown by [the] river\n# not a comment")
 
