@@ -48,13 +48,9 @@ numbers nothing to count from.
 
 - The stepper (`TextTranspositionControls`) mirrors the details screen's, but rewrites the file text: no amount or
   reset; it shows the song's key, or `?`. Either a `{key}` or a chord enables it.
-- Title, artist, and "anything to transpose" come from one `ChordProSummaryCache`, which re-parses only on a keystroke
-  that could change them.
 - Every whole-text rewrite keeps the caret and selection next to their text: transposition
   (`ChordProTransposer.transposedOffset`), Prettify (`ChordProPrettifier.prettifiedOffset`), sheet edits, save
   respelling, and file-follow (`editedOffset`). A revert keeps the offset.
-- Whether Prettify would change anything is computed only while the menu is open (`isEnabledInMenu`), never per
-  keystroke.
 - In documents over 50,000 characters (`LONG_DOCUMENT_LENGTH`), a whole-document rewrite (transposition, revert,
   Replace all of several matches) clears the undo history first, since each is recorded as the whole text twice.
 
@@ -93,27 +89,21 @@ numbers nothing to count from.
   a field being typed in keeps focus across a change that still shows it (rotation, resize across Split).
 - Insertion rows leave whenever only the preview shows.
 - `ChordProOutputTransformation` colours tokens like the viewer (and draws search matches); unreadable directive values
-  (`{time: 5/7}`) are drawn whole in the error colour. It runs on every caret move, hence `ChordProTokenCache`, which
-  keeps the last `ChordProHighlighting` so an edit re-reads only the lines it changes, and takes `LoadedSongEditor`'s
-  derived string rather than copying the text a second time.
+  (`{time: 5/7}`) are drawn whole in the error colour.
 
 ## Preview
 
-- Parsed and split into sections off the main thread once typing pauses; the previous rendering stays meanwhile.
 - **Shows the text as written**: none of the reader's transposition (the file's own `{transpose}` applies), and it
   ignores the Chords and Metronome switches (`shouldShowChords = true`, no `shouldShowTempo`), since it shows what is
   being written. The text size preference reaches the preview but not the field (the field is source, and scaling would
   break tab columns).
 - Split stacks the song in one column (`isSingleColumn`), since columns reshuffling on every keystroke hide the line
   being typed; Preview alone lays out like the details screen.
-- The About the song card's tiles open their editors directly (`rememberSongInfoEditing`, present even for an empty
-  song).
 
 ## Unsaved text and the draft
 
-- The screen reports the text as typed (`onEditorTextChanged`) without saving; `hasUnsavedEditorChanges` is measured
-  from it. A field nobody typed in follows its file (see `ui/state/songText/CLAUDE.md`), so only the user's own text is
-  ever unsaved.
+- Unsaved text is the field's, measured by `hasUnsavedEditorChanges`; an untouched field follows its file
+  (`ui/state/songText/CLAUDE.md`).
 - Every way out goes through `Navigator.navigateBack`, which asks `UnsavedChanges` (save / discard / cancel).
   The draft lives in the view model because that dialog saves it.
 - **The dialog's Save leaves only after the write succeeded** (`saveEditorChangesAndLeave`): until then the editor
@@ -126,10 +116,9 @@ numbers nothing to count from.
 ## A new song from a pasted or shared text
 
 - Opened by `EditorSession.openNewSongEditor` on `NEW_SONG_FILE_NAME`, which no file has: nothing is read, nothing is
-  written before Save, and nothing is synced. The text is shaped like a new song (`DraftSongFromTextUseCase`: localized
-  placeholders for a missing title and artist, the template's header lines) with the placeholder title selected. Its
-  draft goes to disk at once (it is then the only copy of an iOS share) and survives process death like any draft.
-- Always unsaved, so Close asks; its Discard leaves nothing behind. Revert is off (no file to go back to).
-- **Save needs a title** (`Message.NewSongUntitled` otherwise; a kept placeholder is a title). The text is written byte
-  for byte under its header's name, numbered if taken (`CreateSongFromTextUseCase`); the draft and field follow the file,
-  and the editor goes on over the song's details screen.
+  written before Save, and nothing is synced. The text is shaped like a new song (`DraftSongFromTextUseCase`: for a
+  missing title and artist, the share's page title and artist (`sharedTextTitle`, see `presentation/CLAUDE.md`), else
+  localized placeholders; the template's header lines), with the filled-in title selected. Its draft goes to disk at
+  once (it is then the only copy of an iOS share) and survives process death like any draft.
+- Always unsaved, so Close asks; its Discard leaves nothing behind. **Save needs a title** (`Message.NewSongUntitled`;
+  a kept placeholder is a title); Revert is off.
