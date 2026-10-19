@@ -12,7 +12,7 @@
 Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI shared by all) for viewing and editing
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
-zip archives, and other apps' backups, picked in the app, opened with it, or shared to it (Android, the iOS share
+zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the app, opened with it, or shared to it (Android, the iOS share
 extension). Every module has a `CLAUDE.md` of its own, as does every `:presentation` source set and every package with
 something the code cannot say; read the nearest one before changing code there.
 
@@ -66,7 +66,7 @@ library/songs/*.cho                    one song per file; the file name is its i
 library/setlists/*.setlist.json        one setlist per file
 preferences/preferences.json           UserPreferences; never exported (.bad keeps the last undecodable one)
 preferences/sync-credentials.json      desktop and web; Keystore (sync-credentials.bin) / Keychain on Android / iOS
-preferences/sync-index.json            what the last successful sync run saw
+preferences/sync-index.json            what sync last saw of both sides, file by file
 preferences/sync-credentials-forget-pending
 preferences/editor-draft.json          the editor's unsaved text, survives process death
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
@@ -80,11 +80,13 @@ campfire.log / campfire.log.1          desktop only: bounded process log
 
 - Modules apply the convention plugins in `gradle/build-logic` (`campfire-library`, `campfire-compose-library`).
   Sources in `src/commonMain/kotlin`; platform code in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via
-  `expect`/`actual`, JVM code shared by Android and desktop in `jvmSharedMain`. `:app:*` and `:app:baselineprofile` are
-  single-platform; every other module is multiplatform.
+  `expect`/`actual`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*` modules,
+  `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module (`:app:di` included) is
+  multiplatform.
 - Shared code is JVM-free (the `code-style` skill lists the replacements).
 - Implementation classes are `internal`, named `<Interface>Impl`; use cases are `operator fun invoke`. Layers are
-  crossed through `mapper/` packages. `:chordpro` and `:metronome:api` use `explicitApi()`.
+  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, and
+  `:tuner:api` use `explicitApi()`.
 - Formatting is checked: `.editorconfig` + Spotless/ktlint (`./gradlew spotlessApply`), and
   `.github/scripts/check_license_headers.py` requires the MPL-2.0 header in every source file, script, workflow, XML
   resource, and `CLAUDE.md`. The rest of the style is the `code-style` skill's.
@@ -159,19 +161,20 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
 - The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
-- The app links only to the website's downloads and its own store's rating page: `ui/screens/settings`.
+- The app links only to its website, GitHub, the author's site, donations, and its own store's rating page:
+  `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
 - Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordpro/convert`.
-- Other apps' backups are read as archives (SongbookPro translated): `domain/implementation`,
-  `data/source/local/implementation`.
+- Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports);
+  backups are read as archives: `domain/implementation`, `data/source/local/implementation`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
 - Imports are reviewed before writing (a lone song file opened, shared, or dropped only when its name is taken);
   existing files are skipped, collisions numbered or replaced after confirmation: `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
-  included, with placeholders for a missing title and artist; nothing is written before Save, which needs a title; never
-  a link followed: `presentation`.
+  included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
+  Save, which needs a title; never a link followed: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), never in read
   only mode: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
@@ -201,14 +204,14 @@ Pure logic is tested in `commonTest`, run on the desktop target; a few UI tests 
 desktop JVM, and a release is still checked by hand. Add or update tests with every change to tested logic.
 
 ```
-./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest
+./gradlew desktopTest                      # every module's commonTest, on the desktop target
 ./gradlew -p gradle :build-logic:test      # packaging helpers
 ./gradlew :tools:screenshots:test          # UI tests: the whole app driven offscreen (tools/screenshots/CLAUDE.md)
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
-beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header check, and
-compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than `documentation/`
+beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header and size
+checks, and compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than `documentation/`
 (a newer push cancels the older run), and before `publish-all.yml` builds anything.
 
 ## Build
