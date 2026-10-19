@@ -162,10 +162,28 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")") || ChordSheetHeadings.repeat.matches(value)
-    private fun chordTokens(line: Rendered): List<Token>? = tokens(line.text).takeIf { words ->
-        words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordSheetHeadings.repeat.matches(value)
+    private fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
+
+    /**
+     * A row of chords, and the playing note it may end in, `G   D   (let ring)`. The note is kept apart from the
+     * tokens, which every rule that judges the row reads, and is written after the line rather than set as a chord.
+     */
+    private class ChordRow(val tokens: List<Token>, val annotation: String?)
+
+    private fun chordRow(line: Rendered): ChordRow? {
+        val words = tokens(line.text)
+        val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
+            start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
+        } ?: words.size
+        val row = words.take(start)
+        if (row.none { rowChord(it.text) } || !row.all { rowChord(it.text) || furniture(it.text) }) return null
+        return ChordRow(row, line.text.substring(words.getOrNull(start)?.index ?: line.text.length).trim().ifEmpty { null })
     }
+
+    /** A chord of a chord row, where a star marks the one a footnote under the song explains (`C*`). */
+    private fun rowChord(value: String) = chord(value.removeSuffix("*").removeSuffix("*"))
+    private fun rowChordName(value: String) = ascii(value.removeSuffix("*").removeSuffix("*").removeSurrounding("(", ")"))
     /** The punctuation that marks an extracted heading is not part of the section's name. */
     private fun headingLabel(text: String) = ChordSheetHeadings.parse(text)?.label
         ?: text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":").trim()
@@ -336,7 +354,7 @@ public object ChordSheetConverter {
     private fun chordCandidates(lines: List<Rendered>): List<List<Token>?> {
         val hasLatinChords = lines.any { line -> tokens(line.text).any { isLatinChordBeyondNote(it.text) } }
         return lines.map(::chordTokens).map { row ->
-            row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> chord(word.text) }.all { word -> isBareLatinNote(word.text) } }
+            row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> rowChord(word.text) }.all { word -> isBareLatinNote(word.text) } }
         }
     }
 
@@ -346,10 +364,11 @@ public object ChordSheetConverter {
         return parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
     }
 
-    private fun bracketed(row: List<Token>) = row.joinToString(" ") { if (chord(it.text)) "[${ascii(it.text.removeSurrounding("(", ")"))}]" else it.text }
+    private fun bracketed(row: List<Token>, annotation: String?) = row.joinToString(" ") { if (rowChord(it.text)) "[${rowChordName(it.text)}]" else it.text } +
+        annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
 
     private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
-        val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
+        val hasUnambiguousChords = candidates.any { it != null && it.count { word -> rowChord(word.text) } > 1 }
         val parsed = lines.map { ChordSheetHeadings.parse(it.text) }
         val hasStructure = hasUnambiguousChords || parsed.any { it != null }
         // A word that is as likely sung is a heading where a chord row or a blank line follows it, as one does a heading.
@@ -366,9 +385,9 @@ public object ChordSheetConverter {
                 headings[index] -> Kind.SECTION
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
-                candidate != null && (candidate.count { chord(it.text) } > 1 ||
-                    candidate.count { chord(it.text) } == 1 &&
-                    candidate.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
+                candidate != null && (candidate.count { rowChord(it.text) } > 1 ||
+                    candidate.count { rowChord(it.text) } == 1 &&
+                    candidate.filter { rowChord(it.text) }.all { it.text.first().isUpperCase() } &&
                     headings.getOrNull(index - 1) == true &&
                     lines.getOrNull(index + 1)?.let { it.text.isBlank() || headings[index + 1] } != false ||
                     (hasUnambiguousChords || isStyledChordLine(line, candidate, lines.getOrNull(index + 1))) &&
@@ -511,7 +530,7 @@ public object ChordSheetConverter {
                     if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted) {
                         output += merge(line, lines[index + 1], convertParentheses)
                         index++
-                    } else output += bracketed(candidates[index]!!)
+                    } else output += bracketed(candidates[index]!!, chordRow(line)?.annotation)
                 }
                 Kind.LYRIC -> output += inline(line, convertParentheses)
                 Kind.BLANK -> output += ""
@@ -600,7 +619,8 @@ public object ChordSheetConverter {
         val prefixMaxEnd = DoubleArray(spans.size)
         for (index in spans.indices) prefixMaxEnd[index] = maxOf(spans[index].end, prefixMaxEnd.getOrNull(index - 1) ?: Double.NEGATIVE_INFINITY)
         var previous = 0
-        for (word in chordTokens(chords).orEmpty().filter { chord(it.text) }) {
+        val row = chordRow(chords)
+        for (word in row?.tokens.orEmpty().filter { rowChord(it.text) }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             if (lyrics.positions.isEmpty()) at = 0
@@ -629,7 +649,7 @@ public object ChordSheetConverter {
             }
             at = at.coerceAtLeast(previous)
             previous = at
-            insertions.getOrPut(at) { mutableListOf() } += "[${ascii(word.text.removeSurrounding("(", ")"))}]"
+            insertions.getOrPut(at) { mutableListOf() } += "[${rowChordName(word.text)}]"
         }
         val escaped = ChordProLiteralText.escape(lyrics.text)
         val merged = buildString {
@@ -647,7 +667,8 @@ public object ChordSheetConverter {
             }
         }
         // Inline conversion uses different offsets after insertion; convert those tokens in the merged string.
-        return if (convertParentheses) parentheses.replace(merged) { if (chord(it.groupValues[1])) "[${ascii(it.groupValues[1])}]" else it.value } else merged
+        val converted = if (convertParentheses) parentheses.replace(merged) { if (chord(it.groupValues[1])) "[${ascii(it.groupValues[1])}]" else it.value } else merged
+        return converted + row?.annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
     }
 
     /** An insertion or replacement must leave a supplementary character whole. */

@@ -482,6 +482,40 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a chord row may end in a parenthesized playing note`() {
+        assertEquals("[G]I walked alone [D]until the dawn (let ring)\n", convert("G              D               (let ring)\nI walked alone until the dawn"))
+        assertEquals("[G]Hello [D]world\n[Am]Hold on (hold)\n", convert("G     D\nHello world\nAm      (hold)\nHold on"))
+        assertEquals("[G]One [D]two [Em]three [C]four (palm mute)\n", convert("G   D   Em    C     (palm mute)\nOne two three four"))
+        assertEquals("{comment: Outro}\n[Am] (hold)\n", convert("[Outro]\nAm (hold)"))
+        assertTrue(convert("Verse 1\nC     G\nHello world\n\nOutro\nG (fade out)").endsWith("{comment: Outro}\n[G] (fade out)\n"))
+    }
+
+    @Test
+    fun `a starred chord is the chord`() {
+        val result = convert("Em             C*\nThe river runs beside the road\n\n*C played with open G")
+        assertTrue(result.startsWith("[Em]The river runs [C]beside the road\n"), result)
+        assertTrue(result.endsWith("*C played with open G\n"), result)
+    }
+
+    @Test
+    fun `trailing dots are furniture`() {
+        assertEquals("[G]Hello [D]world\n", convert("G     D   ...\nHello world"))
+        assertEquals("[G] [D] ...\n", convert("G  D ..."))
+    }
+
+    @Test
+    fun `isChordLine stays strict about stars and notes`() {
+        assertFalse(ChordSheetConverter.isChordLine("Em C*"))
+        assertFalse(ChordSheetConverter.isChordLine("G D (let ring)"))
+    }
+
+    @Test
+    fun `a parenthesized note does not make the sheet one of parenthesized chords`() {
+        val result = convert("G              D               (let ring)\nI walked alone until the dawn\nand then (Am) I sang\nwith (my) friends (all) night")
+        assertTrue("and then (Am) I sang" in result, result)
+    }
+
+    @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
         assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
     }
