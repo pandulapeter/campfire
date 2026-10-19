@@ -22,9 +22,22 @@ import com.pandulapeter.campfire.presentation.resources.scales_steps_half
 import com.pandulapeter.campfire.presentation.resources.scales_steps_whole
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
-/** The name of [scale], or its id where this version has none for it. */
+/** The name of [scale] as it stands alone, or its id where this version has none for it. */
 @Composable
-internal fun scaleName(scale: Scale) = scaleNameResource(scale.id)?.let { stringResource(it) } ?: scale.id
+internal fun scaleName(scale: Scale) = standaloneScaleName(scaleTitleName(scale))
+
+/**
+ * A scale's name as it stands alone, on its own rather than after a key: the title form the strings hold ("natural
+ * minor", "dúr"), its first letter a capital.
+ */
+internal fun standaloneScaleName(titleForm: String) = titleForm.replaceFirstChar { it.titlecase() }
+
+/**
+ * The name of [scale] as a title puts it after its key, each language's way of writing a key: "C major", "D Dorian",
+ * "C-dúr". Or its id where this version has none for it.
+ */
+@Composable
+private fun scaleTitleName(scale: Scale) = scaleNameResource(scale.id)?.let { stringResource(it) } ?: scale.id
 
 /**
  * The other names of [scale] in the app's language, comma-separated, or its English ones where this version has no
@@ -34,10 +47,10 @@ internal fun scaleName(scale: Scale) = scaleNameResource(scale.id)?.let { string
 internal fun scaleAliases(scale: Scale): String? =
     scaleAliasesResource(scale.id)?.let { stringResource(it) } ?: scale.aliases.joinToString(", ").ifEmpty { null }
 
-/** [scale] in the key of [rootName], a note in the standard notation, named in [notation]: "C Dorian". */
+/** [scale] in the key of [rootName], a note in the standard notation, named in [notation]: "C Dorian", "C-dúr". */
 @Composable
 internal fun scaleTitle(scale: Scale, rootName: String, notation: ChordNotation) =
-    stringResource(Res.string.scales_sheet_title, shownChordName(rootName, notation), scaleName(scale))
+    stringResource(Res.string.scales_sheet_title, shownChordName(rootName, notation), scaleTitleName(scale))
 
 /** What a screen reader says of a diagram of [scale] on [rootName]: the scale, then its notes. */
 @Composable
@@ -47,7 +60,7 @@ internal fun scaleDiagramDescription(scale: Scale, rootName: String, notation: C
     shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
 )
 
-/** The steps between the notes of [scale], the last closing the octave, as a chart writes them: `W W H W W W H`. */
+/** The steps between the notes of [scale], the last closing the octave, as a chart writes them: `W W H W W W H`, or in Hungarian `1 1 ½ 1 1 1 ½`. */
 @Composable
 internal fun scaleStepsText(scale: Scale): String {
     val whole = stringResource(Res.string.scales_steps_whole)

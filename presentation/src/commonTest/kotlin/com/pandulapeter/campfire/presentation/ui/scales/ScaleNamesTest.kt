@@ -28,4 +28,11 @@ class ScaleNamesTest {
 
     @Test
     fun `a degree is shown with the accidental signs`() = assertEquals(listOf("1", "♭3", "♯4", "♭♭7"), listOf("1", "b3", "#4", "bb7").map(::displayedDegree))
+
+    @Test
+    fun `a scale's name standing alone starts with a capital`() {
+        assertEquals("Natural minor", standaloneScaleName("natural minor"))
+        assertEquals("Dúr", standaloneScaleName("dúr"))
+        assertEquals("Dorian", standaloneScaleName("Dorian"))
+    }
 }

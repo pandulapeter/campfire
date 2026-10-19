@@ -626,19 +626,21 @@
     <string name="scales_common_heading">Common scales</string>
     <!-- Over the scales of the picked family and key, e.g. "Major modes in C". -->
     <string name="scales_heading">%1$s in %2$s</string>
-    <!-- A scale in a key, its root first, e.g. "C Dorian". -->
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
     <string name="scales_sheet_title">%1$s %2$s</string>
-    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C Major: C D E F G A B". -->
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
     <string name="scales_diagram">%1$s: %2$s</string>
     <string name="scales_labels_degrees">Degrees</string>
     <string name="scales_labels_notes">Notes</string>
     <string name="scales_labels_show_notes">Show note names</string>
     <string name="scales_labels_show_degrees">Show degrees</string>
-    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. -->
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
     <string name="scales_steps_whole">W</string>
     <string name="scales_steps_half">H</string>
     <string name="scales_steps_augmented">3</string>
-    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C Major" for D Dorian. -->
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
     <string name="scales_mode_of">Mode %1$s of %2$s</string>
     <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
     <string name="scales_also_called">Also called %1$s</string>
@@ -657,35 +659,35 @@
     <string name="song_details_scales_and_unnamed_several">%1$s, and the parts without a heading</string>
     <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
     <string name="song_details_scales_over">Over %1$s</string>
-    <string name="scale_major">Major</string>
+    <string name="scale_major">major</string>
     <string name="scale_dorian">Dorian</string>
     <string name="scale_phrygian">Phrygian</string>
     <string name="scale_lydian">Lydian</string>
     <string name="scale_mixolydian">Mixolydian</string>
-    <string name="scale_natural_minor">Natural minor</string>
+    <string name="scale_natural_minor">natural minor</string>
     <string name="scale_locrian">Locrian</string>
-    <string name="scale_harmonic_minor">Harmonic minor</string>
+    <string name="scale_harmonic_minor">harmonic minor</string>
     <string name="scale_locrian_natural_6">Locrian ♮6</string>
     <string name="scale_ionian_sharp_5">Ionian ♯5</string>
     <string name="scale_dorian_sharp_4">Dorian ♯4</string>
     <string name="scale_phrygian_dominant">Phrygian dominant</string>
     <string name="scale_lydian_sharp_2">Lydian ♯2</string>
-    <string name="scale_ultralocrian">Ultralocrian</string>
-    <string name="scale_melodic_minor">Melodic minor</string>
+    <string name="scale_ultralocrian">ultralocrian</string>
+    <string name="scale_melodic_minor">melodic minor</string>
     <string name="scale_dorian_flat_2">Dorian ♭2</string>
     <string name="scale_lydian_augmented">Lydian augmented</string>
     <string name="scale_lydian_dominant">Lydian dominant</string>
     <string name="scale_mixolydian_flat_6">Mixolydian ♭6</string>
     <string name="scale_locrian_natural_2">Locrian ♮2</string>
-    <string name="scale_altered">Altered</string>
-    <string name="scale_harmonic_major">Harmonic major</string>
-    <string name="scale_double_harmonic">Double harmonic</string>
+    <string name="scale_altered">altered</string>
+    <string name="scale_harmonic_major">harmonic major</string>
+    <string name="scale_double_harmonic">double harmonic</string>
     <string name="scale_hungarian_minor">Hungarian minor</string>
     <string name="scale_hungarian_major">Hungarian major</string>
     <string name="scale_neapolitan_major">Neapolitan major</string>
     <string name="scale_neapolitan_minor">Neapolitan minor</string>
-    <string name="scale_major_pentatonic">Major pentatonic</string>
-    <string name="scale_minor_pentatonic">Minor pentatonic</string>
+    <string name="scale_major_pentatonic">major pentatonic</string>
+    <string name="scale_minor_pentatonic">minor pentatonic</string>
     <string name="scale_egyptian">Egyptian</string>
     <string name="scale_man_gong">Man Gong</string>
     <string name="scale_ritusen">Ritusen</string>
@@ -695,28 +697,28 @@
     <string name="scale_iwato">Iwato</string>
     <string name="scale_kumoi">Kumoi</string>
     <string name="scale_chinese">Chinese</string>
-    <string name="scale_blues">Blues</string>
-    <string name="scale_major_blues">Major blues</string>
-    <string name="scale_major_hexatonic">Major hexatonic</string>
-    <string name="scale_minor_hexatonic">Minor hexatonic</string>
+    <string name="scale_blues">blues</string>
+    <string name="scale_major_blues">major blues</string>
+    <string name="scale_major_hexatonic">major hexatonic</string>
+    <string name="scale_minor_hexatonic">minor hexatonic</string>
     <string name="scale_prometheus">Prometheus</string>
-    <string name="scale_tritone">Tritone</string>
-    <string name="scale_whole_tone">Whole tone</string>
-    <string name="scale_augmented">Augmented</string>
-    <string name="scale_diminished">Diminished (whole–half)</string>
-    <string name="scale_dominant_diminished">Dominant diminished (half–whole)</string>
-    <string name="scale_chromatic">Chromatic</string>
-    <string name="scale_bebop_dominant">Bebop dominant</string>
-    <string name="scale_bebop_major">Bebop major</string>
-    <string name="scale_bebop_dorian">Bebop Dorian</string>
-    <string name="scale_bebop_melodic_minor">Bebop melodic minor</string>
-    <string name="scale_bebop_harmonic_minor">Bebop harmonic minor</string>
+    <string name="scale_tritone">tritone</string>
+    <string name="scale_whole_tone">whole tone</string>
+    <string name="scale_augmented">augmented</string>
+    <string name="scale_diminished">diminished (whole–half)</string>
+    <string name="scale_dominant_diminished">dominant diminished (half–whole)</string>
+    <string name="scale_chromatic">chromatic</string>
+    <string name="scale_bebop_dominant">bebop dominant</string>
+    <string name="scale_bebop_major">bebop major</string>
+    <string name="scale_bebop_dorian">bebop Dorian</string>
+    <string name="scale_bebop_melodic_minor">bebop melodic minor</string>
+    <string name="scale_bebop_harmonic_minor">bebop harmonic minor</string>
     <string name="scale_persian">Persian</string>
     <string name="scale_enigmatic">Enigmatic</string>
     <string name="scale_oriental">Oriental</string>
-    <string name="scale_major_locrian">Major Locrian</string>
+    <string name="scale_major_locrian">major Locrian</string>
     <string name="scale_lydian_minor">Lydian minor</string>
-    <string name="scale_leading_whole_tone">Leading whole tone</string>
+    <string name="scale_leading_whole_tone">leading whole tone</string>
     <string name="scale_flamenco">Flamenco</string>
     <string name="scale_spanish_eight_tone">Spanish eight-tone</string>
     <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->

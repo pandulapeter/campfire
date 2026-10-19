@@ -626,19 +626,21 @@
     <string name="scales_common_heading">Gyakori skálák</string>
     <!-- Over the scales of the picked family and key, e.g. "Major modes in C". -->
     <string name="scales_heading">%1$s (%2$s)</string>
-    <!-- A scale in a key, its root first, e.g. "C Dorian". -->
-    <string name="scales_sheet_title">%1$s %2$s</string>
-    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C Major: C D E F G A B". -->
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
+    <string name="scales_sheet_title">%1$s-%2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
     <string name="scales_diagram">%1$s: %2$s</string>
     <string name="scales_labels_degrees">Fokok</string>
     <string name="scales_labels_notes">Hangok</string>
     <string name="scales_labels_show_notes">Hangnevek mutatása</string>
     <string name="scales_labels_show_degrees">Fokok mutatása</string>
-    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. -->
-    <string name="scales_steps_whole">E</string>
-    <string name="scales_steps_half">F</string>
-    <string name="scales_steps_augmented">3</string>
-    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C Major" for D Dorian. -->
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
+    <string name="scales_steps_whole">1</string>
+    <string name="scales_steps_half">½</string>
+    <string name="scales_steps_augmented">1½</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
     <string name="scales_mode_of">%2$s, %1$s. modus</string>
     <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
     <string name="scales_also_called">Más néven %1$s</string>
@@ -657,36 +659,36 @@
     <string name="song_details_scales_and_unnamed_several">%1$s és a cím nélküli részek</string>
     <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
     <string name="song_details_scales_over">%1$s akkordhoz</string>
-    <string name="scale_major">Dúr</string>
-    <string name="scale_dorian">Dór</string>
-    <string name="scale_phrygian">Fríg</string>
-    <string name="scale_lydian">Líd</string>
-    <string name="scale_mixolydian">Mixolíd</string>
-    <string name="scale_natural_minor">Természetes moll</string>
-    <string name="scale_locrian">Lokriszi</string>
-    <string name="scale_harmonic_minor">Összhangzatos moll</string>
-    <string name="scale_locrian_natural_6">Lokriszi ♮6</string>
-    <string name="scale_ionian_sharp_5">Ión ♯5</string>
-    <string name="scale_dorian_sharp_4">Dór ♯4</string>
-    <string name="scale_phrygian_dominant">Fríg domináns</string>
-    <string name="scale_lydian_sharp_2">Líd ♯2</string>
-    <string name="scale_ultralocrian">Ultralokriszi</string>
-    <string name="scale_melodic_minor">Dallamos moll</string>
-    <string name="scale_dorian_flat_2">Dór ♭2</string>
-    <string name="scale_lydian_augmented">Bővített líd</string>
-    <string name="scale_lydian_dominant">Líd domináns</string>
-    <string name="scale_mixolydian_flat_6">Mixolíd ♭6</string>
-    <string name="scale_locrian_natural_2">Lokriszi ♮2</string>
-    <string name="scale_altered">Alterált</string>
-    <string name="scale_harmonic_major">Összhangzatos dúr</string>
-    <string name="scale_double_harmonic">Kettős összhangzatos</string>
-    <string name="scale_hungarian_minor">Magyar moll</string>
-    <string name="scale_hungarian_major">Magyar dúr</string>
-    <string name="scale_neapolitan_major">Nápolyi dúr</string>
-    <string name="scale_neapolitan_minor">Nápolyi moll</string>
-    <string name="scale_major_pentatonic">Dúr pentaton</string>
-    <string name="scale_minor_pentatonic">Moll pentaton</string>
-    <string name="scale_egyptian">Egyiptomi</string>
+    <string name="scale_major">dúr</string>
+    <string name="scale_dorian">dór</string>
+    <string name="scale_phrygian">fríg</string>
+    <string name="scale_lydian">líd</string>
+    <string name="scale_mixolydian">mixolíd</string>
+    <string name="scale_natural_minor">természetes moll</string>
+    <string name="scale_locrian">lokriszi</string>
+    <string name="scale_harmonic_minor">összhangzatos moll</string>
+    <string name="scale_locrian_natural_6">lokriszi ♮6</string>
+    <string name="scale_ionian_sharp_5">ión ♯5</string>
+    <string name="scale_dorian_sharp_4">dór ♯4</string>
+    <string name="scale_phrygian_dominant">fríg domináns</string>
+    <string name="scale_lydian_sharp_2">líd ♯2</string>
+    <string name="scale_ultralocrian">ultralokriszi</string>
+    <string name="scale_melodic_minor">dallamos moll</string>
+    <string name="scale_dorian_flat_2">dór ♭2</string>
+    <string name="scale_lydian_augmented">bővített líd</string>
+    <string name="scale_lydian_dominant">líd domináns</string>
+    <string name="scale_mixolydian_flat_6">mixolíd ♭6</string>
+    <string name="scale_locrian_natural_2">lokriszi ♮2</string>
+    <string name="scale_altered">alterált</string>
+    <string name="scale_harmonic_major">összhangzatos dúr</string>
+    <string name="scale_double_harmonic">kettős összhangzatos</string>
+    <string name="scale_hungarian_minor">magyar moll</string>
+    <string name="scale_hungarian_major">magyar dúr</string>
+    <string name="scale_neapolitan_major">nápolyi dúr</string>
+    <string name="scale_neapolitan_minor">nápolyi moll</string>
+    <string name="scale_major_pentatonic">dúr pentaton</string>
+    <string name="scale_minor_pentatonic">moll pentaton</string>
+    <string name="scale_egyptian">egyiptomi</string>
     <string name="scale_man_gong">Man Gong</string>
     <string name="scale_ritusen">Ritusen</string>
     <string name="scale_hirajoshi">Hirajoshi</string>
@@ -694,31 +696,31 @@
     <string name="scale_insen">Insen</string>
     <string name="scale_iwato">Iwato</string>
     <string name="scale_kumoi">Kumoi</string>
-    <string name="scale_chinese">Kínai</string>
-    <string name="scale_blues">Blues</string>
-    <string name="scale_major_blues">Dúr blues</string>
-    <string name="scale_major_hexatonic">Dúr hexaton</string>
-    <string name="scale_minor_hexatonic">Moll hexaton</string>
+    <string name="scale_chinese">kínai</string>
+    <string name="scale_blues">blues</string>
+    <string name="scale_major_blues">dúr blues</string>
+    <string name="scale_major_hexatonic">dúr hexaton</string>
+    <string name="scale_minor_hexatonic">moll hexaton</string>
     <string name="scale_prometheus">Prométheusz</string>
-    <string name="scale_tritone">Tritonusz</string>
-    <string name="scale_whole_tone">Egészhangú</string>
-    <string name="scale_augmented">Bővített</string>
-    <string name="scale_diminished">Szűkített (egész–fél)</string>
-    <string name="scale_dominant_diminished">Domináns szűkített (fél–egész)</string>
-    <string name="scale_chromatic">Kromatikus</string>
-    <string name="scale_bebop_dominant">Bebop domináns</string>
-    <string name="scale_bebop_major">Bebop dúr</string>
-    <string name="scale_bebop_dorian">Bebop dór</string>
-    <string name="scale_bebop_melodic_minor">Bebop dallamos moll</string>
-    <string name="scale_bebop_harmonic_minor">Bebop összhangzatos moll</string>
-    <string name="scale_persian">Perzsa</string>
-    <string name="scale_enigmatic">Enigmatikus</string>
-    <string name="scale_oriental">Keleti</string>
-    <string name="scale_major_locrian">Dúr lokriszi</string>
-    <string name="scale_lydian_minor">Líd moll</string>
-    <string name="scale_leading_whole_tone">Vezetőhangos egészhangú</string>
-    <string name="scale_flamenco">Flamenco</string>
-    <string name="scale_spanish_eight_tone">Spanyol nyolcfokú</string>
+    <string name="scale_tritone">tritonusz</string>
+    <string name="scale_whole_tone">egészhangú</string>
+    <string name="scale_augmented">bővített</string>
+    <string name="scale_diminished">szűkített (egész–fél)</string>
+    <string name="scale_dominant_diminished">domináns szűkített (fél–egész)</string>
+    <string name="scale_chromatic">kromatikus</string>
+    <string name="scale_bebop_dominant">bebop domináns</string>
+    <string name="scale_bebop_major">bebop dúr</string>
+    <string name="scale_bebop_dorian">bebop dór</string>
+    <string name="scale_bebop_melodic_minor">bebop dallamos moll</string>
+    <string name="scale_bebop_harmonic_minor">bebop összhangzatos moll</string>
+    <string name="scale_persian">perzsa</string>
+    <string name="scale_enigmatic">enigmatikus</string>
+    <string name="scale_oriental">keleti</string>
+    <string name="scale_major_locrian">dúr lokriszi</string>
+    <string name="scale_lydian_minor">líd moll</string>
+    <string name="scale_leading_whole_tone">vezetőhangos egészhangú</string>
+    <string name="scale_flamenco">flamenco</string>
+    <string name="scale_spanish_eight_tone">spanyol nyolcfokú</string>
     <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
     <string name="scale_aliases_major">Ión</string>
     <string name="scale_aliases_mixolydian">Domináns skála</string>
