@@ -250,17 +250,19 @@ private class Reader(private val test: AppTestScope, private val case: String) {
     private fun shortestViewport() = checkNotNull(test.songViewport()).unclippedBounds().height
 
     /**
-     * The pixels of [piece] from [top] to [bottom] below its top, seen on screen below the faded edge. A short window
-     * hides its app bar as the song is scrolled down, which the pedal's steps never do, and lays the song out again for
-     * the room that leaves, so the piece is found by its words wherever that puts it, and the song is brought there from
-     * further below than the bar is tall, which shows the bar again.
+     * The pixels of [piece] from [top] to [bottom] below its top, seen on screen below the faded edge, in the layout the
+     * pedal read it in. A short window hides its app bar as the song is scrolled down, which the pedal's steps never do,
+     * and lays the song out again for the room that leaves - set at another fitted text size, where its lines wrap
+     * elsewhere and a piece's words and occurrence name another line - and laid out once more when the bar comes back,
+     * which puts the reader back where they last rested rather than where the scroll was asked to go. So the song is
+     * brought past the piece by the pedal, and back up to it by a scroll, which never hides the bar.
      */
     private fun look(piece: Piece, top: Float, bottom: Float): PiecePixels {
         repeat(MAX_LOOK_ATTEMPTS) {
             val placed = placedPiece(piece)
             val maxValue = checkNotNull(test.songViewport()).config[SemanticsProperties.VerticalScrollAxisRange].maxValue()
             val target = floor(placed.bounds.top + top - EDGE_FADE_SIZE.value).coerceIn(0f, maxValue)
-            scrollTo((target + APPROACH).coerceAtMost(maxValue))
+            stepDownTo(target)
             val node = scrollTo(target)
             val bounds = node.unclippedBounds()
             val shown = placedPiece(piece)
@@ -284,6 +286,18 @@ private class Reader(private val test: AppTestScope, private val case: String) {
         val node = checkNotNull(test.songViewport())
         return songPieces(node, node.unclippedBounds().top - node.scroll()).singleOrNull { it.key == piece.key }
             ?: fail("$case: \"${piece.text}\" is gone once the song is scrolled by other means than the pedal.")
+    }
+
+    /** Presses the pedal's Down until the song is scrolled to [target] or further, or goes no further. */
+    private fun stepDownTo(target: Float) {
+        var scroll = checkNotNull(test.songViewport()).scroll()
+        while (scroll < target) {
+            test.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+            test.waitForIdle()
+            val stepped = checkNotNull(test.songViewport()).scroll()
+            if (stepped == scroll) return
+            scroll = stepped
+        }
     }
 
     private fun scrollTo(target: Float): SemanticsNode {
@@ -431,8 +445,6 @@ private const val MAX_STEPS = 500
 private const val MAX_SCROLL_ATTEMPTS = 10
 private const val MAX_LOOK_ATTEMPTS = 3
 
-/** Further than a short window's app bar is tall. */
-private const val APPROACH = 200f
 private const val OPEN_TIMEOUT_MILLIS = 10_000L
 private const val TOLERANCE = 0.5f
 private const val DESCENT_SAMPLE = "gjpqy"
