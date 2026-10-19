@@ -60,7 +60,7 @@ repository; the user reviews and commits.
 1. **Render.** `./gradlew :tools:screenshots:run` (in the background; one app start per image, a few seconds each)
    writes every shot of `Shot.kt` on every listing `Device`, the multi-device rows of `Banners.kt` and the website set of
    `Website.kt` into `tools/screenshots/renders/<row label>/`. `--args="--only IPHONE,03-metronome,banners"` renders
-   part of it (device enum names, shot ids, or `listing`, `banners`, `website`). A failed render is reported and the
+   part of it (device enum names, shot ids, or `listing`, `banners`, `website`, `promo`). A failed render is reported and the
    run goes on. Never rebuild the tool while a render is running.
 2. **Check every image before importing anything**: a contact sheet per shot (PIL), then any device that looks off at
    full size — the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting. Fix the
