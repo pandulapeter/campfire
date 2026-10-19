@@ -88,10 +88,12 @@ The worker `OpfsFileStorage` writes through where there is no `createWritable()`
 
 One Cache Storage cache, `campfire-web-app`, holds every file of a build under its versioned address and the page under
 the folder's address. Once the page holds the Web Lock (so one tab writes the cache) it registers `service-worker.js`
-and fetches `build.json` (`no-store`; `navigator.onLine` is not trusted). The cache is inspected once; the answer is
-awaited briefly (`answerWindow` in `campfire-launch`). The same build fills what the cache lacks and starts; another
-build is downloaded, its page stored last, and the page reloads once per build id per tab; no answer starts the kept
-build.
+and fetches `build.json` (`no-store`; `navigator.onLine` is not trusted). The cache is inspected once; `build.json` is
+waited for 3 s, or until 0.8 s into the launch when the kept build is whole (`answerWindow`). A late answer naming
+another build is noted (`campfire-update-waiting`) and the next launch waits the full 3 s, so an always-slow network
+still gets a release one launch later. The same build fills what the cache lacks and starts; another build is
+downloaded, its page stored last, and the page reloads once per build id per tab; no answer, or a failed update, starts
+the kept build. Downloads give up after 15 s without data (`STALL_TIMEOUT`), never on a total time.
 
 Rules:
 - **Storing the page last is the commit**: a kept build = kept page + every file its map names, so an interrupted update
@@ -138,10 +140,8 @@ the pure, golden-tested `webBuildManifest`):
 ## Sync authorization
 
 - The authorization itself is `data/source/remote/implementation/CLAUDE.md`'s OAuth section.
-- The answer lands on the songs address; `restore` reports the return and `CampfireViewModel` reopens where the button
-  was pressed (`SyncConsentOrigin` in session storage): Settings' Library tab (pushing `settings/general` then
-  `settings/library`) or the onboarding's Dropbox page. App history handling leaves the query string alone until the
-  authenticator has read it.
+- The answer lands on the songs address; where it reopens is `ui/sync/CLAUDE.md`. App history handling leaves the query
+  string alone until the authenticator has read it.
 
 ## Files in
 
