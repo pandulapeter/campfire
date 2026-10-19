@@ -67,10 +67,9 @@ import org.jetbrains.compose.resources.painterResource
  * grew from a line saying the search is running to a grid of covers moved while it was still sliding up, and again
  * with every catalogue that answered.
  *
- * A record whose thumbnail does not load is taken off the grid rather than left as an empty square: the archive only
- * says that a record has no cover by answering its address with nothing, and a cover that cannot be seen cannot be
- * chosen either — so one that was selected while it was still loading is let go of as it leaves, or Save would write an
- * address that answers nothing. A new search gives every record back its place and asks every thumbnail again, since
+ * A record can be chosen only once its thumbnail has loaded, or Save would write an address nobody has seen, and one
+ * whose thumbnail does not load is taken off the grid rather than left as an empty square: the archive only says that a
+ * record has no cover by answering its address with nothing. A new search gives every record back its place and asks every thumbnail again, since
  * the repository forgets the addresses it could not reach when a search starts, while a record really without a cover
  * is answered at once from its memory and drops out again.
  */
@@ -89,6 +88,9 @@ internal fun CoverArtSearchSheet(
     var selectedUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var unavailableKeys by rememberSaveable { mutableStateOf(emptySet<String>()) }
     var unreachableKeys by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    // Saved like the selection it vouches for, and kept across searches: a thumbnail that has loaded is in Coil's
+    // memory and draws again at once.
+    var loadedUrls by rememberSaveable { mutableStateOf(emptySet<String>()) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val query = CoverArtQuery(artist = artist, album = album, title = title)
     val search = {
@@ -110,7 +112,7 @@ internal fun CoverArtSearchSheet(
                 target = dialog.target,
                 canRemove = dialog.song.coverArtUrl != null,
                 canSave = when (mode) {
-                    CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl != dialog.song.coverArtUrl
+                    CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl in loadedUrls && selectedUrl != dialog.song.coverArtUrl
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
                 onRemove = {
@@ -165,8 +167,10 @@ internal fun CoverArtSearchSheet(
                     state = searchState,
                     unavailableKeys = unavailableKeys,
                     unreachableKeys = unreachableKeys,
+                    loadedUrls = loadedUrls,
                     selectedUrl = selectedUrl,
                     onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
+                    onLoaded = { candidate -> loadedUrls += candidate.coverArtUrl },
                     onUnavailable = { candidate, isUnreachable ->
                         unavailableKeys += candidate.key
                         if (isUnreachable) {

@@ -84,8 +84,10 @@ internal fun CoverArtResults(
     state: CoverArtSearchState,
     unavailableKeys: Set<String>,
     unreachableKeys: Set<String>,
+    loadedUrls: Set<String>,
     selectedUrl: String?,
     onSelected: (CoverArtCandidate) -> Unit,
+    onLoaded: (CoverArtCandidate) -> Unit,
     onUnavailable: (candidate: CoverArtCandidate, isUnreachable: Boolean) -> Unit,
     onRetry: () -> Unit,
     fields: @Composable () -> Unit,
@@ -149,7 +151,9 @@ internal fun CoverArtResults(
                         modifier = Modifier.animateItem(),
                         candidate = candidate,
                         isSelected = candidate.coverArtUrl == selectedUrl,
+                        isLoaded = candidate.coverArtUrl in loadedUrls,
                         onClick = { onSelected(candidate) },
+                        onLoaded = { onLoaded(candidate) },
                         onUnavailable = { isUnreachable -> onUnavailable(candidate, isUnreachable) },
                     )
                 }
@@ -242,12 +246,14 @@ private fun CoverArtTile(
     modifier: Modifier = Modifier,
     candidate: CoverArtCandidate,
     isSelected: Boolean,
+    isLoaded: Boolean,
     onClick: () -> Unit,
+    onLoaded: () -> Unit,
     onUnavailable: (isUnreachable: Boolean) -> Unit,
 ) = Column(
     modifier = modifier
         .clip(MaterialTheme.shapes.medium)
-        .selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
+        .selectable(selected = isSelected, enabled = isLoaded, role = Role.RadioButton, onClick = onClick)
         .padding(4.dp),
 ) {
     Box {
@@ -265,6 +271,7 @@ private fun CoverArtTile(
                 model = CoverArt(candidate.coverArtUrl),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                onSuccess = { onLoaded() },
                 // Anything but the fetcher's own refusal, a decode failure for one, is not a matter of the network.
                 onError = { state -> onUnavailable((state.result.throwable as? CoverArtUnavailableException)?.isUnreachable == true) },
             )
