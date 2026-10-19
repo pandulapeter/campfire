@@ -21,8 +21,7 @@ headers.
   it. Decided as the grid is measured (`measuresFastScrollerColumn`), with the flag of the composition that gave it its
   items: a coroutine would hear of the last batch after the screen recomposed as loaded. "Loaded" is the list's own
   `SongGroups.isLibraryRead` / `ListedSetlists.isLibraryRead`, since songs are indexed off the main thread and land
-  after `isLoading` turns off. The
-  column count always leaves room for it, so only card widths change.
+  after `isLoading` turns off. The column count always leaves room for it, so only card widths change.
 - **The column's width is read only while laying out** (`FastScrollerColumn.width` is a reader): the grid's end padding
   (`only(deferredExtraEnd = …)`), the headers' `endPadding`, and `LocalListItemTrailingKeylineAdjustment` (a `() -> Dp`
   provided once per column) all read it in measure or placement, as do the Done buttons' animated bottom rooms
