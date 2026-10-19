@@ -11,12 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,9 +33,10 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_de
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
-import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
+import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.noteName
@@ -46,51 +46,26 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The frequency of A4 everything is tuned from, stepped by a hertz or typed the way the tempo is (and reset to 440 from
- * the focused value the same way), next to a toggle that plays that A until it is tapped again. The label names the note
- * and the pill holds only the frequency, which keeps the pill narrow enough to stand beside its label on a phone.
+ * the focused value the same way), and a toggle that plays that A until it is tapped again: the pill and the filled
+ * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`). There is no label
+ * to read; a screen reader hears the note with the frequency.
  */
 @Composable
-internal fun ReferencePitchSetting(
-    referencePitch: Int,
-    notation: ChordNotation,
-    isReferenceTonePlaying: Boolean,
-    onReferencePitchChanged: (Int) -> Unit,
-    onToggleReferenceTone: () -> Unit,
-) {
-    LabeledControlRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        label = {
-            Text(
-                text = stringResource(Res.string.tuner_reference_pitch, noteNameWithOctave(REFERENCE_NOTE, notation)),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        },
-    ) {
-        ReferencePitchControls(
-            referencePitch = referencePitch,
-            notation = notation,
-            isReferenceTonePlaying = isReferenceTonePlaying,
-            onReferencePitchChanged = onReferencePitchChanged,
-            onToggleReferenceTone = onToggleReferenceTone,
-        )
-    }
-}
-
-/** The stepper and the tone toggle of [ReferencePitchSetting]. */
-@Composable
-private fun ReferencePitchControls(
+internal fun ReferencePitchControls(
+    modifier: Modifier = Modifier,
     referencePitch: Int,
     notation: ChordNotation,
     isReferenceTonePlaying: Boolean,
     onReferencePitchChanged: (Int) -> Unit,
     onToggleReferenceTone: () -> Unit,
 ) = Row(
+    modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    horizontalArrangement = Arrangement.spacedBy(NEW_ITEM_BUTTON_GAP),
 ) {
     Stepper(
         value = stringResource(Res.string.tuner_reference_pitch_value, referencePitch),
+        valueDescription = stringResource(Res.string.tuner_reference_pitch, noteNameWithOctave(REFERENCE_NOTE, notation), referencePitch),
         widestValues = Pitch.REFERENCE_PITCH_RANGE.let { listOf(it.first, it.last) }.map { stringResource(Res.string.tuner_reference_pitch_value, it) },
         isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
         decreaseIcon = painterResource(Res.drawable.ic_subtract),
@@ -107,14 +82,21 @@ private fun ReferencePitchControls(
         entry = StepperEntry(number = referencePitch, range = Pitch.REFERENCE_PITCH_RANGE, onEntered = onReferencePitchChanged),
     )
     val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
-    FilledTonalIconToggleButton(
+    FilledIconToggleButton(
+        modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
         checked = isReferenceTonePlaying,
         onCheckedChange = { onToggleReferenceTone() },
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            checkedContainerColor = MaterialTheme.colorScheme.primary,
+            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+        ),
     ) {
         PlayStopMark(
             modifier = Modifier.semantics { contentDescription = description },
             isPlaying = isReferenceTonePlaying,
-            size = 18.dp,
+            size = 20.dp,
             color = LocalContentColor.current,
         )
     }

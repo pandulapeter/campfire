@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.scales
 
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import kotlin.test.Test
@@ -39,11 +40,46 @@ class ScaleLibraryTest {
 
     private val hungarianAliases = mapOf("double_harmonic" to "Bizánci, Cigány dúr", "melodic_minor" to "Jazz-moll")
 
-    private fun search(query: String) =
-        scaleLibraryResults(familyIndex = 3, query = query, nameOf = { hungarian[it.id] ?: it.id }, aliasesOf = { hungarianAliases[it.id] }).map { it.id }
+    private fun results(query: String, notation: ChordNotation = ChordNotation.STANDARD) = scaleLibraryResults(
+        familyIndex = 3,
+        query = query,
+        keyName = "C",
+        notation = notation,
+        nameOf = { hungarian[it.id] ?: it.id },
+        aliasesOf = { hungarianAliases[it.id] },
+    )
+
+    private fun search(query: String) = results(query).scales.map { it.id }
 
     @Test
-    fun `a blank search lists the family picked`() = assertEquals(scaleLibraryScales(3), scaleLibraryResults(3, "  ", { it.id }, { null }))
+    fun `a blank search lists the family picked in the key`() =
+        assertEquals(ScaleLibraryResults("C", "", scaleLibraryScales(3)), results("  "))
+
+    @Test
+    fun `a search that starts with a note finds the rest on that note, whatever the key`() {
+        val dorian = results("d dor")
+        assertEquals("D", dorian.rootName)
+        assertEquals("dor", dorian.query)
+        assertTrue("dorian" in dorian.scales.map { it.id })
+        assertEquals("F#", results("f#-dur").rootName)
+        assertEquals("Bb", results("bb  mixolid").rootName)
+        assertEquals("B", results("h dur", ChordNotation.GERMAN).rootName)
+    }
+
+    @Test
+    fun `a search whose first word is no note alone is a name in the key`() {
+        assertEquals(ScaleLibraryResults("C", "dor #4", listOf(Scales.all.first { it.id == "dorian_sharp_4" })), results("dor #4"))
+        assertEquals("C", results("dm dor").rootName)
+        assertEquals("C", results("d/f# dor").rootName)
+    }
+
+    @Test
+    fun `a note the rest of which finds nothing is a name in the key`() {
+        val found = results("a maqam")
+        assertEquals("C", found.rootName)
+        assertEquals("a maqam", found.query)
+        assertTrue(found.scales.isEmpty())
+    }
 
     @Test
     fun `a search finds scales of every family by their name, ignoring case and accents`() {

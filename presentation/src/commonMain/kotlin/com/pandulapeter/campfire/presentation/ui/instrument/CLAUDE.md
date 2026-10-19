@@ -19,8 +19,8 @@ One instrument for the whole app.
   every caller goes through it.
 - Picked by two `PickerChip`s (`InstrumentChips.kt`; the tuning chip only for an instrument with more than one) opening
   `InstrumentSheet` / `TuningSheet`. They stand on the song details first section (read only included, since they change
-  a device preference), the Tuner tab (only while Chromatic is off), the Chords and the Scales tabs, Settings → Songs, and the
-  onboarding. Chromatic is the tuner's own switch (`TunerSettings.isChromatic`), not an instrument.
+  a device preference), the Tuner tab, the Chords and the Scales tabs, and the onboarding; never
+  Settings. Other is what the tuner reads every note for; there is no Chromatic switch.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
   no instrument: `withTuning` tunes the picked instrument, and chips ask `isStandard`.

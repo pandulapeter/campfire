@@ -13,7 +13,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -34,19 +38,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.scales_common_heading
-import com.pandulapeter.campfire.presentation.resources.scales_heading
+import com.pandulapeter.campfire.presentation.resources.scale_family_common
 import com.pandulapeter.campfire.presentation.resources.scales_instrument_other
 import com.pandulapeter.campfire.presentation.resources.scales_search
 import com.pandulapeter.campfire.presentation.resources.scales_search_heading
 import com.pandulapeter.campfire.presentation.resources.scales_search_no_scale
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.chords.LibraryKeyStepper
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
@@ -57,8 +62,10 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleName
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
+import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
+import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
@@ -73,16 +80,18 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * The Scales tab: every scale the app knows, on the instrument in the player's hands and its tuning, which the chips at
  * the top change for the whole app, as on the Chords tab. Unlike chord shapes, a scale needs nothing of an instrument but
  * its open strings, so every stringed instrument draws its scales, and Other draws them on a keyboard with a line saying
- * so. Under the key and the family, a heading and a cell per scale of that family ([scaleLibraryScales]), each opening the
- * scale sheet ([DialogType.Scale]).
+ * so. Under the search, with the key beside it, the families, and a cell per scale of the one picked
+ * ([scaleLibraryScales]), each opening the scale sheet ([DialogType.Scale]).
  *
  * The search under the controls, pinned once the cells pass under it, finds scales by name and other names across
- * every family ([scaleLibraryResults]); picking a family empties it. Everything is worked out in composition: the scales
+ * every family ([scaleLibraryResults]), and a search that starts with a note finds them on that note, whatever the key;
+ * picking a family empties it. Everything is worked out in composition: the scales
  * are a fixed list and each diagram is arithmetic, so the first frame is already the page.
  */
 @Composable
@@ -99,14 +108,14 @@ internal fun ScalesScreen(
     val keys = remember(spelling.accidentals) { libraryKeys(spelling.accidentals) }
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
     val instrumentTuning = userPreferences?.instrumentTuning
-    val rootName = keys[state.keyIndex.coerceIn(keys.indices)]
-    val root = ChordProChords.parse(rootName)?.root ?: 0
+    val keyName = keys[state.keyIndex.coerceIn(keys.indices)]
     val query = state.query
-    val names = Scales.all.associateWith { scaleName(it) }
-    val aliases = Scales.all.associateWith { scaleAliases(it) }
-    val scales = remember(state.familyIndex, query, names, aliases) { scaleLibraryResults(state.familyIndex, query, names::getValue, aliases::get) }
+    val results = rememberScaleLibraryResults(state.familyIndex, query, keyName, notation)
+    val rootName = results.rootName
+    val root = ChordProChords.parse(rootName)?.root ?: 0
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
     val familyScrollState = rememberRetainedScrollState(state.familyScrollPosition)
+    val familyLabels = listOf(stringResource(Res.string.scale_family_common)) + ScaleFamily.entries.map { stringResource(it.label) }
     ScrollToTopOnRequest(
         requests = viewModel.navigator.scrollToTopRequests,
         destination = CampfireDestination.Scales,
@@ -148,14 +157,8 @@ internal fun ScalesScreen(
                     instrument = instrument,
                     instrumentTuning = instrumentTuning,
                     notation = notation,
-                    keys = keys,
-                    selectedKeyIndex = state.keyIndex,
-                    selectedFamilyIndex = state.familyIndex,
-                    familyScrollState = familyScrollState,
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
-                    onKeySelected = { state.keyIndex = it },
-                    onFamilySelected = state::selectFamily,
                 )
             }
             pinnedSearchField(
@@ -165,7 +168,26 @@ internal fun ScalesScreen(
                 placeholder = searchPlaceholder,
                 focusRequests = state.searchFocusRequests,
                 onQueryChanged = { state.query = it },
-            )
+            ) {
+                LibraryKeyStepper(
+                    keys = keys,
+                    selectedIndex = state.keyIndex,
+                    notation = notation,
+                    onSelected = { state.keyIndex = it },
+                )
+            }
+            item(key = HEADER_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = HEADER_KEY) {
+                ScaleLibraryHeader(
+                    modifier = listItemAnimation(gridState),
+                    query = query.trim(),
+                    results = results,
+                    notation = notation,
+                    familyLabels = familyLabels,
+                    selectedFamilyIndex = state.familyIndex,
+                    familyScrollState = familyScrollState,
+                    onFamilySelected = state::selectFamily,
+                )
+            }
             if (instrument == UserPreferences.Instrument.OTHER) {
                 item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
                     ScaleLibraryMessage(
@@ -174,30 +196,17 @@ internal fun ScalesScreen(
                     )
                 }
             }
-            item(key = HEADING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = HEADING_KEY) {
-                ScaleLibraryHeading(
+            items(items = results.scales, key = { it.id }, contentType = { CELL_CONTENT_TYPE }) { scale ->
+                ScaleLibraryItem(
                     modifier = listItemAnimation(gridState),
-                    familyIndex = state.familyIndex,
-                    query = query.trim(),
-                    hasResults = scales.isNotEmpty(),
+                    scale = scale,
+                    root = root,
                     rootName = rootName,
                     notation = notation,
+                    instrument = instrument,
+                    instrumentTuning = instrumentTuning,
+                    onClick = { viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scale.id, rootName = rootName)) },
                 )
-            }
-            items(items = scales, key = { it.id }, contentType = { CELL_CONTENT_TYPE }) { scale ->
-                // Remembered for the reason ChordsScreen remembers its shapes: the item is composed again as every
-                // scroll starts and ends.
-                val geometry = remember(scale, root, instrumentTuning, instrument) {
-                    scaleDiagramGeometryOf(scale, root, instrumentTuning?.strings, instrument)
-                }
-                Box(modifier = listItemAnimation(gridState)) {
-                    ScaleLibraryCell(
-                        title = scaleTitle(scale, rootName, notation),
-                        geometry = geometry,
-                        description = scaleDiagramDescription(scale, rootName, notation),
-                        onClick = { viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scale.id, rootName = rootName)) },
-                    )
-                }
             }
         }
     }
@@ -205,41 +214,101 @@ internal fun ScalesScreen(
     QueryBackHandler(query = query, isDialogShown = visibleDialog != null, onCleared = { state.query = "" })
 }
 
-/**
- * What stands over the scales: the family and the key they are in, set the way the controls' titles are, or while a
- * search is typed, what it found them by, or that it found nothing. The line fades between finding and finding nothing,
- * as the Chords tab's message comes and goes; the words of a search change in place as they are typed.
- */
+/** [scaleLibraryResults] for the names and other names of the scales in the app's language. */
 @Composable
-private fun ScaleLibraryHeading(
+private fun rememberScaleLibraryResults(familyIndex: Int, query: String, keyName: String, notation: ChordNotation): ScaleLibraryResults {
+    val names = Scales.all.associateWith { scaleName(it) }
+    val aliases = Scales.all.associateWith { scaleAliases(it) }
+    return remember(familyIndex, query, keyName, notation, names, aliases) {
+        scaleLibraryResults(familyIndex, query, keyName, notation, names::getValue, aliases::get)
+    }
+}
+
+/** A scale's cell in the key, on the instrument in the player's hands, with the grid's placement animation as [modifier]. */
+@Composable
+private fun ScaleLibraryItem(
     modifier: Modifier = Modifier,
-    familyIndex: Int,
-    query: String,
-    hasResults: Boolean,
+    scale: Scale,
+    root: Int,
     rootName: String,
     notation: ChordNotation,
-) = Crossfade(
-    modifier = modifier.fillMaxWidth(),
-    targetState = query.isNotEmpty() && !hasResults,
-    label = "scaleLibraryHeading",
-) { isNothingFound ->
-    Text(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        text = when {
-            isNothingFound -> textResource(Res.string.scales_search_no_scale, query)
-            query.isEmpty() -> stringResource(
-                Res.string.scales_heading,
-                stringResource(ScaleFamily.entries.getOrNull(familyIndex - 1)?.label ?: Res.string.scales_common_heading),
-                shownChordName(rootName, notation),
-            )
-            else -> textResource(Res.string.scales_search_heading, query, shownChordName(rootName, notation))
-        },
-        style = MaterialTheme.typography.bodyLarge,
-        color = if (isNothingFound) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-    )
+    instrument: UserPreferences.Instrument,
+    instrumentTuning: InstrumentTuning?,
+    onClick: () -> Unit,
+) {
+    // Remembered for the reason ChordsScreen remembers its shapes: the item is composed again as every scroll starts and
+    // ends, and the placement animation goes on a box of its own for the same reason.
+    val geometry = remember(scale, root, instrumentTuning, instrument) {
+        scaleDiagramGeometryOf(scale, root, instrumentTuning?.strings, instrument)
+    }
+    Box(modifier = modifier) {
+        ScaleLibraryCell(
+            title = scaleTitle(scale, rootName, notation),
+            geometry = geometry,
+            description = scaleDiagramDescription(scale, rootName, notation),
+            onClick = onClick,
+        )
+    }
 }
+
+/**
+ * What stands over the scales: the families to pick from, in one line under the search, or while a search is typed, what
+ * it found them by, or that it found nothing, since a search looks across every family. The three fade into one another
+ * and the item's height follows, so the cells under it move rather than jump; the words of a search change in place as
+ * they are typed. The search's padding parts it from the field, and its own from the cells (TOOL_GROUP_GAP).
+ */
+@Composable
+private fun ScaleLibraryHeader(
+    modifier: Modifier = Modifier,
+    query: String,
+    results: ScaleLibraryResults,
+    notation: ChordNotation,
+    familyLabels: List<String>,
+    selectedFamilyIndex: Int,
+    familyScrollState: ScrollState,
+    onFamilySelected: (Int) -> Unit,
+) = AnimatedContent(
+    modifier = modifier.fillMaxWidth(),
+    targetState = when {
+        query.isEmpty() -> ScaleLibraryHeaderContent.FAMILIES
+        results.scales.isNotEmpty() -> ScaleLibraryHeaderContent.FOUND
+        else -> ScaleLibraryHeaderContent.NOTHING_FOUND
+    },
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
+    label = "scaleLibraryHeader",
+) { content ->
+    when (content) {
+        ScaleLibraryHeaderContent.FAMILIES -> ScaleFamilyRow(
+            modifier = Modifier
+                .bleedHorizontally(TOOL_PAGE_PADDING)
+                .padding(bottom = TOOL_GROUP_GAP - CELL_GAP),
+            labels = familyLabels,
+            selectedIndex = selectedFamilyIndex,
+            scrollState = familyScrollState,
+            onSelected = onFamilySelected,
+        )
+        ScaleLibraryHeaderContent.FOUND -> Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = TOOL_GROUP_GAP - CELL_GAP),
+            text = textResource(Res.string.scales_search_heading, results.query, shownChordName(results.rootName, notation)),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        // Set as the Chords tab sets its own search's empty state, which the tools' tabs switch between.
+        ScaleLibraryHeaderContent.NOTHING_FOUND -> Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 24.dp),
+            text = textResource(Res.string.scales_search_no_scale, query),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+private enum class ScaleLibraryHeaderContent { FAMILIES, FOUND, NOTHING_FOUND }
 
 /** Why the scales are drawn on a keyboard: no instrument has been picked whose strings they could be drawn on. */
 @Composable
@@ -249,7 +318,7 @@ private fun ScaleLibraryMessage(
 ) = Text(
     modifier = modifier
         .fillMaxWidth()
-        .padding(horizontal = 32.dp, vertical = 8.dp),
+        .padding(start = 32.dp, end = 32.dp, bottom = TOOL_GROUP_GAP - CELL_GAP),
     text = text,
     style = MaterialTheme.typography.bodyLarge,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -258,6 +327,6 @@ private fun ScaleLibraryMessage(
 
 private const val CELL_CONTENT_TYPE = "scale"
 private const val CONTROLS_KEY = "controls"
-private const val HEADING_KEY = "heading"
+private const val HEADER_KEY = "header"
 private const val MESSAGE_KEY = "message"
 private val CELL_GAP = 8.dp

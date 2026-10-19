@@ -27,11 +27,11 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableC
 import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
 
 /**
- * The Scales tab's families as one line of chips scrolling sideways, a radio group like the key row above it. Wrapped,
+ * The Scales tab's families as one line of chips scrolling sideways, a radio group, under the search. Wrapped,
  * the ten families took five lines of a phone and left no scale on the tab's first screen. The padding is inside the
  * scroll, so the first and last chips line up with the page, and the row fades at an end with more chips past it.
- * [scrollState] is the screen's, kept for the session, since the controls item that draws the row is disposed as it
- * scrolls out of the grid.
+ * [scrollState] is the screen's, kept for the session, since the row is disposed as it scrolls out of the grid and while a
+ * search stands in its place.
  */
 @Composable
 internal fun ScaleFamilyRow(

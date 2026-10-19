@@ -227,6 +227,14 @@ class RenderSectionsTest {
         )
     }
 
+    @Test
+    fun `a pre-chorus written without its hyphen is headed in the app's language too`() {
+        assertEquals(
+            listOf("Pre-refrén: lines", "Pre-refrén: lines"),
+            shape("{start_of_prechorus}\nla\n{end_of_prechorus}\n{start_of_pre_chorus}\nla\n{end_of_pre_chorus}"),
+        )
+    }
+
     /** The stretches of [text] as the song details screen lays them out, behind its metadata section. */
     private fun stretches(text: String): Pair<List<String>, TimingStretches> {
         val model = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels)

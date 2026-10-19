@@ -39,7 +39,7 @@ builds what it draws, `grid/` places it.
   nothing; otherwise each group lists its sections' page headings, a kind it holds whole said once ("Verse"), split
   kinds by number ("Verse 3"), headless parts as the rest of the song. A kind is said once only where the group holds
   every chorded section of it; a heading another group (or none) also has is numbered by occurrence ("Verse (3)"),
-  several headless groups are named by their first words, and a named group with headless parts says so. At most five chips a group, and three chords it leaves out, three chips each, titled "Over E7" in every song.
+  several headless groups are named by their first words, and a named group with headless parts says so. At most five chips a group, and three chords it leaves out, three chips each (the common scales where one holds the chord), titled "Over E7" in every song.
 - **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
   sheet.
 

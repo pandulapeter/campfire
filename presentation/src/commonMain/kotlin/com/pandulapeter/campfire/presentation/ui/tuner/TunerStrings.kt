@@ -12,11 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,7 +31,6 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -74,6 +71,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun TunerStrings(
+    modifier: Modifier = Modifier,
     tuning: InstrumentTuning,
     partners: List<Int>?,
     notation: ChordNotation,
@@ -82,7 +80,7 @@ internal fun TunerStrings(
     tunedNotes: Set<Int>,
     onToggleTone: (Int) -> Unit,
 ) = Column(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
 ) {
     StringRow(
         notes = tuning.strings,
@@ -93,18 +91,11 @@ internal fun TunerStrings(
         tunedNotes = tunedNotes,
         onToggleTone = onToggleTone,
     )
-    // Kept while it shrinks away, so that the row leaves as it was rather than as nothing. Not a state: nothing is redrawn
-    // because of it.
-    val lastPartners = remember { LastPartners() }
-    partners?.let { lastPartners.value = it }
-    AnimatedVisibility(
-        visible = partners != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
+    // Partners come and go with the instrument, which TunerStringsSetting crossfades as a whole.
+    partners?.let {
         StringRow(
             modifier = Modifier.padding(top = COURSE_GAP),
-            notes = lastPartners.value.orEmpty(),
+            notes = it,
             description = Res.string.tuner_string_pair,
             notation = notation,
             tone = tone,
@@ -221,6 +212,3 @@ private val STRING_CONTENT_PADDING = PaddingValues(
     end = 4.dp,
     bottom = SegmentedButtonDefaults.ContentPadding.calculateBottomPadding(),
 )
-
-/** The partners [TunerStrings] last drew. */
-private class LastPartners(var value: List<Int>? = null)

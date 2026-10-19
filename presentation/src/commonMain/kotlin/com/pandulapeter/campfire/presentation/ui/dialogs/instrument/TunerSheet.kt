@@ -132,6 +132,7 @@ internal fun TunerSheet(
                 tone = tone,
                 heardNote = heardNote,
                 tunedNotes = tunedNotes,
+                isTitled = true,
                 onToggleTone = viewModel.tunerController::toggleTunerTone,
             )
         }

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -92,9 +93,15 @@ class SongScaleGroupsTest {
     fun `an exception is named in the reader's notation, capped`() {
         val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Bb]two [F]three [G]four\n{end_of_verse}"), labels, ChordNotation.GERMAN)
         assertEquals(listOf("B"), german.single().exceptions.map { it.chordName })
-        val crowded = groups("[C]One [C]two [C]three [C]four [C]five [C]six [C]seven [F]x [G]x [F]x [G]x [A7]x [E7]x [D7]x [Bb]x [Ab]x")
+        val crowded = groups("[C]x [Dm]x [Em]x [F]x [G]x [Am]x [Cmaj7]x [Dm7]x [G7]x [Fmaj7]x [Am7]x [Em7]x [A7]x [E7]x [D7]x [Bb]x [C]x")
         assertEquals(MAX_GROUP_EXCEPTIONS, crowded.single().exceptions.size)
         assertTrue(crowded.single().exceptions.all { it.scales.size <= MAX_EXCEPTION_SCALES })
+    }
+
+    @Test
+    fun `an exception offers the common scales where one holds the chord`() {
+        val exception = groups("[C]One [F]two [G]three [E]four").single().exceptions.single()
+        assertTrue(exception.scales.isNotEmpty() && exception.scales.all { it in Scales.common })
     }
 
     @Test

@@ -16,7 +16,7 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
 
 - `TunerController` holds the settings (`UserPreferences.tunerSettings`, a `DebouncedPreference`), listening, tones, and
   `hasTurnedOnMicrophone` (device-only, never exported or synced). It listens for `tunerConfig`: the player's instrument
-  and tuning (`ui/instrument/`) plus Chromatic and reference pitch, and follows changes made on any screen.
+  and tuning (`ui/instrument/`; the keyboard and Other read every note) plus the reference pitch, and follows changes made on any screen.
 - **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes
   (closing the sheet, which belongs to the song under it), whenever the tuner sheet stops being the visible dialog, and
   on exit (`AppExitController`). `TunerListeningEffect` stops and restarts it with the screen's lifecycle (app hidden,
@@ -58,17 +58,22 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   forgotten when the microphone closes or the instrument changes.
 - `TunerStrings`: one segmented row (read as buttons, not radio buttons), names shrinking to fit eight strings on a
   phone. Paired-string instruments (`Instrument.courses`: mandolin, twelve-string) get a second row of partners; a
-  unison pair is one note to the tuner, so its segments act together. Hidden in chromatic mode; a row leaving is drawn
-  as it was but plays nothing (`isStringOf`).
-- **The tab alone** offers the Chromatic switch (`TunerSettings.isChromatic`; keyboard and Other are always chromatic),
-  the instrument and tuning chips while it is off, and the reference pitch. **The sheet offers neither**: it tunes to
-  the player's instrument and the tab's settings.
+  unison pair is one note to the tuner, so its segments act together. None for the keyboard and Other. Another instrument's
+  strings crossfade in while their room resizes unclipped; a row leaving is drawn as it was but plays nothing
+  (`isStringOf`).
+- **The tab alone** offers the instrument and tuning chips and the reference pitch; there is no Chromatic switch, since
+  Other reads every note. **The sheet offers neither**: it tunes to the player's instrument and the tab's settings.
 - **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
   note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
   spoken form for screen readers (`spokenNoteName`).
 
 ## Layout
 
-The tab pins the display above a `SettingsPage` of two titled sections, Tuning (notice, issue line, strings, Chromatic,
-instrument) and Calibration (reference pitch); it keeps the screen on while it hears. The sheet scrolls everything under
+The tab pins the tools' instrument row (`ui/instrument/ToolInstrumentSetting`, as the Chords and Scales tabs start):
+its title in a line of the list bar's height whose end holds the reference pitch, its stepper pill and a filled 48dp
+play circle exactly where the list screens' pill and New button stand (`NEW_ITEM_BUTTON_*`), and the chips under that
+line.
+The display follows, above a `SettingsPage` that is all header, as wide as the display (`headerColumns`): the notice,
+the issue line, and the strings, untitled and centered under the display (the sheet keeps their title). It keeps the
+screen on while it hears. The gaps are the tools' `TOOL_GROUP_GAP`. The sheet scrolls everything under
 its header: the same display at the same size (compact only in a short window), then the issue line and strings.

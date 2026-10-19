@@ -27,7 +27,7 @@
   the transposer has moved the chords after a `{transpose}` and renamed its key before a page shows them, so a
   `{transpose}` is never applied here, or a modulated verse would read two steps up. A chorus recall is counted again
   only where its chords differ from the chorus's (one after a `{transpose}`). Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
-  thirds of its chords answers, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
+  thirds of its chords answers, unless it leaves out more than two distinct chords and more than a third of them, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
   home's own harmonic minor, Dorian, or melodic minor where one does); below that floor the part is left out.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
   pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic

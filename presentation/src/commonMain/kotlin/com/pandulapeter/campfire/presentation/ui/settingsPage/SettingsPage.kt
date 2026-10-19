@@ -50,6 +50,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  *   system bars instead of stopping short of them.
  * @param header Rows above the sections that span every column, so that a control which reads as one row (the Tuner
  *   tab's strings) is not cut to the width of one column of a wide window.
+ * @param section Left out by a page that is all header (the Tuner tab).
+ * @param headerColumns How many columns the header spans where the window has room for them, for a page whose header
+ *   lines up with something wider than its sections (the Tuner tab's display); as many as the sections take otherwise.
  */
 @Composable
 internal fun SettingsPage(
@@ -58,7 +61,8 @@ internal fun SettingsPage(
     scrollState: ScrollState,
     contentPadding: PaddingValues,
     header: (@Composable ColumnScope.() -> Unit)? = null,
-    section: @Composable () -> Unit,
+    headerColumns: Int = 1,
+    section: (@Composable () -> Unit)? = null,
     secondSection: (@Composable () -> Unit)? = null,
 ) {
     val sections = listOfNotNull(section, secondSection)
@@ -72,9 +76,10 @@ internal fun SettingsPage(
             .padding(contentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
     ) {
         if (header != null) {
+            val headerSpan = maxOf(columns.size, minOf(headerColumns, sectionColumns), 1)
             Column(
                 // As wide as the columns under it at most, so that it ends where they do.
-                modifier = Modifier.widthIn(max = MAX_COLUMN_WIDTH * columns.size + SECTION_GAP * (columns.size - 1)).fillMaxWidth(),
+                modifier = Modifier.widthIn(max = MAX_COLUMN_WIDTH * headerSpan + SECTION_GAP * (headerSpan - 1)).fillMaxWidth(),
                 content = header,
             )
         }

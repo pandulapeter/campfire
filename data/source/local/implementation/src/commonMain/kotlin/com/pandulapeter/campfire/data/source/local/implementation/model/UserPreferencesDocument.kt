@@ -127,13 +127,13 @@ internal data class MetronomeSettingsDocument(
 
 /**
  * [instrument] is what the tuner listened for before it shared the instrument with the chord diagrams, its own tuning
- * id or `chromatic`: only read, for a document that has neither an instrument of its own nor [isChromatic], and never
- * written again. Its default is blank rather than the `chromatic` it once was, since that default was never written:
- * a document without the key is a tuner nobody set, which opens on the instrument like a fresh installation's.
+ * id or `chromatic`: only read, for a document that has no instrument of its own, and never written again (`chromatic`
+ * names no instrument, so the diagrams' is taken). Its default is blank rather than the `chromatic` it once was, since
+ * that default was never written: a document without the key is a tuner nobody set, which opens on the instrument like
+ * a fresh installation's.
  */
 @Serializable
 internal data class TunerSettingsDocument(
-    val isChromatic: Boolean? = null,
     val instrument: String = "",
     val referencePitch: Int = 440,
     val hasTurnedOnMicrophone: Boolean = false,

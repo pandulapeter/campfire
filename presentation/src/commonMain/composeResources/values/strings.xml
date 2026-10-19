@@ -384,7 +384,6 @@
     <string name="settings_accidentals_sharps">Sharps (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
     <string name="instrument">Instrument</string>
-    <string name="instrument_description">The instrument you play. Campfire draws its chord shapes and sets the tuner up for it.</string>
     <string name="instrument_choose">Choose instrument</string>
     <string name="instrument_tuning_standard">Standard tuning</string>
     <string name="instrument_tuning_choose">Choose tuning</string>
@@ -545,10 +544,6 @@
     <string name="tuner_reading_coarse_flat">%1$s, flat</string>
     <string name="tuner_reading_coarse_sharp">%1$s, sharp</string>
     <string name="tuner_reading_far_sharp">%1$s, far sharp</string>
-    <string name="tuner_group_tuning">Tuning</string>
-    <string name="tuner_group_calibration">Calibration</string>
-    <string name="tuner_chromatic">Chromatic</string>
-    <string name="tuner_chromatic_description">Reads the nearest note rather than the nearest string.</string>
     <string name="tuner_tuning_standard">Standard</string>
     <string name="tuner_tuning_half_step_down">Half step down</string>
     <string name="tuner_tuning_full_step_down">Full step down</string>
@@ -570,7 +565,8 @@
          Latin notation, "Do sharp". -->
     <string name="tuner_note_sharp_letter">%1$s sharp</string>
     <string name="tuner_note_sharp_syllable">%1$s sharp</string>
-    <string name="tuner_reference_pitch">Reference pitch (%1$s)</string>
+    <!-- How a screen reader reads the unlabeled reference pitch pill, e.g. "Reference pitch (A4), 440 Hz". -->
+    <string name="tuner_reference_pitch">Reference pitch (%1$s), %2$d Hz</string>
     <string name="tuner_reference_pitch_value">%1$d Hz</string>
     <string name="tuner_reference_pitch_decrease">Lower the reference pitch</string>
     <string name="tuner_reference_pitch_increase">Raise the reference pitch</string>
@@ -596,11 +592,14 @@
          Metronome and the Tuner -->
     <string name="chords">Chords</string>
     <string name="tools">Tools</string>
-    <!-- The row of chips picking the note the chords listed are built on. -->
-    <string name="chords_key">Key</string>
+    <!-- The two buttons of the pill beside the search stepping the key the chords and scales are listed in. -->
+    <string name="library_key_down">Key down a semitone</string>
+    <string name="library_key_up">Key up a semitone</string>
     <string name="chords_search">Find any chord</string>
     <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
     <string name="chords_common">Common %1$s chords</string>
+    <!-- Over the chords of the picked key a search found, e.g. "Chords matching “m7” in C". -->
+    <string name="chords_search_heading">Chords matching “%1$s” in %2$s</string>
     <string name="chords_instrument_other">Choose an instrument to see how its chords are played.</string>
     <string name="chords_instrument_without_diagrams">%1$s: no chord diagrams. Choose another instrument to see how its chords are played.</string>
     <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
@@ -623,9 +622,6 @@
     <string name="scale_family_symmetric">Symmetric</string>
     <string name="scale_family_bebop">Bebop</string>
     <string name="scale_family_world">World</string>
-    <string name="scales_common_heading">Common scales</string>
-    <!-- Over the scales of the picked family and key, e.g. "Major modes in C". -->
-    <string name="scales_heading">%1$s in %2$s</string>
     <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
          capitalized in code where a name stands alone. -->
     <string name="scales_sheet_title">%1$s %2$s</string>

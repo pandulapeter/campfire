@@ -223,13 +223,11 @@ private fun UserPreferencesDocument.tunings(): Map<String, String> {
 }
 
 internal fun TunerSettingsDocument.toModel() = TunerSettings(
-    isChromatic = isChromatic ?: (instrument == "chromatic"),
     referencePitch = referencePitch.coerceIn(TunerSettings.REFERENCE_PITCH_RANGE),
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )
 
 internal fun TunerSettings.toDocument() = TunerSettingsDocument(
-    isChromatic = isChromatic,
     referencePitch = referencePitch,
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )

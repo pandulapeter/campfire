@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.Scale
+import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
@@ -64,7 +65,7 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
             SongScaleException(
                 chordName = ChordProNotation.withAccidentalSigns(shownNames[exception.chordName] ?: exception.chordName),
                 rootName = exception.rootName,
-                scales = exception.scales.take(MAX_EXCEPTION_SCALES),
+                scales = exception.scales.filter { it in Scales.common }.ifEmpty { exception.scales }.take(MAX_EXCEPTION_SCALES),
             )
         }
     }

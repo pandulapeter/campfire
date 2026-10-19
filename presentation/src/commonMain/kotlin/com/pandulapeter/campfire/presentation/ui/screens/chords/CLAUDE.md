@@ -16,10 +16,12 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 
 ## What it shows
 
-- One lazy grid whose first item is the instrument and the key (`ChordLibraryControls`; side by side where both fit
-  unwrapped, `SideBySideWhenFits`), so they scroll away and a phone on its side keeps a row of diagrams above the
-  keyboard. The search under them is a sticky item
-  (`pinnedSearchField`, shared with the Scales tab): the way to every chord the key leaves out, so it stays reachable. The chords fade under
+- One lazy grid whose first item is the instrument (`ChordLibraryControls`, the tools' shared
+  `ToolInstrumentSetting`: its title in a line of the list bar's height, as on the Tuner tab, the chips under it), so it scrolls away and a phone on its side
+  keeps a row of diagrams above the keyboard. The search under it is a sticky item (`pinnedSearchField`, shared with the
+  Scales tab), with the key before it as the editor's transposing pill (`LibraryKeyStepper`, the twelve keys going
+  round): the way to every chord the key leaves out, so it stays reachable. The instrument, the key and search line, the
+  heading, and the cells are one gap apart (`TOOL_GROUP_GAP`), as on the Scales and the Tuner tabs. The chords fade under
   it, and the page's top fade gives way as it pins. It never takes focus on its own; Ctrl / Cmd + F gives it the caret
   with its query selected (`ToolSearch.focusSearch`). Once focused with the keyboard up it is pinned once per
   focus. Escape and Back empty a filled query before leaving the tab (the screen's back handler; the desktop's window
@@ -31,11 +33,11 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 - Keys follow the reader's accidentals preference (`libraryKeys`) and notation (a numbering by its letters). A key
   lists `CHORD_LIBRARY_QUALITIES`, omitting any the instrument has no shape for (`chordLibraryResults`,
   `ChordLibrary.kt`, tested).
-- The key's chords stand under a "Common C chords" heading, so nobody takes them for all there are; the placeholder
-  names a slash chord as an example of what the search finds. The search narrows them by name, ignoring case (`sus`,
-  `cmaj`). A search that is a whole chord name the key does not list, in the reader's notation, is that chord too,
+- The key's chords stand under a "Common C chords" heading, so nobody takes them for all there are, which a search
+  turns into "Chords matching “m7” in C", as on the Scales tab; the placeholder names a slash chord as an example of
+  what the search finds. The search narrows them by name, ignoring case (`sus`, `cmaj`). A search that is a whole chord name the key does not list, in the reader's notation, is that chord too,
   above the heading, in any key and with any bass (`D/F#`, `Emaj7` with C picked), its root read as a capital so
-  `d/f#` is not a minor. Names are always the key row's, whatever case was typed. An instrument without shapes shows a
+  `d/f#` is not a minor. Names are always the key pill's, whatever case was typed. An instrument without shapes shows a
   line pointing at the chip.
 
 ## Cells and the sheet

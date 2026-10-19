@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
 import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
+import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,7 @@ import com.pandulapeter.campfire.presentation.resources.chords_common
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_other
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_without_diagrams
 import com.pandulapeter.campfire.presentation.resources.chords_search
+import com.pandulapeter.campfire.presentation.resources.chords_search_heading
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
 import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
@@ -53,6 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberPinnedSearch
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryCell
+import com.pandulapeter.campfire.presentation.ui.chords.LibraryKeyStepper
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellMinWidth
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
@@ -78,14 +81,14 @@ import kotlinx.coroutines.withContext
 /**
  * The Chords tab: every chord the app can draw, for the instrument in the player's hands and its tuning, which the chip
  * at the top of the page changes for the songs and the tuner too, since a player browsing ukulele chords has a ukulele in
- * hand. An instrument without shapes gets a line naming it instead, which points at the chip. Under them the search,
- * and the common chords of one key under a heading that calls them that, in the order of [CHORD_LIBRARY_QUALITIES], each
+ * hand. An instrument without shapes gets a line naming it instead, which points at the chip. Under them the search
+ * with the key beside it, and the common chords of that key under a heading that calls them that, in the order of [CHORD_LIBRARY_QUALITIES], each
  * a cell with the shape the songs draw it with; a search that names a chord the key does not list finds it above them
  * ([chordLibraryResults]). A tap on a cell opens every shape of that chord ([DialogType.ChordReference]), the one
  * settled on becoming the player's for that chord in every song.
  *
- * The instrument and the key scroll with the chords rather than staying pinned, so that a phone on its side still has
- * room for a row of diagrams under the keyboard; only the search stays, which is the way to any chord the key leaves out.
+ * The instrument scrolls with the chords rather than staying pinned, so that a phone on its side still has room for a
+ * row of diagrams under the keyboard; only the search line stays, which is the way to any chord the key leaves out.
  */
 @Composable
 internal fun ChordsScreen(
@@ -172,11 +175,8 @@ internal fun ChordsScreen(
                     instrument = instrument,
                     instrumentTuning = userPreferences?.instrumentTuning,
                     notation = notation,
-                    keys = keys,
-                    selectedKeyIndex = keyIndex,
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
-                    onKeySelected = { state.keyIndex = it },
                 )
             }
             pinnedSearchField(
@@ -186,7 +186,14 @@ internal fun ChordsScreen(
                 placeholder = searchPlaceholder,
                 focusRequests = state.searchFocusRequests,
                 onQueryChanged = { state.query = it },
-            )
+            ) {
+                LibraryKeyStepper(
+                    keys = keys,
+                    selectedIndex = keyIndex,
+                    notation = notation,
+                    onSelected = { state.keyIndex = it },
+                )
+            }
             val held = shown
             // An instrument without shapes says so at once, whatever the last tuning's results still hold.
             if (tuning == null) {
@@ -237,7 +244,8 @@ internal fun ChordsScreen(
                             item(key = HEADING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = HEADING_KEY) {
                                 ChordLibraryHeading(
                                     modifier = listItemAnimation(gridState),
-                                    text = stringResource(Res.string.chords_common, shownChordName(held.inputs.key, held.inputs.notation)),
+                                    isAfterCell = results.searched != null,
+                                    text = chordLibraryHeading(held.inputs),
                                 )
                             }
                         }
@@ -253,20 +261,35 @@ internal fun ChordsScreen(
 
 /**
  * What stands over the key's chords: that they are its common ones, so that nobody takes them for every chord there is,
- * set the way the controls' titles are.
+ * or while a search is typed, that they are the ones of the key it found, as on the Scales tab, set the way the controls'
+ * titles are.
  */
 @Composable
 private fun ChordLibraryHeading(
     modifier: Modifier = Modifier,
+    isAfterCell: Boolean,
     text: String,
 ) = Text(
+    // A group of its own (TOOL_GROUP_GAP), which the search's padding parts from the field, and its own from the cells.
     modifier = modifier
         .fillMaxWidth()
-        .padding(top = 8.dp),
+        .padding(top = if (isAfterCell) TOOL_GROUP_GAP - CELL_GAP else 0.dp, bottom = TOOL_GROUP_GAP - CELL_GAP),
     text = text,
     style = MaterialTheme.typography.bodyLarge,
     color = MaterialTheme.colorScheme.onSurface,
 )
+
+/** The heading's words: the key's common chords, or while a search is typed, the ones of the key it found. */
+@Composable
+private fun chordLibraryHeading(inputs: ChordLibraryInputs): String {
+    val keyName = shownChordName(inputs.key, inputs.notation)
+    val typed = inputs.query.trim()
+    return if (typed.isEmpty()) {
+        stringResource(Res.string.chords_common, keyName)
+    } else {
+        textResource(Res.string.chords_search_heading, typed, keyName)
+    }
+}
 
 /** What stands in place of the chords: why there are none to show. */
 @Composable

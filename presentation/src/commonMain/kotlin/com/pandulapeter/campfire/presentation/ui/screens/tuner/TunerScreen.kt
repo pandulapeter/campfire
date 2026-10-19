@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -30,17 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.tuner_group_calibration
-import com.pandulapeter.campfire.presentation.resources.tuner_group_tuning
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
@@ -50,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
@@ -64,17 +59,14 @@ import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
- * The Tuner tab: what is heard ([TunerDisplay]) pinned at the top, as wide as a page of two sections like the Metronome
- * tab's bar, and under it, scrolling, what the tuner is set to: the strings ([TunerStringsSetting]) first, since they are
- * what is reached for most while tuning, then the Chromatic switch and the instrument ([TunerInstrumentSetting]) and the
- * reference pitch ([ReferencePitchSetting]), offered here rather than on the sheet over a song, which tunes to what they
- * are set to.
- * The settings are two titled sections, as on every settings page: Tuning (the strings, Chromatic, and the instrument)
- * and Calibration (the reference pitch). Where the window has room for two columns the strings span both, untitled, as
- * the header of the page, and the two sections stand side by side under them; a narrower window stacks all of it in
- * that order in one column. While the
- * microphone cannot be listened to, the display gives way to a notice that is the page's first item ([TunerNoticeCard])
- * and scrolls with it, which costs a short window nothing; its tones still play then.
+ * The Tuner tab: the instrument ([ToolInstrumentSetting]) at the top, as on the Chords and the Scales tabs, with the
+ * reference pitch ([ReferencePitchControls]) in the corner the list screens' pill and New button stand in, then what is
+ * heard ([TunerDisplay]), all pinned, as wide as a page of two sections like the Metronome tab's bar, and under them,
+ * scrolling, the strings ([TunerStringsSetting]), centered under the display they are played against. Other is the
+ * instrument that reads every note. The instrument and the reference pitch are offered here rather than on the sheet
+ * over a song, which tunes to what they are set to. While the microphone cannot be listened to, the display gives way
+ * to a notice that is the page's first item ([TunerNoticeCard]) and scrolls with it, which costs a short window
+ * nothing; its tones still play then.
  *
  * It listens while it is on screen and the app is in front ([TunerListeningEffect]) and nothing longer, keeping the
  * display on meanwhile, and asks for the microphone only as a tap opens it ([TunerAskOnOpenEffect]) or from the notice's
@@ -91,7 +83,6 @@ internal fun TunerScreen(
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
     val state = viewModel.tunerController.tunerState.collectAsStateWithLifecycle()
-    val settings by viewModel.tunerController.tunerSettings.collectAsStateWithLifecycle()
     val config by viewModel.tunerController.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
@@ -115,10 +106,6 @@ internal fun TunerScreen(
         consumeOpenedByTap = viewModel.tunerController::consumeOpenedByTap,
         ask = permission.request ?: viewModel.tunerController::requestMicrophone,
     )
-    // A window with room for two columns gives the strings the whole width of the display above them, which they are
-    // played against, and sets the instrument and the reference pitch side by side under them; a narrower one keeps
-    // everything in one column, in the same order.
-    val isWide = layout.sectionColumns >= 2
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
     ScrollToTopOnRequest(
@@ -131,6 +118,25 @@ internal fun TunerScreen(
         // A tuner is used with both hands on the instrument, and a screen that dims and locks stops the listening.
         modifier = modifier.fillMaxSize().then(if (isHearing) Modifier.keepScreenOn() else Modifier),
     ) {
+        userPreferences?.let { preferences ->
+            ToolInstrumentSetting(
+                // At the top, as the list screens' bar is, so that the reference pitch stands on the New button's spot.
+                modifier = Modifier.padding(contentPadding.only(start = true, end = true)),
+                instrument = preferences.instrument,
+                tuning = preferences.instrumentTuning,
+                notation = notation,
+                onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+                onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
+            ) {
+                ReferencePitchControls(
+                    referencePitch = config.referencePitch,
+                    notation = notation,
+                    isReferenceTonePlaying = tone == REFERENCE_NOTE,
+                    onReferencePitchChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(referencePitch = value) } },
+                    onToggleReferenceTone = { viewModel.tunerController.toggleTunerTone(REFERENCE_NOTE) },
+                )
+            }
+        }
         AnimatedVisibility(
             visible = notice == null,
             enter = fadeIn() + expandVertically(),
@@ -139,7 +145,7 @@ internal fun TunerScreen(
             TunerDisplay(
                 // As wide as the page under it, so that the meter ends where the rows it heads end.
                 modifier = Modifier
-                    .padding(top = DISPLAY_TOP_PADDING)
+                    .padding(top = TOOL_GROUP_GAP)
                     .padding(contentPadding.only(start = true, end = true))
                     .widthIn(
                         max = layout.pageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
@@ -151,21 +157,13 @@ internal fun TunerScreen(
                 isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
             )
         }
-        val strings: @Composable ColumnScope.() -> Unit = {
-            TunerStringsSetting(
-                config = config,
-                notation = notation,
-                tone = tone,
-                heardNote = heardNote,
-                tunedNotes = tunedNotes,
-                onToggleTone = viewModel.tunerController::toggleTunerTone,
-            )
-        }
         SettingsPage(
             modifier = Modifier.weight(1f),
             sectionColumns = layout.sectionColumns,
             scrollState = scrollState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true),
+            // As wide as the display above it, which the strings are centered under.
+            headerColumns = 2,
             // What stands in for the display, or says why it hears nothing, stands above the sections as the display does.
             header = {
                 AnimatedSettingsRow(value = notice) { shownNotice ->
@@ -176,38 +174,16 @@ internal fun TunerScreen(
                     )
                 }
                 TunerInputIssueMessage(issue = issue, permission = permission)
-                if (isWide) strings()
-            },
-            section = {
-                SettingsSection(title = stringResource(Res.string.tuner_group_tuning)) {
-                    if (!isWide) strings()
-                    userPreferences?.let { preferences ->
-                        TunerInstrumentSetting(
-                            instrument = preferences.instrument,
-                            tuning = preferences.instrumentTuning,
-                            notation = notation,
-                            isChromatic = settings.isChromatic,
-                            onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-                            onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
-                            onChromaticChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(isChromatic = value) } },
-                        )
-                    }
-                }
-            },
-            secondSection = {
-                SettingsSection(title = stringResource(Res.string.tuner_group_calibration)) {
-                    ReferencePitchSetting(
-                        referencePitch = config.referencePitch,
-                        notation = notation,
-                        isReferenceTonePlaying = tone == REFERENCE_NOTE,
-                        onReferencePitchChanged = { value -> viewModel.tunerController.updateTunerSettings { copy(referencePitch = value) } },
-                        onToggleReferenceTone = { viewModel.tunerController.toggleTunerTone(REFERENCE_NOTE) },
-                    )
-                }
+                TunerStringsSetting(
+                    config = config,
+                    notation = notation,
+                    tone = tone,
+                    heardNote = heardNote,
+                    tunedNotes = tunedNotes,
+                    isTitled = false,
+                    onToggleTone = viewModel.tunerController::toggleTunerTone,
+                )
             },
         )
     }
 }
-
-/** What the display keeps free above itself, so that it sits where the settings screen's tabs do. */
-private val DISPLAY_TOP_PADDING = 8.dp

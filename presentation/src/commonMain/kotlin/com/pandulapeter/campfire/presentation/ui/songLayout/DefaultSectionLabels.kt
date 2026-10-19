@@ -66,11 +66,12 @@ internal data class DefaultSectionLabels(
 
 /**
  * What a section of a kind ChordPro leaves to the file heads it with where it has no label: the translated name of the
- * kinds the editor writes, and otherwise the file's own wording, only capitalised ("Interlude" for `interlude`).
+ * kinds the editor writes, and otherwise the file's own wording, only capitalised ("Interlude" for `interlude`). A
+ * pre-chorus is the editor's kind however other apps spell it: `pre-chorus`, `prechorus`, or `pre_chorus`.
  */
 internal fun DefaultSectionLabels.labelOf(type: SectionType.Custom) = when (type.name.lowercase()) {
     "intro" -> intro
-    "pre-chorus" -> preChorus
+    "pre-chorus", "prechorus", "pre_chorus" -> preChorus
     "solo" -> solo
     "outro" -> outro
     else -> type.name.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }

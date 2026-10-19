@@ -52,7 +52,11 @@ internal fun SongScalesSection(
     isFadingIn: Boolean,
     headerStyle: TextStyle,
     fontScale: Float,
-) = Column(modifier = modifier) {
+) = Column(
+    // The chips end flush with their last row, so the section's last chunk (its pill alone, folded) keeps a gap of its own
+    // under it, for the section after it not to read as part of it.
+    modifier = modifier.padding(bottom = if (items.last == section.itemCount - 1) SCALES_BOTTOM_GAP else 0.dp),
+) {
     val isFirstChunk = items.first == 0
     if (isFirstChunk) {
         SectionHeaderPill(
@@ -117,3 +121,5 @@ private fun SongScaleGroup.title(other: String): String {
         else -> textResource(Res.string.song_details_scales_and_unnamed, label)
     }
 }
+
+private val SCALES_BOTTOM_GAP = 8.dp

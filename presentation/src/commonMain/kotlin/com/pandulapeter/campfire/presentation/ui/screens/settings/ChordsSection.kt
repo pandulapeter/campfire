@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.instrument_description
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
@@ -29,19 +28,16 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The first section of the Songs tab: what the chords are played on and how they are written. The instrument comes
- * first, since it decides the shapes, the tuner, and how the capo is read, and since it is the one row here that the
- * chords switched off can leave enabled; the notation and the accidentals, which only decide how a chord is written, come after it.
+ * The first section of the Songs tab: how the chords are written. The instrument is not here: it is picked where it is
+ * used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
  */
 @Composable
 internal fun ChordsSection(
@@ -55,20 +51,6 @@ internal fun ChordsSection(
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     // The examples under the settings below are written in the notation picked here, so they change with it.
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    // Enabled with the diagrams switched off too, since the keyboard also reads the capo as a transposition, and with the
-    // chords switched off while the tuner is on, which listens for the same instrument.
-    val isInstrumentEnabled = areChordsEnabled || userPreferences.isTunerEnabled
-    userPreferences?.let { preferences ->
-        InstrumentSetting(
-            instrument = preferences.instrument,
-            tuning = preferences.instrumentTuning,
-            notation = notation,
-            description = stringResource(Res.string.instrument_description),
-            isEnabled = isInstrumentEnabled,
-            onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-            onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
-        )
-    }
     NotationChoice(
         selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation,
         isEnabled = areChordsEnabled,
@@ -98,7 +80,7 @@ internal fun ChordsSection(
 
 /**
  * The notation chords are written in, as a chip naming it that opens a sheet of the five ([DialogType.Notation]), like
- * the instrument's chips above it: a list of five radio rows was the longest thing on the tab for a choice made once.
+ * the instrument's chips elsewhere: a list of five radio rows was the longest thing on the tab for a choice made once.
  */
 @Composable
 private fun NotationChoice(

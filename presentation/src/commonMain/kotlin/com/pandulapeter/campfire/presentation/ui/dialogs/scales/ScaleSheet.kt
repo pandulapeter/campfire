@@ -198,8 +198,8 @@ private fun ScaleSheetDiagram(
 
 /**
  * The header's toggle between a neck's degrees and its notes, one icon button rather than a segmented row, which took
- * most of a phone's header from the title. It shows the mode a tap switches to, as an icon button shows what it does,
- * and tells a screen reader both: the tap's result as its description and the mode shown now as its state.
+ * most of a phone's header from the title. It shows the mode the neck is in now, as the app's other toggles show their
+ * state, and tells a screen reader both: the tap's result as its description and the mode shown now as its state.
  */
 @Composable
 private fun ScaleLabelsToggle(
@@ -217,12 +217,12 @@ private fun ScaleLabelsToggle(
         ) { shownLabels ->
             if (shownLabels == ScaleLabels.DEGREES) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_scale_notes),
+                    painter = painterResource(Res.drawable.ic_scale_degrees),
                     contentDescription = stringResource(Res.string.scales_labels_show_notes),
                 )
             } else {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_scale_degrees),
+                    painter = painterResource(Res.drawable.ic_scale_notes),
                     contentDescription = stringResource(Res.string.scales_labels_show_degrees),
                 )
             }

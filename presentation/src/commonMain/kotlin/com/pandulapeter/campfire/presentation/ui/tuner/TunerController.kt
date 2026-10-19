@@ -173,11 +173,10 @@ private val UserPreferences?.listenedCourses get() = this?.instrument?.courses ?
 
 /**
  * The tuner's own model of what it listens for: the strings of [instrumentTuning], both of each course where [courses]
- * pairs them, or the nearest note (a null tuning) where the chromatic switch is on or the instrument has no strings to
- * tune.
+ * pairs them, or the nearest note (a null tuning) where the instrument has no strings to tune (the keyboard, Other).
  */
 internal fun tunerConfigOf(settings: TunerSettings, instrumentTuning: InstrumentTuning?, courses: StringCourses) = TunerConfig(
     referencePitch = settings.referencePitch.coerceIn(Pitch.REFERENCE_PITCH_RANGE),
-    tuning = if (settings.isChromatic) null else instrumentTuning,
+    tuning = instrumentTuning,
     courses = courses,
 )

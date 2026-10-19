@@ -12,10 +12,14 @@ package com.pandulapeter.campfire.presentation.ui.components
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -30,7 +34,11 @@ import kotlinx.coroutines.flow.Flow
  * once the cells are scrolled under it, so that it can be used from anywhere down the page. The cells fade out under it
  * the way they fade out under a bar, by a gradient drawn below the field over what passes under it, as strong as they
  * have been scrolled under it; the page's own fade gives way to it as it arrives at the top (see [pinnedSearchTopFade]).
- * It stands at [PINNED_SEARCH_INDEX], right after the controls.
+ * It stands at [PINNED_SEARCH_INDEX], right after the controls; the key and the field are no wider than
+ * [PINNED_SEARCH_MAX_WIDTH] together, at the start of a wide page.
+ *
+ * @param leading What the page is narrowed by besides the query, drawn before the field in its line and pinned with it:
+ * the tabs' key, which the player changes as often as the query.
  */
 internal fun LazyGridScope.pinnedSearchField(
     modifier: Modifier = Modifier,
@@ -39,10 +47,11 @@ internal fun LazyGridScope.pinnedSearchField(
     placeholder: String,
     focusRequests: Flow<Unit>,
     onQueryChanged: (String) -> Unit,
+    leading: @Composable () -> Unit,
 ) = stickyHeader(key = SEARCH_FIELD_KEY, contentType = SEARCH_FIELD_KEY) {
     val backgroundColor = MaterialTheme.colorScheme.background
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
-    Box(
+    Row(
         modifier = Modifier
             .bleedHorizontally(TOOL_PAGE_PADDING)
             .drawWithContent {
@@ -68,14 +77,25 @@ internal fun LazyGridScope.pinnedSearchField(
             }
             .background(backgroundColor)
             .padding(bottom = 8.dp),
+        verticalAlignment = Alignment.Bottom,
     ) {
-        SearchField(
-            modifier = modifier,
-            query = query,
-            placeholder = placeholder,
-            focusRequests = focusRequests,
-            onQueryChange = onQueryChanged,
-        )
+        // The line is narrowed rather than the row, whose background is what the cells pass under across the page.
+        Row(
+            modifier = Modifier.weight(1f, fill = false).widthIn(max = PINNED_SEARCH_MAX_WIDTH),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            // The field keeps its own side padding, which already parts it from what comes before it.
+            Box(modifier = Modifier.padding(start = 16.dp)) {
+                leading()
+            }
+            SearchField(
+                modifier = modifier.weight(1f),
+                query = query,
+                placeholder = placeholder,
+                focusRequests = focusRequests,
+                onQueryChange = onQueryChanged,
+            )
+        }
     }
 }
 
@@ -96,5 +116,8 @@ internal fun pinnedSearchTopFade(gridState: LazyGridState, fadeHeight: Int): Int
 
 /** The search field's place in the page's grid, right after the controls. */
 internal const val PINNED_SEARCH_INDEX = 1
+
+/** Past this a query is a few letters at the start of a long empty field, far from the key before it. */
+private val PINNED_SEARCH_MAX_WIDTH = 560.dp
 
 private const val SEARCH_FIELD_KEY = "search"

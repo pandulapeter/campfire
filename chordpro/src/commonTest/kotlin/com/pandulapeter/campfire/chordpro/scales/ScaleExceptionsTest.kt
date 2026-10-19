@@ -80,6 +80,12 @@ class ScaleExceptionsTest {
     fun `a song most of whose chords no scale holds has no group`() = assertTrue(groups("G B C Cm").isEmpty())
 
     @Test
+    fun `a home leaving out more than two chords and a third of them has no group`() {
+        assertTrue(groups("C# F# E F# B E D C#m Bm").isEmpty())
+        assertEquals(3, group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").exceptions.size)
+    }
+
+    @Test
     fun `a dominant blues has no exceptions`() {
         val group = group("E7 A7 E7 E7 A7 A7 E7 E7 B7 A7 E7 B7")
         assertEquals("E" to "minor_pentatonic", group.home)

@@ -20,10 +20,9 @@ wide layout's pages.
 - **Features**: Playing switches first (read only, chords, chord diagrams, scales, scale suggestions, metronome, tuner,
   setlists), then an Online group (song details lookup, cover art) so the two that make requests are found together.
   Rules in `ui/CLAUDE.md`.
-- **Songs**: the Instrument row (chips) comes first, since it decides shapes, tuner, and capo; it is disabled only when
-  both chords and tuner are off (the tuner and the keyboard's capo reading use it without diagrams). Accidentals stay
-  enabled under a numbering notation (they still spell its key). Examples, strings, and tuning notes are written in the
-  picked notation, never in the language.
+- **Songs**: no instrument row; the instrument is picked where it is used (`ui/instrument`). Accidentals stay enabled
+  under a numbering notation (they still spell its key). Examples are written in the picked notation, never in the
+  language.
 - **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
   goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
 - `BackgroundWarmthSlider` and `LanguageChoice` are shared with the onboarding's first page.

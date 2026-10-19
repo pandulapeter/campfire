@@ -16,3 +16,10 @@ import androidx.compose.ui.unit.dp
  * shared rows their controls stand in bring with them by reaching past it (`bleedHorizontally`).
  */
 internal val TOOL_PAGE_PADDING = 16.dp
+
+/**
+ * The room between the groups a tool's page stacks - the instrument, the key and the search, the families or the heading,
+ * and the cards - the same on the Chords, the Scales, and the Tuner tabs, so that the three read as one page. The grids'
+ * own spacing and the search field's padding count towards it.
+ */
+internal val TOOL_GROUP_GAP = 16.dp

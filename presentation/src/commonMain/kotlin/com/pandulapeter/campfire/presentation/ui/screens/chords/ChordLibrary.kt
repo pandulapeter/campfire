@@ -92,7 +92,7 @@ internal fun initialChordLibraryShown(
  * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`). A search that is a
  * whole chord name the key does not list is that chord too, apart from the key's, whatever key it is in ([searchedChord]):
  * a song's `D/F#` or `Emaj7` is then found by typing it, since no key lists every bass a chart puts under a chord. Every
- * name is the one the key row writes, its root in capitals (in title case in the Latin notation), whatever case the
+ * name is the one the key pill writes, its root in capitals (in title case in the Latin notation), whatever case the
  * search was typed in. A chord with no shape on the instrument is left out, since every cell is there to be played. A
  * numbering names the chords by their letters, as it names a chord with no song around it everywhere.
  *

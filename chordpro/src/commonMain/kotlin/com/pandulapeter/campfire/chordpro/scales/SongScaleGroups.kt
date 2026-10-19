@@ -106,7 +106,8 @@ public object SongScaleGroups {
      *   scored one) holds each chord, the home natural minor and the rest named as in a key.
      * - **A home with exceptions** ([Level.LOOSE]): on the key's root, the best scored one, or the first chord's, the
      *   first where major, natural minor (the minor family holding a chord counting), Dorian, or Mixolydian holds at
-     *   least two thirds of the chords played; the chords it leaves out are named with the scales to play over each.
+     *   least two thirds of the chords played, leaving out at most two distinct chords or a third of them; the chords it
+     *   leaves out are named with the scales to play over each.
      *   Only these roots, never further down the scores, or `C A7 Dm G7` would read as D minor.
      * - **A passing tone** ([Level.PASSING]): an eight-note scale on the best scored root, which holds a passing tone
      *   no scale of seven does. It answers what scale a part is in no better than none, so it never joins a key.
@@ -182,6 +183,12 @@ public object SongScaleGroups {
             val best = counts.indexOf(counts.max())
             if (counts[best] * 3 < total * 2) return@firstNotNullOfOrNull null
             val home = looseHomes[best]
+            // The floor counts how often a chord is played, and the minor family as one, but every distinct chord the
+            // home leaves out is named, so more than two of them must stay within a third of the distinct chords: past
+            // that, the answer is a list of exceptions that says nothing about the part.
+            val distinct = harmony.chords.distinct()
+            val outside = distinct.count { !holdsChord(home, root.pitchClass, it) }
+            if (outside > MAX_LOOSE_EXCEPTIONS && outside * 3 > distinct.size) return@firstNotNullOfOrNull null
             if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, Level.LOOSE)
             val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
             // The chords left out are what makes a rock riff, so its minor pentatonic and blues are asked of all of them.
@@ -405,6 +412,7 @@ public object SongScaleGroups {
     private const val FIFTH = 7
     private const val MINOR_SEVENTH = 10
     private const val CADENCE_SCORE = 2
+    private const val MAX_LOOSE_EXCEPTIONS = 2
     private const val NATURAL_MINOR_ID = "natural_minor"
     private val naturalMinor = Scales.fromId(NATURAL_MINOR_ID)!!
     private val majorKeyScaleIds = listOf("major")

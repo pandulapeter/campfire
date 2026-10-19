@@ -14,9 +14,9 @@ The Scales tab: every scale of `chordpro/scales` in one key, browsed by family, 
 destination (`CampfireDestination.Scales`, `/scales` on the web), the fourth tool behind the Tools item, following its
 own Features switch (`areScalesEnabled`), not the chord ones. Offered in read only mode: it writes no file.
 
-- One lazy grid: the controls (instrument and tuning chips, the shared app-wide preference written at once; the key
-  row as the Chords tab's, `libraryKeys`, beside the chips as there; the family row, Common first, one line scrolling
-  sideways, its scroll kept in `ScaleLibraryState`, with no title, since the heading names the family), a heading, a
+- One lazy grid: the controls (instrument and tuning chips, the shared app-wide preference written at once), the
+  search with the key pill before it as on the Chords tab, the family row (Common first, one line scrolling sideways,
+  its scroll kept in `ScaleLibraryState`), which a non-empty search swaps for a heading naming what it found, then a
   cell per scale, titled in the key ("C Dorian") as the Chords tab names each chord in the key. The controls scroll
   away, so a phone on its side keeps a row of cells. A cell's description is set on its surface and its content's
   semantics cleared, never the other way round, or the click action and the button role go with them.
@@ -29,8 +29,12 @@ own Features switch (`areScalesEnabled`), not the chord ones. Offered in read on
   change crossfades each cell's diagram.
 - The search (the Chords tab's pinned field, `pinnedSearchField`) finds scales by their name in the app's language,
   their English name, or an alias in either language, ignoring case and accents, across every family
-  (`scaleLibraryResults`, tested); picking a family empties it. **Aliases are translated** (`scale_aliases_<id>`, one
-  comma-separated string per scale, read by `scaleAliases`); the catalogue's English ones stay as search terms. Ctrl / Cmd + F, Escape, and Back work as on the Chords tab (`ToolSearch`).
+  (`scaleLibraryResults`, tested); picking a family empties it. A search that starts with a note in the reader's
+  notation, set apart by a space or a hyphen (`d dorian`, `a-moll`), finds the rest on that note whatever the key, as
+  the Chords tab finds a chord the key does not list; where the rest finds nothing, the whole search is a name.
+  **Aliases are translated** (`scale_aliases_<id>`, one comma-separated string per scale, read by `scaleAliases`); the
+  catalogue's English ones stay as search terms. Ctrl / Cmd + F, Escape, and Back work as on the Chords tab
+  (`ToolSearch`).
 - **The name strings hold the form a title uses** ("C major", "D Dorian", "C-dúr", the Hungarian title hyphenated), and
   a name standing alone is capitalized in code (`standaloneScaleName`). Hungarian steps are "1 1 ½", not letters that
   read as notes.

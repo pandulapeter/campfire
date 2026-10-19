@@ -610,11 +610,17 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 private val CLOSED_SEARCH_ACTIONS_DIVIDER_ROOM = 4.dp
 
 /**
+ * The gap seen between the closed bar's pill and the New button's circle, as wide as the circle's distance from the end
+ * of the list. The Tuner tab's reference pitch pill keeps it from its play button, which stands on the New button's spot.
+ */
+internal val NEW_ITEM_BUTTON_GAP = SONG_CARD_OUTER_PADDING
+
+/**
  * The room [ClosedSearchActionsDivider] takes before detached actions, which leaves the pill's end as far from the New
  * button's circle, which fills its touch target, as the circle is from the end of the list. The room counts the pill's
  * padding and the overlap the button reaches back into it by, neither of which is part of the gap that is seen.
  */
-private val DETACHED_CLOSED_SEARCH_ACTIONS_GAP = SONG_CARD_OUTER_PADDING + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP
+private val DETACHED_CLOSED_SEARCH_ACTIONS_GAP = NEW_ITEM_BUTTON_GAP + ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP
 
 /** How small a detached action is as it fades out of the bar and back in, see `areClosedSearchActionsDetached`. */
 private const val DETACHED_ACTION_HIDDEN_SCALE = 0.6f

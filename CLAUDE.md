@@ -149,7 +149,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `chordpro`.
 - With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar, a short
   window's rail, or a rail too short for every item: `ui/chrome`.
-- One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, Settings, and onboarding:
+- One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, and onboarding:
   `ui/instrument`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:
   `ui/chords`.
