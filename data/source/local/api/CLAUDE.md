@@ -31,11 +31,11 @@ platform types. One multiplatform implementation, with platform differences in `
 
 - `SetlistLocalSource`: `renameSetlist` saves and moves the file when the title changes the derived name. Every write
   returns the setlist with its new file size, so the cache never lists.
-- `ArchiveLocalSource`: nested archives (by name, or by bytes under any name but a document's; an entry under an
-  unknown name, or a text name over the text limit, is peeked at for them) are unpacked in place,
-  three levels deep, within one inflation budget; unpacking drops tools' hidden files (macOS AppleDouble
-  `._name.cho`) and everything inside a hidden folder, unreported; every other unread entry
-  (not importable, too large, unreadable) comes back as `ImportedFile.unread`, and one bad entry never fails the archive.
+- `ArchiveLocalSource`: nested archives (by name, or by bytes under any name but a document's; an entry under an unknown
+  name that is not a binary one, or a text name over the text limit, is peeked at for them) are unpacked in place, three
+  levels deep, within one inflation budget; unpacking drops tools' hidden files (macOS AppleDouble `._name.cho`) and
+  everything inside a hidden folder, unreported; every other unread entry (not importable, too large, unreadable) comes
+  back as `ImportedFile.unread`, and one bad entry never fails the archive.
   Another app's document that is no archive (a JSON export of songs) comes back as its songs, inside an archive and
   loose through `songsIn` (null where the file is not one).
 - `DocumentLocalSource`: local, bounded PDF/Word text extraction on `Dispatchers.Default`; null means unsupported or
