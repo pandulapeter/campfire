@@ -37,9 +37,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 ### The app bar
 
 - **The subtitle (`SongHeaderNote`) names the sounding key**, transposition and capo applied (unlike the Transposition
-  control), and inside a setlist the duration, after 16dp dots (the cards' 24dp would grow the bar and shrink the
-  lyrics' room). Worked out for the song its crossfaded content was composed for, since a page change draws two. Chords
-  off drop the key. No tempo: the first section says it.
+  control), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song
+  its crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo: the first
+  section says it, and no duration.
 - **The title scrolls the song to its top, and at the top opens the About the song sheet** (its only way in). A chevron
   (`ic_expand`) shows while a tap would open it; its room is kept wherever the sheet is offered, so a long title is not
   cut afresh. The touch target (`titleTouchTarget`) is all the bar's free space but reports only the title's room. No

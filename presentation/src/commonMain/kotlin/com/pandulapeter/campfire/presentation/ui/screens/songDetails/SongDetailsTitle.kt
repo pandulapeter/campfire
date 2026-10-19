@@ -49,7 +49,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -124,13 +123,9 @@ internal fun SongDetailsTitle(
             songRenderer = songRenderer,
             chordSpelling = chordSpelling,
         )
-        // The duration only inside a setlist, as the song's card there says it, since a set is what is
-        // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
-        val headerDuration = song?.takeIf { setlistFileName != null }?.duration?.let(ChordProDuration::format)
         SongTitleBlock(
             song = song,
             headerKey = headerKey,
-            headerDuration = headerDuration,
             showsCoverInBar = showsCoverInBar,
             isChevronKept = openCurrentSongInfo != null,
             isChevronShown = openSongInfoAtTop != null,
@@ -163,7 +158,7 @@ internal fun headerKeyOf(
 }
 
 /**
- * The cover, the title and the artist of [song], and its [headerKey] and [headerDuration] after them.
+ * The cover, the title and the artist of [song], and its [headerKey] after them.
  *
  * @param isChevronKept Whether the room of the chevron saying that the title opens the sheet is kept, which it is wherever
  *   the sheet is offered at all.
@@ -172,7 +167,6 @@ internal fun headerKeyOf(
 private fun SongTitleBlock(
     song: Song?,
     headerKey: String?,
-    headerDuration: String?,
     showsCoverInBar: Boolean,
     isChevronKept: Boolean,
     isChevronShown: Boolean,
@@ -271,13 +265,7 @@ private fun SongTitleBlock(
             SongHeaderNote(
                 text = headerKey,
                 description = headerKey?.let { textResource(Res.string.songs_key, it) },
-                isEmphasized = true,
                 hasPrecedingContent = song?.artist?.isNotBlank() == true,
-            )
-            SongHeaderNote(
-                text = headerDuration,
-                isEmphasized = false,
-                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
             )
         }
     }

@@ -30,26 +30,23 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * One of the things the app bar says about how the song on screen is played, after the artist and separated from it by
- * the dot a song card uses: the key it sounds in, in the accent color that color is kept for, and inside a setlist the
- * song's duration. Crossfaded where it stands and the line closing up around it, since the key changes under the reader
+ * What the app bar says about how the song on screen is played, after the artist and separated from it by the dot a song
+ * card uses: the key it sounds in, in the accent color that color is kept for. Crossfaded where it stands and the line closing up around it, since the key changes under the reader
  * — a transposition or a capo stepped in the song's own first section, a preference synced in from another device — and
  * since the chords switched off take it away altogether.
  *
  * A 16dp dot rather than the cards' 24dp one: the two lines of the title are exactly as tall as the cover beside them,
  * and a 24dp box on the lower one grows the bar and with it the room the lyrics are laid out in.
  *
- * @param text Null leaves the place empty, which is what a song that names no key or duration gets.
- * @param description What it is read out as, where the text alone says nothing: a key is two letters, while a duration
- *   already reads as one.
+ * @param text Null leaves the place empty, which is what a song that names no key gets.
+ * @param description What it is read out as, since a key alone is two letters that say nothing.
  * @param hasPrecedingContent Whether anything stands in front of it for the dot to separate it from.
  */
 @Composable
 internal fun SongHeaderNote(
     text: String?,
-    isEmphasized: Boolean,
+    description: String?,
     hasPrecedingContent: Boolean,
-    description: String? = null,
 ) = AnimatedContent(
     targetState = text,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -69,11 +66,11 @@ internal fun SongHeaderNote(
                 modifier = if (description == null) Modifier else Modifier.semantics { contentDescription = description },
                 text = currentText,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalSecondAccentColor.current,
             )
         }
     }
 }
 
-/** The dot that separates the key and the duration from the artist, see [SongHeaderNote]. */
+/** The dot that separates the key from the artist, see [SongHeaderNote]. */
 private val APP_BAR_NOTE_DOT_SIZE = 16.dp
