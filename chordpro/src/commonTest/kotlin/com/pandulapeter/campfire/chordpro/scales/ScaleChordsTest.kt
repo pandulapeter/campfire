@@ -59,9 +59,12 @@ class ScaleChordsTest {
         Scales.all.filter { it.intervals.size == 7 }.forEach { scale ->
             listOf("C", "Eb", "F#", "Bb").forEach { root ->
                 val pitchClasses = Scales.pitchClasses(scale, ChordProChords.pitchClass(root)!!)
-                (ScaleChords.triads(scale, root) + ScaleChords.sevenths(scale, root)).forEach { chord ->
-                    val parsed = assertNotNull(ChordProChords.parse(chord.name), chord.name)
-                    assertTrue(pitchClasses.containsAll(parsed.pitchClasses), "$root ${scale.id}: ${chord.name}")
+                listOf(ScaleChords.triads(scale, root) to 3, ScaleChords.sevenths(scale, root) to 4).forEach { (chords, size) ->
+                    chords.forEach { chord ->
+                        val parsed = assertNotNull(ChordProChords.parse(chord.name), chord.name)
+                        assertEquals(size, parsed.pitchClasses.size, "$root ${scale.id}: ${chord.name}")
+                        assertTrue(pitchClasses.containsAll(parsed.pitchClasses), "$root ${scale.id}: ${chord.name}")
+                    }
                 }
             }
         }
