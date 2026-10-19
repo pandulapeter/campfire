@@ -9,10 +9,10 @@
 -->
 # :data:source:remote:api
 
-The sync, cover art, import download, and song details lookup contracts. Consumed by `:data:sync:implementation` and
-`:data:repository:implementation`, implemented by `:data:source:remote:implementation`; depends only on `:data:model`.
-A second sync provider must be one new class, not an engine change; the rules are in the KDoc of `SyncFolder` and
-`SyncConnection`.
+The sync, cover art, import download, cover search, and song details lookup contracts. Consumed by
+`:data:sync:implementation` and `:data:repository:implementation`, implemented by `:data:source:remote:implementation`;
+depends only on `:data:model`. A second sync provider must be one new class, not an engine change; the rules are in the
+KDoc of `SyncFolder` and `SyncConnection`.
 
 ## Sync provider contract
 
@@ -30,7 +30,7 @@ A second sync provider must be one new class, not an engine change; the rules ar
   same conflict rule as `upload`.
 - `SyncAuthorizationException`, `SyncNetworkException`, and `SyncRemoteStorageFullException` (subclasses of sealed
   `SyncRunEndingException`, each carrying its `SyncFailureReason`) are the only failures that end a run; storage full
-  comes only from `upload`. Anything else is one file's problem.
+  comes only from `upload` / `uploadDocument`. Anything else is one file's problem.
 
 ## Authorization
 
