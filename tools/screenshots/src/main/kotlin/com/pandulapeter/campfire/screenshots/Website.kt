@@ -120,6 +120,43 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
+        // The Scales tab on a guitar in its standard tuning, the common scales of A, scrolled as the promo clip is so that the
+        // family chips head the screen over the cells.
+        Triple(
+            "phone-scales",
+            Device.IPHONE,
+            Shot(
+                id = "phone-scales",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id)) },
+                prepare = { viewModel.scaleLibrary.keyIndex = KEY_A },
+                drive = {
+                    viewModel.selectTopLevelDestination(CampfireDestination.Scales)
+                    settle()
+                    scrollTo(string("scale_family_common"), SCALE_FAMILIES_Y)
+                },
+            ),
+        ),
+        // Take Me Home, Country Roads on a guitar in standard tuning at 100%, every chord of it in A major so that its Scales
+        // section has a set for the whole song, with the scale sheet open over it on A major pentatonic.
+        Triple(
+            "tablet-song-scales",
+            Device.IPAD,
+            Shot(
+                id = "tablet-song-scales",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = {
+                    mapOf(
+                        "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
+                        "fontScale" to JsonPrimitive(1f),
+                    )
+                },
+                drive = {
+                    openSong("john_denver-take_me_home_country_roads.cho")
+                    viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "major_pentatonic", rootName = "A"))
+                },
+            ),
+        ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
         // A song with the metronome panel open under its title, not playing.
         Triple(

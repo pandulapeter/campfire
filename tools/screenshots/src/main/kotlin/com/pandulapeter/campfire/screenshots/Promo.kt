@@ -215,6 +215,32 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
             ),
         ),
+        // The Scales tab in A on a guitar, scrolled so that its family chips head the screen over the common scales' cells,
+        // and A's minor pentatonic tapped on the clip's second beat, its sheet up over the tab by the third.
+        PromoShot(
+            name = "scales",
+            device = Device.IPHONE,
+            isClip = true,
+            shot = Shot(
+                id = "scales",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id)) },
+                prepare = { viewModel.scaleLibrary.keyIndex = KEY_A },
+                drive = {
+                    viewModel.selectTopLevelDestination(CampfireDestination.Scales)
+                    settle()
+                    scrollTo(string("scale_family_common"), SCALE_FAMILIES_Y)
+                    // A cell is labelled as its diagram is read out, the scale's title before its notes.
+                    val cell = checkNotNull(centersOf("A ${string("scale_minor_pentatonic")}:").firstOrNull()) { "The Scales tab shows no A minor pentatonic." }
+                    record(frames = 110) { frame ->
+                        when (frame) {
+                            SCALE_SHEET_FRAME - 4 -> touch(PointerEventType.Press, cell)
+                            SCALE_SHEET_FRAME -> touch(PointerEventType.Release, cell)
+                        }
+                    }
+                },
+            ),
+        ),
         // Friday Night by the Lake in its reorder mode, Ring of Fire dragged by its grip from fifth to second place over
         // three beats, dropped on the sixth.
         PromoShot(
@@ -379,14 +405,20 @@ private val NOTATION_CHANGES = mapOf(
     158 to UserPreferences.Notation.NASHVILLE,
 )
 
-/** Where A is among the Chords tab's keys, from C, in every spelling of the accidentals. */
-private const val KEY_A = 9
+/** Where A is among the Chords and the Scales tabs' keys, from C, in every spelling of the accidentals. */
+internal const val KEY_A = 9
 
 /** The instruments the Chords tab is switched to on its third and fourth beats, after two on the keyboard's. */
 private val INSTRUMENT_CHANGES = mapOf(
     45 to UserPreferences.Instrument.UKULELE,
     68 to UserPreferences.Instrument.GUITAR,
 )
+
+/** Where the Scales tab's first family chip is dragged to, down the screen: its heading just under the tool tabs. */
+internal const val SCALE_FAMILIES_Y = 0.2f
+
+/** The second beat, on which the Scales tab's cell is released; its sheet has slid up by the third. */
+private const val SCALE_SHEET_FRAME = 23
 
 /** The sheet takes a pick only once it has slid into place, about half a second after the tap that opens it. */
 private const val SHAPE_SHEET_FRAME = 79
@@ -406,7 +438,6 @@ private const val REORDER_PRESS_FRAME = 20
 private const val REORDER_START_FRAME = 26
 private const val REORDER_END_FRAME = 104
 
-private const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
 private const val COUNTRY_ROADS = "john_denver-take_me_home_country_roads.cho"
 private const val FRIDAY_NIGHT_BY_THE_LAKE = "friday_night_by_the_lake.setlist.json"

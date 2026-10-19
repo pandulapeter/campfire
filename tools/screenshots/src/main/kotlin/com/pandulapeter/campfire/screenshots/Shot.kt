@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.screenshots
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.semantics.SemanticsNode
@@ -161,6 +162,24 @@ internal class ShotScope(
         scene.sendPointerEvent(PointerEventType.Release, center, type = PointerType.Touch)
         settle()
         return true
+    }
+
+    /**
+     * Drags whatever is labelled [label] with a finger to [y] of the screen's height, a frame at a time, and lets go only
+     * once the finger has stopped, so that the list under it ends exactly there and no fling carries it on. The finger
+     * moves from its first frame, since one that starts slowly is held long enough to be a long press.
+     */
+    suspend fun scrollTo(label: String, y: Float) {
+        val from = checkNotNull(centerOf(label)) { "Nothing on screen is labelled \"$label\"." }
+        val to = Offset(from.x, device.heightPx * y)
+        scene.sendPointerEvent(PointerEventType.Press, from, type = PointerType.Touch)
+        repeat(SCROLL_FRAMES) { frame ->
+            settle(FRAME_MILLIS)
+            scene.sendPointerEvent(PointerEventType.Move, lerp(from, to, (frame + 1) / SCROLL_FRAMES.toFloat()), type = PointerType.Touch)
+        }
+        settle(FRAME_MILLIS * 12)
+        scene.sendPointerEvent(PointerEventType.Release, to, type = PointerType.Touch)
+        settle()
     }
 
     /**
@@ -342,8 +361,9 @@ internal fun printSettings(isLandscape: Boolean) = buildJsonObject {
     ).forEach { put(it, true) }
 }
 
-private const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
+internal const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
 
 internal const val FRAME_MILLIS = 16L
+private const val SCROLL_FRAMES = 24
 private const val WAIT_TIMEOUT_MILLIS = 30_000L

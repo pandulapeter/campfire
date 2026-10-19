@@ -18,11 +18,11 @@ for long, and the synths are cut around 800 Hz–2 kHz to leave it room.
 
 The chords, one per beat where a bar has several:
 
-     1 A (ringing)        6 A G D/F# G      11 D D D G        16 E (light mode)
-     2 A G D/F# G         7 A               12 A (tuner)      17 E E E G
-     3 A                  8 A A# B C        13 A A A G        18 A
-     4 A A A D            9 C#              14 D              19 A G D/F# G
-     5 A                 10 D (metronome)   15 D D D G        20 A (ringing)
+     1 A (ringing)        6 A G D/F# G      11 D D D G        16 D D D G
+     2 A G D/F# G         7 A               12 A (tuner)      17 E (light mode)
+     3 A                  8 A A# B C        13 A A A G        18 E E E G
+     4 A A A D            9 C#              14 D (chords)     19 A
+     5 A                 10 D (metronome)   15 D (scales)     20 A (ringing)
 """
 import glob
 import os
@@ -673,59 +673,48 @@ b(t_of(13, 2), ROOT["A"], BEAT * 0.9, 0.8)
 b(t_of(13, 3), ROOT["G"], BEAT * 0.9, 0.85)
 fill(13, 3, [(0, "snare"), (0.25, "snare"), (0.5, "snare"), (0.75, "snare")], 0.5, 0.4)
 
-# Bars 14–15: the Chords tab and the export, the full groove back on D; a crash on bar 14's last beat, where a chord
-# shape is picked.
-for bar, chords in ((14, "D"), (15, ["D", "D", "D", "G"])):
-    groove(bar, cymbal="ride" if bar == 15 else "hat", open_last=bar == 14)
+# Bars 14–16: the Chords tab, the Scales tab and the export, the full groove back on D; a crash on bar 14's last beat,
+# where a chord shape is picked, and one on bar 15's second, where a scale's sheet opens.
+for bar, chords in ((14, "D"), (15, "D"), (16, ["D", "D", "D", "G"])):
+    groove(bar, cymbal="ride" if bar == 16 else "hat", open_last=bar != 16)
     bass_eighths(bar, chords)
     arpeggio(bar, chords)
-    pad_chord(t_of(bar), "D", (BAR if bar == 14 else BEAT * 3) * 0.98)
-pad_chord(t_of(15, 3), "G", BEAT * 0.98)
+    pad_chord(t_of(bar), "D", (BEAT * 3 if bar == 16 else BAR) * 0.98)
+pad_chord(t_of(16, 3), "G", BEAT * 0.98)
 crash(t_of(14), 0.95)
 crash(t_of(14, 3), 0.7, second=True)
-fill(15, 3, [(0, "snare"), (0.5, "tom_hi"), (0.75, "tom_mid")], 0.7, 0.2)
+crash(t_of(15), 0.9)
+crash(t_of(15, 1), 0.7, second=True)
+fill(16, 3, [(0, "snare"), (0.5, "tom_hi"), (0.75, "tom_mid")], 0.7, 0.2)
 
-# Bar 16: the laptop comes in on the downbeat's crash, and a whoosh on the second beat, the only effect here, as the
-# light theme washes over it for a beat and a half. Bars 16–17 are the brightest part: E with the bass jumping octaves,
+# Bar 17: the laptop comes in on the downbeat's crash, and a whoosh on the second beat, the only effect here, as the
+# light theme washes over it for a beat and a half. Bars 17–18 are the brightest part: E with the bass jumping octaves,
 # the arpeggio an octave up, the groove on the ride.
-crash(t_of(16), 1.0)
-whoosh(t_of(16, 1), BEAT * 1.6, 3.0)
-for bar, chords in ((16, "E"), (17, ["E", "E", "E", "G"])):
+crash(t_of(17), 1.0)
+whoosh(t_of(17, 1), BEAT * 1.6, 3.0)
+for bar, chords in ((17, "E"), (18, ["E", "E", "E", "G"])):
     groove(bar, cymbal="ride", intensity=1.05)
     bass_eighths(bar, chords, 0.9, octaves=True)
     arpeggio(bar, chords, octave=1, gain=0.85, bright=1.3)
-    pad_chord(t_of(bar), "E", (BAR if bar == 16 else BEAT * 3) * 0.98, 1.1)
-pad_chord(t_of(17, 3), "G", BEAT * 0.98, 1.1)
-# The iPad lands on bar 16's third beat and the Android phone on its fourth; the platform names cascade in from bar 17.
-crash(t_of(16, 2), 0.75, second=True)
-hit("rim", t_of(16, 3), 0.9)
-crash(t_of(17), 0.9, second=True)
-fill(17, 3, [(0, "snare"), (0.25, "snare"), (0.5, "snare"), (0.75, "snare")], 0.55, 0.4)
+    pad_chord(t_of(bar), "E", (BAR if bar == 17 else BEAT * 3) * 0.98, 1.1)
+pad_chord(t_of(18, 3), "G", BEAT * 0.98, 1.1)
+# The iPad lands on bar 17's third beat and the Android phone on its fourth; the platform names cascade in from bar 18.
+crash(t_of(17, 2), 0.75, second=True)
+hit("rim", t_of(17, 3), 0.9)
+crash(t_of(18), 0.9, second=True)
+fill(18, 3, [(0, "snare"), (0.25, "snare"), (0.5, "snare"), (0.75, "snare")], 0.55, 0.4)
 
-# Bar 18: back to the dark, and a stop: "Free." "No ads." "No account." "Offline." — an A a word, each voiced higher.
+# Bar 19: back to the dark, and a stop: "Free." "No ads." "No account." "Offline." — an A a word, each voiced higher.
 for i in range(4):
-    at = t_of(18, i)
+    at = t_of(19, i)
     stab(at, "A", BEAT * (0.75 if i < 3 else 0.95), 1.0, bright=1.0 + 0.1 * i)
     b(at, ROOT["A"] + (12 if i == 3 else 0), BEAT * 0.8, 0.95)
     hit("kick", at, 0.95)
     hit("snare", at, 0.75 + 0.07 * i)
     pluck(at, [69, 73, 76, 81][i], BEAT * 0.8, gain=0.7, bright=1.3)
-crash(t_of(18, 3), 1.0)
+crash(t_of(19, 3), 1.0)
 
-# Bar 19: the icon flips through its colors in eighths: A, G, D/F♯ and G with the bass and arpeggio in eighths, the
-# kick on every beat and the toms rolling down into the last bar.
-bass_eighths(19, ["A", "G", "D/F#", "G"], 0.95)
-arpeggio(19, ["A", "G", "D/F#", "G"], octave=1, bright=1.2)
-for i, chord in enumerate(["A", "G", "D/F#", "G"]):
-    pad_chord(t_of(19, i), chord, BEAT * 0.98, 1.1)
-    hit("kick", t_of(19, i), 0.85)
-for e in range(4):
-    hit("hat", t_of(19, e / 2), 0.7)
-hit("snare", t_of(19, 1), 0.85)
-fill(19, 2, [(0, "tom_hi"), (0.25, "tom_hi"), (0.5, "tom_hi"), (0.75, "tom_mid"), (1.0, "tom_mid"), (1.25, "tom_mid"),
-             (1.5, "tom_lo"), (1.75, "tom_lo")], 0.65, 0.3)
-
-# Bar 20: the name on the last hit, A with an impact and two crashes, ringing out through the extra half bar.
+# Bar 20: the icon and the name on the last hit, A with an impact and two crashes, ringing out to the end.
 impact(t_of(20), 1.0)
 hit("kick", t_of(20), 1.0)
 hit("snare", t_of(20), 0.95)
@@ -749,7 +738,7 @@ CHIPS = [
     (12, 1, 81), (12, 2, 85), (12, 3, 88),   # Instrument tuner; Chromatic tuner; Alternate tunings (A)
     (13, 2, 81), (13, 3, 83),                # Keyboard (A); Mandolin (G)
     (14, 0, 86), (14, 1, 90), (14, 2, 81),   # Ukulele; Guitar; Banjo (D)
-    (15, 1, 86), (15, 2, 90),                # Whole setlists; Individual songs (D)
+    (16, 1, 86), (16, 2, 90),                # Whole setlists; Individual songs (D)
 ]
 for bar, beat, note in CHIPS:
     pluck(t_of(bar, beat), note, BEAT * 0.35, gain=0.6, bright=1.4, bus=chips)
@@ -771,8 +760,8 @@ def sidechain(length, times, depth, release=0.16):
 def pad_cutoff(t):
     """The pad bus's filter over the whole track: closed in the tuner break, open after the page turn and for the light theme."""
     points = [(0, 2600), (t_of(3), 1800), (t_of(5, 1), 1800), (t_of(5, 3.5), 4200), (t_of(6, 1), 4200), (t_of(6, 2.5), 2200),
-              (t_of(10), 1700), (t_of(12), 900), (t_of(13), 2200), (t_of(15, 2), 2400), (t_of(16), 4800), (t_of(18), 4800),
-              (t_of(19), 3200), (t_of(20), 3600), (LENGTH + 6, 1500)]
+              (t_of(10), 1700), (t_of(12), 900), (t_of(13), 2200), (t_of(16, 2), 2400), (t_of(17), 4800), (t_of(19), 4800),
+              (t_of(20), 3600), (LENGTH + 6, 1500)]
     xs, ys = zip(*points)
     return float(np.exp(np.interp(t, xs, np.log(ys))))
 

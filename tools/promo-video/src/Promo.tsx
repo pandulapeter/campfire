@@ -44,11 +44,13 @@ const S = {
   // The tuner leaves as soon as its string is in tune, on bar 13's downbeat, and the Chords tab comes in on that bar's G.
   tuner: { from: 11 * BAR, bars: 1.5 },
   chords: { from: 12.5 * BAR, bars: 1.5 },
-  // The export rides the riser into bar 16, where the laptop comes in; the light sweeps across it a beat later.
-  export: { from: 14 * BAR, bars: 1 },
-  everywhere: { from: 15 * BAR, bars: 2 },
-  values: { from: 17 * BAR, bars: 1 },
-  outro: { from: 18 * BAR, bars: 2 },
+  // The Scales tab has bar 15 to itself; the export rides the riser into bar 17, where the laptop comes in, and the
+  // light sweeps across it a beat later.
+  scales: { from: 14 * BAR, bars: 1 },
+  export: { from: 15 * BAR, bars: 1 },
+  everywhere: { from: 16 * BAR, bars: 2 },
+  values: { from: 18 * BAR, bars: 1 },
+  outro: { from: 19 * BAR, bars: 1 },
 };
 
 /**
@@ -84,6 +86,7 @@ const Bars: React.FC = () => {
       {scene(S.metronome, <Metronome />)}
       {scene(S.tuner, <Tuner />)}
       {scene(S.chords, <Chords />)}
+      {scene(S.scales, <Scales />)}
       {scene(S.export, <Export />)}
       {scene(S.everywhere, <Everywhere />)}
       {scene(S.values, <Values />, false)}
@@ -501,7 +504,24 @@ const Chords: React.FC = () => (
   </AbsoluteFill>
 );
 
-// ─── Bar 15, its first three beats: a PDF for the music stand, over the riser into the light theme ──
+// ─── Bar 15: the Scales tab in A, and a scale's sheet opened over it ──────────────────────────
+
+// The clip taps A's minor pentatonic on its 23rd frame, the second beat, and its sheet has slid up over the tab by the
+// third; nothing else moves, so the diagrams can be read.
+const Scales: React.FC = () => (
+  <AbsoluteFill>
+    <Stage band={[590, 1830]}>
+      <Place y={1215} at={-6} rotate={-3} enter="right">
+        <Phone height={1180}>
+          <Clip name="scales" />
+        </Phone>
+      </Place>
+    </Stage>
+    <Headline top={230} at={0} lines={["Every scale and mode,", <Accent key="a">right under your fingers.</Accent>]} size={84} exitAt={BAR - 14} />
+  </AbsoluteFill>
+);
+
+// ─── Bar 16, its first three beats: a PDF for the music stand, over the riser into the light theme ──
 
 const Export: React.FC = () => {
   const frame = useCurrentFrame();
@@ -525,9 +545,9 @@ const Export: React.FC = () => {
   );
 };
 
-// ─── Bars 16–17: every platform, and the light theme ──────────────────────────────────────────
+// ─── Bars 17–18: every platform, and the light theme ──────────────────────────────────────────
 
-// One thing a beat from bar 16's downbeat, where the soundtrack changes to E: the laptop comes in, the light theme sweeps
+// One thing a beat from bar 17's downbeat, where the soundtrack changes to E: the laptop comes in, the light theme sweeps
 // across it with the whoosh, opening fastest at first and covering the screen over a beat and a half, then the iPad,
 // then the phone.
 const DOWNBEAT = 0;
@@ -545,7 +565,7 @@ const Everywhere: React.FC = () => {
   return (
     <AbsoluteFill>
       <Stage band={[450, 1850]}>
-      {/* The laptop lands dark on bar 16's downbeat and takes the light theme on its second beat; the iPad, upright and
+      {/* The laptop lands dark on bar 17's downbeat and takes the light theme on its second beat; the iPad, upright and
           near its real size beside it, and the phone land over its lower edge on the third and fourth, the two of them
           centred under it. */}
       <Place x={540} y={760} at={-4} enter="top">
@@ -582,7 +602,7 @@ const Everywhere: React.FC = () => {
   );
 };
 
-// ─── Bar 18: four promises, one a beat ────────────────────────────────────────────────────────
+// ─── Bar 19: four promises, one a beat ────────────────────────────────────────────────────────
 
 const Values: React.FC = () => {
   const frame = useCurrentFrame();
@@ -618,31 +638,25 @@ const Values: React.FC = () => {
   );
 };
 
-// ─── Bars 19–20: the icon in every color, the name and the address ────────────────────────────
-
-const ICONS = ["orange", "blue", "green", "pink", "teal", "purple", "red", "yellow"];
+// ─── Bar 20: the icon and the name on the last hit, then the address ──────────────────────────
 
 const Outro: React.FC = () => {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 60, config: { damping: 10, stiffness: 130, mass: 0.7 } });
-  // Half a beat per color for the first bar, then the icon settles on its own gradient.
-  const step = Math.floor(frame / (BEAT / 2));
-  const icon = step < ICONS.length ? `app_icon_${ICONS[step]}.png` : "app_icon.png";
-  const kick = step <= ICONS.length ? pulse(frame, step * (BEAT / 2), 10) : 0;
-  const name = spring({ frame: frame - BAR, fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
-  const url = spring({ frame: frame - BAR - beat(1), fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
-  const sub = spring({ frame: frame - BAR - beat(2), fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
+  const name = spring({ frame, fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
+  const url = spring({ frame: frame - beat(1), fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
+  const sub = spring({ frame: frame - beat(2), fps: 60, config: { damping: 13, stiffness: 150, mass: 0.7 } });
   return (
     <Stage band={[530, 1410]} full>
       <Img
-        src={staticFile(`icons/${icon}`)}
+        src={staticFile("icons/app_icon.png")}
         style={{
           position: "absolute",
           left: 540,
           top: 720,
           width: 340,
           height: 340,
-          transform: `translate(-50%, -50%) scale(${enter * (1 + 0.07 * kick)})`,
+          transform: `translate(-50%, -50%) scale(${enter})`,
         }}
       />
       <div style={{ position: "absolute", top: 950, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 150, letterSpacing: -5, color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 50}px)` }}>

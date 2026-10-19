@@ -34,8 +34,9 @@ Remotion is not open source: free for individuals and companies of up to three p
 
 ## What assumes today's app
 
-- The Chords tab's key (`KEY_A`), the setlist's grip indexes, the drag and swipe positions, and the frames above, all
-  in `Promo.kt`; the tuner comes into tune around frame 90, bar 13's downbeat.
+- The Chords and Scales tabs' key (`KEY_A`), how far the Scales tab is scrolled (`SCALE_FAMILIES_Y`) and the cell it
+  taps, the setlist's grip indexes, the drag and swipe positions, and the frames above, all in `Promo.kt`; the tuner
+  comes into tune around frame 90, bar 13's downbeat.
 - The claims on screen are text in `Promo.tsx`: the feature chips, the instruments the Chords clip switches to, the
   transposition badge (`STEPS`), the platform list, and "Free. No ads. No account. Offline."
 - Brand colors are the website's (`C` in `kit.tsx`); the tag colors are the app's `TagColor` dark variants.
@@ -43,7 +44,7 @@ Remotion is not open source: free for individuals and companies of up to three p
 ## Decisions the owner made (keep them)
 
 - Features are demoed live in recorded clips (a setlist dragged, a song transposed and renotated, the Chords tab across
-  instruments, a PDF's pages swiped), not illustrated with graphics.
+  instruments, a scale's sheet opened on the Scales tab, a PDF's pages swiped), not illustrated with graphics.
 - Timeless: nothing calls a feature new.
 - A static, flat backdrop: the app's own dark background (`#15121C`, the website's too), no gradient and no grain.
 - No soft shadows or glows around devices, chips, or icons (they encoded as blocky halos); devices have a thin outline.
