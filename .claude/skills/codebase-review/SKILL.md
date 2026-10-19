@@ -235,6 +235,7 @@ they found them.
 - **Areas that have worked as reviewer splits:** `:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
   `SyncEngine`, Dropbox); `:domain`; `:presentation`; the platform shells, docs and CI (`app/*`, `.github/`).
 - **Unit tests**: what may be tested and the command are in the root `CLAUDE.md`'s Tests section.
+- **Budgets** are the code-style skill's (`check_sizes.py`): a `.github` or source-set `CLAUDE.md` counts as a module's.
 - **Per-platform compile checks:** desktop `:<module>:compileKotlinDesktop` (`:app:desktop:compileKotlin` for
   `:presentation` and the apps); `androidMain` → `:app:android:compileDebugKotlin`; `iosMain` →
   `:app:ios:linkDebugFrameworkIosSimulatorArm64`; `wasmJsMain` → `:app:web:compileKotlinWasmJs`; the packaged
