@@ -30,6 +30,15 @@ internal object LayoutBudget {
     const val MAX_CHARACTERS = 200_000
 
     /**
+     * The most sections a song may have for its sections to be cut at all, or for its Scales section to be worked out. A
+     * file of more than this is a songbook rather than a song, and is read by paging through it; the flow is tried in
+     * every number of columns, runs on the main thread, and runs again on every frame of a pinch, and the scale groups,
+     * which grow faster than the sections, are worked out on the main thread for the page on screen, while a scale
+     * suggested for a whole songbook says nothing anyway.
+     */
+    const val MAX_CUT_SECTION_COUNT = 200
+
+    /**
      * The sections that fit the budget, and whether anything was left out. It stops at the end of the last section
      * that fits, so that what is shown ends where the song pauses; only a first section that does not fit on its own -
      * a file with no blank line in it, which the parser takes for one paragraph - is cut inside, at a line.

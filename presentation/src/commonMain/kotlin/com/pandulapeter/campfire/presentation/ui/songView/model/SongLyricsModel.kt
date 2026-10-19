@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -90,7 +91,8 @@ internal class SongLyricsModel(
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
- * section: a walk over every chord, so done here, with the chords on only.
+ * section: a walk over every chord, so done here, with the chords on only, and never for a songbook (over
+ * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections), where it grows past what the main thread can spare.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -108,6 +110,7 @@ internal fun prepareSongLyrics(
     } else {
         emptyList()
     }
+    val isSongbook = standardSong.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),
@@ -120,7 +123,7 @@ internal fun prepareSongLyrics(
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
-        scaleGroups = if (shouldShowChords && suggestsScales) songScaleGroupsOf(standardSong, labels, notation) else emptyList(),
+        scaleGroups = if (shouldShowChords && suggestsScales && !isSongbook) songScaleGroupsOf(standardSong, labels, notation) else emptyList(),
     )
 }
 

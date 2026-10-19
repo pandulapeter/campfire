@@ -392,4 +392,16 @@ class RenderSectionsTest {
         val lyricsOnly = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la\n{eov}"), shouldShowChords = false, labels = labels)
         assertFalse(lyricsOnly.hasChords)
     }
+
+    @Test
+    fun `a songbook has no scales section`() {
+        fun groupsOf(sectionCount: Int) = prepareSongLyrics(
+            ChordProParser.parse((1..sectionCount).joinToString("\n\n") { "{sov}\n[G]la [C]la [D]la\n{eov}" }),
+            shouldShowChords = true,
+            labels = labels,
+            suggestsScales = true,
+        ).scaleGroups
+        assertEquals(1, groupsOf(LayoutBudget.MAX_CUT_SECTION_COUNT).size)
+        assertTrue(groupsOf(LayoutBudget.MAX_CUT_SECTION_COUNT + 1).isEmpty())
+    }
 }

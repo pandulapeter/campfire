@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.grid
 
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
+import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget.MAX_CUT_SECTION_COUNT
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -482,10 +483,3 @@ internal fun Int.scaledBy(fitScale: Float) = if (fitScale == 1f) this else (this
  * that a line drawn exactly as wide as itself is never laid out a pixel too narrow for its last word.
  */
 internal fun measuredWidthOf(width: Int, fitScale: Float) = if (fitScale == 1f) width else ceil(width / fitScale).toInt()
-
-/**
- * The most sections a song may have for its sections to be cut at all. A file of more than this is a songbook rather
- * than a song, and is read by paging through it; the flow is tried in every number of columns, runs on the main
- * thread, and runs again on every frame of a pinch.
- */
-private const val MAX_CUT_SECTION_COUNT = 200
