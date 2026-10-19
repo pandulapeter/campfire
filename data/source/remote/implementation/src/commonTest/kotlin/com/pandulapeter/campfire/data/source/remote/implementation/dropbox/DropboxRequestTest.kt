@@ -19,11 +19,14 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthori
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
+import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutCapability
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
@@ -31,7 +34,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
@@ -41,6 +46,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * How the provider answers what Dropbox says about pace. The service is a [MockEngine] and the waiting happens in
@@ -344,6 +350,75 @@ class DropboxRequestTest {
             expected = RemoteWriteResult.Written("0123456789abcdef"),
             actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
         )
+    }
+
+    /** `fetch` has no timeout between packets, so in the browser each call is bounded by what it carries. */
+    @Test
+    fun `each Dropbox call on the browser carries its own bound`() = runTest {
+        val uploadSize = 3 * 16_384
+        assertEquals(
+            expected = mapOf(
+                "get_current_account" to 60_000L,
+                "list_folder" to 120_000L,
+                "download" to 120_000L,
+                "upload" to 63_000L,
+            ),
+            actual = recordedBounds(hasSocketTimeout = false, uploadSize = uploadSize),
+        )
+        assertEquals(
+            expected = setOf(HttpTimeoutConfig.INFINITE_TIMEOUT_MS),
+            actual = recordedBounds(hasSocketTimeout = true, uploadSize = uploadSize).values.toSet(),
+        )
+    }
+
+    @Test
+    fun `a stalled call on the browser fails within its own bound`() = runTest {
+        val provider = dropboxProvider(
+            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = false) },
+            storage = StoredSyncCredentials(connectedCredentials(extraFields = STORED_NAME)),
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) { awaitCancellation() }
+        assertEquals(
+            expected = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Jane", email = "jane@example.com"),
+            actual = provider.loadAccount(),
+        )
+        assertTrue(currentTime < 10.minutes.inWholeMilliseconds, "The account read took $currentTime ms to fail.")
+        val listingStart = currentTime
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertTrue(currentTime - listingStart < 17.minutes.inWholeMilliseconds, "The listing took ${currentTime - listingStart} ms to fail.")
+    }
+
+    /** A native engine bounds the silence between packets instead, so a slow transfer may take as long as it needs. */
+    @Test
+    fun `a slow call on a native engine is not cut short`() = runTest {
+        val provider = dropboxProvider(
+            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = true) },
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) {
+            delay(5.minutes)
+            respondJson(EMPTY_LISTING)
+        }
+        assertEquals(expected = emptyList(), actual = provider.list().files)
+    }
+
+    /** The request bound each kind of call carried, by the last segment of its address. */
+    private suspend fun recordedBounds(hasSocketTimeout: Boolean, uploadSize: Int): Map<String, Long?> {
+        val bounds = mutableMapOf<String, Long?>()
+        val provider = dropboxProvider(configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = hasSocketTimeout) }) { request ->
+            val name = request.url.encodedPath.substringAfterLast('/')
+            bounds[name] = request.getCapabilityOrNull(HttpTimeoutCapability)?.requestTimeoutMillis
+            when (name) {
+                "get_current_account" -> respondJson("""{"account_id":"dbid:2","name":{"display_name":"Joe"}}""")
+                "download" -> respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r7"}"""))
+                "upload" -> respondJson("""{"name":"song.cho","rev":"0123456789abcdef"}""")
+                else -> respondJson(EMPTY_LISTING)
+            }
+        }
+        provider.loadAccount()
+        provider.list()
+        provider.download(LibraryFileKind.SONG, "song.cho")
+        provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(uploadSize), expectedRevision = null)
+        return bounds
     }
 
     private companion object {

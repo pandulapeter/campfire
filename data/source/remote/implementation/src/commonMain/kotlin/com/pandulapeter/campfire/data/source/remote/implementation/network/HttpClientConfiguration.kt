@@ -13,6 +13,9 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.UserAgent
+import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.timeout
+import io.ktor.util.AttributeKey
 
 /**
  * The settings every engine shares. Redirects are followed (the token endpoints do, and so does the Cover Art Archive,
@@ -28,7 +31,8 @@ import io.ktor.client.plugins.UserAgent
  *   it, makes every request to a host that does not expect it a CORS preflight that host may well refuse.
  * @param hasSocketTimeout False in the browser, where `fetch` offers no timeout between packets and a dead connection
  *   could only be told apart from a slow one by a bound on the whole exchange, which is therefore kept there, at
- *   [BROWSER_REQUEST_TIMEOUT_MILLIS].
+ *   [BROWSER_REQUEST_TIMEOUT_MILLIS] by default. A request carrying [BrowserCallTimeout] takes that bound instead, since
+ *   a call that knows how much it carries can tell a stall much sooner; the native engines ignore the attribute.
  */
 internal fun HttpClientConfig<*>.configureClient(sendsUserAgent: Boolean, hasSocketTimeout: Boolean) {
     expectSuccess = false
@@ -39,6 +43,22 @@ internal fun HttpClientConfig<*>.configureClient(sendsUserAgent: Boolean, hasSoc
         requestTimeoutMillis = if (hasSocketTimeout) HttpTimeoutConfig.INFINITE_TIMEOUT_MS else BROWSER_REQUEST_TIMEOUT_MILLIS
         connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
         socketTimeoutMillis = SOCKET_TIMEOUT_MILLIS
+    }
+    if (!hasSocketTimeout) {
+        install(BrowserCallTimeouts)
+    }
+}
+
+/**
+ * The bound, in milliseconds, on the whole exchange of one request in the browser, where it replaces
+ * [BROWSER_REQUEST_TIMEOUT_MILLIS]. Ignored by the native engines, whose socket timeout already tells a stall apart.
+ */
+internal val BrowserCallTimeout = AttributeKey<Long>("BrowserCallTimeout")
+
+/** Runs before [HttpTimeout] fills in the client's defaults, so only the total of a request is replaced. */
+private val BrowserCallTimeouts = createClientPlugin("BrowserCallTimeouts") {
+    onRequest { request, _ ->
+        request.attributes.getOrNull(BrowserCallTimeout)?.let { bound -> request.timeout { requestTimeoutMillis = bound } }
     }
 }
 

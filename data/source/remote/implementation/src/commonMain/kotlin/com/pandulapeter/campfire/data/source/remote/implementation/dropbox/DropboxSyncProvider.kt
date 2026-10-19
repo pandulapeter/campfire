@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCred
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.Pkce
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
+import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
@@ -212,11 +213,21 @@ internal class DropboxSyncProvider(
     override suspend fun list(): RemoteListing {
         val files = mutableListOf<RemoteFile>()
         var response = json.decodeFromString<DropboxListFolderResponse>(
-            requests.rpc(LIST_FOLDER_URL, """{"path":"","recursive":true,"include_deleted":false}""")
+            requests.rpc(
+                url = LIST_FOLDER_URL,
+                body = """{"path":"","recursive":true,"include_deleted":false}""",
+                browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
+            ),
         )
         files += response.entries.toRemoteFiles()
         while (response.hasMore) {
-            response = json.decodeFromString(requests.rpc(LIST_FOLDER_CONTINUE_URL, """{"cursor":${response.cursor.toAsciiJsonString()}}"""))
+            response = json.decodeFromString(
+                requests.rpc(
+                    url = LIST_FOLDER_CONTINUE_URL,
+                    body = """{"cursor":${response.cursor.toAsciiJsonString()}}""",
+                    browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
+                ),
+            )
             files += response.entries.toRemoteFiles()
         }
         return RemoteListing(files = files)
@@ -247,6 +258,7 @@ internal class DropboxSyncProvider(
 
     private suspend fun downloadResponse(path: String) = requests.request { accessToken ->
         httpClientHolder.client().post(DOWNLOAD_URL) {
+            attributes.put(BrowserCallTimeout, DropboxTransport.DOWNLOAD_BROWSER_TIMEOUT_MILLIS)
             header("Authorization", "Bearer $accessToken")
             header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
         }
@@ -281,6 +293,10 @@ internal class DropboxSyncProvider(
         }
         val response = requests.request { accessToken ->
             httpClientHolder.client().post(UPLOAD_URL) {
+                attributes.put(
+                    BrowserCallTimeout,
+                    DropboxTransport.UPLOAD_BROWSER_TIMEOUT_MILLIS + bytes.size * 1000L / DropboxTransport.UPLOAD_BROWSER_BYTES_PER_SECOND,
+                )
                 header("Authorization", "Bearer $accessToken")
                 header(
                     "Dropbox-API-Arg",

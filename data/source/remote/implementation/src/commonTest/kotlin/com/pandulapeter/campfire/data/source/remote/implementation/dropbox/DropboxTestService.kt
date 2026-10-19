@@ -18,20 +18,34 @@ import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpC
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockEngineConfig
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CoroutineDispatcher
 
-/** A [DropboxSyncProvider] whose service is [handler], connected through [storage]. */
+/**
+ * A [DropboxSyncProvider] whose service is [handler], connected through [storage].
+ *
+ * @param engineDispatcher Where the engine runs, and with it the client's request timeout: a test whose bound has to
+ *   expire passes the test's own dispatcher, or the bound is waited in real time.
+ */
 internal fun dropboxProvider(
     configure: HttpClientConfig<*>.() -> Unit = {},
     storage: SyncCredentialsLocalSource = StoredSyncCredentials(connectedCredentials()),
+    engineDispatcher: CoroutineDispatcher? = null,
     handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ) = DropboxSyncProvider(
-    httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
+    httpClientHolder = HttpClientHolder {
+        val engine = MockEngineConfig().apply {
+            if (engineDispatcher != null) dispatcher = engineDispatcher
+            addHandler(handler)
+        }
+        HttpClient(MockEngine(engine), configure)
+    },
     credentialsStore = SyncCredentialsStore(storage, Logger.Standard),
     appKey = "test-app-key",
     logger = Logger.Standard,

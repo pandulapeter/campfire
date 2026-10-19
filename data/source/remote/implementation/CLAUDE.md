@@ -55,7 +55,8 @@ Silent failures go to the injected `Logger`.
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
-  while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout.
+  while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout; Dropbox calls carry
+  a shorter one of their own there (60 s RPC, 120 s listing pages and downloads, uploads by size).
 - Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
   32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as `SyncNetworkException`
   instead. Transport failures are retried too: timeouts six times, anything else (a reset, a cut stream, or a failed

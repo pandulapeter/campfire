@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationEx
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
+import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -42,10 +43,15 @@ internal class DropboxTransport(
     private val tokens: DropboxTokens,
 ) {
 
-    /** A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body. */
-    suspend fun rpc(url: String, body: String?): String {
+    /**
+     * A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body.
+     *
+     * @param browserTimeoutMillis The bound on the whole exchange in the browser, see [BrowserCallTimeout].
+     */
+    suspend fun rpc(url: String, body: String?, browserTimeoutMillis: Long = RPC_BROWSER_TIMEOUT_MILLIS): String {
         val response = request { accessToken ->
             httpClientHolder.client().post(url) {
+                attributes.put(BrowserCallTimeout, browserTimeoutMillis)
                 header("Authorization", "Bearer $accessToken")
                 if (body != null) {
                     contentType(ContentType.Application.Json)
@@ -166,6 +172,28 @@ internal class DropboxTransport(
         const val MAXIMUM_REQUESTED_WAIT_SECONDS = 120L
 
         const val RETRY_JITTER_MILLIS = 500L
+
+        /**
+         * The browser's bound on an account read or a deletion, a few hundred bytes each way.
+         *
+         * These bounds on one call's whole exchange apply in the browser only, where `fetch` has no timeout between
+         * packets. They keep a stalled web run from sitting on "syncing" for over an hour, at the price of a large file
+         * on a very slow browser link timing out where it would have finished; the native engines, which bound the
+         * silence instead, are unaffected.
+         */
+        const val RPC_BROWSER_TIMEOUT_MILLIS = 60_000L
+
+        /** A gzipped listing page of up to about 200 KB, at about 2 KB/s. */
+        const val LISTING_BROWSER_TIMEOUT_MILLIS = 120_000L
+
+        /** A download, whose size is not known when it is asked for: a song at any rate, 8 MB at about 70 KB/s. */
+        const val DOWNLOAD_BROWSER_TIMEOUT_MILLIS = 120_000L
+
+        /** An upload's bound before its size is counted: a song of a few KB gets this. */
+        const val UPLOAD_BROWSER_TIMEOUT_MILLIS = 60_000L
+
+        /** The rate an upload's size is given time at on top of [UPLOAD_BROWSER_TIMEOUT_MILLIS]: 8 MB gets about 9 minutes. */
+        const val UPLOAD_BROWSER_BYTES_PER_SECOND = 16_384L
     }
 }
 
