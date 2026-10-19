@@ -21,13 +21,11 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   (closing the sheet, which belongs to the song under it), whenever the tuner sheet stops being the visible dialog, and
   on exit (`AppExitController`). `TunerListeningEffect` stops and restarts it with the screen's lifecycle (app hidden,
   screen locked, required update drawn over), so the system's recording indicator is lit exactly while a tuner shows.
-- Opening the sheet stops a click playing on the song; the two never hold audio together. The web's `setStartable`
-  follows the Tuner tab or the sheet being on top.
 
 ## Microphone permission
 
-`ui/platform/MicrophonePermission.kt`: Android and iOS re-read on every resume; the web queries `navigator.permissions`
-at app start (`CampfireWebApp`) and follows its change events; the desktop is always unknown.
+`ui/platform/MicrophonePermission.kt`: Android, iOS, and the web re-read on every resume (the web also at app start,
+`CampfireWebApp`, and on the browser's change events); the desktop is always unknown.
 
 - **Nothing asks at launch.** A tap that opens a tuner (the Tuner item, the song's tuner button or menu entry) marks the
   opening (`TunerController.markOpenedByTap`, only where the tuner did open), and the page consumes the mark and, if the
@@ -49,16 +47,10 @@ at app start (`CampfireWebApp`) and follows its change events; the desktop is al
 - The cents meter is a scale of ticks, not a track with a knob (which reads as a slider and gets reached for). In tune
   is shown by the notch closing into a check, never by colour alone.
 - The reading crossfades only when its kind changes (`tunerReadingKindOf`, tested); numbers change in place.
-  `signedCents` uses a typographic minus.
 - The prompt is laid out over an invisible note so the label keeps one height.
 - **Accessibility**: one node explored with the exact reading; a second announces only the note and a coarse step
   (`TunerAnnouncement.kt`, tested) after it held 700 ms, since a reading every 33 ms would queue speech the microphone
   hears.
-- The display reads the tuner's state itself, so thirty readings a second recompose only it; screens pass the rest of
-  the page only what changes with a note or a setting.
-- The in-tune color's spring is handed down as a `State`, read only by the note's and the reading's `Text`s; the meter
-  gets the target color and eases its notch in the draw phase, in a `Canvas` with a layer of its own, so a needle frame
-  re-records only the meter.
 
 ## Strings and settings
 
@@ -78,6 +70,5 @@ at app start (`CampfireWebApp`) and follows its change events; the desktop is al
 ## Layout
 
 The tab pins the display above a `SettingsPage` of two titled sections, Tuning (notice, issue line, strings, Chromatic,
-instrument) and Calibration (reference pitch), two columns where there is room, following the Metronome tab; it keeps the screen on while it hears. The sheet scrolls
-everything under its header: the same display at the same size (compact only in a short window), then the issue line and
-strings.
+instrument) and Calibration (reference pitch); it keeps the screen on while it hears. The sheet scrolls everything under
+its header: the same display at the same size (compact only in a short window), then the issue line and strings.
