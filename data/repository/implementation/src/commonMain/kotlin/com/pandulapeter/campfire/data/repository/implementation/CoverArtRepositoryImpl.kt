@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.recovering
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -96,11 +98,11 @@ internal class CoverArtRepositoryImpl(
         }
     }
 
-    override suspend fun getCoverArt(url: String): ByteArray? {
+    override suspend fun getCoverArt(url: String): CoverArtResult {
         val download = mutex.withLock {
             if (failures.containsKey(url)) {
-                val retryAt = failures[url]
-                if (retryAt == null || retryAt.hasNotPassedNow()) return null
+                val retryAt = failures[url] ?: return CoverArtResult.Missing
+                if (retryAt.hasNotPassedNow()) return CoverArtResult.Unreachable
                 failures.remove(url)
             }
             downloads.getOrPut(url) {
@@ -122,6 +124,10 @@ internal class CoverArtRepositoryImpl(
         what = "cover search",
     ) { catalogue, onBusy ->
         coverArtSearchRemoteSources.all.first { it.catalogue == catalogue }.searchCoverArt(query = query, onBusy = onBusy)
+    }.onStart {
+        // A search is always the user asking, so it is when an address that could not be reached gets another chance;
+        // one that answered with no cover stays remembered, which is how a record without one drops out at once.
+        mutex.withLock { failures.values.removeAll { it != null } }
     }
 
     override suspend fun clearCoverArtCache() {
@@ -130,34 +136,36 @@ internal class CoverArtRepositoryImpl(
         cacheChanges.update { it + 1 }
     }
 
-    private suspend fun load(url: String, download: Download): ByteArray? = try {
+    private suspend fun load(url: String, download: Download): CoverArtResult = try {
         val key = keyOf(url)
-        coverArtLocalSource.loadCoverArt(key) ?: downloadSlots.withPermit {
+        coverArtLocalSource.loadCoverArt(key)?.let(CoverArtResult::Image) ?: downloadSlots.withPermit {
             // An abandoned download records no failure, so that the next asker starts afresh; it leaves the map at
-            // once, under the same lock, so that nobody joins it in the moment before it answers null.
+            // once, under the same lock, so that nobody joins it in the moment before it answers.
             val isAbandoned = mutex.withLock {
                 (download.waiters == 0).also { isAbandoned -> if (isAbandoned) downloads.remove(url) }
             }
-            if (isAbandoned) null else fetch(url, key)
+            if (isAbandoned) CoverArtResult.Unreachable else fetch(url, key)
         }
     } finally {
         mutex.withLock { if (downloads[url] === download) downloads.remove(url) }
     }
 
     private suspend fun fetch(url: String, key: String) = when (val download = coverArtRemoteSource.downloadCoverArt(url)) {
-        is CoverArtDownload.Image -> download.bytes.also {
-            coverArtLocalSource.saveCoverArt(key, it)
+        is CoverArtDownload.Image -> CoverArtResult.Image(download.bytes).also {
+            coverArtLocalSource.saveCoverArt(key, download.bytes)
             cacheChanges.update { changes -> changes + 1 }
         }
-        CoverArtDownload.Missing -> null.also { mutex.withLock { failures[url] = null } }
-        CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = environment.timeSource.markNow() + UNREACHABLE_RETRY_DELAY } }
+        CoverArtDownload.Missing -> CoverArtResult.Missing.also { mutex.withLock { failures[url] = null } }
+        CoverArtDownload.Unreachable -> CoverArtResult.Unreachable.also {
+            mutex.withLock { failures[url] = environment.timeSource.markNow() + UNREACHABLE_RETRY_DELAY }
+        }
     }
 
     private fun keyOf(url: String) = Sha256.hashToHex(url.encodeToByteArray())
 
     /** One address's download and how many callers are waiting for it, both guarded by [mutex]. */
     private class Download {
-        lateinit var deferred: Deferred<ByteArray?>
+        lateinit var deferred: Deferred<CoverArtResult>
         var waiters = 0
     }
 

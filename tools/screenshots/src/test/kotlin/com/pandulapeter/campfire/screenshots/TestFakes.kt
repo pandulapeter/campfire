@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.screenshots
 
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import kotlinx.coroutines.flow.flowOf
@@ -25,7 +26,7 @@ internal val testFakes = module {
  * already answered it with nothing, so the search's first frame is its last.
  */
 private class OfflineCoverArtRepository : CoverArtRepository {
-    override suspend fun getCoverArt(url: String): ByteArray? = null
+    override suspend fun getCoverArt(url: String): CoverArtResult = CoverArtResult.Missing
 
     override fun searchCoverArt(query: CoverArtQuery) = flowOf(
         CoverArtSearchResults(candidates = emptyList(), pending = emptySet(), busy = emptySet(), failed = emptySet()),

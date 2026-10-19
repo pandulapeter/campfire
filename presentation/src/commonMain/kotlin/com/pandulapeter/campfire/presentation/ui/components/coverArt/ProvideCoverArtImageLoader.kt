@@ -22,6 +22,7 @@ import coil3.fetch.SourceFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import coil3.request.crossfade
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
 import okio.Buffer
 import org.koin.compose.koinInject
@@ -61,7 +62,10 @@ private class CoverArtFetcher(
 
     /** A cover with nothing to show is an error to Coil, which is what leaves the place empty. */
     override suspend fun fetch(): FetchResult {
-        val bytes = getCoverArt(data.url) ?: throw CoverArtUnavailableException(data.url)
+        val bytes = when (val result = getCoverArt(data.url)) {
+            is CoverArtResult.Image -> result.bytes
+            else -> throw CoverArtUnavailableException(url = data.url, isUnreachable = result is CoverArtResult.Unreachable)
+        }
         return SourceFetchResult(
             source = ImageSource(source = Buffer().write(bytes), fileSystem = options.fileSystem),
             mimeType = null,
@@ -73,5 +77,3 @@ private class CoverArtFetcher(
         override fun create(data: CoverArt, options: Options, imageLoader: ImageLoader) = CoverArtFetcher(data, options, getCoverArt)
     }
 }
-
-private class CoverArtUnavailableException(url: String) : Exception("No cover art at $url.")

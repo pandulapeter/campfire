@@ -100,7 +100,7 @@ which is visible once a load has finished:
 - Downloads run in the repository's own scope (a row scrolled away must not cancel another row's wait); one download
   per address; at most `MAX_CONCURRENT_DOWNLOADS` (4) at once, and one with no callers left by its turn is skipped (a
   fling would otherwise queue a request per row, the HTTP timeout counting the queue). A non-cover answer is not asked
-  again this session; an unreachable address not for a minute.
+  again this session; an unreachable address not for a minute or until the next cover search starts.
 - `coverArtCacheSize` re-lists after writes and prunes off a conflated `StateFlow` counter.
 - Searches run every catalogue at once via `searchCatalogues` (`CatalogueSearch.kt`, a `channelFlow`), appending each
   one's results as it answers so the grid only grows at its end.

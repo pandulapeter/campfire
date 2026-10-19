@@ -59,6 +59,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_resu
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
+import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtUnavailableException
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import org.jetbrains.compose.resources.painterResource
@@ -82,22 +83,16 @@ internal fun CoverArtResults(
     scrollingControls: (@Composable () -> Unit)?,
     state: CoverArtSearchState,
     unavailableKeys: Set<String>,
+    unreachableKeys: Set<String>,
     selectedUrl: String?,
     onSelected: (CoverArtCandidate) -> Unit,
-    onUnavailable: (CoverArtCandidate) -> Unit,
+    onUnavailable: (candidate: CoverArtCandidate, isUnreachable: Boolean) -> Unit,
     onRetry: () -> Unit,
     fields: @Composable () -> Unit,
 ) {
     val results = (state as? CoverArtSearchState.Active)?.results
     val candidates = remember(results, unavailableKeys) { results?.candidates?.filterNot { it.key in unavailableKeys }.orEmpty() }
-    val content = when {
-        results == null -> ResultsContent.HINT
-        candidates.isNotEmpty() -> ResultsContent.GRID
-        // Only MusicBrainz ever asks to be waited for, so the line saying so is only true once nothing else is left.
-        !results.isComplete -> if (results.busy.containsAll(results.pending)) ResultsContent.BUSY else ResultsContent.LOADING
-        results.failed.isNotEmpty() -> ResultsContent.FAILED
-        else -> ResultsContent.NO_RESULTS
-    }
+    val content = resultsContentOf(results = results, shownCandidates = candidates, unreachableKeys = unreachableKeys)
     val gridState = rememberLazyGridState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardDismissal = remember(keyboardController) {
@@ -155,7 +150,7 @@ internal fun CoverArtResults(
                         candidate = candidate,
                         isSelected = candidate.coverArtUrl == selectedUrl,
                         onClick = { onSelected(candidate) },
-                        onUnavailable = { onUnavailable(candidate) },
+                        onUnavailable = { isUnreachable -> onUnavailable(candidate, isUnreachable) },
                     )
                 }
                 if (results?.isComplete == false) {
@@ -219,15 +214,6 @@ internal fun CoverArtResults(
     }
 }
 
-private enum class ResultsContent {
-    HINT,
-    LOADING,
-    BUSY,
-    FAILED,
-    NO_RESULTS,
-    GRID,
-}
-
 @Composable
 private fun CoverArtSearchMessage(
     modifier: Modifier = Modifier,
@@ -257,7 +243,7 @@ private fun CoverArtTile(
     candidate: CoverArtCandidate,
     isSelected: Boolean,
     onClick: () -> Unit,
-    onUnavailable: () -> Unit,
+    onUnavailable: (isUnreachable: Boolean) -> Unit,
 ) = Column(
     modifier = modifier
         .clip(MaterialTheme.shapes.medium)
@@ -279,7 +265,8 @@ private fun CoverArtTile(
                 model = CoverArt(candidate.coverArtUrl),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                onError = { onUnavailable() },
+                // Anything but the fetcher's own refusal, a decode failure for one, is not a matter of the network.
+                onError = { state -> onUnavailable((state.result.throwable as? CoverArtUnavailableException)?.isUnreachable == true) },
             )
         }
         if (isSelected) {

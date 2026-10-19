@@ -20,8 +20,9 @@ Opened from the cover in the About the song sheet; absent in performance mode or
   request a second.
 - The Web address tab previews after a 500 ms typing pause; an address that does not load can still be saved, since a
   host may refuse only the web build.
-- A tile whose thumbnail fails is dropped (that is how a cover-less release group is found out); a new search restores
-  them, since the failure may have been momentary.
+- A tile whose thumbnail fails is dropped (that is how a cover-less release group is found out); if any dropped tile
+  was unreachable and none is left, the search shows as failed with Retry. A new search restores them all, and the
+  repository asks unreachable ones again.
 - **The sheet opens at full height**, since its content grows after opening and resizing while sliding stuttered.
 - The search lives in the view model (`coverArtSearch`) to survive activity recreation, and is cancelled once the sheet
   is nowhere in the stack (the Remove question over it keeps it).

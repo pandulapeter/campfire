@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import kotlinx.coroutines.flow.Flow
 
@@ -23,18 +24,21 @@ import kotlinx.coroutines.flow.Flow
 interface CoverArtRepository {
 
     /**
-     * The bytes of the image at [url], or null where there is none to show: nothing there, not an image, or no
-     * network. Several callers asking for one address at once share one download, and an address that failed is not
-     * asked again for a while — for the rest of the session where it answered with something that is not a cover,
-     * and for a minute where it could not be reached — so that a dead address is not requested on every scroll.
+     * The image at [url], from the device's copy or downloaded, as [CoverArtResult.Image]; [CoverArtResult.Missing]
+     * where there is nothing there or it is not an image, and [CoverArtResult.Unreachable] where no answer came. Several
+     * callers asking for one address at once share one download, and an address that failed is not asked again for a
+     * while — for the rest of the session where it answered with something that is not a cover, and for a minute where
+     * it could not be reached — so that a dead address is not requested on every scroll.
      */
-    suspend fun getCoverArt(url: String): ByteArray?
+    suspend fun getCoverArt(url: String): CoverArtResult
 
     /**
      * Asks every cover search service about [query] at once, and emits where the search is: first with every service
      * pending, then again whenever one of them has to wait or answers. A service that fails is reported in
      * [CoverArtSearchResults.failed] rather than thrown, so the flow only ever completes, once the last one has
-     * answered; collecting it is what runs the search, and cancelling the collection stops it.
+     * answered; collecting it is what runs the search, and cancelling the collection stops it. Starting a search
+     * forgets the addresses that could not be reached, so its thumbnails, and any other cover shown afterwards, are
+     * asked again.
      */
     fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults>
 

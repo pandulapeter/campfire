@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtQuery
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.catalogue.Catalogue
 import com.pandulapeter.campfire.data.model.song.Song
@@ -40,7 +41,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class CoverArtRepositoryImplTest {
@@ -51,8 +52,8 @@ class CoverArtRepositoryImplTest {
         val local = FakeCoverArtLocalSource()
         val repository = repository(local = local, remote = remote)
 
-        assertContentEquals(IMAGE, repository.getCoverArt(URL))
-        assertContentEquals(IMAGE, repository.getCoverArt(URL))
+        assertContentEquals(IMAGE, assertIs<CoverArtResult.Image>(repository.getCoverArt(URL)).bytes)
+        assertContentEquals(IMAGE, assertIs<CoverArtResult.Image>(repository.getCoverArt(URL)).bytes)
 
         assertEquals(1, remote.requestCount)
         assertEquals(setOf(keyOf(URL)), local.copies.keys)
@@ -73,7 +74,7 @@ class CoverArtRepositoryImplTest {
         gate.complete(Unit)
         val results = callers.awaitAll()
 
-        results.forEach { assertContentEquals(IMAGE, it) }
+        results.forEach { assertContentEquals(IMAGE, assertIs<CoverArtResult.Image>(it).bytes) }
         assertEquals(1, remote.requestCount)
     }
 
@@ -93,7 +94,7 @@ class CoverArtRepositoryImplTest {
         gate.complete(Unit)
         val results = callers.awaitAll()
 
-        results.forEach { assertContentEquals(IMAGE, it) }
+        results.forEach { assertContentEquals(IMAGE, assertIs<CoverArtResult.Image>(it).bytes) }
         assertEquals(urls.toSet(), remote.requestedUrls.toSet())
     }
 
@@ -123,7 +124,7 @@ class CoverArtRepositoryImplTest {
 
         assertEquals(inFlight.toSet(), remote.requestedUrls.toSet())
         assertEquals(inFlight.map(::keyOf).toSet(), local.copies.keys)
-        assertContentEquals(IMAGE, repository.getCoverArt(queued.first()))
+        assertContentEquals(IMAGE, assertIs<CoverArtResult.Image>(repository.getCoverArt(queued.first())).bytes)
         assertTrue(queued.first() in remote.requestedUrls)
     }
 
@@ -132,8 +133,8 @@ class CoverArtRepositoryImplTest {
         val remote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
         val repository = repository(remote = remote)
 
-        assertNull(repository.getCoverArt(URL))
-        assertNull(repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
 
         assertEquals(1, remote.requestCount)
     }
@@ -143,8 +144,8 @@ class CoverArtRepositoryImplTest {
         val remote = FakeCoverArtRemoteSource { CoverArtDownload.Unreachable }
         val repository = repository(remote = remote)
 
-        assertNull(repository.getCoverArt(URL))
-        assertNull(repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
 
         assertEquals(1, remote.requestCount)
     }
@@ -154,14 +155,38 @@ class CoverArtRepositoryImplTest {
         val remote = FakeCoverArtRemoteSource { CoverArtDownload.Unreachable }
         val repository = repository(remote = remote)
 
-        assertNull(repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
         advanceTimeBy(59_000)
-        assertNull(repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
         assertEquals(1, remote.requestCount)
         advanceTimeBy(2_000)
-        assertNull(repository.getCoverArt(URL))
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
 
         assertEquals(2, remote.requestCount)
+    }
+
+    @Test
+    fun `a cover search asks unreachable addresses again`() = runTest {
+        val remote = FakeCoverArtRemoteSource { CoverArtDownload.Unreachable }
+        val repository = repository(remote = remote)
+
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
+        repository.searchCoverArt(QUERY).toList()
+        assertEquals(CoverArtResult.Unreachable, repository.getCoverArt(URL))
+
+        assertEquals(2, remote.requestCount)
+    }
+
+    @Test
+    fun `a cover search does not ask a missing address again`() = runTest {
+        val remote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
+        val repository = repository(remote = remote)
+
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+        repository.searchCoverArt(QUERY).toList()
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+
+        assertEquals(1, remote.requestCount)
     }
 
     @Test

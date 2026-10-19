@@ -9,11 +9,13 @@
  */
 package com.pandulapeter.campfire.domain.api.catalogue
 
+import com.pandulapeter.campfire.data.model.catalogue.CoverArtResult
+
 interface GetCoverArtUseCase {
 
     /**
-     * The bytes of the cover image at [url], from the device's own copy or downloaded and kept, or null where there is
-     * none to show. See `CoverArtRepository.getCoverArt` for how failures are remembered.
+     * The cover image at [url], from the device's own copy or downloaded and kept, or why there is none to show:
+     * nothing there, or no answer. See `CoverArtRepository.getCoverArt` for how failures are remembered.
      */
-    suspend operator fun invoke(url: String): ByteArray?
+    suspend operator fun invoke(url: String): CoverArtResult
 }
