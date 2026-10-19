@@ -11,7 +11,6 @@
 # :presentation — ui/screens/songDetails/stepping
 
 The song details screen's pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songView/`).
-`PedalCoverageTest` (`tools/screenshots`) guards the pedal promise.
 
 ### Snapping
 
@@ -38,9 +37,8 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
   tenth of the height is still a tap (a strumming hand slides), stepping from where the song was at finger-down and
   replacing the fling.
 - **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere.
-- Focus: the buttons take none, and the screen retakes it when lost to nothing while uncovered (`isUncovered`), or
-  Compose spends the next arrow on a focus search, which scrolls. While something is over it the step keys are
-  swallowed; the export screen takes focus itself.
+- Focus: the buttons take none; the screen retakes lost focus while uncovered, or the next arrow is spent on a focus
+  search.
 - **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain pages.
   A held arrow still scrolls where there are no buttons.
 
