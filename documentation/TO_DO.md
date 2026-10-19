@@ -10,7 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Follow documentation/issues/EXECUTION.md
+- Remove duration from Song Details toolbar subtitle
 - Regenerate the Android baseline profiles
 - Update store descriptions to include the chord diagram library and other new features + new title
 
