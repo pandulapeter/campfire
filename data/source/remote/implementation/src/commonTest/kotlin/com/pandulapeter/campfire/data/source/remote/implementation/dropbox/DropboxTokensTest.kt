@@ -16,18 +16,25 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthori
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutCapability
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.http.parseQueryString
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * How the provider keeps the stored connection's tokens good: renewed before they expire, renewed once when Dropbox
@@ -241,6 +248,73 @@ class DropboxTokensTest {
         }
         assertFailsWith<SyncNetworkException> { provider.completeAuthorization(AUTHORIZATION_RESPONSE, verifier = "verifier", redirectUri = null) }
         assertNull(storage.credentials)
+    }
+
+    /** A renewal is the first request of most runs, and a cell handover meets it as often as any other. */
+    @Test
+    fun `a renewal that times out is tried again`() = runTest {
+        var tokenRequestCount = 0
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                if (++tokenRequestCount == 1) throw SocketTimeoutException("Stalled")
+                respondJson("""{"access_token":"renewed","expires_in":14400}""")
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        assertEquals(expected = emptyList(), actual = provider.list().files)
+    }
+
+    @Test
+    fun `the token request carries its own bound`() = runTest {
+        val bounds = mutableListOf<Long?>()
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                bounds += request.getCapabilityOrNull(HttpTimeoutCapability)?.requestTimeoutMillis
+                respondJson("""{"access_token":"renewed","expires_in":14400,"refresh_token":"refresh","account_id":"dbid:1"}""")
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        provider.list()
+        provider.completeAuthorization(AUTHORIZATION_RESPONSE, verifier = "verifier", redirectUri = null)
+        assertEquals(expected = listOf<Long?>(30_000L, 30_000L), actual = bounds)
+    }
+
+    /** The renewal holds the credentials lock, which every read of the connection waits for. */
+    @Test
+    fun `a renewal that never answers ends the run in bounded time`() = runTest {
+        var tokenRequestCount = 0
+        val provider = dropboxProvider(
+            configure = { install(HttpTimeout) },
+            storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0)),
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                awaitCancellation()
+            }
+            respondJson(EMPTY_LISTING)
+        }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertTrue(currentTime < 7 * 30_000L + 94_000L + 7 * 500L, "The renewal took $currentTime ms to fail.")
+        assertEquals(expected = 7, actual = tokenRequestCount)
+    }
+
+    /** A refusal is the one answer that means connecting again, and asking again changes nothing. */
+    @Test
+    fun `a refused renewal is not tried again`() = runTest {
+        var tokenRequestCount = 0
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                respondJson("""{"error":"invalid_grant","error_description":"refresh token is invalid or revoked"}""", HttpStatusCode.BadRequest)
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        assertFailsWith<SyncAuthorizationException> { provider.list() }
+        assertEquals(expected = 1, actual = tokenRequestCount)
     }
 
     private companion object {

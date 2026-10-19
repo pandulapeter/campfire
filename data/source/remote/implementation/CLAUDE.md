@@ -72,10 +72,11 @@ Silent failures go to the injected `Logger`.
 ## OAuth
 
 - PKCE, no client secret, no server of Campfire's own.
-- Tokens renew inside one `SyncCredentialsStore.update`, so concurrent requests share one refresh. Keep a new refresh
-  token Dropbox hands out, or the connection ends silently. The store caches only what it saw stored: a refused or
-  cancelled write drops the cache; a refused read (`LibraryStorageException`) is thrown and not cached, so a document
-  without tokens never overwrites tokens unreadable for a moment.
+- Tokens renew inside one `SyncCredentialsStore.update`, so concurrent requests share one refresh, bounded at 30 s,
+  and retried like any call when it cannot reach Dropbox. Keep a new refresh token Dropbox hands out, or the connection
+  ends silently. The store caches only what it saw stored: a refused or cancelled write drops the cache; a refused read
+  (`LibraryStorageException`) is thrown and not cached, so a document without tokens never overwrites tokens
+  unreadable for a moment.
 - Only a 400 or 401 from the token endpoint is a refusal; any other answer (a proxy's 403 or 407, a portal's redirect)
   is the network.
 - A 401 gets one forced refresh (of the refused token only, so simultaneous refusals share it) and a resend before it

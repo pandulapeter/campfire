@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkExceptio
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -66,6 +67,9 @@ internal class DropboxTokens(
     suspend fun exchange(form: String): DropboxTokenResponse {
         val response = transport {
             httpClientHolder.client().post(TOKEN_URL) {
+                // A few hundred bytes on every engine, so a bound on the whole exchange cuts short nothing that could
+                // finish, and it bounds how long a renewal holds the credentials lock.
+                timeout { requestTimeoutMillis = TOKEN_TIMEOUT_MILLIS }
                 contentType(ContentType.Application.FormUrlEncoded)
                 setBody(form)
             }
@@ -106,6 +110,9 @@ internal class DropboxTokens(
 
     private companion object {
         const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
+
+        /** The bound on one token request as a whole, renewal and authorization code exchange alike. */
+        const val TOKEN_TIMEOUT_MILLIS = 30_000L
 
         /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
         const val EXPIRY_MARGIN_MILLIS = 60_000L

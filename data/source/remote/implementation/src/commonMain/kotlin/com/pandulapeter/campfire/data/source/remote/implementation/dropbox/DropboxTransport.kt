@@ -95,17 +95,22 @@ internal class DropboxTransport(
         var refusedToken: String? = null
         while (true) {
             var token = ""
-            // The token is asked for inside transport, like the call: a renewal whose answer cannot be decoded must
-            // stay a network failure of the run rather than become one of this file.
             val response = transport {
-                token = tokens.accessToken(refused = refusedToken)
                 try {
+                    // The token is asked for inside transport, like the call: a renewal whose answer cannot be decoded
+                    // must stay a network failure of the run rather than become one of this file. It is retried like
+                    // the call, since it is the first request of most runs; the wait below is outside the
+                    // credentials lock the renewal holds.
+                    token = tokens.accessToken(refused = refusedToken)
                     block(token)
+                } catch (exception: SyncAuthorizationException) {
+                    throw exception
                 } catch (throwable: Throwable) {
                     // Null asks for another attempt; the last one is left to transport, which makes it the run's
                     // network failure. Throwable, because the browser engine reports a failed fetch as a kotlin.Error.
                     currentCoroutineContext().ensureActive()
-                    val limit = if (throwable.isTimeout()) MAXIMUM_RETRIES else MAXIMUM_TRANSPORT_FAILURE_RETRIES
+                    val cause = (throwable as? SyncNetworkException)?.cause ?: throwable
+                    val limit = if (cause.isTimeout()) MAXIMUM_RETRIES else MAXIMUM_TRANSPORT_FAILURE_RETRIES
                     if (attempt >= limit) throw throwable
                     null
                 }
