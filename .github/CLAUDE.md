@@ -33,7 +33,6 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 - Each workflow can be dispatched by hand (to publish without a release, or redo one store). It builds the tag's code,
   but `.github/scripts` and `.github/actions` come from the commit the workflow runs from — dispatching from a branch
   with `release_tag` set is how a script fix reaches an existing tag.
-- JDK and Gradle come from `.github/actions/setup-jdk`, shared with `tests.yml`.
 - **A release carries only what no official channel offers**: just the Linux `.deb`. The Mac App Store build is the Mac
   build (Apple silicon only), the Microsoft Store build the Windows one; `packageReleaseMsi` and `packageDmg` still build
   but nothing publishes them.
@@ -65,7 +64,7 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
 ### `publish-linux.yml`
 
 - `packageReleaseDeb` on amd64 and arm64 (jpackage only packages for its own machine), attached to the release — the
-  only way Linux is distributed (website and README link to the latest release). The legs don't cancel each other.
+  only way Linux is distributed (website and README link to the latest release).
 - Runs on the **oldest** supported Ubuntu: a `.deb` depends on the system libraries it was built against.
 - Also builds `createReleaseDistributable` for the start check (the plugin leaves no image behind otherwise), both under
   Xvfb.
