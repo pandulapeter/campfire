@@ -23,8 +23,7 @@ plugin, targeting `nonMinifiedRelease`. Not a test: it asserts nothing and CI ne
   the DEX with `dexLayoutOptimization`) holds only what a launch needs. Data is never cleared between them, so the walk
   must run first to be the one that sees the first run; an onboarding left for `b_startup` is skipped, not walked.
 - Screens are found by their visible **English** text (no test tags). Each step waits up to 5 s and is skipped if the
-  text never appears, so a renamed string costs a step, not the run. The journey repeats without clearing data, so the
-  onboarding is only looked for, not expected.
+  text never appears, so a renamed string costs a step, not the run.
 
 ## Why it is recorded by hand, never in CI
 
