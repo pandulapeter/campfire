@@ -82,11 +82,10 @@ wrong or undo it".
   `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()` and
   `import kotlinx.coroutines.IO` for `Dispatchers.IO`.
 - Platform behavior goes into `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` behind
-  `expect`/`actual` — **all four actuals**, in the same change. A new `expect` that only three platforms
-  implement does not build.
+  `expect`/`actual`, with every platform's actual in the same change (one in `jvmSharedMain` serves Android
+  and desktop); an `expect` a platform lacks does not build.
 - Implementation classes are `internal` and named `<Interface>Impl`; Compose components in
   `:presentation` are `internal` too. Use cases are `operator fun invoke`.
-- New Koin bindings go into the module's own top-level `Module.kt`, nowhere else.
 - **Never give a defaulted parameter to the constructor of a `@Single` / `@Factory` / `@KoinViewModel`
   class, or to a `@Single` module function.** The Koin compiler plugin runs with `skipDefaultValues = true`:
   such a parameter compiles, passes `:app:di`'s graph check and silently gets its default in production.
@@ -222,7 +221,7 @@ wrong or undo it".
   a rule several `:presentation` packages share into `ui/CLAUDE.md`). The root `CLAUDE.md` changes only for a coding
   convention, the architecture, the library layout, the build, or a line of its `## Product rules` index;
   the release pipeline and the workflows are `.github/CLAUDE.md`'s. Each holds only what the code
-  cannot show; budgets and what to cut are in codebase-review §6.
+  cannot show; what to cut is in codebase-review §6.
 - **No paragraph runs past ~1,500 characters**, and lines are hard-wrapped at ~120 columns: a topic that
   outgrows that is cut at sentence boundaries into paragraphs or bullets under `###` headings, so `grep -n`
   and a diff still point at something readable.
