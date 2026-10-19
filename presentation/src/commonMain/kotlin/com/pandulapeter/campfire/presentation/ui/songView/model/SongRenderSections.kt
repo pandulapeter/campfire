@@ -135,7 +135,7 @@ internal fun ChordProSong.toRenderSections(
                 // none is: a recall has always said where the chorus is sung, even with nothing under it.
                 val recalled = block.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
                 val label = block.label ?: recalled?.label
-                var header: String? = block.label ?: recalled?.header(defaultLabels) ?: defaultLabels.chorus
+                var header: String? = block.header(defaultLabels)
                 // A recall is folded apart from the chorus it repeats, as the chorus it is, and whatever of it is
                 // shown after its first piece is named after that piece.
                 val recallFoldKey = foldNameCounts.nextFoldKey(label ?: SectionType.Chorus.foldName)

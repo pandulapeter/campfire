@@ -93,6 +93,13 @@ internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): 
 }).withNumber(number)
 
 /**
+ * The heading of a chorus recall as the page shows it: its own label (`{chorus: Final chorus}`), else the heading of the
+ * chorus it repeats, numbered as that one is, else the chorus kind's name.
+ */
+internal fun ChordProBlock.ChorusRecall.header(defaultLabels: DefaultSectionLabels): String =
+    label ?: (blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section)?.header(defaultLabels) ?: defaultLabels.chorus
+
+/**
  * The header of a section the file gives no name and that has none of its own kind to fall back on — a paragraph of
  * lyrics, which is what a song pasted in as plain text with blank lines between its verses is made of, or the rest
  * of a section a chorus recall cut in two: a pill with nothing in it but the chevron that folds it, so that every

@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 
@@ -252,25 +253,37 @@ public object SongScaleGroups {
     private fun holdsChord(scale: Scale, root: Int, chord: Chord) = Scales.pitchClasses(scale, root).containsAll(notesOf(chord))
 
     /**
-     * Every section of [song] that plays a chord, its continuations with it, a chorus recall left out since it plays
-     * the chorus again, each with the notes of its chords and the roots it plays, and the key in force at it.
+     * Every section of [song] that plays a chord, its continuations with it, each with the notes of its chords and the
+     * roots it plays, and the key in force at it. A chorus recall that plays the chords of the chorus before it joins
+     * that chorus's part without counting them again; one whose chords differ, a recall after a `{transpose}`, which the
+     * transposer has moved, is a part of its own, of the chorus's kind.
      */
     private fun partsOf(song: ChordProSong): List<Part> {
         var key = song.metadata.key?.let(::keyOf)
         val parts = mutableListOf<Part>()
+        var chorus: Part? = null
         song.blocks.forEach { block ->
             when (block) {
                 is ChordProBlock.Transpose -> key = block.key?.let(::keyOf) ?: key
                 is ChordProBlock.Section -> {
-                    val chords = block.lines.flatMap { it.chordNames() }.mapNotNull { name ->
-                        ChordProChords.parse(name)?.let { chord -> rootOf(name)?.let { PlayedChord(name, it, chord) } }
-                    }
-                    val previous = parts.lastOrNull()?.takeIf { block.isContinuation && it.sections.last().type == block.type }
+                    val chords = playedIn(listOf(block))
+                    val previous = parts.lastOrNull()?.takeIf { block.isContinuation && (it.blocks.last() as? ChordProBlock.Section)?.type == block.type }
                     when {
                         previous != null -> {
-                            previous.sections += block
+                            previous.blocks += block
                             previous.add(chords)
                         }
+                        chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply {
+                            add(chords)
+                            if (block.type == SectionType.Chorus) chorus = this
+                        }
+                    }
+                }
+                is ChordProBlock.ChorusRecall -> {
+                    val chords = playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>())
+                    val recalled = chorus
+                    when {
+                        recalled != null && chords.map { it.name } == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
                         chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply { add(chords) }
                     }
                 }
@@ -278,6 +291,11 @@ public object SongScaleGroups {
             }
         }
         return parts.filter { it.roots.isNotEmpty() }
+    }
+
+    /** The chords [sections] play, in order, each read once. */
+    private fun playedIn(sections: List<ChordProBlock.Section>) = sections.flatMap { it.lines.flatMap { line -> line.chordNames() } }.mapNotNull { name ->
+        ChordProChords.parse(name)?.let { chord -> rootOf(name)?.let { PlayedChord(name, it, chord) } }
     }
 
     /** The chord names one line plays, by what kind of line it is: the walk `ChordProChords.namesIn` takes. */
@@ -306,13 +324,24 @@ public object SongScaleGroups {
         return ChordProChords.pitchClass(spelled)?.let { Root(it, spelled) }
     }
 
-    private class Part(val sections: MutableList<ChordProBlock.Section>, val key: Key?) {
+    /**
+     * Sections played together, a section with its continuations, or a chorus recall: each of [blocks] a
+     * `ChordProBlock.Section` or a `ChordProBlock.ChorusRecall`.
+     */
+    private class Part(val blocks: MutableList<ChordProBlock>, val key: Key?) {
         val names = mutableListOf<String>()
         val chords = mutableListOf<Chord>()
         val roots = mutableListOf<Root>()
 
-        /** What a section is of, so that a second verse finds the first: its type, and its label without a number. */
-        val kind get() = sections.first().let { it.type to it.label?.trimEnd { char -> char.isDigit() || char.isWhitespace() }?.lowercase() }
+        val sections get() = blocks.filterIsInstance<ChordProBlock.Section>()
+
+        /**
+         * What a part is of, so that a second verse finds the first: its first section's type, and its label without a
+         * number. A recall part's first section is the chorus's own, so a recall is of its chorus's kind.
+         */
+        val kind get() = blocks.firstNotNullOf { block ->
+            (block as? ChordProBlock.ChorusRecall)?.blocks?.filterIsInstance<ChordProBlock.Section>()?.firstOrNull() ?: block as? ChordProBlock.Section
+        }.let { it.type to it.label?.trimEnd { char -> char.isDigit() || char.isWhitespace() }?.lowercase() }
 
         fun add(played: List<PlayedChord>) = played.forEach { (name, root, chord) ->
             names += name
@@ -351,7 +380,7 @@ public object SongScaleGroups {
         val home: Scale,
         val exceptions: List<ScaleException> = emptyList(),
     ) {
-        fun groupOf(parts: List<Part>) = ScaleGroup(parts.flatMap { it.sections }, root.name, scales, exceptions)
+        fun groupOf(parts: List<Part>) = ScaleGroup(parts.flatMap { it.blocks }, root.name, scales, exceptions)
     }
 
     /** How sure a fit is of a part's key, see [fitOf]. */

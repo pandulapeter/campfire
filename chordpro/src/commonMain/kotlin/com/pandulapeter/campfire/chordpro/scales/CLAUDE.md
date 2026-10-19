@@ -25,8 +25,8 @@
   and last, cadences into it) a major or minor scale holds them on, a Mixolydian or Dorian centre only where the part
   starts on it or the key names it. **The song is read as it stands**:
   the transposer has moved the chords after a `{transpose}` and renamed its key before a page shows them, so a
-  `{transpose}` is never applied here, or a modulated verse would read two steps up. Chorus recalls are not counted
-  again. Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
+  `{transpose}` is never applied here, or a modulated verse would read two steps up. A chorus recall is counted again
+  only where its chords differ from the chorus's (one after a `{transpose}`). Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
   thirds of its chords answers, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
   home's own harmonic minor, Dorian, or melodic minor where one does); below that floor the part is left out.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.scales
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -19,7 +20,25 @@ class SongScaleGroupsTest {
 
     private fun groups(text: String) = SongScaleGroups.of(ChordProParser.parse(text.trimIndent()))
 
-    private val ScaleGroup.labels get() = sections.map { it.label ?: it.type.toString() }
+    private val ScaleGroup.labels
+        get() = blocks.map { block ->
+            when (block) {
+                is ChordProBlock.Section -> block.label ?: block.type.toString()
+                else -> "Recall " + (block as ChordProBlock.ChorusRecall).label.orEmpty()
+            }
+        }
+
+    private val modulatedChorus = """
+        {key: C}
+        {start_of_verse: Verse}
+        [C]One [F]two [G]three [C]four
+        {end_of_verse}
+        {start_of_chorus: Chorus}
+        [F]Five [G]six [C]seven
+        {end_of_chorus}
+    """.trimIndent()
+
+    private fun transposed(text: String) = SongScaleGroups.of(ChordProTransposer.transpose(ChordProParser.parse(text), 0))
 
     private fun rootAndFirst(text: String) = groups(text).map { it.rootName to it.scales.first().id }
 
@@ -185,4 +204,32 @@ class SongScaleGroupsTest {
     @Test
     fun `a verse with a secondary dominant joins its key's chorus`() =
         assertEquals(1, groups(song("C A7 Dm G7", "F G C", key = "C")).size)
+
+    @Test
+    fun `a chorus recalled after a transpose is a part in the new key`() {
+        val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
+        assertEquals(listOf("C", "D"), groups.map { it.rootName })
+        assertTrue(groups[1].blocks.single() is ChordProBlock.ChorusRecall)
+        assertEquals("major", groups[1].scales.first().id)
+    }
+
+    @Test
+    fun `two recalls after one transpose are one group`() {
+        val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}\n{chorus}")
+        assertEquals(2, groups.size)
+        assertEquals(2, groups[1].blocks.size)
+        assertTrue(groups[1].blocks.all { it is ChordProBlock.ChorusRecall })
+    }
+
+    @Test
+    fun `a chorus recalled in its own key is not counted twice`() {
+        val withRecall = transposed("$modulatedChorus\n{chorus}").single()
+        val without = transposed(modulatedChorus).single()
+        assertEquals(listOf("Verse", "Chorus", "Recall "), withRecall.labels)
+        assertEquals(without.rootName to without.scales, withRecall.rootName to withRecall.scales)
+    }
+
+    @Test
+    fun `an untransposed song reads its recall as written`() =
+        assertEquals(listOf("C"), SongScaleGroups.of(ChordProParser.parse("$modulatedChorus\n{transpose: 2}\n{chorus}")).map { it.rootName })
 }

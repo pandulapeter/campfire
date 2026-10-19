@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
@@ -91,6 +92,17 @@ class SongScaleGroupsTest {
         val crowded = groups("[C]One [C]two [C]three [C]four [C]five [C]six [C]seven [F]x [G]x [F]x [G]x [A7]x [E7]x [D7]x [Bb]x [Ab]x")
         assertEquals(MAX_GROUP_EXCEPTIONS, crowded.single().exceptions.size)
         assertTrue(crowded.single().exceptions.all { it.scales.size <= MAX_EXCEPTION_SCALES })
+    }
+
+    @Test
+    fun `a recall is named as the page heads it`() {
+        fun labelsOf(recall: String) = songScaleGroupsOf(
+            ChordProTransposer.transpose(ChordProParser.parse("{key: C}\n$verse$chorus{transpose: 2}\n$recall"), 0),
+            labels,
+            ChordNotation.STANDARD,
+        ).map { it.label }
+        assertEquals(listOf("Verse, Chorus", "Final chorus"), labelsOf("{chorus: Final chorus}"))
+        assertEquals(listOf("Verse, Chorus", "Chorus"), labelsOf("{chorus}"))
     }
 
     @Test

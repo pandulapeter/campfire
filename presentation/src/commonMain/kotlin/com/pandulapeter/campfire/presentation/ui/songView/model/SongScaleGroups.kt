@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
@@ -59,7 +60,15 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
     if (groups.size == 1) {
         return listOf(SongScaleGroup(label = null, rootName = groups.single().rootName, scales = chipsOf(groups.single().scales), exceptions = exceptions.single()))
     }
-    val headers = groups.map { group -> group.sections.filter { !it.isContinuation }.map { it.header(labels) }.filter { it.isNotEmpty() } }
+    val headers = groups.map { group ->
+        group.blocks.mapNotNull { block ->
+            when (block) {
+                is ChordProBlock.Section -> block.takeIf { !it.isContinuation }?.header(labels)
+                is ChordProBlock.ChorusRecall -> block.header(labels)
+                else -> null
+            }
+        }.filter { it.isNotEmpty() }
+    }
     val kindCounts = headers.flatten().groupingBy(::kindOf).eachCount()
     return groups.mapIndexed { index, group ->
         val ofKind = headers[index].groupingBy(::kindOf).eachCount()
