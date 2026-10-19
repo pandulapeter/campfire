@@ -30,11 +30,9 @@ with the step keys, fewest pages first.
 - A section wider than a column (a tab staff) may take a wider row where that saves a page; neighbours may stack in that
   row's single column (`forEachWideRow`).
 - **A song not read whole in one row is set like a magazine** (`flowLikeAMagazine`): columns filled to the screen,
-  sections running on, since every early page end is an extra turn. `LayoutScoring` (`ColumnFlow.program`) prices cuts
-  (dearer in a section of four lines or fewer, almost free after an empty line or before a comment), pieces of one or
-  two lyric lines, and empty space at the end of non-last columns; diagram rows, tab systems, comments, and the first
-  section are never "stranded lines". Pages are then evened out (`ColumnFlow.evenOut`). Compared with the whole-section
-  layout by `SectionGrid.pageCount`, then `score`; a full tie keeps sections whole.
+  sections running on, since every early page end is an extra turn; priced cuts, scored by `LayoutScoring`. Pages are
+  then evened out (`ColumnFlow.evenOut`). Compared with the whole-section layout by `SectionGrid.pageCount`, then
+  `score`; a full tie keeps sections whole.
 - **Narrow columns**: taken only for strictly fewer pages (`withNarrowColumns`), where at most a quarter of lyric lines
   wrap (`fitsNarrowColumns`).
 - **Text fitting** (`TextFitting.kt`): 97.5%, then 95%, never below `MIN_FONT_SCALE`, the first that saves a page
