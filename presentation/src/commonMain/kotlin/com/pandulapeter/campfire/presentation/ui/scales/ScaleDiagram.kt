@@ -79,7 +79,8 @@ internal fun ScaleDiagram(
  * The neck: a column of open notes left of the nut, as a chord diagram marks its open strings above it, then the frets,
  * the strings across them a little thicker the lower they sound, and faint inlays behind them. A note is a filled dot,
  * an open string's a ring, so that what is played without a finger reads apart. The labels are measured once per text and
- * size rather than once per dot, since a label of a scale is on every string.
+ * size rather than once per dot, since a label of a scale is on every string, and share the size at which the widest of
+ * them fits its dot.
  */
 private fun DrawScope.drawFretboard(
     geometry: ScaleDiagramGeometry.Fretboard,
@@ -136,7 +137,12 @@ private fun DrawScope.drawFretboard(
             strokeWidth = thin * (1f + geometry.stringWeights[row] * STRING_WEIGHT),
         )
     }
-    val labelSize = (radius * LABEL_TEXT / density / fontScale).sp
+    // Measured with a style of its own rather than through label(), whose cache would keep it at this first size.
+    val widestLabel = labels.orEmpty().distinct().maxOfOrNull { text ->
+        val style = TextStyle(fontSize = (radius * LABEL_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, fontFamily = fontFamily)
+        textMeasurer.measure(text, style, density = this).size.width.toFloat()
+    } ?: 0f
+    val labelSize = (scaleLabelFontSize(radius, widestLabel) / density / fontScale).sp
     val numberSize = (fretGap * NUMBER_TEXT / density / fontScale).sp
     val measured = HashMap<String, TextLayoutResult>()
     fun label(text: String, color: Color, isNumber: Boolean = false) = measured.getOrPut("$text|${color.value}|$isNumber") {
@@ -183,4 +189,3 @@ private const val DOT_RADIUS = 0.42f
 private const val DOT_ROW_RADIUS = 0.46f
 private const val INLAY_RADIUS = 0.3f
 private const val INLAY_ALPHA = 0.18f
-private const val LABEL_TEXT = 1.05f
