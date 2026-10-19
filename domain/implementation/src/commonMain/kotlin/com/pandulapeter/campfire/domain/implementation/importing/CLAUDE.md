@@ -11,9 +11,7 @@
 
 ### Preparing
 
-- Unpacks archives (nested ones through `ArchiveLocalSource`). An archive is known by name or, under any name but a
-  document's, by bytes (`isZipArchive`) — never a `.docx`; inside an archive or a dropped folder an unknown name is
-  first peeked at, and a text name over `MAX_TEXT_FILE_SIZE` is kept only as a zip.
+- Unpacks archives through `ArchiveLocalSource` (its rules are in `:data:source:local:api`).
 - A loose file goes through `ArchiveRepository.songsIn` first: another app's document of songs (JSON, OpenSong,
   `.onsong`) is those songs, sorted with the document's index as their origin, before a setlist is tried or an unknown
   name skipped.
@@ -34,8 +32,7 @@
   replacement keeps the library's) — so re-importing the demo setlist finds it unchanged. Setlist entries compare as
   they will be written (pointing where each song lands), resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
-- Runs on `Dispatchers.Default`, yielding between songs (web painting, cancellation). Owns the size budget: archives
-  share one.
+- Owns the size budget: archives share one.
 - Documents and plain text go through `ChordSheetConverter`; ChordPro extensions never do. No readable text is
   `unreadableDocumentFileNames`, not unsupported. All incoming songs are prettified after conversion, splitting, and
   notation normalization. No origin info survives in the library.
@@ -53,5 +50,4 @@
   under its arrival name (shown as missing). Identical entries are disregarded whatever the choices say.
 - A write failure stops before any dependent setlist. What was written is adopted in one change (`adoptImported`, also
   after failure or cancellation), from the models built, not by rescanning.
-- Result lists: duplicates name each library file once, and a repeat of a song this import wrote is not "already in
-  the library"; `convertedSongToOpen` only for a lone converted song with no other entries or errors.
+- `convertedSongToOpen` only for a lone converted song with no other entries or errors.
