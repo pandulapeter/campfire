@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlinx.coroutines.CompletableDeferred
@@ -55,6 +56,7 @@ class ImportControllerQueueTest {
     private var importCount = 0
     private val openedSongs = mutableListOf<String>()
     private val newSongTexts = mutableListOf<String>()
+    private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
     private var plannedSongs = listOf(songEntry("new.cho"))
@@ -84,8 +86,9 @@ class ImportControllerQueueTest {
             backStack = backStack,
             reportState = reportState,
             openImportedSong = { openedSongs += it },
-            openNewSongEditor = { text ->
+            openNewSongEditor = { text, suggestion ->
                 newSongTexts += text
+                newSongSuggestions += suggestion
                 backStack.removeAll { it is CampfireDestination.SongEditor }
                 backStack += CampfireDestination.SongEditor.newSong()
             },
@@ -182,6 +185,16 @@ class ImportControllerQueueTest {
         assertNull(reportState.importReport.value)
         assertFalse(controller.isImporting.value)
         assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a new song from a share opens the editor with its suggestion`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        val suggestion = SharedTextTitle(title = "Riverlight", artist = "The Invented Band")
+        enqueuePaste(suggestion)
+        runCurrent()
+        assertEquals(listOf<SharedTextTitle?>(suggestion), newSongSuggestions)
     }
 
     @Test
@@ -328,9 +341,10 @@ class ImportControllerQueueTest {
 
     private fun handOver() = controller.importFiles(listOf(ImportedFile(name = "new.cho", bytes = "{title: New}".encodeToByteArray())))
 
-    private fun enqueuePaste() = controller.enqueueImport(
+    private fun enqueuePaste(suggestion: SharedTextTitle? = null) = controller.enqueueImport(
         source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),
         isNewSongFromText = true,
+        suggestion = suggestion,
     )
 }
 

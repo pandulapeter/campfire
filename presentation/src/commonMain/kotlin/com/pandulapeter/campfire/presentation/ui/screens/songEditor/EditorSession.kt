@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.SongEditor.Companion.NEW_SONG_FILE_NAME
 import com.pandulapeter.campfire.presentation.ui.navigation.songEditorEntries
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PendingExit
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -183,12 +184,12 @@ internal class EditorSession(
     /**
      * Opens the editor on a pasted, dropped or shared [text] that is one song the library does not hold, which has no
      * file until its first Save (see [CampfireDestination.SongEditor.NEW_SONG_FILE_NAME]): shaped like a new song, with
-     * a placeholder title and artist for what it does not declare, the title's selected to be typed over. Nothing is
-     * unsaved in an editor it replaces on top: the import queue waits out one that has (see `ImportController`). The
-     * draft is put on disk at once rather than at the next pause, since it is now the only copy of a share that the
-     * iOS share extension's inbox lets go of.
+     * the [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed
+     * over. Nothing is unsaved in an editor it replaces on top: the import queue waits out one that has (see
+     * `ImportController`). The draft is put on disk at once rather than at the next pause, since it is now the only copy
+     * of a share that the iOS share extension's inbox lets go of.
      */
-    suspend fun openNewSongEditor(text: String) {
+    suspend fun openNewSongEditor(text: String, suggestion: SharedTextTitle?) {
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
         val draft = editorTextOf(
@@ -196,10 +197,12 @@ internal class EditorSession(
                 text = text,
                 placeholderTitle = placeholderTitle,
                 placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
+                suggestedTitle = suggestion?.title,
+                suggestedArtist = suggestion?.artist,
             )
         )
         onEditorTextChanged(fileName = NEW_SONG_FILE_NAME, text = draft)
-        retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, placeholderTitle))
+        retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, suggestion?.title ?: placeholderTitle))
         updateBackStack {
             if (lastOrNull() is CampfireDestination.SongEditor) removeAt(lastIndex)
             add(CampfireDestination.SongEditor.newSong())

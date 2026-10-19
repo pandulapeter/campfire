@@ -17,9 +17,11 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.fitsImport
 import com.pandulapeter.campfire.presentation.ui.platform.isLinkWithTitle
 import com.pandulapeter.campfire.presentation.ui.platform.isOnlyLinks
+import com.pandulapeter.campfire.presentation.ui.platform.sharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -34,8 +36,8 @@ import kotlinx.coroutines.launch
  * `.txt` file (see [sharedTextsToImportedFiles]), so it is converted, split and compared exactly as that file would be,
  * and the import decides what it comes to (see [ImportController.enqueueImport]'s `isNewSongFromText`).
  *
- * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise, and
- *   returns what completes once they have settled.
+ * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise, with the
+ *   title and artist the sender's subject suggests for a new song, and returns what completes once they have settled.
  */
 internal class PastedSongController(
     private val scope: CoroutineScope,
@@ -44,7 +46,7 @@ internal class PastedSongController(
     private val backStack: List<CampfireDestination>,
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
-    private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean) -> Deferred<Unit>,
+    private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean, suggestion: SharedTextTitle?) -> Deferred<Unit>,
 ) {
 
     /**
@@ -61,14 +63,15 @@ internal class PastedSongController(
      * is the user asking for a song, and the share is the one way in that mode leaves. One that arrives while the editor
      * holds unsaved text waits in the import queue for that editor to be left.
      *
-     * @param subject What the text was called where it came from, which names it where the text declares no title.
+     * @param subject What the text was called where it came from, which titles the new song, and names its artist where
+     *   it says "<title> Chords by <artist>", for what the text does not declare.
      * @return Completed once the text has settled: at once where it is answered with a message alone.
      */
     fun newSongFromText(text: String, subject: String? = null): Deferred<Unit> = when {
         text.isBlank() -> answered(Message.ClipboardEmpty)
         text.isOnlyLinks() || text.isLinkWithTitle() -> answered(Message.PastedOnlyLinks)
         !text.fitsImport() -> answered(Message.PastedTextTooLarge)
-        else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject), true)
+        else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject), true, sharedTextTitle(subject))
     }
 
     /**
@@ -82,10 +85,10 @@ internal class PastedSongController(
     fun importSharedText(payload: SharedTextPayload): Deferred<Unit> {
         val texts = payload.texts.filter { it.isNotBlank() }
         return when {
-            texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false)
+            texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false, null)
             texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> answered(Message.SharedLinkNotImported)
             texts.size == 1 -> newSongFromText(texts.single(), payload.subject)
-            else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false)
+            else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false, null)
         }
     }
 

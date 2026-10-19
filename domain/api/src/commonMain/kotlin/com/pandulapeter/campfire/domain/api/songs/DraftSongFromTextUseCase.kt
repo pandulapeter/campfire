@@ -13,9 +13,18 @@ interface DraftSongFromTextUseCase {
 
     /**
      * The text a chord sheet pasted, dropped or shared as a new song opens in the editor with, nothing written: [text]
-     * with [placeholderTitle] and [placeholderArtist] for a title or an artist it does not declare, the new song
-     * template's header lines it has none of, and formatted as an import is. What it declares, in its header or as a
-     * change in its body, is left as it is.
+     * with [suggestedTitle] and [suggestedArtist], or where there is none [placeholderTitle] and [placeholderArtist], for a
+     * title or an artist it does not declare, the new song template's header lines it has none of, and formatted as an
+     * import is. What it declares, in its header or as a change in its body, is left as it is.
+     *
+     * @param suggestedTitle What the text was called where it came from (a shared web page's title), null where nothing
+     *   named it.
      */
-    operator fun invoke(text: String, placeholderTitle: String, placeholderArtist: String): String
+    operator fun invoke(
+        text: String,
+        placeholderTitle: String,
+        placeholderArtist: String,
+        suggestedTitle: String?,
+        suggestedArtist: String?,
+    ): String
 }

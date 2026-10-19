@@ -19,15 +19,21 @@ import org.koin.core.annotation.Factory
 @Factory
 internal class DraftSongFromTextUseCaseImpl : DraftSongFromTextUseCase {
 
-    override operator fun invoke(text: String, placeholderTitle: String, placeholderArtist: String): String {
+    override operator fun invoke(
+        text: String,
+        placeholderTitle: String,
+        placeholderArtist: String,
+        suggestedTitle: String?,
+        suggestedArtist: String?,
+    ): String {
         val metadata = ChordProParser.parseMetadata(text)
-        // Only a field the text says nothing about gets its placeholder, so a title or an artist it declares is kept as
+        // Only a field the text says nothing about gets its suggestion or its placeholder, so a title or an artist it declares is kept as
         // written. Then the template's header lines it has none of, so that the song opens in the editor shaped like any
         // new one, with the same lines to fill in, and formatted once its header is whole, which sets the header apart
         // from the song as an import's formatting does.
         val placeholders = buildMap {
-            if (metadata.title.isNullOrBlank()) put(Field.TITLE, placeholderTitle)
-            if (metadata.artist.isNullOrBlank()) put(Field.ARTIST, placeholderArtist)
+            if (metadata.title.isNullOrBlank()) put(Field.TITLE, suggestedTitle?.ifBlank { null } ?: placeholderTitle)
+            if (metadata.artist.isNullOrBlank()) put(Field.ARTIST, suggestedArtist?.ifBlank { null } ?: placeholderArtist)
         }
         return ChordProPrettifier.prettify(
             ChordProMetadataFields.declare(

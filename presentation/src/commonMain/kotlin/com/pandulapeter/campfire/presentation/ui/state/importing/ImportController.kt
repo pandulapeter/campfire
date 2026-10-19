@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.replaceCount
@@ -75,7 +76,7 @@ internal class ImportController(
     private val backStack: List<CampfireDestination>,
     private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
-    private val openNewSongEditor: suspend (text: String) -> Unit,
+    private val openNewSongEditor: suspend (text: String, suggestion: SharedTextTitle?) -> Unit,
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
@@ -176,6 +177,8 @@ internal class ImportController(
      * @param isNewSongFromText True for a text pasted, dropped or shared as a new song: where it turns out to be one song
      *   the library does not hold, nothing is written and the editor opens on it instead (see [newSongOf]); one the
      *   library holds is opened; anything else - a songbook pasted whole - is the import it would be as a file.
+     * @param suggestion The title and artist a shared text's subject suggests, which the editor opened on it fills in for
+     *   what the text does not declare.
      */
     fun enqueueImport(
         source: ImportSource,
@@ -184,6 +187,7 @@ internal class ImportController(
         shouldReview: Boolean = true,
         isDemoLibrary: Boolean = false,
         isNewSongFromText: Boolean = false,
+        suggestion: SharedTextTitle? = null,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
             source = source,
@@ -192,6 +196,7 @@ internal class ImportController(
             shouldReview = shouldReview,
             isDemoLibrary = isDemoLibrary,
             isNewSongFromText = isNewSongFromText,
+            suggestion = suggestion,
         )
         if (source.isEmpty) {
             request.settled.complete(Unit)
@@ -588,7 +593,7 @@ internal class ImportController(
         // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
         awaitImportSettled()
         if (isLeaving()) return
-        openNewSongEditor(song.text)
+        openNewSongEditor(song.text, request.suggestion)
         request.settled.complete(Unit)
         messageSink.sendMessage(Message.NewSongFromText(isConverted = song.isConverted, hasChords = ChordProParser.summarize(song.text).hasChords))
         snapshotFlow { backStack.none { it is CampfireDestination.SongEditor } }.first { it }

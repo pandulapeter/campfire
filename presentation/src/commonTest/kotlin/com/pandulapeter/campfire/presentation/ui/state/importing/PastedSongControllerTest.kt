@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -38,6 +39,7 @@ class PastedSongControllerTest {
     private val isImporting = MutableStateFlow(false)
     private val isPerformanceModeEnabled = MutableStateFlow(false)
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
+    private val suggestions = mutableListOf<SharedTextTitle?>()
     private val importSettled = CompletableDeferred<Unit>()
     private lateinit var messageSink: MessageSink
     private lateinit var dialogHost: DialogHost
@@ -52,8 +54,9 @@ class PastedSongControllerTest {
             backStack = backStack,
             isImporting = isImporting,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
-            enqueueImport = { files, isNewSongFromText ->
+            enqueueImport = { files, isNewSongFromText, suggestion ->
                 queued += files to isNewSongFromText
+                suggestions += suggestion
                 importSettled
             },
         )
@@ -94,6 +97,15 @@ class PastedSongControllerTest {
         val (files, isNewSongFromText) = queued.single()
         assertEquals("page_title.txt", files.single().name)
         assertTrue(isNewSongFromText)
+    }
+
+    @Test
+    fun `a share's subject is queued as the suggestion`() = runTest {
+        val controller = controller()
+        val subject = "Riverlight Chords by The Invented Band @ Ultimate-Guitar.Com"
+        controller.importSharedText(SharedTextPayload(texts = listOf("Am  C\nHello"), subject = subject))
+        controller.newSongFromText("Am  C\nHello")
+        assertEquals(listOf(SharedTextTitle(title = "Riverlight", artist = "The Invented Band"), null), suggestions)
     }
 
     @Test

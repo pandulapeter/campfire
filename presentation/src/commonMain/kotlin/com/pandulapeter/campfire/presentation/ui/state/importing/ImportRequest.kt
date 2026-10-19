@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -25,6 +26,7 @@ import kotlinx.coroutines.CompletableDeferred
  * @param shouldReview See [ImportController.enqueueImport].
  * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
  * @param isNewSongFromText The one file is a text pasted or dropped as a new song, see [ImportController.enqueueImport].
+ * @param suggestion What the new song is titled for what its text does not declare, see [ImportController.enqueueImport].
  */
 internal class ImportRequest(
     var source: ImportSource,
@@ -33,5 +35,6 @@ internal class ImportRequest(
     val shouldReview: Boolean = true,
     val isDemoLibrary: Boolean = false,
     val isNewSongFromText: Boolean = false,
+    val suggestion: SharedTextTitle? = null,
     val settled: CompletableDeferred<Unit> = CompletableDeferred(),
 )

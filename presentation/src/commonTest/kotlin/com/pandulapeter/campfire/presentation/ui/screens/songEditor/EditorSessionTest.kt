@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -26,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.CoroutineScope
@@ -93,8 +95,13 @@ class EditorSessionTest {
                     }
                 },
                 draftSongFromText = object : DraftSongFromTextUseCase {
-                    override fun invoke(text: String, placeholderTitle: String, placeholderArtist: String) =
-                        if ("{title" in text) text else "{title: $placeholderTitle}\n{artist: $placeholderArtist}\n$text"
+                    override fun invoke(
+                        text: String,
+                        placeholderTitle: String,
+                        placeholderArtist: String,
+                        suggestedTitle: String?,
+                        suggestedArtist: String?,
+                    ) = if ("{title" in text) text else "{title: ${suggestedTitle ?: placeholderTitle}}\n{artist: ${suggestedArtist ?: placeholderArtist}}\n$text"
                 },
                 createSongFromText = object : CreateSongFromTextUseCase {
                     override suspend fun invoke(text: String): Song {
@@ -236,7 +243,7 @@ class EditorSessionTest {
     @Test
     fun `a new song opens its editor alone, with a placeholder title, unsaved, and its draft on disk at once`() = runTest {
         val fixture = fixture()
-        fixture.session.openNewSongEditor("[G]Hello")
+        fixture.session.openNewSongEditor("[G]Hello", null)
         val editor = backStack.last() as CampfireDestination.SongEditor
         assertTrue(editor.isNewSong)
         assertEquals(listOf(CampfireDestination.Songs, editor), backStack.toList())
@@ -247,11 +254,20 @@ class EditorSessionTest {
     }
 
     @Test
+    fun `a suggested title is selected in a new song's editor`() = runTest {
+        val fixture = fixture()
+        fixture.session.openNewSongEditor("[G]Hello", SharedTextTitle(title = "Riverlight", artist = "The Invented Band"))
+        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n[G]Hello", fixture.session.editorDraft.value?.text)
+        val field = fixture.session.retainedEditorField(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)
+        assertEquals(TextRange(8, 18), field?.selection)
+    }
+
+    @Test
     fun `a new song replaces an editor on top that has nothing unsaved`() = runTest {
         files["a.cho"] = "[C]One"
         backStack += CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
         backStack += CampfireDestination.SongEditor(fileName = "a.cho")
-        fixture().session.openNewSongEditor("[G]Hello")
+        fixture().session.openNewSongEditor("[G]Hello", null)
         assertEquals(3, backStack.size)
         assertTrue((backStack.last() as CampfireDestination.SongEditor).isNewSong)
     }
@@ -259,7 +275,7 @@ class EditorSessionTest {
     @Test
     fun `a new song with no title is not saved`() = runTest {
         val fixture = fixture()
-        fixture.session.openNewSongEditor("[G]Hello")
+        fixture.session.openNewSongEditor("[G]Hello", null)
         fixture.session.saveSongContent(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: }\n[G]Hello")
         runCurrent()
         assertTrue(files.isEmpty())
@@ -270,7 +286,7 @@ class EditorSessionTest {
     @Test
     fun `a new song's first save writes it, and its editor goes on over the song's details screen`() = runTest {
         val fixture = fixture()
-        fixture.session.openNewSongEditor("[G]Hello")
+        fixture.session.openNewSongEditor("[G]Hello", null)
         val entryKey = (backStack.last() as CampfireDestination.SongEditor).entryKey
         val text = "{title: Song}\n[G]Hello"
         fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, text)
@@ -287,7 +303,7 @@ class EditorSessionTest {
     @Test
     fun `a new song saved from the unsaved changes question leaves for its details screen`() = runTest {
         val fixture = fixture()
-        fixture.session.openNewSongEditor("{title: Song}\n[G]Hello")
+        fixture.session.openNewSongEditor("{title: Song}\n[G]Hello", null)
         fixture.dialogHost.showDialog(DialogType.UnsavedChanges)
         fixture.session.saveEditorChangesAndLeave()
         runCurrent()
@@ -302,7 +318,7 @@ class EditorSessionTest {
         // What lets go of the stored draft once nothing is unsaved, as every start does.
         fixture.session.startRecovery()
         fixture.session.editorDraftRecovery.await()
-        fixture.session.openNewSongEditor("[G]Hello")
+        fixture.session.openNewSongEditor("[G]Hello", null)
         runCurrent()
         assertTrue(storedDraft != null)
         fixture.session.leaveEditorWithoutSaving()

@@ -31,7 +31,9 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   shared, with a snackbar saying how the text was read; one the library holds is opened; anything else is the ordinary
   review. The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog,
   unsaved editor text, and the onboarding, replaces an editor with nothing unsaved, and holds the queue until no editor
-  is left, so texts arriving together (an iOS inbox drained at once) open one after another.
+  is left, so texts arriving together (an iOS inbox drained at once) open one after another. A share's subject (a page
+  title) fills in, selected, the title the text does not declare, and the artist only from `<title> Chords by <artist>`
+  (`sharedTextTitle`): a bare " by " or a dash is never split.
 - A blank, links-only (a page's address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar
   before anything is prepared, except that a blank share goes to the import, reported as skipped; several shared texts
   are one import. Nothing is fetched.

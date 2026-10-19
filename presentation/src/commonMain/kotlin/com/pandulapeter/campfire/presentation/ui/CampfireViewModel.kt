@@ -482,7 +482,7 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         reportState = importReportState,
         openImportedSong = { navigator.openImportedSong(it) },
-        openNewSongEditor = { editorSession.openNewSongEditor(it) },
+        openNewSongEditor = { text, suggestion -> editorSession.openNewSongEditor(text, suggestion) },
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
@@ -500,11 +500,12 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         isImporting = importController.isImporting,
         isPerformanceModeEnabled = preferencesController.isPerformanceModeEnabled,
-        enqueueImport = { files, isNewSongFromText ->
+        enqueueImport = { files, isNewSongFromText, suggestion ->
             importController.enqueueImport(
                 source = ImportSource.Files(files),
                 shouldOpenSong = !isNewSongFromText,
                 isNewSongFromText = isNewSongFromText,
+                suggestion = suggestion,
             )
         },
     )
