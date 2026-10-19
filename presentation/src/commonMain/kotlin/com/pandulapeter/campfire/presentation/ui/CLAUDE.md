@@ -40,8 +40,6 @@ The view model facade, the composition root, and the product rules every screen 
   desktop's Escape handler, outside the composition, can close it; it holds a `TextFieldState` so text and caret
   survive navigation, takes focus once per opening (`takeFocusOnOpen`), and `close` keeps the text so the field reads
   right while animating away — so lists combine `activeQuery`, gated on `isOpen`, never the raw text.
-- `visibleSetlists` (archive filter only) is kept apart from `setlistsWithSongs` (search applied) so placeholders can
-  tell the two empty states apart. Each entry carries its place in its setlist, missing files included.
 - **Renames** (`state/songs/SongFilesController.kt`; metronome and navigator follow themselves, `followSongRename`): entries on
   the old name are rewritten, not popped (each song once, or two pages would share a key). The file moves before
   references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a
@@ -49,8 +47,8 @@ The view model facade, the composition root, and the product rules every screen 
   says it is the last.
 - Tags and languages are written into the file (`SetChordProTagUseCase`). Save in the tag sheet writes the whole set in
   one rewrite, removing only tags it offered and left unticked. The tag/language *filter* (`songFilter`) is neither a
-  file nor a preference: it lives in the view model and saved state only, gone on next launch. `isSongFilterActive` is
-  asked of the chips shown, not the raw selection (which may hold a tag the library lost).
+  file nor a preference: view model and saved state only. `isSongFilterActive` is asked of the chips shown, not the raw
+  selection (which may hold a tag the library lost).
 - **Interrupted transitions**: every entry reports `transition.isRunning` (`ReportNavigationTransition`); a back stack
   change during a running transition bumps `navigationGeneration` into the entry metadata so the new scene never equals
   the one it started from. Without it, Navigation 3 takes its "predictive back cancelled" path and gets stuck halfway.
@@ -60,9 +58,8 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### `ui/CampfireApp.kt`
 
-- Snackbars are queued in the view model with a running number (two identical messages are the same object, and the
-  Android activity is recreated on rotation); a message leaves on `onMessageShown`. A share is not confirmed (the
-  platform sheet answers); a saved export is, unless a warning already says so.
+- Snackbars are queued in the view model with a running number: two identical messages are the same object, so the
+  queue numbers them.
 - **Rescans** happen only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus
   if the last rescan is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where
   the library can change outside the app (`isLibraryEditableOutsideApp`: iOS, desktop). **No pull to refresh or refresh
@@ -77,10 +74,9 @@ The view model facade, the composition root, and the product rules every screen 
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
 - Settings keeps every row (the mode is switched off there); its two library actions are disabled, not hidden.
-- Files opened with or shared to Campfire are still imported, and a shared text that is one new song still opens the
-  editor on it (the mode's one way in: the user asked for a song, from outside). Paste from clipboard and its Ctrl / Cmd
-  + V are gone with the New buttons (`PastedSongController.isNewSongPasteAvailable`), and every shell refuses a drop,
-  files and text alike (`state/importing/DropAvailability.kt`), asked as the drag starts and again at the drop.
+- Files opened with or shared to Campfire are still imported, and a shared one-song text still opens the editor (see
+  `presentation/CLAUDE.md`); paste and every drop are refused (`PastedSongController.isNewSongPasteAvailable`,
+  `state/importing/DropAvailability.kt`).
 
 ## What a song carries in its file
 
@@ -92,9 +88,10 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### A tag's color is the library's, not the song's
 
-- `UserPreferences.tagColors`, keyed by `tagKey` (case and Unicode form share one). Synced, never exported, **never
-  pruned** when the last song loses the tag. Picked from the tag sheet's popup (`dialogs/labels/TagColorButton.kt`) and written
-  at once, not on Save. Drawn by `TagIcon` (see `components/labels/CLAUDE.md`).
+- `UserPreferences.tagColors`, keyed by `tagKey` (case and Unicode form share one). Never pruned when the last song
+  loses the tag (see `data/model/preferences/CLAUDE.md`). Picked from the tag sheet's popup
+  (`dialogs/labels/TagColorButton.kt`) and written at once, not on Save. Drawn by `TagIcon` (see
+  `components/labels/CLAUDE.md`).
 
 ### The language of a song is carried the same way, and is its own category rather than one more tag
 
@@ -122,8 +119,7 @@ The view model facade, the composition root, and the product rules every screen 
 - Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
   signature is written into the file** (`{time}`), and the click counts by it.
 - **Song defaults sheet** (from About the song's Song defaults tile only) edits the file's four values; empty means the
-  default. A new song's template carries `{key}`,
-  `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`.
+  default.
 - Chords off removes key and capo; metronome off removes tempo and time — everywhere but the editor's preview.
 - Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the metronome
   switch (`CardDetails.isTempoShown`) without writing anything.
@@ -184,8 +180,7 @@ The view model facade, the composition root, and the product rules every screen 
 - Settings → Features. Every switch is a `UserPreferences` field, never exported or synced, and **only hides**: nothing
   is written or deleted. What each takes:
   - **Read only** (`isPerformanceModeEnabled`): see Performance mode.
-  - **Chords** (`areChordsEnabled`, stored inverted as `isLyricsOnlyModeEnabled`): takes chords, key, transposition, and
-    capo; disables the chord spelling rows.
+  - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
     Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The Instrument row stays enabled (keyboard
     capo rule, tuner).
