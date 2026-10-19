@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalTime::class)
+@file:OptIn(ExperimentalAtomicApi::class, ExperimentalTime::class)
 
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
@@ -28,6 +28,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -39,27 +41,52 @@ internal class DropboxTokens(
     private val providerId: SyncProviderId,
 ) {
 
+    /** The last renewal that could not reach Dropbox, written only under the credentials lock, see [accessToken]. */
+    private val lastFailedRenewal = AtomicReference<FailedRenewal?>(null)
+
     /**
      * The stored access token, renewed first if it is about to expire, or regardless when it is the one [refused]
      * says Dropbox has already turned down. The whole check and renewal happen inside one [SyncCredentialsStore.update],
      * so that the several requests of a sync run cannot each start a refresh of their own and have the last one to
      * finish overwrite the tokens the others are using. A token that was refused is renewed only while it is still the
      * stored one: six transfers refused at once make one renewal, and the other five use its result.
+     *
+     * A renewal is shared both ways. One that succeeds is shared because the callers that waited for the lock find its
+     * token stored; one that could not reach Dropbox because they fail with it rather than each starting an exchange of
+     * their own against the same stalled endpoint. The callers of a run therefore cost one renewal per retry round
+     * rather than one each, and a token endpoint that never answers ends the run in the time one caller would take. A
+     * refusal is not shared (each waiter's own exchange is answered at once), and neither is a cancellation, so the
+     * callers waiting behind a cancelled renewal renew for themselves.
      */
-    suspend fun accessToken(refused: String? = null): String = credentialsStore.update { credentials ->
-        if (credentials == null || credentials.providerId != providerId.id) {
-            throw SyncAuthorizationException("Dropbox is not connected.")
+    suspend fun accessToken(refused: String? = null): String {
+        // Read before waiting for the lock: a failure newer than this one happened while this caller waited.
+        val seen = lastFailedRenewal.load()
+        return credentialsStore.update { credentials ->
+            if (credentials == null || credentials.providerId != providerId.id) {
+                throw SyncAuthorizationException("Dropbox is not connected.")
+            }
+            if (credentials.accessToken != refused && hasUsableAccessToken(credentials)) {
+                return@update credentials to credentials.accessToken
+            }
+            val failed = lastFailedRenewal.load()
+            if (failed != null && failed !== seen && failed.refreshToken == credentials.refreshToken) {
+                // A new instance with the same cause, so that DropboxTransport.request gives it the same retry limit.
+                throw SyncNetworkException(failed.failure.message ?: "Dropbox could not be asked for a token.", failed.failure.cause)
+            }
+            val token = try {
+                renew(credentials.refreshToken)
+            } catch (exception: SyncNetworkException) {
+                lastFailedRenewal.store(FailedRenewal(credentials.refreshToken, exception))
+                throw exception
+            }
+            lastFailedRenewal.store(null)
+            credentials.copy(
+                accessToken = token.accessToken,
+                expiresAt = expiryOf(token.expiresInSeconds),
+                // Dropbox may hand out a new refresh token, and keeping the old one would end the connection silently.
+                refreshToken = token.refreshToken ?: credentials.refreshToken,
+            ) to token.accessToken
         }
-        if (credentials.accessToken != refused && hasUsableAccessToken(credentials)) {
-            return@update credentials to credentials.accessToken
-        }
-        val token = renew(credentials.refreshToken)
-        credentials.copy(
-            accessToken = token.accessToken,
-            expiresAt = expiryOf(token.expiresInSeconds),
-            // Dropbox may hand out a new refresh token, and keeping the old one would end the connection silently.
-            refreshToken = token.refreshToken ?: credentials.refreshToken,
-        ) to token.accessToken
     }
 
     /** Whether the access token of [credentials] is there and not about to expire. */
@@ -117,6 +144,9 @@ internal class DropboxTokens(
 
     fun expiryOf(expiresInSeconds: Long) =
         if (expiresInSeconds <= 0) 0 else Clock.System.now().toEpochMilliseconds() + expiresInSeconds * 1000
+
+    /** A renewal that could not reach Dropbox, kept so that the callers who waited for it fail with it, see [accessToken]. */
+    private class FailedRenewal(val refreshToken: String, val failure: SyncNetworkException)
 
     private companion object {
         const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"

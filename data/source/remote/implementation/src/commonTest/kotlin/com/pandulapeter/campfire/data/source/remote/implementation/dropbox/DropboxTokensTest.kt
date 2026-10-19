@@ -24,11 +24,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.http.parseQueryString
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -315,6 +317,67 @@ class DropboxTokensTest {
         }
         assertFailsWith<SyncAuthorizationException> { provider.list() }
         assertEquals(expected = 1, actual = tokenRequestCount)
+    }
+
+    /** The callers of a run queue for the credentials lock, and each starting a renewal of its own would multiply the wait. */
+    @Test
+    fun `callers waiting for a renewal that never answers fail with it rather than each trying their own`() = runTest {
+        var tokenRequestCount = 0
+        val provider = dropboxProvider(
+            configure = { install(HttpTimeout) },
+            storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0)),
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                awaitCancellation()
+            }
+            respondJson(EMPTY_LISTING)
+        }
+        coroutineScope {
+            repeat(6) { launch { assertFailsWith<SyncNetworkException> { provider.list() } } }
+        }
+        assertTrue(currentTime < 7 * 30_000L + 94_000L + 7 * 500L, "The renewals took $currentTime ms to fail.")
+        assertEquals(expected = 7, actual = tokenRequestCount)
+    }
+
+    @Test
+    fun `a caller waiting for a renewal that was cancelled renews for itself`() = runTest {
+        var tokenRequestCount = 0
+        val provider = dropboxProvider(
+            storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0)),
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                if (tokenRequestCount == 1) awaitCancellation()
+                respondJson("""{"access_token":"renewed","expires_in":14400}""")
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        val first = launch { provider.list() }
+        runCurrent()
+        assertEquals(expected = 1, actual = tokenRequestCount)
+        val second = async { provider.list() }
+        runCurrent()
+        first.cancel()
+        assertTrue(second.await().files.isEmpty())
+        assertEquals(expected = 2, actual = tokenRequestCount)
+    }
+
+    @Test
+    fun `every caller waiting for a refused renewal is told it is refused`() = runTest {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                respondJson("""{"error":"invalid_grant","error_description":"refresh token is invalid or revoked"}""", HttpStatusCode.BadRequest)
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        coroutineScope {
+            repeat(2) { launch { assertFailsWith<SyncAuthorizationException> { provider.list() } } }
+        }
     }
 
     /** Stored, an empty token would make every following call a refusal, and the connection one to make again. */
