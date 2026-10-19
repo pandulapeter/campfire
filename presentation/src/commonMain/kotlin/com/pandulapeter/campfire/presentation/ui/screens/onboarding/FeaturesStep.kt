@@ -125,7 +125,7 @@ internal fun FeaturesStep(
                 modifier = Modifier.padding(top = FEATURE_CARD_GAP),
                 title = stringResource(Res.string.settings_scale_suggestions),
                 description = stringResource(Res.string.onboarding_feature_scale_suggestions_description),
-                icon = { Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null) },
+                icon = { Icon(painter = painterResource(Res.drawable.ic_scales), contentDescription = null) },
                 isEnabled = features.areScaleSuggestionsEnabled,
                 onEnabledChange = onScaleSuggestionsEnabledChange,
             )
