@@ -695,7 +695,7 @@
     <string name="scale_whole_tone">Egészhangú</string>
     <string name="scale_augmented">Bővített</string>
     <string name="scale_diminished">Szűkített (egész–fél)</string>
-    <string name="scale_dominant_diminished">Szűkített (fél–egész)</string>
+    <string name="scale_dominant_diminished">Domináns szűkített (fél–egész)</string>
     <string name="scale_chromatic">Kromatikus</string>
     <string name="scale_bebop_dominant">Bebop domináns</string>
     <string name="scale_bebop_major">Bebop dúr</string>
