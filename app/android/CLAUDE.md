@@ -36,7 +36,7 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
     case only. `pathAdvancedPattern` doesn't backtrack either.
   - A second filter takes `text/plain` and `application/octet-stream` without a path, for URIs with no file name
     (Downloads' `msf:` ids, attachments). Unrelated files offered this way are reported as skipped (an unknown name is
-    kept only if its bytes are a zip).
+    kept only if its bytes are a zip, or text with a song's structure).
   - No `application/zip` Open with filter.
 - **Share**: `text/plain` (also shared text), `application/octet-stream`, the two zip types, JSON (other apps' song
   exports), PDF, and `.docx`.
