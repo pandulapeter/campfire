@@ -92,14 +92,18 @@ internal class DropboxTransport(
      *
      * A failure without an answer - a timeout, a reset, a stream that ended early, or a fetch that failed - is retried
      * with the same doubling wait, a timeout up to [MAXIMUM_RETRIES] times and anything else up to
-     * [MAXIMUM_TRANSPORT_FAILURE_RETRIES]: on a phone a cell handover or a moment in a tunnel shows up as any of them,
-     * and one of them ending the run would leave a large library on a poor connection never finishing a sync. Every
-     * call sent here is safe to send again: Dropbox writes nothing for an upload whose bytes are already the file's and
-     * answers its metadata, so a resent write that had landed reads as written, one that meets a file changed in
-     * between is a `Conflict` the engine resolves as usual, and a resent deletion finds the file gone.
+     * [MAXIMUM_TRANSPORT_FAILURE_RETRIES]: on a phone a cell handover or a moment in a tunnel shows up as any of them, and
+     * one of them ending the run would leave a large library on a poor connection never finishing a sync. They are counted
+     * apart from the waits Dropbox asks for, so a call rate limited a few times still gets every retry of a reset, and the
+     * reverse; neither count is reset by progress, so the longest one call can take is the sum of both budgets - six
+     * requested waits of at most two minutes each, plus seven attempts bounded by the engine's timeouts. Every call sent
+     * here is safe to send again: Dropbox writes nothing for an upload whose bytes are already the file's and answers its
+     * metadata, so a resent write that had landed reads as written, one that meets a file changed in between is a
+     * `Conflict` the engine resolves as usual, and a resent deletion finds the file gone.
      */
     suspend fun request(block: suspend (accessToken: String) -> HttpResponse): HttpResponse {
-        var attempt = 0
+        var waits = 0
+        var failures = 0
         var refusedToken: String? = null
         while (true) {
             var token = ""
@@ -119,22 +123,22 @@ internal class DropboxTransport(
                     currentCoroutineContext().ensureActive()
                     val cause = (throwable as? SyncNetworkException)?.cause ?: throwable
                     val limit = if (cause.isTimeout()) MAXIMUM_RETRIES else MAXIMUM_TRANSPORT_FAILURE_RETRIES
-                    if (attempt >= limit) throw throwable
+                    if (failures >= limit) throw throwable
                     null
                 }
             }
             if (response == null) {
-                delay(exponentialBackoffSeconds(attempt) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
-                attempt++
+                delay(exponentialBackoffSeconds(failures) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
+                failures++
                 continue
             }
             if (response.status == HttpStatusCode.Unauthorized && refusedToken == null) {
                 refusedToken = token
                 continue
             }
-            val retryAfterMillis = response.retryAfterMillis(attempt)
-            if (retryAfterMillis == null || attempt >= MAXIMUM_RETRIES) return response
-            attempt++
+            val retryAfterMillis = response.retryAfterMillis(waits)
+            if (retryAfterMillis == null || waits >= MAXIMUM_RETRIES) return response
+            waits++
             delay(retryAfterMillis + Random.nextLong(RETRY_JITTER_MILLIS))
         }
     }

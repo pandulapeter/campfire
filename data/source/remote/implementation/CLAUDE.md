@@ -61,8 +61,9 @@ Silent failures go to the injected `Logger`.
   a shorter one of their own there (60 s RPC, 120 s listing pages and downloads, uploads by size).
 - Retries on 408, 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s
   doubling to 32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as
-  `SyncNetworkException` instead. Transport failures are retried too: timeouts six times, anything else (a reset, a cut stream, or a failed
-  `fetch`) three, since every call here is safe to resend. A first sync *will* be rate limited; it must not fail for it.
+  `SyncNetworkException` instead. Transport failures are retried too, counted apart from the waits: timeouts six times,
+  anything else (a reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend. A first
+  sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a

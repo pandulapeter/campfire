@@ -332,6 +332,35 @@ class DropboxRequestTest {
         assertEquals(expected = listOf("song.cho"), actual = provider.list().files.map { it.name })
     }
 
+    /** A first sync is expected to be rate limited, and that must not use up the retries of a cell handover. */
+    @Test
+    fun `a connection reset after being rate limited is still retried`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider {
+            when (++requests) {
+                in 1..3 -> respondJson("""{"error_summary":"too_many_requests/"}""", HttpStatusCode.TooManyRequests)
+                4 -> throw IOException("Connection reset")
+                else -> respondJson(EMPTY_LISTING)
+            }
+        }
+        assertTrue(provider.list().files.isEmpty())
+        assertTrue(currentTime in 16_000L..<18_000L, "Waited $currentTime ms.")
+    }
+
+    @Test
+    fun `a call that met connection resets still gets every wait it is asked for`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider {
+            when (++requests) {
+                in 1..3 -> throw IOException("Connection reset")
+                in 4..9 -> respondJson("""{"error_summary":"too_many_requests/"}""", HttpStatusCode.TooManyRequests)
+                else -> respondJson(EMPTY_LISTING)
+            }
+        }
+        assertTrue(provider.list().files.isEmpty())
+        assertEquals(expected = 10, actual = requests)
+    }
+
     /** A device that is plainly offline hears so within seconds, not after the minute and a half a timeout is given. */
     @Test
     fun `a failure that is not a timeout is given up on after a few attempts`() = runTest {
