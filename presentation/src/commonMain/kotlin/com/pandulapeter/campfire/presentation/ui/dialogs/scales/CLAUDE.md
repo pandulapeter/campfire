@@ -14,8 +14,9 @@
   id and a root name (standard notation, spelled as its opener spells it) only; instrument, tuning, notation, and labels
   are read when it composes, so it opens over the Scales tab, either chord sheet, or anything else. An unknown id closes
   it.
-- The neck's dots carry degrees or note names (`ScaleLibraryState.labels`, session-wide), picked by a segmented choice
-  in the header; the keyboard carries none, and its header has no choice.
+- The neck's dots carry degrees or note names (`ScaleLibraryState.labels`, session-wide), flipped by one icon toggle
+  in the header, showing the mode it switches to; the keyboard carries none, and its header has no toggle. The title
+  wraps to two lines (`titleMaxLines`), so a long scale's name is never cut short.
 - The chord rows (seven-note scales only) follow Chord diagrams and need an instrument with shapes; shapes come from the
   tables only, never a search during composition. A chord tap opens its `ChordReference` sheet over this one, without
   scales; opened from a chord sheet, this sheet has no chord rows (`showsChords`), so dialogs never stack deeper than two.

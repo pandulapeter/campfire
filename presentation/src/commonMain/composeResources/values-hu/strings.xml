@@ -632,6 +632,8 @@
     <string name="scales_diagram">%1$s: %2$s</string>
     <string name="scales_labels_degrees">Fokok</string>
     <string name="scales_labels_notes">Hangok</string>
+    <string name="scales_labels_show_notes">Hangnevek mutatása</string>
+    <string name="scales_labels_show_degrees">Fokok mutatása</string>
     <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. -->
     <string name="scales_steps_whole">E</string>
     <string name="scales_steps_half">F</string>

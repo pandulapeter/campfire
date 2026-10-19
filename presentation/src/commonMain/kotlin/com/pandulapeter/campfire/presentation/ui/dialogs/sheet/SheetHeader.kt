@@ -49,6 +49,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SheetHeader(
     title: String,
     subtitle: String,
+    titleMaxLines: Int,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)?,
     onClose: () -> Unit,
     onActionDone: () -> Unit,
@@ -70,7 +71,7 @@ internal fun SheetHeader(
             modifier = Modifier.semantics { heading() },
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
+            maxLines = titleMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
         if (subtitle.isNotBlank()) {

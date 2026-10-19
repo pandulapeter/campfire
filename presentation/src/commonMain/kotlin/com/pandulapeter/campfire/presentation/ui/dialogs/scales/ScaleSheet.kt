@@ -11,12 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.scales
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +24,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,17 +40,20 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_scale_degrees
+import com.pandulapeter.campfire.presentation.resources.ic_scale_notes
 import com.pandulapeter.campfire.presentation.resources.scales_also_called
 import com.pandulapeter.campfire.presentation.resources.scales_chords
 import com.pandulapeter.campfire.presentation.resources.scales_labels_degrees
 import com.pandulapeter.campfire.presentation.resources.scales_labels_notes
+import com.pandulapeter.campfire.presentation.resources.scales_labels_show_degrees
+import com.pandulapeter.campfire.presentation.resources.scales_labels_show_notes
 import com.pandulapeter.campfire.presentation.resources.scales_mode_of
 import com.pandulapeter.campfire.presentation.resources.scales_relative_minor
 import com.pandulapeter.campfire.presentation.resources.scales_sevenths
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
@@ -67,6 +72,7 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.scales.scaleStepsText
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
 import com.pandulapeter.campfire.presentation.ui.scales.shownScaleNoteNames
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * One scale in one key, titled with both and the notes spelled under the title: the scale on the player's instrument,
@@ -94,10 +100,11 @@ internal fun ScaleSheet(
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
         subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
-        // A keyboard carries no labels, so only a neck has the choice: the subtitle names a keyboard's notes.
+        titleMaxLines = 2,
+        // A keyboard carries no labels, so only a neck has the toggle: the subtitle names a keyboard's notes.
         actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
             {
-                ScaleLabelsChoice(
+                ScaleLabelsToggle(
                     labels = state.labels,
                     onLabelsSelected = { state.labels = it },
                 )
@@ -190,26 +197,38 @@ private fun ScaleSheetDiagram(
 }
 
 /**
- * The header's choice between a neck's degrees and its notes. A segmented row fills the width it is given, which in the
- * header would leave the title none, so it is held to the width its labels need. The header leaves an action 4 dp from
- * the edge, room an icon button's own inset fills; the row's outline has none, so it adds the 12 dp that put it as far
- * from the end as the close button's glyph is from the start.
+ * The header's toggle between a neck's degrees and its notes, one icon button rather than a segmented row, which took
+ * most of a phone's header from the title. It shows the mode a tap switches to, as an icon button shows what it does,
+ * and tells a screen reader both: the tap's result as its description and the mode shown now as its state.
  */
 @Composable
-private fun ScaleLabelsChoice(
+private fun ScaleLabelsToggle(
     labels: ScaleLabels,
     onLabelsSelected: (ScaleLabels) -> Unit,
-) = SegmentedChoice(
-    modifier = Modifier.padding(end = 12.dp).width(IntrinsicSize.Max),
-    options = listOf(
-        ScaleLabels.DEGREES to stringResource(Res.string.scales_labels_degrees),
-        ScaleLabels.NOTES to stringResource(Res.string.scales_labels_notes),
-    ),
-    selected = labels,
-    shouldApplyPadding = false,
-    isInline = true,
-    onSelected = onLabelsSelected,
-)
+) {
+    val shownLabel = stringResource(if (labels == ScaleLabels.DEGREES) Res.string.scales_labels_degrees else Res.string.scales_labels_notes)
+    IconButton(
+        modifier = Modifier.semantics { stateDescription = shownLabel },
+        onClick = { onLabelsSelected(if (labels == ScaleLabels.DEGREES) ScaleLabels.NOTES else ScaleLabels.DEGREES) },
+    ) {
+        Crossfade(
+            targetState = labels,
+            label = "scaleLabelsToggle",
+        ) { shownLabels ->
+            if (shownLabels == ScaleLabels.DEGREES) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_scale_notes),
+                    contentDescription = stringResource(Res.string.scales_labels_show_notes),
+                )
+            } else {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_scale_degrees),
+                    contentDescription = stringResource(Res.string.scales_labels_show_degrees),
+                )
+            }
+        }
+    }
+}
 
 /** The degrees of the scale with their accidental signs, and the steps between them. */
 @Composable

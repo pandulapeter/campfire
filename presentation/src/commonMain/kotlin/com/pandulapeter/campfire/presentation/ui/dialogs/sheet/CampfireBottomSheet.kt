@@ -108,6 +108,8 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for, or the notes of the
  *   chord a chord's sheet is about. Left out when blank.
+ * @param titleMaxLines How many lines [title] may wrap to. One, unless the sheet has no text field: no keyboard budget
+ *   counts the header of such a sheet, which may then name a long title in full on two.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
  *   the button that finishes what the sheet is for. The close they are handed is final: unlike the header's close
  *   button, a hide that follows an action is not taken back by a finger landing on the sliding sheet. The ones that
@@ -125,6 +127,7 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
 internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
+    titleMaxLines: Int = 1,
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
     onTopMoved: ((topOnScreen: Float) -> Unit)? = null,
@@ -289,6 +292,7 @@ internal fun CampfireBottomSheet(
                     SheetHeader(
                         title = title,
                         subtitle = subtitle,
+                        titleMaxLines = titleMaxLines,
                         actions = actions,
                         onClose = cancel,
                         onActionDone = close,

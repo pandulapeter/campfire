@@ -15,11 +15,13 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
+import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
@@ -28,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.presentation.resources.tools
 
 /** Taps the node [matcher] finds as a finger does, which leaves no pointer hovering over the screen to draw a highlight. */
 internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
@@ -71,6 +74,16 @@ internal fun AppTestScope.openSetlistDetails() {
     tap(hasContentDescription(string(Res.string.setlists_actions)))
     tap(hasText(string(Res.string.setlists_edit_details)) and hasClickAction())
     keyboardHeight = KEYBOARD_HEIGHT
+}
+
+/** Opens the Scales tab of a phone, behind the Tools item of its navigation bar. */
+internal fun AppTestScope.openScales() {
+    tap(hasText(string(Res.string.tools)) and hasClickAction())
+    // The family row's "Scales" title is not clickable, so the click action picks the tab, which a large text size
+    // leaves off the end of the scrolling tab row.
+    val scalesTab = hasText(string(Res.string.scales)) and hasClickAction()
+    onNode(scalesTab).performScrollTo()
+    tap(scalesTab)
 }
 
 /** Turns the onboarding of a first run with Next until its last page, the one Start playing finishes it from. */
