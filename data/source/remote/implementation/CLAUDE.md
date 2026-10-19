@@ -10,8 +10,7 @@
 # :data:source:remote:implementation
 
 Implements `:data:source:remote:api`. **The only module that makes a network call and the only one that sees Ktor.**
-Silent failures (a revocation, an unreadable account, a stray request on the desktop socket) go to the injected
-`Logger`.
+Silent failures go to the injected `Logger`.
 
 ## What reaches the network, and when
 
@@ -58,8 +57,8 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
   while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout.
 - Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
-  32 s, six retries (~1.5 min), plus up to 0.5 s jitter. Of transport failures only timeouts are retried; any other
-  ends the run as `SyncNetworkException`. A first sync *will* be rate limited; it must not fail for it.
+  32 s, six retries, plus up to 0.5 s jitter. Of transport failures only timeouts are retried; any other ends the run as
+  `SyncNetworkException`. A first sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`, like `MusicBrainzModels`: everything defaulted, unknown keys ignored, so a new API field never
@@ -95,12 +94,12 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
     `error=access_denied` is a refusal. The redirect URI is the `<base>` folder (not the address bar), ending in `/`,
     without `index.html`; registered: `https://campfire-songbook.com/app/` (the custom domain, not the `github.io`
     address that redirects to it) and `http://localhost:8080/`.
-- `disconnect` takes an access token (renewed if needed) within 10 s, forgets the local credentials, then revokes best
-  effort within 10 s, so a dead network never keeps the user connected.
+- `disconnect` renews the token if needed, forgets the local credentials, then revokes best effort, each step within
+  10 s, so a dead network never keeps the user connected.
 
 ## Downloads
 
-- Cover (`coverArt/`): redirects followed (the Cover Art Archive sends two). Not `image/*` or over 5 MB (read one byte
+- Cover (`coverArt/`): redirects followed. Not `image/*` or over 5 MB (read one byte
   past the limit when no length is declared) → `Missing`, never read to the end. 408, 429, 5xx, or transport failure →
   `Unreachable`; any other refusal → `Missing`.
 - Import (`importDownload/`): declared length over the ceiling → `TooLarge` before the body; otherwise read one byte
