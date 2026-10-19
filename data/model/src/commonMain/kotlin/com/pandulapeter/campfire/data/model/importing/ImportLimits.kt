@@ -50,9 +50,17 @@ object ImportLimits {
     const val MAX_FOLDER_ENTRIES = 10_000
 
     /**
+     * How many bytes of a file under a name the import does not know are looked at to decide whether to read the rest:
+     * inside an archive and inside a dropped folder, where nobody chose the file itself and reading every photo next to
+     * the songs whole would cost the whole selection's budget, one file at a time.
+     */
+    const val SNIFF_LENGTH = 512
+
+    /**
      * How many bytes of a file called [name] an import reads, which is none for a file it would not look inside.
      * Asked before the file is opened wherever the name is known first, which is everywhere. A name it does not know at
-     * all is a question for [ImportBudget], which reads such a file to see whether it is an archive under another name.
+     * all is a question for [ImportBudget], which reads such a file to see whether it is an archive under another name,
+     * and so is a text name over its limit (see [isReadAsText]).
      */
     fun maxSizeOf(name: String) = when {
         LibraryFiles.isArchiveFileName(name) -> MAX_IMPORT_SIZE
@@ -60,6 +68,13 @@ object ImportLimits {
         LibraryFiles.IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) } -> MAX_TEXT_FILE_SIZE
         else -> 0L
     }
+
+    /**
+     * Whether a file called [name] is read as a song, setlist or collection of them, with [MAX_TEXT_FILE_SIZE] as its
+     * limit. One over that limit is still kept where its bytes are a zip archive: a backup renamed `.txt` or `.json` on
+     * its way over is often larger than any text.
+     */
+    fun isReadAsText(name: String) = maxSizeOf(name) == MAX_TEXT_FILE_SIZE
 }
 
 /**
@@ -80,10 +95,15 @@ class ImportBudget {
     inline fun read(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
         if (!LibraryFiles.isImportableFileName(name)) return readUnknown(name, size, readBytes)
         val ownLimit = ImportLimits.maxSizeOf(name)
-        val limit = minOf(ownLimit, remaining)
+        // A text name is read as far as the selection allows rather than to its own limit, since one over that limit may
+        // be a backup renamed on its way over (see ImportLimits.isReadAsText). A text that is not one is then handed back
+        // too large, without having cost the files after it anything.
+        val limit = if (ImportLimits.isReadAsText(name)) remaining else minOf(ownLimit, remaining)
         if (size != null && size > limit) return ImportedFile.unread(name, isTooLarge = true)
         val bytes = readBytes(limit) ?: return null
-        if (bytes.size > limit) return ImportedFile.unread(name, isTooLarge = true)
+        if (bytes.size > limit || (bytes.size > ownLimit && !LibraryFiles.isZipArchive(bytes))) {
+            return ImportedFile.unread(name, isTooLarge = true)
+        }
         remaining -= bytes.size
         return ImportedFile(name = name, bytes = bytes)
     }
@@ -103,5 +123,15 @@ class ImportBudget {
         if (bytes.size > limit || !LibraryFiles.isZipArchive(bytes)) return ImportedFile.unread(name)
         remaining -= bytes.size
         return ImportedFile(name = name, bytes = bytes)
+    }
+
+    companion object {
+
+        /**
+         * Whether a file under a name the import does not know is worth reading whole, judged by its first
+         * [ImportLimits.SNIFF_LENGTH] bytes ([head]). Asked by the folder walks, which read nothing of a file that is
+         * not, so that a dropped folder of photos costs a peek at each rather than a read of each.
+         */
+        fun isWorthReadingUnknown(head: ByteArray) = LibraryFiles.isZipArchive(head)
     }
 }

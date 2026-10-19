@@ -47,10 +47,12 @@ rejected; ZIP64, encrypted, or otherwise compressed entries left out); `Inflater
 - **`ZipWriter` writes STORED only, on purpose**: a stored archive's size is what an import unpacks, which lets the
   export warn when it is past `ImportLimits.MAX_IMPORT_SIZE`. More than 65,534 entries are refused rather than written
   as ZIP64.
-- **Declared sizes are only a first guess.** Entries are asked about by name before inflating (hidden or uninteresting
-  files, and oversized songs, are never read); the caller's remaining import budget is charged before an entry is read,
-  and inflation stops at the declared size. Compressed sizes may not add up to more than the archive holds, which stops
-  zip bombs whose central directory points many entries at the same bytes. The buffer starts at no more than 1 MiB
+- **Declared sizes are only a first guess.** Entries are asked about by name and declared size before inflating
+  (`EntryPolicy`: hidden files are skipped, oversized songs never read), or, under a name that says nothing, by a
+  512-byte peek (`Sniff`, the inflater's prefix mode) that decides whether to read the rest; a peek turned down costs
+  no budget. The caller's remaining import budget is charged before an entry is read, and inflation stops at the
+  declared size. Each entry's compressed bytes are charged once, peek and read together, and may not add up to more
+  than the archive holds, which stops zip bombs whose central directory points many entries at the same bytes. The buffer starts at no more than 1 MiB
   whatever the directory claims.
 - An unreadable entry is left out and reported by name; only an unwalkable archive is a `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a path

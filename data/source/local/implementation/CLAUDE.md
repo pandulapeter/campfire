@@ -117,9 +117,10 @@ No document type leaves this module.
 ## Other apps' libraries
 
 SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an archive holding one
-is looked inside; none is registered as an Open with type, and no platform's picker filters by name. Other names are recognised by their bytes (`ImportBudget` in
-`:data:model`, `:domain:implementation`'s `importing`), and so is an entry inside an archive, under any name but a
-document's, since an entry under an unknown name is never read.
+is looked inside; none is registered as an Open with type, and no platform's picker filters by name. Other names are
+recognised by their bytes (`ImportBudget` in `:data:model`, `:domain:implementation`'s `importing`), and so is an
+entry inside an archive under any name but a document's: one under an unknown name, or a text name over
+`MAX_TEXT_FILE_SIZE`, is sniffed (`EntryPolicy.Sniff`) and read only when its first bytes are a zip's.
 
 `backup/SongbookProBackup` translates `dataFile.txt` (a version line plus one JSON document, read up to
 `ImportLimits.MAX_IMPORT_SIZE`) into `.cho` songs and `*.setlist.json` setlists, then the ordinary import:

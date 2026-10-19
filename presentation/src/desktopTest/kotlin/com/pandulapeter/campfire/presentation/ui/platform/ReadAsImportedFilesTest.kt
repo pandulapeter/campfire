@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class ReadAsImportedFilesTest {
@@ -57,6 +59,22 @@ class ReadAsImportedFilesTest {
 
         assertEquals(listOf("a.cho", "photo.jpg"), files.map { it.name })
         assertEquals(listOf(true, false), files.map { it.bytes.isNotEmpty() })
+    }
+
+    @Test
+    fun `a folder reads a file under an unknown name only where it starts as an archive does`() {
+        // A zip's local file header, which is all the peek looks at.
+        val zip = byteArrayOf('P'.code.toByte(), 'K'.code.toByte(), 3, 4) + ByteArray(100)
+        val root = folder {
+            File(this, "backup.bak").writeBytes(zip)
+            File(this, "photo.heic").writeBytes(ByteArray(4096) { 7 })
+        }
+
+        val files = listOf(root.absolutePath).readAsImportedFiles()
+
+        assertEquals(listOf("backup.bak", "photo.heic"), files.map { it.name })
+        assertContentEquals(zip, files.first().bytes)
+        assertEquals(ImportedFile.unread("photo.heic"), files.last())
     }
 
     @Test

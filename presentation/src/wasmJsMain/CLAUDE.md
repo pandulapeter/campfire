@@ -20,8 +20,9 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
   `interactive-widget=resizes-content` (the canvas shrinks). Safari ignores both and pans.
 - The browser's media session is cleared from the engine's own playback state, not only from the composition, since a
   hidden tab's composition stops collecting.
-- Dropped files are imported; a dropped folder is read to the bottom like the desktop's (`FilePicker.wasmJs.kt`). An unreadable file arrives
-  empty and is reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song where
+- Dropped files are imported; a dropped folder is read to the bottom like the desktop's (`FilePicker.wasmJs.kt`), its
+  files under unknown names peeked at (`fileHead`) and read only as a zip. An unreadable file arrives empty and is
+  reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song where
   `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`, a page flag) the listeners still
   prevent the browser's default, which would navigate to the file, but set `dropEffect` to `none` and drop nothing.
 

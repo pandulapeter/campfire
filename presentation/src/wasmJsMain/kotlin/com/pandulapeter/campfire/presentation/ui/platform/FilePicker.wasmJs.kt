@@ -88,6 +88,18 @@ private fun fileName(file: JsAny): JsString = js("file.name")
 
 private fun fileSize(file: JsAny): Double = js("file.size")
 
+/** The first [length] bytes of [file], or null where the browser cannot read it, as [fileBytes] does. */
+private fun fileHead(file: JsAny, length: Int): Promise<Int8Array?> = js(
+    """file.slice(0, length).arrayBuffer().then(
+        function (buffer) { return new Int8Array(buffer); },
+        function () { return null; }
+    )"""
+)
+
+private fun droppedFile(item: JsAny): JsAny = js("item.file")
+
+private fun isDroppedInFolder(item: JsAny): Boolean = js("item.isInFolder")
+
 /**
  * Resolves with null instead of rejecting for a file the browser cannot read: a dropped directory where the
  * browser hands one over as a `File`, or a file that was moved or deleted after it was chosen.
@@ -123,10 +135,9 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
     listenForDrops(
         maxDepth = ImportLimits.MAX_FOLDER_DEPTH,
         maxEntries = ImportLimits.MAX_FOLDER_ENTRIES,
-        importableExtensions = LibraryFiles.IMPORTABLE_EXTENSIONS.joinToString(","),
     )
     while (true) {
-        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty())
+        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles(isDrop = true).orEmpty())
     }
 }.catch { exception ->
     // The collector is a LaunchedEffect at the root of the app, and what leaves one of those takes the
@@ -134,10 +145,17 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
     println("Could not read the dropped files: ${exception.message}")
 }
 
-/** Read within one [ImportBudget], which is what keeps a file the import would not look inside out of memory. */
-private suspend fun JsArray<JsAny>.toImportedFiles(): List<ImportedFile> {
+/**
+ * Read within one [ImportBudget], which is what keeps a file the import would not look inside out of memory. A drop's
+ * items are the files paired with whether they came out of a folder (see [listenForDrops]); a pick's are the files.
+ */
+private suspend fun JsArray<JsAny>.toImportedFiles(isDrop: Boolean = false): List<ImportedFile> {
     val budget = ImportBudget()
-    return (0 until length).mapNotNull { index -> get(index)?.toImportedFile(budget) }
+    return (0 until length).mapNotNull { index ->
+        get(index)?.let { item ->
+            if (isDrop) droppedFile(item).toImportedFile(budget, isInFolder = isDroppedInFolder(item)) else item.toImportedFile(budget, isInFolder = false)
+        }
+    }
 }
 
 /**
@@ -146,15 +164,20 @@ private suspend fun JsArray<JsAny>.toImportedFiles(): List<ImportedFile> {
  * instead of being left out, because an empty file is one the import reports as skipped - so the user is told,
  * where leaving it out would say nothing at all.
  *
+ * A file that came out of a dropped folder under a name the import does not know is read only where its first
+ * [ImportLimits.SNIFF_LENGTH] bytes say it is worth it, as the desktop's folder walk decides: a folder of photos would
+ * otherwise be read whole, one file at a time. One picked or dropped on its own is read whatever it is called.
+ *
  * `Throwable` rather than `Exception`: what a `js(...)` block throws arrives as a `JsException`, which is not an
  * `Exception`, and what a rejected promise arrives as is the coroutines library's business.
  */
-private suspend fun JsAny.toImportedFile(budget: ImportBudget): ImportedFile? {
+private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boolean): ImportedFile? {
     val (name, size) = try {
         fileName(this).toString() to fileSize(this).toLong()
     } catch (_: Throwable) {
         return null
     }
+    if (isInFolder && !LibraryFiles.isImportableFileName(name) && !isWorthReading()) return ImportedFile.unread(name)
     return budget.read(name = name, size = size) {
         try {
             fileBytes(this).await<Int8Array?>()?.toByteArray()
@@ -167,20 +190,28 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget): ImportedFile? {
     }
 }
 
+private suspend fun JsAny.isWorthReading() = try {
+    fileHead(this, ImportLimits.SNIFF_LENGTH).await<Int8Array?>()?.toByteArray()?.let(ImportBudget::isWorthReadingUnknown) == true
+} catch (exception: CancellationException) {
+    throw exception
+} catch (_: Throwable) {
+    false
+}
+
 /**
  * A dropped folder is read to the bottom, as the desktop's is (`filesBelow`): each folder's files in name order,
  * within [maxDepth] levels and [maxEntries] entries so that a home directory dropped by accident is not walked for
- * good. Only the files the import knows by name are opened; the others arrive empty, to be reported as skipped, as an
- * archive's entries are. [importableExtensions] are the extensions the import knows, joined by commas. Names starting
- * with a dot are left out of a folder, folders included, and unreported, as they are out of an archive - nobody
- * chose those, and the `._` companions macOS writes next to every file on a foreign volume carry a song's extension.
+ * good. Every file is handed over as `{ file, isInFolder }`, and what is read of one from a folder is decided in
+ * [toImportedFile], as an archive's entries are decided by the reader. Names starting with a dot are left out of a
+ * folder, folders included, and unreported, as they are out of an archive - nobody chose those, and the `._`
+ * companions macOS writes next to every file on a foreign volume carry a song's extension.
  *
  * `webkitGetAsEntry` and `getAsFile` are only answered while the `drop` handler is running, so every item is asked
  * before the handler returns and the reading happens afterwards. Nothing here rejects: an entry that cannot be
  * read resolves to nothing, and a browser without `webkitGetAsEntry` hands a folder over as a `File` that
  * [fileBytes] then reports as unreadable.
  */
-private fun listenForDrops(maxDepth: Int, maxEntries: Int, importableExtensions: String): Unit = js(
+private fun listenForDrops(maxDepth: Int, maxEntries: Int): Unit = js(
     """(function () {
         if (window.__campfireDropsReady) return;
         window.__campfireDropsReady = true;
@@ -206,11 +237,6 @@ private fun listenForDrops(maxDepth: Int, maxEntries: Int, importableExtensions:
                 read();
             });
         }
-        var extensions = importableExtensions.split(',');
-        function isImportable(name) {
-            var lowerCase = name.toLowerCase();
-            return extensions.some(function (extension) { return lowerCase.endsWith(extension); });
-        }
         function filesIn(directory, depth, entries) {
             return childrenOf(directory).then(function (children) {
                 var groups = [];
@@ -221,11 +247,7 @@ private fun listenForDrops(maxDepth: Int, maxEntries: Int, importableExtensions:
                         if (child.isDirectory) {
                             if (depth < maxDepth) groups.push(filesIn(child, depth + 1, entries));
                         } else if (child.isFile) {
-                            // An empty file of the same name stands for one the import does not know, which it reports as
-                            // skipped without anything of the real one being read, as an archive's entry is.
-                            groups.push(isImportable(child.name)
-                                ? fileOf(child).then(function (file) { return [file]; })
-                                : Promise.resolve([new File([], child.name)]));
+                            groups.push(fileOf(child).then(function (file) { return [{ file: file, isInFolder: true }]; }));
                         }
                     });
                 return Promise.all(groups).then(function (found) { return [].concat.apply([], found); });
@@ -242,17 +264,19 @@ private fun listenForDrops(maxDepth: Int, maxEntries: Int, importableExtensions:
                         pending.push(filesIn(entry, 1, { left: maxEntries }));
                     } else {
                         var file = items[i].getAsFile();
-                        if (file) pending.push(Promise.resolve([file]));
+                        if (file) pending.push(Promise.resolve([{ file: file, isInFolder: false }]));
                     }
                 }
             } else if (dataTransfer.files && dataTransfer.files.length > 0) {
-                pending.push(Promise.resolve(Array.prototype.slice.call(dataTransfer.files)));
+                pending.push(Promise.resolve(Array.prototype.slice.call(dataTransfer.files).map(function (file) {
+                    return { file: file, isInFolder: false };
+                })));
             }
             if (pending.length === 0) return null;
             return Promise.all(pending).then(function (groups) {
                 var files = [];
                 groups.forEach(function (group) {
-                    group.forEach(function (file) { if (file) files.push(file); });
+                    group.forEach(function (item) { if (item.file) files.push(item); });
                 });
                 return files;
             }, function () { return []; });

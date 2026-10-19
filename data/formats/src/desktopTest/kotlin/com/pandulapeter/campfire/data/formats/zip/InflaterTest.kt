@@ -13,6 +13,7 @@ import java.util.zip.Deflater
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
@@ -85,6 +86,41 @@ internal class InflaterTest {
         assertFailsWith<ZipException> { Inflater.inflate(compressed, 0, compressed.size, 2) }
     }
 
+    @Test
+    fun `a prefix peek of a longer stream returns exactly the prefix`() {
+        val cases = listOf(
+            Triple("repeated abc", 0, STORED_BLOCK),
+            Triple("repeated abc", 6, FIXED_BLOCK),
+            Triple("long repeats", 6, DYNAMIC_BLOCK),
+        )
+        for ((name, level, blockType) in cases) {
+            val fixture = fixtures.getValue(name)
+            val compressed = deflate(fixture, level, nowrap = true)
+            assertEquals(blockType, (compressed[0].toInt() shr 1) and 3, "the block type of $name at level $level")
+
+            assertContentEquals(fixture.copyOf(512), Inflater.inflate(compressed, maxOutput = 512), "$name at level $level")
+        }
+    }
+
+    @Test
+    fun `a prefix peek of a shorter stream returns the whole stream`() {
+        for (name in listOf("empty", "single byte", "repeated abc")) {
+            val fixture = fixtures.getValue(name)
+            val compressed = deflate(fixture, 6, nowrap = true)
+
+            assertContentEquals(fixture, Inflater.inflate(compressed, maxOutput = 4096), name)
+        }
+    }
+
+    @Test
+    fun `a back reference across the prefix's end is cut, not refused`() {
+        // After its first three literals the stream is back references of up to 258 bytes each.
+        val fixture = fixtures.getValue("repeated abc")
+        val compressed = deflate(fixture, 6, nowrap = true)
+
+        assertContentEquals(fixture.copyOf(100), Inflater.inflate(compressed, maxOutput = 100))
+    }
+
     private fun deflate(input: ByteArray, level: Int, nowrap: Boolean): ByteArray {
         val deflater = Deflater(level, nowrap)
         try {
@@ -103,5 +139,11 @@ internal class InflaterTest {
         } finally {
             deflater.end()
         }
+    }
+
+    private companion object {
+        const val STORED_BLOCK = 0
+        const val FIXED_BLOCK = 1
+        const val DYNAMIC_BLOCK = 2
     }
 }

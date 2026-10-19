@@ -125,6 +125,56 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `unpacks an archive nested under an unknown name by its bytes`() = runBlocking {
+        val inner = ZipWriter.write(listOf(ZipEntry("in.cho", "{title: In}".encodeToByteArray())))
+        val names = listOf("folder/backup.bak", "folder/Songs.backup", "folder/x.onsong", "folder/backup")
+        val archive = ZipWriter.write(names.map { ZipEntry(it, inner) })
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(List(names.size) { "in.cho" }, files.map { it.name })
+        assertTrue(files.all { it.bytes.isNotEmpty() })
+    }
+
+    @Test
+    fun `a nested docx is still a document`() = runBlocking {
+        val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
+        val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("sheet.docx"), files.map { it.name })
+        assertContentEquals(word, files.single().bytes)
+    }
+
+    @Test
+    fun `a nested unknown file that is not an archive is reported skipped and costs nothing`() = runBlocking {
+        val png = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte()) + ByteArray(2000)
+        val song = "{title: A}".encodeToByteArray()
+        val archive = ZipWriter.write(listOf(ZipEntry("x.onsong", png), ZipEntry("a.cho", song)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = song.size.toLong())
+
+        assertEquals(listOf("a.cho", "x.onsong"), files.map { it.name })
+        assertContentEquals(song, files.first().bytes)
+        assertEquals(ImportedFile.unread("x.onsong"), files.last())
+    }
+
+    @Test
+    fun `a zip over the text limit under a text name is unpacked, a text over it is too large`() = runBlocking {
+        val large = ByteArray(ImportLimits.MAX_TEXT_FILE_SIZE.toInt() + 1) { 'a'.code.toByte() }
+        val backup = ZipWriter.write(listOf(ZipEntry("in.cho", "{title: In}".encodeToByteArray()), ZipEntry("padding.cho", large)))
+        val archive = ZipWriter.write(listOf(ZipEntry("backup.txt", backup), ZipEntry("huge.txt", large)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("in.cho", "padding.cho", "huge.txt"), files.map { it.name })
+        assertFalse(files.first().isTooLarge)
+        assertTrue(files[1].isTooLarge)
+        assertTrue(files.last().isTooLarge)
+    }
+
+    @Test
     fun `reads a SongbookPro backup inside an archive as its songs and sets, without its bookkeeping`() = runBlocking {
         val data = """1.0
             {"songs": [{"Id": 1, "name": "A", "content": "[C]La"}],

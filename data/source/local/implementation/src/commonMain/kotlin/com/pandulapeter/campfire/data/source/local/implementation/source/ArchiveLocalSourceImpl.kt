@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
+import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.DosTimestamp
 import com.pandulapeter.campfire.data.formats.zip.UnreadZipEntry
@@ -60,20 +61,33 @@ internal class ArchiveLocalSourceImpl(
         val content = ZipReader.read(
             archive = archive,
             maxTotalSize = inflated.limit - inflated.count,
-            // Decided on the name alone, before anything is inflated. What the archiving tool wrote for itself is not
-            // part of what anybody chose to import. macOS packs an AppleDouble "._name.cho" next to every entry and a
-            // ".DS_Store" into every directory, and the first of those carries the extension of the file it belongs
-            // to: an archive of three hundred songs arrives as six hundred entries, half of them binary, and an import
-            // that took them at their word would offer to import as many unreadable files as there are songs. A file
-            // somebody means to import is never a hidden one, nor inside a hidden folder (a ".Trash" of deleted songs,
-            // a ".dropbox.cache"), so these are never read, and neither is anything an import would not look inside:
-            // both cost nothing and cannot fail the archive.
+            // Decided on the name and the declared size, before anything is inflated. What the archiving tool wrote for
+            // itself is not part of what anybody chose to import. macOS packs an AppleDouble "._name.cho" next to every
+            // entry and a ".DS_Store" into every directory, and the first of those carries the extension of the file it
+            // belongs to: an archive of three hundred songs arrives as six hundred entries, half of them binary, and an
+            // import that took them at their word would offer to import as many unreadable files as there are songs. A
+            // file somebody means to import is never a hidden one, nor inside a hidden folder (a ".Trash" of deleted
+            // songs, a ".dropbox.cache"), so these are never read: they cost nothing and cannot fail the archive.
             // SongbookPro keeps a whole library in one document, which is read whatever its size within the import's.
-            limitOf = { name ->
+            // A name the import does not know, and a text name larger than any text, is peeked at instead: another app's
+            // backup in a zipped cloud folder is a zip under a name of its own as often as not.
+            limitOf = { name, declaredSize ->
+                val ownLimit = ImportLimits.maxSizeOf(name.fileName)
                 when {
-                    name.isHidden -> null
-                    name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) -> ImportLimits.MAX_IMPORT_SIZE
-                    else -> ImportLimits.maxSizeOf(name.fileName).takeIf { it > 0 }
+                    name.isHidden -> EntryPolicy.Skip
+                    name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) -> EntryPolicy.Read(ImportLimits.MAX_IMPORT_SIZE)
+                    ownLimit == 0L -> EntryPolicy.Sniff
+                    ImportLimits.isReadAsText(name.fileName) && declaredSize > ownLimit -> EntryPolicy.Sniff
+                    else -> EntryPolicy.Read(ownLimit)
+                }
+            },
+            // A zip is read within what is left of the import (the reader's own limit), and a text name that is no zip
+            // within its own limit, which a text over it is then reported against.
+            sniffedLimitOf = { name, prefix ->
+                when {
+                    LibraryFiles.isZipArchive(prefix) -> ImportLimits.MAX_IMPORT_SIZE
+                    ImportLimits.isReadAsText(name.fileName) -> ImportLimits.MAX_TEXT_FILE_SIZE
+                    else -> null
                 }
             },
         )

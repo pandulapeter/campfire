@@ -33,3 +33,19 @@ data class UnreadZipEntry(
         UNREADABLE,
     }
 }
+
+/** What [ZipReader.read] is to do with an entry, decided from its name and declared size before anything is inflated. */
+sealed interface EntryPolicy {
+
+    /** Read the entry whole, if it inflates to no more than [limit] bytes. */
+    data class Read(val limit: Long) : EntryPolicy
+
+    /**
+     * Look at its first [com.pandulapeter.campfire.data.model.importing.ImportLimits.SNIFF_LENGTH] bytes and let the
+     * caller decide from those, for an entry whose name says nothing about what it holds.
+     */
+    data object Sniff : EntryPolicy
+
+    /** Leave it unread, at the cost of nothing but its name. */
+    data object Skip : EntryPolicy
+}

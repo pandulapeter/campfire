@@ -12,7 +12,8 @@
 ### Preparing
 
 - Unpacks archives (nested ones through `ArchiveLocalSource`). An archive is known by name or, under any name but a
-  document's, by bytes (`isZipArchive`) — never a `.docx`. One known only by its bytes that holds nothing importable
+  document's, by bytes (`isZipArchive`) — never a `.docx`; inside an archive or a dropped folder an unknown name is
+  first peeked at, and a text name over `MAX_TEXT_FILE_SIZE` is kept only as a zip. One known only by its bytes that holds nothing importable
   is reported as the one unsupported file it was, since OpenDocument files, e-books, and spreadsheets are zips too; a
   bare `.json` does not count (inside another app's container it is that app's configuration).
 - Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.

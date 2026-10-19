@@ -15,9 +15,10 @@ The desktop shell, called by `:app:desktop`.
 ## `ui/CampfireDesktopApp.kt`
 
 - Dropped files are imported (a folder stands for the files in every folder inside it, to
-  `ImportLimits.MAX_FOLDER_DEPTH`; hidden entries are left out, unknown files reported as skipped, as in a zip). A drop whose file list can't be read
-  is refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses
-  every later drag. Dropped text is a pasted song, accepted only where `isNewSongPasteAvailable`; a file list wins.
+  `ImportLimits.MAX_FOLDER_DEPTH`; hidden entries are left out, unknown names peeked at and read only as a zip, else
+  reported as skipped, as in a zip). A drop whose file list can't be read is refused, never thrown: an exception out
+  of the target skips the end of the drag session and the window refuses every later drag. Dropped text is a pasted
+  song, accepted only where `isNewSongPasteAvailable`; a file list wins.
   Read only mode refuses both (`isDropAvailable`).
 - Links (`openUrl` in `ui/platform/SystemBrowser.desktop.kt`) go through `java.awt.Desktop`, falling back to `open`,
   `rundll32`, or `xdg-open` where AWT has no desktop or `browse` fails. On macOS and Windows anything but a web page

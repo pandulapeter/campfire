@@ -53,8 +53,8 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun `a file over its declared size is not read`() {
-        val file = ImportBudget().read(name = "a.cho", size = ImportLimits.MAX_TEXT_FILE_SIZE + 1) { error("read") }
+    fun `a file over what is left of the selection is not read`() {
+        val file = ImportBudget().read(name = "a.cho", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
 
         assertTrue(file!!.isTooLarge)
     }
@@ -69,7 +69,31 @@ internal class ImportLimitsTest {
         }
 
         assertTrue(file!!.isTooLarge)
-        assertEquals(ImportLimits.MAX_TEXT_FILE_SIZE, givenLimit)
+        assertEquals(ImportLimits.MAX_IMPORT_SIZE, givenLimit)
+    }
+
+    @Test
+    fun `a zip over the text limit under a text name is read whole`() {
+        val budget = ImportBudget()
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", ByteArray(ImportLimits.MAX_TEXT_FILE_SIZE.toInt()))))
+
+        val file = budget.read(name = "backup.txt", size = archive.size.toLong()) { archive }
+
+        assertFalse(file!!.isTooLarge)
+        assertContentEquals(archive, file.bytes)
+    }
+
+    @Test
+    fun `a text over its limit is still reported too large and gives its budget back`() {
+        val budget = ImportBudget()
+        val text = ByteArray(ImportLimits.MAX_TEXT_FILE_SIZE.toInt() + 1) { 'a'.code.toByte() }
+        val rest = ByteArray((ImportLimits.MAX_IMPORT_SIZE - 1).toInt())
+
+        val file = budget.read(name = "huge.txt", size = text.size.toLong()) { text }
+        val after = budget.read(name = "after.zip", size = rest.size.toLong()) { rest }
+
+        assertTrue(file!!.isTooLarge)
+        assertFalse(after!!.isTooLarge)
     }
 
     @Test

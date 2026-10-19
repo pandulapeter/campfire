@@ -21,6 +21,10 @@ internal object Inflater {
      *
      * @param expectedSize the known uncompressed size, or a negative number when it is unknown. When it is known the
      * output buffer starts at that size, up to [INITIAL_CAPACITY_LIMIT], and the stream is held to it.
+     * @param maxOutput how many bytes of the stream's start are wanted, or a negative number for all of it. With it the
+     * output buffer is that size whatever the stream declares, the inflate ends as soon as it is full, and neither the
+     * declared size nor what the stream would go on to produce is checked: a peek at what an entry holds costs at most
+     * this much memory, however many entries are peeked at. A stream shorter than that comes back whole.
      * @throws ZipException when the data is malformed, when it declares more than [MAX_ENTRY_SIZE] bytes, or when it
      * produces more than it declared (more than [MAX_ENTRY_SIZE] where it declared nothing) or fewer.
      */
@@ -29,17 +33,23 @@ internal object Inflater {
         offset: Int = 0,
         length: Int = source.size - offset,
         expectedSize: Int = -1,
+        maxOutput: Int = -1,
     ): ByteArray {
         if (offset < 0 || length < 0 || offset.toLong() + length > source.size) {
             throw ZipException("Deflate input range $offset..${offset.toLong() + length} is outside the ${source.size} byte input.")
         }
-        if (expectedSize > MAX_ENTRY_SIZE) {
+        val isPrefix = maxOutput >= 0
+        if (!isPrefix && expectedSize > MAX_ENTRY_SIZE) {
             throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")
         }
-        val state = State(source, offset, length, expectedSize)
-        state.inflate()
+        val state = State(source, offset, length, if (isPrefix) -1 else expectedSize, maxOutput)
+        try {
+            state.inflate()
+        } catch (_: PrefixComplete) {
+            // The prefix is all that was asked for, so whatever the rest of the stream holds is none of this call's business.
+        }
         val result = state.output()
-        if (expectedSize >= 0 && result.size != expectedSize) {
+        if (!isPrefix && expectedSize >= 0 && result.size != expectedSize) {
             throw ZipException("Deflate stream produced ${result.size} bytes instead of the expected $expectedSize.")
         }
         return result
@@ -50,6 +60,7 @@ internal object Inflater {
         offset: Int,
         length: Int,
         expectedSize: Int,
+        private val maxOutput: Int,
     ) {
         private val start = offset
         private val end = offset + length
@@ -59,11 +70,21 @@ internal object Inflater {
         // The declared size comes from the archive itself, so it is only trusted as far as a first guess: a corrupted or
         // crafted central directory can claim gigabytes for a stream of a few bytes, and an allocation that large is an
         // OutOfMemoryError on Android and a trap on the web, neither of which an import can catch.
-        private var out = ByteArray(if (expectedSize > 0) minOf(expectedSize, INITIAL_CAPACITY_LIMIT) else 1024)
+        private var out = ByteArray(
+            when {
+                maxOutput >= 0 -> maxOutput
+                expectedSize > 0 -> minOf(expectedSize, INITIAL_CAPACITY_LIMIT)
+                else -> 1024
+            },
+        )
         private var outSize = 0
         // An entry is held to the size it declared as it inflates rather than once it has ended: an archive can name the
         // same stream from any number of entries, and each of them would otherwise be inflated to MAX_ENTRY_SIZE first.
-        private val outputLimit = if (expectedSize >= 0) expectedSize else MAX_ENTRY_SIZE
+        private val outputLimit = when {
+            maxOutput >= 0 -> maxOutput
+            expectedSize >= 0 -> expectedSize
+            else -> MAX_ENTRY_SIZE
+        }
 
         fun output(): ByteArray = if (outSize == out.size) out else out.copyOf(outSize)
 
@@ -102,6 +123,7 @@ internal object Inflater {
         // region Output
 
         private fun emit(value: Int) {
+            if (prefixLeft(1) == 0) throw PrefixComplete
             ensureCapacity(1)
             out[outSize++] = value.toByte()
         }
@@ -110,12 +132,17 @@ internal object Inflater {
             if (distance > outSize) {
                 throw ZipException("Deflate back reference of $distance bytes points before the start of the output.")
             }
-            ensureCapacity(count)
+            val copied = prefixLeft(count)
+            ensureCapacity(copied)
             var from = outSize - distance
-            repeat(count) {
+            repeat(copied) {
                 out[outSize++] = out[from++]
             }
+            if (copied < count) throw PrefixComplete
         }
+
+        /** How many of [count] bytes still fit into the prefix that was asked for, all of them where none was. */
+        private fun prefixLeft(count: Int) = if (maxOutput >= 0) minOf(count, maxOutput - outSize) else count
 
         private fun ensureCapacity(additional: Int) {
             val required = outSize + additional
@@ -150,10 +177,12 @@ internal object Inflater {
             if (position + storedLength > end) {
                 throw ZipException("Deflate stream ended inside a stored block of $storedLength bytes.")
             }
-            ensureCapacity(storedLength)
-            source.copyInto(out, outSize, position, position + storedLength)
-            outSize += storedLength
+            val copied = prefixLeft(storedLength)
+            ensureCapacity(copied)
+            source.copyInto(out, outSize, position, position + copied)
+            outSize += copied
             position += storedLength
+            if (copied < storedLength) throw PrefixComplete
         }
 
         private fun dynamic() {
@@ -281,6 +310,9 @@ internal object Inflater {
             }
         }
     }
+
+    /** Ends a prefix inflate once the prefix is full; never a [ZipException], since nothing is wrong with the stream. */
+    private object PrefixComplete : RuntimeException()
 
     /** The largest buffer allocated on the strength of a declared size alone; anything bigger grows into place. */
     const val INITIAL_CAPACITY_LIMIT = 1 shl 20

@@ -95,10 +95,11 @@ private fun File.withExtensionOf(offeredName: String): File {
  * Reads whatever of the given paths can be read, within one [ImportBudget], which is also how a file reaches the app
  * without a dialog: as a command line argument from an "open with", or as a drop onto the window. A folder stands for
  * the files below it, in every folder inside it (see [filesBelow]), which are treated as the entries of an archive are:
- * a file the import does not know by name is handed over unread, to be reported as skipped, rather than opened to see
- * whether it is an archive. A file that was named itself is read whatever it is called. A file that cannot be read is
- * handed over empty, which the import reports as skipped, as on Android; one bad file still does not lose the ones next
- * to it.
+ * a file the import does not know by name is read only where its first [ImportLimits.SNIFF_LENGTH] bytes say it is
+ * worth it (an archive under another name), and otherwise handed over unread, to be reported as skipped, so that a
+ * folder of photos is not read whole one file at a time. A file that was named itself is read whatever it is called. A
+ * file that cannot be read is handed over empty, which the import reports as skipped, as on Android; one bad file still
+ * does not lose the ones next to it.
  */
 fun List<String>.readAsImportedFiles(): List<ImportedFile> {
     val budget = ImportBudget()
@@ -107,7 +108,7 @@ fun List<String>.readAsImportedFiles(): List<ImportedFile> {
         if (file.isDirectory) file.filesBelow().map { it to true } else listOf(file to false)
     }.mapNotNull { (file, isInFolder) ->
         try {
-            if (isInFolder && !LibraryFiles.isImportableFileName(file.name)) {
+            if (isInFolder && !LibraryFiles.isImportableFileName(file.name) && !file.isWorthReadingUnknown()) {
                 ImportedFile.unread(file.name)
             } else if (file.isFile) {
                 budget.read(name = file.name, size = file.length()) { file.readBytes() }
@@ -120,6 +121,8 @@ fun List<String>.readAsImportedFiles(): List<ImportedFile> {
         }
     }
 }
+
+private fun File.isWorthReadingUnknown() = ImportBudget.isWorthReadingUnknown(inputStream().use { it.readNBytes(ImportLimits.SNIFF_LENGTH) })
 
 /**
  * The files in this folder and the folders inside it, each folder's in name order. A folder dropped on the app is a

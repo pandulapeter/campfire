@@ -12,14 +12,15 @@ package com.pandulapeter.campfire.data.formats.document
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import kotlinx.coroutines.yield
 
 object DocxTextExtractor {
     suspend fun extract(bytes: ByteArray): ExtractedDocument {
         require(bytes.size >= 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4b.toByte())
-        val parts = ZipReader.read(bytes, maxTotalSize = ImportLimits.MAX_DOCUMENT_FILE_SIZE, limitOf = { name ->
-            ImportLimits.MAX_TEXT_FILE_SIZE.takeIf { name == "word/document.xml" || name == "word/styles.xml" }
+        val parts = ZipReader.read(bytes, maxTotalSize = ImportLimits.MAX_DOCUMENT_FILE_SIZE, limitOf = { name, _ ->
+            if (name == "word/document.xml" || name == "word/styles.xml") EntryPolicy.Read(ImportLimits.MAX_TEXT_FILE_SIZE) else EntryPolicy.Skip
         }).entries.associate { it.name to it.bytes.decodeToString(throwOnInvalidSequence = true) }
         return fromXml(requireNotNull(parts["word/document.xml"]), parts["word/styles.xml"])
     }
