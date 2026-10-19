@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -203,7 +204,8 @@ internal fun ScalesScreen(
 
 /**
  * What stands over the scales: the family and the key they are in, set the way the controls' titles are, or while a
- * search is typed, what it found them by, or that it found nothing.
+ * search is typed, what it found them by, or that it found nothing. The line fades between finding and finding nothing,
+ * as the Chords tab's message comes and goes; the words of a search change in place as they are typed.
  */
 @Composable
 private fun ScaleLibraryHeading(
@@ -213,22 +215,28 @@ private fun ScaleLibraryHeading(
     hasResults: Boolean,
     rootName: String,
     notation: ChordNotation,
-) = Text(
-    modifier = modifier
-        .fillMaxWidth()
-        .padding(top = 8.dp),
-    text = when {
-        query.isEmpty() -> stringResource(
-            Res.string.scales_heading,
-            stringResource(ScaleFamily.entries.getOrNull(familyIndex - 1)?.label ?: Res.string.scales_common_heading),
-            shownChordName(rootName, notation),
-        )
-        hasResults -> textResource(Res.string.scales_search_heading, query, shownChordName(rootName, notation))
-        else -> textResource(Res.string.scales_search_no_scale, query)
-    },
-    style = MaterialTheme.typography.bodyLarge,
-    color = if (query.isNotEmpty() && !hasResults) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-)
+) = Crossfade(
+    modifier = modifier.fillMaxWidth(),
+    targetState = query.isNotEmpty() && !hasResults,
+    label = "scaleLibraryHeading",
+) { isNothingFound ->
+    Text(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        text = when {
+            isNothingFound -> textResource(Res.string.scales_search_no_scale, query)
+            query.isEmpty() -> stringResource(
+                Res.string.scales_heading,
+                stringResource(ScaleFamily.entries.getOrNull(familyIndex - 1)?.label ?: Res.string.scales_common_heading),
+                shownChordName(rootName, notation),
+            )
+            else -> textResource(Res.string.scales_search_heading, query, shownChordName(rootName, notation))
+        },
+        style = MaterialTheme.typography.bodyLarge,
+        color = if (isNothingFound) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+    )
+}
 
 /** Why the scales are drawn on a keyboard: no instrument has been picked whose strings they could be drawn on. */
 @Composable
