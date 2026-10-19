@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.isCutShort
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
@@ -41,7 +42,7 @@ internal class CoverArtRemoteSourceImpl(
     override suspend fun downloadCoverArt(url: String): CoverArtDownload {
         if (parseUrl(url) == null) return CoverArtDownload.Missing
         return try {
-            httpClientHolder.client().prepareGet(url).execute { response ->
+            httpClientHolder.client().prepareGet(url) { timeout { requestTimeoutMillis = DOWNLOAD_TIMEOUT_MILLIS } }.execute { response ->
                 when {
                     response.status.isTransient -> CoverArtDownload.Unreachable
                     !response.status.isSuccess() -> CoverArtDownload.Missing
@@ -75,5 +76,12 @@ internal class CoverArtRemoteSourceImpl(
 
     internal companion object {
         const val MAXIMUM_SIZE_BYTES = 5 * 1024 * 1024
+
+        /**
+         * How long one download may take, body included. A thumbnail makes it at any rate a phone gets, and the largest
+         * cover allowed at ~85 KB/s; what it is for is a host that accepts the connection and sends nothing, which must
+         * not hold one of the repository's four download slots for the ten minutes the browser otherwise allows.
+         */
+        const val DOWNLOAD_TIMEOUT_MILLIS = 60_000L
     }
 }

@@ -16,17 +16,23 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class CoverArtRemoteSourceTest {
 
@@ -83,12 +89,30 @@ class CoverArtRemoteSourceTest {
     }
 
     @Test
+    fun `a cover that never arrives is unreachable after a minute`() = runTest {
+        val download = source { _ -> awaitCancellation() }.downloadCoverArt(URL)
+
+        assertEquals(CoverArtDownload.Unreachable, download)
+        assertTrue(currentTime in 60_000L..<10 * 60_000L)
+    }
+
+    @Test
     fun `a transport failure is unreachable`() = runTest {
         assertEquals(CoverArtDownload.Unreachable, source { _ -> throw IllegalStateException("No route to host") }.downloadCoverArt(URL))
     }
 
-    private fun source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = CoverArtRemoteSourceImpl(
-        httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler)) { expectSuccess = false } },
+    /** Built on the test's scheduler, engine included, so that a request timeout is measured in virtual time. */
+    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = CoverArtRemoteSourceImpl(
+        httpClientHolder = HttpClientHolder(dispatcher = StandardTestDispatcher(testScheduler)) {
+            HttpClient(MockEngine.create {
+                dispatcher = StandardTestDispatcher(testScheduler)
+                addHandler(handler)
+            }) {
+                expectSuccess = false
+                // Production installs it in configureClient, and a request's own timeout needs it.
+                install(HttpTimeout)
+            }
+        },
     )
 
     private fun imageHeaders(contentLength: Int, contentEncoding: String? = null) = Headers.build {

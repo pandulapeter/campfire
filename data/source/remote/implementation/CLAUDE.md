@@ -109,7 +109,8 @@ Silent failures go to the injected `Logger`.
 
 - Cover (`coverArt/`): redirects followed. Not `image/*` or over 5 MB (read one byte
   past the limit when no length is declared) → `Missing`, never read to the end. 408, 429, 5xx, transport failure, or a
-  body shorter than an unencoded declared length → `Unreachable`; any other refusal → `Missing`.
+  body shorter than an unencoded declared length → `Unreachable`; any other refusal → `Missing`. At most a minute per
+  download, so a stalled host cannot hold the repository's download slots.
 - Import (`importDownload/`): declared length over the ceiling → `TooLarge` before the body; otherwise read one byte
   past it. 408, 429, 5xx, transport failure, refused CORS, or a body shorter than an unencoded declared length →
   `Unreachable`; other refusals or an empty body → `Missing`. Content type is not checked.
