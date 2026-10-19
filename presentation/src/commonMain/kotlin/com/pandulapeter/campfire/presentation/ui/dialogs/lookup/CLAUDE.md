@@ -15,8 +15,9 @@ The online cover search and song details lookup; both only fill the form's draft
 
 Opened from the cover in the About the song sheet; absent in performance mode or with Cover art off.
 
-- The search is asked by `setVisibleDialog` as the sheet is put up (so its first frame already says "searching") and
-  afterwards **only from the search key or button, never per keystroke**: MusicBrainz allows one request a second.
+- The search is asked as the sheet enters the stack (`addOpenDialogsChange`), so its first frame already says
+  "searching", and afterwards **only from the search key or button, never per keystroke**: MusicBrainz allows one
+  request a second.
 - The Web address tab previews after a 500 ms typing pause; an address that does not load can still be saved, since a
   host may refuse only the web build.
 - A tile whose thumbnail fails is dropped (that is how a cover-less release group is found out); a new search restores
@@ -33,8 +34,7 @@ draft (`DialogType.SongDetailsLookup`).
 - Fill in (Ctrl / Cmd + S) hands a new draft to the form (`fillSongMetadata`) and closes the lookup. Each Fill in bumps
   `fillCount`, which keys the form's fields, so they reset even to an equal draft. A restored process reopens the form,
   not the lookup.
-- Search runs as the sheet opens (`addOpenDialogsChange`), then only on the search key or button; its state is
-  `SongDetailsLookupController`'s, cleared with the sheet.
+- Search runs the same way; its state is `SongDetailsLookupController`'s, cleared with the sheet.
 - A row's review (`SongDetailsReview.kt`, pure and tested): one box per field it would change, ticked only where the
   form is empty and never for the title; identical values omitted, durations compared as durations.
 - MusicBrainz songwriters are fetched when a row opens (one request; the controller does not re-ask for the row it
