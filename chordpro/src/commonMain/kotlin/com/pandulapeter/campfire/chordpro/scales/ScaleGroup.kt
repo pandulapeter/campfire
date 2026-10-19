@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
  * @property sections The sections, in the order the song plays them, the very instances of the song's blocks, so that
  *   a viewer heads them the way it heads them on the page.
  * @property rootName The root every scale is played on, a note in the standard notation.
- * @property scales The scales on [rootName] holding every note of the sections' chords, ordered as
- *   [ScaleChords.scalesContaining] orders them.
+ * @property scales The scales on [rootName] to play over the sections' chords, what [PlayableScales.over] suggests for
+ *   them, in its order.
  */
 public data class ScaleGroup(
     val sections: List<ChordProBlock.Section>,
