@@ -53,7 +53,7 @@ public object ChordSheetConverter {
      */
     public fun convertFragment(text: String, normalize: (String) -> String = { it }): String? {
         if (isChordPro(text)) return null
-        val lines = ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) }
+        val lines = expandLabels(ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) })
         val candidates = chordCandidates(lines)
         val kinds = classify(lines, candidates).map { if (it == Kind.METADATA) Kind.LYRIC else it }
         if (Kind.CHORD !in kinds) return null
@@ -73,7 +73,8 @@ public object ChordSheetConverter {
             ).joinToString("\n")
     }
 
-    private data class Rendered(val text: String, val positions: DoubleArray, val source: ChordSheet.Line)
+    /** [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. */
+    private data class Rendered(val text: String, val positions: DoubleArray, val source: ChordSheet.Line, val isFromLabel: Boolean = false)
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, SECTION, METADATA, CHORD, LYRIC }
 
@@ -242,14 +243,23 @@ public object ChordSheetConverter {
         }
     }
 
+    /**
+     * Splits a heading's label from the chord row written after it on its line, `Verse 1: G D Em C` or
+     * `[Intro] G D Em C`. The row is the section's progression, so it stays a line of its own rather than being set by
+     * its columns into the lyric under it.
+     */
     private fun expandLabels(lines: List<Rendered>): List<Rendered> = lines.flatMap { line ->
         val colon = line.text.indexOf(':')
+        val bracket = line.text.indexOf(']').takeIf { line.text.trimStart().startsWith('[') && line.text.getOrNull(it + 1) == ' ' } ?: -1
         // The colon is passed with the label, since a word that is also sung, "Hook: C G", is a heading by it.
-        if (colon > 0 && isHeading(line.text.substring(0, colon + 1))) {
-            val after = colon + 1
-            val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size))
-            if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, colon), positions = line.positions.copyOf(colon)), rest) else listOf(line)
-        } else listOf(line)
+        val end = when {
+            colon > 0 && isHeading(line.text.substring(0, colon + 1)) -> colon
+            bracket > 0 && ChordSheetHeadings.parse(line.text.substring(0, bracket + 1)) != null -> bracket + 1
+            else -> return@flatMap listOf(line)
+        }
+        val after = if (end == colon) colon + 1 else end
+        val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size), isFromLabel = true)
+        if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, end), positions = line.positions.copyOf(end)), rest) else listOf(line)
     }
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
@@ -445,7 +455,7 @@ public object ChordSheetConverter {
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
-                    if (kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted) {
+                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted) {
                         output += merge(line, lines[index + 1], convertParentheses)
                         index++
                     } else output += bracketed(candidates[index]!!)

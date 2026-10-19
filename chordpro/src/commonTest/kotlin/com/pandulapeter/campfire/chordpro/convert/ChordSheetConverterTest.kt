@@ -387,6 +387,21 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a label's chords are their own line, never set into the lyric under it`() {
+        assertEquals(
+            "{start_of_verse: Verse 1}\n[G] [D] [Em] [C]\nThe river runs beside the road\n{end_of_verse}\n",
+            convert("Verse 1: G D Em C\nThe river runs beside the road"),
+        )
+        assertEquals("{start_of_chorus: Chorus}\n[C] [G] [D]\nOh riverlight\n{end_of_chorus}\n", convert("Chorus: C G D\nOh riverlight"))
+    }
+
+    @Test
+    fun `a bracketed label followed by chords is a heading and its chords`() {
+        assertEquals("{comment: Intro}\n[G] [D] [Em] [C]\n", convert("[Intro] G D Em C"))
+        assertEquals("{start_of_chorus: Chorus}\n[C] [G]\nSing along\n{end_of_chorus}\n", convert("[Chorus] C G\nSing along"))
+    }
+
+    @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
         assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
     }
@@ -401,6 +416,10 @@ class ChordSheetConverterTest {
         assertEquals(
             "My Song Title\n{start_of_verse: Verse 1}\n[Am]Hello [C]world\n{end_of_verse}",
             ChordSheetConverter.convertFragment("My Song Title\nVerse 1:\nAm     C\nHello world"),
+        )
+        assertEquals(
+            "{start_of_chorus: Chorus}\n[C] [G] [D]\nSing it loud\n{end_of_chorus}",
+            ChordSheetConverter.convertFragment("Chorus: C G D\nSing it loud"),
         )
     }
 
