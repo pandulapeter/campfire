@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.backup
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
@@ -32,7 +33,9 @@ import kotlinx.serialization.json.JsonPrimitive
  * holds both a title and a chord sheet. A chord sheet is a multi-line text with the structure of one
  * ([ChordSheetStructure]), or one of at least four lines under a key named `lyrics`: a notes app writes every note as a
  * `title` and a `content`, and none of them is a song. What else such an object holds that a header can carry - the
- * artist, the key, the capo, the tempo, the time signature, the copyright, the tags - is written into it.
+ * artist, the key, the capo, the tempo, the time signature, the copyright, the tags - is written into it. The content's
+ * first lines are never taken for a title the object names differently, and the object's spelling of its title is the
+ * one written.
  *
  * Bounded twice: the document is at most [ImportLimits.MAX_TEXT_FILE_SIZE], and the walk stops after [MAX_NODES] values
  * or [MAX_DEPTH] levels with what it has found, JSON inside a string included. No setlists: what a set is in another
@@ -80,7 +83,17 @@ internal object JsonSongs {
         private fun song(song: JsonObject): ImportedFile? {
             val title = song.firstText(TITLE_KEYS)?.takeIf { '\n' !in it && it.length <= MAX_TITLE_LENGTH } ?: return null
             val content = song.content() ?: return null
-            val converted = ChordSheetConverter.convert(ChordSheet.ofPlainText(content), String::normalizedToNfc).firstOrNull() ?: return null
+            val sheet = ChordSheet.ofPlainText(content)
+            val guessed = ChordSheetConverter.convert(sheet, String::normalizedToNfc).firstOrNull() ?: return null
+            val guessedTitle = ChordProParser.parseMetadata(guessed).title
+            val ownTitle = ForeignSongHeader.headerValue(title.normalizedToNfc())
+            val converted = when {
+                guessedTitle == null || ChordProParser.parseMetadata(content).title != null -> guessed
+                // The guess only took the title line the content repeats, and perhaps its credit; its `{title}` is
+                // always the first line, dropped so that the object's own spelling of the title is the one written.
+                guessedTitle.equals(ownTitle, ignoreCase = true) -> guessed.substringAfter('\n')
+                else -> ChordSheetConverter.convert(sheet, String::normalizedToNfc, guessesTitle = false).firstOrNull() ?: return null
+            }
             val text = ForeignSongHeader.songText(converted) {
                 directive("title", title, "t")
                 directive("artist", song.firstText(ARTIST_KEYS))

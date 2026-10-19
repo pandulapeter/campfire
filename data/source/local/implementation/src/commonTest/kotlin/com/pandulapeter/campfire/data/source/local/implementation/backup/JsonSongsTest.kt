@@ -94,6 +94,43 @@ class JsonSongsTest {
         assertEquals(listOf("One.cho", "One 2.cho"), JsonSongs.read("[${song("One")}, ${song("One")}]").map { it.name })
     }
 
+    @Test
+    fun `a lyric over the first chord row stays a lyric under the object's own title`() {
+        val content = "Hum along softly now\\nG        D\\nWalking down the road\\nC        G\\nSinging all the way"
+        val text = texts("""{"title": "Riverlight", "content": "$content"}""").single()
+
+        assertEquals("Riverlight", ChordProParser.parseMetadata(text).title)
+        assertTrue("Hum along softly now\n[G]Walking [D]down the road" in text, text)
+    }
+
+    @Test
+    fun `content repeating the object's title is not written twice`() {
+        val content = "Riverlight\\n\\nG        D\\nWalking down the road\\nC        G\\nSinging all the way"
+        val text = texts("""{"title": "Riverlight", "content": "$content"}""").single()
+
+        assertEquals(listOf("{title: Riverlight}"), text.lines().filter { "Riverlight" in it })
+    }
+
+    @Test
+    fun `the object's spelling of its title wins over the content's`() {
+        val content = "RIVERLIGHT\\nby The Invented Band\\n\\nG        D\\nWalking down the road\\nC        G\\nSinging all the way"
+        val text = texts("""{"title": "Riverlight", "content": "$content"}""").single()
+
+        val metadata = ChordProParser.parseMetadata(text)
+        assertEquals("Riverlight", metadata.title)
+        assertEquals("The Invented Band", metadata.artist)
+        assertTrue(text.lines().none { it.trim() == "RIVERLIGHT" }, text)
+    }
+
+    @Test
+    fun `content naming the song differently keeps that line`() {
+        val content = "Riverlight - The Invented Band\\n\\nG        D\\nWalking down the road\\nC        G\\nSinging all the way"
+        val text = texts("""{"title": "Riverlight", "content": "$content"}""").single()
+
+        assertEquals("Riverlight", ChordProParser.parseMetadata(text).title)
+        assertTrue(text.lines().any { it.trim() == "Riverlight - The Invented Band" }, text)
+    }
+
     private companion object {
         const val SHEET = "G         D\\nDown by the river light\\nC         G\\nWe sang until morning"
     }

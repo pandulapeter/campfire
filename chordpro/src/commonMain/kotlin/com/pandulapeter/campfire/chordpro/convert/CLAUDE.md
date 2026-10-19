@@ -18,6 +18,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - `convertFragment` converts what is pasted into the editor: the body as `convert` writes it (chords set, headings as
   sections, prose escaped), but no title or credit guessed and metadata lines kept as text, since the song it goes into
   has its own header. Only a paste with a chord row is converted.
+- `convert` can be told not to guess a title (`guessesTitle`), for a caller that has the song's title from another
+  app's field.
 - The heading vocabulary lives in `ChordSheetHeadings`. A heading word that is also sung (`Hook`, `Tag`, `Coro`, `R`)
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a

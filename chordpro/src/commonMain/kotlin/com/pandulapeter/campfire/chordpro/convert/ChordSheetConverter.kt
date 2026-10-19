@@ -25,8 +25,11 @@ public object ChordSheetConverter {
      * Returns one text per conservatively detected song. Existing ChordPro is returned untouched, including
      * [ChordSheet.originalText] where supplied. Other prose is escaped so it cannot become ChordPro markup.
      * The caller supplies Unicode NFC normalization; this dependency-free module has no platform normalizer.
+     *
+     * @param guessesTitle false for a caller that knows the song's title from elsewhere (another app's field): the first
+     * lines are then read as the song's lines, the title and the credit under it included.
      */
-    public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }): List<String> {
+    public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
         val pages = sheet.pages.map { page -> page.lines.map { render(it, normalize) } }
         val all = pages.flatten()
@@ -40,7 +43,7 @@ public object ChordSheetConverter {
             if (groups.isEmpty() || starts.count { it } >= 2 && starts[index]) groups += mutableListOf<Rendered>()
             groups.last().addAll(page)
         }
-        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))))) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))), guessesTitle)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -365,7 +368,7 @@ public object ChordSheetConverter {
             spans.all { abs(it.size - titleSize) < titleSize * 0.05 && it.isBold == titleSpans.first().isBold }
     }
 
-    private fun convertSong(lines: List<Rendered>): String {
+    private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
         val kinds = classify(lines, candidates)
@@ -376,7 +379,7 @@ public object ChordSheetConverter {
         val header = mutableListOf<String>()
         val omitted = mutableSetOf<Int>()
         val changes = extractHeader(lines, kinds, header, omitted)
-        extractTitle(lines, kinds, header, omitted)
+        if (guessesTitle) extractTitle(lines, kinds, header, omitted)
         val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
         return collapse(header + if (header.isEmpty()) output else listOf("") + output)
     }

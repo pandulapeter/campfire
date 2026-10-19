@@ -430,6 +430,17 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a caller that knows the title has the first lines read as lines`() {
+        val text = "Hum along softly now\nG        D\nWalking down the road"
+
+        val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(text), guessesTitle = false).single()
+
+        assertFalse("{title" in result, result)
+        assertTrue(result.startsWith("Hum along softly now\n[G]Walking [D]down the road"), result)
+        assertTrue(convert(text).startsWith("{title: Hum along softly now}"))
+    }
+
+    @Test
     fun `a lyrics-only paste with headings gets its title`() {
         val result = convert("Riverlight\n\n[Verse 1]\nThe river runs\nbeside the road\nall the way\nback home")
         assertTrue(result.startsWith("{title: Riverlight}\n\n{start_of_verse: Verse 1}\nThe river runs"), result)
