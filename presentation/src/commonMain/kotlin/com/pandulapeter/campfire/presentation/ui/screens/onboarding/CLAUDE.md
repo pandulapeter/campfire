@@ -15,8 +15,7 @@ Campfire again") opens it again.
 
 ## The pages
 
-`OnboardingStep` order: Welcome (language, plus the one note that everything can be changed in Settings — no later page
-repeats it), Pick a look, What do you play?, What do you need?, How do you write chords?, Your songs, everywhere.
+Welcome carries the one note that everything can be changed in Settings; no later page repeats it.
 
 - **Instrument is asked before features**, which depend on it. Uses the app-wide chips (`InstrumentChipRow`).
 - **Features** cards are the Features switches, in order; chord diagrams only with chords on and an instrument that has
@@ -49,8 +48,6 @@ kept: drop D stays drop D).
 
 ## One screen, one pager
 
-- `CampfireDestination.Onboarding(isOpenedFromSettings)` is one screen on a `ScreenSurface`: a `HorizontalPager` and
-  `OnboardingBottomBar`, no top bar.
 - The page is `Navigator.onboardingStep`. Back steps through pages first (`isOnboardingBackToPreviousStep` for Escape; a
   screen-owned `NavigationBackHandler` for gestures/browser Back, following predictive back as the settings tabs do).
 - The page a swipe settles on becomes the step (`showOnboardingStep`), but not one passed while the pager is heading to
@@ -74,10 +71,6 @@ kept: drop D stays drop D).
   than a phone lifts the bar off the bottom edge (`onboardingBottomMargin`, growing with both; never while the bar
   spans the window, so not on an upright phone). The mark is dropped under `ONBOARDING_MARK_MIN_HEIGHT` (animated when
   resized, absent from the start in a short window).
-- Page turns are two layers following the pager position (`LocalOnboardingPageOffset`, draw phase): the question lags
-  and fades (`onboardingHeaderMotion`), the answers lead, shrink, and fade (`onboardingAnswersMotion`). The question
-  layer only moves sideways, never scales, since the mark tracks its place.
-- **The mark is one shared element** (`OnboardingMark`) drawn over the pager: each page reserves a place
-  (`markModifier`), and the mark sits at, or between, those places (`onboardingMarkFrame`, `onboardingMarkTop`). Always a
-  circle; pages differ by icon. Everything follows pager position, not timers, so a held gesture holds the mark
-  halfway; neighbour pages are composed (`beyondViewportPageCount`) so the mark knows its target on the first frame.
+- Page turns follow the pager position, never timers (a held gesture holds the mark halfway); the question layer only
+  moves sideways, never scales, since the mark tracks its place.
+- The mark is one shared element over the pager; neighbour pages are composed so it knows its target on the first frame.
