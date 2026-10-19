@@ -161,20 +161,24 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")") || repeat.matches(value)
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")") || ChordSheetHeadings.repeat.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = tokens(line.text).takeIf { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
     }
     /** The punctuation that marks an extracted heading is not part of the section's name. */
-    private fun headingLabel(text: String) = text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":").trim()
+    private fun headingLabel(text: String) = ChordSheetHeadings.parse(text)?.label
+        ?: text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":").trim()
 
-    private fun section(text: String): String? = section.find(headingLabel(text))
-        ?.takeIf { it.range.first == 0 }?.groupValues?.get(1)?.lowercase()
-    private fun sectionType(text: String): String? = when (section(text)) {
-        "verse", "versszak" -> "verse"
-        "chorus", "refrain", "refr\u00e9n", "ref.", "r." -> "chorus"
-        "bridge", "pre-chorus" -> "bridge"
-        else -> null
+    /** A heading that is one without the lines around it to tell, which is what a single line can be judged by. */
+    private fun isHeading(text: String) = ChordSheetHeadings.parse(text)?.isAmbiguous == false
+
+    /**
+     * A line in brackets is a heading of a name no list holds (`[Riff]`, `[Primeira Parte]`), where the sheet has
+     * structure to say it is a song: in prose brackets as likely hold a note, and a chord in them is the chord.
+     */
+    private fun isBracketedHeading(text: String): Boolean {
+        val content = bracketedLine.matchEntire(text.trim())?.groupValues?.get(1)?.trim() ?: return false
+        return content.isNotEmpty() && !chord(content) && !isChordLine(content) && content.split(' ').count { it.isNotEmpty() } <= 6
     }
     /**
      * A label with a colon is metadata whatever follows it. Without one only a value of the field's own shape is
@@ -240,7 +244,8 @@ public object ChordSheetConverter {
 
     private fun expandLabels(lines: List<Rendered>): List<Rendered> = lines.flatMap { line ->
         val colon = line.text.indexOf(':')
-        if (colon > 0 && section(line.text.substring(0, colon)) != null) {
+        // The colon is passed with the label, since a word that is also sung, "Hook: C G", is a heading by it.
+        if (colon > 0 && isHeading(line.text.substring(0, colon + 1))) {
             val after = colon + 1
             val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size))
             if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, colon), positions = line.positions.copyOf(colon)), rest) else listOf(line)
@@ -248,7 +253,7 @@ public object ChordSheetConverter {
     }
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
-        if (line.text.isBlank() || section(line.text) != null || metadata(line.text) != null || chordTokens(line) != null) return false
+        if (line.text.isBlank() || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
         val bodySizes = lines.filter { it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
         val median = bodySizes.getOrNull(bodySizes.size / 2) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
         return line.source.isHeading || line.source.spans.any { it.size > median * 1.2 } ||
@@ -322,22 +327,29 @@ public object ChordSheetConverter {
 
     private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
         val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
+        val parsed = lines.map { ChordSheetHeadings.parse(it.text) }
+        val hasStructure = hasUnambiguousChords || parsed.any { it != null }
+        // A word that is as likely sung is a heading where a chord row or a blank line follows it, as one does a heading.
+        val headings = lines.indices.map { index ->
+            parsed[index]?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
+                ?: (hasStructure && isBracketedHeading(lines[index].text))
+        }
         return lines.mapIndexed { index, line ->
             val candidate = candidates[index]
             when {
                 line.text.isBlank() -> Kind.BLANK
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
-                section(line.text) != null -> Kind.SECTION
+                headings[index] -> Kind.SECTION
                 index < 15 && (metadata(line.text) != null || labelledRow(line.text, isHeader = true) != null) ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 candidate != null && (candidate.count { chord(it.text) } > 1 ||
                     candidate.count { chord(it.text) } == 1 &&
                     candidate.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
-                    lines.getOrNull(index - 1)?.let { section(it.text) != null } == true &&
-                    lines.getOrNull(index + 1)?.let { it.text.isBlank() || section(it.text) != null } != false ||
+                    headings.getOrNull(index - 1) == true &&
+                    lines.getOrNull(index + 1)?.let { it.text.isBlank() || headings[index + 1] } != false ||
                     (hasUnambiguousChords || isStyledChordLine(line, candidate, lines.getOrNull(index + 1))) &&
-                    lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && section(it.text) == null && metadata(it.text) == null } == true) -> Kind.CHORD
+                    lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && !headings[index + 1] && metadata(it.text) == null } == true) -> Kind.CHORD
                 else -> Kind.LYRIC
             }
         }
@@ -420,7 +432,7 @@ public object ChordSheetConverter {
                     closeSection()
                     flushChanges()
                     val label = headerValue(headingLabel(line.text))
-                    val type = sectionType(line.text)
+                    val type = ChordSheetHeadings.parse(line.text)?.type
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
                     if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION)) output += "{chorus}"
                     else if (type != null) { output += "{start_of_$type: $label}"; environment = type }
@@ -598,9 +610,8 @@ public object ChordSheetConverter {
     }
 
     private val token = Regex("\\|:?|:\\||[^\\s|]+")
+    private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
     private val parentheses = Regex("\\(([^()]+)\\)")
-    private val repeat = Regex("\\(?([0-9]+x|x[0-9]+)\\)?", RegexOption.IGNORE_CASE)
-    private val section = Regex("^(Verse|Chorus|Refrain|Bridge|Pre-Chorus|Intro|Outro|Solo|Interlude|Instrumental|Versszak|Refr\u00e9n|Ref\\.|R\\.)(?:\\s*[0-9]+)?$", RegexOption.IGNORE_CASE)
     private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Temp\u00f3|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
     private val transposition = Regex("^(Transposition|Transzpon\u00e1l\u00e1s)\\s*:\\s*([+-]?[0-9]+)$", RegexOption.IGNORE_CASE)
     private val unlabelledMetadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|words and music by)\\s+(.+)$", RegexOption.IGNORE_CASE)

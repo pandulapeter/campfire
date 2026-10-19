@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.CommentPlacement
+import com.pandulapeter.campfire.chordpro.model.SectionType
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -317,6 +318,73 @@ class ChordSheetConverterTest {
 
     private fun span(text: String, start: Double, end: Double, size: Double = 10.0, bold: Boolean = false) =
         ChordSheet.Span(text, start, end, size, isBold = bold)
+
+    @Test
+    fun `a bracketed heading with a singer after its colon is the section it names`() {
+        val result = convert("[Verse 1: Some Artist]\nC     G\nHello world\n\n[Pre chorus]\nAm     F\nAlmost there\n\n[Chorus: A & B]\nC     G\nSing along\n\n[Chorus x2]")
+        assertTrue("{start_of_verse: Verse 1: Some Artist}" in result, result)
+        assertTrue("{end_of_verse}" in result, result)
+        assertTrue("{start_of_bridge: Pre chorus}" in result, result)
+        assertTrue("{end_of_bridge}\n{start_of_chorus: Chorus: A & B}" in result, result)
+        assertTrue(result.endsWith("{end_of_chorus}\n{chorus}\n"), result)
+    }
+
+    @Test
+    fun `an unknown bracketed heading is a heading, not a lyric`() {
+        for (heading in listOf("Instrumental break", "Vamp", "Riff")) {
+            val result = convert("[Verse 1]\nC     G\nHello world\n\n[$heading]\nG   D")
+            assertTrue(result.endsWith("{comment: $heading}\n[G] [D]\n"), result)
+        }
+        assertEquals("(Riff)\nsome words here\n", convert("[Riff]\nsome words here"))
+    }
+
+    @Test
+    fun `common English heading words are sections and never take a chord row`() {
+        for (heading in listOf("Hook", "Tag", "Coda", "Ending", "Break", "Chorus (x2)", "Instrumental break")) {
+            val result = convert("Verse 1\nC     G\nHello world\n\n$heading\nG D Em C")
+            assertTrue("[G] [D] [Em] [C]" in result, result)
+            assertFalse("[G]$heading" in result || "{start_of_verse: Verse 1}\n[C]Hello [G]world\n\n$heading" in result, result)
+        }
+        assertTrue("{start_of_chorus: Hook}" in convert("Verse 1\nC     G\nHello world\n\nHook\nG D Em C\nSing it"))
+        assertTrue("{start_of_chorus: Chorus (x2)}" in convert("Verse 1\nC     G\nHello world\n\nChorus (x2)\nG D Em C\nSing it"))
+    }
+
+    @Test
+    fun `heading words of the European chord sites are sections`() {
+        val sheets = mapOf(
+            "Strophe 1" to "verse", "Strofa 1" to "verse", "Zwrotka 1" to "verse", "Couplet 1" to "verse", "Estrofa" to "verse",
+            "1. versszak" to "verse", "Vsz." to "verse", "Ritornello" to "chorus", "Refren" to "chorus", "Refrein" to "chorus",
+            "Refr\u00e3o:" to "chorus", "Coro:" to "chorus", "Estribillo" to "chorus", "R:" to "chorus", "Puente" to "bridge",
+            "Pr\u00e9-Refr\u00e3o" to "bridge", "Brug" to "bridge", "\u00c1tk\u00f6t\u00e9s" to "bridge",
+        )
+        for ((heading, type) in sheets) {
+            val result = convert("$heading\nC     G\nHello world")
+            assertTrue(result.startsWith("{start_of_$type: ${heading.removeSuffix(":")}}\n[C]Hello [G]world\n{end_of_$type}"), result)
+        }
+        convert("Parte 1 de 3\nC G\n\nVerse 1\nC     G\nHello world").let { assertTrue(it.startsWith("{comment: Parte 1 de 3}\n[C] [G]"), it) }
+        convert("Refr\u00e3o: C G Am F").let { assertTrue("{start_of_chorus: Refr\u00e3o}\n[C] [G] [Am] [F]" in it, it) }
+        convert("1. versszak: G D").let { assertTrue("{start_of_verse: 1. versszak}\n[G] [D]" in it, it) }
+    }
+
+    @Test
+    fun `Hungarian R and Vsz headings close the chorus before them`() {
+        val result = convert("Vsz.\nC     G\nHello world\n\nRef.:\nAm     F\nSing along\n\nVsz.\nC     G\nSecond verse\n\nR:\nAm     F\nSing along")
+        val sections = ChordProParser.parse(ChordProPrettifier.prettify(result)).blocks.filterIsInstance<ChordProBlock.Section>()
+        assertEquals(listOf(SectionType.Verse, SectionType.Chorus, SectionType.Verse, SectionType.Chorus), sections.map { it.type }, result)
+        assertEquals(1, sections[2].lines.size, result)
+    }
+
+    @Test
+    fun `a heading closes the section before it`() {
+        val result = convert("Verse 1\nC     G\nHello world\nInterlude\nC   G")
+        assertTrue("{end_of_verse}\n\n{comment: Interlude}" in result, result)
+    }
+
+    @Test
+    fun `a lyric that starts with a heading word stays a lyric`() {
+        val result = convert("Verse 1\nC     G\nHello world\nChorus of angels sing\nTag along with me\nBreak my heart again")
+        assertTrue("[C]Hello [G]world\nChorus of angels sing\nTag along with me\nBreak my heart again\n{end_of_verse}" in result, result)
+    }
 
     @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
