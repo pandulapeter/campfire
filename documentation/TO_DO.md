@@ -10,6 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
+- Pull to refresh for sync ?
 - Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)
@@ -17,7 +18,6 @@
 - Shared setlists via Dropbox public links -> deeplink to Campfire: documentation/plans/song-links.md - allow scanning deep links via QR code
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-- Global sync status display
 
 ## Long-term
 - Streaming zip writer on all platforms
