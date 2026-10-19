@@ -441,6 +441,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `marked chord rows are set as marked`() {
+        assertEquals(
+            "[G]Walking down the road\n[Do]Sing[Re]ing\nG   D",
+            ChordSheetConverter.setChordRows("G\nWalking down the road\nDo  Re\nSinging\nG   D", setOf(0, 2)),
+        )
+    }
+
+    @Test
     fun `a lyrics-only paste with headings gets its title`() {
         val result = convert("Riverlight\n\n[Verse 1]\nThe river runs\nbeside the road\nall the way\nback home")
         assertTrue(result.startsWith("{title: Riverlight}\n\n{start_of_verse: Verse 1}\nThe river runs"), result)

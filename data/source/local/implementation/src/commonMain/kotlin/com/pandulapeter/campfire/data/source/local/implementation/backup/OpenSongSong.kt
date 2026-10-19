@@ -88,11 +88,17 @@ internal object OpenSongSong {
         private fun blocks(verse: Int?): String {
             val written = mutableListOf<String>()
             val block = mutableListOf<String>()
+            val chordRows = mutableSetOf<Int>()
             fun endBlock() {
                 if (block.isEmpty()) return
                 val text = block.joinToString("\n")
-                written += ChordSheetConverter.convertFragment(text, String::normalizedToNfc)?.trimEnd() ?: ChordSheetLyrics.escaped(text)
+                written += if (chordRows.isEmpty()) {
+                    ChordSheetLyrics.escaped(text)
+                } else {
+                    ChordSheetConverter.setChordRows(text, chordRows, String::normalizedToNfc).trimEnd()
+                }
                 block.clear()
+                chordRows.clear()
             }
             for (line in lines) {
                 val number = line.firstOrNull()?.digitToIntOrNull()
@@ -104,7 +110,10 @@ internal object OpenSongSong {
                     }
                     // Dropping the marker shifts the row by one column, as dropping a lyric line's space does, so the
                     // chords stay over their syllables.
-                    line.startsWith('.') -> block += line.drop(1).trimEnd()
+                    line.startsWith('.') -> if (line.drop(1).isNotBlank()) {
+                        chordRows += block.size
+                        block += line.drop(1).trimEnd()
+                    }
                     number != null -> if (number == verse) block += lyric(line.drop(1))
                     // A hand-written file leaves out the space a lyric line starts with.
                     else -> block += lyric(if (line.startsWith(' ')) line.drop(1) else line)

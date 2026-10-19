@@ -92,6 +92,21 @@ class OpenSongSongTest {
     }
 
     @Test
+    fun `rows of one chord each are set over their lyrics`() {
+        val text = OpenSongSong.read(song("[V1]\n.G\n Walking down the road\n.C\n Singing all the way"), "x")!!
+
+        assertTrue("{start_of_verse: Verse 1}\n[G]Walking down the road\n[C]Singing all the way\n{end_of_verse}" in text, text)
+    }
+
+    @Test
+    fun `a lyric line spelled like a heading stays a lyric`() {
+        val text = OpenSongSong.read(song("[V1]\n.G           D\n Down by the river\n Chorus"), "x")!!
+
+        assertTrue("[G]Down by the [D]river\nChorus" in text, text)
+        assertFalse("{chorus}" in text, text)
+    }
+
+    @Test
     fun `a section tag holding a brace stays inside its comment`() {
         val text = OpenSongSong.read(song("[Coda}]\n Down by the river"), "x")!!
 

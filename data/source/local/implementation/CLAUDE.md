@@ -135,7 +135,8 @@ their KDoc. JSON is bounded to the text limit, 32 levels, and 200,000 nodes; non
 headers and batch names through `ForeignSongHeader`. What their KDoc does not say:
 
 - OpenSong: a `.cho` of the name it came under; section tags become environments or comments, `.` chord rows are set
-  over the lyric rows under them by `convertFragment`, and a block with no chord row is `ChordSheetLyrics.escaped`.
+  over the lyric rows under them as marked (`ChordSheetConverter.setChordRows`, nothing re-guessed), and a block with no
+  chord row is `ChordSheetLyrics.escaped`.
 - OnSong (text-like bytes only): a `.cho` of its base name; a first chord row means no header unless it is the file's
   own name, and a third bare line ends the header; the body is cut at its directive lines, each run converted, kept as
   inline ChordPro, or escaped.

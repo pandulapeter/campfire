@@ -111,6 +111,27 @@ public object ChordSheetConverter {
             ).joinToString("\n")
     }
 
+    /**
+     * Lines of plain [text] a format marks itself (OpenSong's `.` rows), with the rows at [chordRows] (line indexes) set
+     * into the lyric line under each the way [convertFragment] sets a chord row, or bracketed on a line of their own
+     * where no lyric follows. Nothing is guessed: no other line is taken for chords, a heading, metadata, or tablature,
+     * and a marked row holding anything but chords (and the playing note a row may end in) stays a line of text. Every
+     * line that is not set is escaped, as [ChordSheetLyrics.escaped] does.
+     */
+    public fun setChordRows(text: String, chordRows: Set<Int>, normalize: (String) -> String = { it }): String {
+        val lines = ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) }
+        val candidates = lines.map(::chordTokens)
+        val kinds = lines.indices.map { index ->
+            when {
+                lines[index].text.isBlank() -> Kind.BLANK
+                index in chordRows && candidates[index] != null -> Kind.CHORD
+                else -> Kind.LYRIC
+            }
+        }
+        return writeBody(lines, kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
+            .joinToString("\n")
+    }
+
     /** [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. */
     private data class Rendered(val text: String, val positions: DoubleArray, val source: ChordSheet.Line, val isFromLabel: Boolean = false)
     private data class Token(val text: String, val index: Int)
