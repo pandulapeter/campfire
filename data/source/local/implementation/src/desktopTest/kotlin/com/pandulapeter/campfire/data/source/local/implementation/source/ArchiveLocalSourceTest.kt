@@ -148,6 +148,25 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `a JSON document of songs next to a song yields every song, and a setlist is left as it is`() = runBlocking {
+        val sheet = "G         D\\nDown by the river light\\nC         G\\nWe sang until morning"
+        val songs = "[{\"title\": \"One\", \"content\": \"$sheet\"}, {\"title\": \"Two\", \"content\": \"$sheet\"}]"
+        val setlist = "{\"title\": \"Gig\", \"songs\": []}".encodeToByteArray()
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("a.cho", "{title: A}".encodeToByteArray()),
+                ZipEntry("songs.json", songs.encodeToByteArray()),
+                ZipEntry("gig.setlist.json", setlist),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("a.cho", "One.cho", "Two.cho", "gig.setlist.json"), files.map { it.name })
+        assertContentEquals(setlist, files.last().bytes)
+    }
+
+    @Test
     fun `a nested docx is still a document`() = runBlocking {
         val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))

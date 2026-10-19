@@ -294,13 +294,15 @@ private enum ShareLimits {
         "com.adobe.pdf",
         "org.openxmlformats.wordprocessingml.document",
         "public.zip-archive",
+        "public.json",
         "com.pandulapeter.campfire.songbookpro-backup",
         "org.chordpro.cho",
         "org.chordpro.chordpro",
     ]
 
-    /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the setlist JSON and the legacy Word format the extension is not offered for.
-    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "txt"]
+    /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for; JSON is read
+    /// with the text limit, as a song is.
+    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
 

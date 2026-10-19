@@ -127,12 +127,15 @@ internal open class SyncRepositoryStub : SyncRepository {
  * unless a test says otherwise.
  */
 internal class FakeArchiveRepository(
+    private val songsIn: suspend (file: ImportedFile) -> List<ImportedFile>? = { null },
     private val unpack: suspend (archive: ByteArray, maxSize: Long) -> List<ImportedFile> = { _, _ -> emptyList() },
 ) : ArchiveRepository {
 
     var packed: Map<String, ByteArray> = emptyMap()
 
     override suspend fun unpack(archive: ByteArray, maxSize: Long) = unpack.invoke(archive, maxSize)
+
+    override suspend fun songsIn(file: ImportedFile) = songsIn.invoke(file)
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packed = files

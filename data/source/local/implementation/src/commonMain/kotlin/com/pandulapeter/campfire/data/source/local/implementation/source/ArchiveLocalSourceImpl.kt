@@ -13,8 +13,10 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.backup.JsonSongs
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
@@ -43,6 +45,8 @@ internal class ArchiveLocalSourceImpl(
     override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> = withContext(Dispatchers.Default) {
         unpack(archive = archive, depth = 1, inflated = InflatedBytes(limit = maxSize))
     }
+
+    override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { foreignSongs(file) }
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray = withContext(Dispatchers.Default) {
         ZipWriter.write(
@@ -134,7 +138,7 @@ internal class ArchiveLocalSourceImpl(
                     listOf(ImportedFile.unread(file.name))
                 }
             } else {
-                listOf(file)
+                foreignSongs(file) ?: listOf(file)
             }
         }
         // Hidden entries stay unreported, see above; everything else that was not read is handed over by name.
@@ -142,6 +146,21 @@ internal class ArchiveLocalSourceImpl(
             .filterNot { it.name.isHidden }
             .map { ImportedFile.unread(name = it.name.fileName, isTooLarge = it.reason == UnreadZipEntry.Reason.TOO_LARGE) }
         return read + unread
+    }
+
+    /**
+     * The songs of another app's document that is not an archive, or null where [file] is not one or holds none, so
+     * that it is imported as the file it is: a `.json` that is no setlist, or a text kept for its bytes that starts the
+     * way JSON does. Tried after SongbookPro's backup, whose document is read by a reader of its own.
+     */
+    private fun foreignSongs(file: ImportedFile): List<ImportedFile>? {
+        if (file.bytes.isEmpty()) return null
+        val isJsonByName = file.name.endsWith(JSON_EXTENSION, ignoreCase = true) && !file.name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
+        if (!isJsonByName && !file.isPlainTextByContent) return null
+        val text = file.bytes.decodeLibraryText()
+        val start = text.trimStart().firstOrNull()
+        if (!isJsonByName && start != '{' && start != '[') return null
+        return JsonSongs.read(text).ifEmpty { null }
     }
 
     /**
@@ -163,5 +182,6 @@ internal class ArchiveLocalSourceImpl(
 
     private companion object {
         const val MAX_DEPTH = 3
+        const val JSON_EXTENSION = ".json"
     }
 }

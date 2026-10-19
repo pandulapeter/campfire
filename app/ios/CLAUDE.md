@@ -43,7 +43,8 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 ## Share extension
 
 - `ShareExtension.appex`, embedded in the app: Share → Campfire for selected text and the files the import reads
-  (`NSExtensionActivationRule` in its `Info.plist`; plain text covers `.txt` and the ChordPro family). It links no Kotlin:
+  (`NSExtensionActivationRule` in its `Info.plist`; plain text covers `.txt` and the ChordPro family, `public.json`
+  is named, and `ShareLimits` lists the same types). It links no Kotlin:
   it copies what it was given into `ShareInbox/` in the App Group container (`APP_GROUP_ID` in `Config.xcconfig`, both
   targets' entitlements, `CampfireAppGroup` in both `Info.plist`s), says so, and is done.
 - **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by

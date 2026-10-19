@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.ChordProTime
-import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
@@ -101,7 +100,7 @@ internal object SongbookProBackup {
             if (song.isDeleted || content == null) return@mapNotNull null
             val title = song.text("name")
             val file = ImportedFile(
-                name = uniqueName(base = title ?: "untitled", extension = LibraryFiles.SONG_EXTENSION, usedNames = usedNames),
+                name = ForeignSongHeader.uniqueName(base = title ?: "untitled", extension = LibraryFiles.SONG_EXTENSION, usedNames = usedNames),
                 bytes = songText(song = song, title = title, content = content, folderNames = folderNames).encodeToByteArray(),
             )
             song.int("Id")?.let { id -> songFiles[id] = SongFile(name = file.name, capo = song.capo ?: 0) }
@@ -126,7 +125,7 @@ internal object SongbookProBackup {
                     SetlistSongDocument(file = song.name, capo = entry.int("Capo")?.takeIf { it in Song.CAPO_RANGE && it != song.capo })
                 }
             ImportedFile(
-                name = uniqueName(base = title, extension = LibraryFiles.SETLIST_EXTENSION, usedNames = usedNames),
+                name = ForeignSongHeader.uniqueName(base = title, extension = LibraryFiles.SETLIST_EXTENSION, usedNames = usedNames),
                 bytes = SetlistDocumentFormat.encode(SetlistDocument(title = title, date = date, songs = entries)).encodeToByteArray(),
             )
         }
@@ -148,13 +147,8 @@ internal object SongbookProBackup {
 
     private fun parseObject(text: String) = runCatching { Json.parseToJsonElement(text) as? JsonObject }.getOrNull()
 
-    private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>): String {
-        val declared = DIRECTIVE.findAll(content).mapTo(mutableSetOf()) { it.groupValues[1].lowercase() }
-        val header = buildList {
-            fun directive(name: String, value: String?, vararg aliases: String) {
-                val written = value?.let(::headerValue) ?: return
-                if ((aliases.toList() + name).none { it in declared }) add("{$name: $written}")
-            }
+    private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>) =
+        ForeignSongHeader.songText(content) {
             directive("title", title, "t")
             directive("subtitle", song.text("subTitle"), "st", "su")
             directive("artist", song.text("author"))
@@ -164,50 +158,11 @@ internal object SongbookProBackup {
             directive("time", song.text("timeSig")?.takeIf { ChordProTime.parse(it) != null })
             directive("duration", song.int("Duration")?.takeIf { it > 0 }?.let { ChordProDuration.format(it.seconds) })
             directive("copyright", song.text("Copyright"))
-            song.text("Url")?.let(::linkUrl)?.let { add("{meta: link $it}") }
+            link(song.text("Url"))
             // Folders are how a SongbookPro library is sorted, which is what tags are for here.
             val folders = song.textList("_folders").mapNotNull { folder -> folder.toIntOrNull()?.let(folderNames::get) ?: folder.takeIf { it.toIntOrNull() == null } }
-            (folders + song.textList("_tags"))
-                .mapNotNull(::headerValue)
-                .distinct()
-                .forEach { add("{tag: $it}") }
+            tags(folders + song.textList("_tags"))
         }
-        return (header + content.trimStart('\n', '\r')).joinToString(separator = "\n").trimEnd() + "\n"
-    }
-
-    /**
-     * A value as one directive can hold it: on one line, its line breaks a " / " and every other run of whitespace one
-     * space, and no braces, which would end the directive early. SongbookPro's fields are free text, and a multi-line
-     * copyright reads as two credits, which is why the line breaks are kept as a separator rather than a space.
-     */
-    private fun headerValue(text: String) = text
-        .split(LINE_BREAK).map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" / ")
-        .replace(WHITESPACE, " ")
-        .replace('{', '(').replace('}', ')')
-        .takeIf { it.isNotBlank() }
-
-    /**
-     * [text] as an address a `{meta: link}` directive keeps whole, or null where the parser would not read one: a space
-     * or a brace has no place in a directive's address, so they are percent-encoded - which still opens the page
-     * SongbookPro did, since a browser encodes them the same way - and a line break is dropped.
-     */
-    private fun linkUrl(text: String) = ChordProLinks.usableUrl(
-        text.replace(LINE_BREAK, "").replace(WHITESPACE, "%20").replace("{", "%7B").replace("}", "%7D"),
-    )
-
-    /**
-     * A name for the file in the batch, which only has to be unique within it: a setlist entry points at its song by it,
-     * and the song is named by its own header once it is imported. It is what the import report shows for the file, so
-     * it is the title as it was written, without what a file name cannot hold and without the leading dot that would
-     * make it a hidden file.
-     */
-    private fun uniqueName(base: String, extension: String, usedNames: MutableSet<String>): String {
-        val cleaned = base.replace(UNSAFE_CHARACTERS, " ").trim().trimStart('.').ifBlank { "untitled" }
-        var name = cleaned + extension
-        var number = 2
-        while (!usedNames.add(name.lowercase())) name = "$cleaned ${number++}$extension"
-        return name
-    }
 
     private val JsonObject.capo get() = int("Capo")?.takeIf { it in Song.CAPO_RANGE }
 
@@ -244,16 +199,7 @@ internal object SongbookProBackup {
     /** The keys in the order SongbookPro numbers them, from A, spelled the way the charts of those keys usually are. */
     private val KEYS = listOf("A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab")
 
-    /** The name of every directive the text declares, `{title: …}` and `{t:…}` alike. */
-    private val DIRECTIVE = Regex("""\{\s*([A-Za-z_]+)\s*[:}\s]""")
-
     private val VERSION_LINE = Regex("""\d+(\.\d+)+""")
-
-    private val LINE_BREAK = Regex("[\\r\\n\\u2028\\u2029]+")
-
-    private val WHITESPACE = Regex("""\s+""")
-
-    private val UNSAFE_CHARACTERS = Regex("""[/\\:*?"<>|\u0000-\u001f]+""")
 
     private const val SONG_ITEM_TYPE = 1
     private const val ISO_DATE_LENGTH = 10

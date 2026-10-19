@@ -133,6 +133,12 @@ entry inside an archive under any name but a document's: one under an unknown na
 - A recognised backup whose document cannot be read is reported as one unread `dataFile.txt`; the rest of the archive
   is dropped unreported.
 
+`backup/JsonSongs` reads any other JSON document (a `.json` that is no setlist, or a sniffed text starting with `{` or
+`[`), inside an archive after the SongbookPro check and loose through `songsIn`: an object is a song only with a
+one-line title and a content with `ChordSheetStructure`, or four lines under `lyrics` (a notes export's `{title,
+content}` is not). Bounded to the text limit, 32 levels, and 200,000 nodes; no setlists. Both readers write their
+headers and batch names through `ForeignSongHeader`.
+
 ## A song is named by its header
 
 **A file name is reproducible from its header alone** (`{artist}`, `{title}`, `{subtitle}` joining the title half) in

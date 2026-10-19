@@ -205,8 +205,9 @@
             <!--
               Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain or, because .cho
               has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
-              senders use application/x-zip-compressed. Shared text arrives as EXTRA_TEXT (see importSharedTexts).
-              The importer checks the display name and skips unrelated files with these types.
+              senders use application/x-zip-compressed. JSON is another app's export of songs. Shared text arrives as
+              EXTRA_TEXT (see importSharedTexts). The importer checks the display name and skips unrelated files with
+              these types.
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.SEND" />
@@ -217,6 +218,7 @@
                 <data android:mimeType="application/octet-stream" />
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/json" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
             </intent-filter>

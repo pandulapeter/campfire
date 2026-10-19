@@ -20,6 +20,9 @@ interface ArchiveRepository {
     /** See `ArchiveLocalSource.unpack`. */
     suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
 
+    /** See `ArchiveLocalSource.songsIn`. */
+    suspend fun songsIn(file: ImportedFile): List<ImportedFile>?
+
     /** See `ArchiveLocalSource.pack`. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray
 }

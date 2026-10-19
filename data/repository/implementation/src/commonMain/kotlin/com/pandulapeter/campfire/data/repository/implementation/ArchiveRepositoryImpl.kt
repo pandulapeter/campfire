@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import org.koin.core.annotation.Single
@@ -19,6 +20,8 @@ internal class ArchiveRepositoryImpl(
 ) : ArchiveRepository {
 
     override suspend fun unpack(archive: ByteArray, maxSize: Long) = archiveLocalSource.unpack(archive = archive, maxSize = maxSize)
+
+    override suspend fun songsIn(file: ImportedFile) = archiveLocalSource.songsIn(file)
 
     override suspend fun pack(files: Map<String, ByteArray>) = archiveLocalSource.pack(files)
 }

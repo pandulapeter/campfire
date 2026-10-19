@@ -112,7 +112,13 @@ internal class PrepareImportUseCaseImpl(
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
             val isArchive = isArchiveByName || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
-                !isArchive -> sort(file = file, origin = null)
+                !isArchive -> {
+                    // Another app's export that is no archive (a JSON document of songs) is the songs it holds, before a
+                    // setlist is tried or its name is found unknown. They are numbered within it as an archive's entries
+                    // are, since their names are unique only within it.
+                    val songs = if (LibraryFiles.isHiddenFileName(file.name)) null else archiveRepository.songsIn(file)
+                    if (songs == null) sort(file = file, origin = null) else songs.forEach { sort(file = it, origin = index) }
+                }
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> triage.oversizedFileNames += file.name
                 else -> try {
                     val entries = archiveRepository.unpack(archive = file.bytes, maxSize = remaining)

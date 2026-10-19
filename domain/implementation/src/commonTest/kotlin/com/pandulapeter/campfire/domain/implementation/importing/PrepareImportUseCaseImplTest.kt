@@ -148,6 +148,25 @@ class PrepareImportUseCaseImplTest {
         assertEquals("Mr. Brightside", plan.songs.single().title)
     }
 
+    @Test
+    fun `a loose document of songs is planned as its songs, each with the document's origin`() = runTest {
+        val archive = FakeArchiveRepository(songsIn = { file -> if (file.name == "songs.json") listOf(song("One.cho"), song("Two.cho")) else null })
+
+        val plan = prepare(archive = archive)(listOf(song("first.cho"), ImportedFile("songs.json", "[]".encodeToByteArray())))
+
+        assertEquals(listOf("first.cho", "One.cho", "Two.cho"), plan.songs.map { it.sourceFileName })
+        assertEquals(listOf(null, 1, 1), plan.songs.map { it.origin })
+    }
+
+    @Test
+    fun `a setlist is still read as one`() = runTest {
+        val plan = prepare(parseSetlist = { ParsedSetlist(testSetlist(fileName = "gig.setlist.json"), isDated = true) })(
+            listOf(ImportedFile("gig.setlist.json", "{}".encodeToByteArray())),
+        )
+
+        assertEquals(listOf("gig.setlist.json"), plan.setlists.map { it.sourceFileName })
+    }
+
     private fun song(name: String) = ImportedFile(name, "{title: ${name.substringBeforeLast('.')}}\n".encodeToByteArray())
 
     private companion object {

@@ -48,9 +48,10 @@
 			     Selected text and the files the import reads. A predicate rather than the dictionary form, whose file
 			     key takes any file at all. Plain text covers .txt and the ChordPro family, whose types conform to it;
 			     public.url conforms to none of these, so a page shared by its address alone does not list Campfire.
-			     Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document types are with
-			     SONG_EXTENSIONS: JSON (a setlist means nothing without its songs) and the legacy .doc (which the
-			     import only reports as unreadable) are left out on purpose.
+			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
+			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
+			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
+			     left out on purpose.
 			-->
 			<key>NSExtensionActivationRule</key>
 			<string>SUBQUERY (
@@ -60,6 +61,7 @@
         $extensionItem.attachments,
         $attachment,
         ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.json"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "org.openxmlformats.wordprocessingml.document"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.zip-archive"

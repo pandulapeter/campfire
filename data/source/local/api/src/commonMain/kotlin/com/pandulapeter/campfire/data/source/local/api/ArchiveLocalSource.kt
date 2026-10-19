@@ -32,6 +32,13 @@ interface ArchiveLocalSource {
      */
     suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
 
+    /**
+     * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of
+     * songs - written as the ChordPro files an import of Campfire's own would carry, or null where [file] is not one.
+     * What [unpack] already does to such a document inside an archive, for one that arrived on its own.
+     */
+    suspend fun songsIn(file: ImportedFile): List<ImportedFile>?
+
     /** Packs the given entries (name to content, the names may contain directories) into a zip archive. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray
 }
