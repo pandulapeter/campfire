@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.scales.scaleStepsText
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
+import com.pandulapeter.campfire.presentation.ui.scales.shownScaleNoteNames
 
 /**
  * One scale in one key, titled with both and the notes spelled under the title: the scale on the player's instrument,
@@ -91,7 +92,7 @@ internal fun ScaleSheet(
     val state = viewModel.scaleLibrary
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
-        subtitle = ScaleSpelling.noteNames(scale, rootName, notation).joinToString(" "),
+        subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
         // A keyboard carries no labels, so only a neck has the choice: the subtitle names a keyboard's notes.
         actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
             {
@@ -165,7 +166,7 @@ private fun ScaleSheetDiagram(
     labels: ScaleLabels,
 ) {
     val description = scaleDiagramDescription(scale, rootName, notation)
-    val noteNames = remember(scale, rootName, notation) { ScaleSpelling.noteNames(scale, rootName, notation) }
+    val noteNames = remember(scale, rootName, notation) { shownScaleNoteNames(scale, rootName, notation) }
     val degrees = remember(scale) { scale.degrees.map(::displayedDegree) }
     Crossfade(
         targetState = labels,

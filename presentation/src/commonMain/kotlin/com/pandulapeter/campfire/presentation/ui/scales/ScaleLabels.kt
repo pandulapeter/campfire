@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.scales
 
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.scales.Scale
+import com.pandulapeter.campfire.chordpro.scales.ScaleSpelling
+
 /** What the scale sheet writes in the dots of its neck, picked under it and kept for the session. */
 internal enum class ScaleLabels {
     DEGREES,
@@ -17,3 +22,10 @@ internal enum class ScaleLabels {
 
 /** A degree label of the catalogue (`b3`, `#4`, `bb7`) with the accidental signs a reader sees (`♭3`, `♯4`, `♭♭7`). */
 internal fun displayedDegree(degree: String) = degree.replace('b', '♭').replace('#', '♯')
+
+/**
+ * The notes of [scale] played on [rootName] as a screen draws them in [notation]: `ScaleSpelling.noteNames` with its
+ * accidentals as `♯` and `♭` (`F♯`, `Si♭`), the way `shownChordName` draws a chord.
+ */
+internal fun shownScaleNoteNames(scale: Scale, rootName: String, notation: ChordNotation) =
+    ScaleSpelling.noteNames(scale, rootName, notation).map(ChordProNotation::withAccidentalSigns)

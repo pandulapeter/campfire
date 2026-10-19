@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -47,6 +46,7 @@ import com.pandulapeter.campfire.presentation.resources.scales_search
 import com.pandulapeter.campfire.presentation.resources.scales_search_heading
 import com.pandulapeter.campfire.presentation.resources.scales_search_no_scale
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
 import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
@@ -221,9 +221,9 @@ private fun ScaleLibraryHeading(
         query.isEmpty() -> stringResource(
             Res.string.scales_heading,
             stringResource(ScaleFamily.entries.getOrNull(familyIndex - 1)?.label ?: Res.string.scales_common_heading),
-            ChordProNotation.shownName(rootName, notation),
+            shownChordName(rootName, notation),
         )
-        hasResults -> textResource(Res.string.scales_search_heading, query, ChordProNotation.shownName(rootName, notation))
+        hasResults -> textResource(Res.string.scales_search_heading, query, shownChordName(rootName, notation))
         else -> textResource(Res.string.scales_search_no_scale, query)
     },
     style = MaterialTheme.typography.bodyLarge,

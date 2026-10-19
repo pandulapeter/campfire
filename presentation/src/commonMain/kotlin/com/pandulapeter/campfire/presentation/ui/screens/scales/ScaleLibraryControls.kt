@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -21,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.scale_family_common
 import com.pandulapeter.campfire.presentation.resources.scales
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.components.controls.ChoiceChipRow
@@ -64,7 +64,7 @@ internal fun ScaleLibraryControls(
         second = {
             SettingsSubsection(title = stringResource(Res.string.chords_key)) {
                 ChoiceChipRow(
-                    labels = keys.map { ChordProNotation.shownName(it, notation) },
+                    labels = keys.map { shownChordName(it, notation) },
                     selectedIndex = selectedKeyIndex,
                     onSelected = onKeySelected,
                 )

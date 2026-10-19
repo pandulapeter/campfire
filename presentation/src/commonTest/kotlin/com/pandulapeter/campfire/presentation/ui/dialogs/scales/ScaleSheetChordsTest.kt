@@ -23,9 +23,18 @@ class ScaleSheetChordsTest {
     fun `the chords of a scale are named in the reader's notation and drawn with the tables' shapes`() {
         val major = Scales.fromId("major")!!
         val chords = scaleSheetChords(ScaleChords.triads(major, "G"), ChordNotation.GERMAN, ChordTuning.GUITAR)
-        assertEquals(listOf("G", "Am", "Hm", "C", "D", "Em", "F#dim"), chords.map { it.chord.name })
+        assertEquals(listOf("G", "Am", "Hm", "C", "D", "Em", "F♯dim"), chords.map { it.chord.name })
         assertEquals(listOf("G", "Am", "Bm", "C", "D", "Em", "F#dim"), chords.map { it.chord.spelling })
         chords.filter { !it.chord.isShapePending }.forEach { assertNotNull(it.chord.defaultShape, it.chord.name) }
         assertEquals("vii°", chords.last().numeral)
+    }
+
+    @Test
+    fun `the chords and the numerals of a scale are drawn with accidental signs`() {
+        val harmonicMinor = Scales.fromId("harmonic_minor")!!
+        val chords = scaleSheetChords(ScaleChords.triads(harmonicMinor, "C"), ChordNotation.STANDARD, ChordTuning.GUITAR)
+        assertEquals("E♭aug", chords[2].chord.name)
+        assertEquals("Ebaug", chords[2].chord.spelling)
+        assertEquals("♭III+", chords[2].numeral)
     }
 }

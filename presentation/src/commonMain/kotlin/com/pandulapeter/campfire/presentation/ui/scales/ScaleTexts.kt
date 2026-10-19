@@ -11,9 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.scales
 
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.scales.Scale
-import com.pandulapeter.campfire.chordpro.scales.ScaleSpelling
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -22,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.scales_sheet_title
 import com.pandulapeter.campfire.presentation.resources.scales_steps_augmented
 import com.pandulapeter.campfire.presentation.resources.scales_steps_half
 import com.pandulapeter.campfire.presentation.resources.scales_steps_whole
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /** The name of [scale], or its id where this version has none for it. */
 @Composable
@@ -30,14 +29,14 @@ internal fun scaleName(scale: Scale) = scaleNameResource(scale.id)?.let { string
 /** [scale] in the key of [rootName], a note in the standard notation, named in [notation]: "C Dorian". */
 @Composable
 internal fun scaleTitle(scale: Scale, rootName: String, notation: ChordNotation) =
-    stringResource(Res.string.scales_sheet_title, ChordProNotation.shownName(rootName, notation), scaleName(scale))
+    stringResource(Res.string.scales_sheet_title, shownChordName(rootName, notation), scaleName(scale))
 
 /** What a screen reader says of a diagram of [scale] on [rootName]: the scale, then its notes. */
 @Composable
 internal fun scaleDiagramDescription(scale: Scale, rootName: String, notation: ChordNotation) = stringResource(
     Res.string.scales_diagram,
     scaleTitle(scale, rootName, notation),
-    ScaleSpelling.noteNames(scale, rootName, notation).joinToString(" "),
+    shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
 )
 
 /** The steps between the notes of [scale], the last closing the octave, as a chart writes them: `W W H W W W H`. */

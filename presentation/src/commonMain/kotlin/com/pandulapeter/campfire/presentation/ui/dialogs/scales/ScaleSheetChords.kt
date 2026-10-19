@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.scales.ScaleChord
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /** One chord of the scale sheet's rows: the degree it stands on, over the chord as the Chords tab draws it. */
 @Immutable
@@ -35,9 +36,9 @@ internal fun scaleSheetChords(chords: List<ScaleChord>, notation: ChordNotation,
     val chord = ChordProChords.parse(scaleChord.name) ?: return@mapNotNull null
     val isShapePending = ChordVoicings.needsSearch(chord, tuning)
     ScaleSheetChord(
-        numeral = scaleChord.numeral,
+        numeral = ChordProNotation.withAccidentalSigns(scaleChord.numeral),
         chord = SongChord(
-            name = ChordProNotation.shownName(scaleChord.name, notation),
+            name = shownChordName(scaleChord.name, notation),
             chord = chord,
             spelling = scaleChord.name,
             defaultShape = if (isShapePending) null else ChordVoicings.default(chord, tuning),
