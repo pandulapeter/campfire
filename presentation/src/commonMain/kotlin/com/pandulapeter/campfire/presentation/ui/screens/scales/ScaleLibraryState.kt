@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ToolSearch
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 
 /**
- * Where the Scales tab was left: the key, the family, the search and the scroll position, and how the scale sheet labels its notes,
+ * Where the Scales tab was left: the key, the family, the search, the scroll positions, and how the scale sheet labels its notes,
  * held by the view model for the session for the reason [ScrollPosition] gives. Nothing here is saved: the instrument and
  * its tuning, the one thing about scales a player sets once, are the preferences'.
  */
@@ -39,6 +39,12 @@ internal class ScaleLibraryState(
     /** The family picked: 0 for the common scales, else one more than the family's place in `ScaleFamily`. */
     var familyIndex by mutableIntStateOf(0)
 
+    /** Picks the family at [index] (see [familyIndex]), which empties the search: the cells shown are that family's. */
+    fun selectFamily(index: Int) {
+        familyIndex = index
+        query = ""
+    }
+
     /** What the search finds scales by, their names and the other names they go by, across every family. */
     override var query by mutableStateOf("")
 
@@ -54,4 +60,7 @@ internal class ScaleLibraryState(
     var labels by mutableStateOf(ScaleLabels.DEGREES)
 
     val scrollPosition = ScrollPosition()
+
+    /** How far the family row is scrolled, so that a family picked past the screen's edge is on it again on return. */
+    val familyScrollPosition = ScrollPosition()
 }

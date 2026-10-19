@@ -64,6 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
+import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -105,6 +106,7 @@ internal fun ScalesScreen(
     val aliases = Scales.all.associateWith { scaleAliases(it) }
     val scales = remember(state.familyIndex, query, names, aliases) { scaleLibraryResults(state.familyIndex, query, names::getValue, aliases::get) }
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
+    val familyScrollState = rememberRetainedScrollState(state.familyScrollPosition)
     ScrollToTopOnRequest(
         requests = viewModel.navigator.scrollToTopRequests,
         destination = CampfireDestination.Scales,
@@ -149,13 +151,11 @@ internal fun ScalesScreen(
                     keys = keys,
                     selectedKeyIndex = state.keyIndex,
                     selectedFamilyIndex = state.familyIndex,
+                    familyScrollState = familyScrollState,
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                     onKeySelected = { state.keyIndex = it },
-                    onFamilySelected = {
-                        state.familyIndex = it
-                        state.query = ""
-                    },
+                    onFamilySelected = state::selectFamily,
                 )
             }
             pinnedSearchField(

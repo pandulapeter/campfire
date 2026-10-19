@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.scales
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -19,7 +22,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.scale_family_common
-import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
@@ -33,7 +35,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 /**
  * What the Scales tab lists: the instrument in the player's hands and its tuning, through the chips every screen opens
  * their sheets with and written at once as everywhere, the key, beside them where the window has room for both, and the
- * family, the common scales first. It reaches past the page's side padding for the reason `ChordLibraryControls` gives.
+ * family, the common scales first, in one line scrolling sideways with no title of its own, since the heading under the
+ * search names the family. It reaches past the page's side padding for the reason `ChordLibraryControls` gives.
  */
 @Composable
 internal fun ScaleLibraryControls(
@@ -44,6 +47,7 @@ internal fun ScaleLibraryControls(
     keys: List<String>,
     selectedKeyIndex: Int,
     selectedFamilyIndex: Int,
+    familyScrollState: ScrollState,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
     onKeySelected: (Int) -> Unit,
@@ -71,11 +75,11 @@ internal fun ScaleLibraryControls(
             }
         },
     )
-    SettingsSubsection(title = stringResource(Res.string.scales)) {
-        ChoiceChipRow(
-            labels = listOf(stringResource(Res.string.scale_family_common)) + ScaleFamily.entries.map { stringResource(it.label) },
-            selectedIndex = selectedFamilyIndex,
-            onSelected = onFamilySelected,
-        )
-    }
+    ScaleFamilyRow(
+        modifier = Modifier.padding(vertical = 12.dp),
+        labels = listOf(stringResource(Res.string.scale_family_common)) + ScaleFamily.entries.map { stringResource(it.label) },
+        selectedIndex = selectedFamilyIndex,
+        scrollState = familyScrollState,
+        onSelected = onFamilySelected,
+    )
 }

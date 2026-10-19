@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * A wrapping row of chips that is a radio group, one per entry of [labels], padded as the page's headings are: the key
- * row of the Chords and the Scales tabs, and the Scales tab's families.
+ * row of the Chords and the Scales tabs.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
