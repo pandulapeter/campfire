@@ -12,15 +12,6 @@
 
 The `expect` declarations and the interfaces the platform shells provide.
 
-### `LanguageNames.kt`
-
-- Language names come from the platform's CLDR, never a shipped list (a library may hold any language). The web actual
-  may be missing at runtime and answers null, like an unknown code.
-
-### `NumericImeOptions.kt`
-
-- iOS uses `UIKeyboardTypeNumbersAndPunctuation`: the number pad `KeyboardType.Number` maps to has no return key.
-
 ### `CalendarLocale.kt`
 
 - `rememberDatePickerState` uses the system locale, so the setlist date dialog builds its own `DatePickerState` on
@@ -57,9 +48,6 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 ### Text from outside (`SharedText*.kt`, `ShareInboxManifest.kt`)
 
-- A name made from what arrived (`cleanedForFileName`) is `LibraryFiles.normalizedName`, the rule every library name
-  follows; null where the text has no letter or digit, so the next fallback applies rather than the rule's own. A
-  text of nothing but links is passed on empty, reported as skipped.
 - `ShareInboxManifest` is the `share.json` the iOS share extension writes (`app/ios/CLAUDE.md`), decoded here so the
   test runs on the desktop: unknown fields ignored, a newer `version` left in the inbox, anything else null. The
   extension's Swift writes it; keep the two in step.
@@ -92,7 +80,5 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 - `MetronomeNotifier` (`BackgroundMetronome.kt`) is provided like `SyncNotifier`, and only told a click ended once it
   was shown.
-- `BeatHaptics.kt`: web vibration only where `navigator.vibrate` can actually vibrate (Chrome on Android; never Safari
-  or desktop browsers, which define it with nothing to vibrate); null on desktop. Driven on `beatHapticsDispatcher`
-  (off the main thread on Android, so composition does not delay a beat) while resumed, and on Android while composed at
-  all (`areBeatHapticsFeltInBackground`: the foreground service lets it vibrate).
+- `BeatHaptics.kt`: web vibration only where `navigator.vibrate` can vibrate; on Android felt while composed, not only
+  resumed (`areBeatHapticsFeltInBackground`).
