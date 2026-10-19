@@ -40,7 +40,7 @@ public object ChordSheetConverter {
             if (groups.isEmpty() || starts.count { it } >= 2 && starts[index]) groups += mutableListOf<Rendered>()
             groups.last().addAll(page)
         }
-        return groups.map { normalize(convertSong(expandLabels(singleSpaced(it)))) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))))) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -48,6 +48,27 @@ public object ChordSheetConverter {
      * row from the lyric under it. Where no two lines of a song are adjacent, the single blanks are dropped and a run of
      * them is the one stanza break it stands for.
      */
+    /**
+     * The lines a lyrics site puts into a copy of its page, Genius's "You might also like" and the "12Embed" its
+     * share count ends one with, glued to the last lyric where the copy lost the line break. Only a song is read for
+     * them: a poem may well end in "Embed".
+     */
+    private fun withoutInjections(lines: List<Rendered>): List<Rendered> {
+        if (!hasStructure(lines, chordCandidates(lines))) return lines
+        val last = lines.indexOfLast { it.text.isNotBlank() }
+        return lines.mapIndexedNotNull { index, line ->
+            when {
+                line.text.trim().equals("You might also like", ignoreCase = true) -> null
+                index != last -> line
+                embed.matches(line.text.trim()) -> null
+                else -> gluedEmbed.find(line.text)?.let { match ->
+                    val end = match.range.first
+                    line.copy(text = line.text.substring(0, end), positions = line.positions.copyOf(end))
+                } ?: line
+            }
+        }
+    }
+
     private fun singleSpaced(lines: List<Rendered>): List<Rendered> {
         val filled = lines.indices.filter { lines[it].text.isNotBlank() }
         if (filled.size < 4 || filled.zipWithNext().any { (a, b) -> b == a + 1 }) return lines
@@ -396,10 +417,16 @@ public object ChordSheetConverter {
     private fun bracketed(row: List<Token>, annotation: String?) = row.joinToString(" ") { if (rowChord(it.text)) "[${rowChordName(it.text)}]" else it.text } +
         annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
 
+    private fun hasUnambiguousChords(candidates: List<List<Token>?>) = candidates.any { it != null && it.count { word -> rowChord(word.text) } > 1 }
+
+    /** Whether a sheet reads as a song rather than prose: a row of two chords or more, or a heading. */
+    private fun hasStructure(lines: List<Rendered>, candidates: List<List<Token>?>) =
+        hasUnambiguousChords(candidates) || lines.any { ChordSheetHeadings.parse(it.text) != null }
+
     private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
-        val hasUnambiguousChords = candidates.any { it != null && it.count { word -> rowChord(word.text) } > 1 }
+        val hasUnambiguousChords = hasUnambiguousChords(candidates)
         val parsed = lines.map { ChordSheetHeadings.parse(it.text) }
-        val hasStructure = hasUnambiguousChords || parsed.any { it != null }
+        val hasStructure = hasStructure(lines, candidates)
         // A word that is as likely sung is a heading where a chord row or a blank line follows it, as one does a heading.
         val headings = lines.indices.map { index ->
             parsed[index]?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
@@ -731,6 +758,10 @@ public object ChordSheetConverter {
     }
 
     private val token = Regex("\\|:?|:\\||[^\\s|]+")
+    private val embed = Regex("^[0-9]*Embed$")
+
+    /** A share count glued to a lyric's last letter or punctuation; a sung "we embed" keeps its space. */
+    private val gluedEmbed = Regex("(?<=[^\\s0-9])[0-9]*Embed$")
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
     private val parentheses = Regex("\\(([^()]+)\\)")
     private val keyLabels = setOf(

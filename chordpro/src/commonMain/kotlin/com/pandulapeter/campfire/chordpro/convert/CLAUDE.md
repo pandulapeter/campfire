@@ -24,3 +24,5 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   documented limit, since both orders are common on the web.
 - A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
+- Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
+  Guitar's page furniture (`Difficulty:`, `Author:`, a rating) is many lines in no fixed shape and is not filtered.

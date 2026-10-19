@@ -544,6 +544,27 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `the lines a lyrics site injects into a copy are left out`() {
+        val result = convert("[Verse 1]\nThe river runs\nbeside the road\n\nYou might also like\n\nall the way home\n\n[Chorus]\nSing it loud\nsing it long\n12Embed")
+        assertFalse("You might also like" in result, result)
+        assertFalse("Embed" in result, result)
+        assertTrue(result.endsWith("{start_of_chorus: Chorus}\nSing it loud\nsing it long\n{end_of_chorus}\n"), result)
+        assertFalse("\n\n\n" in result, result)
+    }
+
+    @Test
+    fun `a poem that ends in Embed is left alone`() {
+        assertEquals("The words we keep\nthe lines we write\nthe things we hold\nEmbed\n", convert("The words we keep\nthe lines we write\nthe things we hold\nEmbed"))
+    }
+
+    @Test
+    fun `a share count glued to the last lyric is cut off`() {
+        assertTrue(convert("[Chorus]\nSing it to the end12Embed").contains("Sing it to the end\n{end_of_chorus}"))
+        assertTrue(convert("[Chorus]\nSing it to the end.Embed").contains("Sing it to the end.\n{end_of_chorus}"))
+        assertTrue(convert("[Chorus]\nThis is what we Embed").contains("This is what we Embed\n{end_of_chorus}"))
+    }
+
+    @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
         assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
     }
