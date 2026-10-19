@@ -62,6 +62,13 @@ class ImportDownloadRemoteSourceTest {
     }
 
     @Test
+    fun `a file cut short of its declared length is unreachable`() = runTest {
+        val download = source { _ -> respond(ByteArray(500), HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, "1000")) }.download(URL, MAX)
+
+        assertEquals(ImportDownload.Unreachable, download)
+    }
+
+    @Test
     fun `nothing at the address is missing, and the host's own trouble is unreachable`() = runTest {
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.download(URL, MAX))
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.Forbidden) }.download(URL, MAX))

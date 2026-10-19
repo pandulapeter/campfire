@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.importDownlo
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.source.remote.api.ImportDownloadRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.isCutShort
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
@@ -45,11 +46,13 @@ internal class ImportDownloadRemoteSourceImpl(
                     !response.status.isSuccess() -> ImportDownload.Missing
                     (response.contentLength() ?: 0) > maxSizeBytes -> ImportDownload.TooLarge
                     else -> {
-                        // A length is not promised, so the body is read one byte past the limit to find out.
+                        // A length is not promised, so the body is read one byte past the limit to find out, and a declared one
+                        // the body falls short of is a transfer cut off, not a smaller file.
                         val bytes = response.bodyAsChannel().readBuffer(maxSizeBytes + 1).readByteArray()
                         when {
                             bytes.isEmpty() -> ImportDownload.Missing
                             bytes.size > maxSizeBytes -> ImportDownload.TooLarge
+                            response.isCutShort(bytes.size) -> ImportDownload.Unreachable
                             // The address the redirects ended at names the file better than the one that was asked.
                             else -> ImportDownload.File(
                                 name = importDownloadFileName(

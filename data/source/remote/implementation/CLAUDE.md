@@ -108,11 +108,11 @@ Silent failures go to the injected `Logger`.
 ## Downloads
 
 - Cover (`coverArt/`): redirects followed. Not `image/*` or over 5 MB (read one byte
-  past the limit when no length is declared) → `Missing`, never read to the end. 408, 429, 5xx, or transport failure →
-  `Unreachable`; any other refusal → `Missing`.
+  past the limit when no length is declared) → `Missing`, never read to the end. 408, 429, 5xx, transport failure, or a
+  body shorter than an unencoded declared length → `Unreachable`; any other refusal → `Missing`.
 - Import (`importDownload/`): declared length over the ceiling → `TooLarge` before the body; otherwise read one byte
-  past it. 408, 429, 5xx, transport failure, or refused CORS → `Unreachable`; other refusals or an empty body →
-  `Missing`. Content type is not checked.
+  past it. 408, 429, 5xx, transport failure, refused CORS, or a body shorter than an unencoded declared length →
+  `Unreachable`; other refusals or an empty body → `Missing`. Content type is not checked.
 
 ## Catalogues
 

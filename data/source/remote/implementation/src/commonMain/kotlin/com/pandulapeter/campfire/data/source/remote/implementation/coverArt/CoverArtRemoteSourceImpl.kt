@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.isCutShort
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
@@ -47,9 +48,14 @@ internal class CoverArtRemoteSourceImpl(
                     response.contentType()?.match(ContentType.Image.Any) != true -> CoverArtDownload.Missing
                     (response.contentLength() ?: 0) > MAXIMUM_SIZE_BYTES -> CoverArtDownload.Missing
                     else -> {
-                        // A length is not promised, so the body is read one byte past the limit to find out.
+                        // A length is not promised, so the body is read one byte past the limit to find out, and a declared one
+                        // the body falls short of is a transfer cut off, not a smaller image.
                         val bytes = response.bodyAsChannel().readBuffer(MAXIMUM_SIZE_BYTES + 1L).readByteArray()
-                        if (bytes.isEmpty() || bytes.size > MAXIMUM_SIZE_BYTES) CoverArtDownload.Missing else CoverArtDownload.Image(bytes)
+                        when {
+                            bytes.isEmpty() || bytes.size > MAXIMUM_SIZE_BYTES -> CoverArtDownload.Missing
+                            response.isCutShort(bytes.size) -> CoverArtDownload.Unreachable
+                            else -> CoverArtDownload.Image(bytes)
+                        }
                     }
                 }
             }
