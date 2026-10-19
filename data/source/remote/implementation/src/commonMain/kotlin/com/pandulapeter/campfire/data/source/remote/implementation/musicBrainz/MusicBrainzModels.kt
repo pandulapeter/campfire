@@ -13,8 +13,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * The parts of MusicBrainz's search and lookup answers Campfire reads. Everything is defaulted and unknown keys are ignored, like
- * the Dropbox models, so that a field added or dropped on the other side never turns into a search the user sees fail.
+ * The parts of MusicBrainz's search and lookup answers Campfire reads. Everything is defaulted and unknown keys are
+ * ignored, so that a field added or dropped on the other side never turns into a search the user sees fail.
  */
 @Serializable
 internal data class MusicBrainzReleaseGroupSearchResponse(

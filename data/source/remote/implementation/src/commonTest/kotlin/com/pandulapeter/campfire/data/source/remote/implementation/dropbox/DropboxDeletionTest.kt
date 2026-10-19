@@ -116,6 +116,12 @@ class DropboxDeletionTest {
     }
 
     @Test
+    fun `a deletion answered with an empty object is the network failing`() = runTest {
+        val provider = dropboxProvider { respondJson("{}") }
+        assertFailsWith<SyncNetworkException> { provider.delete(songDeletions(2)) }
+    }
+
+    @Test
     fun `a file the answer says nothing about is reported as not deleted`() = runTest {
         val provider = dropboxProvider { respondJson("""{".tag":"complete","entries":[{".tag":"success","metadata":{}}]}""") }
         val deletions = songDeletions(2)

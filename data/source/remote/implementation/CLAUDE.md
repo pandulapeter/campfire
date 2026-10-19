@@ -65,8 +65,9 @@ Silent failures go to the injected `Logger`.
   `fetch`) three, since every call here is safe to resend. A first sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
-- `DropboxModels`, like `MusicBrainzModels`: everything defaulted, unknown keys ignored, so a new API field never
-  breaks sync.
+- `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a
+  decision rests on (listing entries, cursor, `has_more`; revisions; the access token; the delete job's tag) are
+  required, and an answer without them is the network failing.
 - `toAsciiJsonString`: Dropbox takes arguments in an HTTP header, which is ASCII only, and file names are song titles.
 - The browser engine reports a failed `fetch` as a `kotlin.Error`, so `transport` treats any non-cancellation
   `Throwable` as unreachable.

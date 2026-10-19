@@ -86,7 +86,10 @@ internal class DropboxTokens(
                 else -> SyncNetworkException("Dropbox could not be asked for a token: ${response.status.value} ${response.oAuthError()}")
             }
         }
-        return decodeAnswer(DropboxTokenResponse.serializer(), transport { response.bodyAsText() })
+        val token = decodeAnswer(DropboxTokenResponse.serializer(), transport { response.bodyAsText() })
+        // Stored, an empty token would make every following call a refusal, and the connection one to make again.
+        if (token.accessToken.isEmpty()) throw SyncNetworkException("Dropbox's answer named no access token.")
+        return token
     }
 
     /** The token endpoint speaks standard OAuth rather than the API's own `error_summary`. */

@@ -317,6 +317,17 @@ class DropboxTokensTest {
         assertEquals(expected = 1, actual = tokenRequestCount)
     }
 
+    /** Stored, an empty token would make every following call a refusal, and the connection one to make again. */
+    @Test
+    fun `a renewal answered without an access token is the network failing and keeps the stored token`() = runTest {
+        val storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))
+        val provider = dropboxProvider(storage = storage) { request ->
+            if (request.url.toString() == TOKEN_URL) respondJson("""{"expires_in":14400}""") else respondJson(EMPTY_LISTING)
+        }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertEquals("access", storage.document?.accessToken)
+    }
+
     private companion object {
         val AUTHORIZATION_RESPONSE = RemoteAuthorizationResponse(code = "code", state = "state")
     }

@@ -17,14 +17,16 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
 /**
- * The parts of the Dropbox API's answers Campfire reads. Everything is defaulted and unknown keys are ignored, so
- * that a field added on the other side never turns into a parse failure the user sees as a broken sync.
+ * The parts of the Dropbox API's answers Campfire reads. Unknown keys are ignored and fields that may be added or are
+ * optional are defaulted, so that a field added on the other side never turns into a parse failure the user sees as a
+ * broken sync. The few fields an answer exists to carry are required, so that an answer that is not Dropbox's - an
+ * empty object from something in between - is a failure rather than an empty folder.
  */
 @Serializable
 internal data class DropboxListFolderResponse(
-    val entries: List<DropboxEntry> = emptyList(),
-    val cursor: String = "",
-    @SerialName("has_more") val hasMore: Boolean = false,
+    val entries: List<DropboxEntry>,
+    val cursor: String,
+    @SerialName("has_more") val hasMore: Boolean,
 )
 
 @Serializable
@@ -41,14 +43,14 @@ internal data class DropboxEntry(
 internal data class DropboxFileMetadata(
     val name: String = "",
     @SerialName("path_lower") val pathLower: String = "",
-    val rev: String = "",
+    val rev: String,
     val size: Long? = null,
     @SerialName("content_hash") val contentHash: String? = null,
 )
 
 @Serializable
 internal data class DropboxAccountResponse(
-    @SerialName("account_id") val accountId: String = "",
+    @SerialName("account_id") val accountId: String,
     val name: DropboxName = DropboxName(),
     val email: String = "",
 )
@@ -60,7 +62,7 @@ internal data class DropboxName(
 
 @Serializable
 internal data class DropboxTokenResponse(
-    @SerialName("access_token") val accessToken: String = "",
+    @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String? = null,
     @SerialName("expires_in") val expiresInSeconds: Long = 0,
     @SerialName("account_id") val accountId: String = "",
@@ -88,7 +90,7 @@ internal data class DropboxErrorResponse(
  */
 @Serializable
 internal data class DropboxDeleteBatchResponse(
-    @SerialName(".tag") val tag: String = "",
+    @SerialName(".tag") val tag: String,
     @SerialName("async_job_id") val asyncJobId: String = "",
     val entries: List<DropboxDeleteBatchEntry> = emptyList(),
     val failed: JsonObject? = null,
@@ -97,7 +99,7 @@ internal data class DropboxDeleteBatchResponse(
 /** `success`, or `failure` with the reason as a tagged union in [failure]. */
 @Serializable
 internal data class DropboxDeleteBatchEntry(
-    @SerialName(".tag") val tag: String = "",
+    @SerialName(".tag") val tag: String,
     val failure: JsonObject? = null,
 )
 

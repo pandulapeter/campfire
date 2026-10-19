@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
@@ -125,6 +126,29 @@ class DropboxFilesTest {
     fun `a download that names no revision fails`() = runTest {
         val provider = dropboxProvider { respond(content = "song", status = HttpStatusCode.OK) }
         assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+    }
+
+    /** An empty object from something in between would otherwise read as an empty folder, and every song as deleted. */
+    @Test
+    fun `a listing answered with an empty object is the network failing`() = runTest {
+        for (answer in listOf("{}", """{"error":"blocked"}""")) {
+            val provider = dropboxProvider { respondJson(answer) }
+            assertFailsWith<SyncNetworkException>(answer) { provider.list() }
+        }
+    }
+
+    @Test
+    fun `a listing page with more to come but no cursor is the network failing`() = runTest {
+        val provider = dropboxProvider { respondJson("""{"entries":[],"cursor":"","has_more":true}""") }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+    }
+
+    @Test
+    fun `an upload receipt without a revision is the network failing`() = runTest {
+        for (receipt in listOf("""{"name":"song.cho"}""", """{"rev":""}""")) {
+            val provider = dropboxProvider { respondJson(receipt) }
+            assertFailsWith<SyncNetworkException>(receipt) { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+        }
     }
 
     /** A body cut short without a declared length would otherwise be written as the song and indexed as in step. */

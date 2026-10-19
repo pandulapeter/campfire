@@ -220,6 +220,8 @@ internal class DropboxSyncProvider(
         )
         files += response.entries.toRemoteFiles()
         while (response.hasMore) {
+            // Without a cursor the next page would be asked for as page "", which Dropbox would not have sent.
+            if (response.cursor.isEmpty()) throw SyncNetworkException("Dropbox's listing named no next page.")
             response = requests.rpc(
                 url = LIST_FOLDER_CONTINUE_URL,
                 body = """{"cursor":${response.cursor.toAsciiJsonString()}}""",
@@ -334,7 +336,7 @@ internal class DropboxSyncProvider(
             // The write went through and only its receipt is unreadable, which the contract files under "cannot tell".
             throw SyncNetworkException("Dropbox's answer to an upload could not be read.", exception)
         }
-        return RemoteWriteResult.Written(metadata.rev)
+        return RemoteWriteResult.Written(metadata.rev.ifEmpty { throw SyncNetworkException("Dropbox's answer named no revision.") })
     }
 
     override suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> =
