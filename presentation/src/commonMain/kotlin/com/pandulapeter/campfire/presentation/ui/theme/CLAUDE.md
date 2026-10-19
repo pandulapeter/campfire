@@ -40,18 +40,16 @@ preferences: `themeColor` (palette), `backgroundWarmth` (sepia), and `uiMode` (l
 
 - `ColorSchemePair` (both halves travel together); `themeColorOptions()` is the one ordered list read by both the
   color choice and `colorSchemePair()`. A color the device can't honor is left out of it.
-- `CampfireColorScheme.kt` (default): purple #5A49CA (tone 40) as primary, tinting every neutral, with orange as the
-  tertiary and the **second accent**. Material has no role for it, so `ColorSchemePair` carries
-  `lightSecondAccent` / `darkSecondAccent` (the primary in every other palette) and `CampfireTheme` provides
-  `LocalSecondAccentColor`, faded on the same progress. It draws what is played (chords, a row's key, the read only
-  line's key and capo) and the lists' sticky `SectionHeader`s; every other title and every control uses the primary.
+- `CampfireColorScheme.kt` (default): purple as primary, tinting every neutral, with orange as the tertiary and the
+  **second accent**. Material has no role for it, so `ColorSchemePair` carries `lightSecondAccent` / `darkSecondAccent`
+  (the primary in every other palette) and `CampfireTheme` provides `LocalSecondAccentColor`, faded on the same
+  progress. It draws what is played (chords, a row's key, the read only line's key and capo) and the lists' sticky
+  `SectionHeader`s; every other title and every control uses the primary.
 - The one gradient in the interface is the app's own disc (and ring) in the color choice; everything else is flat.
-- `OrangeColorScheme.kt` is hand-saturated over Material's mapping of #F57C00; `GrayColorScheme.kt` is that palette
-  taken to gray (error roles aside, `secondaryContainer` a step further from surfaces so selected chips stay visible).
 - `MaterialColorSchemes.kt`: seeds run through Material's tonal spot mapping and pasted in — a new color is a seed.
-- `DynamicColorSchemePair.kt`: Android 12+ dynamic color, null elsewhere (no "System"
-  swatch). From Android 14 those read role colors, which Samsung leaves at the framework's blue while recoloring the
-  palette; where the role primary is far from the palette's tone 40, the actual maps the palettes itself.
+- `DynamicColorSchemePair.kt`: Android 12+ dynamic color, null elsewhere (no "System" swatch). From Android 14 those
+  read role colors, which Samsung leaves at the framework's blue while recoloring the palette; where the role primary is
+  far from the palette's tone 40, the actual maps the palettes itself.
 
 ## Interface scale
 
@@ -62,8 +60,8 @@ minimum accounts for it (see `app/desktop`).
 
 ## Icons
 
-XML vector drawables in `composeResources/drawable/`, passed as `Painter`. Directional ones (back, previous/next song,
-undo/redo) carry `android:autoMirrored`, which Compose honors on every platform for RTL.
+Directional icons (back, previous/next song, undo/redo) carry `android:autoMirrored`, which Compose honors on every
+platform for RTL.
 
 ## Fonts
 
@@ -86,7 +84,6 @@ fall back to system fonts (Skia's Roboto on the web).
   web favicon, and a running Linux app's window icon. Not Windows (the Store package draws the taskbar) or the Mac Dock
   (a runtime icon is flat, without the system's clear, tinted, or dark styles).
 - `UserPreferences.isAppIconThemed` turns it off.
-- **The app's own colors are the promotional purple and orange** (#5A49CA, #F57C00); every packaged icon is their
-  diagonal gradient. Gray is just the last option.
+- Every packaged icon is the diagonal gradient of the app's own colors, the promotional purple and orange.
 - Android's launcher and Play icons are drawn as they are; every other icon is the hand-drawn orange one in `app/icons`,
   recolored by `app/generate_theme_icons.py` (outputs committed).
