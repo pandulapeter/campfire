@@ -37,6 +37,8 @@ builds what it draws, `grid/` places it.
 - Its groups are the catalogue's (see `chordpro/scales`), labelled by `songScaleGroupsOf` (tested): one group names
   nothing; otherwise each group lists its sections' page headings, a kind it holds whole said once ("Verse"), split
   kinds by number ("Verse 3"), headless parts as the rest of the song. At most five chips a group.
+- **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
+  sheet.
 
 ### Folding (keys in `model/`)
 
