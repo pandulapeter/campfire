@@ -92,6 +92,13 @@ class OpenSongSongTest {
     }
 
     @Test
+    fun `a section tag holding a brace stays inside its comment`() {
+        val text = OpenSongSong.read(song("[Coda}]\n Down by the river"), "x")!!
+
+        assertTrue("{comment: Coda)}" in text, text)
+    }
+
+    @Test
     fun `a song with an empty title is named by its file`() {
         val text = OpenSongSong.read(song("[V1]\n Down by the river", title = ""), fallbackTitle = "Riverlight")!!
 

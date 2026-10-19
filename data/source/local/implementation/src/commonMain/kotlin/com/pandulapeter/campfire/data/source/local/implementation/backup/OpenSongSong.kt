@@ -122,7 +122,7 @@ internal object OpenSongSong {
             val kind = tag.first().uppercaseChar()
             val ownNumber = tag.drop(1).trim().takeIf { it.isNotEmpty() && it.all(Char::isDigit) }
             val suffix = (ownNumber ?: number?.toString())?.let { " $it" }.orEmpty()
-            val (name, environment) = KINDS[kind]?.takeIf { ownNumber != null || tag.length == 1 } ?: return Label(tag, null)
+            val (name, environment) = KINDS[kind]?.takeIf { ownNumber != null || tag.length == 1 } ?: return Label(ForeignSongHeader.headerValue(tag) ?: tag, null)
             return Label(name + suffix, environment)
         }
     }
