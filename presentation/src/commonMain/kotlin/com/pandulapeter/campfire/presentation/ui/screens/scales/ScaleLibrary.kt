@@ -36,5 +36,17 @@ internal fun scaleLibraryResults(familyIndex: Int, query: String, nameOf: (Scale
     return byName + byAlias
 }
 
-/** [text] in lowercase with the accents of Latin letters taken off, as a search compares it. */
-private fun folded(text: String) = text.lowercase().map(Char::withoutAccent).joinToString("")
+/**
+ * [text] in lowercase with the accents of Latin letters taken off, as a search compares it, and the signs a name is
+ * written with as a keyboard types them: `#` for ♯ and `b` for ♭, a ♮ dropped (the id spells it `natural`), and a hyphen
+ * for the dash of "whole–half".
+ */
+private fun folded(text: String) = text.lowercase().map { char ->
+    when (char) {
+        '♯' -> "#"
+        '♭' -> "b"
+        '♮' -> ""
+        '–' -> "-"
+        else -> char.withoutAccent().toString()
+    }
+}.joinToString("")

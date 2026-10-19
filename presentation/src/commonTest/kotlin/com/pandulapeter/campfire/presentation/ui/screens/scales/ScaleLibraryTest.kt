@@ -27,7 +27,15 @@ class ScaleLibraryTest {
     fun `a family index this version has no family for lists the common scales`() =
         assertEquals(Scales.common, scaleLibraryScales(ScaleFamily.entries.size + 1))
 
-    private val hungarian = mapOf("major" to "Dúr", "dorian" to "Dór", "phrygian_dominant" to "Fríg domináns")
+    private val hungarian = mapOf(
+        "major" to "Dúr",
+        "dorian" to "Dór",
+        "phrygian_dominant" to "Fríg domináns",
+        "dorian_sharp_4" to "Dór ♯4",
+        "mixolydian_flat_6" to "Mixolíd ♭6",
+        "locrian_natural_6" to "Lokriszi ♮6",
+        "diminished" to "Szűkített (egész–fél)",
+    )
 
     private fun search(query: String) = scaleLibraryResults(familyIndex = 3, query = query) { hungarian[it.id] ?: it.id }.map { it.id }
 
@@ -36,7 +44,7 @@ class ScaleLibraryTest {
 
     @Test
     fun `a search finds scales of every family by their name, ignoring case and accents`() {
-        assertEquals(listOf("dorian", "phrygian_dominant"), search("DO").filter { it in hungarian })
+        assertEquals(listOf("dorian", "dorian_sharp_4", "phrygian_dominant", "mixolydian_flat_6"), search("DO").filter { it in hungarian })
         assertEquals("major", search("dur").first())
         assertTrue("phrygian_dominant" in search("fríg"))
     }
@@ -46,6 +54,15 @@ class ScaleLibraryTest {
         assertEquals(listOf("phrygian_dominant", "double_harmonic"), search("hijaz"))
         val ionian = search("ionian")
         assertEquals("major", ionian.last())
+    }
+
+    @Test
+    fun `a search finds a scale by its signs typed as a keyboard has them`() {
+        assertEquals(listOf("dorian_sharp_4"), search("dor #4"))
+        assertEquals(listOf("mixolydian_flat_6"), search("mixolid b6"))
+        assertEquals(listOf("locrian_natural_6"), search("lokriszi 6"))
+        assertTrue("locrian_natural_6" in search("locrian natural 6"))
+        assertEquals(listOf("diminished"), search("egesz-fel"))
     }
 
     @Test
