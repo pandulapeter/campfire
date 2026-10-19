@@ -59,7 +59,8 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels)
 
 /**
  * A heading without the number the page counts its kind by ("Verse" for "Verse 2"): one after a space, as
- * `withNumberedSections` numbers them, so that "Take 5" and "Chorus x2" are headings of their own.
+ * `withNumberedSections` numbers them, so that "Chorus x2" is a heading of its own. A lone "Take 5" is of the kind
+ * "Take" here and keeps its heading only through [songScaleGroupsOf]'s rule of saying a kind for more than one.
  */
 private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
 
