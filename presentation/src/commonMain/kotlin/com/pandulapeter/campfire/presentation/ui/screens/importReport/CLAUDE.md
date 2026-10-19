@@ -18,14 +18,14 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 - The view model puts it on the back stack only once no dialog is up, no editor with unsaved text is on the stack, and
   the onboarding is not (`ImportReportState.show`); reading runs meanwhile.
 - Not reviewed: the demo library (`shouldReview = false`) and a single song file opened with, shared to, or dropped on
-  the app, which is written and opened directly. Each shows the screen only for a taken name, as a one-row review. A song picked from
-  the app's own Import files *is* reviewed.
+  the app, which is written and opened directly. Each shows the screen only for a taken name, as a one-row review. A
+  song picked from the app's own Import files *is* reviewed.
 
 ## Stages
 
 - **Loading**: `ImportProgressContent`, Cancel only while the phase only reads (`isCancellable`); Close does the same.
-- **Failed**: one sentence (`ImportFailure`) and **Try again** (`retryImport`: a downloaded address becomes its bytes,
-  so those are read again).
+- **Failed**: one sentence (`ImportFailure`) and **Try again** (`retryImport`: a failed download is downloaded again;
+  once downloaded, the same bytes are read again).
 - **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
   names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
   button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
