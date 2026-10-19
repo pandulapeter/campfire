@@ -11,10 +11,11 @@
 
 The song card the song lists and setlists draw (`SongListItem`).
 
-- Beside the cover stand three lines: the title, the artist, and the details (key, tempo, duration) in `labelMedium`;
-  a missing artist or no details closes its line up. Labels go under all of it. With all three the title takes
-  `bodyMedium`'s line height (its own leaves a wider gap under it than between the others) and the cover is 56dp; with
-  two (under an artist header, typically) the cover is 44dp and the card lower. Both animate (`isThreeLine`).
+- Beside the cover stand three lines: the title, the artist, and the details (key, tempo, and duration, each as the
+  list's `UserPreferences.CardDetails` picks) in `labelMedium`; a missing artist or no details closes its line up.
+  Labels go under all of it. With all three the title takes `bodyMedium`'s line height (its own leaves a wider gap under
+  it than between the others) and the cover is 56dp; with two (under an artist header, typically) the cover is 44dp and
+  the card lower. Both animate (`isThreeLine`).
 - A song inside a setlist prefixes its one-based place, missing files included.
 - The title carries its `{subtitle}` in parentheses, as everywhere else: a song's "Live" copy by the same artist is told
   apart by nothing else.
@@ -37,6 +38,7 @@ The song card the song lists and setlists draw (`SongListItem`).
 - **Column width** (`minSongColumnWidth`): a 336dp base, +68dp for the cover while covers are on (whether or not a song
   has one, so arriving covers never change the count), so the default card keeps 404dp and a phone on its side stays one
   column. The key, tempo, and duration stand on a line of their own and add nothing. Setlists are laid out by the same
-  width (the slot number comes out of the title), so both screens fit the same columns. `CampfireScreens` computes it
-  into `ListLayout.of`. Sorted by artist, the Songs grid (not its side panel or the expanded rail, so sorting never
-  moves the chrome) takes 8dp off (`songGridColumnWidth`), the room the card's artist line no longer needs.
+  width (the slot number comes out of the title), so both screens fit the same columns. `CampfireContent` computes it
+  and `CampfireScreens` hands it to `ListLayout.of`. Sorted by artist, the Songs grid (not its side panel or the
+  expanded rail, so sorting never moves the chrome) takes 8dp off (`songGridColumnWidth`), the room the card's artist
+  line no longer needs.
