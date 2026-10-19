@@ -26,8 +26,8 @@ How the video is built, and the owner's decisions it keeps, are in `tools/promo-
 
 ## Steps
 
-1. **Make the change** asked for. A scene's timing touches `Promo.kt`, `Promo.tsx`, `soundtrack.py`, and
-   `cue-sheet.md` together; a new or changed clip is a `PromoShot` in `Promo.kt` (load `code-style` first).
+1. **Make the change** asked for, by `tools/promo-video/CLAUDE.md`'s rules; a new or changed clip is a `PromoShot` in
+   `Promo.kt` (load `code-style` first).
 2. **Run** `tools/promo-video/regenerate.sh` in the background: `all` (about 10 minutes, most of it recording the app)
    after a change to the app or to `Promo.kt`; `music` then `video` (about 3 minutes) for the soundtrack alone;
    `video` for `src/` alone. It writes `~/Desktop/Campfire Promo Video`: the three `campfire-promo-*.mp4`,
