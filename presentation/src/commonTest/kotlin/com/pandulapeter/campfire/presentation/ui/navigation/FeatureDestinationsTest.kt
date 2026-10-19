@@ -23,11 +23,14 @@ internal class FeatureDestinationsTest {
         isMetronomeEnabled: Boolean = true,
         isTunerEnabled: Boolean = true,
         isChordLibraryEnabled: Boolean = true,
+        areScalesEnabled: Boolean = true,
     ) = FeatureSwitches(
         areSetlistsEnabled = areSetlistsEnabled,
         isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
         isChordLibraryEnabled = isChordLibraryEnabled,
+        areScalesEnabled = areScalesEnabled,
+        areScaleSuggestionsEnabled = areScalesEnabled,
     )
 
     @Test
@@ -36,12 +39,18 @@ internal class FeatureDestinationsTest {
         assertEquals(
             listOf(CampfireDestination.Songs, CampfireDestination.Settings),
             CampfireDestination.TopLevel.entries(
-                features(areSetlistsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = false, isChordLibraryEnabled = false),
+                features(
+                    areSetlistsEnabled = false,
+                    isMetronomeEnabled = false,
+                    isTunerEnabled = false,
+                    isChordLibraryEnabled = false,
+                    areScalesEnabled = false,
+                ),
             ),
         )
         assertEquals(
             listOf(CampfireDestination.Songs, CampfireDestination.Setlists, CampfireDestination.Metronome, CampfireDestination.Chords, CampfireDestination.Settings),
-            CampfireDestination.TopLevel.entries(features(isTunerEnabled = false)),
+            CampfireDestination.TopLevel.entries(features(isTunerEnabled = false, areScalesEnabled = false)),
         )
     }
 
@@ -52,6 +61,20 @@ internal class FeatureDestinationsTest {
         assertTrue(FeatureSwitches.of(null).isChordLibraryEnabled)
         assertFalse(FeatureSwitches.of(preferences.copy(areChordDiagramsEnabled = false)).isChordLibraryEnabled)
         assertFalse(FeatureSwitches.of(preferences.copy(areChordsEnabled = false)).isChordLibraryEnabled)
+    }
+
+    @Test
+    fun `the scales tab follows a switch of its own, whatever the chords`() {
+        val preferences = testPreferences()
+        assertTrue(FeatureSwitches.of(preferences).areScalesEnabled)
+        assertTrue(FeatureSwitches.of(null).areScalesEnabled)
+        assertTrue(FeatureSwitches.of(preferences.copy(areChordsEnabled = false, areChordDiagramsEnabled = false)).areScalesEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areScalesEnabled = false)).areScalesEnabled)
+        assertFalse(CampfireDestination.isEnabled(CampfireDestination.Scales, features(areScalesEnabled = false)))
+        assertTrue(FeatureSwitches.of(preferences).areScaleSuggestionsEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScaleSuggestionsEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areScalesEnabled = false)).areScaleSuggestionsEnabled)
+        assertTrue(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScalesEnabled)
     }
 
     @Test
@@ -82,6 +105,9 @@ internal class FeatureDestinationsTest {
         val chords = songs.copy(backStack = songs.backStack + CampfireDestination.Chords)
         assertEquals(songs, chords.withoutDisabledFeatures(features(isChordLibraryEnabled = false)))
         assertEquals(chords, chords.withoutDisabledFeatures(features(isTunerEnabled = false)))
+        val scales = songs.copy(backStack = songs.backStack + CampfireDestination.Scales)
+        assertEquals(songs, scales.withoutDisabledFeatures(features(areScalesEnabled = false)))
+        assertEquals(scales, scales.withoutDisabledFeatures(features(isChordLibraryEnabled = false)))
     }
 
     @Test

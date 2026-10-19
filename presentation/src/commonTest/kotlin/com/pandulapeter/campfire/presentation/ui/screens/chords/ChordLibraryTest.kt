@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
+import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
@@ -23,7 +24,7 @@ import kotlin.test.assertTrue
 
 internal class ChordLibraryTest {
 
-    private val keys = chordLibraryKeys(UserPreferences.Accidentals.ORIGINAL)
+    private val keys = libraryKeys(UserPreferences.Accidentals.ORIGINAL)
 
     private fun results(
         query: String = "",
@@ -31,13 +32,6 @@ internal class ChordLibraryTest {
         notation: ChordNotation = ChordNotation.STANDARD,
         tuning: ChordTuning = ChordTuning.GUITAR,
     ) = assertNotNull(chordLibraryResults(keys, keyIndex, query, notation, tuning))
-
-    @Test
-    fun `every spelling of the keys names the twelve notes from C`() {
-        UserPreferences.Accidentals.entries.forEach { accidentals ->
-            assertEquals((0 until 12).toList(), chordLibraryKeys(accidentals).map { ChordProChords.parse(it)!!.root })
-        }
-    }
 
     @Test
     fun `every chord a key lists is a chord of its own`() {

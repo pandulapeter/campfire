@@ -71,7 +71,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.localization.textResource
-import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
+import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -258,7 +258,7 @@ private fun ChordRowsBlock(
                 val width = size.width.roundToInt()
                 val starts = layouts.rowStartsAt(width)
                 var y = 0f
-                for (row in chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)) {
+                for (row in slotRows(starts.size, firstSlot, lastSlot, isLastSlot)) {
                     var x = 0
                     val rowHeight = layouts.rowHeight(starts, row)
                     for (cell in layouts.cellsOfRow(starts, row)) {

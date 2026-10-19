@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.filledForm
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.chordpro.model.Chord
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -42,6 +44,19 @@ class DialogStackTest {
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = draftLookup))
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = DialogType.ConfirmExit))
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = null))
+    }
+
+    @Test
+    fun `a scale stacks over the chord sheet it is suggested in, and a chord over the scale sheet it is in`() {
+        val chordReference = DialogType.ChordReference(SongChord(name = "C", chord = Chord(root = 0, intervals = listOf(0, 4, 7))))
+        val chordShape = DialogType.ChordShape(song = song, setlistFileName = null, chordName = "C")
+        val scale = DialogType.Scale(scaleId = "mixolydian", rootName = "C")
+
+        assertEquals(listOf(chordShape), nextUnderlyingDialogs(openDialogs = listOf(chordShape), next = scale))
+        assertEquals(listOf(chordReference), nextUnderlyingDialogs(openDialogs = listOf(chordReference), next = scale))
+        assertEquals(listOf(chordShape, scale), nextUnderlyingDialogs(openDialogs = listOf(chordShape, scale), next = chordReference))
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(scale, chordReference), next = scale.copy(scaleId = "dorian")))
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = scale))
     }
 
     @Test

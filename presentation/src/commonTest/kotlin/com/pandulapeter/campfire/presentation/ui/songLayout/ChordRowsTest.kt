@@ -67,10 +67,10 @@ class ChordRowsTest {
 
     @Test
     fun `a slot holds the row its index names and the last one the rest`() {
-        assertEquals(1..1, chordSlotRows(rowCount = 5, firstSlot = 1, lastSlot = 1, isLastSlot = false))
-        assertEquals(3..4, chordSlotRows(rowCount = 5, firstSlot = 3, lastSlot = 3, isLastSlot = true))
-        assertTrue(chordSlotRows(rowCount = 2, firstSlot = 3, lastSlot = 3, isLastSlot = false).isEmpty())
-        assertEquals(0..4, chordSlotRows(rowCount = 5, firstSlot = 0, lastSlot = 47, isLastSlot = true))
+        assertEquals(1..1, slotRows(rowCount = 5, firstSlot = 1, lastSlot = 1, isLastSlot = false))
+        assertEquals(3..4, slotRows(rowCount = 5, firstSlot = 3, lastSlot = 3, isLastSlot = true))
+        assertTrue(slotRows(rowCount = 2, firstSlot = 3, lastSlot = 3, isLastSlot = false).isEmpty())
+        assertEquals(0..4, slotRows(rowCount = 5, firstSlot = 0, lastSlot = 47, isLastSlot = true))
     }
 
     @Test

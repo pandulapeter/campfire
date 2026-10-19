@@ -9,11 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
+import com.pandulapeter.campfire.presentation.ui.components.ToolSearch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,23 +24,23 @@ import kotlinx.coroutines.flow.asSharedFlow
  * session for the reason [ScrollPosition] gives, since the tab is taken off the back stack whenever another one is picked.
  * The instrument and its tuning are the preferences' (Settings → Songs), so they are not here.
  */
-internal class ChordLibraryState {
+internal class ChordLibraryState(
+    keyIndex: MutableIntState,
+) : ToolSearch {
 
-    /** The key picked, by its place in `chordLibraryKeys`, from C: the same key whichever way its accidental is spelled. */
-    var keyIndex by mutableIntStateOf(0)
+    /**
+     * The key picked, by its place in `libraryKeys`, from C: the same key whichever way its accidental is spelled. One
+     * state shared by the Chords and the Scales tabs, so that moving between them keeps the key the player is in.
+     */
+    var keyIndex by keyIndex
 
-    var query by mutableStateOf("")
+    override var query by mutableStateOf("")
 
     private val _searchFocusRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    /**
-     * Asks the search field for the caret, with what it holds selected, see [focusSearch]. Events rather than state, for
-     * the reason `SearchState.focusRequests` gives.
-     */
-    val searchFocusRequests: Flow<Unit> = _searchFocusRequests.asSharedFlow()
+    override val searchFocusRequests: Flow<Unit> = _searchFocusRequests.asSharedFlow()
 
-    /** What Ctrl / Cmd + F does on the tab, see `ScreenSearches.openCurrentSearch`. */
-    fun focusSearch() {
+    override fun focusSearch() {
         _searchFocusRequests.tryEmit(Unit)
     }
 

@@ -12,13 +12,14 @@
 
 One instrument for the whole app.
 
-- `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`. Diagrams, tuner, and the
-  keyboard capo rule read it.
+- `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`. Diagrams, tuner, scales, and
+  the keyboard capo rule read it. The scales read `InstrumentTuning.strings` directly (every stringed instrument, not
+  only the five with shapes), the one reader besides the tuner.
 - This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
 - Picked by two `PickerChip`s (`InstrumentChips.kt`; the tuning chip only for an instrument with more than one) opening
   `InstrumentSheet` / `TuningSheet`. They stand on the song details first section (read only included, since they change
-  a device preference), the Tuner tab (only while Chromatic is off), the Chords tab, Settings → Songs, and the
+  a device preference), the Tuner tab (only while Chromatic is off), the Chords and the Scales tabs, Settings → Songs, and the
   onboarding. Chromatic is the tuner's own switch (`TunerSettings.isChromatic`), not an instrument.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
@@ -26,6 +27,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
+import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
+import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions_description
+import com.pandulapeter.campfire.presentation.resources.settings_scales_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup_description
@@ -78,6 +82,21 @@ private fun PlayingSection(
         isChecked = userPreferences?.areChordDiagramsEnabled != false,
         isEnabled = userPreferences?.areChordsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setChordDiagramsEnabled,
+    )
+    // Not tied to either chord switch: a scale is played on any instrument, a violin with no chords included.
+    SwitchListItem(
+        title = stringResource(Res.string.scales),
+        description = stringResource(Res.string.settings_scales_description),
+        isChecked = userPreferences?.areScalesEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setScalesEnabled,
+    )
+    // Disabled rather than hidden with the scales off, as the chord diagrams are with the chords off.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_scale_suggestions),
+        description = stringResource(Res.string.settings_scale_suggestions_description),
+        isChecked = userPreferences?.areScaleSuggestionsEnabled != false,
+        isEnabled = userPreferences?.areScalesEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.metronome),

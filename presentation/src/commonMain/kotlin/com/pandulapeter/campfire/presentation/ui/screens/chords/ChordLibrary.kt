@@ -15,20 +15,8 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
-
-/**
- * The twelve keys the Chords tab lists chords in, from C, in the standard notation, as [accidentals] spells them: as a
- * chart spells each key where it keeps the song's own accidentals (`C#` but `Eb`, `F#` but `Bb`), and every one of them
- * sharp or flat where the reader asked for that.
- */
-internal fun chordLibraryKeys(accidentals: UserPreferences.Accidentals) = when (accidentals) {
-    UserPreferences.Accidentals.ORIGINAL -> listOf("C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B")
-    UserPreferences.Accidentals.SHARPS -> listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-    UserPreferences.Accidentals.FLATS -> listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
-}
 
 /**
  * What a key lists after its root, in the standard notation: the chords a chart uses, the everyday ones first and the
@@ -100,7 +88,7 @@ internal fun initialChordLibraryShown(
 }
 
 /**
- * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
+ * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [libraryKeys]) on [tuning], named in
  * [notation], narrowed by [query] to those whose name holds it, ignoring case (`m7`, `sus`, `cmaj`). A search that is a
  * whole chord name the key does not list is that chord too, apart from the key's, whatever key it is in ([searchedChord]):
  * a song's `D/F#` or `Emaj7` is then found by typing it, since no key lists every bass a chart puts under a chord. Every

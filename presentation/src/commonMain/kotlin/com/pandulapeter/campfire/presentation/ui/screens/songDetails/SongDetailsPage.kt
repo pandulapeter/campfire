@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsMode
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
@@ -147,6 +148,7 @@ internal fun SongDetailsPage(
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
     chordDiagrams: ChordDiagrams?,
+    scaleSuggestions: ScaleSuggestions?,
     tabs: TabReading?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
@@ -185,6 +187,7 @@ internal fun SongDetailsPage(
                 showsTiming = shouldShowTempo,
                 chordTuning = chordDiagrams?.tuning,
                 tabs = tabs,
+                suggestsScales = scaleSuggestions != null,
             ),
             buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
@@ -198,6 +201,7 @@ internal fun SongDetailsPage(
                 chordTuning = inputs.chordTuning,
                 notation = inputs.spelling.notation.toChordNotation(),
                 searchesShapes = searchesShapes,
+                suggestsScales = inputs.suggestsScales,
             )
         }
         if (model == null) {
@@ -331,6 +335,7 @@ internal fun SongDetailsPage(
                 keepsStepButtonInset = keepsStepButtonInset,
                 canCutSections = true,
                 chordDiagrams = chordDiagrams,
+                scaleSuggestions = scaleSuggestions,
             )
         }
     }

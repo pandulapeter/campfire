@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
+import com.pandulapeter.campfire.presentation.ui.songView.ScaleChipRows
 import com.pandulapeter.campfire.presentation.ui.songView.SongChordsSection
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionContent
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
@@ -111,6 +112,32 @@ internal sealed interface RenderSection {
         val itemCount = if (isFolded) 1 else chordSlotCount(cells.size)
 
         /** Every row may start a piece: a row of diagrams is a line, with the header kept with the first one. */
+        val chunkStarts = sectionChunkStarts(List(itemCount) { SectionItemKind.CONTENT })
+    }
+
+    /**
+     * The scales the song is played over, after its Chords section, in groups of the sections each fits (see
+     * [songScaleGroupsOf]). It is cut between its rows of chips like any section, each group's rows drawn as slots the
+     * way the Chords section's rows of diagrams are (see [ScaleChipRows]).
+     *
+     * @param isFolded Whether only the header is shown, part of the content for the reason [Chords] gives.
+     */
+    @Immutable
+    data class Scales(
+        val groups: List<SongScaleGroup>,
+        val isFolded: Boolean,
+    ) : RenderSection {
+
+        /**
+         * The first slot of each group, followed by one past the last: a group has one slot per chip, the most rows its
+         * chips can wrap into, the first one under its title.
+         */
+        val groupStarts = groups.runningFold(0) { start, group -> start + group.scales.size.coerceAtLeast(1) }.toIntArray()
+
+        /** One slot per row the groups' chips can wrap into, the first headed by the pill; only the pill while folded. */
+        val itemCount = if (isFolded) 1 else groupStarts.last().coerceAtLeast(1)
+
+        /** Every row may start a piece, with the header and a group's title kept with the row under them. */
         val chunkStarts = sectionChunkStarts(List(itemCount) { SectionItemKind.CONTENT })
     }
 

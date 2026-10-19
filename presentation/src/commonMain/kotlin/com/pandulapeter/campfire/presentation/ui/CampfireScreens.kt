@@ -66,6 +66,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
+import com.pandulapeter.campfire.presentation.ui.screens.scales.ScalesScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.songGridColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -331,6 +332,17 @@ internal fun CampfireScreens(
                     topLevelScreen(destination) {
                         toolScreen(destination) {
                             ChordsScreen(
+                                viewModel = viewModel,
+                                layout = settingsLayout,
+                                contentPadding = shellContentPadding,
+                            )
+                        }
+                    }
+                }
+                entry<CampfireDestination.Scales>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    topLevelScreen(destination) {
+                        toolScreen(destination) {
+                            ScalesScreen(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
                                 contentPadding = shellContentPadding,

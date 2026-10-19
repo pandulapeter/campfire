@@ -147,14 +147,18 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
 - Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui/tabs`,
   `chordpro`.
-- With six screens on, Metronome, Tuner, and Chords go behind one Tools item on a navigation bar or a short window's
-  rail: `ui/chrome`.
-- One instrument preference, picked with its tuning from song details, Tuner, Chords, Settings, and onboarding:
+- With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar or a short
+  window's rail: `ui/chrome`.
+- One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, Settings, and onboarding:
   `ui/instrument`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:
   `ui/chords`.
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
   shape picked there applies everywhere: `ui/screens/chords`.
+- The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument
+  included; 12-TET only. Scale suggestions (a switch under Scales, as Chord diagrams is under Chords) add a song's Scales
+  section, grouped by the parts each set fits, and a chord sheet's scales: `ui/screens/scales`, `ui/songView`,
+  `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
 - Under three songs, the songs list ends in a hint on pasting from a website and importing another app's songs:

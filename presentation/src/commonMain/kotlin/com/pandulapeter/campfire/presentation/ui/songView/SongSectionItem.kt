@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
@@ -44,10 +45,12 @@ internal fun SongSectionItem(
     playingTools: SongPlayingTools?,
     animatesControls: Boolean,
     chordDiagrams: ChordDiagrams?,
+    scaleSuggestions: ScaleSuggestions?,
     tuningChipVisibility: MutableTransitionState<Boolean>,
     chordLayouts: ChordCellLayouts?,
     onChordFoldToggled: (() -> Unit)?,
     isChordsSectionFadingIn: Boolean,
+    isScalesSectionFadingIn: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
@@ -90,6 +93,16 @@ internal fun SongSectionItem(
         chordDiagrams = chordDiagrams,
         onFoldToggled = onChordFoldToggled,
         isFadingIn = isChordsSectionFadingIn,
+        headerStyle = headerStyle,
+        fontScale = fontScale,
+    )
+
+    is RenderSection.Scales -> SongScalesSection(
+        modifier = modifier.padding(horizontal = CARD_PADDING),
+        section = section,
+        items = items,
+        scaleSuggestions = scaleSuggestions,
+        isFadingIn = isScalesSectionFadingIn,
         headerStyle = headerStyle,
         fontScale = fontScale,
     )

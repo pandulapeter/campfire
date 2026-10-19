@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_metronome_body
 import com.pandulapeter.campfire.presentation.resources.ic_metronome_pendulum
+import com.pandulapeter.campfire.presentation.resources.ic_scales
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
@@ -41,13 +42,17 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_chord_diagrams_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_chords_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_metronome_description
+import com.pandulapeter.campfire.presentation.resources.onboarding_feature_scale_suggestions_description
+import com.pandulapeter.campfire.presentation.resources.onboarding_feature_scales_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_setlists_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_tuner_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_features_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_features_title
+import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chords
+import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.chords.ChordsIcon
@@ -62,7 +67,8 @@ import org.jetbrains.compose.resources.painterResource
  *
  * The chord diagrams are a card of their own under the chords, only while the chords are on and only for an instrument
  * they are drawn for ([chordTuning] not null): the instrument has been asked already, so the card ends in a G drawn for
- * it in its tuning, which shows what the feature will add to every song.
+ * it in its tuning, which shows what the feature will add to every song. The scale suggestions are a card under the
+ * scales the same way, only while the scales are on.
  */
 @Composable
 internal fun FeaturesStep(
@@ -75,6 +81,8 @@ internal fun FeaturesStep(
     onChordDiagramsEnabledChange: (Boolean) -> Unit,
     onMetronomeEnabledChange: (Boolean) -> Unit,
     onTunerEnabledChange: (Boolean) -> Unit,
+    onScalesEnabledChange: (Boolean) -> Unit,
+    onScaleSuggestionsEnabledChange: (Boolean) -> Unit,
     onSetlistsEnabledChange: (Boolean) -> Unit,
 ) = OnboardingPage(
     modifier = modifier,
@@ -93,28 +101,34 @@ internal fun FeaturesStep(
             isEnabled = features.areChordsEnabled,
             onEnabledChange = onChordsEnabledChange,
         )
-        // Keyed on whether there is a card, so that the card leaving still draws the diagram it had. The empty state is
-        // as wide as the card, so that only the height changes: the card collapses and fades rather than also shrinking
-        // sideways, and the gap above it collapses with it, so that the cards under it close up evenly.
-        AnimatedContent(
-            targetState = chordTuning.takeIf { features.areChordsEnabled },
-            contentKey = { it != null },
-            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = true) },
-            contentAlignment = Alignment.TopCenter,
-        ) { tuning ->
-            if (tuning == null) {
-                Spacer(modifier = Modifier.fillMaxWidth())
-            } else {
-                FeatureCard(
-                    modifier = Modifier.padding(top = FEATURE_CARD_GAP),
-                    title = stringResource(Res.string.settings_chord_diagrams),
-                    description = stringResource(Res.string.onboarding_feature_chord_diagrams_description),
-                    icon = { ChordsIcon(isKeyboard = tuning.instrument == ChordInstrument.KEYBOARD) },
-                    preview = { ChordDiagramPreview(tuning = tuning) },
-                    isEnabled = features.areChordDiagramsEnabled,
-                    onEnabledChange = onChordDiagramsEnabledChange,
-                )
-            }
+        DependentFeatureCard(target = chordTuning.takeIf { features.areChordsEnabled }) { tuning ->
+            FeatureCard(
+                modifier = Modifier.padding(top = FEATURE_CARD_GAP),
+                title = stringResource(Res.string.settings_chord_diagrams),
+                description = stringResource(Res.string.onboarding_feature_chord_diagrams_description),
+                icon = { ChordsIcon(isKeyboard = tuning.instrument == ChordInstrument.KEYBOARD) },
+                preview = { ChordDiagramPreview(tuning = tuning) },
+                isEnabled = features.areChordDiagramsEnabled,
+                onEnabledChange = onChordDiagramsEnabledChange,
+            )
+        }
+        FeatureCard(
+            modifier = Modifier.padding(top = FEATURE_CARD_GAP),
+            title = stringResource(Res.string.scales),
+            description = stringResource(Res.string.onboarding_feature_scales_description),
+            icon = { Icon(painter = painterResource(Res.drawable.ic_scales), contentDescription = null) },
+            isEnabled = features.areScalesEnabled,
+            onEnabledChange = onScalesEnabledChange,
+        )
+        DependentFeatureCard(target = Unit.takeIf { features.areScalesEnabled }) {
+            FeatureCard(
+                modifier = Modifier.padding(top = FEATURE_CARD_GAP),
+                title = stringResource(Res.string.settings_scale_suggestions),
+                description = stringResource(Res.string.onboarding_feature_scale_suggestions_description),
+                icon = { Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null) },
+                isEnabled = features.areScaleSuggestionsEnabled,
+                onEnabledChange = onScaleSuggestionsEnabledChange,
+            )
         }
         FeatureCard(
             modifier = Modifier.padding(top = FEATURE_CARD_GAP),
@@ -147,6 +161,26 @@ internal fun FeaturesStep(
             onEnabledChange = onSetlistsEnabledChange,
         )
     }
+}
+
+/**
+ * A feature's card that only stands while the feature it is part of is on ([target] not null), as the chord diagrams
+ * under the chords and the scale suggestions under the scales. Keyed on whether there is a card, so that the card
+ * leaving still draws what it had. The empty state is as wide as the card, so that only the height changes: the card
+ * collapses and fades rather than also shrinking sideways, and the gap above it collapses with it, so that the cards
+ * under it close up evenly.
+ */
+@Composable
+private fun <T : Any> DependentFeatureCard(
+    target: T?,
+    card: @Composable (T) -> Unit,
+) = AnimatedContent(
+    targetState = target,
+    contentKey = { it != null },
+    transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = true) },
+    contentAlignment = Alignment.TopCenter,
+) { shown ->
+    if (shown == null) Spacer(modifier = Modifier.fillMaxWidth()) else card(shown)
 }
 
 /** One feature's card. */

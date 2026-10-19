@@ -41,9 +41,10 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
 
 ### The Tools item
 
-- A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six screens on, Metronome, Tuner, and
-  Chords go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, and on a rail in a
-  short window (`SHORT_WINDOW_HEIGHT`). Five or fewer screens never group.
+- A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six or more screens on, Metronome, Tuner,
+  Chords, and Scales go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, and on a
+  rail in a short window (`SHORT_WINDOW_HEIGHT`). Five or fewer screens never group, nor does a lone tool.
+  The tools' tab row scrolls like the settings tabs (`ToolsTabRow`): four equal tabs would cut "Metronome" at 360dp.
 - The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool
   on top, else `Navigator.lastTool`, else the first enabled (`toolsItemDestination`); pressed again it scrolls to top,
   then goes to the first tool (`ScrollToTopRequest.destinationWhenAtTop`).

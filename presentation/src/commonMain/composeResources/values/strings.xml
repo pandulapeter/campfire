@@ -337,6 +337,9 @@
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song, and every chord the app knows in the Chords tab.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
+    <string name="settings_scales_description">The Scales tab: every scale and mode the app knows, drawn on your instrument</string>
+    <string name="settings_scale_suggestions">Scale suggestions</string>
+    <string name="settings_scale_suggestions_description">Show the scales each part of a song can be played over, after its chords, and the scales for a chord in its sheet.</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
     <string name="settings_song_details_lookup">Online song details</string>
     <string name="settings_song_details_lookup_description">Offer to look up a song\'s artist, album, year, and songwriters on MusicBrainz and iTunes while its details are edited</string>
@@ -602,6 +605,111 @@
     <string name="chords_instrument_without_diagrams">%1$s: no chord diagrams. Choose another instrument to see how its chords are played.</string>
     <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
     <string name="chords_search_no_chord">No chord in this key matches “%1$s”.</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">Scales</string>
+    <string name="scales_instrument_other">Shown on a keyboard. Choose an instrument to see the scales on its strings.</string>
+    <string name="scales_search">Find a scale or mode</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">Scales matching “%1$s” in %2$s</string>
+    <string name="scales_search_no_scale">No scale matches “%1$s”.</string>
+    <string name="scale_family_common">Common</string>
+    <string name="scale_family_major_modes">Major modes</string>
+    <string name="scale_family_harmonic_minor_modes">Harmonic minor modes</string>
+    <string name="scale_family_melodic_minor_modes">Melodic minor modes</string>
+    <string name="scale_family_minor_and_harmonic">Other harmonic</string>
+    <string name="scale_family_pentatonic">Pentatonic</string>
+    <string name="scale_family_blues_and_hexatonic">Blues and hexatonic</string>
+    <string name="scale_family_symmetric">Symmetric</string>
+    <string name="scale_family_bebop">Bebop</string>
+    <string name="scale_family_world">World</string>
+    <string name="scales_common_heading">Common scales</string>
+    <!-- Over the scales of the picked family and key, e.g. "Major modes in C". -->
+    <string name="scales_heading">%1$s in %2$s</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian". -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C Major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">Degrees</string>
+    <string name="scales_labels_notes">Notes</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. -->
+    <string name="scales_steps_whole">W</string>
+    <string name="scales_steps_half">H</string>
+    <string name="scales_steps_augmented">3</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C Major" for D Dorian. -->
+    <string name="scales_mode_of">Mode %1$s of %2$s</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">Also called %1$s</string>
+    <string name="scales_relative_minor">Relative minor: %1$s</string>
+    <string name="scales_relative_major">Relative major: %1$s</string>
+    <string name="scales_chords">Chords in this scale</string>
+    <string name="scales_sevenths">Seventh chords</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">Scales for this chord</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">The rest of the song</string>
+    <string name="scale_major">Major</string>
+    <string name="scale_dorian">Dorian</string>
+    <string name="scale_phrygian">Phrygian</string>
+    <string name="scale_lydian">Lydian</string>
+    <string name="scale_mixolydian">Mixolydian</string>
+    <string name="scale_natural_minor">Natural minor</string>
+    <string name="scale_locrian">Locrian</string>
+    <string name="scale_harmonic_minor">Harmonic minor</string>
+    <string name="scale_locrian_natural_6">Locrian ♮6</string>
+    <string name="scale_ionian_sharp_5">Ionian ♯5</string>
+    <string name="scale_dorian_sharp_4">Dorian ♯4</string>
+    <string name="scale_phrygian_dominant">Phrygian dominant</string>
+    <string name="scale_lydian_sharp_2">Lydian ♯2</string>
+    <string name="scale_ultralocrian">Ultralocrian</string>
+    <string name="scale_melodic_minor">Melodic minor</string>
+    <string name="scale_dorian_flat_2">Dorian ♭2</string>
+    <string name="scale_lydian_augmented">Lydian augmented</string>
+    <string name="scale_lydian_dominant">Lydian dominant</string>
+    <string name="scale_mixolydian_flat_6">Mixolydian ♭6</string>
+    <string name="scale_locrian_natural_2">Locrian ♮2</string>
+    <string name="scale_altered">Altered</string>
+    <string name="scale_harmonic_major">Harmonic major</string>
+    <string name="scale_double_harmonic">Double harmonic</string>
+    <string name="scale_hungarian_minor">Hungarian minor</string>
+    <string name="scale_hungarian_major">Hungarian major</string>
+    <string name="scale_neapolitan_major">Neapolitan major</string>
+    <string name="scale_neapolitan_minor">Neapolitan minor</string>
+    <string name="scale_major_pentatonic">Major pentatonic</string>
+    <string name="scale_minor_pentatonic">Minor pentatonic</string>
+    <string name="scale_egyptian">Egyptian</string>
+    <string name="scale_man_gong">Man Gong</string>
+    <string name="scale_ritusen">Ritusen</string>
+    <string name="scale_hirajoshi">Hirajoshi</string>
+    <string name="scale_in">In</string>
+    <string name="scale_insen">Insen</string>
+    <string name="scale_iwato">Iwato</string>
+    <string name="scale_kumoi">Kumoi</string>
+    <string name="scale_chinese">Chinese</string>
+    <string name="scale_blues">Blues</string>
+    <string name="scale_major_blues">Major blues</string>
+    <string name="scale_major_hexatonic">Major hexatonic</string>
+    <string name="scale_minor_hexatonic">Minor hexatonic</string>
+    <string name="scale_prometheus">Prometheus</string>
+    <string name="scale_tritone">Tritone</string>
+    <string name="scale_whole_tone">Whole tone</string>
+    <string name="scale_augmented">Augmented</string>
+    <string name="scale_diminished">Diminished (whole–half)</string>
+    <string name="scale_dominant_diminished">Dominant diminished (half–whole)</string>
+    <string name="scale_chromatic">Chromatic</string>
+    <string name="scale_bebop_dominant">Bebop dominant</string>
+    <string name="scale_bebop_major">Bebop major</string>
+    <string name="scale_bebop_dorian">Bebop Dorian</string>
+    <string name="scale_bebop_melodic_minor">Bebop melodic minor</string>
+    <string name="scale_bebop_harmonic_minor">Bebop harmonic minor</string>
+    <string name="scale_persian">Persian</string>
+    <string name="scale_enigmatic">Enigmatic</string>
+    <string name="scale_oriental">Oriental</string>
+    <string name="scale_major_locrian">Major Locrian</string>
+    <string name="scale_lydian_minor">Lydian minor</string>
+    <string name="scale_leading_whole_tone">Leading whole tone</string>
+    <string name="scale_flamenco">Flamenco</string>
+    <string name="scale_spanish_eight_tone">Spanish eight-tone</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Edit</string>
@@ -910,6 +1018,8 @@
     <string name="onboarding_feature_setlists_description">Songs in order for a gig or a rehearsal</string>
     <string name="onboarding_feature_metronome_description">Keeps the beat at each song\'s tempo, in songs and on a screen of its own</string>
     <string name="onboarding_feature_tuner_description">Tunes your instrument through the microphone, in songs and on a screen of its own</string>
+    <string name="onboarding_feature_scales_description">Every scale and mode, drawn on your instrument, on a screen of its own</string>
+    <string name="onboarding_feature_scale_suggestions_description">The scales each part of a song is played over, right under its chords</string>
     <string name="onboarding_sync_title">Your songs, everywhere</string>
     <string name="onboarding_sync_message">Connect Dropbox to keep the same library on all your devices. There is no server in between: your files go straight to your own storage.</string>
     <string name="welcome_get_started">Get started</string>

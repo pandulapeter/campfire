@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
+import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import kotlin.test.Test
@@ -29,6 +30,19 @@ class RenderSectionTest {
         assertEquals(1, RenderSection.Chords(cells = List(5) { cell }, isFolded = true).itemCount)
         val unfolded = RenderSection.Chords(cells = List(5) { cell }, isFolded = false)
         assertEquals(5, unfolded.itemCount)
+        assertContentEquals(intArrayOf(0, 1, 2, 3, 4), unfolded.chunkStarts)
+    }
+
+    @Test
+    fun `a scales section has a slot for every row its groups can wrap into`() {
+        val groups = listOf(
+            SongScaleGroup(label = "Verse", rootName = "C", scales = Scales.all.take(3)),
+            SongScaleGroup(label = "Solo", rootName = "D", scales = Scales.all.take(2)),
+        )
+        assertEquals(1, RenderSection.Scales(groups = groups, isFolded = true).itemCount)
+        val unfolded = RenderSection.Scales(groups = groups, isFolded = false)
+        assertEquals(5, unfolded.itemCount)
+        assertContentEquals(intArrayOf(0, 3, 5), unfolded.groupStarts)
         assertContentEquals(intArrayOf(0, 1, 2, 3, 4), unfolded.chunkStarts)
     }
 }

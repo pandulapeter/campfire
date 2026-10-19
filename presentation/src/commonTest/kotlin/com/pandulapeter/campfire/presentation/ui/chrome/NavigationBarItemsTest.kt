@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Chords
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Metronome
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Scales
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Settings
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Setlists
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.Songs
@@ -64,14 +65,21 @@ internal class NavigationBarItemsTest {
 
     @Test
     fun `a short rail with five screens lists them all`() {
-        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists, isShortWindow = true))
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists - Scales, isShortWindow = true))
     }
 
     @Test
     fun `a bar that fits every screen switched on offers each of them`() {
-        val withoutSetlists = all - Setlists
-        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, withoutSetlists, isShortWindow = false))
-        assertEquals(withoutSetlists.map { NavigationBarItem.Destination(it) }, shownItems(withoutSetlists))
+        val fitting = all - Setlists - Scales
+        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, fitting, isShortWindow = false))
+        assertEquals(fitting.map { NavigationBarItem.Destination(it) }, shownItems(fitting))
+    }
+
+    @Test
+    fun `the four tools are grouped behind one item, which never holds a tool alone`() {
+        assertEquals(listOf(Metronome, Tuner, Chords, Scales), CampfireDestination.TopLevel.tools)
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all - Setlists, isShortWindow = false))
+        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, listOf(Songs, Setlists, Scales, Settings), isShortWindow = false))
     }
 
     @Test

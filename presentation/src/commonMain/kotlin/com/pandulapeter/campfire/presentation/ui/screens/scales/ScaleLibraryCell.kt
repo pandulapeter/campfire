@@ -1,0 +1,86 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.screens.scales
+
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.scales.Scale
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
+import com.pandulapeter.campfire.presentation.ui.scales.scaleName
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+
+/**
+ * One scale of the Scales tab: its name in the chords' accent color over a small diagram of it on the player's
+ * instrument, without labels, on a card that opens the scale sheet. A tuning or an instrument picked on the tab
+ * crossfades the diagram into the new one.
+ */
+@Composable
+internal fun ScaleLibraryCell(
+    modifier: Modifier = Modifier,
+    scale: Scale,
+    geometry: ScaleDiagramGeometry,
+    description: String,
+    onClick: () -> Unit,
+) = Surface(
+    modifier = modifier.clearAndSetSemantics { contentDescription = description },
+    onClick = onClick,
+    shape = MaterialTheme.shapes.medium,
+    color = MaterialTheme.colorScheme.surfaceContainerLow,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            text = scaleName(scale),
+            style = MaterialTheme.typography.titleMedium,
+            color = LocalSecondAccentColor.current,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Crossfade(
+            targetState = geometry,
+            label = "scaleLibraryDiagram",
+        ) { shown ->
+            ScaleDiagram(
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 8.dp, end = 8.dp)
+                    .fillMaxWidth()
+                    .height(if (shown is ScaleDiagramGeometry.Keyboard) KEYBOARD_HEIGHT else NECK_HEIGHT),
+                geometry = shown,
+                labels = null,
+                description = description,
+            )
+        }
+    }
+}
+
+/** How narrow a column of the Scales tab gets: two to a phone held upright. */
+internal val SCALE_CELL_MIN_WIDTH = 160.dp
+
+private val NECK_HEIGHT = 52.dp
+private val KEYBOARD_HEIGHT = 64.dp

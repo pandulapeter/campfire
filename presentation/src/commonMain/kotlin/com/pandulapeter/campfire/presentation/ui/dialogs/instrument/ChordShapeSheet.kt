@@ -53,6 +53,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
+import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipRow
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.shownFor
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
@@ -69,7 +71,8 @@ import kotlinx.coroutines.withContext
  * as the page shows it: transposed (on the keyboard by the capo too, see `withCapoSounding`) and spelled the same way,
  * and finds the chord by the name the page gave it. A tuning other than the standard one is named under the title, so
  * that a shape is never read for the wrong strings, and a chord the song defines for standard tuning, which such a
- * tuning does not draw, says so and offers to show the definition, named as standard tuning while it is shown.
+ * tuning does not draw, says so and offers to show the definition, named as standard tuning while it is shown. It ends
+ * in the scales to play over the chord as it sounds there, each opening the scale sheet over it.
  */
 @Composable
 internal fun ChordShapeSheet(
@@ -138,17 +141,51 @@ internal fun ChordShapeSheet(
                 tuningLine = tuningLine(shownTuning, notation),
                 contentPadding = contentPadding,
                 onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
-                footer = if (chord.undrawnDefinition == null) {
-                    null
-                } else {
-                    {
-                        UndrawnDefinitionNote(
-                            isShown = showsDefinition,
-                            onToggled = { showsDefinition = !showsDefinition },
-                        )
-                    }
-                },
+                footer = chordSheetFooter(
+                    hasUndrawnDefinition = chord.undrawnDefinition != null,
+                    isDefinitionShown = showsDefinition,
+                    areScalesShown = FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled,
+                    chord = shownChord,
+                    notation = notation,
+                    onDefinitionToggled = { showsDefinition = !showsDefinition },
+                    onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false)) },
+                ),
             )
+        }
+    }
+}
+
+/**
+ * What closes the grid of a song's chord: the note on a definition the tuning does not draw, and the scales to play over
+ * the chord the page plays ([ScaleChipRow]), each only where there is one; null where there is neither.
+ */
+private fun chordSheetFooter(
+    hasUndrawnDefinition: Boolean,
+    isDefinitionShown: Boolean,
+    areScalesShown: Boolean,
+    chord: SongChord,
+    notation: ChordNotation,
+    onDefinitionToggled: () -> Unit,
+    onScaleSelected: (scaleId: String, rootName: String) -> Unit,
+): (@Composable () -> Unit)? = if (!hasUndrawnDefinition && !areScalesShown) {
+    null
+} else {
+    {
+        Column {
+            if (hasUndrawnDefinition) {
+                UndrawnDefinitionNote(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    isShown = isDefinitionShown,
+                    onToggled = onDefinitionToggled,
+                )
+            }
+            if (areScalesShown) {
+                ScaleChipRow(
+                    chord = chord,
+                    notation = notation,
+                    onScaleSelected = onScaleSelected,
+                )
+            }
         }
     }
 }
@@ -169,9 +206,11 @@ private fun tuningLine(tuning: ChordTuning, notation: ChordNotation) =
  */
 @Composable
 private fun UndrawnDefinitionNote(
+    modifier: Modifier = Modifier,
     isShown: Boolean,
     onToggled: () -> Unit,
 ) = Column(
+    modifier = modifier,
     horizontalAlignment = Alignment.CenterHorizontally,
 ) {
     Text(

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.songs
@@ -27,5 +28,6 @@ internal val CampfireDestination.TopLevel.label: StringResource
         CampfireDestination.Metronome -> Res.string.metronome
         CampfireDestination.Tuner -> Res.string.tuner
         CampfireDestination.Chords -> Res.string.chords
+        CampfireDestination.Scales -> Res.string.scales
         CampfireDestination.Settings -> Res.string.settings
     }

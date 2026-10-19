@@ -74,6 +74,7 @@ internal object BrowserRoutes {
                 CampfireDestination.Metronome -> add(METRONOME)
                 CampfireDestination.Tuner -> add(TUNER)
                 CampfireDestination.Chords -> add(CHORDS)
+                CampfireDestination.Scales -> add(SCALES)
 
                 CampfireDestination.Settings -> {
                     add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
@@ -140,6 +141,7 @@ internal object BrowserRoutes {
                 METRONOME -> home.copy(backStack = home.backStack + CampfireDestination.Metronome)
                 TUNER -> home.copy(backStack = home.backStack + CampfireDestination.Tuner)
                 CHORDS -> home.copy(backStack = home.backStack + CampfireDestination.Chords)
+                SCALES -> home.copy(backStack = home.backStack + CampfireDestination.Scales)
                 SETTINGS -> home.copy(backStack = home.backStack + CampfireDestination.Settings)
                 else -> null
             }
@@ -250,6 +252,7 @@ internal object BrowserRoutes {
     private const val METRONOME = "metronome"
     private const val TUNER = "tuner"
     private const val CHORDS = "chords"
+    private const val SCALES = "scales"
     private const val SETTINGS = "settings"
     private const val SONG = "song"
     private const val SETLIST = "setlist"

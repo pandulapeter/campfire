@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordCellAt
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordRowStarts
-import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
+import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
 
 /**
  * The cells of a Chords section as its slots measure and draw them: every name laid out once, every cell's width and
@@ -103,7 +103,7 @@ internal class ChordCellLayouts(
      */
     fun height(width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): Int {
         val starts = rowStartsAt(width)
-        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
+        val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
         if (rows.isEmpty()) return 0
         return rows.sumOf { rowHeight(starts, it) } + gap * (rows.last - rows.first) + if (rows.last < starts.size - 1) gap else 0
     }
@@ -111,14 +111,14 @@ internal class ChordCellLayouts(
     /** The cell under [x], [y] in the slots from [firstSlot] to [lastSlot] at [width] (see [chordCellAt]), -1 where none. */
     fun cellAt(x: Float, y: Float, width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean, isRightToLeft: Boolean): Int {
         val starts = rowStartsAt(width)
-        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
+        val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
         return chordCellAt(x, y, width, starts, rows, cellWidths, cellHeights, gap, isRightToLeft)
     }
 
     /** The cells the slots from [firstSlot] to [lastSlot] show at [width], which a screen reader is told about. */
     fun cellsAt(width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): IntRange {
         val starts = rowStartsAt(width)
-        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
+        val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
         return if (rows.isEmpty()) IntRange.EMPTY else starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: cells.size)
     }
 }

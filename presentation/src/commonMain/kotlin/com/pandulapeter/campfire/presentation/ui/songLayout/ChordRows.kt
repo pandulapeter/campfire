@@ -66,7 +66,7 @@ internal fun balancedRowStarts(cellWidths: FloatArray, gap: Float, width: Float)
 }
 
 /** Where each row of [cellWidths] starts when every row takes as many cells as fit in [width] before the next begins. */
-private fun greedyRowStarts(cellWidths: FloatArray, gap: Float, width: Float): IntArray {
+internal fun greedyRowStarts(cellWidths: FloatArray, gap: Float, width: Float): IntArray {
     if (cellWidths.isEmpty()) return IntArray(0)
     val starts = mutableListOf(0)
     var used = cellWidths[0]
@@ -89,11 +89,11 @@ private fun greedyRowStarts(cellWidths: FloatArray, gap: Float, width: Float): I
 internal fun chordSlotCount(cellCount: Int) = cellCount.coerceIn(1, MAX_CHORD_SLOTS)
 
 /**
- * The rows a chunk holding the slots from [firstSlot] to [lastSlot] draws when the section has [rowCount] rows at its
- * width: the rows those slots name, and every row after them where the chunk ends the section ([isLastSlot]). Empty
+ * The rows a chunk holding the slots from [firstSlot] to [lastSlot] draws when the section (a Chords section, or a group
+ * of a Scales section) has [rowCount] rows at its width: the rows those slots name, and every row after them where the chunk ends the section ([isLastSlot]). Empty
  * where the width has no row for its first slot, which then has no height, and nothing is cut in front of it.
  */
-internal fun chordSlotRows(rowCount: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): IntRange =
+internal fun slotRows(rowCount: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): IntRange =
     if (firstSlot >= rowCount) IntRange.EMPTY else firstSlot..(if (isLastSlot) rowCount - 1 else minOf(lastSlot, rowCount - 1))
 
 /**

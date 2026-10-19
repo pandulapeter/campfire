@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
@@ -167,6 +168,7 @@ internal fun SongLyrics(
     canCutSections: Boolean = false,
     isSingleColumn: Boolean = false,
     chordDiagrams: ChordDiagrams? = null,
+    scaleSuggestions: ScaleSuggestions? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
@@ -192,6 +194,7 @@ internal fun SongLyrics(
     val sections = rememberShownSections(
         model = model,
         chordDiagrams = chordDiagrams,
+        scaleSuggestions = scaleSuggestions,
         instrumentChips = instrumentChips,
         shouldShowTempo = shouldShowTempo,
         isSongInfoShown = isSongInfoShown,
@@ -209,9 +212,20 @@ internal fun SongLyrics(
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
     var toggledFolds by remember { mutableStateOf(emptySet<String>()) }
-    // Whether the Chords section was folded or unfolded while the page is open, so that its rows fade in as they come back
-    // in every chunk they come back in, rather than only in the one the pill is in.
+    // Whether the Chords or the Scales section was folded or unfolded while the page is open, so that its rows fade in as
+    // they come back in every chunk they come back in, rather than only in the one the pill is in.
     var hasChordFoldBeenToggled by remember { mutableStateOf(false) }
+    var hasScaleFoldBeenToggled by remember { mutableStateOf(false) }
+    val shownScaleSuggestions = scaleSuggestions?.let { suggestions ->
+        remember(suggestions) {
+            suggestions.copy(
+                onFoldToggled = {
+                    hasScaleFoldBeenToggled = true
+                    suggestions.onFoldToggled()
+                },
+            )
+        }
+    }
     val onChordFoldToggled = chordDiagrams?.onFoldToggled?.let { toggle ->
         remember(toggle) {
             {
@@ -258,14 +272,15 @@ internal fun SongLyrics(
     // so a fold only measures its own section again.
     val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
-    // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords section's slots, one per row of
-    // diagrams. A folded section is one, since what is left of it is its header.
+    // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
+    // row of diagrams or chips. A folded section is one, since what is left of it is its header.
     val units = remember(sections, foldedSections, canCutSections) {
         SongUnits.of(sections) { section ->
             when (section) {
                 is RenderSection.Lines -> canCutSections && section.foldKey !in foldedSections
                 // Folded, it is one item - its pill - whatever this says.
                 is RenderSection.Chords -> canCutSections
+                is RenderSection.Scales -> canCutSections
                 else -> false
             }
         }
@@ -362,10 +377,12 @@ internal fun SongLyrics(
                     playingControls = shownPlayingControls,
                     playingTools = playingTools,
                     chordDiagrams = chordDiagrams,
+                    scaleSuggestions = shownScaleSuggestions,
                     tuningChipVisibility = tuningChipVisibility,
                     chordLayouts = chordLayouts,
                     onChordFoldToggled = onChordFoldToggled,
                     hasChordFoldBeenToggled = hasChordFoldBeenToggled,
+                    hasScaleFoldBeenToggled = hasScaleFoldBeenToggled,
                     headerStyle = headerStyle,
                     lyricsStyle = lyricsStyle,
                     chordStyle = chordStyle,

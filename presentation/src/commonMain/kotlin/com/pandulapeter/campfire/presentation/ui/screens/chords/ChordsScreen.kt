@@ -9,13 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
+import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
+import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -28,42 +28,39 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigationevent.NavigationEventInfo
-import androidx.navigationevent.compose.NavigationBackHandler
-import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_common
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_other
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_without_diagrams
+import com.pandulapeter.campfire.presentation.resources.chords_search
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
+import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
+import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
+import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchTopFade
+import com.pandulapeter.campfire.presentation.ui.components.rememberPinnedSearchFocus
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryCell
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.chordCellMinWidth
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -73,11 +70,9 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 
 /**
@@ -103,7 +98,7 @@ internal fun ChordsScreen(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
-    val keys = remember(spelling.accidentals) { chordLibraryKeys(spelling.accidentals) }
+    val keys = remember(spelling.accidentals) { libraryKeys(spelling.accidentals) }
     val tuning = userPreferences?.chordTuning()
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
     val keyIndex = state.keyIndex
@@ -139,27 +134,9 @@ internal fun ChordsScreen(
         gridState = gridState,
         onSelectDestination = viewModel::selectTopLevelDestination,
     )
-    var isSearchFocused by remember { mutableStateOf(false) }
+    val searchFocus = rememberPinnedSearchFocus(gridState)
+    val searchPlaceholder = stringResource(Res.string.chords_search)
     val density = LocalDensity.current
-    val ime = WindowInsets.ime
-    // Derived, so that the page recomposes as the keyboard comes and goes rather than on every frame it slides.
-    val isKeyboardVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
-    val isTypingSearch = isSearchFocused && isKeyboardVisible
-    CompactKeyboardEffect(isEnabled = isTypingSearch && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
-    // Read through a state: every platform but Android hands out a new, fixed instance on every composition (see
-    // KeyboardAwarePadding), which a flow started once would never see move.
-    val imeState = rememberUpdatedState(ime)
-    LaunchedEffect(isTypingSearch) {
-        if (isTypingSearch) {
-            // The page is laid out under the keyboard, which only pads the grid, so the field's bring-into-view counts what
-            // the keyboard covers as shown: the field is pinned at the top instead, once per focus, so that what it finds
-            // is above the keyboard. It follows the keyboard as it rises, since the grid can only scroll as far as the
-            // padding added so far allows.
-            snapshotFlow { imeState.value.getBottom(density) }.collectLatest {
-                gridState.animateScrollToItem(SEARCH_FIELD_INDEX)
-            }
-        }
-    }
     val backgroundColor = MaterialTheme.colorScheme.background
     val fadeHeight = with(density) { EDGE_FADE_SIZE.roundToPx() }
     Box(
@@ -171,7 +148,7 @@ internal fun ChordsScreen(
                 .widthIn(max = layout.pageMaxWidth(sections = 2))
                 .fillMaxSize()
                 .fadingTopEdge(
-                    scrolled = { chordLibraryTopFade(gridState, fadeHeight) },
+                    scrolled = { pinnedSearchTopFade(gridState, fadeHeight) },
                     backgroundColor = backgroundColor,
                 )
                 .bounceScrollableContent(gridState),
@@ -183,9 +160,9 @@ internal fun ChordsScreen(
                 start = true,
                 end = true,
                 bottom = true,
-                extraStart = CHORDS_PAGE_PADDING,
-                extraEnd = CHORDS_PAGE_PADDING,
-                extraBottom = CHORDS_PAGE_PADDING,
+                extraStart = TOOL_PAGE_PADDING,
+                extraEnd = TOOL_PAGE_PADDING,
+                extraBottom = TOOL_PAGE_PADDING,
             ),
             horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
             verticalArrangement = Arrangement.spacedBy(CELL_GAP),
@@ -202,10 +179,11 @@ internal fun ChordsScreen(
                     onKeySelected = { state.keyIndex = it },
                 )
             }
-            chordLibrarySearchField(
-                modifier = Modifier.onFocusChanged { isSearchFocused = it.hasFocus },
+            pinnedSearchField(
+                modifier = searchFocus,
                 gridState = gridState,
                 query = query,
+                placeholder = searchPlaceholder,
                 focusRequests = state.searchFocusRequests,
                 onQueryChanged = { state.query = it },
             )
@@ -270,14 +248,7 @@ internal fun ChordsScreen(
         }
     }
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
-    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-    // A search the tab is narrowed by goes before the tab, as an open search goes before a list screen. The desktop never
-    // reaches this: its window key handler sees Escape first, and empties the field there (ScreenSearches.closeCurrentSearch).
-    NavigationBackHandler(
-        state = backGesture,
-        isBackEnabled = query.isNotEmpty() && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
-        onBackCompleted = { state.query = "" },
-    )
+    QueryBackHandler(query = query, isDialogShown = visibleDialog != null, onCleared = { state.query = "" })
 }
 
 /**

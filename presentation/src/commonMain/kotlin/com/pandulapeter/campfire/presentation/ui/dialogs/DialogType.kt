@@ -94,9 +94,30 @@ sealed interface DialogType {
     /**
      * One chord of the Chords tab and the other ways it can be played, the chord sheet without a song around it: the
      * shape it settles on is the player's for the chord, as the song's sheet writes it.
+     *
+     * @param showsScales Whether it ends in the scales to play over the chord: not where it was opened from a scale's
+     *   sheet, which the player is already in, so that a chord and a scale are one hop apart and never a chain.
      */
     @ConsistentCopyVisibility
-    data class ChordReference internal constructor(internal val chord: SongChord) : DialogType
+    data class ChordReference internal constructor(
+        internal val chord: SongChord,
+        internal val showsScales: Boolean = true,
+    ) : DialogType
+
+    /**
+     * One scale in one key on the player's instrument, the one way a scale is shown: opened from the Scales tab's cells
+     * and from both chord sheets' scales. It carries only what names the scale, [scaleId] (`Scale.id`) and [rootName] (a
+     * note in the standard notation, spelled as whatever opened it spells it), and reads the instrument, the notation and
+     * the labels as it is drawn, so that it depends on no screen and opens over any.
+     *
+     * @param showsChords Whether it lists the chords the scale stacks into: not where it was opened from a chord's sheet,
+     *   for the reason [ChordReference.showsScales] gives.
+     */
+    data class Scale(
+        val scaleId: String,
+        val rootName: String,
+        val showsChords: Boolean = true,
+    ) : DialogType
     /**
      * The instrument in the player's hands and its tuning, opened from the instrument chip of every screen that depends on
      * it (the chips at the top of the song details screen's first section, the Tuner tab, the Chords tab, Settings, and

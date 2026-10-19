@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.scales.ScaleSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
@@ -225,6 +226,7 @@ private fun CampfireDialog(
         is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
         is DialogType.ChordShape -> ChordShapeSheet(viewModel = viewModel, dialog = dialog)
         is DialogType.ChordReference -> ChordReferenceSheet(viewModel = viewModel, dialog = dialog)
+        is DialogType.Scale -> ScaleSheet(viewModel = viewModel, dialog = dialog)
         DialogType.Instrument -> InstrumentSheet(viewModel = viewModel, dialog = DialogType.Instrument)
         DialogType.Tuning -> TuningSheet(viewModel = viewModel, dialog = DialogType.Tuning)
         DialogType.Notation -> NotationSheet(viewModel = viewModel)

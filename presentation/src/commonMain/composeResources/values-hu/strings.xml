@@ -337,6 +337,9 @@
     <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját, az Akkordok fülön pedig minden akkordot, amit az alkalmazás ismer.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
+    <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
+    <string name="settings_scale_suggestions">Skálajavaslatok</string>
+    <string name="settings_scale_suggestions_description">Megmutatja, milyen skálákon játszhatók a dal egyes részei, az akkordok után, és egy akkord lapján a hozzá illő skálákat.</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
     <string name="settings_song_details_lookup">Daladatok online</string>
     <string name="settings_song_details_lookup_description">A daladatok szerkesztésekor felajánlja, hogy a dal előadóját, albumát, évét és szerzőit megkeresd a MusicBrainzen és az iTunesban</string>
@@ -602,6 +605,111 @@
     <string name="chords_instrument_without_diagrams">%1$s: nincsenek akkordábrák. Válassz másik hangszert, hogy lásd, hogyan kell lefogni az akkordjait.</string>
     <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
     <string name="chords_search_no_chord">Ebben a hangnemben egy akkord sem felel meg ennek: „%1$s”.</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">Skálák</string>
+    <string name="scales_instrument_other">Billentyűzeten. Válassz hangszert, hogy a húrjain lásd a skálákat.</string>
+    <string name="scales_search">Skála vagy modus keresése</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">„%1$s” keresésre talált skálák (%2$s)</string>
+    <string name="scales_search_no_scale">Egy skála sem felel meg ennek: „%1$s”.</string>
+    <string name="scale_family_common">Gyakori</string>
+    <string name="scale_family_major_modes">Dúr modusok</string>
+    <string name="scale_family_harmonic_minor_modes">Összhangzatos moll modusok</string>
+    <string name="scale_family_melodic_minor_modes">Dallamos moll modusok</string>
+    <string name="scale_family_minor_and_harmonic">Egyéb összhangzatos</string>
+    <string name="scale_family_pentatonic">Pentaton</string>
+    <string name="scale_family_blues_and_hexatonic">Blues és hexaton</string>
+    <string name="scale_family_symmetric">Szimmetrikus</string>
+    <string name="scale_family_bebop">Bebop</string>
+    <string name="scale_family_world">Világzene</string>
+    <string name="scales_common_heading">Gyakori skálák</string>
+    <!-- Over the scales of the picked family and key, e.g. "Major modes in C". -->
+    <string name="scales_heading">%1$s (%2$s)</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian". -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C Major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">Fokok</string>
+    <string name="scales_labels_notes">Hangok</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. -->
+    <string name="scales_steps_whole">E</string>
+    <string name="scales_steps_half">F</string>
+    <string name="scales_steps_augmented">3</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C Major" for D Dorian. -->
+    <string name="scales_mode_of">%2$s, %1$s. modus</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">Más néven %1$s</string>
+    <string name="scales_relative_minor">Párhuzamos moll: %1$s</string>
+    <string name="scales_relative_major">Párhuzamos dúr: %1$s</string>
+    <string name="scales_chords">Akkordok ebben a skálában</string>
+    <string name="scales_sevenths">Szeptimakkordok</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">Skálák ehhez az akkordhoz</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">A dal többi része</string>
+    <string name="scale_major">Dúr</string>
+    <string name="scale_dorian">Dór</string>
+    <string name="scale_phrygian">Fríg</string>
+    <string name="scale_lydian">Líd</string>
+    <string name="scale_mixolydian">Mixolíd</string>
+    <string name="scale_natural_minor">Természetes moll</string>
+    <string name="scale_locrian">Lokriszi</string>
+    <string name="scale_harmonic_minor">Összhangzatos moll</string>
+    <string name="scale_locrian_natural_6">Lokriszi ♮6</string>
+    <string name="scale_ionian_sharp_5">Ión ♯5</string>
+    <string name="scale_dorian_sharp_4">Dór ♯4</string>
+    <string name="scale_phrygian_dominant">Fríg domináns</string>
+    <string name="scale_lydian_sharp_2">Líd ♯2</string>
+    <string name="scale_ultralocrian">Ultralokriszi</string>
+    <string name="scale_melodic_minor">Dallamos moll</string>
+    <string name="scale_dorian_flat_2">Dór ♭2</string>
+    <string name="scale_lydian_augmented">Bővített líd</string>
+    <string name="scale_lydian_dominant">Líd domináns</string>
+    <string name="scale_mixolydian_flat_6">Mixolíd ♭6</string>
+    <string name="scale_locrian_natural_2">Lokriszi ♮2</string>
+    <string name="scale_altered">Alterált</string>
+    <string name="scale_harmonic_major">Összhangzatos dúr</string>
+    <string name="scale_double_harmonic">Kettős összhangzatos</string>
+    <string name="scale_hungarian_minor">Magyar moll</string>
+    <string name="scale_hungarian_major">Magyar dúr</string>
+    <string name="scale_neapolitan_major">Nápolyi dúr</string>
+    <string name="scale_neapolitan_minor">Nápolyi moll</string>
+    <string name="scale_major_pentatonic">Dúr pentaton</string>
+    <string name="scale_minor_pentatonic">Moll pentaton</string>
+    <string name="scale_egyptian">Egyiptomi</string>
+    <string name="scale_man_gong">Man Gong</string>
+    <string name="scale_ritusen">Ritusen</string>
+    <string name="scale_hirajoshi">Hirajoshi</string>
+    <string name="scale_in">In</string>
+    <string name="scale_insen">Insen</string>
+    <string name="scale_iwato">Iwato</string>
+    <string name="scale_kumoi">Kumoi</string>
+    <string name="scale_chinese">Kínai</string>
+    <string name="scale_blues">Blues</string>
+    <string name="scale_major_blues">Dúr blues</string>
+    <string name="scale_major_hexatonic">Dúr hexaton</string>
+    <string name="scale_minor_hexatonic">Moll hexaton</string>
+    <string name="scale_prometheus">Prométheusz</string>
+    <string name="scale_tritone">Tritonusz</string>
+    <string name="scale_whole_tone">Egészhangú</string>
+    <string name="scale_augmented">Bővített</string>
+    <string name="scale_diminished">Szűkített (egész–fél)</string>
+    <string name="scale_dominant_diminished">Szűkített (fél–egész)</string>
+    <string name="scale_chromatic">Kromatikus</string>
+    <string name="scale_bebop_dominant">Bebop domináns</string>
+    <string name="scale_bebop_major">Bebop dúr</string>
+    <string name="scale_bebop_dorian">Bebop dór</string>
+    <string name="scale_bebop_melodic_minor">Bebop dallamos moll</string>
+    <string name="scale_bebop_harmonic_minor">Bebop összhangzatos moll</string>
+    <string name="scale_persian">Perzsa</string>
+    <string name="scale_enigmatic">Enigmatikus</string>
+    <string name="scale_oriental">Keleti</string>
+    <string name="scale_major_locrian">Dúr lokriszi</string>
+    <string name="scale_lydian_minor">Líd moll</string>
+    <string name="scale_leading_whole_tone">Vezetőhangos egészhangú</string>
+    <string name="scale_flamenco">Flamenco</string>
+    <string name="scale_spanish_eight_tone">Spanyol nyolcfokú</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>
@@ -910,6 +1018,8 @@
     <string name="onboarding_feature_setlists_description">Sorba rendezett dalok egy fellépéshez vagy próbához</string>
     <string name="onboarding_feature_metronome_description">Tartja az ütemet a dal tempójában, a dalokban és egy saját képernyőn</string>
     <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül, a dalokban és egy saját képernyőn</string>
+    <string name="onboarding_feature_scales_description">Minden skála és modus a hangszereden ábrázolva, egy saját képernyőn</string>
+    <string name="onboarding_feature_scale_suggestions_description">Az egyes dalrészekhez illő skálák, közvetlenül az akkordok alatt</string>
     <string name="onboarding_sync_title">A dalaid mindenhol</string>
     <string name="onboarding_sync_message">Csatlakoztasd a Dropboxot, hogy minden eszközödön ugyanaz a könyvtár legyen elérhető. Nincs köztes szerver: a fájljaid egyenesen a saját tárhelyedre kerülnek.</string>
     <string name="welcome_get_started">Kezdjük</string>

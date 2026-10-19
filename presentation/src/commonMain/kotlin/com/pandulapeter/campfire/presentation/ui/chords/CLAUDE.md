@@ -83,3 +83,8 @@ is gone.
 - Shapes are searched before the sheet opens, so it slides up whole; a stored shape the app doesn't list goes first.
 - A tap writes the player's choice at once; picking the app's first shape removes the entry. No reset button.
 - A chord the song defines shows its definition alone, not pickable.
+- Both chord sheets end in the scales built on the chord's root that hold its tones (`ScaleChipRow`), root
+  as the chord spells it, while Scales is on; a chip opens the scale sheet over the chord's.
+  **One hop only**: a chord sheet opened from a scale sheet offers no scales (`ChordReference.showsScales`), and a scale
+  sheet opened from a chord sheet no chords (`DialogType.Scale.showsChords`), so the two never chain.
+- Chord sheets offer scales only while Scale suggestions is on (`FeatureSwitches.areScaleSuggestionsEnabled`).

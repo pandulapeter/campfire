@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.chrome.toolsItemDestination
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -114,6 +115,7 @@ import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
@@ -283,6 +285,7 @@ class CampfireViewModel(
         setlistsSearch = { setlistsController.setlistsSearch },
         importReportSearch = { importReportState.search },
         chordLibrary = { chordLibrary },
+        scaleLibrary = { scaleLibrary },
         // The view model's copy of the preferences, which is what the onboarding's pages draw their dots from.
         onboardingSteps = { onboardingSteps(userPreferences.value) },
         topLevelDestinations = { preferencesController.topLevelDestinations.value },
@@ -327,8 +330,14 @@ class CampfireViewModel(
 
     internal val songSelection: SongSelection = SongSelection(scope = viewModelScope, backStack = navigator.backStack)
 
+    /** The key the Chords and the Scales tabs both list, see [ChordLibraryState.keyIndex]. */
+    private val libraryKeyIndex = mutableIntStateOf(0)
+
     /** Where the Chords tab was left, see [ChordLibraryState]. */
-    internal val chordLibrary = ChordLibraryState()
+    internal val chordLibrary = ChordLibraryState(keyIndex = libraryKeyIndex)
+
+    /** Where the Scales tab was left, and how the scale sheet labels its notes, see [ScaleLibraryState]. */
+    internal val scaleLibrary = ScaleLibraryState(keyIndex = libraryKeyIndex)
 
     internal val fontScaleController: FontScaleController = FontScaleController(
         scope = viewModelScope,

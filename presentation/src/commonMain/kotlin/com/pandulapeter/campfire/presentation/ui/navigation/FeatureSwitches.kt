@@ -16,12 +16,18 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
  *
  * @property isChordLibraryEnabled Whether the Chords tab is there, which follows the Chord diagrams switch: the tab is
  *   those diagrams, every one of them, and with the chords switched off there is nothing to finger either.
+ * @property areScalesEnabled Whether the Scales tab is there, and with it the scales a chord sheet suggests: a switch of
+ *   its own, since a scale is played on any instrument, chords or not.
+ * @property areScaleSuggestionsEnabled Whether songs and chord sheets suggest scales, which follows the Scale suggestions
+ *   switch, disabled by the Scales switch, as the chord diagrams follow theirs.
  */
 internal data class FeatureSwitches(
     val areSetlistsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isTunerEnabled: Boolean,
     val isChordLibraryEnabled: Boolean,
+    val areScalesEnabled: Boolean,
+    val areScaleSuggestionsEnabled: Boolean,
 ) {
 
     companion object {
@@ -32,6 +38,8 @@ internal data class FeatureSwitches(
             isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
             isTunerEnabled = preferences?.isTunerEnabled != false,
             isChordLibraryEnabled = preferences?.areChordsEnabled != false && preferences?.areChordDiagramsEnabled != false,
+            areScalesEnabled = preferences?.areScalesEnabled != false,
+            areScaleSuggestionsEnabled = preferences?.areScalesEnabled != false && preferences?.areScaleSuggestionsEnabled != false,
         )
     }
 }

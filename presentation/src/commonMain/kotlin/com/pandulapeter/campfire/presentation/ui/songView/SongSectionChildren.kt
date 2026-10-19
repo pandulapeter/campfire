@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.CardKey
@@ -61,10 +62,12 @@ internal fun LookaheadScope.SongSectionChildren(
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
     chordDiagrams: ChordDiagrams?,
+    scaleSuggestions: ScaleSuggestions?,
     tuningChipVisibility: MutableTransitionState<Boolean>,
     chordLayouts: ChordCellLayouts?,
     onChordFoldToggled: (() -> Unit)?,
     hasChordFoldBeenToggled: Boolean,
+    hasScaleFoldBeenToggled: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
@@ -109,10 +112,12 @@ internal fun LookaheadScope.SongSectionChildren(
                 playingTools = playingTools,
                 animatesControls = sectionMotion == SectionMotion.SPRING && !isResizing,
                 chordDiagrams = chordDiagrams,
+                scaleSuggestions = scaleSuggestions,
                 tuningChipVisibility = tuningChipVisibility,
                 chordLayouts = chordLayouts,
                 onChordFoldToggled = onChordFoldToggled,
                 isChordsSectionFadingIn = hasChordFoldBeenToggled,
+                isScalesSectionFadingIn = hasScaleFoldBeenToggled,
                 headerStyle = headerStyle,
                 lyricsStyle = lyricsStyle,
                 chordStyle = chordStyle,

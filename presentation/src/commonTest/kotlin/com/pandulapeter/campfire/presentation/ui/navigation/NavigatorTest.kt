@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
@@ -17,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -43,7 +45,8 @@ class NavigatorTest {
     private val savedStateHandle = SavedStateHandle()
     private val songsSearch = SearchState()
     private val setlistsSearch = SearchState()
-    private val chordLibrary = ChordLibraryState()
+    private val chordLibrary = ChordLibraryState(keyIndex = mutableIntStateOf(0))
+    private val scaleLibrary = ScaleLibraryState(keyIndex = mutableIntStateOf(0))
 
     private fun navigator(scope: CoroutineScope, dialogHost: DialogHost = DialogHost(scope)) = Navigator(
         savedStateStore = SavedStateStore(savedStateHandle, scope),
@@ -52,6 +55,7 @@ class NavigatorTest {
         setlistsSearch = { setlistsSearch },
         importReportSearch = { SearchState(isInitiallyOpen = true) },
         chordLibrary = { chordLibrary },
+        scaleLibrary = { scaleLibrary },
         onboardingSteps = { onboardingSteps },
         topLevelDestinations = { topLevelDestinations },
         userPreferences = { null as UserPreferences? },

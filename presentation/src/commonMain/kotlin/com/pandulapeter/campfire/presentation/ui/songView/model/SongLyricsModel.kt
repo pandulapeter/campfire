@@ -51,6 +51,7 @@ internal class SongLyricsModel(
     val chords: List<SongChord> = emptyList(),
     val chordTuning: ChordTuning? = null,
     val hasChords: Boolean = chords.isNotEmpty(),
+    val scaleGroups: List<SongScaleGroup> = emptyList(),
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -69,6 +70,7 @@ internal class SongLyricsModel(
         chords = chordTuning?.let { chords.withSearchedShapes(it) } ?: chords,
         chordTuning = chordTuning,
         hasChords = hasChords,
+        scaleGroups = scaleGroups,
     )
 }
 
@@ -87,6 +89,8 @@ internal class SongLyricsModel(
  * @param standardSong [song] before it was written in [notation], which its chords are read from.
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
+ * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
+ * section: a walk over every chord, so done here, with the chords on only.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -97,6 +101,7 @@ internal fun prepareSongLyrics(
     notation: ChordNotation = ChordNotation.STANDARD,
     standardSong: ChordProSong = song,
     searchesShapes: Boolean = true,
+    suggestsScales: Boolean = false,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val chords = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
@@ -115,6 +120,7 @@ internal fun prepareSongLyrics(
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
+        scaleGroups = if (shouldShowChords && suggestsScales) songScaleGroupsOf(standardSong, labels) else emptyList(),
     )
 }
 
@@ -180,6 +186,7 @@ internal data class SongLyricsInputs(
     val showsTiming: Boolean = true,
     val chordTuning: ChordTuning? = null,
     val tabs: TabReading? = null,
+    val suggestsScales: Boolean = false,
 )
 
 /**

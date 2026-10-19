@@ -16,4 +16,6 @@ internal data class OnboardingFeatures(
     val areSetlistsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isTunerEnabled: Boolean,
+    val areScalesEnabled: Boolean,
+    val areScaleSuggestionsEnabled: Boolean,
 )

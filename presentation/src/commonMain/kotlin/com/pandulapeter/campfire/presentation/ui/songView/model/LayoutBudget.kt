@@ -44,7 +44,7 @@ internal object LayoutBudget {
                 is RenderSection.Comment -> section.text.length
                 is RenderSection.KeyChange -> section.key.length
                 is RenderSection.Timing -> section.time.length + (section.tempo?.length ?: 0)
-                is RenderSection.Metadata, is RenderSection.Chords -> 0
+                is RenderSection.Metadata, is RenderSection.Chords, is RenderSection.Scales -> 0
             }
             if (lines + sectionLines > MAX_LINES || characters + sectionCharacters > MAX_CHARACTERS) {
                 return if (index == 0 && section is RenderSection.Lines) listOf(section.cut()) to true else sections.subList(0, index) to true

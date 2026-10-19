@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.chords
+package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Column
@@ -29,19 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
-import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
-import com.pandulapeter.campfire.presentation.ui.chords.SongChord
-import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
-import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * One chord of the Chords tab: its name in the chords' accent color over its diagram, drawn with [selection], the shape
- * the songs draw it with, on a card that opens all of its shapes. A shape chosen in that sheet crossfades in as the
- * sheet settles on it, as the song details screen's cells do.
+ * One chord of the Chords tab, and of the scale sheet's chords: its name in the chords' accent color over its diagram,
+ * drawn with [selection], the shape the songs draw it with, on a card that opens all of its shapes. A shape chosen in
+ * that sheet crossfades in as the sheet settles on it, as the song details screen's cells do.
  */
 @Composable
 internal fun ChordLibraryCell(
@@ -90,7 +83,7 @@ internal fun ChordLibraryCell(
     }
 }
 
-/** How narrow a column of the Chords tab gets: a cell as wide as its diagram and the card around it. */
+/** How narrow a column of the Chords tab gets, and how wide the scale sheet's cells are: a diagram and the card around it. */
 internal fun chordCellMinWidth(instrument: ChordInstrument?) = (instrument ?: ChordInstrument.GUITAR).diagramWidth + 24.dp
 
 private val ChordInstrument.diagramWidth: Dp get() = if (isFretted) 84.dp else 168.dp

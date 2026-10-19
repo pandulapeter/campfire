@@ -36,14 +36,14 @@ sealed interface CampfireDestination : NavKey {
     sealed interface TopLevel : CampfireDestination {
 
         companion object {
-            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Tuner, Chords, Settings)
+            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Tuner, Chords, Scales, Settings)
 
             /**
              * The top level screens that are tools to reach for while playing rather than places the library is read in,
              * in the order the chrome lists them: where a navigation bar has no room for every top level screen, these are
              * the ones it offers behind one Tools item (see `navigationBarItems`).
              */
-            val tools: List<TopLevel> get() = listOf(Metronome, Tuner, Chords)
+            val tools: List<TopLevel> get() = listOf(Metronome, Tuner, Chords, Scales)
 
             /** The top level screens the navigation chrome offers, which leaves out those of the features switched off. */
             internal fun entries(features: FeatureSwitches) = entries.filter { CampfireDestination.isEnabled(it, features) }
@@ -61,13 +61,14 @@ sealed interface CampfireDestination : NavKey {
         /**
          * Whether [destination] belongs to a feature that is switched on: the setlists screen and a song read from a
          * setlist to the setlists, the metronome screen to the metronome, the tuner screen to the tuner, the chords screen
-         * to the chord diagrams. Everything else is always there.
+         * to the chord diagrams, the scales screen to the scales. Everything else is always there.
          */
         internal fun isEnabled(destination: CampfireDestination, features: FeatureSwitches) = when (destination) {
             Setlists -> features.areSetlistsEnabled
             Metronome -> features.isMetronomeEnabled
             Tuner -> features.isTunerEnabled
             Chords -> features.isChordLibraryEnabled
+            Scales -> features.areScalesEnabled
             is SongDetails -> features.areSetlistsEnabled || destination.setlistFileName == null
             else -> true
         }
@@ -97,6 +98,12 @@ sealed interface CampfireDestination : NavKey {
     @Serializable
     data object Chords : TopLevel {
         override val contentKey = "chords"
+    }
+
+    /** Every scale the app knows on the player's instrument, browsed by key and family, see `ScalesScreen`. */
+    @Serializable
+    data object Scales : TopLevel {
+        override val contentKey = "scales"
     }
 
     @Serializable

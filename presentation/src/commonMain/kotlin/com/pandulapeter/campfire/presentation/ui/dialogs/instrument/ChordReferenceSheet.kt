@@ -32,13 +32,16 @@ import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
+import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipRow
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 
 /**
  * A chord of the Chords tab with every way it can be played, the song's chord sheet ([ChordShapeSheet]) with no song
  * around it: titled the same way, naming a tuning that is not the standard one under the title, and writing the shape
  * picked in its grid as the player's shape for the chord in that tuning at once, so that the tab and every song follow
  * it. The tuning is the one the tab drew the chord for, which nothing can change while the sheet covers the tab; an
- * instrument without shapes, which leaves the tab nothing to draw, closes it.
+ * instrument without shapes, which leaves the tab nothing to draw, closes it. It ends in the scales to play over the
+ * chord ([ScaleChipRow]), each opening the scale sheet over it.
  */
 @Composable
 internal fun ChordReferenceSheet(
@@ -69,6 +72,17 @@ internal fun ChordReferenceSheet(
                 tuningLine = if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
                 contentPadding = contentPadding,
                 onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },
+                footer = if (dialog.showsScales && FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) {
+                    {
+                        ScaleChipRow(
+                            chord = chord,
+                            notation = notation,
+                            onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false)) },
+                        )
+                    }
+                } else {
+                    null
+                },
             )
         }
     }

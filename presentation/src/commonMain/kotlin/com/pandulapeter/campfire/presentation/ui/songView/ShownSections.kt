@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.songView
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentChipsContent
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
+import com.pandulapeter.campfire.presentation.ui.songView.model.withScalesSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.model.chordCellsOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.definitionCellsOf
@@ -23,12 +25,14 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 
 /**
  * The sections [SongLyrics] shows of [model]: the song's own, after its first section of what the song says about itself
- * and how it is played, and the Chords section of its diagrams where [chordDiagrams] asks for one.
+ * and how it is played, the Chords section of its diagrams where [chordDiagrams] asks for one, and the Scales section
+ * after it where [scaleSuggestions] does.
  */
 @Composable
 internal fun rememberShownSections(
     model: SongLyricsModel,
     chordDiagrams: ChordDiagrams?,
+    scaleSuggestions: ScaleSuggestions?,
     instrumentChips: InstrumentChipsContent?,
     shouldShowTempo: Boolean,
     isSongInfoShown: Boolean,
@@ -79,7 +83,7 @@ internal fun rememberShownSections(
             }
         }
         lastCells.value = cells
-        remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentChips) {
+        val withChords = remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentChips) {
             withChordsSection(
                 sections = sections,
                 cells = cells,
@@ -87,6 +91,9 @@ internal fun rememberShownSections(
                 hasChords = model.hasChords,
                 instrumentChips = instrumentChips,
             )
+        }
+        remember(withChords, model.scaleGroups, scaleSuggestions?.isFolded) {
+            if (scaleSuggestions == null) withChords else withScalesSection(withChords, model.scaleGroups, scaleSuggestions.isFolded)
         }
     }
 

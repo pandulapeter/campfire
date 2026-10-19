@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_scales
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -37,5 +38,6 @@ internal fun DestinationIcon(
     CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
     CampfireDestination.Tuner -> Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null)
     CampfireDestination.Chords -> ChordsIcon(isKeyboard = isKeyboard)
+    CampfireDestination.Scales -> Icon(painter = painterResource(Res.drawable.ic_scales), contentDescription = null)
     CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
 }

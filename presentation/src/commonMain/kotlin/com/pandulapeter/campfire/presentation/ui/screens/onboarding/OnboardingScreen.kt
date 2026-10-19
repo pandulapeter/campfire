@@ -255,6 +255,8 @@ private fun OnboardingStepPage(
         areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
         isTunerEnabled = userPreferences?.isTunerEnabled != false,
+        areScalesEnabled = userPreferences?.areScalesEnabled != false,
+        areScaleSuggestionsEnabled = userPreferences?.areScaleSuggestionsEnabled != false,
     )
     val notation = userPreferences?.chordSpelling?.notation
     when (step) {
@@ -296,6 +298,8 @@ private fun OnboardingStepPage(
             onChordDiagramsEnabledChange = viewModel.preferencesController::setChordDiagramsEnabled,
             onMetronomeEnabledChange = viewModel.preferencesController::setMetronomeEnabled,
             onTunerEnabledChange = viewModel.preferencesController::setTunerEnabled,
+            onScalesEnabledChange = viewModel.preferencesController::setScalesEnabled,
+            onScaleSuggestionsEnabledChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
             onSetlistsEnabledChange = viewModel.preferencesController::setSetlistsEnabled,
         )
 

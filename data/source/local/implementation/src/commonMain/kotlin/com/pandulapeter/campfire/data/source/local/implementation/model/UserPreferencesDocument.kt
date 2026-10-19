@@ -43,6 +43,8 @@ internal data class UserPreferencesDocument(
     // What the notation was before there could be more than two: only read, for a document that has no notation yet.
     val isGermanNotationEnabled: Boolean = false,
     val areChordDiagramsEnabled: Boolean = true,
+    val areScalesEnabled: Boolean = true,
+    val areScaleSuggestionsEnabled: Boolean = true,
     // What the cards of the Songs screen show, under the names of the two switches that once decided the song details
     // screen and the cards of both lists at once; the Setlists screen's cards follow them where a document has no
     // switches of their own yet, since that is what they showed when it was written.
@@ -65,6 +67,7 @@ internal data class UserPreferencesDocument(
     val chordTunings: Map<String, String> = emptyMap(),
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
     val isChordSectionFolded: Boolean = false,
+    val isScaleSectionFolded: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
     val tempos: Map<String, Int> = emptyMap(),
     val capos: Map<String, Int> = emptyMap(),

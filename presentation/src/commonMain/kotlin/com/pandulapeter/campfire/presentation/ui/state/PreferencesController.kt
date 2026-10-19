@@ -139,6 +139,12 @@ internal class PreferencesController(
 
     fun setTunerEnabled(value: Boolean) = changeUserPreferences { copy(isTunerEnabled = value) }
 
+    fun setScalesEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value) }
+
+    fun setScaleSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScaleSuggestionsEnabled = value) }
+
+    fun toggleScaleSectionFold() = changeUserPreferences { copy(isScaleSectionFolded = !isScaleSectionFolded) }
+
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a

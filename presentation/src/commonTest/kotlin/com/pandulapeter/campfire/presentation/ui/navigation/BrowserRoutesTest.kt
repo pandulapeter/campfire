@@ -87,6 +87,7 @@ class BrowserRoutesTest {
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Metronome)) to listOf("", "metronome"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Tuner)) to listOf("", "tuner"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Chords)) to listOf("", "chords"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Scales)) to listOf("", "scales"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings)) to listOf("", "settings/general"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings), settingsTab = SettingsTab.LIBRARY) to
             listOf("", "settings/general", "settings/library"),

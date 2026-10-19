@@ -71,6 +71,7 @@ class RenderSectionsTest {
             }
             is RenderSection.Metadata -> "metadata"
             is RenderSection.Chords -> "chords"
+            is RenderSection.Scales -> "scales"
         }
     }
 

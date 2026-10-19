@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.nextOnboardingStep
@@ -55,6 +56,7 @@ internal class Navigator(
     private val setlistsSearch: () -> SearchState,
     importReportSearch: () -> SearchState,
     chordLibrary: () -> ChordLibraryState,
+    scaleLibrary: () -> ScaleLibraryState,
     private val onboardingSteps: () -> List<OnboardingStep>,
     private val topLevelDestinations: () -> List<CampfireDestination.TopLevel>,
     private val userPreferences: () -> UserPreferences?,
@@ -159,6 +161,7 @@ internal class Navigator(
         setlistsSearch = setlistsSearch,
         importReportSearch = importReportSearch,
         chordLibrary = chordLibrary,
+        scaleLibrary = scaleLibrary,
         isSetlistReordering = isSetlistReordering,
     )
 

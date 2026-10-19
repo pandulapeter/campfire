@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
+import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.fontScaleGestures
@@ -87,6 +90,7 @@ internal fun SongPages(
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tabs = rememberTabReading(userPreferences)
+    val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
         // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
@@ -218,6 +222,31 @@ internal fun SongPages(
                 )
             },
             tabs = tabs,
+            scaleSuggestions = scaleSuggestions,
+        )
+    }
+}
+
+/**
+ * What the Scales section of every page is drawn with, null where it is off: with the chords, since the scales are
+ * read from them, and with the Scale suggestions switch, which the Scales switch takes with it. One for the whole pager,
+ * since nothing in it belongs to one song.
+ */
+@Composable
+private fun rememberScaleSuggestions(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+    shouldShowChords: Boolean,
+): ScaleSuggestions? {
+    if (!shouldShowChords || !FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) return null
+    val isFolded = userPreferences?.isScaleSectionFolded == true
+    val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
+    return remember(isFolded, notation) {
+        ScaleSuggestions(
+            isFolded = isFolded,
+            onFoldToggled = viewModel.preferencesController::toggleScaleSectionFold,
+            onScaleClicked = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName)) },
+            notation = notation,
         )
     }
 }

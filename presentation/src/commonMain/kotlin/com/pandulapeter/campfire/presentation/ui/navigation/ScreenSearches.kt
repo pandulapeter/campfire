@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.navigation
 
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
-import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.components.ToolSearch
 
 /**
  * The searches of the screens as the keys that reach them from outside the composition see them: Ctrl / Cmd + F, which
@@ -24,7 +24,8 @@ internal class ScreenSearches(
     private val songsSearch: () -> SearchState,
     private val setlistsSearch: () -> SearchState,
     private val importReportSearch: () -> SearchState,
-    private val chordLibrary: () -> ChordLibraryState,
+    private val chordLibrary: () -> ToolSearch,
+    private val scaleLibrary: () -> ToolSearch,
     private val isSetlistReordering: () -> Boolean,
 ) {
 
@@ -47,33 +48,39 @@ internal class ScreenSearches(
 
     /**
      * Whether a step back takes a search away before the screen on top: the open search of a list screen
-     * ([currentSearch]), or the query of the Chords tab, whose field is always there and is emptied instead. For the
-     * desktop's window key handler, as [currentSearch] is; the tab answers the back gesture itself.
+     * ([currentSearch]), or the query of the Chords or the Scales tab, whose field is always there and is emptied instead.
+     * For the desktop's window key handler, as [currentSearch] is; the tab answers the back gesture itself.
      */
     val isCurrentSearchOpen: Boolean
-        get() = currentSearch?.isOpen?.value == true || isChordLibraryTop && chordLibrary().query.isNotEmpty()
+        get() = currentSearch?.isOpen?.value == true || toolSearch?.query?.isNotEmpty() == true
 
     /** Takes away what [isCurrentSearchOpen] says is there. */
     fun closeCurrentSearch() {
         currentSearch?.close()
-        if (isChordLibraryTop) chordLibrary().query = ""
+        toolSearch?.query = ""
     }
 
-    private val isChordLibraryTop get() = top() == CampfireDestination.Chords
+    /** The search of the tool on top whose field is always there. */
+    private val toolSearch: ToolSearch?
+        get() = when (top()) {
+            CampfireDestination.Chords -> chordLibrary()
+            CampfireDestination.Scales -> scaleLibrary()
+            else -> null
+        }
 
     /**
      * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
      * does: nothing on a list screen is focused while its search is closed, and a key event only travels along the
      * focus path. It opens the search of the list screen that is on top, or brings the caret back into it if it is
-     * open already - the import screen's and the Chords tab's fields, which are always there, being given the caret the
+     * open already - the import screen's and the Chords and the Scales tabs' fields, which are always there, being given the caret the
      * same way - and answers whether it did, so that the key is left to whoever else wants it everywhere else - the
      * browser's own find bar among them. A dialog, a sheet or an overflow menu keeps it from reaching the screen under
      * it, the way it keeps Escape from reaching it.
      */
     fun openCurrentSearch(): Boolean {
         if (dialogHost.visibleDialog.value != null || dialogHost.overlayState.isAnyMenuOpen || isSetlistReordering()) return false
-        if (isChordLibraryTop) {
-            chordLibrary().focusSearch()
+        toolSearch?.let {
+            it.focusSearch()
             return true
         }
         val search = currentSearch

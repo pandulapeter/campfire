@@ -1,0 +1,277 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.dialogs.scales
+
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.scales.Scale
+import com.pandulapeter.campfire.chordpro.scales.ScaleChords
+import com.pandulapeter.campfire.chordpro.scales.ScaleSpelling
+import com.pandulapeter.campfire.chordpro.scales.Scales
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.scales_also_called
+import com.pandulapeter.campfire.presentation.resources.scales_chords
+import com.pandulapeter.campfire.presentation.resources.scales_labels_degrees
+import com.pandulapeter.campfire.presentation.resources.scales_labels_notes
+import com.pandulapeter.campfire.presentation.resources.scales_mode_of
+import com.pandulapeter.campfire.presentation.resources.scales_relative_minor
+import com.pandulapeter.campfire.presentation.resources.scales_sevenths
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
+import com.pandulapeter.campfire.presentation.ui.scales.displayedDegree
+import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
+import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.scales.scaleStepsText
+import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
+
+/**
+ * One scale in one key, titled with both and the notes spelled under the title: the scale on the player's instrument,
+ * its notes labelled with their degrees or their names, the formula and the steps, what it is a mode of and its other
+ * names, and for a seven-note scale the chords it stacks into, each opening that chord's sheet over this one.
+ *
+ * The instrument, the tuning and the notation are read from the preferences as it is drawn, never from the screen it was
+ * opened over (see [DialogType.Scale]); nothing can change them under the sheet, whose chips are behind it, and if
+ * something did it would only be drawn again. An id this version has no scale for closes it.
+ */
+@Composable
+internal fun ScaleSheet(
+    viewModel: CampfireViewModel,
+    dialog: DialogType.Scale,
+) {
+    val scale = Scales.fromId(dialog.scaleId) ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
+    val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
+    val strings = userPreferences?.instrumentTuning?.strings
+    val rootName = dialog.rootName
+    val root = ChordProChords.parse(rootName)?.root ?: 0
+    val geometry = remember(scale, root, strings, instrument) { scaleDiagramGeometryOf(scale, root, strings, instrument) }
+    val state = viewModel.scaleLibrary
+    CampfireBottomSheet(
+        title = scaleTitle(scale, rootName, notation),
+        subtitle = ScaleSpelling.noteNames(scale, rootName, notation).joinToString(" "),
+        // A keyboard carries no labels, so only a neck has the choice: the subtitle names a keyboard's notes.
+        actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
+            {
+                ScaleLabelsChoice(
+                    labels = state.labels,
+                    onLabelsSelected = { state.labels = it },
+                )
+            }
+        } else {
+            null
+        },
+        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+    ) { contentPadding ->
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .fillMaxWidth()
+                .fadingTopEdge(scrollState, sheetContainerColor())
+                .bounceVerticalScroll(scrollState)
+                .padding(contentPadding)
+                .padding(top = 8.dp, bottom = 16.dp),
+        ) {
+            ScaleSheetDiagram(
+                scale = scale,
+                rootName = rootName,
+                notation = notation,
+                geometry = geometry,
+                labels = state.labels,
+            )
+            ScaleFormula(scale = scale)
+            ScaleRelations(scale = scale, rootName = rootName, notation = notation)
+            val tuning = userPreferences?.chordTuning()
+            if (dialog.showsChords && tuning != null && FeatureSwitches.of(userPreferences).isChordLibraryEnabled && scale.intervals.size == 7) {
+                val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
+                val onChordClicked = { chord: SongChord ->
+                    viewModel.dialogHost.showDialog(DialogType.ChordReference(chord, showsScales = false))
+                }
+                ScaleChordsRow(
+                    modifier = Modifier.padding(top = 24.dp),
+                    title = stringResource(Res.string.scales_chords),
+                    chords = remember(scale, rootName, notation, tuning) { scaleSheetChords(ScaleChords.triads(scale, rootName), notation, tuning) },
+                    tuning = tuning,
+                    storedShapes = storedShapes,
+                    onChordClicked = onChordClicked,
+                )
+                ScaleChordsRow(
+                    modifier = Modifier.padding(top = 16.dp),
+                    title = stringResource(Res.string.scales_sevenths),
+                    chords = remember(scale, rootName, notation, tuning) { scaleSheetChords(ScaleChords.sevenths(scale, rootName), notation, tuning) },
+                    tuning = tuning,
+                    storedShapes = storedShapes,
+                    onChordClicked = onChordClicked,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The scale on the instrument, as wide as the sheet and as tall as its strings need, a neck's dots carrying its degrees
+ * or its notes, which crossfade into each other as the header's choice changes. A keyboard carries no labels: the
+ * subtitle names its notes.
+ */
+@Composable
+private fun ScaleSheetDiagram(
+    scale: Scale,
+    rootName: String,
+    notation: ChordNotation,
+    geometry: ScaleDiagramGeometry,
+    labels: ScaleLabels,
+) {
+    val description = scaleDiagramDescription(scale, rootName, notation)
+    val noteNames = remember(scale, rootName, notation) { ScaleSpelling.noteNames(scale, rootName, notation) }
+    val degrees = remember(scale) { scale.degrees.map(::displayedDegree) }
+    Crossfade(
+        targetState = labels,
+        label = "scaleSheetLabels",
+    ) { shownLabels ->
+        ScaleDiagram(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .height(geometry.sheetHeight),
+            geometry = geometry,
+            labels = when {
+                geometry is ScaleDiagramGeometry.Keyboard -> null
+                shownLabels == ScaleLabels.DEGREES -> degrees
+                else -> noteNames
+            },
+            description = description,
+        )
+    }
+}
+
+/**
+ * The header's choice between a neck's degrees and its notes. A segmented row fills the width it is given, which in the
+ * header would leave the title none, so it is held to the width its labels need.
+ */
+@Composable
+private fun ScaleLabelsChoice(
+    labels: ScaleLabels,
+    onLabelsSelected: (ScaleLabels) -> Unit,
+) = SegmentedChoice(
+    modifier = Modifier.width(IntrinsicSize.Max),
+    options = listOf(
+        ScaleLabels.DEGREES to stringResource(Res.string.scales_labels_degrees),
+        ScaleLabels.NOTES to stringResource(Res.string.scales_labels_notes),
+    ),
+    selected = labels,
+    shouldApplyPadding = false,
+    isInline = true,
+    onSelected = onLabelsSelected,
+)
+
+/** The degrees of the scale with their accidental signs, and the steps between them. */
+@Composable
+private fun ScaleFormula(scale: Scale) {
+    Text(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        text = scale.degrees.joinToString("  ", transform = ::displayedDegree),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center,
+    )
+    Text(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 16.dp, end = 16.dp),
+        text = scaleStepsText(scale),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
+}
+
+/**
+ * How the scale relates to others, each line only where it says something: the scale it is a mode of, in the key that
+ * makes it this one, the relative minor of a major scale, and the other names it goes by.
+ */
+@Composable
+private fun ScaleRelations(
+    scale: Scale,
+    rootName: String,
+    notation: ChordNotation,
+) {
+    val parent = scale.modeOf?.let { (parentId, degree) -> Scales.fromId(parentId)?.let { it to degree } }
+    val parentRootName = ScaleSpelling.parentRootName(scale, rootName)
+    if (parent != null && parentRootName != null) {
+        RelationLine(stringResource(Res.string.scales_mode_of, parent.second.toString(), scaleTitle(parent.first, parentRootName, notation)))
+    }
+    if (scale.id == MAJOR_ID) {
+        Scales.fromId(NATURAL_MINOR_ID)?.let { minor ->
+            val relativeRoot = ScaleSpelling.noteNames(scale, rootName)[RELATIVE_MINOR_DEGREE]
+            RelationLine(stringResource(Res.string.scales_relative_minor, scaleTitle(minor, relativeRoot, notation)))
+        }
+    }
+    if (scale.aliases.isNotEmpty()) {
+        RelationLine(stringResource(Res.string.scales_also_called, scale.aliases.joinToString(", ")))
+    }
+}
+
+@Composable
+private fun RelationLine(text: String) = Text(
+    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp),
+    text = text,
+    style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textAlign = TextAlign.Center,
+)
+
+/**
+ * How tall the sheet draws a scale: a neck by its strings, each row about as tall as a fret of a phone's sheet is wide,
+ * so that a dot fills its fret and its label is legible, plus the band of fret numbers under them; a keyboard as tall
+ * as it reads well at the sheet's width.
+ */
+private val ScaleDiagramGeometry.sheetHeight: Dp
+    get() = when (this) {
+        is ScaleDiagramGeometry.Fretboard -> (16 + 22 * strings).dp
+        is ScaleDiagramGeometry.Keyboard -> 96.dp
+    }
+
+private const val MAJOR_ID = "major"
+private const val NATURAL_MINOR_ID = "natural_minor"
+private const val RELATIVE_MINOR_DEGREE = 5

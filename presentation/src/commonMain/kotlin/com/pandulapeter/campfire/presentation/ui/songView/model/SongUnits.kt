@@ -115,8 +115,8 @@ internal class SongUnits(
     companion object {
 
         /**
-         * The chunks of [sections], where each section [isCuttable] says so is composed line by line, or a Chords section
-         * row by row.
+         * The chunks of [sections], where each section [isCuttable] says so is composed line by line, or a Chords or Scales
+         * section row by row.
          */
         fun of(sections: List<RenderSection>, isCuttable: (RenderSection) -> Boolean): SongUnits {
             val sectionStarts = IntArray(sections.size + 1)
@@ -131,12 +131,14 @@ internal class SongUnits(
                 val itemCount = when (section) {
                     is RenderSection.Lines -> section.itemCount
                     is RenderSection.Chords -> section.itemCount
+                    is RenderSection.Scales -> section.itemCount
                     else -> 1
                 }
                 val ranges = if (isCuttable(section) && itemCount > 1) List(itemCount) { item -> item..item } else listOf(0 until itemCount)
                 val cutStarts = when (section) {
                     is RenderSection.Lines -> section.chunkStarts
                     is RenderSection.Chords -> section.chunkStarts
+                    is RenderSection.Scales -> section.chunkStarts
                     else -> null
                 }
                 val kinds = (section as? RenderSection.Lines)?.itemKinds
@@ -188,6 +190,7 @@ internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
             // Kept for the same reason: a shape chosen or the section folded is the same section, and folding it
             // has to fade its body in rather than compose the whole of it afresh.
             is RenderSection.Chords -> RenderSection.Chords::class
+            is RenderSection.Scales -> RenderSection.Scales::class
             else -> section
         }
         val occurrence = (occurrences[identity] ?: 0) + 1

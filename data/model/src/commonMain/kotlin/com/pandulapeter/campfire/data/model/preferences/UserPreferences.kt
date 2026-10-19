@@ -97,6 +97,17 @@ data class UserPreferences(
      */
     val areChordDiagramsEnabled: Boolean = true,
     /**
+     * Whether the app has a scale library: the Scales tab, the scale sheet, and the scales a chord sheet suggests. It
+     * follows neither chord switch, since a violinist with no chords still plays scales.
+     */
+    val areScalesEnabled: Boolean = true,
+    /**
+     * Whether a song opens with the scales it can be played over, in a section of its own after its chords, and a chord's
+     * sheet ends in the scales for that chord. Only while [areScalesEnabled], as [areChordDiagramsEnabled] is only while
+     * [areChordsEnabled].
+     */
+    val areScaleSuggestionsEnabled: Boolean = true,
+    /**
      * What the cards of the Songs screen say after the artist. Never the song details screen, which always shows the key
      * and the tempo a song is played in, since that is where they are changed.
      */
@@ -127,6 +138,8 @@ data class UserPreferences(
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
     /** Whether the chord diagrams are folded away, one choice for every song rather than one per song like [foldedSections]. */
     val isChordSectionFolded: Boolean = false,
+    /** Whether the scale suggestions are folded away, one choice for every song, as [isChordSectionFolded] is. */
+    val isScaleSectionFolded: Boolean = false,
     /**
      * Song file name to semitones, for songs opened from the library rather than from a setlist. Never exported, but
      * synced: with [tempos] and [capos] it is what every device connected to one cloud folder shares through its
