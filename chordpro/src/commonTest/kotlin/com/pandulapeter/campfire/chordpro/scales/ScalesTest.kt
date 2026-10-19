@@ -61,6 +61,13 @@ class ScalesTest {
     }
 
     @Test
+    fun `every mode is browsed in the family of the scale it is a mode of`() {
+        Scales.all.filter { it.modeOf != null }.forEach { scale ->
+            assertEquals(Scales.fromId(scale.modeOf!!.first)!!.family, scale.family, scale.id)
+        }
+    }
+
+    @Test
     fun `an unknown id is no scale`() = assertNull(Scales.fromId("maqam_rast"))
 
     @Test
