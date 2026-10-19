@@ -52,10 +52,8 @@ Product side in `ui/metronome/CLAUDE.md`.
 
 ### Building the model, and the budget
 
-- `rememberSongLyricsModel` parses, transposes, and splits off the main thread, except the first rendering of the page
-  on screen (and pages before it), built in place (`buildsModelInPlace`) so the page never opens on an empty frame and a
-  step back from a song's top has the previous song's end to land on. Later builds keep the previous rendering until the
-  next is ready.
+- Built off the main thread except the first page on screen and those before it (`buildsModelInPlace`), so a page
+  never opens empty.
 - **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
   line measured on the main thread, and a concatenated songbook froze the app for seconds. The model stops after the
   last section that fits and says so; the file is untouched and the header is built from all of it.
