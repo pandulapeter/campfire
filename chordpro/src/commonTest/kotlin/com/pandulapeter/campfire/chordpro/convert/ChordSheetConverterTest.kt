@@ -194,7 +194,7 @@ class ChordSheetConverterTest {
     @Test
     fun `chords never split supplementary characters`() {
         assertEquals("[C]Hel😀[G]lo wor\n", convert("C   G\nHel😀lo wor"))
-        assertEquals("[A]x😀[G]hello\n", convert("A G\nx😀hello"))
+        assertEquals("[Am]x😀[G]hello\n", convert("Am G\nx😀hello"))
         assertEquals("[C]😀hello😀[G]\n", convert("C       G\n😀hello😀"))
         for (text in listOf("C   G\nHel😀lo wor", "C G\n😀hello😀", "C      G\n😀hello😀")) {
             val result = convert(text)
@@ -513,6 +513,34 @@ class ChordSheetConverterTest {
     fun `a parenthesized note does not make the sheet one of parenthesized chords`() {
         val result = convert("G              D               (let ring)\nI walked alone until the dawn\nand then (Am) I sang\nwith (my) friends (all) night")
         assertTrue("and then (Am) I sang" in result, result)
+    }
+
+    @Test
+    fun `an unaligned chord row is written above a much longer lyric`() {
+        assertEquals("[G] [D] [Em] [C]\nThe river runs beside the old mill road\n", convert("G D Em C\nThe river runs beside the old mill road"))
+        assertEquals("[Am]Hel[C]lo world\n", convert("Am C\nHello world"))
+    }
+
+    @Test
+    fun `a measured chord row stays merged over a long lyric`() {
+        val chords = ChordSheet.Line(listOf(span("G", 0.0, 6.0), span(" ", 6.0, 9.0), span("C", 60.0, 66.0), span(" ", 66.0, 69.0), span("G", 150.0, 156.0)))
+        val lyric = ChordSheet.Line(listOf(span("Amazing grace how sweet the sound", 0.0, 198.0)))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(chords, lyric))))).single()
+        assertTrue(result.startsWith("[G]Amazing"), result)
+        assertEquals(3, Regex("\\[[GC]]").findAll(result).count(), result)
+        assertFalse("[G] [C] [G]" in result, result)
+    }
+
+    @Test
+    fun `a paste with a blank line after every line is read as single-spaced`() {
+        val result = convert("G     D\n\nHello world\n\nEm   C\n\nSing along\n\n\nG      D\n\nSecond verse")
+        assertEquals("[G]Hello [D]world\n[Em]Sing [C]along\n\n[G]Second [D]verse\n", result)
+    }
+
+    @Test
+    fun `a lettered list in prose is not a chord row`() {
+        assertEquals("Options:\nA B C D\nPick one of them.\n", convert("Options:\nA B C D\nPick one of them."))
+        assertTrue("[A] [B] [C] [D]\nPick one of them." in convert("Am     F\nHello world\nA B C D\nPick one of them."))
     }
 
     @Test

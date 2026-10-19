@@ -22,3 +22,5 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
   documented limit, since both orders are common on the web.
+- A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
+  over a much longer lyric lost them on copy and is written above its lyric, not into it.

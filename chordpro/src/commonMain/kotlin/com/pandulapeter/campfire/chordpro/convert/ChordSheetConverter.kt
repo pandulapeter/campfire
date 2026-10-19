@@ -40,7 +40,21 @@ public object ChordSheetConverter {
             if (groups.isEmpty() || starts.count { it } >= 2 && starts[index]) groups += mutableListOf<Rendered>()
             groups.last().addAll(page)
         }
-        return groups.map { normalize(convertSong(expandLabels(it))) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(singleSpaced(it)))) }.filter { it.isNotBlank() }
+    }
+
+    /**
+     * A page copied with every line as a paragraph of its own has a blank line after each, which would keep every chord
+     * row from the lyric under it. Where no two lines of a song are adjacent, the single blanks are dropped and a run of
+     * them is the one stanza break it stands for.
+     */
+    private fun singleSpaced(lines: List<Rendered>): List<Rendered> {
+        val filled = lines.indices.filter { lines[it].text.isNotBlank() }
+        if (filled.size < 4 || filled.zipWithNext().any { (a, b) -> b == a + 1 }) return lines
+        if (chordCandidates(lines).none { row -> row != null && row.count { rowChord(it.text) } >= 2 }) return lines
+        return lines.filterIndexed { index, line ->
+            line.text.isNotBlank() || index > 0 && lines[index - 1].text.isBlank() && lines.getOrNull(index - 2)?.text?.isBlank() != true
+        }
     }
 
     /**
@@ -353,10 +367,25 @@ public object ChordSheetConverter {
      */
     private fun chordCandidates(lines: List<Rendered>): List<List<Token>?> {
         val hasLatinChords = lines.any { line -> tokens(line.text).any { isLatinChordBeyondNote(it.text) } }
-        return lines.map(::chordTokens).map { row ->
+        val rows = lines.map(::chordTokens)
+        // A row of bare capitals typed one space apart is as likely a lettered list ("A B C D"); a chord beyond a bare
+        // letter elsewhere, or a heading, says the sheet is a song. Measured rows (a PDF's, a Word document's) are
+        // spaced by their glyphs' positions rather than their text, so the guard reads character columns only.
+        val hasRicherChords = rows.any { row -> row?.any { rowChord(it.text) && !isBareLetter(it.text) } == true }
+        val hasHeading = lines.any { ChordSheetHeadings.parse(it.text) != null }
+        return rows.mapIndexed { index, row ->
             row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> rowChord(word.text) }.all { word -> isBareLatinNote(word.text) } }
+                ?.takeUnless {
+                    !hasRicherChords && !hasHeading && it.size >= 2 && isCharacterColumns(lines[index]) && !isPositioned(it) &&
+                        it.all { word -> isBareLetter(word.text) }
+                }
         }
     }
+
+    private fun isBareLetter(value: String) = value.length == 1 && value[0] in 'A'..'G'
+
+    /** Text laid out in characters, whose columns are where its chords stand; a measured row's spacing says nothing. */
+    private fun isCharacterColumns(line: Rendered) = line.source.spans.all { it.isMonospace }
 
     /** Chords written in parentheses inside the lyrics, `(Am)`, are taken for chords only where most parentheses hold one. */
     private fun convertsParentheses(lines: List<Rendered>): Boolean {
@@ -527,7 +556,7 @@ public object ChordSheetConverter {
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
-                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted) {
+                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         output += merge(line, lines[index + 1], convertParentheses)
                         index++
                     } else output += bracketed(candidates[index]!!, chordRow(line)?.annotation)
@@ -554,6 +583,14 @@ public object ChordSheetConverter {
         fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
         fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }
+
+    /**
+     * A row of three or more chords typed one space apart over a lyric more than twice its length lost its columns
+     * when it was copied, so placing its chords by them would set them all into the lyric's first word. It is written
+     * above the lyric instead; two chords over a short line may well be meant where they stand.
+     */
+    private fun isUnaligned(row: Rendered, tokens: List<Token>, lyric: Rendered) = isCharacterColumns(row) && !isPositioned(tokens) &&
+        tokens.count { rowChord(it.text) } >= 3 && lyric.text.trim().length > row.text.trim().length * 2
 
     private fun inline(line: Rendered, convertParentheses: Boolean): String {
         // Escape prose first, then insert only the chord tokens the classifier accepted.
