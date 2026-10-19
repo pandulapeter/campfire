@@ -35,7 +35,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 import org.koin.mp.KoinPlatform
 
 /**
@@ -171,7 +170,21 @@ internal class ShotScope(
      */
     suspend fun scrollTo(label: String, y: Float) {
         val from = checkNotNull(centerOf(label)) { "Nothing on screen is labelled \"$label\"." }
-        val to = Offset(from.x, device.heightPx * y)
+        drag(from, Offset(from.x, device.heightPx * y))
+    }
+
+    /** Scrolls the text field on screen the way [scrollTo] scrolls a list, its text moved up by [fraction] of the screen's height. */
+    @OptIn(ExperimentalComposeUiApi::class)
+    suspend fun scrollTextField(fraction: Float) {
+        val from = checkNotNull(
+            scene.semanticsOwners.firstNotNullOfOrNull { owner ->
+                owner.unmergedRootSemanticsNode.find { it.config.getOrNull(SemanticsProperties.EditableText) != null }
+            },
+        ) { "There is no text field on screen." }.boundsInRoot.center
+        drag(from, Offset(from.x, from.y - device.heightPx * fraction))
+    }
+
+    private suspend fun drag(from: Offset, to: Offset) {
         scene.sendPointerEvent(PointerEventType.Press, from, type = PointerType.Touch)
         repeat(SCROLL_FRAMES) { frame ->
             settle(FRAME_MILLIS)
@@ -221,8 +234,7 @@ internal class ShotScope(
 
 /** The listing, in the order the stores show it. */
 internal val shots = listOf(
-    // The library: the songs in English only, sorted by artist and scrolled down to Bob Dylan, whose header is pinned
-    // under the app bar, with the "New song" menu open over the list, offering to create a song or import files.
+    // The library: the songs in English only, sorted by artist, from the top of the list.
     Shot(
         id = "01-songs",
         uiMode = UserPreferences.UiMode.DARK,
@@ -231,54 +243,36 @@ internal val shots = listOf(
             val unfiltered = awaitSongGroups { it.groups.isNotEmpty() }.filterKey
             viewModel.songListState.toggleLanguageFilter("en")
             awaitSongGroups { it.filterKey != unfiltered }
-            scrollSongsTo(artist = "Bob Dylan")
         },
-        drive = { tap(string("songs_new_song")) },
     ),
     // A song as it is played: the public domain House of the Rising Sun, opened from the library, its first section of
     // controls and its chord diagrams followed by the start of the lyrics. At least the first verse has to be in view,
-    // so on a phone the picking pattern, which is a whole screen of tablature, is folded.
+    // so on a phone the picking pattern, which is a whole screen of tablature, is folded, and so is the Scales section.
     Shot(
         id = "02-song",
         uiMode = UserPreferences.UiMode.DARK,
         preferences = { device ->
             buildMap {
                 // The library's own text size takes the first verse off a phone, and on the Chromebook it breaks the
-                // picking pattern across two columns instead of keeping it whole in the first, as the iPad does.
-                if (device.isPhone || device == Device.CHROMEBOOK) put("fontScale", JsonPrimitive(1f))
+                // picking pattern across two columns instead of keeping it whole in the first, as the iPad does. The
+                // Android phone stacks the two folded headers where the iPhone sets them side by side, so it needs a
+                // smaller text for the last line of the verse.
+                when (device) {
+                    Device.ANDROID_PHONE -> put("fontScale", JsonPrimitive(0.925f))
+                    Device.IPHONE, Device.CHROMEBOOK -> put("fontScale", JsonPrimitive(1f))
+                    else -> Unit
+                }
                 if (device.isPhone) put("foldedSections", buildJsonObject { putJsonArray(HOUSE_OF_THE_RISING_SUN) { add("Picking pattern#1") } })
+                put("isScaleSectionFolded", JsonPrimitive(true))
             }
         },
         drive = { openSong(HOUSE_OF_THE_RISING_SUN) },
     ),
-    // The metronome as an instrument: its own tab, playing 6/8 at 236 BPM (House of the Rising Sun's tempo), the bar
-    // accented on its first and fourth beats as 6/8 is counted, and caught on the first, with the tempo, the time
-    // signature and the sound below the pinned bar.
+    // The tools a song is played with: the public domain Home on the Range on a guitar, its metronome panel open under
+    // the title at the song's 100 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click
+    // is not playing, since opening the tuner sheet stops it.
     Shot(
-        id = "03-metronome",
-        uiMode = UserPreferences.UiMode.LIGHT,
-        preferences = {
-            mapOf(
-                "metronomeSettings" to buildJsonObject {
-                    put("bpm", 236)
-                    put("timeSignature", "6/8")
-                    putJsonObject("beatLevels") {
-                        putJsonArray("6/8") { listOf("accent", "normal", "normal", "accent", "normal", "normal").forEach(::add) }
-                    }
-                },
-            )
-        },
-        drive = {
-            viewModel.selectTopLevelDestination(CampfireDestination.Metronome)
-            settle()
-            viewModel.metronomeController.toggleMetronome()
-        },
-        beat = 0,
-    ),
-    // The tuner as an instrument: its own tab on a guitar, the low E and the A strings already heard in tune and ticked
-    // off, and the D string heard a little flat, the needle left of the in-tune window, so the strings still to do show.
-    Shot(
-        id = "04-tuner",
+        id = "03-metronome-tuner",
         uiMode = UserPreferences.UiMode.LIGHT,
         preferences = {
             mapOf(
@@ -287,30 +281,29 @@ internal val shots = listOf(
                     put("referencePitch", 440)
                     put("hasTurnedOnMicrophone", true)
                 },
+                "metronomeSettings" to buildJsonObject { put("isSongPanelShown", true) },
             )
         },
         drive = {
-            viewModel.selectTopLevelDestination(CampfireDestination.Tuner)
+            openSong(HOME_ON_THE_RANGE)
+            viewModel.dialogHost.showDialog(DialogType.Tuner)
             settle()
-            val tuner = KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner
-            listOf(reading(note = 40, cents = 0f), reading(note = 45, cents = 1f), reading(note = 50, cents = -12f)).forEach {
-                tuner.hear(it)
-                settle(FRAME_MILLIS * 4)
-            }
+            (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading(note = 45, cents = -12f))
+            settle()
         },
     ),
     // The setlists, latest day first: the Frey-Tully Nuptials in two days and Friday Night by the Lake tomorrow, each
     // counting down under its header next to its running time, and the rest of the gigs below.
     Shot(
-        id = "05-setlists",
-        uiMode = UserPreferences.UiMode.DARK,
+        id = "04-setlists",
+        uiMode = UserPreferences.UiMode.LIGHT,
         preferences = { mapOf("setlistSortingMode" to JsonPrimitive(UserPreferences.SetlistSortingMode.BY_DATE.id)) },
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Setlists) },
     ),
     // The ChordPro editor on the public domain Home on the Range: the text on its own where the window has room for one
     // pane, side by side with its live preview where it has room for two, and the Shortcuts always unfolded.
     Shot(
-        id = "06-editor",
+        id = "05-editor",
         uiMode = UserPreferences.UiMode.DARK,
         drive = {
             viewModel.editorSession.openEditor(HOME_ON_THE_RANGE)
@@ -318,12 +311,33 @@ internal val shots = listOf(
             tapIfPresent(string("song_editor_show_shortcuts"))
         },
     ),
+    // The scales: the Scales tab on a guitar in its standard tuning, in the key of A, with the sheet of A minor
+    // pentatonic open over it, its shapes along the neck and the chords it stacks into.
+    Shot(
+        id = "06-scales",
+        uiMode = UserPreferences.UiMode.DARK,
+        preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id)) },
+        prepare = { viewModel.scaleLibrary.keyIndex = KEY_A },
+        drive = {
+            viewModel.selectTopLevelDestination(CampfireDestination.Scales)
+            settle()
+            viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "minor_pentatonic", rootName = "A"))
+        },
+    ),
+    // The chord diagrams: the Chords tab on a ukulele in its standard tuning, so that the listing shows the app drawing
+    // more than the guitar the other shots play, with the chords of C in the shapes the songs would draw them with.
+    Shot(
+        id = "07-chords",
+        uiMode = UserPreferences.UiMode.LIGHT,
+        preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.UKULELE.id)) },
+        drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
+    ),
     // Home on the Range exported as a PDF, from the library's own song menu: A4 in landscape (in portrait on the small
     // Android tablet, whose upright window shows a portrait page larger), two columns and every option ticked, so the
     // preview shows the chord diagrams, the key, the tempo, the comments and the details. Share stands next to Save on
     // the phones and tablets, as the platforms' file pickers offer it there and not on a desktop.
     Shot(
-        id = "07-export",
+        id = "08-export",
         uiMode = UserPreferences.UiMode.LIGHT,
         preferences = { device ->
             mapOf(
@@ -331,14 +345,6 @@ internal val shots = listOf(
             )
         },
         drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
-    ),
-    // The chord diagrams: the Chords tab on a ukulele in its standard tuning, so that the listing shows the app drawing
-    // more than the guitar the other shots play, with the chords of C in the shapes the songs would draw them with.
-    Shot(
-        id = "08-chords",
-        uiMode = UserPreferences.UiMode.LIGHT,
-        preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.UKULELE.id)) },
-        drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
     ),
 )
 

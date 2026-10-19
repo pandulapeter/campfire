@@ -31,10 +31,10 @@ internal class Banner(
 internal val banners: List<Banner> by lazy {
     val slots = listOf(
         Device.ANDROID_PHONE to "01-songs",
-        Device.IPHONE to "03-metronome",
+        Device.IPHONE to "03-metronome-tuner",
         Device.IPAD to "02-song",
-        Device.ANDROID_SMALL_TABLET to "05-setlists",
-        Device.MAC to "06-editor",
+        Device.ANDROID_SMALL_TABLET to "04-setlists",
+        Device.MAC to "05-editor",
     ).map { (device, id) -> device to shot(id) }
     listOf(
         Banner(
@@ -50,11 +50,11 @@ internal val banners: List<Banner> by lazy {
             slots = listOf(Device.ANDROID_PHONE to shot("01-songs"), Device.ANDROID_PHONE to shot("02-song")),
         ),
         // Apple's product page header (21:9) and search results image (3:2): every Apple device at once on the first,
-        // and the song on the iPad with the metronome on the iPhone on the second, all in the dark theme.
+        // and the song on the iPad with its metronome and tuner on the iPhone on the second, all in the dark theme.
         Banner(
             folder = "App Store - Header",
             slots = listOf(
-                Device.IPAD to shot("05-setlists").inTheme(UserPreferences.UiMode.DARK),
+                Device.IPAD to shot("04-setlists").inTheme(UserPreferences.UiMode.DARK),
                 Device.MAC to shot("02-song"),
                 Device.IPHONE to shot("01-songs"),
             ),
@@ -63,7 +63,7 @@ internal val banners: List<Banner> by lazy {
             folder = "App Store - Search results",
             slots = listOf(
                 Device.IPAD to shot("02-song"),
-                Device.IPHONE to shot("03-metronome").inTheme(UserPreferences.UiMode.DARK),
+                Device.IPHONE to shot("03-metronome-tuner").inTheme(UserPreferences.UiMode.DARK),
             ),
         ),
         Banner(

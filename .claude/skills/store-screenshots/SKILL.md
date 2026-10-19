@@ -59,7 +59,7 @@ repository; the user reviews and commits.
 
 1. **Render.** `./gradlew :tools:screenshots:run` (in the background; one app start per image, a few seconds each)
    writes every shot of `Shot.kt` on every listing `Device`, the multi-device rows of `Banners.kt` and the website set of
-   `Website.kt` into `tools/screenshots/renders/<row label>/`. `--args="--only IPHONE,03-metronome,banners"` renders
+   `Website.kt` into `tools/screenshots/renders/<row label>/`. `--args="--only IPHONE,03-metronome-tuner,banners"` renders
    part of it (device enum names, shot ids, or `listing`, `banners`, `website`, `promo`). A failed render is reported and the
    run goes on. Never rebuild the tool while a render is running.
 2. **Check every image before importing anything**: a contact sheet per shot (PIL), then any device that looks off at
@@ -76,7 +76,8 @@ repository; the user reviews and commits.
    - The nine listing rows (one frame per column): import the row's eight images in order.
    - Rows with several frames in a column (the README banners, the Play Store banner, the link preview, Apple's header
      and search results): give each extra frame a temporary column (`add_template`, `delete_shape` the default device
-     it drops in, move the frame's `x` there), import, move it back, `remove_template`. Then restore the stacking with
+     it drops in, move the frame's `x` there), import, move it back, `remove_template`. Sending a frame to the back
+     with `z_order` does not change which frame of a column an import fills; only a column of its own does. Then restore the stacking with
      `z_order: front` in back-to-front order, keeping every MacBook's black camera-housing strip above its frame.
 
    | Row label | Row id |
@@ -129,24 +130,25 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 
 | # | Headline | Shot |
 |---|---|---|
-| 1 | Your songbook, synced to every screen | Songs, English only, by artist, scrolled to Bob Dylan (pinned), "+" menu open |
-| 2 | Laid out for the way you play | House of the Rising Sun (Traditional American); phones at 100% text with the Picking pattern folded, Chromebook at 100%, so the whole first verse shows |
-| 3 | A metronome that knows each song | Metronome tab playing 6/8 at 236, beats 1 and 4 accented, caught on beat 1 |
-| 4 | A tuner for the whole band | Tuner tab on a guitar: E2 and A2 ticked off in tune, D3 heard 12 cents flat |
-| 5 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
-| 6 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
-| 7 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
-| 8 | Chords for guitar, ukulele, and more | Chords tab on a ukulele in standard tuning, the chords of C |
+| 1 | Your songbook, synced to every screen | Songs, English only, by artist, from the top (the library's copy of Gimme! Gimme! Gimme! has no subtitle) |
+| 2 | Laid out for the way you play | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the Android phone at 92.5% text, the iPhone and the Chromebook at 100%, so the whole first verse shows |
+| 3 | A metronome and tuner in every song | Home on the Range on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat |
+| 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
+| 5 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
+| 6 | Every scale and mode, on your instrument | Scales tab on a guitar in standard tuning, in A, under the sheet of A minor pentatonic |
+| 7 | Chords for guitar, ukulele, and more | Chords tab on a ukulele in standard tuning, the chords of C |
+| 8 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
 
-The README banners are shots 1, 3, 2, 5, 6 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
+The README banners are shots 1, 3, 2, 4, 5 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
 banner 1, light and in reverse order in banner 2. The Play Store banner is the Android phone's shots 1 and 2; the link
-preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 5, the Mac's 2 and the iPhone's 1, and its search
+preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2 and the iPhone's 1, and its search
 results image the iPad's 2 and the iPhone's 3, all dark.
 
 The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
-Alive 95% (page one ends after Bridge 2), Accidentally in Love 100% with the metronome panel open (after Prechorus 2),
-I'll Be There for You 100% on the laptop (the whole song, in four columns), Uptown Girl 100% under the Choose chord
-shape sheet. A song longer than a page is cut wherever
+Alive 95% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner
+sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets; I'll Be
+There for You on the laptop at 100% (the whole song, in four columns), 140% (after Verse 2) and 232.5% (after Verse 1).
+The laptop's editor is scrolled past Thinking Out Loud's directives. A song longer than a page is cut wherever
 a column ends, so these were found by rendering every size from 80% to 130% in steps of 2.5% and reading where page
 one ends; if a song, a device or the layout changes, try again the same way. **Never fold the Chords section (or
 anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on

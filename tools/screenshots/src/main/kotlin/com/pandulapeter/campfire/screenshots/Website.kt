@@ -72,19 +72,19 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        // A song with the tuner sheet open over it, the low E string heard in tune.
+        // Uptown Girl as the metronome shot shows it, with the tuner sheet open over it, the low E string heard a little sharp.
         Triple(
             "tablet-song-tuner",
             Device.IPAD,
             Shot(
                 id = "tablet-song-tuner",
                 uiMode = UserPreferences.UiMode.DARK,
-                preferences = { tuner + ("fontScale" to JsonPrimitive(0.9f)) },
+                preferences = { tuner + metronome(isSongPanelShown = true) + ("fontScale" to JsonPrimitive(UPTOWN_GIRL_FONT_SCALE)) },
                 drive = {
-                    openSong("the_proclaimers-im_gonna_be_500_miles.cho")
+                    openSong(UPTOWN_GIRL)
                     viewModel.dialogHost.showDialog(DialogType.Tuner)
                     settle()
-                    hear(reading(note = 40, cents = 1.2f))
+                    hear(reading(note = 40, cents = 9f))
                 },
             ),
         ),
@@ -100,7 +100,8 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
             ),
         ),
-        // Uptown Girl on a guitar in standard tuning at 100%, with the Choose chord shape sheet open over it for E.
+        // I'm Gonna Be (500 Miles) on a guitar in standard tuning, as the scales shot shows it, with the Choose chord shape
+        // sheet open over it for B, a barre chord with shapes all along the neck.
         Triple(
             "tablet-song-chord-shape",
             Device.IPAD,
@@ -110,13 +111,13 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 preferences = {
                     mapOf(
                         "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
-                        "fontScale" to JsonPrimitive(1f),
+                        "fontScale" to JsonPrimitive(FIVE_HUNDRED_MILES_FONT_SCALE),
                     )
                 },
                 drive = {
-                    openSong(UPTOWN_GIRL)
-                    val song = checkNotNull(song(UPTOWN_GIRL))
-                    viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = null, chordName = "E"))
+                    openSong(FIVE_HUNDRED_MILES)
+                    val song = checkNotNull(song(FIVE_HUNDRED_MILES))
+                    viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = null, chordName = "B"))
                 },
             ),
         ),
@@ -137,8 +138,8 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        // Take Me Home, Country Roads on a guitar in standard tuning at 100%, every chord of it in A major so that its Scales
-        // section has a set for the whole song, with the scale sheet open over it on A major pentatonic.
+        // I'm Gonna Be (500 Miles) on a guitar in standard tuning, every chord of it in E major so that its Scales section
+        // has a set for the whole song, with the scale sheet open over it on E major pentatonic.
         Triple(
             "tablet-song-scales",
             Device.IPAD,
@@ -148,21 +149,21 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 preferences = {
                     mapOf(
                         "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
-                        "fontScale" to JsonPrimitive(1f),
+                        "fontScale" to JsonPrimitive(FIVE_HUNDRED_MILES_FONT_SCALE),
                     )
                 },
                 drive = {
-                    openSong("john_denver-take_me_home_country_roads.cho")
-                    viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "major_pentatonic", rootName = "A"))
+                    openSong(FIVE_HUNDRED_MILES)
+                    viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "major_pentatonic", rootName = "E"))
                 },
             ),
         ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
-        // A song with the metronome panel open under its title, not playing.
+        // Uptown Girl with the metronome panel open under its title, not playing, as the tuner shot shows it under its sheet.
         Triple(
             "tablet-song-metronome",
             Device.IPAD,
-            song("tablet-song-metronome", "counting_crows-accidentally_in_love.cho", fontScale = 1f, extra = metronome(isSongPanelShown = true)),
+            song("tablet-song-metronome", UPTOWN_GIRL, fontScale = UPTOWN_GIRL_FONT_SCALE, extra = metronome(isSongPanelShown = true)),
         ),
         // A song exported as a two-column A4 PDF, every option ticked.
         Triple(
@@ -176,11 +177,11 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             ),
         ),
         // One song at three text sizes, which the page crossfades between to show that the columns follow the text size:
-        // the whole song in four columns, the first page ending after Chorus 2 in three, and after Verse 1 in two.
+        // the whole song in four columns, the first page ending after Verse 2 in three, and after Verse 1 in two.
         Triple("laptop-song-small", Device.LAPTOP, song("laptop-song-small", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1f)),
         Triple("laptop-song-medium", Device.LAPTOP, song("laptop-song-medium", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.4f)),
-        Triple("laptop-song-large", Device.LAPTOP, song("laptop-song-large", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 2.3f)),
-        Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho")),
+        Triple("laptop-song-large", Device.LAPTOP, song("laptop-song-large", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 2.325f)),
+        Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho", scroll = EDITOR_SCROLL)),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
     ).flatMap { (name, device, shot) ->
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
@@ -207,6 +208,14 @@ private val tuner = mapOf(
 )
 
 private const val UPTOWN_GIRL = "billy_joel-uptown_girl.cho"
+private const val EDITOR_SCROLL = 0.3f
+private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.cho"
+
+/** The text size at which the iPad's first page of Uptown Girl, its metronome panel open, ends where a section ends. */
+private const val UPTOWN_GIRL_FONT_SCALE = 1f
+
+/** The text size at which the iPad's first page of I'm Gonna Be (500 Miles) ends where a section ends. */
+private const val FIVE_HUNDRED_MILES_FONT_SCALE = 1.1f
 
 /** Has the tuner hear [reading] and settle on it, the needle come to rest. */
 private suspend fun PrepareScope.hear(reading: TunerReading) {
@@ -224,7 +233,7 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 
 /**
  * A song from the library at [fontScale], chosen per song so that its first page on the device ends where a section
- * ends (for Still Alive, after Bridge 2), since sections are cut across columns and pages wherever a column ends; a
+ * ends (for Still Alive, after Verse 4), since sections are cut across columns and pages wherever a column ends; a
  * change to the song, the device or the layout calls for looking again.
  * The Chords section is never folded to make room.
  */
@@ -235,12 +244,17 @@ private fun song(id: String, fileName: String, fontScale: Float = 1f, extra: Map
     drive = { openSong(fileName) },
 )
 
-private fun editor(id: String, fileName: String) = Shot(
+/**
+ * The editor on the song whose file is called [fileName], its Shortcuts unfolded and its text scrolled up by [scroll] of
+ * the screen's height, past the directives every file starts with, so that the page shows the lyrics being written.
+ */
+private fun editor(id: String, fileName: String, scroll: Float) = Shot(
     id = id,
     uiMode = UserPreferences.UiMode.DARK,
     drive = {
         viewModel.editorSession.openEditor(fileName)
         settle()
         tapIfPresent(string("song_editor_show_shortcuts"))
+        scrollTextField(scroll)
     },
 )
