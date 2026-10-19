@@ -69,6 +69,10 @@ test('the worker sends a screen\'s address to the form the site\'s 404 page prod
         action: 'redirect',
         location: `${SCOPE}?/chords`,
     });
+    assert.deepEqual(plain(route(`${SCOPE}scales`, 'navigate')), {
+        action: 'redirect',
+        location: `${SCOPE}?/scales`,
+    });
 });
 
 test('the worker leaves alone what is not the app\'s', () => {
