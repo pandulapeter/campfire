@@ -26,6 +26,14 @@ import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 @Composable
 internal fun scaleName(scale: Scale) = scaleNameResource(scale.id)?.let { stringResource(it) } ?: scale.id
 
+/**
+ * The other names of [scale] in the app's language, comma-separated, or its English ones where this version has no
+ * translation, or null for a scale known by one name.
+ */
+@Composable
+internal fun scaleAliases(scale: Scale): String? =
+    scaleAliasesResource(scale.id)?.let { stringResource(it) } ?: scale.aliases.joinToString(", ").ifEmpty { null }
+
 /** [scale] in the key of [rootName], a note in the standard notation, named in [notation]: "C Dorian". */
 @Composable
 internal fun scaleTitle(scale: Scale, rootName: String, notation: ChordNotation) =

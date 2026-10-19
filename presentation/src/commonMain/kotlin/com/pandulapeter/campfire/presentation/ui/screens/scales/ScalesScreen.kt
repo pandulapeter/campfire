@@ -67,6 +67,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.scales.label
+import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
@@ -100,7 +101,8 @@ internal fun ScalesScreen(
     val root = ChordProChords.parse(rootName)?.root ?: 0
     val query = state.query
     val names = Scales.all.associateWith { scaleName(it) }
-    val scales = remember(state.familyIndex, query, names) { scaleLibraryResults(state.familyIndex, query) { names.getValue(it) } }
+    val aliases = Scales.all.associateWith { scaleAliases(it) }
+    val scales = remember(state.familyIndex, query, names, aliases) { scaleLibraryResults(state.familyIndex, query, names::getValue, aliases::get) }
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
     ScrollToTopOnRequest(
         requests = viewModel.navigator.scrollToTopRequests,

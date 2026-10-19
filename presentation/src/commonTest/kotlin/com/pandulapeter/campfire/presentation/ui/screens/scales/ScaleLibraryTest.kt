@@ -37,10 +37,13 @@ class ScaleLibraryTest {
         "diminished" to "Szűkített (egész–fél)",
     )
 
-    private fun search(query: String) = scaleLibraryResults(familyIndex = 3, query = query) { hungarian[it.id] ?: it.id }.map { it.id }
+    private val hungarianAliases = mapOf("double_harmonic" to "Bizánci, Cigány dúr", "melodic_minor" to "Jazz-moll")
+
+    private fun search(query: String) =
+        scaleLibraryResults(familyIndex = 3, query = query, nameOf = { hungarian[it.id] ?: it.id }, aliasesOf = { hungarianAliases[it.id] }).map { it.id }
 
     @Test
-    fun `a blank search lists the family picked`() = assertEquals(scaleLibraryScales(3), scaleLibraryResults(3, "  ") { it.id })
+    fun `a blank search lists the family picked`() = assertEquals(scaleLibraryScales(3), scaleLibraryResults(3, "  ", { it.id }, { null }))
 
     @Test
     fun `a search finds scales of every family by their name, ignoring case and accents`() {
@@ -54,6 +57,13 @@ class ScaleLibraryTest {
         assertEquals(listOf("phrygian_dominant", "double_harmonic"), search("hijaz"))
         val ionian = search("ionian")
         assertEquals("major", ionian.last())
+    }
+
+    @Test
+    fun `a search finds a scale by another name in the app's language`() {
+        assertEquals(listOf("double_harmonic"), search("cigany dur"))
+        assertEquals(listOf("melodic_minor"), search("jazz-moll"))
+        assertTrue("melodic_minor" in search("jazz minor"))
     }
 
     @Test

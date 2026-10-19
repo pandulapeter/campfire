@@ -25,5 +25,6 @@ own Features switch (`areScalesEnabled`), not the chord ones. Offered in read on
 - Everything is computed in composition (no dispatcher): the first frame is the page. A tuning or instrument
   change crossfades each cell's diagram.
 - The search (the Chords tab's pinned field, `pinnedSearchField`) finds scales by their name in the app's language,
-  their English name, or an alias, ignoring case and accents, across every family (`scaleLibraryResults`, tested);
-  picking a family empties it. Ctrl / Cmd + F, Escape, and Back work as on the Chords tab (`ToolSearch`).
+  their English name, or an alias in either language, ignoring case and accents, across every family
+  (`scaleLibraryResults`, tested); picking a family empties it. **Aliases are translated** (`scale_aliases_<id>`, one
+  comma-separated string per scale, read by `scaleAliases`); the catalogue's English ones stay as search terms. Ctrl / Cmd + F, Escape, and Back work as on the Chords tab (`ToolSearch`).

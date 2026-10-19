@@ -709,6 +709,31 @@
     <string name="scale_leading_whole_tone">Leading whole tone</string>
     <string name="scale_flamenco">Flamenco</string>
     <string name="scale_spanish_eight_tone">Spanish eight-tone</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">Ionian</string>
+    <string name="scale_aliases_mixolydian">Dominant scale</string>
+    <string name="scale_aliases_natural_minor">Aeolian</string>
+    <string name="scale_aliases_ionian_sharp_5">Augmented major</string>
+    <string name="scale_aliases_dorian_sharp_4">Romanian minor, Ukrainian Dorian</string>
+    <string name="scale_aliases_phrygian_dominant">Spanish Phrygian, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_ultralocrian">Super Locrian ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">Jazz minor</string>
+    <string name="scale_aliases_dorian_flat_2">Phrygian ♮6</string>
+    <string name="scale_aliases_lydian_dominant">Acoustic, Overtone</string>
+    <string name="scale_aliases_mixolydian_flat_6">Aeolian dominant, Hindu</string>
+    <string name="scale_aliases_locrian_natural_2">Half-diminished</string>
+    <string name="scale_aliases_altered">Super Locrian, Diminished whole tone</string>
+    <string name="scale_aliases_double_harmonic">Byzantine, Hijaz Kar, Arabic, Gypsy major</string>
+    <string name="scale_aliases_hungarian_minor">Gypsy minor, Double harmonic minor</string>
+    <string name="scale_aliases_egyptian">Suspended pentatonic</string>
+    <string name="scale_aliases_man_gong">Blues minor pentatonic</string>
+    <string name="scale_aliases_ritusen">Yo, Blues major pentatonic</string>
+    <string name="scale_aliases_in">Sakura</string>
+    <string name="scale_aliases_blues">Minor blues</string>
+    <string name="scale_aliases_prometheus">Mystic</string>
+    <string name="scale_aliases_tritone">Petrushka</string>
+    <string name="scale_aliases_augmented">Hexatonic</string>
+    <string name="scale_aliases_diminished">Octatonic</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Edit</string>

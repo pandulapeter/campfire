@@ -12,6 +12,30 @@ package com.pandulapeter.campfire.presentation.ui.scales
 import com.pandulapeter.campfire.chordpro.scales.ScaleFamily
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.scale_altered
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_altered
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_augmented
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_blues
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_diminished
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_dorian_flat_2
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_dorian_sharp_4
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_double_harmonic
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_egyptian
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_hungarian_minor
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_in
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_ionian_sharp_5
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_locrian_natural_2
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_lydian_dominant
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_major
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_man_gong
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_melodic_minor
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_mixolydian
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_mixolydian_flat_6
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_natural_minor
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_phrygian_dominant
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_prometheus
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_ritusen
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_tritone
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_ultralocrian
 import com.pandulapeter.campfire.presentation.resources.scale_augmented
 import com.pandulapeter.campfire.presentation.resources.scale_bebop_dominant
 import com.pandulapeter.campfire.presentation.resources.scale_bebop_dorian
@@ -151,6 +175,39 @@ internal fun scaleNameResource(id: String): StringResource? = when (id) {
     "leading_whole_tone" -> Res.string.scale_leading_whole_tone
     "flamenco" -> Res.string.scale_flamenco
     "spanish_eight_tone" -> Res.string.scale_spanish_eight_tone
+    else -> null
+}
+
+/**
+ * The other names the scale with the catalogue's [id] is known by, as one comma-separated list in the app's language
+ * (the catalogue's `Scale.aliases` are the English ones), or null for a scale known by one name, or an id this version
+ * has no names for.
+ */
+internal fun scaleAliasesResource(id: String): StringResource? = when (id) {
+    "major" -> Res.string.scale_aliases_major
+    "mixolydian" -> Res.string.scale_aliases_mixolydian
+    "natural_minor" -> Res.string.scale_aliases_natural_minor
+    "ionian_sharp_5" -> Res.string.scale_aliases_ionian_sharp_5
+    "dorian_sharp_4" -> Res.string.scale_aliases_dorian_sharp_4
+    "phrygian_dominant" -> Res.string.scale_aliases_phrygian_dominant
+    "ultralocrian" -> Res.string.scale_aliases_ultralocrian
+    "melodic_minor" -> Res.string.scale_aliases_melodic_minor
+    "dorian_flat_2" -> Res.string.scale_aliases_dorian_flat_2
+    "lydian_dominant" -> Res.string.scale_aliases_lydian_dominant
+    "mixolydian_flat_6" -> Res.string.scale_aliases_mixolydian_flat_6
+    "locrian_natural_2" -> Res.string.scale_aliases_locrian_natural_2
+    "altered" -> Res.string.scale_aliases_altered
+    "double_harmonic" -> Res.string.scale_aliases_double_harmonic
+    "hungarian_minor" -> Res.string.scale_aliases_hungarian_minor
+    "egyptian" -> Res.string.scale_aliases_egyptian
+    "man_gong" -> Res.string.scale_aliases_man_gong
+    "ritusen" -> Res.string.scale_aliases_ritusen
+    "in" -> Res.string.scale_aliases_in
+    "blues" -> Res.string.scale_aliases_blues
+    "prometheus" -> Res.string.scale_aliases_prometheus
+    "tritone" -> Res.string.scale_aliases_tritone
+    "augmented" -> Res.string.scale_aliases_augmented
+    "diminished" -> Res.string.scale_aliases_diminished
     else -> null
 }
 

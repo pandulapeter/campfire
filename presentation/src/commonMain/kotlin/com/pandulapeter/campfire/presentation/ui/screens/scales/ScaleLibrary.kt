@@ -24,15 +24,18 @@ internal fun scaleLibraryScales(familyIndex: Int): List<Scale> =
 
 /**
  * What the Scales tab lists for [query]: the scales of the family chip at [familyIndex] while it is blank, and otherwise
- * every scale whose name ([nameOf], in the app's language), English name or other name holds it, ignoring case and
- * accents, whatever family it is in, so that `hijaz` finds the Phrygian dominant and `dur` the major scale in
- * Hungarian. The ones found by a name come before the ones found only by another name, each in catalogue order.
+ * every scale whose name ([nameOf], in the app's language), English name or other name (in the app's language,
+ * [aliasesOf], or in English, the catalogue's) holds it, ignoring case and accents, whatever family it is in, so that
+ * `hijaz` finds the Phrygian dominant and `dur` the major scale in Hungarian. The ones found by a name come before the
+ * ones found only by another name, each in catalogue order.
  */
-internal fun scaleLibraryResults(familyIndex: Int, query: String, nameOf: (Scale) -> String): List<Scale> {
+internal fun scaleLibraryResults(familyIndex: Int, query: String, nameOf: (Scale) -> String, aliasesOf: (Scale) -> String?): List<Scale> {
     val typed = folded(query.trim())
     if (typed.isEmpty()) return scaleLibraryScales(familyIndex)
     val byName = Scales.all.filter { scale -> folded(nameOf(scale)).contains(typed) || folded(scale.id.replace('_', ' ')).contains(typed) }
-    val byAlias = Scales.all.filter { scale -> scale !in byName && scale.aliases.any { folded(it).contains(typed) } }
+    val byAlias = Scales.all.filter { scale ->
+        scale !in byName && (scale.aliases.any { folded(it).contains(typed) } || aliasesOf(scale)?.let { folded(it).contains(typed) } == true)
+    }
     return byName + byAlias
 }
 

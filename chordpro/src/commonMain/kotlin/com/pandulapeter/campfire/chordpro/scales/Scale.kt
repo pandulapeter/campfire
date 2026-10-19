@@ -20,7 +20,7 @@ package com.pandulapeter.campfire.chordpro.scales
  *   letter ([ScaleSpelling]). Every label names its interval.
  * @property modeOf The id of the scale this is a rotation of and the degree it starts on (Dorian is the major scale from
  *   its second degree), or null.
- * @property aliases Other names it is known by, in English.
+ * @property aliases Other names it is known by, in English: search terms, and the source a translation is made from.
  */
 public data class Scale(
     val id: String,

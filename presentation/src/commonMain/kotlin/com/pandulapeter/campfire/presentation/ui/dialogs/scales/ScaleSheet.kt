@@ -61,6 +61,7 @@ import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 import com.pandulapeter.campfire.presentation.ui.scales.displayedDegree
+import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.scales.scaleStepsText
@@ -250,8 +251,8 @@ private fun ScaleRelations(
             RelationLine(stringResource(Res.string.scales_relative_minor, scaleTitle(minor, relativeRoot, notation)))
         }
     }
-    if (scale.aliases.isNotEmpty()) {
-        RelationLine(stringResource(Res.string.scales_also_called, scale.aliases.joinToString(", ")))
+    scaleAliases(scale)?.let { aliases ->
+        RelationLine(stringResource(Res.string.scales_also_called, aliases))
     }
 }
 

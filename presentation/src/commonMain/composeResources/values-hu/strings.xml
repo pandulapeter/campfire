@@ -709,6 +709,31 @@
     <string name="scale_leading_whole_tone">Vezetőhangos egészhangú</string>
     <string name="scale_flamenco">Flamenco</string>
     <string name="scale_spanish_eight_tone">Spanyol nyolcfokú</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">Ión</string>
+    <string name="scale_aliases_mixolydian">Domináns skála</string>
+    <string name="scale_aliases_natural_minor">Eol</string>
+    <string name="scale_aliases_ionian_sharp_5">Bővített dúr</string>
+    <string name="scale_aliases_dorian_sharp_4">Román moll, Ukrán dór</string>
+    <string name="scale_aliases_phrygian_dominant">Spanyol fríg, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_ultralocrian">Szuperlokriszi ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">Jazz-moll</string>
+    <string name="scale_aliases_dorian_flat_2">Fríg ♮6</string>
+    <string name="scale_aliases_lydian_dominant">Akusztikus, Felhangskála</string>
+    <string name="scale_aliases_mixolydian_flat_6">Eol domináns, Hindu</string>
+    <string name="scale_aliases_locrian_natural_2">Félszűkített</string>
+    <string name="scale_aliases_altered">Szuperlokriszi, Szűkített egészhangú</string>
+    <string name="scale_aliases_double_harmonic">Bizánci, Hijaz Kar, Arab, Cigány dúr</string>
+    <string name="scale_aliases_hungarian_minor">Cigány moll, Kettős összhangzatos moll</string>
+    <string name="scale_aliases_egyptian">Szuszpendált pentaton</string>
+    <string name="scale_aliases_man_gong">Blues moll pentaton</string>
+    <string name="scale_aliases_ritusen">Yo, Blues dúr pentaton</string>
+    <string name="scale_aliases_in">Sakura</string>
+    <string name="scale_aliases_blues">Moll blues</string>
+    <string name="scale_aliases_prometheus">Misztikus</string>
+    <string name="scale_aliases_tritone">Petruska</string>
+    <string name="scale_aliases_augmented">Hexaton</string>
+    <string name="scale_aliases_diminished">Oktaton</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>
