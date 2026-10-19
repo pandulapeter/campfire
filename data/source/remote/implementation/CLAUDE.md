@@ -19,9 +19,7 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
   `:data:repository:implementation`.
 - The import download (`ImportDownloadRemoteSourceImpl`), one GET of an address the user opened, keeping nothing;
   reached by nothing in the app yet.
-- The "Cover art" switch in Settings → Features (`UserPreferences.isCoverArtEnabled`) turns off cover fetching, drawing,
-  and search; the "Online song details" switch removes the lookup. Coil has no network artifact: it draws what
-  `GetCoverArtUseCase` hands it.
+- Coil has no network artifact: it draws what `GetCoverArtUseCase` hands it.
 - `HttpClientHolder` builds the one client lazily on the first request, on `Dispatchers.Default`, so a user who never
   syncs or searches never builds it.
 - `User-Agent` (`UserAgent.kt`): `Campfire/<campfire.versionName> ( https://github.com/pandulapeter/campfire )`, naming
@@ -37,9 +35,9 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 - The key is `campfire.dropbox.appKey` → `DROPBOX_APP_KEY` in the generated `RemoteConfiguration.kt` (with
   `CAMPFIRE_VERSION` for the `User-Agent`).
 - Dropbox app setup: a *scoped access* app with the **App folder** permission; scopes `files.content.read`,
-  `files.content.write`, `account_info.read`, `sharing.read`, `sharing.write` (the last two for song links, added
-  2026-10-16: the authorization URL names no scopes, so Dropbox grants what the console ticks, and a token from before
-  then lacks them — a sharing call answers `missing_scope`, never a reason to fail sync); redirect URIs
+  `files.content.write`, `account_info.read`, plus `sharing.read` and `sharing.write` for the planned song links
+  (`documentation/plans/song-links.md`; the authorization URL names no scopes, so a token granted before a scope was
+  ticked lacks it); redirect URIs
   `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682` (desktop), and the exact page URL per web deployment.
   Dropbox matches them character for character, hence the fixed desktop port.
 - `MusicBrainzRemoteSource` and `ITunesRemoteSource` are each built once in `DataRemoteSourceModule` and handed to both
@@ -50,17 +48,18 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
 - App-folder scope: every path is inside `Apps/Campfire Sync`. Library files are `/songs/<name>` and
   `/setlists/<name>`; folder documents (`preferences.json`) are `/<name>`, never listed. A document's `path/not_found`
   is no document.
-- Uploads use `update` mode with the expected revision (the service refuses a clobber); `autorename` is off. Deletes
-  carry `parent_rev`; "already gone" is success. A download's revision comes from the `Dropbox-API-Result` header (its
+- Uploads use `add` mode for a new file and `update` with the expected revision otherwise, so the service refuses a
+  clobber (`path/conflict` → `Conflict`); `autorename` is off. Deletes carry `parent_rev`; "already gone" is success,
+  and a file changed since is left for the next run to bring back. A download's revision comes from the `Dropbox-API-Result` header (its
   absence is a failure).
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
-  while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout. Timeouts retry like
-  rate limits.
+  while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout.
 - Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
-  32 s over six attempts, plus jitter. A first sync *will* be rate limited; it must not fail for it.
+  32 s, six retries (~1.5 min), plus up to 0.5 s jitter. Of transport failures only timeouts are retried; any other
+  ends the run as `SyncNetworkException`. A first sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`, like `MusicBrainzModels`: everything defaulted, unknown keys ignored, so a new API field never
@@ -90,12 +89,14 @@ Silent failures (a revocation, an unreadable account, a stray request on the des
     shell's URL opener); if it never opens, the attempt ends at once. `accept` ignores cancellation and interrupts, so
     cancelling closes the socket from a sibling coroutine (`DesktopSyncAuthenticatorTest`; getting it wrong holds the
     port for five minutes). Each connection is read with a timeout and non-redirect requests (speculative connections,
-    favicon) get a 404 while listening continues.
+    favicon) get a 404 while listening continues. An attempt nobody answers ends after five minutes.
   - **Web**: navigates away (`Redirected`), the PKCE verifier written to OPFS first; the answer is read from the query
     string at the next start and removed from the address bar so a reload cannot replay the code.
     `error=access_denied` is a refusal. The redirect URI is the `<base>` folder (not the address bar), ending in `/`,
     without `index.html`; registered: `https://campfire-songbook.com/app/` (the custom domain, not the `github.io`
     address that redirects to it) and `http://localhost:8080/`.
+- `disconnect` takes an access token (renewed if needed) within 10 s, forgets the local credentials, then revokes best
+  effort within 10 s, so a dead network never keeps the user connected.
 
 ## Downloads
 
