@@ -22,5 +22,6 @@ written only once non-empty, so older documents keep their bytes.
   newer `version` is neither applied nor overwritten.
 - A song no longer in the library loses its entry, except a file the run failed on or one the folder gained since the
   last sync. Chord and tag entries are never dropped with a song. Entries match songs ignoring case and Unicode form.
-- A value changed here during the merge is kept. A failure sets `SyncSummary.havePreferencesFailed` and leaves the base
-  unchanged.
+- A value changed here during the merge is kept. A failure that ends a run (`SyncRunEndingException`) ends this one with
+  its reason, keeping the folder's document as the base once it was applied here; any other failure sets
+  `SyncSummary.havePreferencesFailed` and leaves the base unchanged.

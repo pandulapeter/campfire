@@ -30,8 +30,10 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -581,6 +583,93 @@ class SyncRepositoryImplTest {
             provider,
             FakeSyncIndexLocalSource(index = index.encoded()),
             FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("song_1.cho" to 2))),
+        )
+    }
+
+    @Test
+    fun `preferences cut off by the network end the run as a network failure`() = runTest {
+        val world = preferencesOnTheirWayUp(failure = SyncNetworkException("Offline"))
+
+        world.repository.restore()
+        world.repository.synchronize(SyncDeletionPolicy.ASK)
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), world.repository.awaitOutcome().lastOutcome)
+        val saved = assertNotNull(world.stateLocalSource.document)
+        assertFalse(saved.isRunInProgress)
+        assertEquals(world.index.entries, saved.entries)
+        assertEquals(1, saved.lastSyncedAt)
+        assertEquals(world.folderDocument, saved.syncedPreferences)
+
+        world.provider.onUploadDocument = {}
+        world.repository.synchronize(SyncDeletionPolicy.ASK)
+        val outcome = world.repository.syncState.first { (it as? SyncState.Connected)?.lastOutcome is SyncOutcome.Success }
+        assertFalse(assertIs<SyncOutcome.Success>((outcome as SyncState.Connected).lastOutcome).summary.havePreferencesFailed)
+        val uploaded = SyncedPreferencesDocument.preferencesOf(
+            assertNotNull(SyncedPreferencesDocument.decode(world.provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)),
+        )
+        assertEquals(mapOf("song_1.cho" to 2), uploaded.transpositions)
+    }
+
+    @Test
+    fun `a full folder on preferences ends the run as that`() = runTest {
+        val world = preferencesOnTheirWayUp(failure = SyncRemoteStorageFullException("Full"))
+
+        world.repository.restore()
+        world.repository.synchronize(SyncDeletionPolicy.ASK)
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), world.repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `preferences that fail for any other reason leave the run a success that says so`() = runTest {
+        val world = preferencesOnTheirWayUp(failure = IllegalStateException("Broken"))
+
+        world.repository.restore()
+        world.repository.synchronize(SyncDeletionPolicy.ASK)
+
+        val outcome = assertIs<SyncOutcome.Success>(world.repository.awaitOutcome().lastOutcome)
+        assertTrue(outcome.summary.havePreferencesFailed)
+    }
+
+    private class PreferencesWorld(
+        val repository: SyncRepositoryImpl,
+        val provider: FakeSyncProvider,
+        val stateLocalSource: FakeSyncIndexLocalSource,
+        val index: SyncIndexDocument,
+        val folderDocument: JsonObject,
+    )
+
+    /**
+     * A library in step with the folder, and a transposition set only here since the last run, so the run's last step
+     * is uploading `preferences.json` - which throws [failure].
+     */
+    private fun TestScope.preferencesOnTheirWayUp(failure: Exception): PreferencesWorld {
+        val folderDocument = Json.parseToJsonElement("""{"version":1,"songs":{"song_1.cho":{"capo":2}}}""").jsonObject
+        val provider = FakeSyncProvider(files = mapOf(song(1) to SONG_BYTES), account = TEST_ACCOUNT)
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(folderDocument) to "r1"
+        provider.onUploadDocument = { throw failure }
+        val index = SyncIndexDocument.of(
+            providerId = SyncProviderId.DROPBOX.id,
+            accountId = TEST_ACCOUNT.indexKey(),
+            lastSyncedAt = 1,
+            syncedPreferences = Json.parseToJsonElement("""{"version":1,"songs":{"song_1.cho":{"capo":1}}}""").jsonObject,
+            index = mapOf(song(1) to SyncIndexEntry(localHash = localContentHash(SONG_BYTES), remoteRevision = "r1")),
+        )
+        val stateLocalSource = FakeSyncIndexLocalSource(index = index.encoded())
+        val repository = syncRepository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to SONG_BYTES)),
+            userPreferencesRepository = FakeUserPreferencesRepository(
+                defaultUserPreferences(capos = mapOf("song_1.cho" to 1), transpositions = mapOf("song_1.cho" to 2)),
+            ),
+        )
+        return PreferencesWorld(
+            repository = repository,
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            index = index,
+            folderDocument = folderDocument,
         )
     }
 

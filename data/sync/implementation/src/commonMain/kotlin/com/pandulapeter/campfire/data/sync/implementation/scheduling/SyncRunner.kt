@@ -222,8 +222,8 @@ internal class SyncRunner(
 
     /**
      * Settles `preferences.json` once the library files have been, and answers the document to remember, or null where
-     * it could not be settled. Only the failures that end a run end this one too: anything else is the one document's
-     * problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
+     * it could not be settled. A failure that ends a run (refused, the network, a full folder) ends this one with its
+     * reason: anything else is the one document's problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
      * next run tries again.
      */
     private suspend fun synchronizePreferences(
@@ -239,7 +239,7 @@ internal class SyncRunner(
         )
     } catch (exception: CancellationException) {
         throw exception
-    } catch (exception: SyncAuthorizationException) {
+    } catch (exception: SyncRunEndingException) {
         throw exception
     } catch (exception: Exception) {
         environment.logger.log("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
