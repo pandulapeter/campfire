@@ -923,7 +923,7 @@
     <string name="app_update_downloaded_hint">A telepítés befejezéséhez a Campfire újraindul.</string>
     <string name="app_update_restart">Újraindítás</string>
     <string name="app_update_required">Frissítés szükséges</string>
-    <string name="app_update_required_hint">A Campfire ezen verziója már nem használható. A könyvtárad pontosan ott marad, ahol van.</string>
+    <string name="app_update_required_hint">A Campfire ezen verziója már nem használható. A könyvtárad pontosan ott marad, ahol van. A frissítéshez internetkapcsolat kell.</string>
 
     <!-- Export -->
     <string name="print_save">Mentés</string>

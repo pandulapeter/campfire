@@ -923,7 +923,7 @@
     <string name="app_update_downloaded_hint">Campfire needs to restart to finish installing it.</string>
     <string name="app_update_restart">Restart</string>
     <string name="app_update_required">Update required</string>
-    <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is.</string>
+    <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is. Updating needs an internet connection.</string>
 
     <!-- Export -->
     <string name="print_save">Save</string>
