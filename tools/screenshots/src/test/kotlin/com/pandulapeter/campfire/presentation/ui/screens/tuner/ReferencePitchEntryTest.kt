@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
@@ -59,7 +60,8 @@ internal class ReferencePitchEntryTest {
     private fun AppTestScope.openReferencePitch() {
         tap(hasText(string(Res.string.tools)) and hasClickAction())
         tap(hasText(string(Res.string.tuner)) and hasClickAction())
-        onNode(hasScrollAction() and !hasSetTextAction()).performScrollToNode(hasSetTextAction())
+        // The tools' tab row above the tuner scrolls too, sideways, where its tabs are wider than the window.
+        onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasSetTextAction())
         waitForIdle()
     }
 }
