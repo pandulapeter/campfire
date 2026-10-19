@@ -278,6 +278,43 @@ class NavigatorTest {
     }
 
     @Test
+    fun `ctrl f on the scales tab asks its search field for the caret`() = runTest {
+        val navigator = navigator(backgroundScope)
+        var requests = 0
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { scaleLibrary.searchFocusRequests.collect { requests++ } }
+        navigator.selectTopLevelDestination(CampfireDestination.Scales)
+        assertTrue(navigator.searches.openCurrentSearch())
+        assertEquals(1, requests)
+        navigator.selectTopLevelDestination(CampfireDestination.Metronome)
+        assertFalse(navigator.searches.openCurrentSearch())
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `a step back empties the scales tab's search before leaving the tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Scales)
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+        scaleLibrary.query = "dorian"
+        assertTrue(navigator.searches.isCurrentSearchOpen)
+        navigator.searches.closeCurrentSearch()
+        assertEquals("", scaleLibrary.query)
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+    }
+
+    @Test
+    fun `the scales tab's search is no other screen's to empty`() = runTest {
+        val navigator = navigator(backgroundScope)
+        scaleLibrary.query = "dorian"
+        assertFalse(navigator.searches.isCurrentSearchOpen)
+        songsSearch.open()
+        assertTrue(navigator.searches.isCurrentSearchOpen)
+        navigator.searches.closeCurrentSearch()
+        assertFalse(songsSearch.isOpen.value)
+        assertEquals("dorian", scaleLibrary.query)
+    }
+
+    @Test
     fun `pressing the open settings item scrolls it without touching a search`() = runTest {
         val navigator = navigator(backgroundScope)
         val requests = mutableListOf<CampfireDestination.TopLevel>()
