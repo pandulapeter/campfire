@@ -28,9 +28,13 @@ import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
  * share a scale with: first one holding a section of its own kind (a second verse goes with the first), then the group
  * the section before it is in, then any other, so that a verse after the solo goes back to the verses rather than starting a group of its
  * own. A section that fits no group starts one, and one whose chords no scale holds is left out. The root of a group is
- * the first of these that some scale on it fits: the key in force at its first section (the song's `{key}`, moved by any
- * `{transpose}` before it, or the key that `{transpose}` names), the first chord it plays, the last one, then every other
- * root its chords stand on, the most played first.
+ * the first of these that some scale on it fits: the key in force at its first section (the song's `{key}`, or the key
+ * the last `{transpose}` before it names), the first chord it plays, the last one, then every other root its chords
+ * stand on, the most played first.
+ *
+ * The song is read as it stands: every chord as written, and a `{transpose}` only for the key it names, never as a move
+ * to make. The transposer has already moved the chords after one, and renamed its key, by the time a page shows them;
+ * a song it has not been through reads as written, its chords and its `{transpose}` keys agreeing just the same.
  */
 public object SongScaleGroups {
 
@@ -86,30 +90,25 @@ public object SongScaleGroups {
 
     /**
      * Every section of [song] that plays a chord, its continuations with it, a chorus recall left out since it plays
-     * the chorus again, each with the notes of its chords and the roots it plays, moved by the `{transpose}` in force.
+     * the chorus again, each with the notes of its chords and the roots it plays, and the key in force at it.
      */
     private fun partsOf(song: ChordProSong): List<Part> {
-        val songKey = song.metadata.key?.let(::rootOf)
-        var offset = 0
-        var key = songKey
+        var key = song.metadata.key?.let(::rootOf)
         val parts = mutableListOf<Part>()
         song.blocks.forEach { block ->
             when (block) {
-                is ChordProBlock.Transpose -> {
-                    offset = block.semitones
-                    key = block.key?.let(::rootOf) ?: songKey?.movedBy(offset)
-                }
+                is ChordProBlock.Transpose -> key = block.key?.let(::rootOf) ?: key
                 is ChordProBlock.Section -> {
                     val chords = block.lines.flatMap { it.chordNames() }.mapNotNull { name ->
-                        ChordProChords.parse(name)?.let { chord -> rootOf(name)?.movedBy(offset)?.let { it to chord } }
+                        ChordProChords.parse(name)?.let { chord -> rootOf(name)?.let { it to chord } }
                     }
                     val previous = parts.lastOrNull()?.takeIf { block.isContinuation && it.sections.last().type == block.type }
                     when {
                         previous != null -> {
                             previous.sections += block
-                            previous.add(chords, offset)
+                            previous.add(chords)
                         }
-                        chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply { add(chords, offset) }
+                        chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply { add(chords) }
                     }
                 }
                 else -> Unit
@@ -142,10 +141,10 @@ public object SongScaleGroups {
         /** What a section is of, so that a second verse finds the first: its type, and its label without a number. */
         val kind get() = sections.first().let { it.type to it.label?.trimEnd { char -> char.isDigit() || char.isWhitespace() }?.lowercase() }
 
-        fun add(played: List<Pair<Root, Chord>>, offset: Int) = played.forEach { (root, chord) ->
+        fun add(played: List<Pair<Root, Chord>>) = played.forEach { (root, chord) ->
             roots += root
             // The bass of a slash chord is left out: it is a voicing, and a passing bass note is often outside the scale.
-            chords += Chord(root = (chord.root + offset).mod(12), intervals = chord.intervals)
+            chords += Chord(root = chord.root, intervals = chord.intervals)
         }
     }
 
@@ -153,16 +152,5 @@ public object SongScaleGroups {
 
     private class Fit(val root: Root, val scales: List<Scale>)
 
-    private class Root(val pitchClass: Int, val name: String) {
-
-        /** This root [semitones] higher, spelled with flats where it was written with one, else with sharps. */
-        fun movedBy(semitones: Int): Root {
-            if (semitones == 0) return this
-            val pitchClass = (pitchClass + semitones).mod(12)
-            return Root(pitchClass, (if (name.getOrNull(1) == 'b') flatNames else sharpNames)[pitchClass])
-        }
-    }
-
-    private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-    private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
+    private class Root(val pitchClass: Int, val name: String)
 }

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro.scales
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -65,8 +66,8 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a transpose moves the chords after it and the key they are rooted on`() {
-        val groups = groups(
+    fun `a transpose is read for the key it names, the chords after it as the transposer left them`() {
+        val song = ChordProParser.parse(
             """
             {key: C}
             {start_of_verse: Verse}
@@ -76,9 +77,12 @@ class SongScaleGroupsTest {
             {start_of_verse: Last verse}
             [C]One [F]two [G]three
             {end_of_verse}
-            """,
+            """.trimIndent(),
         )
-        assertEquals(listOf("C", "D"), groups.map { it.rootName })
+        val transposed = SongScaleGroups.of(ChordProTransposer.transpose(song, 0))
+        assertEquals(listOf("C", "D"), transposed.map { it.rootName })
+        assertEquals(listOf("major", "major"), transposed.map { it.scales.first().id })
+        assertEquals(listOf("C"), SongScaleGroups.of(song).map { it.rootName })
     }
 
     @Test
