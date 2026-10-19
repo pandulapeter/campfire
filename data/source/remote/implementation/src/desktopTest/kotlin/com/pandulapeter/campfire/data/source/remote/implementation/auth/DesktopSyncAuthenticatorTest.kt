@@ -81,7 +81,7 @@ class DesktopSyncAuthenticatorTest {
             }
             socket.getInputStream().readBytes().decodeToString()
         }.let { response ->
-            assertTrue(response.contains("A Campfire csatlakozott"), "The page does not carry the title it was given.")
+            assertTrue(response.contains("Vissza a Campfire-höz"), "The page does not carry the title it was given.")
             assertTrue(response.contains("Bezárhatod"), "The page does not carry the message it was given.")
         }
         val outcome = withTimeout(5_000) { authorization.await() }
@@ -115,7 +115,7 @@ class DesktopSyncAuthenticatorTest {
             idle.close()
             socket.getInputStream().readBytes().decodeToString()
         }.let { response ->
-            assertTrue(response.contains("A Campfire csatlakozott"), "The redirect was not answered with the completion page.")
+            assertTrue(response.contains("Vissza a Campfire-höz"), "The redirect was not answered with the completion page.")
         }
         val outcome = withTimeout(5_000) { authorization.await() }
         assertEquals(
@@ -178,7 +178,7 @@ class DesktopSyncAuthenticatorTest {
     private companion object {
         /** In Hungarian on purpose: the page is rendered from what it is handed, not from anything built in. */
         val COMPLETION_PAGE = AuthorizationCompletionPage(
-            title = "A Campfire csatlakozott",
+            title = "Vissza a Campfire-höz",
             message = "Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.",
         )
     }
