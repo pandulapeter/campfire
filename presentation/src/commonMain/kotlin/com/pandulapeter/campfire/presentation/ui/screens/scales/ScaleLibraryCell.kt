@@ -26,21 +26,19 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
-import com.pandulapeter.campfire.presentation.ui.scales.scaleName
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * One scale of the Scales tab: its name in the chords' accent color over a small diagram of it on the player's
- * instrument, without labels, on a card that opens the scale sheet. A tuning or an instrument picked on the tab
- * crossfades the diagram into the new one.
+ * One scale of the Scales tab: its [title], the scale in its key ("C Dorian", as the Chords tab names each chord in the
+ * key), in the chords' accent color over a small diagram of it on the player's instrument, without labels, on a card
+ * that opens the scale sheet. A tuning or an instrument picked on the tab crossfades the diagram into the new one.
  */
 @Composable
 internal fun ScaleLibraryCell(
     modifier: Modifier = Modifier,
-    scale: Scale,
+    title: String,
     geometry: ScaleDiagramGeometry,
     description: String,
     onClick: () -> Unit,
@@ -56,7 +54,7 @@ internal fun ScaleLibraryCell(
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 8.dp),
-            text = scaleName(scale),
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             color = LocalSecondAccentColor.current,
             textAlign = TextAlign.Center,

@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
 import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchTopFade
 import com.pandulapeter.campfire.presentation.ui.components.rememberPinnedSearchFocus
 import com.pandulapeter.campfire.presentation.ui.scales.scaleName
+import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
@@ -191,7 +192,7 @@ internal fun ScalesScreen(
                 }
                 Box(modifier = listItemAnimation(gridState)) {
                     ScaleLibraryCell(
-                        scale = scale,
+                        title = scaleTitle(scale, rootName, notation),
                         geometry = geometry,
                         description = scaleDiagramDescription(scale, rootName, notation),
                         onClick = { viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scale.id, rootName = rootName)) },
