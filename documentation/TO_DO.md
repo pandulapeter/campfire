@@ -15,9 +15,9 @@
 ## Midterm (in the next versions)
 - Rename master branch to main
 - Shared setlists via Dropbox public links -> deeplink to Campfire: documentation/plans/song-links.md - allow scanning deep links via QR code
+- Scale / mode library: documentation/plans/scale-library.md
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-- Scale / mode library
 - Global sync status display
 
 ## Long-term
