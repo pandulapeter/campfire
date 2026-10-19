@@ -29,8 +29,8 @@
   again. Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
   thirds of its chords answers, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
   home's own harmonic minor, Dorian, or melodic minor where one does); below that floor the part is left out.
-- **What is suggested is `PlayableScales`**, not bare containment: the scales holding the chords, the major and minor
-  pentatonics and hexatonics inside the seven-note home scale (the safe choice, though five notes never hold a key's
-  chords), the blues scale wherever the minor pentatonic is, and over a dominant blues (major chords on I, IV, V, the I
-  a dominant seventh) the minor pentatonic, blues, and major ones too, its flat third being the style. Common holding
-  scales first, then these, then the rest, so a capped list keeps them.
+- **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
+  pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic
+  and blues also after a Mixolydian home's major one, over a dominant blues with the I or IV a seventh, and over a rock
+  riff of major chords on I, ♭III, IV, V, ♭VII), then the other common holders, other seven-note ones, hexatonics and
+  smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.

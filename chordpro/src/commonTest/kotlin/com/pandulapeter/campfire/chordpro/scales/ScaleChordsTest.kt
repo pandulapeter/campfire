@@ -82,7 +82,7 @@ class ScaleChordsTest {
     @Test
     fun `the common scales come first and the chromatic one never`() {
         val forC = scalesFor("C")
-        assertEquals(listOf("major", "major_pentatonic", "major_blues", "mixolydian"), forC.take(4))
+        assertEquals(listOf("major", "major_pentatonic", "mixolydian", "major_blues"), forC.take(4))
         assertFalse(Scales.CHROMATIC_ID in forC)
     }
 

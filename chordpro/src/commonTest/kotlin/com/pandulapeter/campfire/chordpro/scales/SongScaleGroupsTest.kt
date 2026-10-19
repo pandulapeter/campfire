@@ -148,6 +148,15 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a rock riff is played over the minor pentatonic and the blues on its root`() {
+        listOf("E G A E" to "G", "C Eb F C" to "Eb").forEach { (chords, outside) ->
+            val group = groups(song(chords)).single()
+            assertEquals(listOf("major", "minor_pentatonic", "blues"), group.scales.take(3).map { it.id }, chords)
+            assertEquals(listOf(outside), group.exceptions.map { it.chordName }, chords)
+        }
+    }
+
+    @Test
     fun `a Dorian vamp of triads is Dorian, not melodic minor`() {
         assertEquals(listOf("A" to "dorian"), rootAndFirst(song("Am D")))
         assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G")))

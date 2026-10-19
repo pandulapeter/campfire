@@ -57,7 +57,7 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
         }
     }
     if (groups.size == 1) {
-        return listOf(SongScaleGroup(label = null, rootName = groups.single().rootName, scales = groups.single().scales.take(MAX_GROUP_SCALES), exceptions = exceptions.single()))
+        return listOf(SongScaleGroup(label = null, rootName = groups.single().rootName, scales = chipsOf(groups.single().scales), exceptions = exceptions.single()))
     }
     val headers = groups.map { group -> group.sections.filter { !it.isContinuation }.map { it.header(labels) }.filter { it.isNotEmpty() } }
     val kindCounts = headers.flatten().groupingBy(::kindOf).eachCount()
@@ -70,11 +70,21 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
         SongScaleGroup(
             label = names.distinct().joinToString(", ").ifEmpty { null },
             rootName = group.rootName,
-            scales = group.scales.take(MAX_GROUP_SCALES),
+            scales = chipsOf(group.scales),
             exceptions = exceptions[index],
         )
     }
 }
+
+/**
+ * The chips of a group's [scales]: the eight-note ones left out where a smaller scale fits, since bebop and the
+ * diminished scales are a jazz player's passing tones rather than the answer to what a song is in, then the first
+ * [MAX_GROUP_SCALES]. A chord sheet keeps them.
+ */
+private fun chipsOf(scales: List<Scale>) =
+    (if (scales.any { it.intervals.size <= HOME_SCALE_SIZE }) scales.filter { it.intervals.size <= HOME_SCALE_SIZE } else scales).take(MAX_GROUP_SCALES)
+
+private const val HOME_SCALE_SIZE = 7
 
 /**
  * A heading without the number the page counts its kind by ("Verse" for "Verse 2"): one after a space, as

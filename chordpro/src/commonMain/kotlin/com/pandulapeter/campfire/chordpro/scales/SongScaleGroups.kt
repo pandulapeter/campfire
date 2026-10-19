@@ -173,7 +173,10 @@ public object SongScaleGroups {
             val home = looseHomes[best]
             if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, Level.LOOSE)
             val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
-            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), Level.LOOSE, home, exceptionsOf(harmony, root, home))
+            // The chords left out are what makes a rock riff, so its minor pentatonic and blues are asked of all of them.
+            val riff = if (PlayableScales.isRockRiff(root.pitchClass, harmony.chords)) PlayableScales.rockRiffScales else emptyList()
+            val scales = (listOf(home) + riff + PlayableScales.over(root.pitchClass, held)).distinct()
+            Fit(root, scales, Level.LOOSE, home, exceptionsOf(harmony, root, home))
         }
     }
 

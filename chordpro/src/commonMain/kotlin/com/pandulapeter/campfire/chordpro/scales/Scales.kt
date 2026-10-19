@@ -121,12 +121,13 @@ public object Scales {
     private val byId = all.associateBy { it.id }
 
     /**
-     * The shortlist offered before the families, in the order a player reaches for them: the scales most songs are
-     * played over, each an entry of [all].
+     * The shortlist offered before the families, in the order a player reaches for them: the major and minor keys, the
+     * pentatonics and the blues a solo starts from, the two modes rock and folk sit in, then the minor scales of jazz and
+     * classical harmony. Each an entry of [all].
      */
     public val common: List<Scale> = listOf(
-        "major", "natural_minor", "harmonic_minor", "melodic_minor", "major_pentatonic", "minor_pentatonic", "blues",
-        "major_blues", "dorian", "mixolydian", CHROMATIC_ID,
+        "major", "natural_minor", "minor_pentatonic", "major_pentatonic", "blues", "dorian", "mixolydian", "harmonic_minor",
+        "melodic_minor", "major_blues", CHROMATIC_ID,
     ).map(byId::getValue)
 
     private val byFamily = all.groupBy { it.family }

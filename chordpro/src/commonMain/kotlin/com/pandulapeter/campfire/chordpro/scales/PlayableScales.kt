@@ -13,19 +13,22 @@ import com.pandulapeter.campfire.chordpro.model.Chord
 
 /**
  * The scales to suggest for playing over chords, on a root: the ones holding every note of them
- * ([ScaleChords.scalesContaining]), and two kinds a player reaches for first that hold fewer notes or other ones.
+ * ([ScaleChords.scalesContaining]), and the kinds a player reaches for first that hold fewer notes or other ones.
  *
- * - **The pentatonic and hexatonic scales inside the home scale**: where a seven-note scale holds the chords (C major
- *   over C, F and G), the major and minor pentatonics and hexatonics whose notes are all in it are offered too. They
- *   leave out its tense notes, so they are the safe choice, even though a five-note scale can never hold the seven
- *   notes a key's chords play.
- * - **The blues scales**: the minor blues scale wherever the home scale holds the minor pentatonic (its flat fifth is a
- *   passing tone), and over a dominant blues, every chord a major one on the first, fourth or fifth step and the first a
- *   dominant seventh (C7 F7 G7, or a lone C7), the minor pentatonic, the blues scale and the major ones too: the flat
- *   third against the chords' major third is the sound of the style, which no scale holding the chords' notes plays.
+ * - **The pentatonics inside the home scale**, the first seven-note scale holding the chords: the one sharing its third
+ *   first, then the blues scale where the minor pentatonic is among them (its flat fifth is a passing tone). They leave
+ *   out its tense notes, so they are the safe choice, though five notes never hold a key's chords. A harmonic or melodic
+ *   minor home offers natural minor's, the safe set over a minor song's i and iv.
+ * - **The minor pentatonic and the blues over a major sound that has a flat third or seventh**: after a Mixolydian
+ *   home's major pentatonic; over a dominant blues, every chord a major one on the first, fourth, or fifth step, the
+ *   first or the fourth a dominant seventh (C7 F G, C F7 G, but not the plain cadence C F G7); and over a rock riff, every
+ *   chord a major triad or dominant seventh on I, ♭III, IV, V, or ♭VII with a ♭III or a ♭VII among them (E G A, C B♭ F).
+ *   The flat third against the chords' major third is the sound of the style, which no scale holding the notes plays, so
+ *   a dominant blues is a fit with no scale holding it. A rock riff is not: its ♭III and ♭VII are the roots of every
+ *   key a step or a fourth away, and as a fit it would hold a verse and a chorus in two keys together.
  *
- * The common scales that hold the notes come first, then these, then the rest that hold them, so that a suggestion
- * cut short still has them.
+ * After these, the other common scales holding the notes, the other seven-note ones, the hexatonics and the rest of six
+ * notes or fewer, and the eight-note scales last, so that a suggestion cut short keeps what a player reaches for.
  */
 public object PlayableScales {
 
@@ -43,23 +46,55 @@ public object PlayableScales {
         val notes = chords.flatMapTo(mutableSetOf()) { chord -> chord.intervals.map { (chord.root + it).mod(12) } }
         val holding = ScaleChords.scalesContaining(root, notes)
         val home = holding.firstOrNull { it.intervals.size == HOME_SCALE_SIZE }
-        val inside = home?.let { scale -> insideHome.filter { scale.intervals.containsAll(it.intervals) } }.orEmpty()
-        val minorBlues = if (inside.any { it.id == MINOR_PENTATONIC_ID }) listOfNotNull(Scales.fromId(BLUES_ID)) else emptyList()
-        val dominantBlues = if (isDominantBlues(root, chords)) dominantBluesScales else emptyList()
-        if (holding.isEmpty() && dominantBlues.isEmpty()) return null
-        val added = (inside + minorBlues + dominantBlues).filter { it !in holding }
-        val scales = (holding.filter { it in Scales.common } + added + holding.filter { it !in Scales.common }).distinct()
-        return Suggestion(scales = scales, isFit = dominantBlues.isNotEmpty() || holding.any { it.intervals.size <= HOME_SCALE_SIZE })
+        val isDominantBlues = isDominantBlues(root, chords)
+        val isRockRiff = isRockRiff(root, chords)
+        if (holding.isEmpty() && !isDominantBlues && !isRockRiff) return null
+        val source = if (home?.id in raisedMinorIds) naturalMinor else home
+        val inside = source?.let { scale -> pentatonics.filter { scale.intervals.containsAll(it.intervals) } }.orEmpty()
+            .sortedBy { MAJOR_THIRD !in (source?.intervals.orEmpty()) == (it.id == MAJOR_PENTATONIC_ID) }
+        val bluesSound = when {
+            home == null && isDominantBlues -> dominantBluesScales
+            home == null && isRockRiff -> rockRiffScales
+            else -> {
+                val minorBlues = if (inside.any { it.id == MINOR_PENTATONIC_ID } || home?.id == MIXOLYDIAN_ID || isRockRiff) rockRiffScales else emptyList()
+                inside + minorBlues + if (isDominantBlues) dominantBluesScales else emptyList()
+            }
+        }
+        val hexatonics = (source?.let { scale -> insideHexatonics.filter { scale.intervals.containsAll(it.intervals) } }.orEmpty() + holding)
+            .filter { it.id in hexatonicIds }
+        val scales = (
+            listOfNotNull(home) +
+                bluesSound +
+                holding.filter { it in Scales.common && it.intervals.size <= HOME_SCALE_SIZE } +
+                holding.filter { it.intervals.size == HOME_SCALE_SIZE } +
+                hexatonics +
+                holding.filter { it.intervals.size < HOME_SCALE_SIZE } +
+                holding.filter { it.intervals.size > HOME_SCALE_SIZE }
+            ).distinct()
+        return Suggestion(scales = scales, isFit = isDominantBlues || holding.any { it.intervals.size <= HOME_SCALE_SIZE })
     }
 
     /**
      * Whether [chords] are a dominant blues on [root]: each a chord with a major third on its first, fourth or fifth
-     * step, and the first step's a dominant seventh, its third and flat seventh both there.
+     * step, and the first or the fourth step's a dominant seventh, its third and flat seventh both there. A seventh on
+     * the fifth alone is the plain cadence of every hymn and folk song, no blues.
      */
     internal fun isDominantBlues(root: Int, chords: List<Chord>): Boolean {
         if (chords.isEmpty()) return false
         val isMajorOnBluesStep = chords.all { (it.root - root).mod(12) in bluesSteps && MAJOR_THIRD in it.intervals }
-        return isMajorOnBluesStep && chords.any { (it.root - root).mod(12) == 0 && MINOR_SEVENTH in it.intervals }
+        return isMajorOnBluesStep && chords.any { (it.root - root).mod(12) in seventhSteps && MINOR_SEVENTH in it.intervals }
+    }
+
+    /**
+     * Whether [chords] are a rock riff on [root]: each a major triad or a dominant seventh on its first, flat third,
+     * fourth, fifth, or flat seventh step, with a flat third or a flat seventh among them, the minor pentatonic's roots.
+     */
+    internal fun isRockRiff(root: Int, chords: List<Chord>): Boolean {
+        if (chords.isEmpty()) return false
+        val isMajorOnRiffStep = chords.all { chord ->
+            (chord.root - root).mod(12) in riffSteps && MAJOR_THIRD in chord.intervals && chord.intervals.all { it.mod(12) in dominantSeventh }
+        }
+        return isMajorOnRiffStep && chords.any { (it.root - root).mod(12) in flatRiffSteps }
     }
 
     /** What [suggestionFor] answers. */
@@ -68,9 +103,22 @@ public object PlayableScales {
     private const val HOME_SCALE_SIZE = 7
     private const val MAJOR_THIRD = 4
     private const val MINOR_SEVENTH = 10
+    private const val MAJOR_PENTATONIC_ID = "major_pentatonic"
     private const val MINOR_PENTATONIC_ID = "minor_pentatonic"
-    private const val BLUES_ID = "blues"
+    private const val MIXOLYDIAN_ID = "mixolydian"
     private val bluesSteps = setOf(0, 5, 7)
-    private val insideHome = listOf("major_pentatonic", "minor_pentatonic", "major_hexatonic", "minor_hexatonic").map(Scales::fromId).requireNoNulls()
-    private val dominantBluesScales = listOf(MINOR_PENTATONIC_ID, BLUES_ID, "major_pentatonic", "major_blues", "mixolydian").map(Scales::fromId).requireNoNulls()
+    private val seventhSteps = setOf(0, 5)
+    private val riffSteps = setOf(0, 3, 5, 7, 10)
+    private val flatRiffSteps = setOf(3, 10)
+    private val dominantSeventh = setOf(0, 4, 7, 10)
+    private val raisedMinorIds = setOf("harmonic_minor", "melodic_minor")
+    private val hexatonicIds = setOf("major_hexatonic", "minor_hexatonic")
+    private val naturalMinor = scalesOf("natural_minor").single()
+    private val pentatonics = scalesOf(MAJOR_PENTATONIC_ID, MINOR_PENTATONIC_ID)
+    private val insideHexatonics = scalesOf("major_hexatonic", "minor_hexatonic")
+    /** What a rock riff ([isRockRiff]) is played over besides the scales holding it, on its root. */
+    internal val rockRiffScales = scalesOf(MINOR_PENTATONIC_ID, "blues")
+    private val dominantBluesScales = scalesOf(MINOR_PENTATONIC_ID, "blues", MAJOR_PENTATONIC_ID, "major_blues", MIXOLYDIAN_ID)
+
+    private fun scalesOf(vararg ids: String) = ids.map(Scales::fromId).requireNoNulls()
 }

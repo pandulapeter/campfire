@@ -75,8 +75,14 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a group offers at most a handful of scales`() =
-        assertEquals(MAX_GROUP_SCALES, groups("[C]One [G]two").single().scales.size)
+    fun `a group offers at most a handful of scales`() {
+        val scales = groups("[C]One [G]two").single().scales
+        assertTrue(scales.isNotEmpty() && scales.size <= MAX_GROUP_SCALES)
+    }
+
+    @Test
+    fun `a song's chips leave out the eight-note scales`() =
+        assertTrue(groups("[C]One [F]two [G]three").single().scales.none { it.intervals.size == 8 })
 
     @Test
     fun `an exception is named in the reader's notation, capped`() {
