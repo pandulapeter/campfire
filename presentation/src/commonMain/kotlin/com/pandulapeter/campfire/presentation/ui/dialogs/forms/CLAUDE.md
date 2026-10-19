@@ -11,8 +11,6 @@
 
 The form sheets that write a song or setlist file.
 
-Root `CLAUDE.md` owns the rules that every typed modal is a `TextFieldBottomSheet` with its actions in the header.
-
 - **First-field focus is per form** (`rememberFirstFieldFocusRequester`): new song, new and duplicate setlist, tag
   management, language management, and library deletion focus their first field; duplicate song, edit setlist, song
   metadata, links, and cover art do not. Both assignment pickers leave search unfocused at every height.
