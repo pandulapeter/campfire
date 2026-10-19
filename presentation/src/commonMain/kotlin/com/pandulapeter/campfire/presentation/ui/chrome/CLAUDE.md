@@ -14,8 +14,7 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
 ### Chrome
 
 - Chrome kind (`navigationChromeKind`): bar under 600dp, rail above, expanded `WideNavigationRail` where the window also
-  fits the Songs filter side panel (decided from `minSongColumnWidth`), so the wide rail's own collapsed state is never
-  used.
+  fits the Songs filter side panel (decided from `minSongColumnWidth`).
 - **Transitions** (all in `NavigationTransitions.kt`, shared by every platform): tabs fade through in place, no slide;
   cards (`SongDetails`, `SongEditor`) enter and leave to the right regardless of the predictive gesture's edge, the
   screen beneath moving 12% with a scrim (theme `scrim` at 32%, via `NavigationScrim`, animated per entry so it follows
