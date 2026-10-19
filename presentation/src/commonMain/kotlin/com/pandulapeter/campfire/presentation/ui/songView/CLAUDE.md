@@ -28,9 +28,9 @@ builds what it draws, `grid/` places it.
 
 ### The Scales section
 
-- `RenderSection.Scales`, after the Chords section (else the first section), while chords and Scale suggestions are on
-  (`ScaleSuggestions`, null otherwise); read only mode keeps it, since a scale sheet writes nothing. One fold for every
-  song (`UserPreferences.isScaleSectionFolded`).
+- `RenderSection.Scales`, after the Chords section (else after the metadata section, else first), while chords and
+  Scale suggestions are on (`ScaleSuggestions`, null otherwise); read only mode keeps it, since a scale sheet writes
+  nothing. One fold for every song (`UserPreferences.isScaleSectionFolded`).
 - Cut between its rows of chips like the Chords section between its rows of diagrams: each group has one slot per chip
   (`RenderSection.Scales.groupStarts`), and every chunk composes its group's chips but places only its own rows
   (`ScaleChipRows`), since which row a chip lands in depends on the width being tried.

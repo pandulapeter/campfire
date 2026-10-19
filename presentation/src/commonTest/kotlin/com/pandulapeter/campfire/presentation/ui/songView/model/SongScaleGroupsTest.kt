@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,12 +64,17 @@ class SongScaleGroupsTest {
         assertEquals(MAX_GROUP_SCALES, groups("[C]One [G]two").single().scales.size)
 
     @Test
-    fun `the scales section stands after the chords, else after the first section, else first`() {
+    fun `the scales section stands after the chords, else after the metadata, else first`() {
         val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList())
+        val scales = RenderSection.Scales(listOf(group), isFolded = false)
         val sections = emptyList<RenderSection>()
-        assertEquals(listOf(RenderSection.Scales(listOf(group), isFolded = false)), withScalesSection(sections, listOf(group), isFolded = false))
+        assertEquals(listOf(scales), withScalesSection(sections, listOf(group), isFolded = false))
         assertEquals(sections, withScalesSection(sections, emptyList(), isFolded = false))
         val chords = RenderSection.Chords(cells = emptyList(), isFolded = false)
         assertEquals(listOf(chords, RenderSection.Scales(listOf(group), isFolded = true)), withScalesSection(listOf(chords), listOf(group), isFolded = true))
+        val metadata = RenderSection.Metadata(ChordProMetadata())
+        val comment = RenderSection.Comment(text = "Slowly", style = CommentStyle.ITALIC)
+        assertEquals(listOf(metadata, scales, comment), withScalesSection(listOf(metadata, comment), listOf(group), isFolded = false))
+        assertEquals(listOf(scales, comment), withScalesSection(listOf(comment), listOf(group), isFolded = false))
     }
 }

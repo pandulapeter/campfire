@@ -30,8 +30,8 @@ internal data class ScaleSuggestions(
 )
 
 /**
- * [sections] with the Scales section of [groups] after the Chords section, or after the song's first section where it
- * has none (the diagrams switched off, or an instrument without shapes), or first; unchanged where there are no groups.
+ * [sections] with the Scales section of [groups] after the Chords section, or after the metadata section where there is
+ * none (the diagrams switched off, or an instrument without shapes), or first; unchanged where there are no groups.
  */
 internal fun withScalesSection(sections: List<RenderSection>, groups: List<SongScaleGroup>, isFolded: Boolean): List<RenderSection> {
     if (groups.isEmpty()) return sections
