@@ -36,4 +36,4 @@ a no-op actual elsewhere. The gate wraps the whole app inside `CampfireApp`, so 
   exercised from an internal testing track.
 - **No other platform has this.** iOS has no API; polling Apple's lookup endpoint would be a second network request the
   app makes on its own, and iOS updates apps itself, so its actual stays `NotAvailable`. Desktop and the web answer to
-  no store (the web reloads the build on every open).
+  no store; the web asks its deployment at every open and switches to a new build itself (`app/web/CLAUDE.md`).
