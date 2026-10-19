@@ -10,7 +10,7 @@
 
 # :presentation — ui/screens/export
 
-The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUDE.md`.
+The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 
 ## Entry and sources
 
@@ -21,11 +21,29 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
   `hasSeveralSongs` (song ticks, Select all, new page per song, Zip). Several songs are unnumbered, in library keys,
   zipped by `ExportSongsUseCase` as `campfire_songs.zip` (even if one is left) and saved as `campfire_songs.pdf`.
 
+## Formats and options
+
+- One export entry per song and setlist (and selection mode's "Export songs") opens the export screen; no separate
+  share or file export entry. Formats: **PDF** (for printing) or the library's own files (for Campfire users):
+  **ChordPro** for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or
+  for several selected songs (no manifest).
+- A setlist's song ticks apply to both formats. A partial zip's manifest names only the ticked songs
+  (`ExportSetlistUseCase`'s `songFileNames`, rest of the document kept), so the archive never names a song the user left
+  out; a ticked song missing from the library is still named. All ticked → the stored manifest unchanged.
+- `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
+  size and folded sections.
+- **The Features switches reach the export**: an option whose feature is off (chords, which take diagrams and key; the
+  metronome, which takes tempo) is neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept
+  for when the switch comes back.
+- A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
+  entry's key. Missing or unreadable songs keep a visibly marked slot.
+- **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
+  excluded metadata. No platform print service: the file is saved or shared.
+
 ## A dialog to the view model, a screen to the user
 
-- `ExportHost`, composed by `CampfireScreens` after the `NavDisplay` and before dialogs and snackbars, slides it in and
-  out exactly like a pushed destination: same spring (`slideFractionSpec`), the `NavDisplay` giving way 12% through the
-  shared `ExportTransition` progress, following predictive back.
+- `ExportHost` (composed by `CampfireScreens` after the `NavDisplay`, before dialogs and snackbars) slides it in and out
+  exactly like a pushed destination, following predictive back.
 - An opaque `Surface` under the host's `NavigationBackHandler`, so Escape, browser Back, and the gesture close it; a
   failed export's snackbar still shows over it.
 - A focus group that cancels every exit while it is the dialog shown, so Tab never reaches the screen beneath
@@ -35,9 +53,8 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
 
 - **The format is the first option**, with a line saying what each is for (the names alone don't tell anybody).
   `Format.FILES` are written by `ExportController.exportFiles`; a saved one closes the screen like a PDF.
-- All PDF options fold away for files except a setlist's song ticks, one selection for both formats (switching doesn't
-  restore unticked songs). `chosenSongFileNames` is null when all are ticked, so the manifest goes out as stored. A zip
-  of none isn't offered unless the setlist has no songs.
+- All PDF options fold away for files except a setlist's song ticks (switching doesn't restore unticked songs). A zip of
+  none isn't offered unless the setlist has no songs.
 - Files skip the layout; `FilesPreview` shows the song's text (`PrintSong.text`, monospace, unwrapped) or `ZipContents`
   (manifest, then each `.cho`, missing ones dimmed).
 - Option and zip rows use `listItemAnimation`, keyed by their place in the source (a setlist may name a song twice).
@@ -60,9 +77,7 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
 
 ## Layout
 
-- Phone: the preview is the options list's first item (`STACKED_PREVIEW_HEIGHT`) and scrolls away; the list ends above
-  the save button (`FLOATING_CONTROLS_CLEARANCE`). From 520dp wide, options sit beside the preview and the button
-  floats over the preview.
+- Phone: the preview is the options list's first item and scrolls away; from 520dp wide, options sit beside it.
 - **The preview is its whole pane, and no floating control ever rests on the page at zoom 1**: the page fits the pane
   less one `FLOATING_CONTROLS_CLEARANCE` band at each end a control floats over (`PageFit`, `fitArea`). In a short window
   (`SHORT_WINDOW_HEIGHT`) the controls stack at the pane's end and the page sits beside them; the page-count pill is
@@ -77,7 +92,6 @@ The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUD
 - **Zoom grows the whole sheet**, edges included, past the pane (content growing in a fixed page read as larger text in
   the file). The zoom is stored as the page point at the pane's center (`PageView`), not a pixel pan, so resizing keeps
   the view; turning the page opens the next one whole.
-- Turning: swipe, buttons, arrows, Page Up / Down, Home, and End. Zoom: pinch, double tap, double-tap-and-drag
-  (`doubleTapZoom`, second press consumed so pager and pan don't move), touchpad pinch (`magnifyByTouchpad`). Ctrl / Cmd
-  plus wheel zooms only in the desktop app (`isCtrlWheelZoomOwnedByApp`), since in a browser that is the page's zoom.
+- Ctrl / Cmd plus wheel zooms only in the desktop app (`isCtrlWheelZoomOwnedByApp`), since in a browser that is the
+  page's zoom.
 - A page is described to screen readers by its number.

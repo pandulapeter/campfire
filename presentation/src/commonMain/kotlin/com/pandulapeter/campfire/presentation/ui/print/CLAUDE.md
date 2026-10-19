@@ -10,26 +10,7 @@
 
 # :presentation — ui/print
 
-The export formats, the options, and the PDF pipeline behind the export screen (`ui/screens/export`).
-
-## Formats and options
-
-- One export entry per song and setlist (and selection mode's "Export songs") opens the export screen; no separate
-  share or file export entry. Formats: **PDF** (for printing) or the library's own files (for Campfire users):
-  **ChordPro** for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or
-  for several selected songs (no manifest).
-- A setlist's song ticks apply to both formats. A partial zip's manifest names only the ticked songs
-  (`ExportSetlistUseCase`'s `songFileNames`, rest of the document kept), so the archive never names a song the user left
-  out; a ticked song missing from the library is still named. All ticked → the stored manifest unchanged.
-- `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
-  size and folded sections.
-- **The Features switches reach the export**: an option whose feature is off (chords, which take diagrams and key; the
-  metronome, which takes tempo) is neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept
-  for when the switch comes back.
-- A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
-  entry's key. Missing or unreadable songs keep a visibly marked slot.
-- **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
-  excluded metadata. No platform print service: the file is saved or shared.
+The PDF pipeline behind the export screen (`ui/screens/export`, which has the formats and options).
 
 ## Pipeline
 
@@ -51,8 +32,6 @@ the option). The setlist date uses the date picker's formatter in the app's lang
 - Section labels: hidden when the options hide all its lines; an unnamed verse is "Verse", an unnamed paragraph has none.
 - A chorus bar is a `PrintRule` per row so it continues across columns and pages. `wrapPrintText` never breaks inside a
   grapheme cluster.
-- Only strings of ≤8 characters are cached; layout yields after each song and every 50 groups (on the web it shares the
-  page's thread).
 - Diagram names and the instrument/tuning line above diagrams (`PrintLabels.chordTuning`, printed where not guitar or
   keyboard, or not standard tuning) are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
 - The playing row (`playingDetails`): key, transposition, and non-zero capo with `showKey` (on the keyboard the capo is
@@ -82,8 +61,3 @@ kept). Diagrams use the screen's `drawChordDiagram` in black (root mid gray), th
 - A run holding any RTL cluster (`rtlRuns`, the whole run) is wrapped in a `/Span` with `ActualText`, since readers
   ordering by position would read it backwards; the importer honours it.
 - No font programs are embedded, so visible glyphs match the preview.
-
-## Tests
-
-`CAMPFIRE_PRINT_QA_DIR` makes the renderer tests save QA PDFs; its `campfire.pdf` is also the document importer's
-positioned export/reimport fixture (documented beside that fixture).
