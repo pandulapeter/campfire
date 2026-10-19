@@ -86,8 +86,7 @@ belongs to the process); the view model is obtained outside `Window` so resizing
 ## Data directory
 
 - `~/Library/Application Support/Campfire` (macOS), `%APPDATA%\Campfire` (Windows; the package's `LocalState` for the
-  Store build, see MSIX), `$XDG_DATA_HOME/campfire` or `~/.local/share/campfire` (Linux). Settings doesn't show the
-  path.
+  Store build, see MSIX), `$XDG_DATA_HOME/campfire` or `~/.local/share/campfire` (Linux).
 - Mac App Store sandbox: the JDK takes `user.home` from the container, so nothing in the code changes;
   `network.server` covers the two loopback sockets.
 
@@ -136,7 +135,7 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 
 ### Windows
 
-- `.msi` (published by nothing now): per user, fixed `upgradeUuid`. **Never change either**: both put a second Campfire
+- `.msi`: per user, fixed `upgradeUuid`. **Never change either**: both put a second Campfire
   next to existing installs.
 - File associations: only `.cho`, `.chopro`, `.chordpro` (an MSI can only claim an extension outright); the Store
   package claims the same. Never zip or `.txt`. Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
@@ -160,4 +159,4 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   package logos regardless, and a Dock image set via `Taskbar` can't be drawn in macOS's tinted/dark icon styles, so
   neither is set.
 
-`run --args="/path/to/song.cho"` tests opening a file; `packageRelease…` tasks run ProGuard.
+`packageRelease…` tasks run ProGuard.
