@@ -163,6 +163,18 @@ class MusicBrainzRemoteSourceTest {
         assertEquals(1, busyCount)
     }
 
+    /** A person is looking at the sheet; a wait the app would never choose itself is not sat through on the server's word. */
+    @Test
+    fun `a refusal asking for a wait longer than the cap fails the search at once`() = runTest {
+        var busyCount = 0
+        val source = source { _ -> respond("", HttpStatusCode.ServiceUnavailable, headersOf(HttpHeaders.RetryAfter, "3600")) }
+
+        assertFailsWith<CatalogueSearchException> { source.searchCoverArt(QUERY, onBusy = { busyCount++ }) }
+
+        assertTrue(currentTime < 1_000L, "Waited $currentTime ms before failing.")
+        assertEquals(0, busyCount)
+    }
+
     @Test
     fun `a refusal that says nothing is waited out for longer each time, and then given up on`() = runTest {
         val starts = mutableListOf<Long>()

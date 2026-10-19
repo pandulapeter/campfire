@@ -122,13 +122,20 @@ internal class DropboxTransport(
 
     private fun Throwable.isTimeout() = this is HttpRequestTimeoutException || this is ConnectTimeoutException || this is SocketTimeoutException
 
-    /** Null when the answer is one to act on rather than to wait out. */
+    /**
+     * Null when the answer is one to act on rather than to wait out. A requested wait longer than
+     * [MAXIMUM_REQUESTED_WAIT_SECONDS] ends the run instead, as the service being busy, whatever the call.
+     */
     private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {
         status == HttpStatusCode.TooManyRequests ||
             status.value >= 500 ||
-            (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) ->
-            (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull()
-                ?: exponentialBackoffSeconds(attempt)) * 1000L
+            (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) -> {
+            val requested = (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull())?.coerceAtLeast(0)
+            if (requested != null && requested > MAXIMUM_REQUESTED_WAIT_SECONDS) {
+                throw SyncNetworkException("Dropbox asked to wait $requested s.")
+            }
+            (requested ?: exponentialBackoffSeconds(attempt)) * 1000L
+        }
 
         else -> null
     }
@@ -151,6 +158,12 @@ internal class DropboxTransport(
          * seconds rather than after the minute and a half a timeout is given.
          */
         const val MAXIMUM_TRANSPORT_FAILURE_RETRIES = 3
+
+        /**
+         * Dropbox's own rate limits ask for seconds to a few tens of seconds; anything far past the doubling's longest
+         * wait comes from something in between, and no run sits silent on "syncing" for longer than this.
+         */
+        const val MAXIMUM_REQUESTED_WAIT_SECONDS = 120L
 
         const val RETRY_JITTER_MILLIS = 500L
     }

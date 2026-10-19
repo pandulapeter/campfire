@@ -57,9 +57,9 @@ Silent failures go to the injected `Logger`.
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
   while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout.
 - Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
-  32 s, six retries, plus up to 0.5 s jitter. Transport failures are retried too: timeouts six times, anything else (a
-  reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend. A first sync *will* be rate
-  limited; it must not fail for it.
+  32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as `SyncNetworkException`
+  instead. Transport failures are retried too: timeouts six times, anything else (a reset, a cut stream, or a failed
+  `fetch`) three, since every call here is safe to resend. A first sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`, like `MusicBrainzModels`: everything defaulted, unknown keys ignored, so a new API field never
@@ -120,7 +120,7 @@ Silent failures go to the injected `Logger`.
   - Songwriters: one recording lookup with its work relations (`MusicBrainzSearch`, tested).
   - Pace: `MusicBrainzRateLimiter`, one per app, 1.1 s between request starts (MusicBrainz refuses everything while a
     client averages over 1/s). 503 / 429 wait for `Retry-After`, else 2 s doubling to 32 s, at most five retries,
-    calling `onBusy` before each.
+    calling `onBusy` before each; a `Retry-After` over 32 s fails the search at once.
 - **iTunes** (`iTunes/`, pure part `ITunesSearch`): no key, CORS headers on search and artwork.
   - Cover search: searches *songs* with artist plus album (or title) as one term (the album search matches the album
     name only); candidates are their albums. Artwork is the 100 px address rewritten to `250x250bb.jpg`; any other form

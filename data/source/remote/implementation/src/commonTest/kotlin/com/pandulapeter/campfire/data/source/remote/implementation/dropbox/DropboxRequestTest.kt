@@ -24,7 +24,9 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -96,6 +98,35 @@ class DropboxRequestTest {
         provider.list()
         // 2 + 4 + 8 + 16 + 32 + 32 seconds, and less than a second of jitter on each.
         assertTrue(currentTime in 94_000L..<97_000L, "Waited $currentTime ms rather than about 94 s.")
+    }
+
+    /** Anything far past Dropbox's own rate limits comes from something in between, and "syncing" must not sit for a day. */
+    @Test
+    fun `a wait longer than the cap ends the run instead of being waited`() = runTest {
+        val provider = dropboxProvider {
+            respond(content = "", status = HttpStatusCode.ServiceUnavailable, headers = headersOf(HttpHeaders.RetryAfter, "86400"))
+        }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertTrue(currentTime < 1_000L, "Waited $currentTime ms before giving up.")
+        val rateLimitedProvider = dropboxProvider {
+            respondJson("""{"error_summary":"too_many_requests/...","error":{"retry_after":86400}}""", HttpStatusCode.TooManyRequests)
+        }
+        assertFailsWith<SyncNetworkException> { rateLimitedProvider.list() }
+        assertTrue(currentTime < 1_000L, "Waited $currentTime ms before giving up.")
+    }
+
+    @Test
+    fun `a wait under the cap is waited`() = runTest {
+        var requestCount = 0
+        val provider = dropboxProvider {
+            if (++requestCount == 1) {
+                respond(content = "", status = HttpStatusCode.ServiceUnavailable, headers = headersOf(HttpHeaders.RetryAfter, "60"))
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        provider.list()
+        assertTrue(currentTime >= 60_000L, "Waited $currentTime ms rather than the 60 s that were asked for.")
     }
 
     @Test

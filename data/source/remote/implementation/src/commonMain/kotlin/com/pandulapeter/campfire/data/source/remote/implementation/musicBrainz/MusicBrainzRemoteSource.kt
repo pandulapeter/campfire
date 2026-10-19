@@ -33,9 +33,10 @@ import kotlinx.coroutines.delay
  * The cover search and the song details lookup on MusicBrainz, one instance for both so that both wait at the one
  * [rateLimiter]: MusicBrainz counts the app's requests, not one search's. Every request waits its turn at [rateLimiter], and a refusal — 503, which is how
  * MusicBrainz answers a client going faster than it allows, or 429 — is waited out and asked again: for as long as
- * its `Retry-After` says, or where it says nothing, for a wait that doubles from 2 s to 32 s, over at most
- * [MAXIMUM_RETRIES] attempts, the way the Dropbox provider sits out being rate limited. The caller hears of every such
- * wait through `onBusy`, since a search that takes ten seconds without saying why looks broken.
+ * its `Retry-After` says (up to [MAXIMUM_REQUESTED_WAIT_SECONDS]; a longer wait fails the search at once), or where it
+ * says nothing, for a wait that doubles from 2 s to 32 s, over at most [MAXIMUM_RETRIES] attempts, the way the Dropbox
+ * provider sits out being rate limited. The caller hears of every such wait through `onBusy`, since a search that takes
+ * ten seconds without saying why looks broken.
  */
 internal class MusicBrainzRemoteSource(
     private val httpClientHolder: HttpClientHolder,
@@ -68,12 +69,19 @@ internal class MusicBrainzRemoteSource(
             val (status, retryAfterSeconds, body) = catalogueTransport(SERVICE_NAME) {
                 rateLimiter.awaitTurn()
                 val response = httpClientHolder.client().get(url)
-                Triple(response.status, response.headers[HttpHeaders.RetryAfter]?.trim()?.toLongOrNull(), response.bodyAsText())
+                Triple(
+                    response.status,
+                    response.headers[HttpHeaders.RetryAfter]?.trim()?.toLongOrNull()?.coerceAtLeast(0),
+                    response.bodyAsText(),
+                )
             }
             when {
                 status.isSuccess() -> return body
                 status == HttpStatusCode.ServiceUnavailable || status == HttpStatusCode.TooManyRequests -> {
                     if (attempt >= MAXIMUM_RETRIES) throw CatalogueSearchException("$SERVICE_NAME is busy.")
+                    if (retryAfterSeconds != null && retryAfterSeconds > MAXIMUM_REQUESTED_WAIT_SECONDS) {
+                        throw CatalogueSearchException("$SERVICE_NAME asked to wait $retryAfterSeconds s.")
+                    }
                     onBusy()
                     delay((retryAfterSeconds ?: exponentialBackoffSeconds(attempt)) * 1000L)
                     attempt++
@@ -87,5 +95,11 @@ internal class MusicBrainzRemoteSource(
     private companion object {
         const val SERVICE_NAME = "MusicBrainz"
         const val MAXIMUM_RETRIES = 5
+
+        /**
+         * The doubling's own longest wait: a person is looking at the sheet, and a wait the app would never choose
+         * itself is not one to sit through on the server's word.
+         */
+        const val MAXIMUM_REQUESTED_WAIT_SECONDS = 32L
     }
 }
