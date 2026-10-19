@@ -54,6 +54,6 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 
 ## Tests
 
-`./gradlew :chordpro:desktopTest`. `ChordProSerializer` lives only in `commonTest`: the round-trip oracle
-`parse(serialize(parse(x))) == parse(x)` every model change is held to (the app never writes a model back).
+`ChordProSerializer` lives only in `commonTest`: the round-trip oracle `parse(serialize(parse(x))) == parse(x)` every
+model change is held to (the app never writes a model back).
 `desktopTest` draws every table shape into `CAMPFIRE_CHORD_QA_DIR` when set, for a player to review.
