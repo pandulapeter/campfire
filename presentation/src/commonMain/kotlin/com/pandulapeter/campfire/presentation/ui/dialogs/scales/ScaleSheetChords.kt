@@ -28,9 +28,10 @@ internal data class ScaleSheetChord(
 
 /**
  * [chords], a scale's chords in the standard notation, as the cells the scale sheet draws on [tuning], named in
- * [notation]. The shape is the tables' only: a chord they lack is drawn as the empty frame ([SongChord.isShapePending])
- * rather than searched for while the sheet is composed, which the qualities a stack of thirds makes never need, and its
- * own sheet still finds every shape it has.
+ * [notation]. The shape is the tables' only, so that nothing is searched for while the sheet is composed: they hold one
+ * for every chord a seven-note scale stacks, in every key and fretted tuning (`ScaleChordsTest` in `:chordpro`), and a
+ * chord they lacked would be drawn as the empty frame ([SongChord.isShapePending]). Its own sheet finds every shape it
+ * has.
  */
 internal fun scaleSheetChords(chords: List<ScaleChord>, notation: ChordNotation, tuning: ChordTuning) = chords.mapNotNull { scaleChord ->
     val chord = ChordProChords.parse(scaleChord.name) ?: return@mapNotNull null

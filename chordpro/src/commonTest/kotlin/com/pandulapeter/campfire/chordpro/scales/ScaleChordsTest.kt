@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicingSearch
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -118,22 +117,8 @@ class ScaleChordsTest {
     }
 
     @Test
-    fun `every chord a seven-note scale stacks has a table shape in the standard and lowered tunings`() {
-        val missing = missingTableShapes(ChordTuning.entries.filter { it.instrument != ChordInstrument.KEYBOARD } - TUNINGS_LACKING_SHAPES)
-        assertTrue(missing.isEmpty(), missing.toString())
-    }
-
-    /**
-     * The same over the tunings whose tables lack chords a scale sheet shows, which it draws as empty frames. The
-     * mandolin and the mandolin a half step down lack 7#5, 7b5, dim, maj7#5, maj7b5, and mmaj7; double drop D lacks
-     * every quality past the plain triads and sevenths (aug, dim, dim7, m7b5, maj7, the altered sevenths, mmaj7, sus2,
-     * sus4); the open guitar tunings, DADGAD, the AEAE and GDGD mandolins, and every banjo tuning lack most of them, and
-     * in some keys even major and minor triads.
-     */
-    @Ignore
-    @Test
-    fun `every chord a seven-note scale stacks has a table shape in the open and banjo and mandolin tunings`() {
-        val missing = missingTableShapes(TUNINGS_LACKING_SHAPES)
+    fun `every chord a seven-note scale stacks has a table shape in every fretted tuning`() {
+        val missing = missingTableShapes(ChordTuning.entries.filter { it.instrument != ChordInstrument.KEYBOARD })
         assertTrue(missing.isEmpty(), missing.toString())
     }
 
@@ -159,22 +144,3 @@ class ScaleChordsTest {
 }
 
 private val ROOTS = listOf("C", "C#", "Db", "D", "Eb", "E", "F", "F#", "Gb", "G", "Ab", "A", "Bb", "B")
-
-private val TUNINGS_LACKING_SHAPES = listOf(
-    ChordTuning.GUITAR_DOUBLE_DROP_D,
-    ChordTuning.GUITAR_OPEN_G,
-    ChordTuning.GUITAR_OPEN_D,
-    ChordTuning.GUITAR_OPEN_E,
-    ChordTuning.GUITAR_OPEN_A,
-    ChordTuning.GUITAR_OPEN_C,
-    ChordTuning.GUITAR_DADGAD,
-    ChordTuning.MANDOLIN,
-    ChordTuning.MANDOLIN_HALF_STEP_DOWN,
-    ChordTuning.MANDOLIN_AEAE,
-    ChordTuning.MANDOLIN_GDGD,
-    ChordTuning.BANJO,
-    ChordTuning.BANJO_DOUBLE_C,
-    ChordTuning.BANJO_C,
-    ChordTuning.BANJO_OPEN_D,
-    ChordTuning.BANJO_G_MODAL,
-)

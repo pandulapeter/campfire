@@ -14,6 +14,10 @@
   order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`
   is tolerant. A table is read on its first use (a `lazy`, which a second thread waits for); `ChordVoicings.prepare`
   reads it ahead, off the main thread.
+- **Every chord a seven-note scale stacks has a table shape in every key and fretted tuning** (`ScaleChordsTest`): the
+  scale sheet draws only the tables'. Adding to a table never changes the shape a chord was shown with (a moved shape
+  a new one would come before is filed under its chord). A table shape spans five frets only where its chord has no
+  shape within four (`ChordVoicingTablesTest`); the search never goes past four.
 - `ChordTuning`: its `id` must match `:tuner:api`'s `InstrumentTuning` ids. **A chord name names the chord that
   sounds.** A tuning has its own table or shifts one by a single interval. `drawsDefinitions` (standard and ukulele low
   G) is where a `{define}`, which has no tuning, is drawn.

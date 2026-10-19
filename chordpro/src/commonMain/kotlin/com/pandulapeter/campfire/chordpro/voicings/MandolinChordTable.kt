@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.chordpro.voicings
 
 /**
  * The mandolin's shapes in standard tuning (G D A E, one per pair of strings): the ones Campfire was first shipped with,
- * then ChordPro's.
+ * then ChordPro's, then the scale chords' ([ChordVoicingTables]).
  *
  * Within a chord the shapes are in the order they are offered in: the one every chart shows first, then the rest from
  * the most comfortable to the least (the lowest position, the fewest fingers, the smallest stretch, no muted string
@@ -175,5 +175,21 @@ internal object MandolinChordTable {
         "Bdim7 frets 1 0 2 1 fingers 1 0 3 2",
         "Bø frets 2 0 2 1 fingers 2 0 3 1",
         "B+ frets 4 1 2 3 fingers 4 1 2 3",
+
+        "Ddim frets 10 12 11 10 fingers 1 3 2 1",
+        "Ebdim frets 2 1 0 2 fingers 2 1 0 3",
+        "Edim frets 0 2 1 0 fingers 0 2 1 0",
+        "Fdim frets 1 3 2 1 fingers 1 3 2 1",
+        "Fmmaj7 frets 1 2 3 1 fingers 1 2 3 1",
+        "Abmmaj7 frets 1 1 2 3 fingers 1 1 2 3",
+        "Abmaj7#5 frets 1 2 3 3 fingers 1 2 3 4",
+        "Bmaj7#5 frets 3 1 2 3 fingers 3 1 2 4",
+        "Ab7#5 frets 1 2 3 2 fingers 1 2 4 3",
+        "B7#5 frets 2 1 2 3 fingers 2 1 3 4",
+        "F7b5 frets 2 1 2 1 fingers 2 1 3 1",
+        "B7b5 frets 2 1 2 1 fingers 2 1 3 1",
+        "Emaj7b5 frets 1 1 1 0 fingers 1 1 1 0",
+        "Fmaj7b5 frets 2 2 2 1 fingers 2 3 4 1",
+        "Bmaj7b5 frets 3 1 2 1 fingers 3 1 2 1",
     )
 }

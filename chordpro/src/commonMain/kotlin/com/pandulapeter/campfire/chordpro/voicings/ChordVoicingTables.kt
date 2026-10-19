@@ -19,6 +19,13 @@ package com.pandulapeter.campfire.chordpro.voicings
  * itself. `ChordVoicingTablesTest` checks that every shape sounds exactly the chord it is filed under, which is what
  * catches a mistyped fret, and that every fingering a shape has matches its frets; a shape that came without one has
  * none.
+ *
+ * Every table but the guitar's, the ukulele's, and drop D's, which have them already, ends in the shapes of the chords a
+ * seven-note scale stacks (`ScaleChords`) in the keys its typed shapes leave without one, since a scale sheet draws only
+ * the tables' shapes: each picked from the search's shapes of its chord, the most comfortable among those reaching the
+ * most keys filed or moved, an open-position one where that is the least work. Where one of them, moved to a key, would
+ * come before the shape that key was shown with, that shape is filed under its chord there too, so that every chord a
+ * table answered before keeps its shape. A few span five frets, where their chord has no shape within four.
  */
 internal object ChordVoicingTables {
 

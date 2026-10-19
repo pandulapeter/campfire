@@ -163,6 +163,7 @@ class ChordVoicingsTest {
                 val instrument = tuning.instrument
                 val played = if (instrument.playsChordOver) chord.copy(bass = null) else chord
                 val shapes = ChordVoicings.all(chord, tuning)
+                val tableFrets = ChordVoicingSearch.tableShapes(chord, tuning).map { it.frets }.toSet()
                 assertEquals(shapes.size, shapes.map { (it as ChordVoicing.Fretted).frets }.distinct().size, "$name has no shape twice")
                 shapes.forEach { voicing ->
                     val shape = assertIs<ChordVoicing.Fretted>(voicing)
@@ -175,7 +176,8 @@ class ChordVoicingsTest {
                     // The tables' own shapes, which carry their fingering, may mute a string with a finger that rests on it.
                     if (shape.fingers == null) assertEquals(sounding.size, sounding.last() - sounding.first() + 1, "$label mutes no string between two that sound")
                     val stopped = frets.filterNotNull().filter { it > 0 }
-                    if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < 4, label)
+                    // A table holds a shape five frets wide where its chord has no four-fret one; the search never finds one.
+                    if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < if (frets in tableFrets) 5 else 4, label)
                     instrument.droneString?.let { assertTrue(frets[it] == null || frets[it] == 0, "$label leaves its drone string open or muted") }
                     if (!instrument.playsChordOver) {
                         assertTrue(soundsBassLowest(chord, tuning, frets), "$label sounds its bass or root lowest, or an open tuning's open string its fifth")

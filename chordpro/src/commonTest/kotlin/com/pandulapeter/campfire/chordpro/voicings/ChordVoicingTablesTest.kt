@@ -80,6 +80,19 @@ class ChordVoicingTablesTest {
     }
 
     @Test
+    fun `a shape spans five frets only where its chord has no shape within four`() {
+        tablesByTuning.forEach { (tuning, lines) ->
+            lines.forEach { line ->
+                val shape = ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape
+                val stopped = (shape.voicing as ChordVoicing.Fretted).frets.filterNotNull().filter { it > 0 }
+                val stretch = if (stopped.isEmpty()) 0 else stopped.max() - stopped.min()
+                assertTrue(stretch <= 4, line)
+                if (stretch == 4) assertTrue(ChordVoicingSearch.search(ChordProChords.parse(shape.name)!!, tuning).isEmpty(), "$line has a narrower shape")
+            }
+        }
+    }
+
+    @Test
     fun `every table is checked here`() {
         ChordTuning.entries.filter { it.tableTuning == it }.forEach { assertTrue(it in tablesByTuning || !it.instrument.isFretted, it.id) }
     }
