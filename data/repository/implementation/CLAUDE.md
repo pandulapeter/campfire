@@ -61,9 +61,11 @@ which is visible once a load has finished:
   writes setlists behind the repository's back, and a change built on the stale cache would put the old version back
   and upload it over another device's edit. A gone file drops the setlist and changes nothing; an undecodable one is
   changed as cached.
-- No read writes: an undated file is listed with today's day in memory (`ParsedSetlist.isDated` false). `writeDays`
-  saves those days after `loadSetlistsIfNeeded` / `rescan` publish, from a fresh read under both locks, announcing
-  nothing; never inside the read itself (`latest` takes the read lock while holding the other two).
+- **Every setlist has a date**: an import dates a dateless setlist with today (the demo's included) unless it replaces a
+  library setlist, whose day it keeps. No read writes: an undated file is listed with today's day in memory
+  (`ParsedSetlist.isDated` false). `writeDays` saves those days after `loadSetlistsIfNeeded` / `rescan` publish, from a
+  fresh read under both locks, announcing nothing, so the next sync carries them; never inside the read itself (`latest`
+  takes the read lock while holding the other two).
 - `loadSetlistFileNamesNaming` reads every file afresh, outside the locks, for the reference walks.
 
 ### `SongRepositoryImpl`
