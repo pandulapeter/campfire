@@ -641,7 +641,6 @@
     <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
     <string name="scales_also_called">Más néven %1$s</string>
     <string name="scales_relative_minor">Párhuzamos moll: %1$s</string>
-    <string name="scales_relative_major">Párhuzamos dúr: %1$s</string>
     <string name="scales_chords">Akkordok ebben a skálában</string>
     <string name="scales_sevenths">Szeptimakkordok</string>
     <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
