@@ -32,6 +32,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -275,6 +276,43 @@ class DropboxRequestTest {
         }
         assertIs<SocketTimeoutException>(assertFailsWith<SyncNetworkException> { provider.list() }.cause)
         assertEquals(7, attempts)
+    }
+
+    /** What a cell handover shows up as at least as often as a timeout. */
+    @Test
+    fun `a connection reset is retried`() = runTest {
+        var attempts = 0
+        val provider = dropboxProvider {
+            if (++attempts <= 2) throw IOException("Connection reset")
+            respondJson("""{"entries":[{".tag":"file","name":"song.cho","path_lower":"/songs/song.cho","rev":"r1"}],"cursor":"","has_more":false}""")
+        }
+        assertEquals(expected = listOf("song.cho"), actual = provider.list().files.map { it.name })
+    }
+
+    /** A device that is plainly offline hears so within seconds, not after the minute and a half a timeout is given. */
+    @Test
+    fun `a failure that is not a timeout is given up on after a few attempts`() = runTest {
+        var attempts = 0
+        val provider = dropboxProvider {
+            attempts++
+            throw Error("Fail to fetch")
+        }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertEquals(4, attempts)
+        assertTrue(currentTime < 20_000L, "Waited $currentTime ms before giving up.")
+    }
+
+    @Test
+    fun `an upload whose first attempt was cut short is sent again`() = runTest {
+        var attempts = 0
+        val provider = dropboxProvider {
+            if (++attempts == 1) throw IOException("unexpected end of stream")
+            respondJson("""{"name":"song.cho","rev":"0123456789abcdef"}""")
+        }
+        assertEquals(
+            expected = RemoteWriteResult.Written("0123456789abcdef"),
+            actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
+        )
     }
 
     private companion object {

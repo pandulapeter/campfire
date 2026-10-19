@@ -57,8 +57,9 @@ Silent failures go to the injected `Logger`.
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
   while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout.
 - Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
-  32 s, six retries, plus up to 0.5 s jitter. Of transport failures only timeouts are retried; any other ends the run as
-  `SyncNetworkException`. A first sync *will* be rate limited; it must not fail for it.
+  32 s, six retries, plus up to 0.5 s jitter. Transport failures are retried too: timeouts six times, anything else (a
+  reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend. A first sync *will* be rate
+  limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`, like `MusicBrainzModels`: everything defaulted, unknown keys ignored, so a new API field never

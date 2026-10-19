@@ -76,9 +76,13 @@ internal class DropboxTransport(
      * handed the token it sends, so that the one refused is known and only that one is renewed: the transfers of a run
      * refused together share one renewal. A second 401 is the real refusal.
      *
-     * A timeout produces no answer at all, and is retried with the same doubling wait: on a phone it is more often a
-     * cell handover or a moment in a tunnel than a service that is gone, and one of them ending the run would leave a
-     * large library on a poor connection never finishing a sync. Anything else the transport throws is not retried.
+     * A failure without an answer - a timeout, a reset, a stream that ended early, or a fetch that failed - is retried
+     * with the same doubling wait, a timeout up to [MAXIMUM_RETRIES] times and anything else up to
+     * [MAXIMUM_TRANSPORT_FAILURE_RETRIES]: on a phone a cell handover or a moment in a tunnel shows up as any of them,
+     * and one of them ending the run would leave a large library on a poor connection never finishing a sync. Every
+     * call sent here is safe to send again: Dropbox writes nothing for an upload whose bytes are already the file's and
+     * answers its metadata, so a resent write that had landed reads as written, one that meets a file changed in
+     * between is a `Conflict` the engine resolves as usual, and a resent deletion finds the file gone.
      */
     suspend fun request(block: suspend (accessToken: String) -> HttpResponse): HttpResponse {
         var attempt = 0
@@ -91,11 +95,12 @@ internal class DropboxTransport(
                 token = tokens.accessToken(refused = refusedToken)
                 try {
                     block(token)
-                } catch (exception: Exception) {
+                } catch (throwable: Throwable) {
                     // Null asks for another attempt; the last one is left to transport, which makes it the run's
-                    // network failure as before.
+                    // network failure. Throwable, because the browser engine reports a failed fetch as a kotlin.Error.
                     currentCoroutineContext().ensureActive()
-                    if (attempt >= MAXIMUM_RETRIES || !exception.isTimeout()) throw exception
+                    val limit = if (throwable.isTimeout()) MAXIMUM_RETRIES else MAXIMUM_TRANSPORT_FAILURE_RETRIES
+                    if (attempt >= limit) throw throwable
                     null
                 }
             }
@@ -115,7 +120,7 @@ internal class DropboxTransport(
         }
     }
 
-    private fun Exception.isTimeout() = this is HttpRequestTimeoutException || this is ConnectTimeoutException || this is SocketTimeoutException
+    private fun Throwable.isTimeout() = this is HttpRequestTimeoutException || this is ConnectTimeoutException || this is SocketTimeoutException
 
     /** Null when the answer is one to act on rather than to wait out. */
     private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {
@@ -139,6 +144,13 @@ internal class DropboxTransport(
     companion object {
         /** Six waits of 2, 4, 8, 16, 32 and 32 seconds: about a minute and a half of patience. */
         const val MAXIMUM_RETRIES = 6
+
+        /**
+         * Three waits of 2, 4 and 8 seconds for a failure that is not a timeout: enough to outlast a cell handover, while
+         * a device that is plainly offline - a lookup failing at once, or the browser's failed fetch - still hears within
+         * seconds rather than after the minute and a half a timeout is given.
+         */
+        const val MAXIMUM_TRANSPORT_FAILURE_RETRIES = 3
 
         const val RETRY_JITTER_MILLIS = 500L
     }
