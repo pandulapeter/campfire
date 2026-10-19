@@ -14,6 +14,9 @@
 - Every app change to a library file (`LibraryChanges`) and to a synced preference schedules a run
   `AUTOMATIC_RUN_DELAY` after the latest request; a request during a run is carried out after it. A run's own writes go
   around the repositories, so a run never schedules the next one.
+- A run that ends in `Failure(NETWORK)` (only that reason) is tried again while the app is alive, after
+  `NETWORK_RETRY_DELAYS` (capped, reset by any other ending and by a run somebody asks for); a change waiting already
+  wins, Stop and Disconnect drop it, and leaving the front hands it to the keep-alive only once it is due.
 - `startScheduledSynchronization` (the app leaving the front) starts the run on the caller's thread and puts
   `SyncProgress()` in the state before returning, so the shell can hand it to the platform keep-alive in the same
   callback.

@@ -29,7 +29,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  * the engine may assume about them, and the content hash is the local one so that identical bytes compare equal.
  *
  * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
- * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
+ * through a run or changes the local library under an operation that is already under way; [onList] runs before a
+ * listing answers, which is where a test makes the whole run fail. [sizes] lets a listing
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what a
  * repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
  * that differ only by case or Unicode form for one file, [listCount] is how many passes a run made, [downloadCounts]
@@ -51,6 +52,8 @@ internal class FakeSyncProvider(
 ) : SyncProvider {
 
     var listCount = 0
+
+    var onList: suspend () -> Unit = {}
 
     var connected = true
 
@@ -112,7 +115,12 @@ internal class FakeSyncProvider(
 
     override suspend fun storedAccount() = null
 
-    override suspend fun list() = RemoteListing(
+    override suspend fun list(): RemoteListing {
+        onList()
+        return listing()
+    }
+
+    private fun listing() = RemoteListing(
         files = files.also { listCount++ }.map { (key, file) ->
             RemoteFile(
                 kind = key.kind,

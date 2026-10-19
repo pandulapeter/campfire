@@ -23,17 +23,24 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.NETWORK_RETRY_DELAYS
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
+import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -41,8 +48,11 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * When runs start, against a real [SyncRunner] on the in-memory fakes, on virtual time. The scheduler's scope is
@@ -115,20 +125,166 @@ class SyncRunSchedulerTest {
         assertEquals(0, world.runs.count)
     }
 
-    private class World(val scheduler: SyncRunScheduler, val stateHolder: SyncStateHolder, val runs: RunCounter)
+    @Test
+    fun `a run the network failed is tried again`() = runTest {
+        val world = world()
+        world.provider.failListingOnce()
+
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        assertEquals(1, world.runs.count)
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), world.lastOutcome)
+        advanceTimeBy(NETWORK_RETRY_DELAYS[0] - MARGIN * 2)
+        assertEquals(1, world.runs.count)
+        advanceTimeBy(MARGIN * 2)
+
+        assertEquals(2, world.runs.count)
+        assertIs<SyncOutcome.Success>(world.lastOutcome)
+    }
+
+    @Test
+    fun `the wait grows with each failure and starts over after a run that worked`() = runTest {
+        val world = world()
+        world.provider.onList = { throw SyncNetworkException("Offline") }
+
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        advanceTimeBy(NETWORK_RETRY_DELAYS[0])
+        assertEquals(2, world.runs.count)
+        world.provider.onList = {}
+        advanceTimeBy(NETWORK_RETRY_DELAYS[1] - MARGIN * 2)
+        assertEquals(2, world.runs.count)
+        advanceTimeBy(MARGIN * 2)
+        assertEquals(3, world.runs.count)
+        assertIs<SyncOutcome.Success>(world.lastOutcome)
+        world.provider.failListingOnce()
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        assertEquals(4, world.runs.count)
+        advanceTimeBy(NETWORK_RETRY_DELAYS[0] - MARGIN * 2)
+        assertEquals(4, world.runs.count)
+        advanceTimeBy(MARGIN * 2)
+
+        assertEquals(5, world.runs.count)
+    }
+
+    @Test
+    fun `a failure that is not the network's is not tried again`() = runTest {
+        val unknown = world()
+        unknown.provider.onList = { throw IllegalStateException("Broken") }
+        val storageFull = world(localFiles = mapOf(song(1) to "One".encodeToByteArray()))
+        storageFull.provider.onUpload = { throw SyncRemoteStorageFullException("Full") }
+
+        unknown.scheduler.schedule()
+        storageFull.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.UNKNOWN), unknown.lastOutcome)
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), storageFull.lastOutcome)
+        advanceTimeBy(6.hours)
+
+        assertEquals(1, unknown.runs.count)
+        assertEquals(1, storageFull.runs.count)
+    }
+
+    @Test
+    fun `a run stopped while the network fails it is not tried again`() = runTest {
+        val stopped = world()
+        stopped.provider.failListingWhenStopped()
+        val disconnected = world()
+        disconnected.provider.failListingWhenStopped()
+
+        stopped.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        disconnected.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+        stopped.scheduler.cancel()
+        disconnected.scheduler.stopForDisconnect()
+        advanceTimeBy(NETWORK_RETRY_DELAYS.last() + MARGIN)
+
+        assertEquals(1, stopped.runs.count)
+        assertEquals(1, disconnected.runs.count)
+    }
+
+    @Test
+    fun `a change made while a retry waits starts after the usual delay`() = runTest {
+        val world = world()
+        world.provider.failListingOnce()
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `Stop drops a waiting retry`() = runTest {
+        val world = world()
+        world.provider.failListingOnce()
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        world.scheduler.cancel()
+        advanceTimeBy(NETWORK_RETRY_DELAYS.last() + MARGIN)
+
+        assertEquals(1, world.runs.count)
+    }
+
+    @Test
+    fun `leaving the app with only a retry waiting starts nothing`() = runTest {
+        val world = world()
+        world.provider.failListingOnce()
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        val progress = world.scheduler.startScheduled()
+        advanceTimeBy(NETWORK_RETRY_DELAYS[0] - MARGIN * 2)
+
+        assertNull(progress)
+        assertEquals(1, world.runs.count)
+    }
+
+    private fun FakeSyncProvider.failListingOnce() {
+        onList = {
+            onList = {}
+            throw SyncNetworkException("Offline")
+        }
+    }
+
+    /** Waits for the run to be stopped, then fails for the network in place of the cancellation, as a provider can. */
+    private fun FakeSyncProvider.failListingWhenStopped() {
+        onList = {
+            try {
+                awaitCancellation()
+            } catch (_: CancellationException) {
+                throw SyncNetworkException("Offline")
+            }
+        }
+    }
+
+    private class World(
+        val scheduler: SyncRunScheduler,
+        val stateHolder: SyncStateHolder,
+        val runs: RunCounter,
+        val provider: FakeSyncProvider,
+    ) {
+        val lastOutcome get() = (stateHolder.value as? SyncState.Connected)?.lastOutcome
+    }
 
     private fun TestScope.world(
         files: Map<SyncKey, ByteArray> = emptyMap(),
         onDownload: suspend (SyncKey) -> Unit = {},
+        localFiles: Map<SyncKey, ByteArray> = emptyMap(),
     ): World {
         val environment = testEnvironment()
         val runs = RunCounter()
-        val syncProviders = SyncProviders(listOf(FakeSyncProvider(files = files, onDownload = onDownload, account = TEST_ACCOUNT)))
+        val provider = FakeSyncProvider(files = files, onDownload = onDownload, account = TEST_ACCOUNT)
+        val syncProviders = SyncProviders(listOf(provider))
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
         }
         val userPreferencesRepository = FakeUserPreferencesRepository()
-        val libraryFileLocalSource = FakeLibraryFileLocalSource()
+        val libraryFileLocalSource = FakeLibraryFileLocalSource(files = localFiles)
         val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
         val runner = SyncRunner(
             syncProviders = syncProviders,
@@ -153,6 +309,11 @@ class SyncRunSchedulerTest {
             environment = environment,
         )
         runCurrent()
-        return World(scheduler = scheduler, stateHolder = stateHolder, runs = runs)
+        return World(scheduler = scheduler, stateHolder = stateHolder, runs = runs, provider = provider)
+    }
+
+    private companion object {
+        /** Room on either side of a due time for a run's own steps, well inside the shortest delay. */
+        val MARGIN = 1.seconds
     }
 }
