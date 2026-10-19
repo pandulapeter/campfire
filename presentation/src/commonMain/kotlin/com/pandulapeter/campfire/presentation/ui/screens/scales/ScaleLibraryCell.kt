@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.scales
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -63,6 +64,8 @@ internal fun ScaleLibraryCell(
             overflow = TextOverflow.Ellipsis,
         )
         Crossfade(
+            // A keyboard is taller than a neck, so the cell's height follows the fade rather than jumping at its end.
+            modifier = Modifier.animateContentSize(),
             targetState = geometry,
             label = "scaleLibraryDiagram",
         ) { shown ->
