@@ -14,7 +14,7 @@ One instrument for the whole app.
 
 - `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`. Diagrams, tuner, scales, and
   the keyboard capo rule read it. The scales read `InstrumentTuning.strings` directly (every stringed instrument, not
-  only the five with shapes), the one reader besides the tuner.
+  only the five with shapes), as the tuner, the tab retuning, and the tuning names do.
 - This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
 - Picked by two `PickerChip`s (`InstrumentChips.kt`; the tuning chip only for an instrument with more than one) opening
