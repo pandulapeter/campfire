@@ -49,7 +49,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ### Keeping the display on
 
-`Modifier.keepScreenOn()` on the root: a song is read with both hands on the instrument.
+`Modifier.keepScreenOn()` on the root: a song is read with both hands on the instrument. It is the view flag on
+Android, `idleTimerDisabled` on iOS, a Screen Wake Lock on the web (retaken when the tab is shown, secure contexts
+only), and nothing on the desktop.
 
 ### Keyboard (`SongKeyboardShortcuts.kt`)
 

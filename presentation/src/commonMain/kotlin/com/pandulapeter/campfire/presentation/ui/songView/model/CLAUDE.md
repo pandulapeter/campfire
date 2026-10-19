@@ -30,8 +30,9 @@ What a song page draws, built from the parsed song (pure): `SongLyricsModel`, `R
 Product side in `ui/metronome/CLAUDE.md`.
 
 - **A later `{tempo}` / `{time}` starts a page of its own** (`RenderSection.Timing`, `showsTiming`): never joined into
-  its section; a read-only `SongTimingLine` stands in its place; the rest of the section is headed by its fold toggle
-  alone and folded under the section's key plus `~n`, so switching the Metronome feature does not renumber later folds.
+  its section, even in a song that fits one screen, since the page is the signal; a read-only `SongTimingLine` stands
+  in its place; the rest of the section is headed by its fold toggle alone and folded under the section's key plus
+  `~n`, so switching the Metronome feature does not renumber later folds.
   With the feature off it is joined over like a `{transpose}`.
 - A timing line with no song line after it is dropped (`withoutEmptyTimings`, after `LayoutBudget`).
 - A change before the first line starts no page (`timingStretchesOf`); `SongRows.timingSections` reports it at section

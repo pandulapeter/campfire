@@ -16,4 +16,5 @@
   fresh start; Android restores its back stack.
 - `rememberSyncNotifications` only reports "nothing to show" after showing something; otherwise opening the app onto a
   background run would stop the Android service.
-- Forgetting happens inside `startRestoring`'s coroutine, before `restore` reads the credentials.
+- On a launch with no preferences document the stored credentials are forgotten inside `startRestoring`'s coroutine,
+  before `restore` reads them.
