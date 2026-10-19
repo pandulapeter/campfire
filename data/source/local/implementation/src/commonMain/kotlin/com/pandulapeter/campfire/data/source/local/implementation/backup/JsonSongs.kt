@@ -55,7 +55,7 @@ internal object JsonSongs {
 
     private class Walk {
         val files = mutableListOf<ImportedFile>()
-        private val usedNames = mutableSetOf<String>()
+        private val usedNames = BatchNames()
         private var nodes = 0
 
         fun visit(element: JsonElement, depth: Int, nesting: Int) {

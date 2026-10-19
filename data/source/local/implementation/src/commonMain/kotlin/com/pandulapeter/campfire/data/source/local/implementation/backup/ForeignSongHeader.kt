@@ -72,11 +72,13 @@ internal object ForeignSongHeader {
      * it is the title as it was written, without what a file name cannot hold and without the leading dot that would
      * make it a hidden file.
      */
-    fun uniqueName(base: String, extension: String, usedNames: MutableSet<String>): String {
+    fun uniqueName(base: String, extension: String, usedNames: BatchNames): String {
         val cleaned = base.replace(UNSAFE_CHARACTERS, " ").trim().trimStart('.').ifBlank { "untitled" }
         var name = cleaned + extension
-        var number = 2
-        while (!usedNames.add(name.lowercase())) name = "$cleaned ${number++}$extension"
+        val key = name.lowercase()
+        var number = usedNames.nextNumbers[key] ?: 2
+        while (!usedNames.used.add(name.lowercase())) name = "$cleaned ${number++}$extension"
+        usedNames.nextNumbers[key] = number
         return name
     }
 

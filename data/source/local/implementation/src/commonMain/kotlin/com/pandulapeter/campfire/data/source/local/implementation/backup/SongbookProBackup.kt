@@ -92,7 +92,7 @@ internal object SongbookProBackup {
             id to name
         }.toMap()
         val songFiles = mutableMapOf<Int, SongFile>()
-        val usedNames = mutableSetOf<String>()
+        val usedNames = BatchNames()
         val files = songs.mapNotNull { element ->
             val song = element as? JsonObject ?: return@mapNotNull null
             val content = song.text("content")
