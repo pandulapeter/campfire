@@ -40,11 +40,8 @@ a beat not muted, which plays on (iOS has no background haptics).
   dragging; a song paged back to reports its last stretch). Or `Standalone`, the tab's pattern.
 - `metronomePatternOf` (`MetronomePatterns.kt`): a song's tempo and `{time}` (4/4 where it names none), accents for that
   signature, everything else from the settings.
-- One collector in `init` follows the context, tempos, settings, and library:
-  - **Another song or another stretch moves the click once the bar being played ends** (`Metronome.update`'s
-    `fromNextBar`), from beat one, so the band finishes its bar.
-  - Anything else (a tempo stepped, a setting, the same stretch at a scaled tempo) applies from the next beat.
-  - The first value is only remembered, so a view model rebuilt over a playing click does not stop it.
+- **A new song or stretch takes effect from beat one of the next bar** (`fromNextBar`), anything else from the next
+  beat; a rebuilt view model does not stop a playing click.
 - A collector in `init` tells the engine whether the tab or a song is on top with the feature on
   (`isMetronomeStartable` → `Metronome.setStartable`): only those screens' taps may open the web's audio device; a no-op
   elsewhere.
@@ -55,9 +52,8 @@ a beat not muted, which plays on (iOS has no background haptics).
 
 ## The panel (`MetronomePanel.kt`)
 
-- **On the song details screen it is inside the app bar** (`CampfireTopAppBar`'s `bottomContent`), growing and shrinking
-  the bar. Being inside the screen is the design: it is laid out, pushed, and popped with it, covers none of the song,
-  and no scaffold wraps the app to make room. Its controls fade and squash on the bar's own timing so they always fit.
+- **On the song details screen it is inside the app bar** (`CampfireTopAppBar`'s `bottomContent`), so it moves with the
+  screen and covers none of the song.
 - It holds only the `BeatRow` and play / stop (`PlayStopMark`), at the end because the phone is held there. The tempo
   is in the song's first section; sound, subdivision, and volume are the tab's. A lit beat also swells, since in the
   light theme an accent at rest is already half the lit color.
@@ -93,8 +89,4 @@ a beat not muted, which plays on (iOS has no background haptics).
   would be written for the wrong song.
 - The stepper, a setlist's entry, and the library override still hold one number, the opening tempo; a later tempo keeps
   its ratio to the file's opening one (120 → 60 played at 110 is 55), so nothing new is stored.
-- A recalled chorus plays in whatever is in force where it is recalled. A song that fits one screen is still cut into
-  pages by a change, since the page is the signal.
-- The editor offers Tempo and Time signature repeatedly (the header first, then the start of the caret's line); its
-  preview shows changes in place and is never paged; the PDF prints each as a line kept with what follows.
 - **With the Metronome feature off none of it exists**: no line, no forced page. A later `{key}` is only read past.
