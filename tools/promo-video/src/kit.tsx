@@ -53,26 +53,10 @@ export const pulse = (frame: number, at: number, length = 18) => {
 export const ease = (frame: number, range: [number, number], out: [number, number], easing = Easing.bezier(0.22, 1, 0.36, 1)) =>
   interpolate(frame, range, out, { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing });
 
-/**
- * The night sky behind everything: two still glows, purple above and orange below, and a fine still grain over them,
- * which keeps the encoder from cutting the gradients into bands.
- */
+/** The night sky behind everything: the app's dark background, which the light scene fades to its light one over. */
 export const Backdrop: React.FC<{ light?: number }> = ({ light = 0 }) => (
   <AbsoluteFill style={{ background: C.bg }}>
-    <AbsoluteFill
-      style={{
-        background: `radial-gradient(70% 38% at 50% 82%, rgba(245,124,0,0.26), transparent 72%),
-                     radial-gradient(80% 42% at 40% 16%, rgba(90,73,202,0.34), transparent 72%)`,
-      }}
-    />
     <AbsoluteFill style={{ background: C.bgLight, opacity: light }} />
-    <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.07, mixBlendMode: "overlay" }}>
-      <filter id="grain">
-        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch" />
-        <feColorMatrix type="saturate" values="0" />
-      </filter>
-      <rect width="100%" height="100%" filter="url(#grain)" />
-    </svg>
   </AbsoluteFill>
 );
 

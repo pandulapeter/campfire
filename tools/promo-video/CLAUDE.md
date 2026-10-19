@@ -45,7 +45,7 @@ Remotion is not open source: free for individuals and companies of up to three p
 - Features are demoed live in recorded clips (a setlist dragged, a song transposed and renotated, the Chords tab across
   instruments, a PDF's pages swiped), not illustrated with graphics.
 - Timeless: nothing calls a feature new.
-- A static backdrop: a purple and orange gradient with a still grain, which stops the encoder banding it.
+- A static, flat backdrop: the app's own dark background (`#15121C`, the website's too), no gradient and no grain.
 - No soft shadows or glows around devices, chips, or icons (they encoded as blocky halos); devices have a thin outline.
 - Generic devices, so one video serves every store: no notch or island, and the laptop shows the app's window alone
   (`Device.LAPTOP`); the phones' and tablet's status bars stay.
