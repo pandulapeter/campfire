@@ -92,6 +92,7 @@ import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
 import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.sync.stage
 import kotlin.time.ExperimentalTime
+import kotlin.reflect.KClass
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.painterResource
 
@@ -176,11 +177,9 @@ private fun ColumnScope.ConnectedSyncSettings(
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = { Text(textResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
         supportingContent = {
-            // Keyed by what kind of line it is rather than by its words, which change with every file a run moves and
-            // as the time since the last run passes: only a run starting or ending moves the line.
             AnimatedContent(
                 targetState = syncState,
-                contentKey = { it.progress?.let { SyncProgress::class } ?: it.lastOutcome?.let { outcome -> outcome::class } },
+                contentKey = { it.statusKey },
                 transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
             ) { state ->
                 Text(state.statusText())
@@ -247,6 +246,20 @@ private fun ColumnScope.ConnectedSyncSettings(
         onClick = { viewModel.dialogHost.showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
     )
 }
+
+/**
+ * What [statusText] says, short of its words: a run going, a clean finish, and no run yet all say when the last one
+ * finished, so they share a key, and the words of the time since change on their own as it passes. The line moves only
+ * when a run ends, or when what it reports turns into something else to read.
+ */
+private val SyncState.Connected.statusKey: Pair<KClass<out SyncOutcome>?, Long?>
+    get() = when (val outcome = lastOutcome?.takeIf { progress == null }) {
+        null -> null
+        is SyncOutcome.Success -> outcome.takeIf {
+            it.summary.failed.isNotEmpty() || it.summary.conflicts.isNotEmpty() || it.summary.havePreferencesFailed
+        }?.let { SyncOutcome.Success::class }
+        else -> outcome::class
+    } to lastSyncedAt
 
 /**
  * The one line under the account name: what is happening now, or what the last run ended in. A failure stays there
