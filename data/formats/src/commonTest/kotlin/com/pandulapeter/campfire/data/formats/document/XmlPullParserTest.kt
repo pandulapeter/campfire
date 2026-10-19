@@ -40,6 +40,8 @@ class XmlPullParserTest {
         assertFailsWith<IllegalStateException> { parseXml("<!DOCTYPE a [<!ENTITY e 'expanded'>]><a>&e;</a>") }
         assertFailsWith<IllegalArgumentException> { parseXml("<a>".repeat(65) + "</a>".repeat(65)) }
         assertFailsWith<IllegalArgumentException> { parseXml("<a><b></a>") }
+        assertFailsWith<IllegalArgumentException> { parseXml("</p>\nhello") }
+        assertFailsWith<IllegalArgumentException> { parseXml("<a></a></b>") }
         assertFailsWith<IllegalArgumentException> { parseXml("<a>&#x110000;</a>") }
         assertFailsWith<IllegalArgumentException> { parseXml("<a>&external;</a>") }
     }

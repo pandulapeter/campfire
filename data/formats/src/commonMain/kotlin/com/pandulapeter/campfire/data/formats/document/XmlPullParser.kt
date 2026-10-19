@@ -49,7 +49,8 @@ internal class XmlPullParser(private val xml: String) {
                     val name = name()
                     whitespace()
                     require(xml.getOrNull(position++) == '>')
-                    require(stack.removeAt(stack.lastIndex) == name) { "Mismatched XML element" }
+                    require(stack.lastOrNull() == name) { "Mismatched XML element" }
+                    stack.removeAt(stack.lastIndex)
                     return Event.End(name)
                 }
                 else -> {

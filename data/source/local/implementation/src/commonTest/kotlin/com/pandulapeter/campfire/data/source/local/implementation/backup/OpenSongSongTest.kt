@@ -73,6 +73,7 @@ class OpenSongSongTest {
         assertNull(OpenSongSong.read(openLyrics, "x"))
         assertNull(OpenSongSong.read("<set name=\"Sunday\"><slide_groups/></set>", "x"))
         assertNull(OpenSongSong.read("<song><lyrics>[V1]", "x"))
+        assertNull(OpenSongSong.read("<br/>notes</div>", "x"))
     }
 
     @Test
