@@ -21,10 +21,7 @@ builds what it draws, `grid/` places it.
   back over the one before.
 - Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
   block's its lines, so screen readers read the chords.
-- One `TextMeasurer` per page; `SongTextMeasurements` caches per page, keyed on the styles and the measurer (not the
-  song), so a transposition only measures chord names it has not drawn yet.
-- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together. It draws text rather
-  than composing it, so an intrinsic measurement at a candidate width already counts the rows it wraps into.
+- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together.
 - Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) aligns bar lines across lines; each bar is one text,
   since only one monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`).
 - A paragraph holding nothing but one tab or grid run is headed "Tab" / "Grid" (screen and PDF).
@@ -56,6 +53,3 @@ builds what it draws, `grid/` places it.
 - `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px: animated sections are measured no
   taller than half that (`maxAnimatedSectionHeight`).
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.
-- `availableHeight` comes from the caller: inside `verticalScroll` height is infinite.
-- `SongSectionChildren` takes only remembered values (styles too), so it skips while `SongLyrics` recomposes on each
-  frame of a bar, panel, or rail; the live viewport height reaches the measure as a provider reading a state.
