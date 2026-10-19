@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import androidx.compose.runtime.Immutable
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
@@ -22,12 +24,14 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  *
  * @property label The sections' headings, joined, or null for a song one group fits whole, which names nothing, and for
  *   a group of sections the page heads with nothing.
+ * @property exceptions The chords [scales] leave out, each with its own row of chips.
  */
 @Immutable
 internal data class SongScaleGroup(
     val label: String?,
     val rootName: String,
     val scales: List<Scale>,
+    val exceptions: List<SongScaleException>,
 )
 
 /**
@@ -36,11 +40,25 @@ internal data class SongScaleGroup(
  * section of a kind, and more than one, the kind is said once, at the first of them ("Verse" for both verses); a lone
  * one keeps its heading ("Take 5"), and the numbered ones are named where the verses are split between groups ("Verse 3"
  * for the one after a modulation). At most [MAX_GROUP_SCALES] scales a group, the common ones first, since a long row of
- * rarities buries the answer.
+ * rarities buries the answer, and [MAX_GROUP_EXCEPTIONS] chords it leaves out, the most played, [MAX_EXCEPTION_SCALES]
+ * scales each, every chord named as the page shows it in [notation].
  */
-internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels): List<SongScaleGroup> {
+internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels, notation: ChordNotation): List<SongScaleGroup> {
     val groups = SongScaleGroups.of(song.copy(blocks = song.blocks.withNumberedSections(labels)))
-    if (groups.size <= 1) return groups.map { SongScaleGroup(label = null, rootName = it.rootName, scales = it.scales.take(MAX_GROUP_SCALES)) }
+    if (groups.isEmpty()) return emptyList()
+    val shownNames = ChordProNotation.shownNames(song, notation)
+    val exceptions = groups.map { group ->
+        group.exceptions.take(MAX_GROUP_EXCEPTIONS).map { exception ->
+            SongScaleException(
+                chordName = ChordProNotation.withAccidentalSigns(shownNames[exception.chordName] ?: exception.chordName),
+                rootName = exception.rootName,
+                scales = exception.scales.take(MAX_EXCEPTION_SCALES),
+            )
+        }
+    }
+    if (groups.size == 1) {
+        return listOf(SongScaleGroup(label = null, rootName = groups.single().rootName, scales = groups.single().scales.take(MAX_GROUP_SCALES), exceptions = exceptions.single()))
+    }
     val headers = groups.map { group -> group.sections.filter { !it.isContinuation }.map { it.header(labels) }.filter { it.isNotEmpty() } }
     val kindCounts = headers.flatten().groupingBy(::kindOf).eachCount()
     return groups.mapIndexed { index, group ->
@@ -53,6 +71,7 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels)
             label = names.distinct().joinToString(", ").ifEmpty { null },
             rootName = group.rootName,
             scales = group.scales.take(MAX_GROUP_SCALES),
+            exceptions = exceptions[index],
         )
     }
 }
@@ -67,3 +86,5 @@ private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
 private val KIND_NUMBER = Regex("""\s+\d{1,4}$""")
 
 internal const val MAX_GROUP_SCALES = 5
+internal const val MAX_GROUP_EXCEPTIONS = 3
+internal const val MAX_EXCEPTION_SCALES = 3

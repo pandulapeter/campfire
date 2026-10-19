@@ -20,6 +20,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_other
+import com.pandulapeter.campfire.presentation.resources.song_details_scales_over
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
@@ -29,8 +31,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
  * a section of its own after the chords whose first chunk is headed by a pill that folds it as the Chords section's does,
  * one choice for every song. A group of rows of chips per group of sections one set of scales fits, each named by those
  * sections where the song needs more than one ("Intro, Verse, Chorus" over C's, "Solo" over D's), a group of sections the
- * page heads with nothing named as the rest of the song, and each row a slot the section may be cut between, as the
- * Chords section's rows of diagrams are ([ScaleChipRows]). A chip opens its scale's sheet.
+ * page heads with nothing named as the rest of the song, then a row per chord those scales leave out, titled by the chord
+ * ("Over E7") in every song, and each line of chips a slot the section may be cut between, as the Chords section's rows
+ * of diagrams are ([ScaleChipRows]). A chip opens its scale's sheet.
  *
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in every
  * chunk they come back in.
@@ -68,16 +71,27 @@ internal fun SongScalesSection(
             .fadingIn(isFadingIn = isFadingIn)
             .padding(top = if (isFirstChunk) HEADER_GAP + 4.dp else 0.dp),
     ) {
-        section.groups.forEachIndexed { index, group ->
-            val groupStart = section.groupStarts[index]
-            val slots = (maxOf(items.first, groupStart) - groupStart)..(minOf(items.last, section.groupStarts[index + 1] - 1) - groupStart)
+        section.rows.forEachIndexed { index, row ->
+            val rowStart = section.rowStarts[index]
+            val slots = (maxOf(items.first, rowStart) - rowStart)..(minOf(items.last, section.rowStarts[index + 1] - 1) - rowStart)
             if (slots.isEmpty()) return@forEachIndexed
+            val title = when {
+                slots.first != 0 -> null
+                row.exception != null -> stringResource(Res.string.song_details_scales_over, row.exception.chordName)
+                isGrouped -> section.groups[row.groupIndex].label ?: other
+                else -> null
+            }
             ScaleChipRows(
                 modifier = Modifier.fillMaxWidth(),
-                title = if (isGrouped && slots.first == 0) group.label ?: other else null,
-                group = group,
+                title = title,
+                rootName = row.rootNameOf(section.groups),
+                scales = row.scalesOf(section.groups),
                 slots = slots,
-                trailingGap = if (index < section.groups.lastIndex) 16.dp else 0.dp,
+                trailingGap = when {
+                    index == section.rows.lastIndex -> 0.dp
+                    section.rows[index + 1].groupIndex == row.groupIndex -> CHIP_GAP
+                    else -> 16.dp
+                },
                 notation = scaleSuggestions.notation,
                 onScaleSelected = scaleSuggestions.onScaleClicked,
             )

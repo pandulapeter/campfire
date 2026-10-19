@@ -156,12 +156,24 @@ class SongScaleGroupsTest {
 
     @Test
     fun `a minor key is read from its m`() {
-        assertEquals(listOf("A" to "harmonic_minor"), rootAndFirst(song("Am Dm E", key = "A minor")))
-        assertEquals(listOf("A" to "harmonic_minor"), rootAndFirst(song("Am Dm E", key = "Am")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E", key = "A minor")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E", key = "Am")))
+        assertEquals(listOf("E"), groups(song("Am Dm E", key = "A minor")).single().exceptions.map { it.chordName })
         assertEquals(listOf("A" to "major"), rootAndFirst(song("A D E", key = "Amaj")))
     }
 
     @Test
     fun `an eight-note answer is never taken on another root`() =
-        assertTrue(groups(song("Am Am/G# Am/G D/F# Fmaj7 G Am", key = "Am")).none { it.rootName == "D" })
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Am/G# Am/G D/F# Fmaj7 G Am", key = "Am")))
+
+    @Test
+    fun `a verse and a chorus in one minor key are one group`() {
+        val group = groups(song("Am Dm Em", "Am Dm E", key = "Am")).single()
+        assertEquals("A" to "natural_minor", group.rootName to group.scales.first().id)
+        assertEquals(listOf("E" to "harmonic_minor"), group.exceptions.map { it.chordName to it.scales.first().id })
+    }
+
+    @Test
+    fun `a verse with a secondary dominant joins its key's chorus`() =
+        assertEquals(1, groups(song("C A7 Dm G7", "F G C", key = "C")).size)
 }

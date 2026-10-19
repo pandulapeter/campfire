@@ -31,12 +31,12 @@ builds what it draws, `grid/` places it.
 - `RenderSection.Scales`, after the Chords section (else after the metadata section, else first), while chords and
   Scale suggestions are on (`ScaleSuggestions`, null otherwise); read only mode keeps it, since a scale sheet writes
   nothing. One fold for every song (`UserPreferences.isScaleSectionFolded`).
-- Cut between its rows of chips like the Chords section between its rows of diagrams: each group has one slot per chip
-  (`RenderSection.Scales.groupStarts`), and every chunk composes its group's chips but places only its own rows
+- Cut between its rows of chips like the Chords section between its rows of diagrams: each row of chips (a group's, then
+  one per chord it leaves out) has one slot per chip (`RenderSection.Scales.rowStarts`), and every chunk composes its group's chips but places only its own rows
   (`ScaleChipRows`), since which row a chip lands in depends on the width being tried.
 - Its groups are the catalogue's (see `chordpro/scales`), labelled by `songScaleGroupsOf` (tested): one group names
   nothing; otherwise each group lists its sections' page headings, a kind it holds whole said once ("Verse"), split
-  kinds by number ("Verse 3"), headless parts as the rest of the song. At most five chips a group.
+  kinds by number ("Verse 3"), headless parts as the rest of the song. At most five chips a group, and three chords it leaves out, three chips each, titled "Over E7" in every song.
 - **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
   sheet.
 

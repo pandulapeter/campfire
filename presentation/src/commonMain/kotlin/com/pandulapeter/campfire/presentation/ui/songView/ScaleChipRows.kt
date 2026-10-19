@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.chords.SCALE_CHIPS_TITLE_GAP
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChip
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipsTitle
@@ -30,25 +31,25 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.songLayout.greedyRowStarts
 import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
-import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
 /**
- * The rows of [group]'s chips that its [slots] hold at the width they are measured at, under [title] where there is one:
+ * The rows of the chips of [scales] on [rootName] that its [slots] hold at the width they are measured at, under [title] where there is one:
  * the chips in their order, as many to a row as fit, one slot per row the Scales section may be cut between (see
- * [RenderSection.Scales]), as the Chords section's diagrams are. Every chip of the group is composed in every chunk,
+ * [RenderSection.Scales]), as the Chords section's diagrams are. Every chip is composed in every chunk,
  * since which row a chip falls in depends on that width and the section is measured at several before one wins (see
  * [SongSectionsLayout]); the chips of the rows other chunks hold are left unplaced, so they are neither drawn, tapped,
  * nor read. Its intrinsic heights count the rows the chips wrap into at the width asked for, which is what the grid
  * measures a chunk by.
  *
- * Every row but the group's last is followed by a chip gap and the last by [trailingGap], so that a cut leaves the gap at
+ * Every row but the last is followed by a chip gap and the last by [trailingGap], so that a cut leaves the gap at
  * the bottom of a page rather than at the top of the next.
  */
 @Composable
 internal fun ScaleChipRows(
     modifier: Modifier = Modifier,
     title: String?,
-    group: SongScaleGroup,
+    rootName: String,
+    scales: List<Scale>,
     slots: IntRange,
     trailingGap: Dp,
     notation: ChordNotation,
@@ -62,10 +63,10 @@ internal fun ScaleChipRows(
                 textAlign = TextAlign.Start,
             )
         }
-        group.scales.forEach { scale ->
+        scales.forEach { scale ->
             ScaleChip(
                 scale = scale,
-                rootName = group.rootName,
+                rootName = rootName,
                 notation = notation,
                 onScaleSelected = onScaleSelected,
             )

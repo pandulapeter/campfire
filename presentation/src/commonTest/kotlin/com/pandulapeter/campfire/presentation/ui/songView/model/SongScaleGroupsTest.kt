@@ -10,12 +10,14 @@
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SongScaleGroupsTest {
 
@@ -32,7 +34,7 @@ class SongScaleGroupsTest {
         shouldNumberSections = true,
     )
 
-    private fun groups(text: String) = songScaleGroupsOf(ChordProParser.parse(text.trimIndent()), labels)
+    private fun groups(text: String) = songScaleGroupsOf(ChordProParser.parse(text.trimIndent()), labels, ChordNotation.STANDARD)
 
     private val verse = "{start_of_verse}\n[C]One [F]two [G]three\n{end_of_verse}\n"
     private val chorus = "{start_of_chorus}\n[F]Four [G]five [C]six\n{end_of_chorus}\n"
@@ -77,8 +79,17 @@ class SongScaleGroupsTest {
         assertEquals(MAX_GROUP_SCALES, groups("[C]One [G]two").single().scales.size)
 
     @Test
+    fun `an exception is named in the reader's notation, capped`() {
+        val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Bb]two [F]three [G]four\n{end_of_verse}"), labels, ChordNotation.GERMAN)
+        assertEquals(listOf("B"), german.single().exceptions.map { it.chordName })
+        val crowded = groups("[C]One [C]two [C]three [C]four [C]five [C]six [C]seven [F]x [G]x [F]x [G]x [A7]x [E7]x [D7]x [Bb]x [Ab]x")
+        assertEquals(MAX_GROUP_EXCEPTIONS, crowded.single().exceptions.size)
+        assertTrue(crowded.single().exceptions.all { it.scales.size <= MAX_EXCEPTION_SCALES })
+    }
+
+    @Test
     fun `the scales section stands after the chords, else after the metadata, else first`() {
-        val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList())
+        val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList())
         val scales = RenderSection.Scales(listOf(group), isFolded = false)
         val sections = emptyList<RenderSection>()
         assertEquals(listOf(scales), withScalesSection(sections, listOf(group), isFolded = false))

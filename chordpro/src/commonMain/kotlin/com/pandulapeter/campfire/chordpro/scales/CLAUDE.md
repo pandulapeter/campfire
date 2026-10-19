@@ -26,7 +26,9 @@
   starts on it or the key names it. **The song is read as it stands**:
   the transposer has moved the chords after a `{transpose}` and renamed its key before a page shows them, so a
   `{transpose}` is never applied here, or a modulated verse would read two steps up. Chorus recalls are not counted
-  again; a section no scale holds is left out.
+  again. Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
+  thirds of its chords answers, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
+  home's own harmonic minor, Dorian, or melodic minor where one does); below that floor the part is left out.
 - **What is suggested is `PlayableScales`**, not bare containment: the scales holding the chords, the major and minor
   pentatonics and hexatonics inside the seven-note home scale (the safe choice, though five notes never hold a key's
   chords), the blues scale wherever the minor pentatonic is, and over a dominant blues (major chords on I, IV, V, the I

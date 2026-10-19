@@ -647,6 +647,8 @@
     <string name="song_details_chord_scales">Skálák ehhez az akkordhoz</string>
     <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
     <string name="song_details_scales_other">A dal többi része</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">%1$s akkordhoz</string>
     <string name="scale_major">Dúr</string>
     <string name="scale_dorian">Dór</string>
     <string name="scale_phrygian">Fríg</string>

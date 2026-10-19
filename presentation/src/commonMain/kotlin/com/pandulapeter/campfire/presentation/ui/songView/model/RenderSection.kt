@@ -117,8 +117,9 @@ internal sealed interface RenderSection {
 
     /**
      * The scales the song is played over, after its Chords section, in groups of the sections each fits (see
-     * [songScaleGroupsOf]). It is cut between its rows of chips like any section, each group's rows drawn as slots the
-     * way the Chords section's rows of diagrams are (see [ScaleChipRows]).
+     * [songScaleGroupsOf]), each group followed by the chords its scales leave out. It is cut between its rows of chips
+     * like any section, each row of chips drawn as slots the way the Chords section's rows of diagrams are (see
+     * [ScaleChipRows]).
      *
      * @param isFolded Whether only the header is shown, part of the content for the reason [Chords] gives.
      */
@@ -128,16 +129,21 @@ internal sealed interface RenderSection {
         val isFolded: Boolean,
     ) : RenderSection {
 
+        /** Every row of chips in the order they are drawn: a group's own, then one per chord it leaves out. */
+        val rows = groups.flatMapIndexed { index, group ->
+            listOf(ScaleChipBlock(index, exception = null)) + group.exceptions.map { ScaleChipBlock(index, it) }
+        }
+
         /**
-         * The first slot of each group, followed by one past the last: a group has one slot per chip, the most rows its
-         * chips can wrap into, the first one under its title.
+         * The first slot of each row of chips, followed by one past the last: a row has one slot per chip, the most lines
+         * its chips can wrap into, the first one under its title.
          */
-        val groupStarts = groups.runningFold(0) { start, group -> start + group.scales.size.coerceAtLeast(1) }.toIntArray()
+        val rowStarts = rows.runningFold(0) { start, row -> start + row.scalesOf(groups).size.coerceAtLeast(1) }.toIntArray()
 
-        /** One slot per row the groups' chips can wrap into, the first headed by the pill; only the pill while folded. */
-        val itemCount = if (isFolded) 1 else groupStarts.last().coerceAtLeast(1)
+        /** One slot per line the rows' chips can wrap into, the first headed by the pill; only the pill while folded. */
+        val itemCount = if (isFolded) 1 else rowStarts.last().coerceAtLeast(1)
 
-        /** Every row may start a piece, with the header and a group's title kept with the row under them. */
+        /** Every line may start a piece, with the header and a row's title kept with the line under them. */
         val chunkStarts = sectionChunkStarts(List(itemCount) { SectionItemKind.CONTENT })
     }
 

@@ -120,7 +120,7 @@ internal fun prepareSongLyrics(
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
-        scaleGroups = if (shouldShowChords && suggestsScales) songScaleGroupsOf(standardSong, labels) else emptyList(),
+        scaleGroups = if (shouldShowChords && suggestsScales) songScaleGroupsOf(standardSong, labels, notation) else emptyList(),
     )
 }
 

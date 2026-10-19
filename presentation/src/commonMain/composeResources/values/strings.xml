@@ -647,6 +647,8 @@
     <string name="song_details_chord_scales">Scales for this chord</string>
     <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
     <string name="song_details_scales_other">The rest of the song</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">Over %1$s</string>
     <string name="scale_major">Major</string>
     <string name="scale_dorian">Dorian</string>
     <string name="scale_phrygian">Phrygian</string>
