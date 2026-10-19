@@ -10,9 +10,9 @@
 
 # :presentation — ui/screens/settings
 
-The settings screen: five tabs (General, Features, Songs, Library, About), a `HorizontalPager` under a tab row (capped
-at 560dp) while that fits, else a `SettingsCategoryPane` beside the selected page. The two layouts crossfade across the
-breakpoint, as do the wide layout's pages.
+Five tabs (General, Features, Songs, Library, About) in a `HorizontalPager` under a tab row (capped at 560dp) while that
+fits, else a `SettingsCategoryPane` beside the selected page; the layouts crossfade across the breakpoint, as do the
+wide layout's pages.
 
 ## Tab contents (rules not obvious from the code)
 
@@ -33,10 +33,9 @@ breakpoint, as do the wide layout's pages.
   (`fadingTopEdge`); the tab row fades at an end with more tabs (`fadingHorizontalEdges`).
 - `targetPage` lights the tab name (a press answers at once); **the indicator follows the pages**
   (`pagerIndicatorSpan`), so swipe, press, and predictive back move it identically.
-- Every page is composed with the screen (`beyondViewportPageCount` covers all).
 - **Each page is one column**, capped at `THEME_COLOR_CHOICE_WIDTH`, at every width: two columns made tabs look unlike
   each other and change with window width. `SettingsPage` (`ui/settingsPage/`) allows two side-by-side sections (380dp
-  each) for the Metronome and Tuner tabs, plus a spanning `header` (the Tuner's strings).
+  each), plus a spanning `header`.
 - Every section is titled, has no background, and no tab uses a card.
 - A `verticalScroll`, not a lazy list: **every row is first composed in its current state**; rows that come and go
   (demo offer, sync progress, web storage) use `AnimatedSettingsRow`, which keeps the last value while leaving. Controls
@@ -71,8 +70,7 @@ breakpoint, as do the wide layout's pages.
 ### The app says nothing about the other builds but where to find them
 
 - "Every version of Campfire" links to https://campfire-songbook.com/#download, which can change without a release.
-- `Distribution` (`ui/platform/Platform.kt`) is the four stores and their listing URLs; a null `listingUrl` means not
-  on that store yet (publishing fills it in).
+- A null `Distribution.listingUrl` (`ui/platform/Platform.kt`) means not on that store yet (publishing fills it in).
 - `platformStore` is the store of the platform the app **runs** on (a hand-built Mac build is still a Mac build). It
   decides the one "Rate Campfire" row (absent on Linux, the web, and where the listing is null) and
   `canAskForDonations` (never on Apple platforms, guideline 3.1.1).
