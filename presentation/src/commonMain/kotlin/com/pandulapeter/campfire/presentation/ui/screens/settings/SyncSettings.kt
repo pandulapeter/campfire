@@ -175,7 +175,17 @@ private fun ColumnScope.ConnectedSyncSettings(
     ListItem(
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = { Text(textResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
-        supportingContent = { Text(syncState.statusText()) },
+        supportingContent = {
+            // Keyed by what kind of line it is rather than by its words, which change with every file a run moves and
+            // as the time since the last run passes: only a run starting or ending moves the line.
+            AnimatedContent(
+                targetState = syncState,
+                contentKey = { it.progress?.let { SyncProgress::class } ?: it.lastOutcome?.let { outcome -> outcome::class } },
+                transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+            ) { state ->
+                Text(state.statusText())
+            }
+        },
     )
     AnimatedSettingsRow(value = (syncState.lastOutcome as? SyncOutcome.DeletionsNeedConfirmation)?.direction) { direction ->
         Column {
