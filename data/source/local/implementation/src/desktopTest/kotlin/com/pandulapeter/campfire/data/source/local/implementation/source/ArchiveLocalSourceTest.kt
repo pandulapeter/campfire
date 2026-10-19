@@ -167,6 +167,36 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `an OpenSongApp backup yields its songs, without its sets and its database`() = runBlocking {
+        val song = "<song><title>Riverlight</title><lyrics>[V1]\n.G           D\n Down by the river</lyrics></song>"
+        val set = "<set name=\"Sunday\"><slide_groups><slide_group name=\"Riverlight\" type=\"song\"/></slide_groups></set>"
+        val backup = ZipWriter.write(
+            listOf(
+                ZipEntry("MAIN/Riverlight", song.encodeToByteArray()),
+                ZipEntry("Sets/Sunday", set.encodeToByteArray()),
+                ZipEntry("Songs.db", byteArrayOf(0x53, 0x51, 0x4C, 0, 1, 2)),
+            ),
+        )
+        val archive = ZipWriter.write(listOf(ZipEntry("OpenSongBackup_2026.osb", backup)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("Riverlight.cho", "Sunday", "Songs.db"), files.map { it.name })
+        assertTrue("[G]Down by the [D]river" in files.first().bytes.decodeToString())
+        assertTrue(files.last().bytes.isEmpty())
+    }
+
+    @Test
+    fun `a loose extensionless OpenSong file is its song`() = runBlocking {
+        val song = "<song><title>Riverlight</title><lyrics>[V1]\n Down by the river</lyrics></song>"
+
+        val files = archiveLocalSource.songsIn(ImportedFile("Riverlight", song.encodeToByteArray(), isPlainTextByContent = true))
+
+        assertEquals(listOf("Riverlight.cho"), files?.map { it.name })
+        assertEquals(null, archiveLocalSource.songsIn(ImportedFile("notes", "<p>Hello</p>".encodeToByteArray(), isPlainTextByContent = true)))
+    }
+
+    @Test
     fun `a nested docx is still a document`() = runBlocking {
         val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))

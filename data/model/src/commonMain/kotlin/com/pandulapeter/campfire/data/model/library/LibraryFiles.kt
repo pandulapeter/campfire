@@ -37,10 +37,10 @@ object LibraryFiles {
 
     /**
      * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
-     * `.sbpbackup` and the `.sbp` it shares a set or a song as. Named so that an archive is looked inside when it holds
-     * one; a file under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
+     * `.sbpbackup` and the `.sbp` it shares a set or a song as, and OpenSongApp's `.osb` of its song folders. Named so
+     * that an archive is looked inside when it holds one; a file under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
      */
-    val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp")
+    val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp", ".osb")
 
     /** Document inputs converted locally to ChordPro, never registered as system Open with file types. */
     val DOCUMENT_EXTENSIONS = listOf(".pdf", ".docx")

@@ -28,6 +28,18 @@ data class ImportedFile(
     val isPlainTextByContent: Boolean = false,
 ) {
 
+    /**
+     * [name] without its extension, which titles a song that names none itself. A file kept for its text loses only an
+     * extension with no space in it: `riverlight.onsong` is "riverlight", but `Mr. Brightside` is a title whose dot
+     * ends an abbreviation.
+     */
+    val baseName: String
+        get() {
+            val extension = name.substringAfterLast('.', "")
+            val hasExtension = !isPlainTextByContent || (extension.isNotEmpty() && extension.none(Char::isWhitespace))
+            return if (hasExtension) name.substringBeforeLast('.') else name
+        }
+
     override fun equals(other: Any?) = this === other || (
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
             isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes)

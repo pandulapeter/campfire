@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.backup.JsonSongs
+import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongSong
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
@@ -151,16 +152,24 @@ internal class ArchiveLocalSourceImpl(
     /**
      * The songs of another app's document that is not an archive, or null where [file] is not one or holds none, so
      * that it is imported as the file it is: a `.json` that is no setlist, or a text kept for its bytes that starts the
-     * way JSON does. Tried after SongbookPro's backup, whose document is read by a reader of its own.
+     * way JSON does, and an OpenSong song, a text kept for its bytes (OpenSong names its songs without an extension) or
+     * an `.xml` that starts the way XML does. Tried after SongbookPro's backup, whose document is read by a reader of
+     * its own. A song is handed over as a `.cho` of the name it came under, which is what it is titled by where it
+     * names no title itself.
      */
     private fun foreignSongs(file: ImportedFile): List<ImportedFile>? {
         if (file.bytes.isEmpty()) return null
         val isJsonByName = file.name.endsWith(JSON_EXTENSION, ignoreCase = true) && !file.name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
-        if (!isJsonByName && !file.isPlainTextByContent) return null
+        val isXmlByName = file.name.endsWith(XML_EXTENSION, ignoreCase = true)
+        if (!isJsonByName && !isXmlByName && !file.isPlainTextByContent) return null
         val text = file.bytes.decodeLibraryText()
-        val start = text.trimStart().firstOrNull()
-        if (!isJsonByName && start != '{' && start != '[') return null
-        return JsonSongs.read(text).ifEmpty { null }
+        return when (text.trimStart().firstOrNull()) {
+            '{', '[' -> if (isXmlByName) null else JsonSongs.read(text).ifEmpty { null }
+            '<' -> if (isJsonByName) null else OpenSongSong.read(text, fallbackTitle = file.baseName)?.let { song ->
+                listOf(ImportedFile(name = file.baseName + LibraryFiles.SONG_EXTENSION, bytes = song.encodeToByteArray()))
+            }
+            else -> if (isJsonByName) JsonSongs.read(text).ifEmpty { null } else null
+        }
     }
 
     /**
@@ -183,5 +192,6 @@ internal class ArchiveLocalSourceImpl(
     private companion object {
         const val MAX_DEPTH = 3
         const val JSON_EXTENSION = ".json"
+        const val XML_EXTENSION = ".xml"
     }
 }

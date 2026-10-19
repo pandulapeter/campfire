@@ -116,11 +116,12 @@ No document type leaves this module.
 
 ## Other apps' libraries
 
-SongbookPro's `.sbpbackup` / `.sbp` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an archive holding one
-is looked inside; none is registered as an Open with type, and no platform's picker filters by name. Other names are
-recognised by their bytes (`ImportBudget` in `:data:model`, `:domain:implementation`'s `importing`), and so is an
-entry inside an archive under any name but a document's: one under an unknown name, or a text name over
-`MAX_TEXT_FILE_SIZE`, is sniffed (`EntryPolicy.Sniff`) and read only when its first bytes are a zip's.
+SongbookPro's `.sbpbackup` / `.sbp` and OpenSongApp's `.osb` are named in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so
+an archive holding one is looked inside (`.osb` is not offered to the iOS share extension, which has no type to name);
+none is registered as an Open with type, and no platform's picker filters by name. Other names are recognised by their
+bytes (`ImportBudget` in `:data:model`, `:domain:implementation`'s `importing`), and so is an entry inside an archive
+under any name but a document's: one under an unknown name, or a text name over `MAX_TEXT_FILE_SIZE`, is sniffed
+(`EntryPolicy.Sniff`) and read only when its first bytes are a zip's or text's.
 
 `backup/SongbookProBackup` translates `dataFile.txt` (a version line plus one JSON document, read up to
 `ImportLimits.MAX_IMPORT_SIZE`) into `.cho` songs and `*.setlist.json` setlists, then the ordinary import:
@@ -138,6 +139,11 @@ entry inside an archive under any name but a document's: one under an unknown na
 one-line title and a content with `ChordSheetStructure`, or four lines under `lyrics` (a notes export's `{title,
 content}` is not). Bounded to the text limit, 32 levels, and 200,000 nodes; no setlists. Both readers write their
 headers and batch names through `ForeignSongHeader`.
+
+`backup/OpenSongSong` reads one OpenSong XML song (root `song` whose `lyrics` is text; OpenLyrics' element lyrics are
+not), from a sniffed text or `.xml` starting with `<`, into a `.cho` of the name it came under: section tags become
+environments or comments, `.` chord rows are set over the lyric rows under them by `convertFragment`, numbered lyric
+lines are one verse each over shared chord rows, and a block with no chord row is `ChordSheetLyrics.escaped`.
 
 ## A song is named by its header
 

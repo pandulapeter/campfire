@@ -11,9 +11,9 @@
 
 Pure PDF and Word text extractors and zip reader/writer in common Kotlin on every target, on no third-party library
 (only `kotlinx.coroutines`) and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no network.
-Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and `ArchiveLocalSourceImpl`; public is
-only what those use, everything else `internal`. `ZipReader` is the one place that
-prints (the name of an entry it could not read).
+Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl`, `ArchiveLocalSourceImpl`, and the readers
+of other apps' files in its `backup/` (`parseXml` for OpenSong); public is only what those use, everything else
+`internal`. `ZipReader` is the one place that prints (the name of an entry it could not read).
 
 Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocument` is all that leaves this module.
 

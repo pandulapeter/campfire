@@ -192,7 +192,7 @@ internal class PrepareImportUseCaseImpl(
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
                 // only worth anything where the song inside it declares no title: then it is what titles the song,
                 // and a collection's parts do not even have that, since the file they came from named none of them.
-                val fallbackTitle = if (parts.size == 1) file.fallbackTitle() else ""
+                val fallbackTitle = if (parts.size == 1) file.baseName else ""
                 // All sources share the same formatter after conversion and splitting, and before naming or
                 // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
                 val text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD))
@@ -247,17 +247,6 @@ internal class PrepareImportUseCaseImpl(
             librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty(),
             songFileNames = songFileNames,
         )
-    }
-
-    /**
-     * The name a file came under without its extension. A file kept for its text under a name that says nothing loses
-     * only an extension with no space in it: `riverlight.onsong` is "riverlight", but `Mr. Brightside` is a title whose
-     * dot ends an abbreviation.
-     */
-    private fun ImportedFile.fallbackTitle(): String {
-        if (!isPlainTextByContent) return name.substringBeforeLast('.')
-        val extension = name.substringAfterLast('.', "")
-        return if (extension.isNotEmpty() && extension.none(Char::isWhitespace)) name.substringBeforeLast('.') else name
     }
 
     /**

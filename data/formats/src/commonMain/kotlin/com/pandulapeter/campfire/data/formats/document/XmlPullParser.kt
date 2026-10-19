@@ -132,13 +132,18 @@ internal class XmlPullParser(private val xml: String) {
     }
 }
 
-internal data class XmlElement(val name: String, val attributes: Map<String, String>, val children: MutableList<XmlElement> = mutableListOf(), var text: String = "") {
+/** One element of a document [parseXml] read: its children in order, and the text directly inside it. */
+data class XmlElement(val name: String, val attributes: Map<String, String>, val children: MutableList<XmlElement> = mutableListOf(), var text: String = "") {
     val localName get() = name.substringAfter(':')
     fun child(name: String) = children.firstOrNull { it.localName == name }
     fun attribute(name: String) = attributes.entries.firstOrNull { it.key.substringAfter(':') == name }?.value
 }
 
-internal fun parseXml(xml: String): XmlElement {
+/**
+ * The root element of [xml]. Throws an [IllegalArgumentException] or an [IllegalStateException] for malformed XML, a
+ * DTD, or a document past [XmlPullParser]'s bounds, which a reader of another app's files catches.
+ */
+fun parseXml(xml: String): XmlElement {
     val reader = XmlPullParser(xml.removePrefix("\ufeff"))
     val stack = mutableListOf<XmlElement>()
     // A comment or a CDATA section ends one text event and starts another, so an element's text may arrive in a great
