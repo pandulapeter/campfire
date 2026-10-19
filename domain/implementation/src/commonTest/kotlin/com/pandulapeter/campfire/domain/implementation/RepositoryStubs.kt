@@ -111,7 +111,7 @@ internal open class UserPreferencesRepositoryStub : UserPreferencesRepository {
 internal open class SyncRepositoryStub : SyncRepository {
     override val syncState: Flow<SyncState> get() = unexpected()
     override val availableProviders: List<SyncProviderId> get() = unexpected()
-    override suspend fun restore(): SyncRepository.RestoreResult = unexpected()
+    override suspend fun restore(onReturnedFromAuthorization: () -> Unit): SyncRepository.RestoreResult = unexpected()
     override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean = unexpected()
     override suspend fun cancelConnection(): Unit = unexpected()
     override suspend fun disconnect(): Unit = unexpected()

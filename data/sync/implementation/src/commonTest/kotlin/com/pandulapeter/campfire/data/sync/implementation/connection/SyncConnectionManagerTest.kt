@@ -35,11 +35,13 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizatio
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -72,10 +74,10 @@ class SyncConnectionManagerTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertTrue(result.isConnected)
         assertFalse(result.wasInterrupted)
@@ -94,8 +96,8 @@ class SyncConnectionManagerTest {
             stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true}"""),
         )
 
-        assertTrue(repository.restore().wasInterrupted)
-        assertTrue(repository.restore().wasInterrupted)
+        assertTrue(repository.restore {}.wasInterrupted)
+        assertTrue(repository.restore {}.wasInterrupted)
         assertEquals(SyncOutcome.Interrupted, (repository.syncState.value as SyncState.Connected).lastOutcome)
     }
 
@@ -104,7 +106,7 @@ class SyncConnectionManagerTest {
         val stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true,"isAutomaticRunInProgress":true}""")
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT), stateLocalSource = stateLocalSource)
 
-        assertFalse(repository.restore().wasInterrupted)
+        assertFalse(repository.restore {}.wasInterrupted)
         assertNull((repository.syncState.value as SyncState.Connected).lastOutcome)
         assertFalse(assertNotNull(stateLocalSource.document).isRunInProgress)
         assertFalse(assertNotNull(stateLocalSource.document).isAutomaticRunInProgress)
@@ -115,7 +117,7 @@ class SyncConnectionManagerTest {
         val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
         val provider = FakeSyncProvider(account = TEST_ACCOUNT).apply { onDisconnect = { delay(1_000) } }
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource)
-        repository.restore()
+        repository.restore {}
 
         val job = launch { repository.disconnect() }
         runCurrent()
@@ -137,7 +139,7 @@ class SyncConnectionManagerTest {
             ),
             authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
         )
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { it is SyncState.ConnectionFailed }
 
@@ -156,7 +158,7 @@ class SyncConnectionManagerTest {
             ),
             authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
         )
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { it is SyncState.ConnectionFailed }
 
@@ -196,7 +198,7 @@ class SyncConnectionManagerTest {
             stateLocalSource = FakeSyncIndexLocalSource(onLoadIndex = { throw LibraryStorageException("Locked") }),
         )
 
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertTrue(result.isConnected)
         assertIs<SyncState.Connected>(repository.syncState.value)
@@ -208,10 +210,10 @@ class SyncConnectionManagerTest {
             provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = TEST_ACCOUNT),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.awaitOutcome()
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertTrue(result.isConnected)
         assertFalse(result.wasInterrupted)
@@ -230,7 +232,7 @@ class SyncConnectionManagerTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
         repository.cancelSynchronization()
@@ -262,7 +264,7 @@ class SyncConnectionManagerTest {
     fun `cancelling a connection leaves every other state alone`() = runTest {
         val store = FakePendingAuthorizationStore()
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT), pendingAuthorizationStore = store)
-        repository.restore()
+        repository.restore {}
         val pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
         store.pending = pending
 
@@ -355,7 +357,7 @@ class SyncConnectionManagerTest {
         assertTrue(provider.hasForgottenCredentials)
         assertFalse(provider.isConnected())
         assertEquals(SyncState.Disconnected, repository.syncState.value)
-        assertFalse(repository.restore().isConnected)
+        assertFalse(repository.restore {}.isConnected)
     }
 
     @Test
@@ -389,7 +391,7 @@ class SyncConnectionManagerTest {
         }
         val repository = syncRepository(provider = provider)
 
-        assertFalse(repository.restore().isConnected)
+        assertFalse(repository.restore {}.isConnected)
 
         assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
         assertEquals(0, provider.listCount)
@@ -400,7 +402,7 @@ class SyncConnectionManagerTest {
         val provider = FakeSyncProvider(account = TEST_ACCOUNT)
         val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource)
-        repository.restore()
+        repository.restore {}
         provider.onIsConnected = { throw LibraryStorageException("Keystore busy") }
 
         repository.disconnect()
@@ -447,9 +449,9 @@ class SyncConnectionManagerTest {
             pendingAuthorizationStore = store,
         )
 
-        val result = repository.restore()
+        val result = repository.restore {}
 
-        assertEquals(SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = true, wasInterrupted = false), result)
+        assertEquals(SyncRepository.RestoreResult(isConnected = true, wasInterrupted = false), result)
         assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
         assertNull(store.pending)
     }
@@ -466,11 +468,12 @@ class SyncConnectionManagerTest {
             authenticator = FakeSyncAuthenticator(pendingRedirect = "campfire://sync?code=c&state=forged"),
             pendingAuthorizationStore = store,
         )
+        var returned = false
 
-        val result = repository.restore()
+        val result = repository.restore { returned = true }
 
         assertFalse(result.isConnected)
-        assertTrue(result.didReturnFromAuthorization)
+        assertTrue(returned)
         assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.UNKNOWN), repository.syncState.value)
         assertFalse(provider.connected)
         assertNull(store.pending)
@@ -489,7 +492,7 @@ class SyncConnectionManagerTest {
             pendingAuthorizationStore = store,
         )
 
-        assertFalse(repository.restore().isConnected)
+        assertFalse(repository.restore {}.isConnected)
 
         assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
         assertFalse(provider.connected)
@@ -503,11 +506,81 @@ class SyncConnectionManagerTest {
             provider = FakeSyncProvider(account = TEST_ACCOUNT),
             authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
         )
+        var returned = false
 
-        val result = repository.restore()
+        val result = repository.restore { returned = true }
 
-        assertEquals(SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = false, wasInterrupted = false), result)
+        assertEquals(SyncRepository.RestoreResult(isConnected = true, wasInterrupted = false), result)
         assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+        assertFalse(returned)
+    }
+
+    @Test
+    fun `a start up finishing a consent page's answer shows connecting meanwhile`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val repository = syncRepository(
+            provider = FakeSyncProvider().apply {
+                connected = false
+                onCompleteAuthorization = {
+                    gate.await()
+                    connected = true
+                    TEST_ACCOUNT
+                }
+            },
+            authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
+            pendingAuthorizationStore = FakePendingAuthorizationStore().apply { pending = PENDING },
+        )
+        var returned = false
+
+        val restoring = async { repository.restore { returned = true } }
+        runCurrent()
+
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.value)
+        assertTrue(returned)
+        gate.complete(Unit)
+        runCurrent()
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+        assertTrue(restoring.await().isConnected)
+    }
+
+    @Test
+    fun `cancelling while start up finishes a consent page's answer ends disconnected and keeps nothing`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { pending = PENDING }
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                // A provider stores the tokens before it asks whose they are.
+                connected = true
+                awaitCancellation()
+            }
+        }
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
+            pendingAuthorizationStore = store,
+        )
+
+        val restoring = async { repository.restore {} }
+        runCurrent()
+        repository.cancelConnection()
+
+        assertFalse(restoring.await().isConnected)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertTrue(provider.hasForgottenCredentials)
+        assertNull(store.pending)
+    }
+
+    @Test
+    fun `a start up without a consent page's answer never shows connecting and never calls back`() = runTest {
+        val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT))
+        val states = mutableListOf<SyncState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repository.syncState.collect { states += it } }
+        var returned = false
+
+        assertTrue(repository.restore { returned = true }.isConnected)
+
+        assertFalse(returned)
+        assertTrue(states.none { it is SyncState.Connecting })
     }
 
     /** A provider with nothing stored, which [TEST_ACCOUNT]'s credentials are stored in once a code is exchanged. */

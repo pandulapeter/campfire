@@ -20,13 +20,12 @@ internal class RestoreSyncUseCaseImpl(
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
 ) : RestoreSyncUseCase {
 
-    override suspend operator fun invoke(): Boolean {
-        val result = syncRepository.restore()
+    override suspend operator fun invoke(onReturnedFromAuthorization: () -> Unit) {
+        val result = syncRepository.restore(onReturnedFromAuthorization = onReturnedFromAuthorization)
         // A run that was cut short is reported rather than repeated: an automatic run would overwrite the message
         // before it could be read, and the button that starts one is right under it.
         if (result.isConnected && !result.wasInterrupted) {
             synchronizeLibrary()
         }
-        return result.didReturnFromAuthorization
     }
 }

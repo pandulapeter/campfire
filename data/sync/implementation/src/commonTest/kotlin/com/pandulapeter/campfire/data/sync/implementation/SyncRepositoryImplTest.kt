@@ -55,7 +55,7 @@ class SyncRepositoryImplTest {
         val stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = { throw LibraryStorageException("Full") })
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT), stateLocalSource = stateLocalSource)
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -67,7 +67,7 @@ class SyncRepositoryImplTest {
     fun `an automatic run starts straight away when the app leaves the front`() = runTest {
         val repository = syncRepository(provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = TEST_ACCOUNT))
 
-        repository.restore()
+        repository.restore {}
         repository.scheduleSynchronization()
         repository.startScheduledSynchronization()
         val state = repository.awaitOutcome()
@@ -86,7 +86,7 @@ class SyncRepositoryImplTest {
             ),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.scheduleSynchronization()
         val progress = repository.startScheduledSynchronization()
 
@@ -112,7 +112,7 @@ class SyncRepositoryImplTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
         repository.scheduleSynchronization()
@@ -130,7 +130,7 @@ class SyncRepositoryImplTest {
     fun `lastSyncedAt is the clock's time`() = runTest {
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT))
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -142,7 +142,7 @@ class SyncRepositoryImplTest {
     fun `a run stopped before it got going shows no progress`() = runTest {
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT))
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.cancelSynchronization()
         val state = repository.syncState.first { (it as? SyncState.Connected)?.progress == null }
@@ -167,7 +167,7 @@ class SyncRepositoryImplTest {
             logger = logger,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -199,7 +199,7 @@ class SyncRepositoryImplTest {
             ),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         isWaiting.await()
         assertTrue(reads.isEmpty())
@@ -219,7 +219,7 @@ class SyncRepositoryImplTest {
             songRepository = songRepository,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -242,7 +242,7 @@ class SyncRepositoryImplTest {
             songRepository = songRepository,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -288,7 +288,7 @@ class SyncRepositoryImplTest {
             songRepository = songRepository,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -316,7 +316,7 @@ class SyncRepositoryImplTest {
             libraryFileLocalSource = FakeLibraryFileLocalSource(files = emptyMap()),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -341,7 +341,7 @@ class SyncRepositoryImplTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -359,7 +359,7 @@ class SyncRepositoryImplTest {
             libraryFileLocalSource = FakeLibraryFileLocalSource(onWrite = { throw LibraryStorageException("Full") }),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -376,7 +376,7 @@ class SyncRepositoryImplTest {
             libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to "One".encodeToByteArray())),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -396,7 +396,7 @@ class SyncRepositoryImplTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.scheduleSynchronization()
         repository.startScheduledSynchronization()
         repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
@@ -421,7 +421,7 @@ class SyncRepositoryImplTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
 
@@ -435,7 +435,7 @@ class SyncRepositoryImplTest {
     fun `a run asked for after the credentials went reports the connection as failed`() = runTest {
         val provider = FakeSyncProvider(account = TEST_ACCOUNT)
         val repository = syncRepository(provider = provider)
-        repository.restore()
+        repository.restore {}
 
         provider.connected = false
         repository.synchronize(SyncDeletionPolicy.ASK)
@@ -456,7 +456,7 @@ class SyncRepositoryImplTest {
             stateLocalSource = stateLocalSource,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.syncState.first { it is SyncState.ConnectionFailed }
 
@@ -482,7 +482,7 @@ class SyncRepositoryImplTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = TEST_ACCOUNT)
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource, libraryFileLocalSource = local)
 
-        repository.restore()
+        repository.restore {}
         stateLocalSource.onLoadIndex = { throw LibraryStorageException("Locked") }
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
@@ -511,7 +511,7 @@ class SyncRepositoryImplTest {
             userPreferencesRepository = userPreferencesRepository,
             logger = Logger.Standard,
         ).rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -531,7 +531,7 @@ class SyncRepositoryImplTest {
             userPreferencesRepository = preferences,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -554,7 +554,7 @@ class SyncRepositoryImplTest {
             userPreferencesRepository = preferences,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()
 
@@ -590,7 +590,7 @@ class SyncRepositoryImplTest {
     fun `preferences cut off by the network end the run as a network failure`() = runTest {
         val world = preferencesOnTheirWayUp(failure = SyncNetworkException("Offline"))
 
-        world.repository.restore()
+        world.repository.restore {}
         world.repository.synchronize(SyncDeletionPolicy.ASK)
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), world.repository.awaitOutcome().lastOutcome)
@@ -614,7 +614,7 @@ class SyncRepositoryImplTest {
     fun `a full folder on preferences ends the run as that`() = runTest {
         val world = preferencesOnTheirWayUp(failure = SyncRemoteStorageFullException("Full"))
 
-        world.repository.restore()
+        world.repository.restore {}
         world.repository.synchronize(SyncDeletionPolicy.ASK)
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), world.repository.awaitOutcome().lastOutcome)
@@ -624,7 +624,7 @@ class SyncRepositoryImplTest {
     fun `preferences that fail for any other reason leave the run a success that says so`() = runTest {
         val world = preferencesOnTheirWayUp(failure = IllegalStateException("Broken"))
 
-        world.repository.restore()
+        world.repository.restore {}
         world.repository.synchronize(SyncDeletionPolicy.ASK)
 
         val outcome = assertIs<SyncOutcome.Success>(world.repository.awaitOutcome().lastOutcome)

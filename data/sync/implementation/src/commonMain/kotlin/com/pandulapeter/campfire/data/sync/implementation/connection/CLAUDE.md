@@ -12,7 +12,9 @@
 - `restore` is called once per view model; finding `Connected` it reads nothing (re-reading would make a running run
   look interrupted). It shows the stored account before asking the service, so a slow network never shows
   disconnected. Refused credentials are a `ConnectionFailed` (authorization), nothing deleted and no launch run;
-  credentials unreadable right now are a connection failure with the file left alone.
+  credentials unreadable right now are a connection failure with the file left alone. A start up carrying a consent
+  page's answer shows `Connecting` (and tells the UI, which puts the user back where they tapped Connect) before the
+  token exchange; Cancel cancels that exchange and forgets what it stored.
 - A previous installation's credentials that could not be forgotten are noted and retried by every `restore` first;
   until then it answers disconnected. A start-up carrying the answer to a waiting authorization forgets nothing, even if
   it looks like a first launch.

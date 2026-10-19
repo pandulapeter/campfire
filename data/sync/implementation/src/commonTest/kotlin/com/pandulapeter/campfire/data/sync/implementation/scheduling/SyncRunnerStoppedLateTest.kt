@@ -70,7 +70,7 @@ class SyncRunnerStoppedLateTest {
             userPreferencesRepository = FakeUserPreferencesRepository(),
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         refreshStarted.await()
         repository.cancelSynchronization()
@@ -113,7 +113,7 @@ class SyncRunnerStoppedLateTest {
             userPreferencesRepository = preferences,
         )
 
-        repository.restore()
+        repository.restore {}
         repository.synchronize(SyncDeletionPolicy.ASK)
         uploadStarted.await()
         repository.cancelSynchronization()

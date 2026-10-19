@@ -28,26 +28,36 @@ class SyncUseCaseImplsTest {
 
     @Test
     fun `a start up that finds the account connected starts a run`() = runTest {
-        sync.restored = SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = true, wasInterrupted = false)
+        sync.restored = SyncRepository.RestoreResult(isConnected = true, wasInterrupted = false)
 
-        assertTrue(RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke())
+        RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke {}
         assertEquals(1, sync.runs)
     }
 
     @Test
     fun `a start up after a run that was cut short leaves the message about it in place`() = runTest {
-        sync.restored = SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = false, wasInterrupted = true)
+        sync.restored = SyncRepository.RestoreResult(isConnected = true, wasInterrupted = true)
 
-        assertFalse(RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke())
+        RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke {}
         assertEquals(0, sync.runs)
     }
 
     @Test
     fun `a start up that finds no account starts no run`() = runTest {
-        sync.restored = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = true, wasInterrupted = false)
+        sync.restored = SyncRepository.RestoreResult(isConnected = false, wasInterrupted = false)
 
-        assertTrue(RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke())
+        RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke {}
         assertEquals(0, sync.runs)
+    }
+
+    @Test
+    fun `a start up passes the return from a consent page on to its caller`() = runTest {
+        sync.isReturningFromAuthorization = true
+        var returned = false
+
+        RestoreSyncUseCaseImpl(sync, synchronizeLibrary).invoke { returned = true }
+
+        assertTrue(returned)
     }
 
     @Test
@@ -64,11 +74,15 @@ class SyncUseCaseImplsTest {
     }
 
     private class FakeSyncRepository : SyncRepositoryStub() {
-        var restored = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false, wasInterrupted = false)
+        var restored = SyncRepository.RestoreResult(isConnected = false, wasInterrupted = false)
+        var isReturningFromAuthorization = false
         var isConnecting = true
         var runs = 0
 
-        override suspend fun restore() = restored
+        override suspend fun restore(onReturnedFromAuthorization: () -> Unit): SyncRepository.RestoreResult {
+            if (isReturningFromAuthorization) onReturnedFromAuthorization()
+            return restored
+        }
 
         override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) = isConnecting
 

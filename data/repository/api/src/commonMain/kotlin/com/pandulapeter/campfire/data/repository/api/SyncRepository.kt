@@ -39,20 +39,22 @@ interface SyncRepository {
      * May be called more than once in a process - on Android every new activity's ViewModel does. Only a call that
      * finds no connection in [syncState] reads anything; a later one answers from the state and never touches a run
      * that is going.
+     *
+     * @param onReturnedFromAuthorization Called when this start up turns out to be the answer to a consent page the app
+     *   had been sent away to, before the token exchange begins and with the state already saying
+     *   [SyncState.Connecting]. That happens on the web, where the app stops existing while the user is on that page,
+     *   and on Android when the process was killed behind the browser - it is what lets the UI put them back where
+     *   they pressed the button, at once rather than after an exchange a bad network can stretch past a minute. Called
+     *   whatever the service went on to say: an authorization that failed is exactly the case where the user most
+     *   needs to see the screen that says so. Called on the caller's coroutine, at most once.
      */
-    suspend fun restore(): RestoreResult
+    suspend fun restore(onReturnedFromAuthorization: () -> Unit): RestoreResult
 
     /**
      * What start up found.
      *
      * @param isConnected Whether the app ended up connected, which is what tells the caller a first run is worth
      *   starting.
-     * @param didReturnFromAuthorization Whether this start up was the answer to a consent page the app had been
-     *   sent away to. True on the web, where the app stops existing while the user is on that page, and on Android
-     *   when the process was killed behind the browser - it is what lets the UI put them back where they pressed the
-     *   button. True whether the service said yes or no:
-     *   an authorization that failed is exactly the case where the user most needs to see the screen that says so,
-     *   so this reports that the app came back, not that it came back connected.
      * @param wasInterrupted Whether the last run never finished - the app was killed, swiped away or suspended while
      *   it was going. The caller must not start a run on its own then: the run would replace the message saying so
      *   before anyone could read it, and starting it again is one button away from that message. False for an
@@ -61,7 +63,6 @@ interface SyncRepository {
      */
     data class RestoreResult(
         val isConnected: Boolean,
-        val didReturnFromAuthorization: Boolean,
         val wasInterrupted: Boolean,
     )
 

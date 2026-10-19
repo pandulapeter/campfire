@@ -44,10 +44,10 @@ class SyncConnectionManagerForgettingTest {
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource)
 
         repository.forgetStoredConnection()
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertEquals(
-            SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false, wasInterrupted = false),
+            SyncRepository.RestoreResult(isConnected = false, wasInterrupted = false),
             result,
         )
         assertEquals(SyncState.Disconnected, repository.syncState.value)
@@ -95,10 +95,11 @@ class SyncConnectionManagerForgettingTest {
             pendingAuthorizationStore = store,
         )
 
+        var returned = false
         repository.forgetStoredConnection()
-        val result = repository.restore()
+        val result = repository.restore { returned = true }
 
-        assertTrue(result.didReturnFromAuthorization)
+        assertTrue(returned)
         assertTrue(result.isConnected)
         assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
     }
@@ -109,7 +110,7 @@ class SyncConnectionManagerForgettingTest {
         val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource)
 
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertTrue(result.isConnected)
         assertFalse(provider.hasForgottenCredentials)
@@ -123,7 +124,7 @@ class SyncConnectionManagerForgettingTest {
         val repository = syncRepository(provider = provider, stateLocalSource = stateLocalSource)
 
         repository.forgetStoredConnection()
-        val result = repository.restore()
+        val result = repository.restore {}
 
         assertFalse(result.isConnected)
         assertEquals(SyncState.Disconnected, repository.syncState.value)
@@ -138,12 +139,12 @@ class SyncConnectionManagerForgettingTest {
         syncRepository(provider = provider, stateLocalSource = stateLocalSource).forgetStoredConnection()
         provider.onForgetStoredCredentials = {}
 
-        assertFalse(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+        assertFalse(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore {}.isConnected)
         assertTrue(provider.hasForgottenCredentials)
         assertFalse(stateLocalSource.isForgettingOwed)
 
         provider.connected = true
-        assertTrue(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+        assertTrue(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore {}.isConnected)
     }
 
     @Test
@@ -178,7 +179,7 @@ class SyncConnectionManagerForgettingTest {
 
         assertTrue(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
         assertFalse(stateLocalSource.isForgettingOwed)
-        assertTrue(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+        assertTrue(syncRepository(provider = provider, stateLocalSource = stateLocalSource).restore {}.isConnected)
     }
 
     @Test
@@ -186,6 +187,6 @@ class SyncConnectionManagerForgettingTest {
         val stateLocalSource = FakeSyncIndexLocalSource().apply { onIsForgettingOwed = { error("Not readable.") } }
         val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT), stateLocalSource = stateLocalSource)
 
-        assertTrue(repository.restore().isConnected)
+        assertTrue(repository.restore {}.isConnected)
     }
 }

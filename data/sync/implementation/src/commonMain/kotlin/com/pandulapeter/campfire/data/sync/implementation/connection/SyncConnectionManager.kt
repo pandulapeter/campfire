@@ -33,14 +33,22 @@ import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
+import kotlin.concurrent.Volatile
 
 /**
  * Who is connected: restoring the connection at start up, the authorization that makes one, disconnecting and forgetting
@@ -82,19 +90,28 @@ internal class SyncConnectionManager(
     /** A consent page's answer [forgetStoredConnection] took up and left for [restoreConnection] to finish. */
     private var redirectKeptForRestore: String? = null
 
-    suspend fun restore() = restoreMutex.withLock { restoreConnection() }
+    /**
+     * The token exchange a start up is finishing for a consent page's answer, which [cancelConnection] cancels. Volatile
+     * because Cancel comes from the main thread while [restore] may be running on another.
+     */
+    @Volatile
+    private var restoreExchange: Deferred<Boolean>? = null
 
-    private suspend fun restoreConnection(): SyncRepository.RestoreResult {
+    suspend fun restore(onReturnedFromAuthorization: () -> Unit) = restoreMutex.withLock {
+        restoreConnection(onReturnedFromAuthorization)
+    }
+
+    private suspend fun restoreConnection(onReturnedFromAuthorization: () -> Unit): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // Android's once the process was reclaimed behind the browser. Checked first because it decides what the
         // stored credentials are about to become. A redirect that no authorization is waiting for answers nothing -
         // Android hands a spent one over again when a finished task is reopened from the recents - and must not keep
         // the account that is connected from being restored below.
         val redirectUri = redirectKeptForRestore?.also { redirectKeptForRestore = null } ?: authenticator.consumePendingRedirect()
-        if (redirectUri != null && pendingAuthorizationStore.loadPendingAuthorization() != null) {
+        val pending = redirectUri?.let { pendingAuthorizationStore.loadPendingAuthorization() }
+        if (redirectUri != null && pending != null) {
             return SyncRepository.RestoreResult(
-                isConnected = completePendingAuthorization(redirectUri),
-                didReturnFromAuthorization = true,
+                isConnected = finishAuthorizationAtStartUp(redirectUri, pending.providerId, onReturnedFromAuthorization),
                 wasInterrupted = false,
             )
         }
@@ -114,7 +131,6 @@ internal class SyncConnectionManager(
         (stateHolder.value as? SyncState.Connected)?.let { connected ->
             return SyncRepository.RestoreResult(
                 isConnected = true,
-                didReturnFromAuthorization = false,
                 wasInterrupted = !connected.isSyncing && connected.lastOutcome == SyncOutcome.Interrupted,
             )
         }
@@ -171,9 +187,35 @@ internal class SyncConnectionManager(
         }
         return SyncRepository.RestoreResult(
             isConnected = true,
-            didReturnFromAuthorization = false,
             wasInterrupted = wasInterrupted,
         )
+    }
+
+    /**
+     * Runs the token exchange for a consent page's answer as something [cancelConnection] can stop: on a bad network it
+     * can take over a minute, and the screen says [SyncState.Connecting] with a Cancel button all the while. A cancelled
+     * exchange forgets whatever tokens it stored on its way out, see [completePendingAuthorization], so it answers not
+     * connected rather than ending the start up in an exception.
+     */
+    private suspend fun finishAuthorizationAtStartUp(
+        redirectUri: String,
+        providerId: SyncProviderId,
+        onReturnedFromAuthorization: () -> Unit,
+    ) = coroutineScope {
+        // Published before Connecting is shown: a Cancel that sees Connecting must find something to cancel.
+        val exchange = async(start = CoroutineStart.LAZY) { completePendingAuthorization(redirectUri) }
+        restoreExchange = exchange
+        stateHolder.update { SyncState.Connecting(providerId) }
+        onReturnedFromAuthorization()
+        try {
+            exchange.await()
+        } catch (exception: CancellationException) {
+            // The caller's own cancellation carries on; only the exchange's, which is Cancel, is answered here.
+            currentCoroutineContext().ensureActive()
+            false
+        } finally {
+            restoreExchange = null
+        }
     }
 
     suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
@@ -226,6 +268,8 @@ internal class SyncConnectionManager(
 
     suspend fun cancelConnection() {
         if (stateHolder.value !is SyncState.Connecting) return
+        // An exchange cancelled before it started never cleared the pending authorization, which the line below does.
+        restoreExchange?.cancelAndJoin()
         discardPendingAuthorization()
         stateHolder.update { if (it is SyncState.Connecting) stateAfterBackingOut() else it }
         stateBeforeConnecting = null
@@ -449,7 +493,6 @@ internal class SyncConnectionManager(
     private companion object {
         val disconnectedResult = SyncRepository.RestoreResult(
             isConnected = false,
-            didReturnFromAuthorization = false,
             wasInterrupted = false,
         )
     }

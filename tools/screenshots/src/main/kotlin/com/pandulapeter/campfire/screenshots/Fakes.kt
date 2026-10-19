@@ -73,7 +73,8 @@ private class ConnectedSyncRepository : SyncRepository {
 
     override val availableProviders = listOf(SyncProviderId.DROPBOX)
 
-    override suspend fun restore() = SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = false, wasInterrupted = false)
+    override suspend fun restore(onReturnedFromAuthorization: () -> Unit) =
+        SyncRepository.RestoreResult(isConnected = true, wasInterrupted = false)
 
     override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) = false
 

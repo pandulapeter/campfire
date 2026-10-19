@@ -115,8 +115,9 @@ internal class SyncController(
      */
     fun startRestoring(isFirstLaunch: Deferred<Boolean>, onConsentAnswered: () -> Unit) = scope.launch {
         // On the web the consent page replaces the app, so this start up is the second half of a tap on Connect:
-        // whether it ended up connected or not, the screen the tap was made on is the one the answer is on, which
-        // onConsentAnswered puts back, since the page load forgot it.
+        // whether it ends up connected or not, the screen the tap was made on is the one the answer is on, which
+        // onConsentAnswered puts back, since the page load forgot it. It does so before the token exchange, while
+        // nobody has had the time to build on the start stack, and that screen shows the exchange going on.
         try {
             // A reinstall is the one case where credentials outlive the library: iOS leaves the Keychain item
             // behind while everything else goes, so a fresh installation would find itself connected to an
@@ -124,7 +125,7 @@ internal class SyncController(
             // folder. In this coroutine rather than beside it, because it is the one thing that must happen
             // before restore() reads those credentials.
             if (isFirstLaunch.await()) forgetSyncConnection()
-            if (restoreSync()) onConsentAnswered()
+            restoreSync(onReturnedFromAuthorization = onConsentAnswered)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {

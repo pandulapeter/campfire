@@ -13,7 +13,8 @@
 - A consent's answer is shown only onto a stack nobody has built on since start (Songs, Settings, or an owed onboarding
   still on page one, which is moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`). Only the web
   keeps the origin across the page load (session storage, `ui/platform`), since only there does every consent end in a
-  fresh start; Android restores its back stack.
+  fresh start; Android restores its back stack. The answer's screen is shown when the redirect is found, not when the
+  exchange ends, and shows `Connecting` until it does.
 - `rememberSyncNotifications` only reports "nothing to show" after showing something; otherwise opening the app onto a
   background run would stop the Android service.
 - On a launch with no preferences document the stored credentials are forgotten inside `startRestoring`'s coroutine,
