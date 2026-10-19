@@ -124,39 +124,6 @@ The view model facade, the composition root, and the product rules every screen 
 - Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the metronome
   switch (`CardDetails.isTempoShown`) without writing anything.
 
-### How a song is played on the keyboard
-
-- On Keyboard the capo is a transposition (`readsCapoAsTransposition`, whatever the Chord diagrams switch says): no capo
-  stepper or capo text; the capo's frets are counted into the transposition (`withCapoSounding`), so chords, diagrams,
-  chord sheet, and the stepper's key are the sounding key. The stepper still steps and resets only the transposition's
-  own override. Capo overrides and the file's `{capo}` are kept for other instruments. The PDF follows the screen.
-
-### One instrument for the whole app
-
-- `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`, device-only, never synced.
-  Diagrams, tuner, and the keyboard capo rule read it.
-- `ui/instrument/` is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
-  every caller goes through it.
-- Picked by two `PickerChip`s (`instrument/InstrumentChips.kt`; the tuning chip only for an instrument with more than one)
-  opening `InstrumentSheet` / `TuningSheet`. They stand on the song details first section (read only included, since
-  they change a device preference), the Tuner tab (only while Chromatic is off), the Chords tab, Settings → Songs, and the
-  onboarding. Chromatic is the tuner's own switch (`TunerSettings.isChromatic`), not an instrument.
-- **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
-  shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
-  no instrument: `withTuning` tunes the picked instrument, and chips ask `isStandard`.
-
-### Tabs follow the instrument
-
-- `ui/tabs/` builds the `TabPlayer` and its notice text; `SongRenderer.transposedSong` applies them.
-- Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
-  guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
-- Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its
-  string names are another instrument's open strings (`A E C G` → ukulele).
-- Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
-- Details screen and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
-  button writes an empty staff in standard tuning (see `screens/songEditor/toolbar/CLAUDE.md`), stored in standard
-  notation on Save.
-
 ## Haptics
 
 - Only what the eye cannot easily follow, through `LocalHapticFeedback` (platform feedback and its setting; nothing on

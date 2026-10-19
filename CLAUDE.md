@@ -144,11 +144,12 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Feature switches in Settings → Features only hide, never write or delete: `ui`.
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
-- Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui`,
+- Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui/tabs`,
   `chordpro`.
 - With six screens on, Metronome, Tuner, and Chords go behind one Tools item on a navigation bar or a short window's
   rail: `ui/chrome`.
-- One instrument preference, picked with its tuning from song details, Tuner, Chords, Settings, and onboarding: `ui`.
+- One instrument preference, picked with its tuning from song details, Tuner, Chords, Settings, and onboarding:
+  `ui/instrument`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:
   `ui/chords`.
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a

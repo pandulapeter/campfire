@@ -49,4 +49,4 @@ The values a song is played with and where each is kept.
 - **Zero is a value, not nothing**: a capo this setlist takes off a song whose file asks for one.
 - On the keyboard (`readsCapoAsTransposition`) the effective capo is read as semitones of transposition
   (`SongPlayback.withCapoSounding`, `soundingTransposition`), and `withoutCapo` takes the file's capo line off the PDF;
-  see `ui/CLAUDE.md`.
+  see `ui/instrument/CLAUDE.md`.

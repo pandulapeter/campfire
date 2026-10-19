@@ -20,7 +20,7 @@ Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and
 eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning
 chips head the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
 be brought back (`RenderSection.Metadata.instrumentChips`). On the keyboard the page is already in the sounding chords
-(see `ui/CLAUDE.md`), so diagrams count no capo.
+(see `ui/instrument/CLAUDE.md`), so diagrams count no capo.
 
 - The section's content holds what the chips name (`InstrumentChipsContent`), since label widths decide line count and a
   section's measured size is keyed by its content; a leaving tuning chip is named until it has faded out.
