@@ -821,7 +821,7 @@
     <string name="settings_sync_unavailable">Ez a Campfire build szinkronizálási azonosítók nélkül készült, így nincs mihez csatlakozni.</string>
     <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül, azzal együtt, hogy melyik dalt hogyan transzponálod, hányadik bundon capózod és milyen tempóban játszod. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
     <string name="settings_sync_connect_dropbox">Dropbox csatlakoztatása</string>
-    <string name="settings_sync_connecting">Várakozás a böngészőre…</string>
+    <string name="settings_sync_connecting">Csatlakozás…</string>
     <string name="settings_sync_connection_failed_network">A szolgáltatás nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="settings_sync_connection_failed_authorization">A Dropbox elutasította a kapcsolódást.</string>
     <string name="settings_sync_connection_failed_unknown">A kapcsolódás nem sikerült.</string>

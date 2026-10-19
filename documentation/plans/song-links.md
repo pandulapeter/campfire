@@ -262,7 +262,7 @@ a share.
 | State | Preview | FAB | Options |
 | --- | --- | --- | --- |
 | Sync not connected | "Share a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices." | **Connect Dropbox** | — |
-| Connecting | "Waiting for the browser…" | **Cancel** | — |
+| Connecting | "Connecting…" | **Cancel** | — |
 | `ConnectionFailed` | the Settings wording for it | **Connect again** | — |
 | Connected, not shared | "Anyone with the link can open this setlist and its songs in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update." | **Create link** | — |
 | Creating | `LayoutIndicator` | — | — |
