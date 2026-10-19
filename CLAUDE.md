@@ -12,9 +12,10 @@
 Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI shared by all) for viewing and editing
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
-zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the app, opened with it, or shared to it (Android, the iOS share
-extension). Every module has a `CLAUDE.md` of its own, as does every `:presentation` source set and every package with
-something the code cannot say; read the nearest one before changing code there.
+zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the app,
+opened with it, or shared to it (Android, the iOS share extension). Every module has a `CLAUDE.md` of its own, as does
+every `:presentation` source set and every package with something the code cannot say; read the nearest one before
+changing code there.
 
 ## Privacy: what reaches the network
 
@@ -85,8 +86,7 @@ campfire.log / campfire.log.1          desktop only: bounded process log
   multiplatform.
 - Shared code is JVM-free (the `code-style` skill lists the replacements).
 - Implementation classes are `internal`, named `<Interface>Impl`; use cases are `operator fun invoke`. Layers are
-  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, and
-  `:tuner:api` use `explicitApi()`.
+  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, and `:tuner:api` use `explicitApi()`.
 - Formatting is checked: `.editorconfig` + Spotless/ktlint (`./gradlew spotlessApply`), and
   `.github/scripts/check_license_headers.py` requires the MPL-2.0 header in every source file, script, workflow, XML
   resource, and `CLAUDE.md`. The rest of the style is the `code-style` skill's.
@@ -162,7 +162,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
 - The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
-- The app links only to its website, GitHub, the author's site, donations, and its own store's rating page:
+- Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:
   `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
 - Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordpro/convert`.
@@ -211,9 +211,9 @@ desktop JVM, and a release is still checked by hand. Add or update tests with ev
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
-beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header and size
-checks, and compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than `documentation/`
-(a newer push cancels the older run), and before `publish-all.yml` builds anything.
+beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header and
+size checks, and compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than
+`documentation/` (a newer push cancels the older run), and before `publish-all.yml` builds anything.
 
 ## Build
 
