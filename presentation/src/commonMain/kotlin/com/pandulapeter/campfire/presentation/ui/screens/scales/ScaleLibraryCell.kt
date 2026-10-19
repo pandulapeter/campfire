@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,13 +44,15 @@ internal fun ScaleLibraryCell(
     description: String,
     onClick: () -> Unit,
 ) = Surface(
-    modifier = modifier.clearAndSetSemantics { contentDescription = description },
+    // The description is set here, without clearing, and the content cleared below: a clearing node here would also clear
+    // the click action and the button role the clickable Surface adds after this modifier.
+    modifier = modifier.semantics { contentDescription = description },
     onClick = onClick,
     shape = MaterialTheme.shapes.medium,
     color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clearAndSetSemantics { },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(

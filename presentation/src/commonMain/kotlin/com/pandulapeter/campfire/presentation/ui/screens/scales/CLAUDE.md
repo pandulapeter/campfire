@@ -18,7 +18,8 @@ own Features switch (`areScalesEnabled`), not the chord ones. Offered in read on
   row as the Chords tab's, `libraryKeys`, beside the chips as there; the family row, Common first, one line scrolling
   sideways, its scroll kept in `ScaleLibraryState`, with no title, since the heading names the family), a heading, a
   cell per scale, titled in the key ("C Dorian") as the Chords tab names each chord in the key. The controls scroll
-  away, so a phone on its side keeps a row of cells.
+  away, so a phone on its side keeps a row of cells. A cell's description is set on its surface and its content's
+  semantics cleared, never the other way round, or the click action and the button role go with them.
 - **Every stringed instrument draws its scales**, since a neck needs only the open strings (`InstrumentTuning.strings`):
   the basses, the longer guitars, and the violin too, where Chords draws nothing. The keyboard and Other draw a
   keyboard, Other with a line saying so.

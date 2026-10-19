@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
 import com.pandulapeter.campfire.presentation.resources.scales
@@ -84,6 +85,12 @@ internal fun AppTestScope.openScales() {
     val scalesTab = hasText(string(Res.string.scales)) and hasClickAction()
     onNode(scalesTab).performScrollTo()
     tap(scalesTab)
+}
+
+/** Opens the Chords tab of a phone, behind the Tools item of its navigation bar. */
+internal fun AppTestScope.openChords() {
+    tap(hasText(string(Res.string.tools)) and hasClickAction())
+    tap(hasText(string(Res.string.chords)) and hasClickAction())
 }
 
 /** Turns the onboarding of a first run with Next until its last page, the one Start playing finishes it from. */

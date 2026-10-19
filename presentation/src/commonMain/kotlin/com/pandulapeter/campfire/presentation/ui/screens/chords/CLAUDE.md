@@ -41,7 +41,8 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 ## Cells and the sheet
 
 - `ChordLibraryCell` is **drawn with the shape the songs draw it with** (`selectShape`: player's choice in that tuning,
-  then the app's first), crossfading on change.
+  then the app's first), crossfading on change. Its description is set on its surface and its content's semantics
+  cleared, never the other way round, or the click action and the button role go with them (as on the Scales tab).
 - Shapes are looked up off the main thread, except where the tables answer every chord on screen
   (`searchesShapes = false`) or the session's kept results are shown, so the tab's first frame is already the page.
   After a tuning or instrument change, a key that needs the search keeps the old chords, drawn for the tuning they were
