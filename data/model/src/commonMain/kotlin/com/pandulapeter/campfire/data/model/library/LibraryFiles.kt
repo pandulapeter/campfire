@@ -36,6 +36,12 @@ object LibraryFiles {
     const val ARCHIVE_EXTENSION = ".zip"
 
     /**
+     * The song files of other apps that are text of a format of their own: OnSong's `.onsong`. Read with the text limit
+     * and translated into ChordPro by the import, never part of the library or registered as an Open with type.
+     */
+    val FOREIGN_SONG_EXTENSIONS = listOf(".onsong")
+
+    /**
      * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
      * `.sbpbackup` and the `.sbp` it shares a set or a song as, and OpenSongApp's `.osb` of its song folders. Named so
      * that an archive is looked inside when it holds one; a file under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
@@ -53,7 +59,7 @@ object LibraryFiles {
      * zip and JSON belong to everyone: the app happily reads one that is handed to it, but claiming them system wide would
      * put Campfire in the way of every archive and note on the device.
      */
-    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + LIBRARY_BACKUP_EXTENSIONS +
+    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + LIBRARY_BACKUP_EXTENSIONS + FOREIGN_SONG_EXTENSIONS +
         listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
 
     /** Whether a file called [name] is unpacked for what it holds by its name alone: a zip, or another app's backup. */

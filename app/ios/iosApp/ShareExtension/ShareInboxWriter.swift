@@ -300,8 +300,9 @@ private enum ShareLimits {
         "org.chordpro.chordpro",
     ]
 
-    /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for; JSON is read
-    /// with the text limit, as a song is.
+    /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for, and without
+    /// `.onsong` and `.osb`, which have no system type the activation rule could name; JSON is read with the text limit,
+    /// as a song is.
     private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]

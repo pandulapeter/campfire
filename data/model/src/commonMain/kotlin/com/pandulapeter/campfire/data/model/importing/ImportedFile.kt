@@ -30,7 +30,7 @@ data class ImportedFile(
 
     /**
      * [name] without its extension, which titles a song that names none itself. A file kept for its text loses only an
-     * extension with no space in it: `riverlight.onsong` is "riverlight", but `Mr. Brightside` is a title whose dot
+     * extension with no space in it: `riverlight.song` is "riverlight", but `Mr. Brightside` is a title whose dot
      * ends an abbreviation.
      */
     val baseName: String

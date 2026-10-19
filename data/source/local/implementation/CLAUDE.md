@@ -145,6 +145,11 @@ not), from a sniffed text or `.xml` starting with `<`, into a `.cho` of the name
 environments or comments, `.` chord rows are set over the lyric rows under them by `convertFragment`, numbered lyric
 lines are one verse each over shared chord rows, and a block with no chord row is `ChordSheetLyrics.escaped`.
 
+`backup/OnSongFile` reads an OnSong `.onsong` (text-like bytes only) into a `.cho` of its base name, so a bytes-only
+OnSong `.backup` passes the import's gate: the header up to the first blank line (labelled lines, or a bare title and
+artist first; a first chord row means no header unless it is the file's own name; a third bare line ends it), then the
+body cut at its directive lines, each run converted, kept as inline ChordPro, or escaped.
+
 ## A song is named by its header
 
 **A file name is reproducible from its header alone** (`{artist}`, `{title}`, `{subtitle}` joining the title half) in

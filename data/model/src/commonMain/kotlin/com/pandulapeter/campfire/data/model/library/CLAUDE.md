@@ -15,8 +15,8 @@
 - The extension lists (`SONG_EXTENSIONS`, `IMPORTABLE_EXTENSIONS`, `LIBRARY_BACKUP_EXTENSIONS`) **must agree with the
   import rules, the storage layer, and the three OS registrations** (Android manifest, iOS plist, desktop Gradle file).
   Importable-only types are never claimed system wide; legacy `.doc` is listed only to report it unreadable. `.osb`
-  is the exception to the iOS share extension: it has no system type there to name (OpenSongApp is Android only), so on
-  iOS it comes in through the in-app picker.
+  and `FOREIGN_SONG_EXTENSIONS` (`.onsong`, read with the text limit) are the exceptions to the iOS share extension:
+  they have no system type there to name, so on iOS they come in through the in-app picker.
 - `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
   library, asked by the scan, the local sync listing, and the remote listing: right extension and not hidden
   (`._song.cho` is macOS's AppleDouble companion).

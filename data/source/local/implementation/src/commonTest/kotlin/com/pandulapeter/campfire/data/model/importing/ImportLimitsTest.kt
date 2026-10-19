@@ -44,7 +44,7 @@ internal class ImportLimitsTest {
         val sheet = "G   D\nDown by the river\n".encodeToByteArray()
         val binary = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte(), 0, 1, 2)
 
-        val text = budget.read(name = "riverlight.onsong", size = sheet.size.toLong()) { sheet }
+        val text = budget.read(name = "riverlight.songsheet", size = sheet.size.toLong()) { sheet }
         val program = budget.read(name = "riverlight", size = binary.size.toLong()) { binary }
         val photo = budget.read(name = "cover.png", size = sheet.size.toLong()) { sheet }
 

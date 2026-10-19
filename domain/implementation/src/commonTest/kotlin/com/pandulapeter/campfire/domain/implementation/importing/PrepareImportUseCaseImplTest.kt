@@ -112,9 +112,9 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `a text of unknown name with song structure is planned as a converted song`() = runTest {
-        val plan = prepare()(listOf(ImportedFile("riverlight.onsong", SHEET.encodeToByteArray(), isPlainTextByContent = true)))
+        val plan = prepare()(listOf(ImportedFile("riverlight.songsheet", SHEET.encodeToByteArray(), isPlainTextByContent = true)))
 
-        assertEquals(listOf("riverlight.onsong"), plan.songs.map { it.sourceFileName })
+        assertEquals(listOf("riverlight.songsheet"), plan.songs.map { it.sourceFileName })
         assertEquals("riverlight", plan.songs.single().title)
         assertTrue(plan.songs.single().text.contains("[G]Down"), plan.songs.single().text)
         assertEquals(emptyList(), plan.oversizedFileNames)
@@ -156,6 +156,16 @@ class PrepareImportUseCaseImplTest {
 
         assertEquals(listOf("first.cho", "One.cho", "Two.cho"), plan.songs.map { it.sourceFileName })
         assertEquals(listOf(null, 1, 1), plan.songs.map { it.origin })
+    }
+
+    @Test
+    fun `a loose OnSong file is planned as the song its document holds, not skipped`() = runTest {
+        val archive = FakeArchiveRepository(songsIn = { file -> if (file.name == "Riverlight.onsong") listOf(song("Riverlight.cho")) else null })
+
+        val plan = prepare(archive = archive)(listOf(ImportedFile("Riverlight.onsong", "Riverlight\n\nG D\nLa".encodeToByteArray())))
+
+        assertEquals(listOf("Riverlight.cho"), plan.songs.map { it.sourceFileName })
+        assertEquals(emptyList(), plan.skippedFileNames)
     }
 
     @Test

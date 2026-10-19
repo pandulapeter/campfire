@@ -139,11 +139,11 @@ class ArchiveLocalSourceTest {
     @Test
     fun `a chord sheet under an unknown name inside an archive is read`() = runBlocking {
         val sheet = "G         D\nDown by the river light\n".encodeToByteArray()
-        val archive = ZipWriter.write(listOf(ZipEntry("songs/x.onsong", sheet), ZipEntry("songs/Riverlight", sheet)))
+        val archive = ZipWriter.write(listOf(ZipEntry("songs/x.songsheet", sheet), ZipEntry("songs/Riverlight", sheet)))
 
         val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        assertEquals(listOf("x.onsong", "Riverlight"), files.map { it.name })
+        assertEquals(listOf("x.songsheet", "Riverlight"), files.map { it.name })
         assertTrue(files.all { it.isPlainTextByContent && it.bytes.contentEquals(sheet) })
     }
 
@@ -197,6 +197,23 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `OnSong files come out as ChordPro songs named by the files they came in`() = runBlocking {
+        val sheet = "G" + " ".repeat(11) + "D\nDown by the river"
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("Riverlight.onsong", "Riverlight\nThe Invented Band\n\n$sheet".encodeToByteArray()),
+                ZipEntry("Meadow.onsong", "Title: Meadow\n\n$sheet".encodeToByteArray()),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("Riverlight.cho", "Meadow.cho"), files.map { it.name })
+        assertTrue(files.all { "[G]Down by the [D]river" in it.bytes.decodeToString() })
+        assertTrue("{title: Meadow}" in files.last().bytes.decodeToString())
+    }
+
+    @Test
     fun `a nested docx is still a document`() = runBlocking {
         val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))
@@ -211,13 +228,13 @@ class ArchiveLocalSourceTest {
     fun `a nested unknown file that is not an archive is reported skipped and costs nothing`() = runBlocking {
         val png = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte()) + ByteArray(2000)
         val song = "{title: A}".encodeToByteArray()
-        val archive = ZipWriter.write(listOf(ZipEntry("x.onsong", png), ZipEntry("a.cho", song)))
+        val archive = ZipWriter.write(listOf(ZipEntry("x.songsheet", png), ZipEntry("a.cho", song)))
 
         val files = archiveLocalSource.unpack(archive = archive, maxSize = song.size.toLong())
 
-        assertEquals(listOf("a.cho", "x.onsong"), files.map { it.name })
+        assertEquals(listOf("a.cho", "x.songsheet"), files.map { it.name })
         assertContentEquals(song, files.first().bytes)
-        assertEquals(ImportedFile.unread("x.onsong"), files.last())
+        assertEquals(ImportedFile.unread("x.songsheet"), files.last())
     }
 
     @Test

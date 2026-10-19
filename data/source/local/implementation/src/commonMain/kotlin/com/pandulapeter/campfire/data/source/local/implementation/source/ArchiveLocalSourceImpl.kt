@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.backup.JsonSongs
+import com.pandulapeter.campfire.data.source.local.implementation.backup.OnSongFile
 import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongSong
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
@@ -153,12 +154,19 @@ internal class ArchiveLocalSourceImpl(
      * The songs of another app's document that is not an archive, or null where [file] is not one or holds none, so
      * that it is imported as the file it is: a `.json` that is no setlist, or a text kept for its bytes that starts the
      * way JSON does, and an OpenSong song, a text kept for its bytes (OpenSong names its songs without an extension) or
-     * an `.xml` that starts the way XML does. Tried after SongbookPro's backup, whose document is read by a reader of
-     * its own. A song is handed over as a `.cho` of the name it came under, which is what it is titled by where it
-     * names no title itself.
+     * an `.xml` that starts the way XML does, and an OnSong `.onsong`. Tried after SongbookPro's backup, whose document
+     * is read by a reader of its own. A song is handed over as a `.cho` of the name it came under, which is what it is
+     * titled by where it names no title itself, and which the import counts as a song where it decides whether an
+     * archive known only by its bytes held anything to import.
      */
     private fun foreignSongs(file: ImportedFile): List<ImportedFile>? {
         if (file.bytes.isEmpty()) return null
+        // Read by its name, but a photo renamed .onsong is still a photo, and is left to be reported as skipped.
+        if (LibraryFiles.FOREIGN_SONG_EXTENSIONS.any { file.name.endsWith(it, ignoreCase = true) }) {
+            if (!LibraryFiles.isTextLike(file.bytes.copyOf(minOf(file.bytes.size, ImportLimits.SNIFF_LENGTH)))) return null
+            val song = OnSongFile.read(file.bytes.decodeLibraryText(), fallbackTitle = file.baseName)
+            return listOf(ImportedFile(name = file.baseName + LibraryFiles.SONG_EXTENSION, bytes = song.encodeToByteArray()))
+        }
         val isJsonByName = file.name.endsWith(JSON_EXTENSION, ignoreCase = true) && !file.name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
         val isXmlByName = file.name.endsWith(XML_EXTENSION, ignoreCase = true)
         if (!isJsonByName && !isXmlByName && !file.isPlainTextByContent) return null

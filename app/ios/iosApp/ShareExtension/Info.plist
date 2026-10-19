@@ -51,7 +51,7 @@
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
 			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
-			     left out on purpose.
+			     left out on purpose, and OnSong's .onsong and OpenSongApp's .osb have no system type to name.
 			-->
 			<key>NSExtensionActivationRule</key>
 			<string>SUBQUERY (

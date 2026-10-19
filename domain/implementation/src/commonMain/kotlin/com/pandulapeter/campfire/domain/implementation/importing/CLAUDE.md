@@ -14,8 +14,9 @@
 - Unpacks archives (nested ones through `ArchiveLocalSource`). An archive is known by name or, under any name but a
   document's, by bytes (`isZipArchive`) — never a `.docx`; inside an archive or a dropped folder an unknown name is
   first peeked at, and a text name over `MAX_TEXT_FILE_SIZE` is kept only as a zip.
-- A loose file goes through `ArchiveRepository.songsIn` first: another app's document of songs (JSON) is those songs,
-  sorted with the document's index as their origin, before a setlist is tried or an unknown name skipped.
+- A loose file goes through `ArchiveRepository.songsIn` first: another app's document of songs (JSON, OpenSong,
+  `.onsong`) is those songs, sorted with the document's index as their origin, before a setlist is tried or an unknown
+  name skipped.
 - A file under an unknown name whose bytes read as text arrives flagged `isPlainTextByContent`; it is a song (converted
   as a `.txt`, titled by its name less an extension without a space) only with `ChordSheetStructure.hasSongStructure`,
   else reported skipped. In a bytes-only archive such an entry, and a `.txt`, count toward the gate only with structure
