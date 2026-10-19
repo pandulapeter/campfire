@@ -49,8 +49,9 @@ internal class CoverArtSearchController(
 
     /**
      * The state of the cover search sheet ([DialogType.CoverArtSearch]). Held here rather than by the sheet so that a
-     * search survives the Android activity being recreated under it, and cleared with its search cancelled whenever
-     * the sheet stops being the dialog on screen, see [DialogHost.setVisibleDialog].
+     * search survives the Android activity being recreated under it, and cleared with its search cancelled once the
+     * sheet is nowhere among the open dialogs (a question over it keeps it), see [onOpenDialogsChanged] and
+     * [DialogHost.addOpenDialogsChange].
      */
     private val _coverArtSearch = MutableStateFlow<CoverArtSearchState>(CoverArtSearchState.Idle)
     val coverArtSearch = _coverArtSearch.asStateFlow()
