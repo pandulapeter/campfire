@@ -19,17 +19,8 @@ The songs screen.
 - An open search runs the sections together (`withoutSectionHeaders`), so cards fill the columns a section's last row
   left open; the Selection group loses its header too and keeps the divider (`SongGroup.isSelection`).
 - **The top left card in sight stays where it is on screen** as the search opens and closes
-  (`KeepCardsInPlaceAcrossSearch`). Opening, the results start with empty cells (`SongGroup.leadingGap`) that keep it in
-  its column, kept while the search shows those songs; its row is asked for 48dp higher, by as much as the filling bar
-  moves the list down, and `ListAnchor` narrates the jump on the bar's spring, so the rest slides while it stands still
-  (headers vanish at once: a request makes the grid forget its item animation). `SearchCardHold` asks again while that
-  runs, since the cards above it grow by their artist line; a card's height changes on the bar's spring too, and
-  `ListAnchor` slides each item from its first layout, so growth and slide add up to one movement. Closing over the
-  songs it opened over, neither scrolled nor shown other songs since (a query typed and cleared counts), puts it back
-  where it was; otherwise the top left card then is kept the same way, its column the one its section gives it.
-  A list arriving inside the narration ends the hold (`SearchCardHold.follow`): re-ranked results let go to the top and
-  stop it, a tag tap's own newer narration is left running (`ListAnchor.transitionNumber`), and the full list arriving
-  after closing holds the same card at its new index.
+  (`KeepCardsInPlaceAcrossSearch`, `SearchCardHold`, narrated by `ListAnchor` on the bar's spring); closing unscrolled
+  over the same songs puts it back where it was.
 
 ## The add songs hint
 
@@ -59,8 +50,7 @@ The songs screen.
   - A tick since then joins the end of the group **as a copy** (`SongGroup.copiedFileNames`, its own grid item key)
     while the tapped card stays put; an untick stays in the group until the next refresh.
 - **Nothing on screen moves under a tick**: `KeepCardsInPlaceUnderTick` keeps the first visible card outside the group
-  in place (like `KeepChecklistRowsInPlace`). That request is a jump the grid forgets its item animation over, so
-  `ListAnchor` narrates it: cards above slide away; the copy, header, and divider fade in.
+  in place (like `KeepChecklistRowsInPlace`).
 - The bar keeps search, sort, and filter; New gives way to `SongSelectionMenu`, which stays while search is open
   (`areClosedSearchActionsKeptInSearch`). Actions are disabled while nothing is ticked or a write runs
   (`isEditingSongs`, which also shows the import progress bar).
