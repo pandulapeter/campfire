@@ -134,6 +134,7 @@ internal class DropboxTransport(
      */
     private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {
         status == HttpStatusCode.TooManyRequests ||
+            status == HttpStatusCode.RequestTimeout ||
             status.value >= 500 ||
             (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) -> {
             val requested = (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull())?.coerceAtLeast(0)
@@ -229,8 +230,10 @@ internal suspend fun HttpResponse.ensureSuccessful() {
     val summary = errorSummary()
     throw when {
         status == HttpStatusCode.Unauthorized -> SyncAuthorizationException("Dropbox refused the token: $summary")
-        // Dropbox says 429 for rate limiting and 5xx for its own trouble; both are worth trying again later.
-        status == HttpStatusCode.TooManyRequests || status.value >= 500 -> SyncNetworkException("Dropbox is busy: ${status.value}")
+        // Dropbox says 429 for rate limiting and 5xx for its own trouble, and a proxy that gave up on a request says 408;
+        // all are worth trying again later.
+        status == HttpStatusCode.TooManyRequests || status == HttpStatusCode.RequestTimeout || status.value >= 500 ->
+            SyncNetworkException("Dropbox is busy: ${status.value}")
         // A full account, which Dropbox reports per write: "path/insufficient_space/..".
         status == HttpStatusCode.Conflict && summary.contains("insufficient_space") ->
             SyncRemoteStorageFullException("Dropbox is full: $summary")

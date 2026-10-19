@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.connectedCredentials
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
@@ -25,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 /**
  * How the provider keeps the stored connection's tokens good: renewed before they expire, renewed once when Dropbox
@@ -182,5 +185,65 @@ class DropboxTokensTest {
             expected = "Dropbox refused the authorization: 400 invalid_grant: refresh token is invalid or revoked",
             actual = exception.message,
         )
+    }
+
+    /** A proxy, a firewall, or a captive portal answering for Dropbox says nothing about the credentials. */
+    @Test
+    fun `an answer from something between the device and the token endpoint is the network rather than a refusal`() = runTest {
+        val answers = listOf(
+            HttpStatusCode.Forbidden to headersOf(HttpHeaders.ContentType, "text/html"),
+            HttpStatusCode.ProxyAuthenticationRequired to headersOf(HttpHeaders.ContentType, "text/html"),
+            HttpStatusCode.RequestTimeout to headersOf(HttpHeaders.ContentType, "text/html"),
+            HttpStatusCode.Found to headersOf(HttpHeaders.Location, "http://portal.example/login"),
+        )
+        for ((status, headers) in answers) {
+            val storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))
+            val provider = dropboxProvider(storage = storage) { request ->
+                if (request.url.toString() == TOKEN_URL) {
+                    respond(content = "<html>Blocked</html>", status = status, headers = headers)
+                } else {
+                    respondJson(EMPTY_LISTING)
+                }
+            }
+            assertFailsWith<SyncNetworkException>("Answered ${status.value}") { provider.list() }
+            assertEquals("refresh", storage.document?.refreshToken)
+        }
+    }
+
+    @Test
+    fun `a refresh the token endpoint refuses as an unknown app is a refusal`() = runTest {
+        val provider = dropboxProvider(storage = StoredSyncCredentials(connectedCredentials(expiresAt = 0))) { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                respondJson("""{"error":"invalid_client","error_description":"Invalid client_id"}""", HttpStatusCode.Unauthorized)
+            } else {
+                respondJson(EMPTY_LISTING)
+            }
+        }
+        assertFailsWith<SyncAuthorizationException> { provider.list() }
+    }
+
+    /** A code that was spent or expired, after a reload or a slow consent page: connecting failed. */
+    @Test
+    fun `an authorization code the token endpoint refuses is a refusal and stores nothing`() = runTest {
+        val storage = StoredSyncCredentials()
+        val provider = dropboxProvider(storage = storage) {
+            respondJson("""{"error":"invalid_grant","error_description":"code doesn't exist or has expired"}""", HttpStatusCode.BadRequest)
+        }
+        assertFailsWith<SyncAuthorizationException> { provider.completeAuthorization(AUTHORIZATION_RESPONSE, verifier = "verifier", redirectUri = null) }
+        assertNull(storage.credentials)
+    }
+
+    @Test
+    fun `an authorization code exchange a proxy blocks is the network`() = runTest {
+        val storage = StoredSyncCredentials()
+        val provider = dropboxProvider(storage = storage) {
+            respond(content = "<html>Blocked</html>", status = HttpStatusCode.Forbidden, headers = headersOf(HttpHeaders.ContentType, "text/html"))
+        }
+        assertFailsWith<SyncNetworkException> { provider.completeAuthorization(AUTHORIZATION_RESPONSE, verifier = "verifier", redirectUri = null) }
+        assertNull(storage.credentials)
+    }
+
+    private companion object {
+        val AUTHORIZATION_RESPONSE = RemoteAuthorizationResponse(code = "code", state = "state")
     }
 }

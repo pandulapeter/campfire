@@ -57,9 +57,9 @@ Silent failures go to the injected `Logger`.
 - Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
   while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout; Dropbox calls carry
   a shorter one of their own there (60 s RPC, 120 s listing pages and downloads, uploads by size).
-- Retries on 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s doubling to
-  32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as `SyncNetworkException`
-  instead. Transport failures are retried too: timeouts six times, anything else (a reset, a cut stream, or a failed
+- Retries on 408, 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s
+  doubling to 32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as
+  `SyncNetworkException` instead. Transport failures are retried too: timeouts six times, anything else (a reset, a cut stream, or a failed
   `fetch`) three, since every call here is safe to resend. A first sync *will* be rate limited; it must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
@@ -76,6 +76,8 @@ Silent failures go to the injected `Logger`.
   token Dropbox hands out, or the connection ends silently. The store caches only what it saw stored: a refused or
   cancelled write drops the cache; a refused read (`LibraryStorageException`) is thrown and not cached, so a document
   without tokens never overwrites tokens unreadable for a moment.
+- Only a 400 or 401 from the token endpoint is a refusal; any other answer (a proxy's 403 or 407, a portal's redirect)
+  is the network.
 - A 401 gets one forced refresh (of the refused token only, so simultaneous refusals share it) and a resend before it
   is reported as a refusal; the device clock may be wrong.
 - Each platform must notice the user backing out as well as the redirect, or the UI waits for the browser forever.

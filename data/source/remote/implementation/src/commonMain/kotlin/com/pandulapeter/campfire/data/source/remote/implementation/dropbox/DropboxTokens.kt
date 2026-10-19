@@ -72,11 +72,15 @@ internal class DropboxTokens(
         }
         if (!response.status.isSuccess()) {
             // Being told to wait, or the service having trouble of its own, says nothing about the credentials, and
-            // reporting it as a refusal would send the user off to connect an account that is perfectly fine.
-            if (response.status == HttpStatusCode.TooManyRequests || response.status.value >= 500) {
-                throw SyncNetworkException("Dropbox is busy: ${response.status.value}")
+            // reporting it as a refusal would send the user off to connect an account that is perfectly fine. An answer
+            // from something between the device and Dropbox - a proxy's 403 or 407, a captive portal's redirect - is
+            // never about the credentials either, and every refusal OAuth defines is a 400 or a 401.
+            throw when (response.status) {
+                HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized ->
+                    SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.oAuthError()}")
+
+                else -> SyncNetworkException("Dropbox could not be asked for a token: ${response.status.value} ${response.oAuthError()}")
             }
-            throw SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.oAuthError()}")
         }
         return json.decodeFromString(response.bodyAsText())
     }

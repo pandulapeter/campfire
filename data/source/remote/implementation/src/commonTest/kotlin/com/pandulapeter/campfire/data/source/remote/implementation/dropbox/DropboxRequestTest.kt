@@ -135,6 +135,22 @@ class DropboxRequestTest {
         assertTrue(currentTime >= 60_000L, "Waited $currentTime ms rather than the 60 s that were asked for.")
     }
 
+    /** What a proxy or a load balancer answers for a request it gave up on. */
+    @Test
+    fun `a request a proxy gave up on is sent again`() = runTest {
+        var requestCount = 0
+        val provider = dropboxProvider {
+            if (++requestCount == 1) respond(content = "", status = HttpStatusCode.RequestTimeout) else respondJson(EMPTY_LISTING)
+        }
+        assertEquals(expected = emptyList(), actual = provider.list().files)
+    }
+
+    @Test
+    fun `a request a proxy keeps giving up on is the service not being reached`() = runTest {
+        val provider = dropboxProvider { respond(content = "", status = HttpStatusCode.RequestTimeout) }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+    }
+
     @Test
     fun `gives up on a service that stays unavailable`() = runTest {
         val provider = dropboxProvider { respond(content = "", status = HttpStatusCode.ServiceUnavailable) }
