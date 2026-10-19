@@ -23,7 +23,8 @@ public object ScaleChords {
      * The triads of [scale] played on [rootName], one per degree whose stack of thirds within the scale is a chord with a
      * name ([triadSuffixes]), for a seven-note scale only: a scale of another size has no thirds to stack. Each name is
      * the degree's note as [ScaleSpelling] spells it and the chord's suffix, in the standard notation, so that
-     * [ChordProChords.parse] reads it.
+     * [ChordProChords.parse] reads it, and each numeral stands on the degree as the scale's formula writes it (`bV` on a
+     * Locrian scale's `b5`), not on the step its semitones would make it.
      */
     public fun triads(scale: Scale, rootName: String): List<ScaleChord> = stacks(scale, rootName, depth = 3, triadSuffixes)
 
@@ -56,7 +57,7 @@ public object ScaleChords {
             val suffix = suffixes[intervals.sorted()] ?: return@mapNotNull null
             val note = ScaleSpelling.spell(rootName, ScaleSpelling.letterStep(scale.degrees[degree]), (root + scale.intervals[degree]).mod(12))
             val name = note + suffix
-            ScaleChord(numeral = ChordProNashville.number(name, root, isRoman = true), name = name)
+            ScaleChord(numeral = ChordProNashville.numeral(name, scale.degrees[degree]), name = name)
         }
     }
 

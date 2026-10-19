@@ -53,10 +53,27 @@ internal object ChordProNashville {
         val root = reader.root ?: return name
         val degree = ((ChordProChords.pitchClass(root) ?: return name) - tonic).mod(NOTE_COUNT)
         val suffix = notes.first().substring(root.length)
-        val numbered = if (isRoman) numeral(degree, reader.quality, suffix) else nashvilleDegrees[degree] + extended(nashvilleSuffix(reader.quality, suffix))
+        val numbered = if (isRoman) numeral(romanDegrees[degree], reader.quality, suffix) else nashvilleDegrees[degree] + extended(nashvilleSuffix(reader.quality, suffix))
         val bass = notes.getOrNull(1)?.let { note -> ChordProChords.pitchClass(note)?.let { nashvilleDegrees[(it - tonic).mod(NOTE_COUNT)] } ?: note }
         val rewritten = if (bass == null) numbered else "$numbered/$bass"
         return if (isParenthesized) "($rewritten)" else rewritten
+    }
+
+    /**
+     * [name], a chord in the standard notation, as the numeral on [step], a degree of a scale as its formula writes it
+     * (`b5`, `#2`, `bb7`), its quality the case and sign of the numeral as [number] gives them: what a scale's own chords
+     * are numbered by, so that the chord on a Locrian scale's fifth reads `bV` as the scale's `b5` does, where counting
+     * its semitones from the root would make it a `#IV`. A word that is no chord name, or a step with no degree in it,
+     * is returned as it was.
+     */
+    fun numeral(name: String, step: String): String {
+        if (!ChordProChordNames.isChordName(name)) return name
+        val reader = QualityReader()
+        ChordProChordNames.read(ChordProChordNames.notes(name).first(), reader)
+        val root = reader.root ?: return name
+        val digit = step.trimStart { it in ACCIDENTALS }.toIntOrNull()?.takeIf { it in 1..romanSteps.size } ?: return name
+        val signs = step.substring(0, step.length - digit.toString().length)
+        return numeral(signs + romanSteps[digit - 1], reader.quality, name.substring(root.length))
     }
 
     /**
@@ -94,8 +111,7 @@ internal object ChordProNashville {
     private fun nashvilleSuffix(quality: String?, suffix: String) =
         if (quality != null && quality in minorQualities) MINOR_SIGN + suffix.removePrefix(quality) else suffix
 
-    private fun numeral(degree: Int, quality: String?, suffix: String): String {
-        val step = romanDegrees[degree]
+    private fun numeral(step: String, quality: String?, suffix: String): String {
         val rest = if (quality == null) suffix else suffix.removePrefix(quality)
         return when (quality) {
             in minorQualities -> when {
@@ -149,5 +165,6 @@ internal object ChordProNashville {
     private val minorQualities: Set<String?> = setOf("m", "mi", "min", "-")
     private val nashvilleDegrees = listOf("1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7")
     private val romanDegrees = listOf("I", "bII", "II", "bIII", "III", "IV", "#IV", "V", "bVI", "VI", "bVII", "VII")
+    private val romanSteps = listOf("I", "II", "III", "IV", "V", "VI", "VII")
     private val romanNumerals = listOf("VII", "VI", "V", "IV", "III", "II", "I")
 }

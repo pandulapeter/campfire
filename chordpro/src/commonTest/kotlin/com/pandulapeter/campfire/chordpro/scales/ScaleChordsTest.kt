@@ -40,6 +40,15 @@ class ScaleChordsTest {
     }
 
     @Test
+    fun `a chord is numbered by the scale's own degree, not by the step its semitones make`() {
+        assertEquals("bV", ScaleChords.triads(scale("locrian"), "C")[4].numeral)
+        assertEquals("#iv°", ScaleChords.triads(scale("lydian"), "C")[3].numeral)
+        assertEquals("#ii°", ScaleChords.triads(scale("lydian_sharp_2"), "C")[1].numeral)
+        assertEquals("bbVII", ScaleChords.triads(scale("ultralocrian"), "C")[6].numeral)
+        assertEquals("#vø7", ScaleChords.sevenths(scale("lydian_augmented"), "C")[4].numeral)
+    }
+
+    @Test
     fun `a scale of another size than seven has no chords`() {
         assertTrue(ScaleChords.triads(scale("minor_pentatonic"), "A").isEmpty())
         assertTrue(ScaleChords.sevenths(scale("diminished"), "C").isEmpty())
