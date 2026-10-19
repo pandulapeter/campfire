@@ -9,17 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.metronome.api.model.MetronomeAudioIssue
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
@@ -78,7 +75,6 @@ internal fun MetronomeScreen(
     viewModel: CampfireViewModel,
     layout: PageWidthLayout,
     scrollPosition: ScrollPosition,
-    isUnderTabs: Boolean,
     contentPadding: PaddingValues,
 ) {
     val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
@@ -96,15 +92,10 @@ internal fun MetronomeScreen(
         modifier = modifier.fillMaxSize().then(if (isPlaying) Modifier.keepScreenOn() else Modifier),
     ) {
         val panel = rememberMetronomePanelState(viewModel)
-        // Under the tools' tabs, the gap the other tool screens leave above their first control; at the top of the window,
-        // where the list screens' bar would stand, so that the play button is on the New button's spot. On the spec the tab
-        // row's room grows and shrinks by, so the bar moves with it.
-        val panelTopPadding by animateDpAsState(
-            targetValue = if (isUnderTabs) PANEL_TOP_PADDING else NEW_ITEM_BUTTON_TOP_INSET,
-            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-        )
         MetronomePanel(
-            modifier = Modifier.padding(top = panelTopPadding),
+            // Where the list screens' bar would stand, under the tools' tabs too, so that the play button is on the New
+            // button's spot, as the Tuner tab's reference tone is.
+            modifier = Modifier.padding(top = NEW_ITEM_BUTTON_TOP_INSET),
             isPlaying = panel.isPlaying,
             beatLevels = panel.beatLevels,
             beats = viewModel.metronomeController.metronomeBeats,
@@ -217,6 +208,3 @@ private fun MetronomeSoundOptions(
         )
     }
 }
-
-/** What the bar keeps free above itself under the tabs, the gap the other tool screens leave above their first control. */
-private val PANEL_TOP_PADDING = 16.dp
