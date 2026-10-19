@@ -25,28 +25,37 @@ internal object ChordProStaffNames {
     /**
      * The lines of one tab environment with every string name of its staves read in [from] and written in [to], the way
      * the chords above them are: the editor's field names the strings in the reader's notation, and the file in the
-     * standard one. A name is respelled keeping its accidental and its case (see [respelled]), and every staff line of
-     * a system keeps its bar in one column with the others, the lines above the staff moving with them so that a chord
-     * stays over its note.
+     * standard one. Every staff line of a system keeps its bar in one column with the others, the lines above the staff
+     * moving with them so that a chord stays over its note.
      *
-     * Each staff line keeps its indentation relative to the others, the least indented one keeping its own, so the move
-     * the way back takes is exactly the one the way there took and a file opened in another notation and saved again is
-     * the file it was. The one system that cannot be moved back exactly is one whose names all get shorter (the German
-     * `B` for `Bb`) under a line already at the edge they would move it past; read from the standard notation, where
-     * that would change the file, it is left with its names as written, and so is a system indented with tab
-     * characters, whose columns are not characters. A text typed in another notation is always brought into the
-     * standard one, since that is what every file is written in.
+     * Between the standard notation and the German one only the names whose note differs are renamed: a file's bare `B`
+     * is shown as `H`, and a German `B` and `H` are saved as `Bb` and `B`. Every other name, a sign, a Latin name or a
+     * file's own `H` included, reads the same note in both and is kept as written, so whatever the field shows is read
+     * back as the notes the file meant, and a file whose `H` is saved as `B` keeps its tuning.
+     *
+     * In the other notations a name is respelled keeping its accidental and its case (see [respelled]). Each staff line
+     * keeps its indentation relative to the others, the least indented one keeping its own, so the move the way back
+     * takes is exactly the one the way there took and a file opened in another notation and saved again is the file it
+     * was; read from the standard notation, a system that would not come back exactly is left with its names as
+     * written. A system indented with tab characters, whose columns are not characters, is never renamed. A text typed
+     * in another notation is always brought into the standard one, since that is what every file is written in.
      */
     fun respelledStaffNames(lines: List<String>, from: ChordNotation, to: ChordNotation): List<String> {
         if (from == to) return lines
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         if (isStaffLine.none { it }) return lines
+        val isGerman = setOf(from, to) == setOf(ChordNotation.STANDARD, ChordNotation.GERMAN)
+        val rename: (String) -> String = if (isGerman) {
+            { name -> germanRespelled(name, toGerman = to == ChordNotation.GERMAN) }
+        } else {
+            { name -> respelled(name, from, to) }
+        }
         val respelled = lines.toMutableList()
         ChordProTabWrapper.systems(lines, isStaffLine).forEach { range ->
             val system = range.map { lines[it] }
             val staff = range.map { isStaffLine[it] }
-            val moved = respelledSystem(system, staff, from, to) ?: return@forEach
-            if (from == ChordNotation.STANDARD && respelledSystem(moved, staff, to, from) != system) return@forEach
+            val moved = respelledSystem(system, staff, rename) ?: return@forEach
+            if (!isGerman && from == ChordNotation.STANDARD && respelledSystem(moved, staff) { respelled(it, to, from) } != system) return@forEach
             range.forEachIndexed { line, index -> respelled[index] = moved[line] }
         }
         return respelled
@@ -64,12 +73,12 @@ internal object ChordProStaffNames {
         line.substring(0, start) + signs + line.substring(start + name.length)
     }
 
-    /** The lines of one system, [isStaff] telling its staff lines from the rest, renamed from [from] to [to], or null where nothing changes. */
-    private fun respelledSystem(lines: List<String>, isStaff: List<Boolean>, from: ChordNotation, to: ChordNotation): List<String>? {
+    /** The lines of one system, [isStaff] telling its staff lines from the rest, with its names [rename]d, or null where nothing changes. */
+    private fun respelledSystem(lines: List<String>, isStaff: List<Boolean>, rename: (String) -> String): List<String>? {
         val staff = lines.indices.filter { isStaff[it] }
         if (staff.isEmpty() || lines.any { line -> line.takeWhile { it.isWhitespace() }.contains(TAB_CHARACTER) }) return null
         val names = staff.map { staffPrefix(lines[it]).name }
-        val newNames = names.map { name -> name?.let { respelled(it, from, to) } }
+        val newNames = names.map { name -> name?.let(rename) }
         if (newNames == names) return null
         val indents = staff.map { index -> lines[index].takeWhile { it == ' ' }.length }
         val growths = staff.indices.map { line -> newNames[line].orEmpty().length - names[line].orEmpty().length }
@@ -171,6 +180,19 @@ internal object ChordProStaffNames {
         }
         val shown = ChordProNotation.shownName(spelled, to)
         return if (name.first().isLowerCase()) shown.lowercase() else shown
+    }
+
+    /**
+     * A string's [name] between a file and a German field, renamed only where German reads it as another note: the bare
+     * B, which is the B flat in German. A lowercase first letter is kept.
+     */
+    private fun germanRespelled(name: String, toGerman: Boolean): String {
+        val renamed = when (name.uppercase()) {
+            "B" -> if (toGerman) "H" else "Bb"
+            "H" -> if (toGerman) return name else "B"
+            else -> return name
+        }
+        return if (name.first().isLowerCase()) renamed.lowercase() else renamed
     }
 
     private const val MAX_NAME_LENGTH = 4

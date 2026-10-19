@@ -269,6 +269,32 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a staff whose names read the same note in German is opened and saved with only its B strings renamed`() {
+        val texts = listOf(
+            "{sot}\ne|---0---|\nB|---1---|\nG♯|---0---|\nE|---2---|\nB|---3---|\nE|-------|\n{eot}",
+            "{sot}\nE♭|--0--|\nB|--1--|\n{eot}",
+            "{sot}\nmi|--0--|\nB|--1--|\nSol|--0--|\n{eot}",
+            "{sot}\nb|--0--|\nG♯|--1--|\n{eot}",
+            "{sot}\nEb|--0--|\nBb|--1--|\nGb|--2--|\n{eot}",
+        )
+        texts.forEach { text ->
+            val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+            assertEquals(text.replace("\nB|", "\nH|").replace("\nb|", "\nh|"), german)
+            assertEquals(text, ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD), german)
+        }
+    }
+
+    @Test
+    fun `a file's H string beside a B one is saved through German as two B strings, never a B flat`() {
+        val text = "{sot}\nH|--0--|\nB|--1--|\n{eot}"
+        val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+        assertEquals("{sot}\nH|--0--|\nH|--1--|\n{eot}", german)
+        assertEquals("{sot}\nB|--0--|\nB|--1--|\n{eot}", ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
     fun `strings named in the notation the field is typed in are saved in the standard one`() {
         val latin = "{sot}\n mi|--0--|\nSol|--1--|\n{eot}"
         val german = "{sot}\nB|--0--|\nH|--1--|\nh|--2--|\n{eot}"
