@@ -221,7 +221,7 @@ all of them are always written:
 - bullet one
 - bullet two
 -->
-<!-- play-store update-priority: 3 -->
+<!-- play-store update-priority: 0 -->
 <!-- play-store submit: true -->
 <!-- app-store submit: true -->
 <!-- mac-app-store submit: true -->
@@ -237,13 +237,13 @@ all of them are always written:
 - **500 characters at most**, newlines included — Play's limit, the tightest of the stores. Check it with
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.
-- **An empty block is valid** for a small release with no notes. It has zero characters and no placeholder bullet.
+- **An empty block is allowed** for a small release with no notes, but then every store gets the visible release notes
+  with their markdown stripped, or "Bug fixes and improvements." where there are none (`release_description.py`'s
+  fallback); say so when reporting back.
 - **No markdown**: no links, no bold, no backticks. Plain `-` bullets and plain text only. Nothing in the
   block may contain `-->`.
 - **`play-store update-priority`** is Play's in-app update priority. Always write it, with **0** unless the user asked for something else, so the user can see
-  it and change it before publishing: 0–1 leaves the update to Play's own schedule, 2–3 offers it inside
-  the installed app, 4–5 blocks the app until it is installed (see `:presentation`'s `ui/update/CLAUDE.md`, under
-  `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/`).
+  it and change it before publishing; what each number does is in `:presentation`'s `ui/update/CLAUDE.md`.
   Never pick a number above 0 on your own; mention the line when reporting back, so a release that fixes
   something serious can be raised before it is published.
 - **`<store> submit`** says, per store, whether the release is sent for review / certification (`true`) or
