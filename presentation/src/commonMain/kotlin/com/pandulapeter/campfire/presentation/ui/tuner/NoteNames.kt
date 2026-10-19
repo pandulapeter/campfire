@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 private val SHARP_NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
@@ -20,11 +21,14 @@ private val SHARP_NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
  */
 internal fun noteName(note: Int, notation: ChordNotation): String = ChordProNotation.shownName(SHARP_NAMES[note.mod(SEMITONES)], notation)
 
+/** [noteName] as a screen or a page draws it: `F♯`, see [ChordProNotation.withAccidentalSigns]. */
+internal fun shownNoteName(note: Int, notation: ChordNotation): String = shownChordName(SHARP_NAMES[note.mod(SEMITONES)], notation)
+
 /** The octave of a MIDI note in scientific numbering, C4 being middle C. */
 internal fun noteOctave(note: Int): Int = note.floorDiv(SEMITONES) - 1
 
-/** The note with its octave, `E2`, the way the strings are named. */
-internal fun noteNameWithOctave(note: Int, notation: ChordNotation) = "${noteName(note, notation)}${noteOctave(note)}"
+/** The note with its octave, `E2`, the way the strings are named on the screen. */
+internal fun noteNameWithOctave(note: Int, notation: ChordNotation) = "${shownNoteName(note, notation)}${noteOctave(note)}"
 
 /**
  * [noteNameWithOctave] as it is spoken: a sharp is said by [sharp], given the name without its sign, since a screen reader

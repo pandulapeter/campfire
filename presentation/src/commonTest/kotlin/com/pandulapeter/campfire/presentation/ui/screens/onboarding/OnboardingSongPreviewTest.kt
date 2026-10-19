@@ -18,18 +18,18 @@ class OnboardingSongPreviewTest {
 
     @Test
     fun `the chords are shown as written where the accidentals are left alone`() {
-        assertEquals("C#m", onboardingPreviewChordNames(ChordNotation.STANDARD, UserPreferences.Accidentals.ORIGINAL)["C#m"])
+        assertEquals("C♯m", onboardingPreviewChordNames(ChordNotation.STANDARD, UserPreferences.Accidentals.ORIGINAL)["C#m"])
     }
 
     @Test
     fun `flats respell the black key chord`() {
-        assertEquals("Dbm", onboardingPreviewChordNames(ChordNotation.STANDARD, UserPreferences.Accidentals.FLATS)["C#m"])
+        assertEquals("D♭m", onboardingPreviewChordNames(ChordNotation.STANDARD, UserPreferences.Accidentals.FLATS)["C#m"])
     }
 
     @Test
     fun `the accidentals are applied before the notation`() {
         val names = onboardingPreviewChordNames(ChordNotation.LATIN, UserPreferences.Accidentals.FLATS)
-        assertEquals("Rebm", names["C#m"])
+        assertEquals("Re♭m", names["C#m"])
         assertEquals("Si", names["B"])
     }
 

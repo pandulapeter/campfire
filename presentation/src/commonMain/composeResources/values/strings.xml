@@ -377,8 +377,8 @@
     <string name="settings_accidentals">Accidentals</string>
     <string name="settings_accidentals_description">Whether a chord on a black key is written as a flat (%1$s) or as a sharp (%2$s). Left as written, Campfire picks whichever fits the key of the song.</string>
     <string name="settings_accidentals_original">As written</string>
-    <string name="settings_accidentals_flats">Flats (b)</string>
-    <string name="settings_accidentals_sharps">Sharps (#)</string>
+    <string name="settings_accidentals_flats">Flats (♭)</string>
+    <string name="settings_accidentals_sharps">Sharps (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
     <string name="instrument">Instrument</string>
     <string name="instrument_description">The instrument you play. Campfire draws its chord shapes and sets the tuner up for it.</string>

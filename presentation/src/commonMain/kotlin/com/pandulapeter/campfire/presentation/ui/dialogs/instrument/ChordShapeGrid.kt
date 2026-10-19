@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
@@ -335,7 +336,8 @@ internal fun shapeGridOptions(selection: SelectedShape, all: List<ChordVoicing>)
 
 /** The notes [chord] is made of, spelled the way the song spells the chord where it does: the subtitle of its sheet. */
 internal fun chordNoteNames(chord: SongChord, notation: ChordNotation) =
-    (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation)).joinToString(" ")
+    (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation))
+        .joinToString(" ", transform = ChordProNotation::withAccidentalSigns)
 
 /** Whether two shapes are fingered on the same frets or keys, whatever either says about the fingers. */
 private fun ChordVoicing.sameShapeAs(other: ChordVoicing) = when (this) {

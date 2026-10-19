@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.tabs
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
 
 /**
  * Cuts one run of tablature into rows that fit a width, the way a tab book breaks a long staff into systems.
@@ -257,7 +258,7 @@ public object ChordProTabWrapper {
         return line.substring(0, index)
     }
 
-    private val Char.isStringNameCharacter get() = this in 'A'..'Z' || this in 'a'..'z' || this == SHARP
+    private val Char.isStringNameCharacter get() = this in 'A'..'Z' || this in 'a'..'z' || this in ACCIDENTALS
 
     /**
      * The columns where every staff line that reaches them has a bar line. A staff line that has already ended does
@@ -338,7 +339,6 @@ public object ChordProTabWrapper {
     private const val BAR = '|'
     private const val DASH = '-'
     private const val MAX_PREFIX_LETTERS = 4 // `Sol#`, a string named in the Latin notation.
-    private const val SHARP = '#'
 
     /**
      * A crafted line of nothing but combining marks would otherwise make the walk back as long as the line, once per

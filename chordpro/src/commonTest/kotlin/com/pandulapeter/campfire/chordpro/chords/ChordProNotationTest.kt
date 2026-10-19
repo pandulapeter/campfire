@@ -55,6 +55,55 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a shown chord's accidentals are drawn as signs wherever they stand in it`() {
+        assertEquals("B♭m7♭5/C♯", ChordProNotation.withAccidentalSigns("Bbm7b5/C#"))
+        assertEquals("(F♯7(♭9))", ChordProNotation.withAccidentalSigns("(F#7(b9))"))
+        assertEquals("Si♭7", ChordProNotation.withAccidentalSigns("Sib7"))
+        assertEquals("H7/D♯", ChordProNotation.withAccidentalSigns("H7/D#"))
+    }
+
+    @Test
+    fun `a shown step's accidentals are drawn as signs`() {
+        assertEquals("♭7(7sus4)", ChordProNotation.withAccidentalSigns("b7(7sus4)"))
+        assertEquals("♭VII", ChordProNotation.withAccidentalSigns("bVII"))
+        assertEquals("5/♯4", ChordProNotation.withAccidentalSigns("5/#4"))
+        assertEquals("1(7)(♭9)", ChordProNotation.withAccidentalSigns("1(7)(b9)"))
+    }
+
+    @Test
+    fun `a lowercase bass note and a word that is no chord keep their letters`() {
+        assertEquals("D/b", ChordProNotation.withAccidentalSigns("D/b"))
+        assertEquals("E♭/b♭", ChordProNotation.withAccidentalSigns("Eb/bb"))
+        assertEquals("N.C.", ChordProNotation.withAccidentalSigns("N.C."))
+        assertEquals("Chorus #2", ChordProNotation.withAccidentalSigns("Chorus #2"))
+    }
+
+    @Test
+    fun `a shown step with signs is still recognized as one`() {
+        assertTrue(ChordProChordNames.isDisplayedChordName("♭7(7sus4)"))
+        assertTrue(ChordProChordNames.isDisplayedChordName("♭VII"))
+    }
+
+    @Test
+    fun `every chord a shown song draws gets its signs, and only those`() {
+        val song = ChordProParser.parse(
+            "{key: Bb}\n{define: Eb base-fret 1 frets x 1 1 3 4 3}\n{comment: Intro [Bb] [F#]}\n[Bb]Tab #1 [Eb]\n" +
+                "{start_of_grid}\n| Bb . F# . |\n{end_of_grid}\n{start_of_tab}\nBb      F#\nEb|--1----2--|\n e|--1----2--|\n{end_of_tab}",
+        )
+
+        val shown = ChordProNotation.withAccidentalSigns(song)
+
+        assertEquals("B♭", shown.metadata.key)
+        assertEquals(listOf("E♭"), shown.metadata.definitions.map { it.name })
+        val lines = shown.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+        assertEquals(listOf("B♭", "E♭"), lines.filterIsInstance<ChordProLine.Lyrics>().flatMap { line -> line.chords.map { it.name } })
+        assertEquals("Tab #1 ", lines.filterIsInstance<ChordProLine.Lyrics>().single().text)
+        assertEquals("Intro [B♭] [F♯]", shown.blocks.filterIsInstance<ChordProBlock.Section>().single().label)
+        assertEquals(listOf("B♭", "F♯"), lines.filterIsInstance<ChordProLine.Grid>().flatMap { it.tokens }.filterIsInstance<GridToken.Chord>().map { it.name })
+        assertEquals(listOf("B♭      F♯", "E♭|--1----2--|", " e|--1----2--|"), lines.filterIsInstance<ChordProLine.Tab>().map { it.text })
+    }
+
+    @Test
     fun `a name written in German notation is read into the app's own`() {
         assertEquals("B", ChordProNotation.fromGerman("H"))
         assertEquals("Bm7", ChordProNotation.fromGerman("Hm7"))

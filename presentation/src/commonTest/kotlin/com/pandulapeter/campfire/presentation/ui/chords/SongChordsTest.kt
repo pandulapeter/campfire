@@ -85,14 +85,14 @@ class SongChordsTest {
     fun `a chord written two ways is listed once`() {
         val lines = "[G]la [(G)]la [a]la [Am]la [A#]la [Bb]la"
         // The parser has already spelled the lowercase minor out.
-        assertEquals(listOf("G", "Am", "A#"), names(lines).map { it.name })
+        assertEquals(listOf("G", "Am", "A♯"), names(lines).map { it.name })
         val bb = "{define: Bb base-fret 1 frets x 1 3 3 3 1}"
         val aSharp = "{define: A# base-fret 1 frets x 1 3 3 3 1}"
-        assertTrue(names("$bb\n$lines").single { it.name == "A#" }.definition != null)
+        assertTrue(names("$bb\n$lines").single { it.name == "A♯" }.definition != null)
         assertEquals(3, names("$bb\n$lines").size)
         assertEquals(3, names("$aSharp\n$bb\n$lines").size)
         val different = names("$aSharp\n{define: Bb base-fret 6 frets 1 3 3 2 1 1}\n$lines")
-        assertEquals(listOf("G", "Am", "A#", "Bb"), different.map { it.name })
+        assertEquals(listOf("G", "Am", "A♯", "B♭"), different.map { it.name })
         assertEquals(different[2].chord, different[3].chord)
     }
 
@@ -115,7 +115,7 @@ class SongChordsTest {
         assertEquals(listOf("H", "B"), german.map { it.name })
         assertEquals(listOf(11, 10), german.map { it.chord.root })
         val latin = names("[Am]la [Bb7]la", notation = ChordNotation.LATIN)
-        assertEquals(listOf("Lam", "Sib7"), latin.map { it.name })
+        assertEquals(listOf("Lam", "Si♭7"), latin.map { it.name })
         assertEquals(listOf(null, null), latin.map { it.letterName })
         assertEquals(listOf("Am", "Bb7"), latin.map { it.spelling })
     }

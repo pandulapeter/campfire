@@ -93,9 +93,9 @@ internal fun songChordsOf(
         val definition = written?.takeIf { tuning.drawsDefinitions }
         val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(chord, tuning)
         SongChord(
-            name = shownNames.getValue(name),
+            name = ChordProNotation.withAccidentalSigns(shownNames.getValue(name)),
             chord = chord,
-            letterName = name.takeIf { notation.isNumbering && shownNames[name] != name },
+            letterName = name.takeIf { notation.isNumbering && shownNames[name] != name }?.let(ChordProNotation::withAccidentalSigns),
             spelling = name,
             defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(chord, tuning) else null,
             definition = definition,

@@ -49,7 +49,7 @@ internal fun tuningLabel(tuning: InstrumentTuning, notation: ChordNotation) = wh
             TuningName.Noted.Kind.KEY -> Res.string.tuner_tuning_key
             TuningName.Noted.Kind.MODAL -> Res.string.tuner_tuning_modal
         },
-        noteName(name.note, notation),
+        shownNoteName(name.note, notation),
     )
     is TuningName.Spelled -> spelledTuning(name.strings, notation)
 }

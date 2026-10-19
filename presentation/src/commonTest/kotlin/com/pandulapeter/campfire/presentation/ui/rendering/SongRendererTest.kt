@@ -24,10 +24,10 @@ class SongRendererTest {
     private fun spelling(accidentals: UserPreferences.Accidentals) = UserPreferences.ChordSpelling(accidentals = accidentals, notation = Notation.STANDARD)
 
     @Test
-    fun `a key is moved by the file's transpose, the reader's transposition and the capo, then spelled`() {
-        assertEquals("A#", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.SHARPS)))
-        assertEquals("Bb", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
-        assertEquals("Bb", renderer.renderKey(key = "G", transpose = 1, transposition = 1, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
+    fun `a key is moved by the file's transpose, the reader's transposition and the capo, then spelled and drawn with signs`() {
+        assertEquals("A♯", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.SHARPS)))
+        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
+        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 1, transposition = 1, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
     }
 
     @Test

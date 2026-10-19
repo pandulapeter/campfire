@@ -394,7 +394,7 @@ notes. Scrolling content, `fadingTopEdge`, under the sheet's padding:
    80dp, eight 140dp; keyboard 96dp), with labels per `state.labels`, and under it a two-chip radio row
    **Degrees / Notes** (`SelectableChip`, `selectableGroup`), which writes `state.labels`; the labels crossfade.
    Not shown for the keyboard (no labels on keys in this version; the list below names them).
-2. **Formula**: one line, `1 2 b3 4 5 6 b7` in the notation's accidental signs (`♭`/`♯` as `ChordProNotation`
+2. **Formula**: one line, `1 2 b3 4 5 6 b7` in the notation's accidental signs (`♭`/`♯` as `ChordProNotation.withAccidentalSigns`
    shows chords), then the steps `W H W W W H W` (`scales_steps_whole` "W", `scales_steps_half` "H", `scales_steps_augmented`
    "3" for a step of three semitones, Hungarian "E", "F", "3").
 3. **Relation**: "Mode 2 of C major" (`scales_mode_of`) where `modeOf` is set, with `Scales.parentRoot`; "Also

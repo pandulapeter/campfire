@@ -52,6 +52,18 @@ internal object ChordProStaffNames {
         return respelled
     }
 
+    /**
+     * [lines] with the accidental of every string name drawn as the sign [ChordProNotation.withAccidentalSigns] draws a
+     * chord's with (`Eb|` as `E♭|`). A sign takes the column its letter took, so nothing else moves.
+     */
+    fun withAccidentalSigns(lines: List<String>): List<String> = lines.map { line ->
+        if (!ChordProTokens.isStaffLine(line)) return@map line
+        val name = staffPrefix(line).name?.takeIf { it.length > 1 && noteOf(it) != null } ?: return@map line
+        val start = line.indexOf(name)
+        val signs = name.first() + name.substring(1).replace('#', '♯').replace('b', '♭')
+        line.substring(0, start) + signs + line.substring(start + name.length)
+    }
+
     /** The lines of one system, [isStaff] telling its staff lines from the rest, renamed from [from] to [to], or null where nothing changes. */
     private fun respelledSystem(lines: List<String>, isStaff: List<Boolean>, from: ChordNotation, to: ChordNotation): List<String>? {
         val staff = lines.indices.filter { isStaff[it] }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.NOTE_COUNT
 
 /**
@@ -108,15 +109,15 @@ internal object ChordProNashville {
         }
     }
 
-    /** The end of an Arabic step written at [start] (`5`, `b7`, `#4`), or -1 where there is none. */
+    /** The end of an Arabic step written at [start] (`5`, `b7`, `#4`, `♭7`), or -1 where there is none. */
     private fun arabicStepEnd(text: String, start: Int): Int {
-        val digit = if (text.getOrNull(start) == 'b' || text.getOrNull(start) == '#') start + 1 else start
+        val digit = if (text.getOrNull(start)?.let { it in ACCIDENTALS } == true) start + 1 else start
         return if (text.getOrNull(digit)?.let { it in '1'..'7' } == true) digit + 1 else -1
     }
 
     /** The end of a numeral the chord starts with, the sign after a small one included, or null where there is none. */
     private fun romanStepEnd(chord: String): Int? {
-        val start = if (chord.firstOrNull() == 'b' || chord.firstOrNull() == '#') 1 else 0
+        val start = if (chord.firstOrNull()?.let { it in ACCIDENTALS } == true) 1 else 0
         val numeral = romanNumerals.firstOrNull { chord.startsWith(it, start) } ?: romanNumerals.map { it.lowercase() }.firstOrNull { chord.startsWith(it, start) } ?: return null
         val end = start + numeral.length
         return if (chord.getOrNull(end)?.let { it in "°ø+" } == true) end + 1 else end

@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -282,7 +283,7 @@ internal fun LoadedSongEditor(
                     EditorControlRow(
                         contentPadding = contentPadding,
                         // The summary reads the key into the standard notation, and the field is in the editor's.
-                        key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) },
+                        key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) }?.let(ChordProNotation::keyWithAccidentalSigns),
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
                         // even before a chord has been written under it.
                         isTranspositionEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),

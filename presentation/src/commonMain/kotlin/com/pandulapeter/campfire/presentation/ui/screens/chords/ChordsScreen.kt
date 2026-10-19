@@ -46,7 +46,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -59,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -259,7 +259,7 @@ internal fun ChordsScreen(
                             item(key = HEADING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = HEADING_KEY) {
                                 ChordLibraryHeading(
                                     modifier = listItemAnimation(gridState),
-                                    text = stringResource(Res.string.chords_common, ChordProNotation.shownName(held.inputs.key, held.inputs.notation)),
+                                    text = stringResource(Res.string.chords_common, shownChordName(held.inputs.key, held.inputs.notation)),
                                 )
                             }
                         }

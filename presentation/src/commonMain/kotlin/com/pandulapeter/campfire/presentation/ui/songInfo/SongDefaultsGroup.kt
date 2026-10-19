@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_edit
@@ -97,7 +98,7 @@ private fun SongDefaultsValues(
     fontScale: Float,
 ) {
     val rows = listOfNotNull(
-        defaults.key?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_key) to it },
+        defaults.key?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_key) to ChordProNotation.keyWithAccidentalSigns(it) },
         defaults.capo?.let { stringResource(Res.string.song_editor_insert_capo) to it.toString() },
         defaults.tempo?.let { stringResource(Res.string.song_editor_insert_tempo) to textResource(Res.string.song_details_tempo, it.toString()) },
         defaults.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_time) to it },

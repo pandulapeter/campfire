@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /**
  * The twelve keys the Chords tab lists chords in, from C, in the standard notation, as [accidentals] spells them: as a
@@ -129,7 +130,7 @@ internal fun chordLibraryResults(
         val chord = ChordProChords.parse(name) ?: return@mapNotNull null
         if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
         val shape = ChordVoicings.default(chord, tuning) ?: return@mapNotNull null
-        SongChord(name = ChordProNotation.shownName(name, notation), chord = chord, spelling = name, defaultShape = shape)
+        SongChord(name = shownChordName(name, notation), chord = chord, spelling = name, defaultShape = shape)
     }
     val searched = found.firstOrNull()?.takeIf { searchedName != null && it.spelling == searchedName }
     val chords = if (searched == null) found else found.drop(1)

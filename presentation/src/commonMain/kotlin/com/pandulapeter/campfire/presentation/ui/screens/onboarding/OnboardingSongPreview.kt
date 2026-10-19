@@ -100,7 +100,7 @@ internal fun onboardingPreviewChordNames(notation: ChordNotation, accidentals: U
     val shown = ChordProNotation.shownNames(ChordProParser.parse(ChordProTransposer.transposeText(PREVIEW_SONG, 0, preferFlats)), notation)
     return PREVIEW_LINES.flatten().mapNotNull { it.first }.distinct().associateWith { chord ->
         val spelled = ChordProTransposer.transposeText("[$chord]", 0, preferFlats).removeSurrounding("[", "]")
-        shown[spelled] ?: spelled
+        ChordProNotation.withAccidentalSigns(shown[spelled] ?: spelled)
     }
 }
 

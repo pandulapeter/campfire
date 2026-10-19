@@ -19,7 +19,7 @@ class NoteNamesTest {
     fun `a note is named with sharps and its octave in scientific numbering`() {
         assertEquals("A4", noteNameWithOctave(69, ChordNotation.STANDARD))
         assertEquals("E2", noteNameWithOctave(40, ChordNotation.STANDARD))
-        assertEquals("C#3", noteNameWithOctave(49, ChordNotation.STANDARD))
+        assertEquals("C♯3", noteNameWithOctave(49, ChordNotation.STANDARD))
         assertEquals("C-1", noteNameWithOctave(0, ChordNotation.STANDARD))
         assertEquals("B0", noteNameWithOctave(23, ChordNotation.STANDARD))
     }
@@ -30,6 +30,7 @@ class NoteNamesTest {
         assertEquals("E", noteName(40, ChordNotation.GERMAN))
         assertEquals("Mi", noteName(40, ChordNotation.LATIN))
         assertEquals("E", noteName(40, ChordNotation.NASHVILLE))
+        assertEquals("Fa♯", shownNoteName(66, ChordNotation.LATIN))
         assertEquals("G", noteName(55, ChordNotation.ROMAN))
     }
 

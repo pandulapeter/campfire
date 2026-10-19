@@ -82,8 +82,12 @@ class SongRenderer(
         return tabs?.let { ChordProTabs.withNotices(transposed, it.player, it.labels::describe) } ?: transposed
     }
 
-    /** The last step of [renderSong], and on the model only: the file stays in the standard notation, which the transposition works in. */
-    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) = ChordProNotation.toNotation(song, spelling.notation.toChordNotation())
+    /**
+     * The last step of [renderSong], and on the model only: the file stays in the standard notation, which the
+     * transposition works in, and in the ASCII `#` and `b` the chords are drawn with `♯` and `♭` in place of.
+     */
+    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) =
+        ChordProNotation.withAccidentalSigns(ChordProNotation.toNotation(song, spelling.notation.toChordNotation()))
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
@@ -108,10 +112,7 @@ class SongRenderer(
      */
     fun renderKey(key: String?, transpose: Int, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
         val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
-        ChordProNotation.toNotation(
-            ChordProTransposer.transpose(keyOnly, transpose + transposition + capo, spelling.accidentals.toPreferFlats(), null),
-            spelling.notation.toChordNotation(),
-        ).metadata.key
+        notatedSong(ChordProTransposer.transpose(keyOnly, transpose + transposition + capo, spelling.accidentals.toPreferFlats(), null), spelling).metadata.key
     }
 
     /** Formats the current editor draft without saving it or changing its chord notation. */

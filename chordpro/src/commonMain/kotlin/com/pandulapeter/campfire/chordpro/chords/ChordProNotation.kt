@@ -74,6 +74,40 @@ public object ChordProNotation {
     }
 
     /**
+     * One chord name as a screen or a page shows it, in whatever notation it is already written in: every sharp and
+     * flat as the musical sign `♯` or `♭` rather than the `#` and `b` a file holds, so that `Bbm7` reads `B♭m7` and a
+     * step `b7` reads `♭7`. Only for showing: a field, a file, the clipboard and an export keep the ASCII signs, which
+     * is what every other program reads, and everything here reads both. A `b` that is a note (the lowercase bass of
+     * `D/b`) stays, and a word that is no chord (`N.C.`, `[Chorus 2x]`) is returned as it is.
+     */
+    public fun withAccidentalSigns(name: String): String {
+        if (ChordProNashville.isDegree(name)) return name.replace('#', SHARP_SIGN).replace('b', FLAT_SIGN)
+        if (!ChordProChordNames.isChordName(name) && ChordProChordNames.latinExpanded(name) == null) return name
+        // A root is a capital (`H` included) or a Latin name, so a lowercase `b` is a note only where a bass is written.
+        return name.mapIndexed { index, char ->
+            when {
+                char == '#' -> SHARP_SIGN
+                char == 'b' && index > 0 && name[index - 1] != '/' -> FLAT_SIGN
+                else -> char
+            }
+        }.joinToString("")
+    }
+
+    /** A song's key as [withAccidentalSigns] draws a chord, its note signed where it is spelled out in words (`B♭ major`). */
+    public fun keyWithAccidentalSigns(key: String): String = ChordProChordRewriter.renameKey(key, ::withAccidentalSigns)
+
+    /**
+     * [song], already in the notation it is shown in, with [withAccidentalSigns] applied to every chord it shows: its
+     * key, the chords over its lyrics and in its comments, its grids, its tabs' chord rows and string names, and its
+     * definitions, which a chord is matched to by the name it is shown under. The step after [toNotation].
+     */
+    public fun withAccidentalSigns(song: ChordProSong): ChordProSong = ChordProChordRewriter.rewriteChords(
+        song = song,
+        rewriteTabLines = { lines -> ChordProStaffNames.withAccidentalSigns(ChordProTabTransposer.rewriteChordNames(lines, ::withAccidentalSigns)) },
+        rename = ::withAccidentalSigns,
+    )
+
+    /**
      * The chord [name] stands for, typed in [notation], named the way the app names it in [notation]: its root and its
      * bass in capitals in the standard and the German notations and in title case in the Latin one, a lowercase minor
      * spelled out (`c7` is `Cm7`), the parentheses and the `♯` and `♭` signs dropped, and the rest as it was typed, since

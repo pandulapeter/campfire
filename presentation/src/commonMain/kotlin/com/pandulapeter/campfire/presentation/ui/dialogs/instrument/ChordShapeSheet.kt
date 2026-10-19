@@ -116,7 +116,9 @@ internal fun ChordShapeSheet(
         // A numbering names the chord by its step, which reads as another chord in letters (`b7`), so it stays as it is.
         title = textResource(
             Res.string.song_details_chord_shape_choose,
-            dialog.chordName.takeIf { notation.isNumbering } ?: ChordProNotation.canonicalName(dialog.chordName, notation) ?: dialog.chordName,
+            dialog.chordName.takeIf { notation.isNumbering }
+                ?: ChordProNotation.canonicalName(dialog.chordName, notation)?.let(ChordProNotation::withAccidentalSigns)
+                ?: dialog.chordName,
         ),
         // The notes rather than the song: the sheet is only ever opened from that song's page, and the notes say what the
         // shapes below have in common, which a line scrolled away with them would stop saying.

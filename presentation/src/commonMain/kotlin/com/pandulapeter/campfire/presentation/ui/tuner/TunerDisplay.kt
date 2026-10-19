@@ -300,7 +300,7 @@ private fun TunerNoteName(
 ) {
     if (isCompact) {
         Text(
-            text = noteName(note, notation),
+            text = shownNoteName(note, notation),
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
             color = color.value,
@@ -313,7 +313,7 @@ private fun TunerNoteName(
             // upright and the page of a tablet. The weight leaves the octave its room, and not filling it is what lets the
             // arrangement centre the pair.
             modifier = Modifier.weight(1f, fill = false),
-            text = noteName(note, notation),
+            text = shownNoteName(note, notation),
             style = MaterialTheme.typography.displayLarge,
             fontWeight = FontWeight.Bold,
             color = color.value,

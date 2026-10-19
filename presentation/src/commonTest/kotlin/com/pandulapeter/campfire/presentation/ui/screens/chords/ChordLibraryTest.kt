@@ -66,19 +66,19 @@ internal class ChordLibraryTest {
     @Test
     fun `a search narrows the key's chords to the names that hold it, ignoring case`() {
         assertEquals(listOf("Csus2", "Csus4", "C7sus4"), assertIs<ChordLibraryResults.Chords>(results(query = " sus ")).chords.map { it.name })
-        assertEquals(listOf("Cmaj7", "Cmaj9", "Cmaj13", "Cmaj7b5", "Cmaj7#5"), assertIs<ChordLibraryResults.Chords>(results(query = "cMAJ")).chords.map { it.name })
+        assertEquals(listOf("Cmaj7", "Cmaj9", "Cmaj13", "Cmaj7♭5", "Cmaj7♯5"), assertIs<ChordLibraryResults.Chords>(results(query = "cMAJ")).chords.map { it.name })
     }
 
     @Test
     fun `a found chord keeps the name the key row gives it, whatever case was typed`() {
         assertTrue("Lam7" in assertIs<ChordLibraryResults.Chords>(results(query = "LAM7", keyIndex = 9, notation = ChordNotation.LATIN)).chords.map { it.name })
-        assertEquals("F#m7b5", assertIs<ChordLibraryResults.Chords>(results(query = "f#m7b5", keyIndex = 6)).chords.single().name)
+        assertEquals("F♯m7♭5", assertIs<ChordLibraryResults.Chords>(results(query = "f#m7b5", keyIndex = 6)).chords.single().name)
     }
 
     @Test
     fun `a search that names a chord the key does not list finds it apart from the key's, whatever key is picked`() {
         val slash = assertIs<ChordLibraryResults.Chords>(results(query = "d/f#"))
-        assertEquals("D/F#", slash.searched?.name)
+        assertEquals("D/F♯", slash.searched?.name)
         assertEquals("2 x 0 2 3 2", slash.searched?.defaultShape?.let(ChordVoicings::write))
         assertEquals(emptyList(), slash.chords)
         assertEquals("Emaj7", assertIs<ChordLibraryResults.Chords>(results(query = "Emaj7")).searched?.name)

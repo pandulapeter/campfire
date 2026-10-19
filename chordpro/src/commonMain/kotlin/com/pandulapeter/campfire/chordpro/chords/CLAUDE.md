@@ -16,6 +16,8 @@
 - **A text is read in the notation it is declared in**, except that `H`/`h` makes a standard text German, and Latin
   needs no declaring (no Latin name is a standard chord). `ChordProNotation.read` is the one reading path. A lowercase
   root is minor, a lowercase bass a note.
+- **Shown chords draw `♯` and `♭`** (`withAccidentalSigns`, after `toNotation`); anything typed, stored, copied, or
+  exported keeps `#` and `b`, and every reader takes both.
 - Tab string names follow the notation; a system that could not come back exactly is left as written.
 - **Numberings are display only**: counted from the song's key per modulated stretch, no key = letters, and nothing is
   ever read from numbers (`[1]` is as often an ending). Definitions follow the chords but do not vote on notation.

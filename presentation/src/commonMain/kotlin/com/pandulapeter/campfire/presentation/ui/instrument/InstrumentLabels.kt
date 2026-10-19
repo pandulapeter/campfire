@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.instrument_strings_six_p
 import com.pandulapeter.campfire.presentation.resources.instrument_strings_six
 import com.pandulapeter.campfire.presentation.resources.instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.instrument_violin
-import com.pandulapeter.campfire.presentation.ui.tuner.noteName
+import com.pandulapeter.campfire.presentation.ui.tuner.shownNoteName
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import org.jetbrains.compose.resources.StringResource
 
@@ -91,4 +91,4 @@ private fun stringsSentenceOf(instrument: UserPreferences.Instrument, count: Int
  * The open strings of [tuning] in a chord chart's order, which is what the tuning list says under each tuning's name
  * ("D A D G B E"): in the chord [notation] rather than the app's language, as the diagrams' chords are.
  */
-internal fun tuningStringsLabel(tuning: InstrumentTuning, notation: ChordNotation) = tuning.strings.joinToString(" ") { noteName(it, notation) }
+internal fun tuningStringsLabel(tuning: InstrumentTuning, notation: ChordNotation) = tuning.strings.joinToString(" ") { shownNoteName(it, notation) }

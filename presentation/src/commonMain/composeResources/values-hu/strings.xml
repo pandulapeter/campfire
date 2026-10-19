@@ -377,8 +377,8 @@
     <string name="settings_accidentals">Módosítójelek</string>
     <string name="settings_accidentals_description">A fekete billentyűkre eső akkordok bével (%1$s) vagy kereszttel (%2$s) legyenek-e írva. Az eredeti beállítás mellett a Campfire a dal hangneméhez illőt választja.</string>
     <string name="settings_accidentals_original">Eredeti</string>
-    <string name="settings_accidentals_flats">Bé (b)</string>
-    <string name="settings_accidentals_sharps">Kereszt (#)</string>
+    <string name="settings_accidentals_flats">Bé (♭)</string>
+    <string name="settings_accidentals_sharps">Kereszt (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
     <string name="instrument">Hangszer</string>
     <string name="instrument_description">A hangszer, amelyen játszol. A Campfire ehhez rajzolja az akkordfogásokat, és erre állítja be a hangolót.</string>

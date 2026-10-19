@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -28,6 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.label
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
@@ -78,8 +78,8 @@ internal fun ChordsSection(
         title = stringResource(Res.string.settings_accidentals),
         description = stringResource(
             Res.string.settings_accidentals_description,
-            ChordProNotation.shownName("Bb", notation),
-            ChordProNotation.shownName("A#", notation),
+            shownChordName("Bb", notation),
+            shownChordName("A#", notation),
         ),
         isEnabled = areChordsEnabled,
     ) {

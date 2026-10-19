@@ -23,11 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
@@ -68,7 +68,7 @@ internal fun ChordLibraryControls(
         ChipRow {
             keys.forEachIndexed { index, key ->
                 ChoiceChip(
-                    text = ChordProNotation.shownName(key, notation),
+                    text = shownChordName(key, notation),
                     isSelected = index == selectedKeyIndex,
                     onClick = { onKeySelected(index) },
                 )

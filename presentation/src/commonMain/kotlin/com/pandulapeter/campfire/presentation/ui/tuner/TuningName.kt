@@ -90,7 +90,7 @@ internal fun tuningNameOf(tuning: InstrumentTuning): TuningName = when (tuning) 
  */
 internal fun spelledTuning(strings: List<Int>, notation: ChordNotation) = strings.joinToString(
     separator = if (notation == ChordNotation.LATIN) " " else "",
-) { noteName(it, notation) }
+) { shownNoteName(it, notation) }
 
 private const val C = 0
 private const val D = 2
