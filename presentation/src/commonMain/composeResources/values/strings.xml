@@ -879,7 +879,7 @@
     <string name="settings_sync_keep_and_download">Keep them and download</string>
     <string name="settings_sync_notification_channel">Sync</string>
     <string name="settings_sync_notification_title">Syncing the library</string>
-    <string name="settings_sync_redirect_page_title">Campfire is connected</string>
+    <string name="settings_sync_redirect_page_title">Back to Campfire</string>
     <string name="settings_sync_redirect_page_message">You can close this tab and go back to the app.</string>
 
     <!-- What's new, shown once per version after the first installed version -->

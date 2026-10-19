@@ -879,7 +879,7 @@
     <string name="settings_sync_keep_and_download">Megtartás és letöltés</string>
     <string name="settings_sync_notification_channel">Szinkronizálás</string>
     <string name="settings_sync_notification_title">A könyvtár szinkronizálása</string>
-    <string name="settings_sync_redirect_page_title">A Campfire csatlakozott</string>
+    <string name="settings_sync_redirect_page_title">Vissza a Campfire-höz</string>
     <string name="settings_sync_redirect_page_message">Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.</string>
 
     <!-- What's new, shown once per version after the first installed version -->
