@@ -22,18 +22,18 @@ The setlist picker (every setlist, one song) and the song picker (every song, on
   tag and language chips (`SortableChipRow`) are a plain `Row` animated by `animateBounds`, since a lazy row sent to its
   start drops its placement animation; their selection is the sheet's own, empty each opening. Rows are built off the
   main thread once per library (`SongPickerIndex.kt`); chips are `ScreenData.libraryTags`/`libraryLanguages`.
-- **One write per tick** (`SetlistsController.setSetlistSong`, serialized by a `Mutex`, each applied to the setlist as
-  the library has it then): ticks come faster than a write round-trips, and boxes following `setlists` would flick back.
-  A gone setlist is not recreated from the sheet's copy. A ticked song goes to the end; an entry whose file is missing
-  is kept.
+- **One write per tick** (`SetlistsController.setSetlistSong`, serialized by `SetlistRepositoryImpl`'s write lock, each
+  applied to the setlist as the library has it then): ticks come faster than a write round-trips, and boxes following
+  `setlists` would flick back. A gone setlist is not recreated from the sheet's copy. A ticked song goes to the end; an
+  entry whose file is missing is kept.
 - The setlist picker's "New setlist" renders the naming sheet over the picker from its own state, not via the stack,
   since the song goes into the setlist as soon as it exists (`createSetlistWithSongs`). It opens named after a search
   that found nothing. A song with no listable setlist (`hasListableSetlist`) skips straight to the naming sheet.
 
 ### The selection mode's Choose setlists sheet
 
-For the songs screen's selection mode (see `ui/screens/songs`). Each holds the selection as it was when opened; none has
-a `SavedDialog`, since the mode is not restored either.
+For the songs screen's selection mode (see `ui/screens/songs`). It holds the selection as it was when opened and has no
+`SavedDialog`, since the mode is not restored either.
 
 - **Choose setlists** (`SelectionSetlistsSheet`): a box per setlist, ticked / empty / half ticked by how many of the
   songs it holds (`selectionBoxState`, following the library until the sheet is first tapped on it, then the sheet's own
