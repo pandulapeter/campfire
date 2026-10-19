@@ -44,11 +44,6 @@ public object ChordSheetConverter {
     }
 
     /**
-     * A page copied with every line as a paragraph of its own has a blank line after each, which would keep every chord
-     * row from the lyric under it. Where no two lines of a song are adjacent, the single blanks are dropped and a run of
-     * them is the one stanza break it stands for.
-     */
-    /**
      * The lines a lyrics site puts into a copy of its page, Genius's "You might also like" and the "12Embed" its
      * share count ends one with, glued to the last lyric where the copy lost the line break. Only a song is read for
      * them: a poem may well end in "Embed".
@@ -69,6 +64,11 @@ public object ChordSheetConverter {
         }
     }
 
+    /**
+     * A page copied with every line as a paragraph of its own has a blank line after each, which would keep every chord
+     * row from the lyric under it. Where no two lines of a song are adjacent, the single blanks are dropped and a run of
+     * them is the one stanza break it stands for.
+     */
     private fun singleSpaced(lines: List<Rendered>): List<Rendered> {
         val filled = lines.indices.filter { lines[it].text.isNotBlank() }
         if (filled.size < 4 || filled.zipWithNext().any { (a, b) -> b == a + 1 }) return lines
@@ -304,16 +304,16 @@ public object ChordSheetConverter {
         }
     }
 
-    /**
-     * Splits a heading's label from the chord row written after it on its line, `Verse 1: G D Em C` or
-     * `[Intro] G D Em C`. The row is the section's progression, so it stays a line of its own rather than being set by
-     * its columns into the lyric under it.
-     */
     /** The fret a capo value names, in digits or in the Roman numerals many sites write it in; blank where it names none. */
     private fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
         ?: romanCapo.matchEntire(value.uppercase())?.groupValues?.get(1)?.let { roman -> (romanNumerals.indexOf(roman) + 1).toString() }
         ?: ""
 
+    /**
+     * Splits a heading's label from the chord row written after it on its line, `Verse 1: G D Em C` or
+     * `[Intro] G D Em C`. The row is the section's progression, so it stays a line of its own rather than being set by
+     * its columns into the lyric under it.
+     */
     private fun expandLabels(lines: List<Rendered>): List<Rendered> = lines.flatMap { line ->
         val colon = line.text.indexOf(':')
         val bracket = line.text.indexOf(']').takeIf { line.text.trimStart().startsWith('[') && line.text.getOrNull(it + 1) == ' ' } ?: -1
