@@ -60,6 +60,6 @@ rejected; ZIP64, encrypted, or otherwise compressed entries left out); `Inflater
 
 ## Tests
 
-`./gradlew :data:formats:desktopTest`. `commonTest` calls the extractors directly; `desktopTest` checks against archives
-the JVM produced. What the local source does around the extractors (size limit, extension, blank text, failure) and the
-end-to-end document goldens are tested in `:data:source:local:implementation`.
+`commonTest` calls the extractors directly; `desktopTest` checks against archives the JVM produced. What the local
+source does around the extractors, and the end-to-end document goldens, are tested in
+`:data:source:local:implementation`.
