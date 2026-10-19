@@ -9,9 +9,9 @@
 -->
 # :domain:implementation
 
-Implements `:domain:api` over `:data:repository:api`. Every use case is an `internal` `@Factory` class, as the root's
-conventions have it. A failure a use case notes but does not throw goes to the injected `Logger` (`:data:model`). Use cases are grouped by feature, the same
-packages in `:domain:api`; `importing`, `library`, `export`, and `songs` have a `CLAUDE.md` of their own.
+Implements `:domain:api` over `:data:repository:api`. A failure a use case notes but does not throw goes to the injected
+`Logger` (`:data:model`). Use cases are grouped by feature, the same packages in `:domain:api`; `importing`, `library`,
+`export`, and `songs` have a `CLAUDE.md` of their own.
 
 ## Import
 
