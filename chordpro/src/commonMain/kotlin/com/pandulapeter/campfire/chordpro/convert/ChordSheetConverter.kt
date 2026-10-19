@@ -184,31 +184,39 @@ public object ChordSheetConverter {
     /**
      * A label with a colon is metadata whatever follows it. Without one only a value of the field's own shape is
      * (`Capo 2`, `Key G`, `Time 4/4`), since a lyric may well start with one of these words: "By the rivers of
-     * Babylon" and "Time after time" are sung, not credited.
+     * Babylon" and "Time after time" are sung, not credited. A value that cannot be read comes back blank, and its line
+     * then stays a line of text rather than vanishing ([classify]).
      */
     private fun metadata(text: String): Pair<String, String>? {
+        if (noCapo.matches(text.trim())) return NO_CAPO to NO_CAPO
         val match = metadata.matchEntire(text.trim()) ?: unlabelledMetadata.matchEntire(text.trim())?.takeIf {
             val value = it.groupValues[2].trim()
             when (it.groupValues[1].lowercase()) {
-                "capo", "tempo" -> value.first().isDigit()
+                "tempo" -> value.first().isDigit()
                 "time" -> timeSignature.matches(value)
-                "key", "hangnem" -> isChordOrLatinName(ascii(value))
+                in keyLabels -> isChordOrLatinName(ascii(value))
+                in capoLabels -> value.replace(capoPreposition, "").let { it.firstOrNull()?.isDigit() == true || romanCapo.matches(it.uppercase()) }
                 else -> true
             }
         }
         if (match != null) {
-            val name = when (match.groupValues[1].lowercase()) {
-                "hangnem" -> "key"
-                "temp\u00f3" -> "tempo"
+            val label = match.groupValues[1].lowercase()
+            val name = when (label) {
+                in keyLabels -> "key"
+                in capoLabels -> "capo"
+                "temp\u00f3", "bpm" -> "tempo"
                 "\u00fctemmutat\u00f3" -> "time"
                 "el\u0151ad\u00f3", "by", "words and music by" -> "artist"
-                else -> match.groupValues[1].lowercase()
+                else -> label
             }
             val value = match.groupValues[2].trim()
             // A tempo is a number of beats, which Campfire's PDF prints with its unit: "96 BPM".
             return name to when (name) {
-                "capo" -> Regex("[0-9]+").find(value)?.value.orEmpty()
+                "capo" -> capo(value.replace(capoPreposition, ""))
                 "tempo" -> Regex("^[0-9]+").find(value)?.value ?: value
+                // The labels the sites outside the English-speaking world write are read with a value of a key only,
+                // since a line such as "Tom: here we go" is as likely a cue in the lyrics.
+                "key" -> value.takeIf { label in setOf("key", "hangnem") || isChordOrLatinName(ascii(value)) }.orEmpty()
                 else -> value
             }
         }
@@ -248,6 +256,11 @@ public object ChordSheetConverter {
      * `[Intro] G D Em C`. The row is the section's progression, so it stays a line of its own rather than being set by
      * its columns into the lyric under it.
      */
+    /** The fret a capo value names, in digits or in the Roman numerals many sites write it in; blank where it names none. */
+    private fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
+        ?: romanCapo.matchEntire(value.uppercase())?.groupValues?.get(1)?.let { roman -> (romanNumerals.indexOf(roman) + 1).toString() }
+        ?: ""
+
     private fun expandLabels(lines: List<Rendered>): List<Rendered> = lines.flatMap { line ->
         val colon = line.text.indexOf(':')
         val bracket = line.text.indexOf(']').takeIf { line.text.trimStart().startsWith('[') && line.text.getOrNull(it + 1) == ' ' } ?: -1
@@ -351,7 +364,7 @@ public object ChordSheetConverter {
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
                 headings[index] -> Kind.SECTION
-                index < 15 && (metadata(line.text) != null || labelledRow(line.text, isHeader = true) != null) ||
+                index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 candidate != null && (candidate.count { chord(it.text) } > 1 ||
                     candidate.count { chord(it.text) } == 1 &&
@@ -379,7 +392,7 @@ public object ChordSheetConverter {
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
             (labelledRow(lines[index].text, isHeader = index < 15) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
                 when {
-                    value.isBlank() || name == TRANSPOSITION -> Unit
+                    value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
@@ -662,9 +675,25 @@ public object ChordSheetConverter {
     private val token = Regex("\\|:?|:\\||[^\\s|]+")
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
     private val parentheses = Regex("\\(([^()]+)\\)")
-    private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Temp\u00f3|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
+    private val keyLabels = setOf(
+        "key", "key of", "hangnem", "tom", "tono", "tonalidad", "tonart", "tonalit\u00e9", "tonalit\u00e0", "tonacja", "toonsoort",
+    )
+    private val capoLabels = setOf("capo", "capotraste", "cejilla", "kapodaster", "capodastre", "kapo")
+    private val metadata = Regex(
+        "^(Capo|Capotraste|Cejilla|Kapodaster|Capodastre|Kapo|Key|Hangnem|Tom|Tono|Tonalidad|Tonart|Tonalit\u00e9|Tonalit\u00e0|Tonacja|Toonsoort|" +
+            "Tempo|Temp\u00f3|BPM|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$",
+        RegexOption.IGNORE_CASE,
+    )
     private val transposition = Regex("^(Transposition|Transzpon\u00e1l\u00e1s)\\s*:\\s*([+-]?[0-9]+)$", RegexOption.IGNORE_CASE)
-    private val unlabelledMetadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|words and music by)\\s+(.+)$", RegexOption.IGNORE_CASE)
+    private val unlabelledMetadata = Regex(
+        "^(Capo|Capotraste|Cejilla|Kapodaster|Capodastre|Kapo|Key of|Key|Hangnem|Tonalidad|Tonart|Tonalit\u00e9|Tonalit\u00e0|Tonacja|Toonsoort|" +
+            "Tempo|Time|words and music by)\\s+(.+)$",
+        RegexOption.IGNORE_CASE,
+    )
+    private val capoPreposition = Regex("^(?:on|at)\\s+", RegexOption.IGNORE_CASE)
+    private val romanNumerals = listOf("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII")
+    private val romanCapo = Regex("^(XII|XI|X|IX|IV|V?I{1,3}|V)(?:\\s+(?:FRET|TRASTE|TASTO|BUND|BUNDSTAB))?$")
+    private val noCapo = Regex("^(?:No|Sin|Senza|Nincs) capo$", RegexOption.IGNORE_CASE)
     private val timeSignature = Regex("[0-9]+/[0-9]+")
     private val timingNames = setOf("tempo", "time")
     private val labelGap = Regex("\\s{2,}")
@@ -675,4 +704,7 @@ public object ChordSheetConverter {
 
     /** What [labelledRow] names a transposition, which no directive is written for. */
     private const val TRANSPOSITION = "transposition"
+
+    /** What [metadata] names a line saying the song is played without a capo, which is the default and is written as nothing. */
+    private const val NO_CAPO = "no capo"
 }

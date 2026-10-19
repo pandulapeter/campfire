@@ -447,6 +447,41 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `capo in Roman numerals and spelled-out capo lines become the header`() {
+        for (line in listOf("Capo: II", "Capo on 2nd fret", "Capo II", "Capo: IV fret", "Kapo 2")) {
+            assertTrue(convert("$line\nAm     C\nHello world").startsWith("{capo: ${if ("IV" in line) 4 else 2}}\n"), line)
+        }
+        assertTrue(convert("Cejilla: 3\nAm     C\nHello world").startsWith("{capo: 3}\n"))
+        assertTrue(convert("Tempo: 120bpm\nAm     C\nHello world").startsWith("{tempo: 120}\n"))
+        assertTrue(convert("BPM: 96\nAm     C\nHello world").startsWith("{tempo: 96}\n"))
+    }
+
+    @Test
+    fun `key lines of the European chord sites become the header`() {
+        for ((line, key) in listOf("Tom: G" to "G", "Tono: Sol" to "Sol", "Tonart: H" to "H", "Key of G" to "G", "Tonalit\u00e9: Sol" to "Sol")) {
+            val result = convert("$line\nAm     C\nHello world")
+            assertTrue(result.startsWith("{key: $key}\n"), result)
+        }
+    }
+
+    @Test
+    fun `a metadata line whose value cannot be read stays a line of text`() {
+        for (line in listOf("Capo: see below", "Capo: I don't use one")) {
+            val result = convert("Verse 1\n$line\nAm     C\nHello world")
+            assertTrue(result.startsWith("{start_of_verse: Verse 1}\n$line\n"), result)
+            assertFalse("{capo" in result, result)
+        }
+        assertEquals("[Am]Hello [C]world\n", convert("No capo\nAm     C\nHello world"))
+    }
+
+    @Test
+    fun `a lyric that starts with a key word is not metadata`() {
+        for (line in listOf("Key of my heart", "Tono y fuerza")) {
+            assertEquals("{start_of_verse: Verse 1}\n$line\n[Am]Hello [C]world\n{end_of_verse}\n", convert("Verse 1\n$line\nAm     C\nHello world"))
+        }
+    }
+
+    @Test
     fun `a fragment's chord rows are set into the lyrics under them`() {
         assertEquals("[Am]Hello [C]world\nsecond line", ChordSheetConverter.convertFragment("Am     C\nHello world\nsecond line"))
     }
