@@ -236,25 +236,44 @@ internal class DropboxSyncProvider(
     override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
         val response = downloadResponse(remotePath(kind, name))
         response.ensureSuccessful()
-        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = revisionOf(response))
+        return downloadedDocument(response)
     }
 
     override suspend fun downloadDocument(name: String): RemoteDocument? {
         val response = downloadResponse(documentPath(name))
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
         response.ensureSuccessful()
-        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = revisionOf(response))
+        return downloadedDocument(response)
     }
 
     /**
-     * A download answers with the file itself, so its metadata - the revision the next upload has to name - comes in a
-     * header instead, which Dropbox also exposes to a page's script.
+     * The body of a successful download, checked against the size and content hash Dropbox sent with it. A body cut
+     * short without a declared length - an HTTP/1.0 proxy, a connection closed at a chunk boundary - is otherwise
+     * written as the song and indexed as in step, and the next edit uploads it over the full one. A mismatch fails only
+     * this file: nothing is written, and the next run downloads it again, while a run ended by one file that keeps
+     * failing would never finish the rest of the library. Both are compared against the decoded bytes, so a transfer
+     * the engine decompressed is compared correctly.
      */
-    private fun revisionOf(response: HttpResponse) = try {
+    private suspend fun downloadedDocument(response: HttpResponse): RemoteDocument {
+        val metadata = downloadMetadataOf(response)
+        val bytes = transport { response.readRawBytes() }
+        if (metadata.size != null && bytes.size.toLong() != metadata.size ||
+            metadata.contentHash != null && dropboxContentHash(bytes) != metadata.contentHash
+        ) {
+            throw DropboxApiException(response.status.value, "the download arrived incomplete (${bytes.size} of ${metadata.size} bytes)")
+        }
+        return RemoteDocument(bytes = bytes, revision = metadata.rev)
+    }
+
+    /**
+     * A download answers with the file itself, so its metadata - the revision the next upload has to name, its size and
+     * its hash - comes in a header instead, which Dropbox also exposes to a page's script.
+     */
+    private fun downloadMetadataOf(response: HttpResponse) = try {
         response.headers[DOWNLOAD_RESULT_HEADER]?.let { json.decodeFromString<DropboxFileMetadata>(it) }
     } catch (exception: SerializationException) {
         null
-    }?.rev ?: throw DropboxApiException(response.status.value, "the download named no revision")
+    }?.takeIf { it.rev.isNotEmpty() } ?: throw DropboxApiException(response.status.value, "the download named no revision")
 
     private suspend fun downloadResponse(path: String) = requests.request { accessToken ->
         httpClientHolder.client().post(DOWNLOAD_URL) {

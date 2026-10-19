@@ -50,7 +50,8 @@ Silent failures go to the injected `Logger`.
 - Uploads use `add` mode for a new file and `update` with the expected revision otherwise, so the service refuses a
   clobber (`path/conflict` → `Conflict`); `autorename` is off. Deletes carry `parent_rev`; "already gone" is success,
   and a file changed since is left for the next run to bring back.
-  A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure).
+  A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure), and its `size` and
+  `content_hash`, which the bytes must match, or that file fails (not the run).
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.

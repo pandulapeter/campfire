@@ -48,6 +48,8 @@ interface SyncFolder {
     /**
      * The file as it is now, with the revision of what was fetched rather than the one [list] named: another device may
      * have written the file again in between, and the engine records the revision of the content it actually holds.
+     * The bytes are the whole file as the service holds it: a transfer that cannot be shown to be whole is a failure
+     * of this download, thrown, never a shorter file.
      */
     suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument
 

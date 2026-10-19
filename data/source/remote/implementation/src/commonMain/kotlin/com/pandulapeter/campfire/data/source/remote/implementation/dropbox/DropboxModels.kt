@@ -42,7 +42,7 @@ internal data class DropboxFileMetadata(
     val name: String = "",
     @SerialName("path_lower") val pathLower: String = "",
     val rev: String = "",
-    val size: Long = 0,
+    val size: Long? = null,
     @SerialName("content_hash") val contentHash: String? = null,
 )
 

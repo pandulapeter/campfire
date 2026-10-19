@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
+import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
@@ -125,6 +127,35 @@ class DropboxFilesTest {
         assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
     }
 
+    /** A body cut short without a declared length would otherwise be written as the song and indexed as in step. */
+    @Test
+    fun `a download shorter than the file Dropbox describes fails`() = runTest {
+        val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4000}""") }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+    }
+
+    @Test
+    fun `a download whose bytes do not hash to Dropbox's hash fails`() = runTest {
+        val hash = dropboxContentHash("sing".encodeToByteArray())
+        val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+    }
+
+    @Test
+    fun `a download that matches its size and hash is accepted`() = runTest {
+        val hash = dropboxContentHash("song".encodeToByteArray())
+        val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
+        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho")
+        assertEquals("song", downloaded.bytes.decodeToString())
+        assertEquals("r7", downloaded.revision)
+    }
+
+    @Test
+    fun `a document shorter than the file Dropbox describes fails`() = runTest {
+        val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4000}""") }
+        assertFailsWith<DropboxApiException> { provider.downloadDocument("preferences.json") }
+    }
+
     @Test
     fun `a document that is not there is no document rather than a failure`() = runTest {
         var argument: JsonElement? = null
@@ -137,4 +168,8 @@ class DropboxFilesTest {
     }
 
     private fun JsonElement.field(name: String) = (this as JsonObject)[name]
+
+    /** A download of the body `song`, described by [metadata] as Dropbox's `Dropbox-API-Result` header. */
+    private fun MockRequestHandleScope.downloadAnswer(metadata: String) =
+        respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", metadata))
 }
