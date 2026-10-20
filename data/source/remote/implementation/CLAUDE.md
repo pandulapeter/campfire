@@ -60,7 +60,7 @@ Silent failures go to the injected `Logger`.
   document, since a library folder deleted whole may come as one entry.
 - `ConnectivityMonitor` (per platform, in `network/`): offline-to-online changes only, never the starting state, and
   nothing that needs a permission prompt. Android: the default network becoming validated (`ACCESS_NETWORK_STATE`,
-  install-time); iOS: the Network framework's path monitor; web: the `online` event; desktop: nothing, the JVM has no
+  install-time; a network whose validation check is blocked never is, so its waits run their full length); iOS: the Network framework's path monitor; web: the `online` event; desktop: nothing, the JVM has no
   such callback.
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
