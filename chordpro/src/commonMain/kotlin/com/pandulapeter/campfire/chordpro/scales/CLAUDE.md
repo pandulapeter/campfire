@@ -27,8 +27,9 @@
   own major or minor family as a home with exceptions, its mode too where its tonic chord is played (capo shapes in C
   under `{key: D}` play no D, so they never read as D Mixolydian). Only where none fits is the root scored (chords on
   it, the first and last, cadences into it), a mode only where the part starts on it. **The song is read as it
-  stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here. A chorus
-  recall counts again only where its chords differ.
+  stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
+  `{transpose}` inside a section starts a part. A chorus recall counts again only where its chords differ, and recalls
+  of one set of chords once between them, so modulated last choruses never outweigh the song.
 - Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian) holding half its chords
   answers; it may leave out two distinct chords or a third of them, each a `ScaleException` (`ScaleExceptions`: a minor
   home's own minor scales, else the closest of a secondary dominant's target harmonic minor, the chord's root, and the

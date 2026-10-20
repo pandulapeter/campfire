@@ -298,6 +298,12 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `recalls after a transpose count once, so the song's key stays its home`() {
+        val groups = SongScaleSuggestions.of(ChordProTransposer.transpose(ChordProParser.parse("$modulatedChorus\n{transpose: 2}\n{chorus}\n{chorus}\n{chorus}"), 0))
+        assertEquals(listOf("C" to true, "D" to false), groups.map { it.rootName to it.isHome })
+    }
+
+    @Test
     fun `a chorus recalled in its own key is not counted twice`() {
         val withRecall = transposed("$modulatedChorus\n{chorus}").single()
         val without = transposed(modulatedChorus).single()

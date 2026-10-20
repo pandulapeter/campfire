@@ -28,7 +28,8 @@ internal object SongParts {
      * roots it plays, and the key in force at it. A `{transpose}` inside a section cuts it, and the rest is a part of
      * its own under the new key, since the transposer has moved its chords. A chorus recall that plays the chords of the
      * chorus before it joins that chorus's part without counting them again; one whose chords differ, a recall after
-     * a `{transpose}`, which the transposer has moved, is a part of its own, of the chorus's kind.
+     * a `{transpose}`, which the transposer has moved, joins the earlier recall playing the same chords, else is a part
+     * of its own, of the chorus's kind, so the modulated last choruses of a song weigh as the chorus does before them.
      */
     fun of(song: ChordProSong): List<SongPart> {
         var key = song.metadata.key?.let(::keyOf)
@@ -60,9 +61,12 @@ internal object SongParts {
                 }
                 is ChordProBlock.ChorusRecall -> {
                     val chords = playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>())
+                    val names = chords.map { it.name }
                     val recalled = chorus
+                    val sameRecall = parts.firstOrNull { part -> part.blocks.all { it is ChordProBlock.ChorusRecall } && part.names == names }
                     when {
-                        recalled != null && chords.map { it.name } == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
+                        recalled != null && names == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
+                        sameRecall != null -> sameRecall.blocks += block
                         chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key).apply { add(chords) }
                     }
                 }
