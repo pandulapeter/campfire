@@ -62,9 +62,13 @@ internal object ScaleExceptions {
             .minByOrNull { distance(it.scales.first(), it.root) }
     }
 
-    /** The root of the harmonic minor [chord] leads into as a secondary dominant (a major triad or a dominant seventh). */
+    /**
+     * The root of the harmonic minor [chord] leads into as a secondary dominant: a major triad or a dominant seventh,
+     * with the flat ninth that is that harmonic minor's own (`A7b9` into Dm); a ninth or a thirteenth is not in it, so
+     * a chord with one is no such dominant.
+     */
     private fun targetMinorOf(chord: Chord) =
-        (chord.root + FOURTH).mod(12).takeIf { chord.isMajorOrDominant && holdsChord(harmonicMinor, it, chord) }
+        (chord.root + FOURTH).mod(12).takeIf { (chord.isMajorOrDominant || chord.isDominantSeventh) && holdsChord(harmonicMinor, it, chord) }
 
     /** Scales on one root, spelled [rootName], to play over an exception. */
     private data class Answer(val rootName: String, val root: Int, val scales: List<Scale>)

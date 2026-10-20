@@ -36,6 +36,8 @@ class ScaleExceptionsTest {
         assertEquals("C" to "major", group.home)
         assertEquals(listOf(Triple("A7", "D", "harmonic_minor")), group.exceptions.map { it.first })
         assertEquals(listOf(Triple("E7", "A", "harmonic_minor")), group("C E7 Am F G", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("A7b9", "D", "harmonic_minor")), group("C A7b9 Dm7 G7 C", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("A9", "A", "mixolydian")), group("C A9 Dm7 G7 C", key = "C").exceptions.map { it.first })
     }
 
     @Test
