@@ -140,7 +140,7 @@ internal fun ScalesScreen(
                 .bounceScrollableContent(gridState),
             state = gridState,
             columns = GridCells.Adaptive(minSize = SCALE_CELL_MIN_WIDTH),
-            // Nothing above the first row but its own room, as on the Chords tab, which the tools' tabs switch between.
+            // Nothing above the first row but its own room, as on the Chords tab, which the tools' button group switches between.
             contentPadding = contentPadding.only(
                 start = true,
                 end = true,
@@ -295,7 +295,7 @@ private fun ScaleLibraryHeader(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        // Set as the Chords tab sets its own search's empty state, which the tools' tabs switch between.
+        // Set as the Chords tab sets its own search's empty state, which the tools' button group switches between.
         ScaleLibraryHeaderContent.NOTHING_FOUND -> Text(
             modifier = Modifier
                 .fillMaxWidth()

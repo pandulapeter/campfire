@@ -158,7 +158,7 @@ internal fun ChordsScreen(
             state = gridState,
             columns = GridCells.Adaptive(minSize = chordCellMinWidth(shown?.tuning?.instrument ?: tuning?.instrument)),
             // Nothing above the first row but its own room, so that its title starts where the Metronome's beats and the
-            // Tuner's note do, which the tools' tabs switch between in place.
+            // Tuner's note do, which the tools' button group switches between in place.
             contentPadding = contentPadding.only(
                 start = true,
                 end = true,

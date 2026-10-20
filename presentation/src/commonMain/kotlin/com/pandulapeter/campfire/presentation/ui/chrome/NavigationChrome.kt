@@ -71,7 +71,7 @@ private const val MIN_NAVIGATION_LABEL_SCALE = 0.75f
  * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
  * @param railCapacity How many items each kind of rail holds at the reader's text size, see [railCapacityIn]: the
- *   same for every copy of the chrome and for the tools' tabs, which would otherwise disagree on the grouping.
+ *   same for every copy of the chrome and for the tools' button group, which would otherwise disagree on the grouping.
  * @param lastTool The tool the Tools item opens where none is on screen, see [toolsItemDestination].
  * @param isKeyboard Whether the player's instrument is a keyboard, which the Chords item's icon is drawn for.
  * @param onToolsItemSelected The Tools item, with the tool it opens, see `CampfireViewModel.selectToolsItem`.
