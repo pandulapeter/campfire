@@ -181,6 +181,10 @@ internal class SyncRunScheduler(
         // there again once it holds the lock, and clears it on every way out of its body - and the handler clears it
         // for a run that is cancelled before its body clears anything, waiting for the lock or not started yet.
         stateHolder.updateConnected { it.copy(progress = SyncProgress(), lastOutcome = null) }
+        // Here as well as in the run, which only gets to it once it holds the lock on another thread: the watcher would
+        // meanwhile report the changes this run is about to carry, the ones made while the app was away above all, and
+        // have a second run follow it for nothing.
+        runner.forgetWatchPoint()
         run.invokeOnCompletion { cause ->
             if (cause == null) return@invokeOnCompletion
             val current = syncJob.load()

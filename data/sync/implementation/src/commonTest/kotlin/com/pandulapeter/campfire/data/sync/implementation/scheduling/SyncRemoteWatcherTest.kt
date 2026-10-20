@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -159,6 +160,26 @@ class SyncRemoteWatcherTest {
 
         assertEquals(2, world.runs.count)
         assertEquals(awaits, world.provider.awaitCount)
+    }
+
+    @Test
+    fun `a change made while the app was away is carried by the run of its return alone`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.synchronizeAndWatch().cancel()
+        world.provider.writeElsewhere(song(2), TWO)
+        // The run is held before it takes its lock, as a run on another thread can be, while the watcher goes ahead.
+        val gate = CompletableDeferred<Unit>()
+        world.provider.onIsConnected = { gate.await() }
+
+        world.scheduler.synchronizeOnReturn()
+        world.scope.backgroundScope.launch { world.watcher.watch() }
+        runCurrent()
+        world.provider.onIsConnected = {}
+        gate.complete(Unit)
+        advanceTimeBy(1.hours)
+
+        assertEquals(2, world.runs.count)
+        assertContentEquals(TWO, world.local.files[song(2)])
     }
 
     @Test
