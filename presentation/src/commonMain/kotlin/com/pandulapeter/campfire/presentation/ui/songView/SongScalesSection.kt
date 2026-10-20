@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -74,36 +77,43 @@ internal fun SongScalesSection(
     if (section.isFolded || scaleSuggestions == null) return@Column
     val isGrouped = section.groups.size > 1
     val other = stringResource(Res.string.song_details_scales_other)
+    val density = LocalDensity.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fadingIn(isFadingIn = isFadingIn)
-            .padding(top = if (isFirstChunk) HEADER_GAP + 4.dp else 0.dp),
+            .padding(top = if (isFirstChunk) SCALES_HEADER_GAP else 0.dp),
     ) {
-        section.rows.forEachIndexed { index, row ->
-            val rowStart = section.rowStarts[index]
-            val slots = (maxOf(items.first, rowStart) - rowStart)..(minOf(items.last, section.rowStarts[index + 1] - 1) - rowStart)
-            if (slots.isEmpty()) return@forEachIndexed
-            val title = when {
-                slots.first != 0 -> null
-                row.exception != null -> stringResource(Res.string.song_details_scales_over, row.exception.chordName)
-                isGrouped -> section.groups[row.groupIndex].title(other)
-                else -> null
+        // The chips grow with the song's text as the Chords section's diagrams do: scaling the density they convert
+        // their dp and sp with keeps their text, paddings, and gaps in the proportions Material drew them in.
+        CompositionLocalProvider(
+            LocalDensity provides Density(density = density.density * fontScale, fontScale = density.fontScale),
+        ) {
+            section.rows.forEachIndexed { index, row ->
+                val rowStart = section.rowStarts[index]
+                val slots = (maxOf(items.first, rowStart) - rowStart)..(minOf(items.last, section.rowStarts[index + 1] - 1) - rowStart)
+                if (slots.isEmpty()) return@forEachIndexed
+                val title = when {
+                    slots.first != 0 -> null
+                    row.exception != null -> stringResource(Res.string.song_details_scales_over, row.exception.chordName)
+                    isGrouped -> section.groups[row.groupIndex].title(other)
+                    else -> null
+                }
+                ScaleChipRows(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = title,
+                    rootName = row.rootNameOf(section.groups),
+                    scales = row.scalesOf(section.groups),
+                    slots = slots,
+                    trailingGap = when {
+                        index == section.rows.lastIndex -> 0.dp
+                        section.rows[index + 1].groupIndex == row.groupIndex -> CHIP_GAP
+                        else -> 16.dp
+                    },
+                    notation = scaleSuggestions.notation,
+                    onScaleSelected = scaleSuggestions.onScaleClicked,
+                )
             }
-            ScaleChipRows(
-                modifier = Modifier.fillMaxWidth(),
-                title = title,
-                rootName = row.rootNameOf(section.groups),
-                scales = row.scalesOf(section.groups),
-                slots = slots,
-                trailingGap = when {
-                    index == section.rows.lastIndex -> 0.dp
-                    section.rows[index + 1].groupIndex == row.groupIndex -> CHIP_GAP
-                    else -> 16.dp
-                },
-                notation = scaleSuggestions.notation,
-                onScaleSelected = scaleSuggestions.onScaleClicked,
-            )
         }
     }
 }
@@ -121,5 +131,7 @@ private fun SongScaleGroup.title(other: String): String {
         else -> textResource(Res.string.song_details_scales_and_unnamed, label)
     }
 }
+
+private val SCALES_HEADER_GAP = 16.dp
 
 private val SCALES_BOTTOM_GAP = 8.dp

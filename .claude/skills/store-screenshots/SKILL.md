@@ -148,13 +148,11 @@ The website's songs are set at the text size where page one ends exactly where a
 Alive 95% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner
 sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets; I'll Be
 There for You on the laptop at the six sizes the page's text size slider stops at, 100, 120, 140, 175, 210, and 230%,
-each with its chords and without (the page's Chords switch), chosen so that page one ends where a section ends in
-both: with chords after the Outro (the whole song), the Solo, Chorus 2, Verse 2, Verse 1, and Verse 1 again; without,
-the whole song up to 175%, then after a chorus. The laptop's editor is scrolled past Thinking Out Loud's directives. A
-song longer than a page is cut wherever a column ends, so these were found by rendering every size and reading where
-page one ends: for the laptop `./gradlew :tools:screenshots:run --args="--out <folder> --only sweep"` renders I'll Be
-There for You from 100% to 250% in steps of 2.5%, both ways, into `<folder>/Sweep/`; the tablet shots were found the
-same way by hand, from 80% to 130%. If a song, a device or the layout changes, try again the same way. **Never fold the
+where page one ends after the Outro (the whole song), the Solo, Chorus 2, Verse 2, Verse 1, and Verse 1 again. The
+laptop's editor is scrolled past Thinking Out Loud's directives. A song longer than a page is cut wherever a column
+ends, so these were found by rendering every size and reading where page one ends: for the laptop `./gradlew
+:tools:screenshots:run --args="--out <folder> --only sweep"` renders I'll Be There for You from 100% to 250% in steps
+of 2.5% into `<folder>/Sweep/`; the tablet shots were found the same way by hand, from 80% to 130%. If a song, a device or the layout changes, try again the same way. **Never fold the
 Chords section (or anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
 a 14" MacBook Pro (`Device.LAPTOP`).
 

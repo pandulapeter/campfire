@@ -180,14 +180,12 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho", scroll = EDITOR_SCROLL)),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
     ).plus(
-        // One song at every text size the page's slider stops at, with its chords and without, for the demo that the
-        // columns follow the text size. Named after the size as the app shows it; at each of them page one ends where a
-        // section ends, chords or not, which is what websiteSweep is for finding.
-        TEXT_SIZE_DEMO_FONT_SCALES.flatMap { fontScale ->
-            listOf(true, false).map { areChordsEnabled ->
-                val name = "laptop-song-${(fontScale * 100).roundToInt()}-${if (areChordsEnabled) "chords" else "lyrics"}"
-                Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale, extra = chords(areChordsEnabled)))
-            }
+        // One song at every text size the page's slider stops at, for the demo that the columns follow the text size.
+        // Named after the size as the app shows it; at each of them page one ends where a section ends, which is what
+        // websiteSweep is for finding.
+        TEXT_SIZE_DEMO_FONT_SCALES.map { fontScale ->
+            val name = "laptop-song-${(fontScale * 100).roundToInt()}"
+            Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale))
         },
     ).flatMap { (name, device, shot) ->
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
@@ -197,17 +195,14 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
 }
 
 /**
- * I'll Be There for You on the laptop at every text size from 100% to 250% in steps of 2.5%, with its chords and
- * without, for choosing the sizes the page's text size slider stops at: the ones at which page one ends where a section
- * ends, in both modes. Rendered only with `--only sweep`, into `Sweep/`, in the dark theme alone, since the theme
- * changes nothing of the layout.
+ * I'll Be There for You on the laptop at every text size from 100% to 250% in steps of 2.5%, for choosing the sizes the
+ * page's text size slider stops at: the ones at which page one ends where a section ends. Rendered only with
+ * `--only sweep`, into `Sweep/`, in the dark theme alone, since the theme changes nothing of the layout.
  */
 internal val websiteSweep: List<Triple<String, Device, Shot>> by lazy {
-    (0..60).map { 1f + it * 0.025f }.flatMap { fontScale ->
-        listOf(true, false).map { areChordsEnabled ->
-            val name = "sweep-%05.1f-%s".format(fontScale * 100, if (areChordsEnabled) "chords" else "lyrics")
-            Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale, extra = chords(areChordsEnabled)))
-        }
+    (0..60).map { 1f + it * 0.025f }.map { fontScale ->
+        val name = "sweep-%05.1f".format(fontScale * 100)
+        Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale))
     }
 }
 
@@ -247,12 +242,6 @@ private suspend fun PrepareScope.hear(reading: TunerReading) {
     (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading)
     settle()
 }
-
-/**
- * Whether the songs show their chords, or lyrics alone, as the Chords switch in Settings sets it: the document stores
- * the switch's old name, the inverse of `UserPreferences.areChordsEnabled`.
- */
-private fun chords(areChordsEnabled: Boolean): Map<String, JsonElement> = mapOf("isLyricsOnlyModeEnabled" to JsonPrimitive(!areChordsEnabled))
 
 private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = mapOf(
     "metronomeSettings" to buildJsonObject {
