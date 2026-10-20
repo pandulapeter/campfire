@@ -15,6 +15,9 @@ in the sharer's own Dropbox that Campfire keeps current as the library changes. 
 the link opens the import screen, which downloads it. Without Campfire, the link leads through a landing page to the
 store, and the installed app imports it after onboarding. There is still no Campfire server.
 
+Revised 2026-10-20 for sync's change feed, its runs on every return to the front, and its network retries
+(`6498ee072`…`6136b5999`): §4.1, §5.1, §5.5, §6.4, §11.2, and §14.
+
 **Read §11 (corner cases) before writing any code.** Most of this feature is its edges.
 
 ## 1. Decisions (settled with the user; do not reopen)
@@ -118,15 +121,16 @@ campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons'
 - Documents: the registry (§4.2) uses the existing `downloadDocument` / `uploadDocument` under its own name.
 
 **The listing**: `DropboxSyncProvider.list()` already lists the whole app folder recursively and keeps only `/songs`
-and `/setlists` (`toRemoteFiles`, around line 375).
-- It now also returns the `/shared/*.zip` entries, with their `content_hash` and revision, as a separate
-  `sharedFiles` list. That costs no extra request.
+and `/setlists` (`toRemoteFiles` in `DropboxEntries.kt`, which the change feed's `changesSince` shares).
+- `RemoteListing` gains, beside its `cursor`, the `/shared/*.zip` entries with their `content_hash` and revision, as a
+  separate `sharedFiles` list, and the registry's revision (`sharedLinksRevision`, §5.1). That costs no extra request.
+- Picked out in `list()` only, never in `toRemoteFiles`: the change feed must not report them (§5.5).
 - `PassListing` and `DeletionGuard` never see them.
 
-**`missing_scope`**: today `DropboxTransport.request` refreshes the token on every 401 and then throws
-`SyncAuthorizationException`, which a run turns into `ConnectionFailed(AUTHORIZATION)`.
-- **A 401 whose `error_summary` starts with `missing_scope` must not do that.** Detect it before the refresh and throw
-  a new `SyncScopeMissingException`.
+**`missing_scope`**: today `DropboxTransport.request` answers a 401 with one renewal of the refused token, and a second
+401 throws `SyncAuthorizationException`, which a run turns into `ConnectionFailed(AUTHORIZATION)`.
+- **A 401 whose `error_summary` starts with `missing_scope` must not do that.** Detect it before the renewal and throw
+  a new `SyncScopeMissingException`. It is **not** a `SyncRunEndingException`, or a run would end on it (§5.1).
 - Sharing calls catch it and report "connect again to allow links" (§6.2).
 - A run that meets it in its shared-copy step (§5) skips the step and leaves the connection alone.
 - Tested in `DropboxTransportTest` with both a plain 401 and a `missing_scope` 401.
@@ -171,12 +175,18 @@ Dropbox is full".
 ### 5.1 The step
 
 `synchronizeSharedCopies(provider, listing)` is a new step in its own package `shared/`, with a `CLAUDE.md`. It runs
-in `SyncRunner.run()`'s `SyncEngine.Result.Completed` branch, right after `synchronizePreferences` (around
-`scheduling/SyncRunner.kt:151-182`).
+in `SyncRunner.run()`'s `SyncEngine.Result.Completed` branch, right after `synchronizePreferences` and before the
+completed index is saved and the watch point set, so a run that the step ends never hands the feed a point.
+- The engine's `Result.Completed` carries its last listing's `sharedFiles` and `sharedLinksRevision` out, beside
+  `cursor`.
+- It is part of the run, so the progress line at the top of the window stays up through its uploads.
+- Runs now start on every return to the front and on another device's change, not only after this device's edits, so
+  the step must cost nothing when nothing changed.
 
 1. **Skip it entirely** when the listing has no `/shared/` files and the local journal is empty. This is the common
    case, and it costs no request.
-2. Read the registry (one download). Apply the journal (§5.4), then clear the journal entries that were applied.
+2. Read the registry: the mirror when `sharedLinksRevision` is the revision the mirror was read at and the journal is
+   empty, otherwise one download. Apply the journal (§5.4), then clear the journal entries that were applied.
 3. For each entry in the `ok` or `tooLarge` state:
    1. Find the item in the local library by `fileName`. If it is missing, the entry becomes `orphaned` (§5.4), and
       nothing is uploaded.
@@ -188,9 +198,12 @@ in `SyncRunner.run()`'s `SyncEngine.Result.Completed` branch, right after `synch
       - `Conflict` (another device uploaded in between) is dropped for this run.
       - A missing file (deleted by hand in Dropbox, §11.3) makes the entry `orphaned`.
    5. If the entry's `title` changed, update it in the registry (display only).
-4. **Errors**: follow `synchronizePreferences`. Rethrow cancellation and `SyncAuthorizationException`. Catch
-   `SyncScopeMissingException` and everything else, log it, and name it in the `SyncSummary`. A failure here never
-   fails the run.
+4. **Errors**: follow `synchronizePreferences`.
+   - Rethrow cancellation and every `SyncRunEndingException` (authorization, the network, a full folder). The run
+     then ends with that reason, and a `Failure(NETWORK)` is retried after `NETWORK_RETRY_DELAYS`, which brings the
+     copies up to date without waiting for the next edit or return to the front.
+   - Catch `SyncScopeMissingException` and everything else, log it, and name it in the `SyncSummary`. Those never fail
+     the run.
 
 ### 5.2 Deterministic zips
 
@@ -243,6 +256,21 @@ a share.
 - **A rename arriving from another device**: device B renames and syncs, and its own run applies its journal right
   after its library pass. Device A sees the new name in the registry on its next read. If B's run dies between the
   two, A may mark the entry `orphaned` for one run, and B's next run repairs it.
+
+### 5.5 The change feed
+
+While the app is in front, `SyncRemoteWatcher` holds a long poll on the folder from the watch point a completed run
+leaves (`scheduling/CLAUDE.md`).
+- **`/shared/*.zip` never reaches it**: `changesSince` reports only library files and documents at the top of the
+  folder. No change needed, but keep it so (§4.1).
+- **The registry does, and must not start a run.** `SyncWatchPoint.hasOtherChangesThanPreferences` counts every
+  top-level document other than `preferences.json` as another device's change. Left so, every **Create link** and
+  **Stop sharing** would start a run on every device in front, this one included, and so would the step's own
+  registry writes, which come after the listing whose cursor the point holds.
+  - Nothing a run settles depends on the registry: another device's share or stop reaches this device's mirror at the
+    next registry read (§5.1, §7.1).
+  - So the watcher ignores `shared-links.json` as it ignores this device's own `preferences.json`. Tested in
+    `SyncRemoteWatcherTest`.
 
 ## 6. The export screen (`ui/screens/export`)
 
@@ -308,9 +336,9 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
     "the stack is still the start" condition it uses for Settings.
 - **The first sync starts right away** (`ConnectSyncProviderUseCaseImpl` calls `synchronizeLibrary`). **Create link**
   does not wait for it.
-- **Connecting again for the scope** while already connected: `connect()` today expects a disconnected or failed
-  state.
-  - Allow it from `Connected` for this purpose. When the account is the same, keep the index, as
+- **Connecting again for the scope** while already connected: `SyncConnectionManager.connect()` today remembers only a
+  `ConnectionFailed` state to go back to (`stateBeforeConnecting`), so a Cancel would leave the user disconnected.
+  - Remember `Connected` too for this purpose. When the account is the same, keep the index, as
     `completePendingAuthorization` already does.
   - A different account resets the index (existing behaviour), and the mirror and journal are cleared with it.
 - **Clipboard and text sharing**:
@@ -631,6 +659,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 | Nothing shared | The step costs nothing: no `/shared/` files and no journal means it is skipped (§5.1). |
 | Two devices rebuild the same copy | Deterministic bytes (§5.2) give the same hash, so neither uploads. If both do, the second gets `Conflict` and drops it. |
 | A run ends in `DeletionsNeedConfirmation`, or fails | No rebuild; the next completed run does it. |
+| The step itself fails for the network | The run ends as `Failure(NETWORK)` and is retried after `NETWORK_RETRY_DELAYS` (§5.1). |
+| A run with nothing changed (a return to the front) | Every zip built hashes the same, and the registry comes from the mirror: no request beyond the listing (§5.1). |
+| A share created or stopped while other devices are in front | No run anywhere: the feed ignores the registry (§5.5). The other mirrors catch up at their next registry read. |
 | **Stop syncing** pressed mid-run | It cancels the run, as today, so the step is skipped. |
 | Sync stays disconnected | Links keep serving the last version, and nothing updates them. The disconnect confirmation says so (§7.2). |
 | Per-device transposition, capo, and tempo | Never in the copy. A setlist entry's values are. |
@@ -752,7 +783,8 @@ Each step builds and tests green on its own, one commit each.
    - a rename on one device, seen by the other;
    - a deletion;
    - an orphan, and its return;
-   - two devices rebuilding at once.
+   - two devices rebuilding at once;
+   - a registry write that the watcher ignores (`SyncRemoteWatcherTest`, §5.5).
 7. **The rename and deletion journals** in the use cases, and the confirmation strings (§5.4, §7.3).
 8. **The import side** (§8): `ImportSource.SharedLink`, the Replace default, the zip check, the wording, and links in
    pasted, dropped, and shared text.
