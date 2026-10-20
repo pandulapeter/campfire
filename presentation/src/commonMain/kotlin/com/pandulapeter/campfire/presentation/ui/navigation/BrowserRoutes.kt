@@ -155,7 +155,7 @@ internal object BrowserRoutes {
             2 -> when (segments[0]) {
                 SONGS -> home.copy(isSongsSearchOpen = true).takeIf { segments[1] == SEARCH }
                 SETLISTS -> home.copy(backStack = home.backStack + CampfireDestination.Setlists, isSetlistsSearchOpen = true).takeIf { segments[1] == SEARCH }
-                SETTINGS -> SettingsTab.entries.firstOrNull { it.pathSegment == segments[1] }?.let { tab ->
+                SETTINGS -> settingsTabOf(segments[1])?.let { tab ->
                     home.copy(backStack = home.backStack + CampfireDestination.Settings, settingsTab = tab)
                 }
 
@@ -252,6 +252,10 @@ internal object BrowserRoutes {
     private fun candidates(segment: String, extension: String) = listOf(segment + extension, segment)
 
     private val SettingsTab.pathSegment get() = name.lowercase()
+
+    /** The tab a path segment names, where `songs` is the Preferences tab's address from before its rename, still in bookmarks. */
+    private fun settingsTabOf(segment: String) = SettingsTab.entries.firstOrNull { it.pathSegment == segment }
+        ?: SettingsTab.PREFERENCES.takeIf { segment == SONGS }
 
     private const val ROOT = ""
     private const val SONGS = "songs"

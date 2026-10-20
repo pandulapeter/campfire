@@ -176,6 +176,12 @@ class BrowserRoutesTest {
     }
 
     @Test
+    fun `the songs settings tab's old address opens the preferences tab`() = assertEquals(
+        SettingsTab.PREFERENCES,
+        BrowserRoutes.resolve(path = "settings/songs", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false)?.settingsTab,
+    )
+
+    @Test
     fun `a bare settings address keeps the tab that was open`() = assertEquals(
         SettingsTab.ABOUT,
         BrowserRoutes.resolve(path = "settings", songs = songs, setlists = setlists, current = home.copy(settingsTab = SettingsTab.ABOUT), isPerformanceModeEnabled = false)?.settingsTab,
