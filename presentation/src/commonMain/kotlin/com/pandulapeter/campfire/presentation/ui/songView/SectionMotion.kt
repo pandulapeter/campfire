@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.songView
 
 import com.pandulapeter.campfire.presentation.ui.songView.grid.DecidedGrid
-import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements
 import com.pandulapeter.campfire.presentation.ui.songView.grid.hasSameCellsAs
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
@@ -56,12 +55,6 @@ internal enum class SectionMotion {
 internal class SectionAnimation {
 
     var isTooTallToAnimate by mutableStateOf(false)
-}
-
-/** Whether the grid on screen still waits to be fitted, which only the layout finds out (see [SectionMeasurements.grid]). */
-internal class FitDeferral {
-
-    var isPending by mutableStateOf(false)
 }
 
 /**

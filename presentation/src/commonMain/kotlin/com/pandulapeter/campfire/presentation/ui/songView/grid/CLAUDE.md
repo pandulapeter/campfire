@@ -38,10 +38,8 @@ with the step keys, fewest pages first.
   `score`; a full tie keeps sections whole.
 - **Narrow columns**: taken only for strictly fewer pages (`withNarrowColumns`), where at most a quarter of lyric lines
   wrap (`fitsNarrowColumns`).
-- **Text fitting** (`TextFitting.kt`): 97.5%, then 95%, never below `MIN_FONT_SCALE`, the first that saves a page
-  (`chooseFitScale`), searched only where a lower bound says it could. Drawn through a scaled layer, so nothing
-  recomposes and the first frame is fitted (`DecidedGrid.fitScale`). Deferred while the inputs keep changing
-  (`isFitDeferred`), since it costs two or three more layouts a frame.
+- **The text is always the reader's size**, never set smaller to save a page: fitting was too costly to run while a
+  pinch or a window drag kept coming, and fitting once it stopped rearranged the song after the reader had.
 - **A single-column width is paged** (`flowIntoPages`) with the same scoring. Two neighbours that fit half the column
   unwrapped may sit side by side (`SectionGrid.joinsPrevious`) and are never cut. Something uncuttable moves to the next
   page only if this one is at least half full. Rows share a start edge (`sharesKeyline`).

@@ -28,9 +28,9 @@ internal class SectionWidths(
 
 /** The widths of [decided] laid out [layoutWidth] wide. */
 internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: Int): SectionWidths {
-    val (grid, _, fitScale) = decided
+    val grid = decided.grid
     val unitCount = units.unitSections.size
-    val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth, fitScale) }
+    val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth) }
     // A column is only as wide as the widest thing in it, up to the width it was given. Only a card needs its width
     // to decide the grid; everything else wraps at the column's width, which is the same height at any width it fits
     // in, so the widths of the rest are only asked for here, once, for the grid that won.
@@ -39,9 +39,9 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
         val row = grid.rows[unit]
         val columnWidth = columnWidths[unit]
         val contentWidth = if (units.cardStarts[units.unitSections[unit]] >= 0) {
-            unitWidthFor(unit, columnWidth, fitScale)
+            unitWidthFor(unit, columnWidth)
         } else {
-            minOf(columnWidth, maxWidthOf(unit).scaledBy(fitScale))
+            minOf(columnWidth, maxWidthOf(unit))
         }
         cellWidths[row][grid.columns[unit]] = maxOf(cellWidths[row][grid.columns[unit]], contentWidth)
     }
@@ -67,8 +67,8 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
     val unitWidths = IntArray(unitCount) { unit ->
         val section = units.unitSections[unit]
         when {
-            units.cardStarts[section] >= 0 -> unitWidthFor(unit, columnWidths[unit], fitScale)
-            grid.wideRows[grid.rows[unit]] -> unitsOf(section).maxOf { minOf(columnWidths[it], maxWidthOf(it).scaledBy(fitScale)) }
+            units.cardStarts[section] >= 0 -> unitWidthFor(unit, columnWidths[unit])
+            grid.wideRows[grid.rows[unit]] -> unitsOf(section).maxOf { minOf(columnWidths[it], maxWidthOf(it)) }
             else -> cellWidths[grid.rows[unit]][grid.columns[unit]]
         }
     }

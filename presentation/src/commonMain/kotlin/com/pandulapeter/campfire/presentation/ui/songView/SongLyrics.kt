@@ -29,7 +29,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.unitKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements
 import com.pandulapeter.campfire.presentation.ui.songView.grid.SectionSizesPool
-import com.pandulapeter.campfire.presentation.ui.songView.grid.fitScalesFor
 import com.pandulapeter.campfire.presentation.ui.songView.grid.fitsNarrowColumns
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowLikeAMagazine
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
@@ -95,10 +94,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * only rearrange now and then, and travel to their new places as they do.
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
- * @param canFitText Whether a song a few lines too long for its pages may be set a little smaller to save one. False
- * while what the grid is decided for keeps changing - a pinch, a window edge being dragged, which is not the same as
- * [SectionMotion.GLIDE] - since fitting lays the song out two or three more times on every frame; it is fitted once the
- * change holds still.
  * @param foldedSections The keys of the sections, tabs and grids of this song the reader has folded away (see
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
@@ -153,7 +148,6 @@ internal fun SongLyrics(
     sectionMotion: SectionMotion = SectionMotion.SPRING,
     isTextScaling: Boolean = false,
     fontScale: Float = 1f,
-    canFitText: Boolean = true,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
     isSongInfoShown: Boolean = false,
@@ -320,9 +314,6 @@ internal fun SongLyrics(
     val chordLayouts = remember(chordsSection?.cells, chordStyle, textMeasurer, density, fontScale) {
         chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, textMeasurer, density, fontScale) }
     }
-    // Only a song cut into pages is set smaller to save one; the editor's preview is set as it is typed.
-    val fitScales = remember(fontScale, canCutSections) { if (canCutSections) fitScalesFor(fontScale) else emptyList() }
-    val fitDeferral = remember { FitDeferral() }
     // Only where a fold can be toggled, which the editor's preview cannot.
     val centeringHold = if (onFoldToggled == null && chordDiagrams?.onFoldToggled == null) {
         null
@@ -359,9 +350,6 @@ internal fun SongLyrics(
                 sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
                 lyricsLineHeight = textMeasurements.lyricsLineHeight,
-                fitScales = fitScales,
-                canFitText = canFitText,
-                fitDeferral = fitDeferral,
                 centeringHold = centeringHold,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
@@ -372,7 +360,6 @@ internal fun SongLyrics(
                     cardKeys = cardKeys,
                     animations = animations,
                     sectionGlides = sectionGlides,
-                    fitDeferral = fitDeferral,
                     sectionMotion = sectionMotion,
                     isResizing = isResizing,
                     isTextScaling = isTextScaling,

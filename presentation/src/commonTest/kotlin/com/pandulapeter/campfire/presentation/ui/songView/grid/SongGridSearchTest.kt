@@ -33,7 +33,7 @@ class SongGridSearchTest {
     fun `a song that fits one row takes the fewest columns that hold it`() {
         // Lines as wide as a column of two, so that two columns fill the width as they fill the height.
         val sections = song(count = 6, lines = 4, lineWidth = 550)
-        val decided = search(sections, spec(availableHeight = 700)).decide(settledWidth = 1_200, canFit = true)
+        val decided = search(sections, spec(availableHeight = 700)).decide(settledWidth = 1_200)
         assertEquals(listOf(2), decided.grid.columnCounts.toList())
         assertTrue(6 * 4 * LINE_HEIGHT / 2 + 5 * SECTION_GAP > 700)
     }
@@ -42,7 +42,7 @@ class SongGridSearchTest {
     fun `a short wide song on a wide screen takes more columns than the fewest and wraps no line more`() {
         val sections = song(count = 4, lines = 4, lineWidth = 200)
         val metrics = FakeSectionMetrics(unitLinesOf(sections))
-        val decided = search(sections, spec(availableHeight = 1_000), metrics = metrics).decide(settledWidth = 2_000, canFit = true)
+        val decided = search(sections, spec(availableHeight = 1_000), metrics = metrics).decide(settledWidth = 2_000)
         assertEquals(1, decided.grid.columnCounts.size)
         assertTrue(decided.grid.columnCounts.single() > 1)
         assertTrue(metrics.heightCalls.none { (_, width) -> width < 200 })
@@ -52,8 +52,8 @@ class SongGridSearchTest {
     fun `a window with room for one column that is not cut searches no other count`() {
         val sections = song(count = 8, lines = 6, lineWidth = 450)
         val metrics = FakeSectionMetrics(unitLinesOf(sections))
-        val decided = search(sections, spec(availableHeight = 600, fitScales = emptyList(), canCutSections = false), metrics = metrics)
-            .decide(settledWidth = 500, canFit = true)
+        val decided = search(sections, spec(availableHeight = 600, canCutSections = false), metrics = metrics)
+            .decide(settledWidth = 500)
         assertTrue(decided.grid.columnCounts.all { it == 1 })
         assertTrue(metrics.heightCalls.all { (_, width) -> width == 500 })
     }
@@ -61,7 +61,7 @@ class SongGridSearchTest {
     @Test
     fun `the editor's preview never cuts a section`() {
         val sections = List(6) { List(3) { List(4) { 300 } } }
-        val decided = search(sections, spec(availableHeight = 700, canCutSections = false)).decide(settledWidth = 1_200, canFit = true)
+        val decided = search(sections, spec(availableHeight = 700, canCutSections = false)).decide(settledWidth = 1_200)
         sections.indices.forEach { section ->
             val units = (section * 3 until section * 3 + 3).map { decided.grid.cellOf(it) }
             assertEquals(1, units.distinct().size)
@@ -71,8 +71,8 @@ class SongGridSearchTest {
     @Test
     fun `a song too long for one row is cut like a magazine, in no more pages than with its sections whole`() {
         val sections = List(7) { List(3) { List(3) { 300 } } }
-        val cut = search(sections, spec(availableHeight = 800)).decide(settledWidth = 1_200, canFit = true).grid
-        val whole = search(sections, spec(availableHeight = 800, canCutSections = false)).decide(settledWidth = 1_200, canFit = true).grid
+        val cut = search(sections, spec(availableHeight = 800)).decide(settledWidth = 1_200).grid
+        val whole = search(sections, spec(availableHeight = 800, canCutSections = false)).decide(settledWidth = 1_200).grid
         assertTrue(cut.pageCount <= whole.pageCount)
         assertTrue(sections.indices.any { section -> (section * 3 until section * 3 + 3).map { cut.cellOf(it) }.distinct().size > 1 })
     }
@@ -80,7 +80,7 @@ class SongGridSearchTest {
     @Test
     fun `every stretch of a song that changes its tempo starts a page`() {
         val sections = song(count = 6, lines = 3, lineWidth = 300)
-        val grid = search(sections, spec(availableHeight = 2_000), timingStarts = intArrayOf(0, 3)).decide(settledWidth = 1_200, canFit = true).grid
+        val grid = search(sections, spec(availableHeight = 2_000), timingStarts = intArrayOf(0, 3)).decide(settledWidth = 1_200).grid
         assertTrue(grid.startsPage(grid.rows[3]))
         assertTrue(grid.rows[3] != grid.rows[2])
     }
@@ -88,43 +88,31 @@ class SongGridSearchTest {
     @Test
     fun `a songbook with tempo changes is one column`() {
         val sections = song(count = 210, lines = 2, lineWidth = 300)
-        val grid = search(sections, spec(availableHeight = 800), timingStarts = intArrayOf(0, 100)).decide(settledWidth = 1_600, canFit = true).grid
+        val grid = search(sections, spec(availableHeight = 800), timingStarts = intArrayOf(0, 100)).decide(settledWidth = 1_600).grid
         assertTrue(grid.columnCounts.all { it == 1 })
     }
 
     @Test
     fun `a staff wider than a column gets a row as wide as it`() {
         val sections = listOf(listOf(List(12) { 900 })) + song(count = 6, lines = 4, lineWidth = 300)
-        val grid = search(sections, spec(availableHeight = 800), tabUnits = setOf(0)).decide(settledWidth = 1_400, canFit = true).grid
+        val grid = search(sections, spec(availableHeight = 800), tabUnits = setOf(0)).decide(settledWidth = 1_400).grid
         assertTrue(grid.wideRows.any { it })
     }
 
     @Test
     fun `narrow columns are taken only where they save a page`() {
-        val narrowLines = search(song(count = 9, lines = 4, lineWidth = 250), spec(availableHeight = 700)).decide(settledWidth = 1_000, canFit = true).grid
+        val narrowLines = search(song(count = 9, lines = 4, lineWidth = 250), spec(availableHeight = 700)).decide(settledWidth = 1_000).grid
         assertEquals(3, narrowLines.columnCounts.max())
-        val wideLines = search(song(count = 9, lines = 4, lineWidth = 350), spec(availableHeight = 700)).decide(settledWidth = 1_000, canFit = true).grid
+        val wideLines = search(song(count = 9, lines = 4, lineWidth = 350), spec(availableHeight = 700)).decide(settledWidth = 1_000).grid
         assertTrue(wideLines.columnCounts.all { it <= 2 })
-    }
-
-    @Test
-    fun `a song a few lines over is fitted only once fitting is allowed`() {
-        val sections = song(count = 10, lines = 2, lineWidth = 300)
-        val search = search(sections, spec(availableHeight = 1_170))
-        val deferred = search.decide(settledWidth = 500, canFit = false)
-        assertEquals(1f, deferred.fitScale)
-        assertTrue(deferred.isFitDeferred)
-        val fitted = search.decide(settledWidth = 500, canFit = true)
-        assertEquals(0.975f, fitted.fitScale)
-        assertTrue(fitted.grid.pageCount < deferred.grid.pageCount)
     }
 
     @Test
     fun `the step buttons' edge is kept only where the song scrolls`() {
         val short = song(count = 2, lines = 2, lineWidth = 300)
         val long = song(count = 30, lines = 4, lineWidth = 300)
-        assertFalse(search(short, spec(availableHeight = 800, endInset = 100)).decide(settledWidth = 1_200, canFit = true).isInset)
-        assertTrue(search(long, spec(availableHeight = 800, endInset = 100)).decide(settledWidth = 1_200, canFit = true).isInset)
-        assertTrue(search(short, spec(availableHeight = 800, endInset = 100, keepsEndInset = true)).decide(settledWidth = 1_200, canFit = true).isInset)
+        assertFalse(search(short, spec(availableHeight = 800, endInset = 100)).decide(settledWidth = 1_200).isInset)
+        assertTrue(search(long, spec(availableHeight = 800, endInset = 100)).decide(settledWidth = 1_200).isInset)
+        assertTrue(search(short, spec(availableHeight = 800, endInset = 100, keepsEndInset = true)).decide(settledWidth = 1_200).isInset)
     }
 }

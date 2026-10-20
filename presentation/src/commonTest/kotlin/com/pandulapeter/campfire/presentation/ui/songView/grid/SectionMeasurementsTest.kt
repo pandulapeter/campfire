@@ -23,44 +23,24 @@ class SectionMeasurementsTest {
         endInset = 48,
         keepsEndInset = false,
     )
-    private val searches = mutableListOf<Boolean>()
+    private var searchCount = 0
 
-    /** A song that could be fitted: its grid is only deferred where fitting was not allowed. */
-    private fun fittableSearch(canFit: Boolean): DecidedGrid {
-        searches += canFit
-        return DecidedGrid(emptyGrid(), isInset = false, fitScale = 1f, isFitDeferred = !canFit)
+    private fun search(): DecidedGrid {
+        searchCount++
+        return DecidedGrid(emptyGrid(), isInset = false)
     }
 
     @Test
-    fun `a grid decided with fitting deferred is searched again once fitting is allowed`() {
-        measurements.grid(key, canFit = false, search = ::fittableSearch)
-        measurements.grid(key, canFit = true, search = ::fittableSearch)
-        assertEquals(listOf(false, true), searches)
+    fun `a grid is searched for once for as long as its key stays the same`() {
+        measurements.grid(key, search = ::search)
+        measurements.grid(key, search = ::search)
+        assertEquals(1, searchCount)
     }
 
     @Test
-    fun `a grid decided with fitting is not searched again`() {
-        measurements.grid(key, canFit = true, search = ::fittableSearch)
-        measurements.grid(key, canFit = false, search = ::fittableSearch)
-        measurements.grid(key, canFit = true, search = ::fittableSearch)
-        assertEquals(listOf(true), searches)
-    }
-
-    @Test
-    fun `a deferred grid is not searched again while fitting stays deferred`() {
-        measurements.grid(key, canFit = false, search = ::fittableSearch)
-        measurements.grid(key, canFit = false, search = ::fittableSearch)
-        assertEquals(listOf(false), searches)
-    }
-
-    @Test
-    fun `a grid that could not have been fitted is not searched again`() {
-        val search = { canFit: Boolean ->
-            searches += canFit
-            DecidedGrid(emptyGrid(), isInset = false, fitScale = 1f, isFitDeferred = false)
-        }
-        measurements.grid(key, canFit = false, search = search)
-        measurements.grid(key, canFit = true, search = search)
-        assertEquals(listOf(false), searches)
+    fun `a grid is searched for again once its key changes`() {
+        measurements.grid(key, search = ::search)
+        measurements.grid(key.copy(settledWidth = 900), search = ::search)
+        assertEquals(2, searchCount)
     }
 }

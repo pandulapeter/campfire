@@ -64,7 +64,7 @@ builds what it draws, `grid/` places it.
 - **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just
   tapped would move and a second tap miss.
 - The editor's preview and a songbook (over `MAX_CUT_SECTION_COUNT`, 200 sections) keep a plain, unmeasured single
-  column, neither cut, narrowed, nor fitted: the search would rerun on every pinch frame, and typing would move pieces.
+  column, neither cut nor narrowed: the search would rerun on every pinch frame, and typing would move pieces.
   They show tempo and time changes as lines.
 - **Every row shorter than the screen is followed by space down to its bottom** (`minRowPitch`, `minLastRowHeight`), so
   a rest shows one row; only where the song scrolls anyway, never in the preview.

@@ -53,7 +53,6 @@ internal fun LookaheadScope.SongSectionChildren(
     cardKeys: List<CardKey>,
     animations: List<SectionAnimation>,
     sectionGlides: SectionGlides?,
-    fitDeferral: FitDeferral,
     sectionMotion: SectionMotion,
     isResizing: Boolean,
     isTextScaling: Boolean,
@@ -80,12 +79,9 @@ internal fun LookaheadScope.SongSectionChildren(
     // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps coming or a
     // navigation transition, not where it is too tall for it (see maxAnimatedSectionHeight), and not while it is still
     // gliding from a change that kept coming, since the spring would start at the place the glide has not reached yet.
-    // Nor while the grid on screen still waits to be fitted: the pass that fits it is the first one after a change
-    // stopped coming, and an animateBounds attached in that pass has no bounds to animate from, so the fitted grid would
-    // land in one frame rather than be glided to.
     fun Modifier.movedBy(key: Any, animation: SectionAnimation): Modifier {
         val isGliding = sectionGlides?.isGliding(key) == true
-        val isHeldStill = sectionMotion != SectionMotion.SPRING || isResizing || fitDeferral.isPending
+        val isHeldStill = sectionMotion != SectionMotion.SPRING || isResizing
         return if (isHeldStill || animation.isTooTallToAnimate || isGliding) {
             this
         } else {

@@ -72,7 +72,6 @@ internal fun spec(
     maxRowHeight: Int = availableHeight,
     endInset: Int = 0,
     keepsEndInset: Boolean = false,
-    fitScales: List<Float> = listOf(0.975f, 0.95f),
     canCutSections: Boolean = true,
     isSingleColumn: Boolean = false,
     cardPadding: Int = 0,
@@ -89,7 +88,6 @@ internal fun spec(
     keepsEndInset = keepsEndInset,
     cardPadding = cardPadding,
     lyricsLineHeight = LINE_HEIGHT / 2,
-    fitScales = fitScales,
     canCutSections = canCutSections,
     isSingleColumn = isSingleColumn,
 )

@@ -21,10 +21,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.grid.SongGridSpec
 import com.pandulapeter.campfire.presentation.ui.songView.grid.arrange
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowIntoPages
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowIntoRows
-import com.pandulapeter.campfire.presentation.ui.songView.grid.measuredWidthOf
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
 import com.pandulapeter.campfire.presentation.ui.songView.grid.placeSections
-import com.pandulapeter.campfire.presentation.ui.songView.grid.scaledBy
 import com.pandulapeter.campfire.presentation.ui.songView.grid.sectionWidthsOf
 import com.pandulapeter.campfire.presentation.ui.songView.grid.songRowsOf
 import androidx.compose.foundation.layout.offset
@@ -36,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
@@ -128,9 +125,6 @@ internal fun SongSectionsLayout(
     sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
     lyricsLineHeight: Int,
-    fitScales: List<Float>,
-    canFitText: Boolean,
-    fitDeferral: FitDeferral,
     centeringHold: ColumnCenteringHold?,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
@@ -189,20 +183,16 @@ internal fun SongSectionsLayout(
                 keepsEndInset = keepsStepButtonInset,
                 cardPadding = cardPadding.roundToPx(),
                 lyricsLineHeight = lyricsLineHeight,
-                fitScales = fitScales,
                 canCutSections = canCutSections,
                 isSingleColumn = isSingleColumn,
             ),
         )
-        val decidedGrid = sectionMeasurements.grid(search.gridKey(settledWidth), canFitText) { canFit -> search.decide(settledWidth, canFit) }
-        if (fitDeferral.isPending != decidedGrid.isFitDeferred) fitDeferral.isPending = decidedGrid.isFitDeferred
-        val (grid, isInset, fitScale) = decidedGrid
+        val decidedGrid = sectionMeasurements.grid(search.gridKey(settledWidth)) { search.decide(settledWidth) }
+        val (grid, isInset) = decidedGrid
         val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
         val widths = search.sectionWidthsOf(decidedGrid, layoutWidth)
-        // Text set smaller to fit the page is the text at its own size laid out wider and drawn scaled down, so that the
-        // song is never composed a second time at the smaller style, and its first frame is already the fitted one.
         val placeables = measurables.mapIndexed { index, measurable ->
-            val unitWidth = measuredWidthOf(widths.unitWidths[index], fitScale)
+            val unitWidth = widths.unitWidths[index]
             val heightLimit = maxAnimatedSectionHeight(unitWidth)
             // Only a section that is being animated is held to the limit. One that reaches it is cut short for the one
             // frame it takes the composition to take the animation off it, which happens far below the screen.
@@ -213,7 +203,7 @@ internal fun SongSectionsLayout(
             if (isLookingAhead) animations[index].isTooTallToAnimate = placeable.height >= heightLimit
             placeable
         }
-        val unitHeights = IntArray(placeables.size) { placeables[it].height.scaledBy(fitScale) }
+        val unitHeights = IntArray(placeables.size) { placeables[it].height }
         // The height a divider takes between the rows, which decides the room of the last row and where a scroll rests.
         val dividerHeight = if (grid.pageCount > 1) DividerDefaults.Thickness.roundToPx() else 0
         val placement = placeSections(
@@ -291,17 +281,7 @@ internal fun SongSectionsLayout(
             }
             placeables.forEachIndexed { index, placeable ->
                 val position = positions[index] + glideOf(unitKeys[index])
-                // A layer scales the hit testing with the drawing, so the fold toggles and the steppers of a fitted song are
-                // still where they are drawn, and the text is drawn through the canvas transform, as sharp as at any size.
-                if (fitScale == 1f) {
-                    placeable.place(position)
-                } else {
-                    placeable.placeWithLayer(position) {
-                        scaleX = fitScale
-                        scaleY = fitScale
-                        transformOrigin = TransformOrigin(0f, 0f)
-                    }
-                }
+                placeable.place(position)
             }
             // Only the main pass: the approach measures animated sections at their animated sizes, so its tops are the
             // ones on screen, while the lookahead's are where they settle.
