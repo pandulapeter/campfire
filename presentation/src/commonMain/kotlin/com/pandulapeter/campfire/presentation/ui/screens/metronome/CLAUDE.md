@@ -16,7 +16,7 @@ The Metronome tab: the whole instrument. The click's lifecycle is in `ui/metrono
   the click is played the same way on both screens and can be stopped however far the page is scrolled. Drawn
   `isProminent`: the beats start at a settings page's margin and are capped at `PageWidthLayout.pageMaxWidth`, while the
   play button is the list screens' New button in size and place (`NEW_ITEM_BUTTON_END_INSET`, and
-  `NEW_ITEM_BUTTON_TOP_INSET`, under the tools' tabs too, as the Tuner tab's play circle), at the window's end whatever
+  `NEW_ITEM_BUTTON_TOP_INSET`, under the tools' button group too, as the Tuner tab's play circle), at the window's end whatever
   the cap.
 - The `BeatRow` uses shades of one color (the second accent), since every palette but the app's own has no second accent
   apart from the primary. A tap cycles a beat through accent, plain, and muted, stored per signature here (a song's
