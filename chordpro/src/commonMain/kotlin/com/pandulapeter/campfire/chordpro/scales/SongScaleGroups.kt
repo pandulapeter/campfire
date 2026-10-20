@@ -108,11 +108,23 @@ public object SongScaleGroups {
      * The scales to play over [parts] and the root they are heard in, or null where nothing fits them. The key in force
      * at the first part (`{key}`, or the key a `{transpose}` names) is the author's word for the root, so every answer
      * on it is tried first ([keyFitOf]); only where none holds the part, a modulated section, is the root guessed from
-     * the chords ([guessedFitOf]).
+     * the chords ([guessedFitOf]), a vamp on one chord answered as the chord's own sheet is ([oneChordFitOf]).
      */
     private fun fitOf(parts: List<SongPart>): Fit? {
         val harmony = Harmony(parts)
-        return powerRiffFitOf(harmony) ?: harmony.key?.let { keyFitOf(harmony, it) } ?: guessedFitOf(harmony)
+        return powerRiffFitOf(harmony) ?: harmony.key?.let { keyFitOf(harmony, it) } ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
+    }
+
+    /**
+     * The fit of a part that plays one chord, on its root: what the chord's sheet offers, its quality's textbook scales
+     * first ([ChordScaleChoices]), so a `Dm7` vamp is Dorian before the minor key, as every player names it, and an
+     * `E9` groove Mixolydian. A key in force says otherwise and is read before this.
+     */
+    private fun oneChordFitOf(harmony: Harmony): Fit? {
+        val chord = harmony.chords.distinct().singleOrNull() ?: return null
+        val scales = PlayableScales.over(chord)
+        val home = scales.firstOrNull { it.intervals.size <= HOME_SCALE_SIZE } ?: return null
+        return Fit(harmony.roots.first(), scales, Level.TONAL, home)
     }
 
     /**

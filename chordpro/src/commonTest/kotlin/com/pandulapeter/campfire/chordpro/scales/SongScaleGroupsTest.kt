@@ -248,6 +248,15 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a vamp on one chord is answered as the chord's sheet is, unless a key says otherwise`() {
+        assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm7 Dm7 Dm7 Dm7")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Am Am Am")))
+        assertEquals(listOf("E" to "mixolydian"), rootAndFirst(song("E9 E9 E9 E9")))
+        assertEquals(listOf("D" to "natural_minor"), rootAndFirst(song("Dm7 Dm7 Dm7 Dm7", key = "Dm")))
+        assertEquals(listOf("D" to "dorian", "Eb" to "dorian"), rootAndFirst(song("Dm7 Dm7 Dm7 Dm7", "Ebm7 Ebm7", "Dm7 Dm7")))
+    }
+
+    @Test
     fun `a Dorian vamp of triads is Dorian, not melodic minor`() {
         assertEquals(listOf("A" to "dorian"), rootAndFirst(song("Am D")))
         assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G")))

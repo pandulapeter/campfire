@@ -26,7 +26,8 @@
   key a `{transpose}` names), a scale of its third holding the part, a minor key's family, a dominant blues, then its
   own major or minor family as a home with exceptions, its mode too where its tonic chord is played (capo shapes in C
   under `{key: D}` play no D, so they never read as D Mixolydian). Only where none fits is the root scored (chords on
-  it, the first and last, cadences into it), a mode only where the part starts on it. **The song is read as it
+  it, the first and last, cadences into it), a mode only where the part starts on it; a part of one chord is answered
+  as the chord's sheet is (a `Dm7` vamp is Dorian). **The song is read as it
   stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
   `{transpose}` inside a section starts a part. A chorus recall counts again only where its chords differ, and recalls
   of one set of chords once between them, so modulated last choruses never outweigh the song.
