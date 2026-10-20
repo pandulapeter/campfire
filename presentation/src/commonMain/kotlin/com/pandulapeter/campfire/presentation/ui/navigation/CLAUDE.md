@@ -27,7 +27,8 @@ The destinations and the back stack.
   its file name in place, is not a new editor sliding in.
 - `ImportReport` carries nothing (one import at a time) and is never restored (the report dies with the process);
   `Message.ImportInterrupted` says so where the import had not been written yet (a flag saved beside the back stack).
-- Top level selection resets the stack to `[Songs, tab?]`, so Back always returns to Songs. The tools behind one Tools
+- Top level selection resets the stack to `[home, tab?]` (`TopLevel.home`: Songs, or the first tool with the songs
+  switched off), so Back always returns there. The tools behind one Tools
   item: see `ui/chrome/CLAUDE.md`. Feature switches: `isEnabled` with `FeatureSwitches`.
 
 ### Saved state and process death
@@ -53,6 +54,9 @@ The destinations and the back stack.
   editor holds unsaved text.
 
 ### `BrowserRoutes.kt`
+
+- Every top level screen has an address, the songs too (`songs`); the bare address opens the home screen and is
+  rewritten to its address, so `/` and the old `search` keep working whichever screen the app opens on.
 
 - Song = file name without `.cho` (other extensions kept), setlist without `.setlist.json`, percent-encoded as
   `encodeURIComponent` (`PercentEncoding.kt`) with `~` escaped too, since the site's 404 page carries `&` as `~and~`.

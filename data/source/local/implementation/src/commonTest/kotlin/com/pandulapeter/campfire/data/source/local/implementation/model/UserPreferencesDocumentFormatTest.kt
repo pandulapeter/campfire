@@ -26,6 +26,7 @@ internal class UserPreferencesDocumentFormatTest {
             isPerformanceModeEnabled = true,
             shouldShowArchivedSetlists = true,
             isLyricsOnlyModeEnabled = true,
+            areSongsEnabled = false,
             areSetlistsEnabled = false,
             isMetronomeEnabled = false,
             fontScale = 1.25f,

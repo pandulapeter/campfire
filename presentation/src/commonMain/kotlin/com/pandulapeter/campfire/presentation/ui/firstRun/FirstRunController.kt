@@ -188,7 +188,7 @@ internal class FirstRunController(
             } else if (userPreferencesState.first { it !is DataState.Loading }.data?.isOnboardingPending == true) {
                 // Only onto a stack nothing has been built on yet: a process restored behind the onboarding already has it,
                 // and one restored on another screen has a user somewhere the onboarding must not cover.
-                if (backStack.toList() == listOf(CampfireDestination.Songs)) openOnboardingOnStartUp()
+                if (backStack.size == 1) openOnboardingOnStartUp()
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and

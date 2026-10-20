@@ -69,7 +69,9 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Performance mode
 
-- `UserPreferences.isPerformanceModeEnabled` ("Read only" in the UI, first row of Settings → Features).
+- `UserPreferences.isPerformanceModeEnabled` ("Read only" in the UI, first row of Settings → General, shown only while
+  the songs are on). With the songs off the mode is off in effect (`PreferencesController.isPerformanceModeEnabled`),
+  the preference kept for when they return.
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
@@ -145,9 +147,12 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Features are switched on and off as a whole
 
-- Settings → Features. Every switch is a `UserPreferences` field, never exported or synced, and **only hides**: nothing
-  is written or deleted. What each takes:
-  - **Read only** (`isPerformanceModeEnabled`): see Performance mode.
+- Settings → Features (Read only is in General). Every switch is a `UserPreferences` field, never exported or synced,
+  and **only hides**: nothing is written or deleted. What each takes:
+  - **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song
+    and editor screen, paste, and drops; disables the Setlists, Online song details, and Cover art rows. Files opened
+    with or shared to the app are still imported, but nothing opens a song (`ImportController`'s `areSongsEnabled`,
+    the import screen's rows, the snackbar's Open). The app opens on the first tool switched on (`TopLevel.home`).
   - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
     Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard capo
@@ -159,6 +164,7 @@ The view model facade, the composition root, and the product rules every screen 
   - **Metronome**: takes its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
   - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
   - **Setlists**: takes their tab and every way into one; setlist files still travel through import, export, and sync.
+    Off with the songs too (`FeatureSwitches.areSetlistsEnabled`).
   - **Online song details** (`isSongDetailsLookupEnabled`): takes the lookup button.
   - **Cover art** (`isCoverArtEnabled`): cover fetching, drawing, and search.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
@@ -166,4 +172,8 @@ The view model facade, the composition root, and the product rules every screen 
 - A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored
   stack or opened address is cut at the first screen belonging to a disabled feature
   (`NavigationState.withoutDisabledFeatures`), so `/metronome` with the metronome off opens the songs and rewrites the
-  address.
+  address. The bottom of every stack is the home screen (`TopLevel.home`, the first top level screen switched on, so
+  Settings once everything is off, which the Features tab's first row then jokes about);
+  `Navigator.followFeatureSwitches` swaps it whenever the switches change (`rootedAt`), so code asking whether nothing
+  has been built on the stack asks for one entry, never for `[Songs]`. A switch never navigates: an old root that is
+  the tab on screen (Settings, everything else off) stays on top of the new one.

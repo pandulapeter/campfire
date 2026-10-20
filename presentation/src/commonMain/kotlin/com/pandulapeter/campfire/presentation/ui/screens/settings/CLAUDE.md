@@ -10,21 +10,23 @@
 
 # :presentation — ui/screens/settings
 
-Five tabs (General, Features, Songs, Library, About) in a `HorizontalPager` under a tab row (capped at 560dp) while that
-fits, else a `SettingsCategoryPane` beside the selected page; the layouts crossfade across the breakpoint, as do the
-wide layout's pages.
+Five tabs (General, Preferences, Library, Features, About) in a `HorizontalPager` under a tab row (capped at 560dp)
+while that fits, else a `SettingsCategoryPane` beside the selected page; the layouts crossfade across the breakpoint,
+as do the wide layout's pages.
 
 ## Tab contents (rules not obvious from the code)
 
-- **General**: Setup ("Set up Campfire again", the onboarding) leads, since General is the tab Settings opens on.
-- **Features**: Playing switches first (read only, chords, chord diagrams, scales, scale suggestions, metronome, tuner,
-  setlists), then an Online group (song details lookup, cover art) so the two that make requests are found together.
-  Rules in `ui/CLAUDE.md`.
-- **Songs**: no instrument row; the instrument is picked where it is used (`ui/instrument`). Accidentals stay enabled
-  under a numbering notation (they still spell its key). Examples are written in the picked notation, never in the
-  language.
+- **General**: Performance (the Read only switch) leads, since General is the tab Settings opens on, and only while
+  the songs are on (it fades out with them). Setup ("Set up Campfire again", the onboarding) follows.
+- **Preferences**: how chords are written (they are in the Chords and Scales tabs too), then a Display section about
+  songs alone, which leaves with the Songs switch. No instrument row; the instrument is picked where it is used
+  (`ui/instrument`). Accidentals stay enabled under a numbering notation (they still spell its key). Examples are
+  written in the picked notation, never in the language.
 - **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
   goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
+- **Features**: Playing switches first, in the navigation's tab order (songs, setlists, metronome, tuner, chords, chord
+  diagrams, scales, scale suggestions), then an Online group (song details lookup, cover art) so the two that make
+  requests are found together. Rules in `ui/CLAUDE.md`.
 - `BackgroundWarmthSlider` and `LanguageChoice` are shared with the onboarding's first page.
 
 ## Layout invariants

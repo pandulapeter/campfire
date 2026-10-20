@@ -39,7 +39,7 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 /**
  * One entry of the review. A row with a box is ticked or unticked by a tap anywhere on it, and a name already taken
  * carries its own choice at its end; a row without one (already in the library, or a file that cannot be imported) is
- * only read, and opens the library's song where it names one.
+ * only read, and opens the library's song where it names one while the songs are switched on.
  *
  * Each row reads only its own tick and choice out of [choices], so that a tap recomposes the row it was made on and
  * the summary rather than the whole list.
@@ -52,14 +52,14 @@ internal fun ImportReviewRowItem(
     choices: () -> ImportChoices,
     onChosenChange: (ImportEntryKey, Boolean) -> Unit,
     onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
-    onOpenLibrarySong: (String) -> Unit,
+    onOpenLibrarySong: ((String) -> Unit)?,
 ) {
     val key = row.key
     if (key == null) {
         ImportReviewInfoRow(
             modifier = modifier,
             row = row,
-            onClick = row.openableLibraryFileName?.let { fileName -> { onOpenLibrarySong(fileName) } },
+            onClick = onOpenLibrarySong?.let { open -> row.openableLibraryFileName?.let { fileName -> { open(fileName) } } },
         )
         return
     }
@@ -88,7 +88,7 @@ internal fun ImportReviewRowItem(
                 ConflictResolutionDropdown(
                     resolution = resolution,
                     onResolutionSelected = { onResolutionSelected(key, it) },
-                    onShowLibrarySong = row.openableLibraryFileName?.let { fileName -> { onOpenLibrarySong(fileName) } },
+                    onShowLibrarySong = onOpenLibrarySong?.let { open -> row.openableLibraryFileName?.let { fileName -> { open(fileName) } } },
                 )
             }
         } else {

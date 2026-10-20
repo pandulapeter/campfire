@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The first section of the Songs tab: how the chords are written. The instrument is not here: it is picked where it is
+ * The first section of the Preferences tab: how the chords are written. The instrument is not here: it is picked where it is
  * used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
  */
 @Composable

@@ -10,16 +10,16 @@
 package com.pandulapeter.campfire.presentation.ui.navigation
 
 /**
- * The tabs of the settings screen, in the order they are read in: what the app looks like, then which of its parts it
- * has at all, then what a song is read with, then where the library is and where else it goes, and what the app is
- * last. General is what the screen opens on. Features is right after it, because read only mode is its first row and
- * that switch decides what the rest of the app is still allowed to do - it is also the only way back out of the mode,
- * so it must never be something to go looking for.
+ * The tabs of the settings screen, in the order they are read in: read only mode and what the app looks like, then how
+ * the chords and the songs are written and shown, then where the library is and where else it goes, then which of the
+ * app's parts it has at all, and what the app is last. General is what the screen opens on, and read only mode is its
+ * first row: that switch decides what the rest of the app is still allowed to do, and it is the only way back out of
+ * the mode, so it must never be something to go looking for.
  */
 internal enum class SettingsTab {
     GENERAL,
-    FEATURES,
-    SONGS,
+    PREFERENCES,
     LIBRARY,
+    FEATURES,
     ABOUT,
 }

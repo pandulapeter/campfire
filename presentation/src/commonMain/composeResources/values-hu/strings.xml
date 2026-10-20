@@ -327,10 +327,15 @@
     <string name="settings_library_storage_online_only">A Campfire-t nem sikerült elmenteni ebben a böngészőben, ezért csak internetkapcsolattal nyílik meg.</string>
     <string name="settings_import">Dalok, dokumentumok vagy zip archívumok importálása…</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
-    <string name="settings_songs">Dalok</string>
+    <string name="settings_preferences">Preferenciák</string>
     <string name="settings_features">Funkciók</string>
+    <string name="settings_group_performance">Előadás</string>
     <string name="settings_read_only_mode">Csak olvasás</string>
     <string name="settings_read_only_mode_description">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
+    <string name="settings_read_only_mode_description_without_setlists">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
+    <string name="settings_songs_description">A Dalok és a Listák fül, ha csak metronómként, hangolóként és akkordtárként használnád. Kikapcsolva csak elrejti őket, egyetlen dal sem törlődik.</string>
+    <string name="settings_songs_description_without_setlists">A Dalok fül, ha csak metronómként, hangolóként és akkordtárként használnád. Kikapcsolva csak elrejti a dalokat, egyetlen dal sem törlődik.</string>
+    <string name="settings_everything_off">Minden ki van kapcsolva, így a Campfire most egy alkalmazás a Campfire beállítására. Kapcsolj vissza valamit, hogy újra hasznos legyen.</string>
     <string name="settings_chords">Akkordok</string>
     <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>

@@ -128,7 +128,8 @@ internal class LaunchState(
                 val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty(), isPerformanceModeEnabled)
                 // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
                 editorDraftRecovery.await()
-                if (destination != null && backStack.toList() == listOf(CampfireDestination.Songs)) {
+                // Its home screen alone, whichever that is: the Songs switch may move it while the launch is waiting.
+                if (destination != null && backStack.size == 1) {
                     restoreNavigationState(destination)
                 }
             } finally {

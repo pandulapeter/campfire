@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * lasts long enough for the setting to change under it). Read only mode offers no way to add to the library, and a drop
  * is one; a file opened with Campfire or shared to it is still imported there, since the user sent it from outside. A
  * dropped text is a new song, asked [PastedSongController.isNewSongPasteAvailable] besides, which refuses it in read
- * only mode too.
+ * only mode too. With the songs switched off there is no library on screen to drop anything into either.
  */
 internal val CampfireViewModel.isDropAvailable
-    get() = !preferencesController.isPerformanceModeEnabled.value
+    get() = !preferencesController.isPerformanceModeEnabled.value && preferencesController.areSongsEnabled.value

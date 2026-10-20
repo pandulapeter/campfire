@@ -90,6 +90,7 @@ internal fun ImportReportScreen(
     val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
     val searchState = viewModel.importReportState.search
     val query by searchState.activeQuery.collectAsStateWithLifecycle("")
     // Read through the state rather than off the stage, so that a tick recomposes the rows and the counts that read
@@ -166,7 +167,7 @@ internal fun ImportReportScreen(
                             onEntriesChosenChange = viewModel.importReportState::setImportEntriesChosen,
                             onConflictResolutionSelected = viewModel.importReportState::setImportConflictResolution,
                             onGroupConflictResolutionSelected = viewModel.importReportState::setImportGroupConflictResolution,
-                            onOpenSong = viewModel.navigator::openReportedSong,
+                            onOpenSong = (viewModel.navigator::openReportedSong).takeIf { areSongsEnabled },
                         )
                     }
 
@@ -191,7 +192,7 @@ internal fun ImportReportScreen(
                             sections = matchingResultSections,
                             isFiltered = query.isNotBlank(),
                             isPerformanceModeEnabled = isPerformanceModeEnabled,
-                            onOpenSong = viewModel.navigator::openReportedSong,
+                            onOpenSong = (viewModel.navigator::openReportedSong).takeIf { areSongsEnabled },
                             onEditSong = { viewModel.editorSession.openEditor(it) },
                         )
                     }

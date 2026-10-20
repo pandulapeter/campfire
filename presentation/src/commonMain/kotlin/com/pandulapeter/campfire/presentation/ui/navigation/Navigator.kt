@@ -284,7 +284,6 @@ internal class Navigator(
         // Read from the repository's own state, which the launch has waited for, rather than from userPreferences,
         // which may not have caught up with the read yet.
         val allowedState = state.withoutDisabledFeatures(FeatureSwitches.of(userPreferences()))
-        if (allowedState.backStack.isEmpty()) return false
         settingsTab = allowedState.settingsTab
         listOf(songsSearch() to allowedState.isSongsSearchOpen, setlistsSearch() to allowedState.isSetlistsSearchOpen).forEach { (search, isOpen) ->
             if (isOpen != search.isOpen.value) if (isOpen) search.reopen() else search.close()
@@ -299,7 +298,8 @@ internal class Navigator(
     }
 
     /**
-     * Rebuilds the stack around a top level screen. Refused while an editor on the stack holds unsaved text: the
+     * Rebuilds the stack around a top level screen, over the home screen ([CampfireDestination.TopLevel.home]) unless it
+     * is that one. Refused while an editor on the stack holds unsaved text: the
      * navigation chrome that calls this is hidden over the editor, and nothing else may take that text off the screen
      * without asking, see [navigateBack]. Refused too for a screen whose feature is switched off: its item stays on
      * screen, and tappable, for as long as it takes to shrink away.
@@ -319,11 +319,28 @@ internal class Navigator(
             return
         }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
+        val home = topLevelDestinations().first()
         updateBackStack {
             clear()
-            add(CampfireDestination.Songs)
-            if (destination != CampfireDestination.Songs) {
+            add(home)
+            if (destination != home) {
                 add(destination)
+            }
+        }
+    }
+
+    /**
+     * Puts the home screen [features] leave at the bottom of the stack and cuts it short at the first screen of a feature
+     * switched off ([rootedAt]), called whenever the switches change. The switches are flipped in Settings and the
+     * onboarding, neither of which is cut, so what changes is where Back goes: with the songs switched off it goes to
+     * the first tool rather than to a screen that is no longer there.
+     */
+    fun followFeatureSwitches(features: FeatureSwitches) {
+        val rooted = backStack.rootedAt(features)
+        if (rooted != backStack.toList()) {
+            updateBackStack {
+                clear()
+                addAll(rooted)
             }
         }
     }
@@ -344,8 +361,9 @@ internal class Navigator(
         )
     )
 
+    /** Refused while the songs are switched off, which an import's snackbar or screen can still offer to open one in. */
     private fun openSongDetails(destination: CampfireDestination.SongDetails) {
-        if (backStack.lastOrNull() !is CampfireDestination.SongDetails) {
+        if (backStack.lastOrNull() !is CampfireDestination.SongDetails && isEnabled(destination)) {
             updateBackStack { add(destination) }
         }
     }
@@ -356,16 +374,18 @@ internal class Navigator(
      * An editor is covered like any other screen as long as everything in it is saved, and Back returns to it. One
      * holding unsaved text is left alone, as [selectTopLevelDestination] leaves it: the song's arrival is announced all
      * the same, and the unsaved changes question is only ever asked of an editor on top, so the text would be one
-     * closed window away from being lost without it.
+     * closed window away from being lost without it. Nothing is opened while the songs are switched off.
      */
     fun openImportedSong(fileName: String) {
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
         val songFileNames = listOf(fileName)
+        val destination = CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = 0)
+        if (!isEnabled(destination)) return
         val current = backStack.lastOrNull()
         if (current is CampfireDestination.SongDetails && current.setlistFileName == null && current.songFileNames == songFileNames) return
         updateBackStack {
             if (current is CampfireDestination.SongDetails) removeAt(lastIndex)
-            add(CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = 0))
+            add(destination)
         }
     }
 
@@ -461,6 +481,8 @@ internal class Navigator(
             updateBackStack(isPredictiveBackCompleted = isPredictiveBackCompleted) { removeAt(lastIndex) }
         }
     }
+
+    private fun isEnabled(destination: CampfireDestination) = CampfireDestination.isEnabled(destination, FeatureSwitches.of(userPreferences()))
 
     private fun List<CampfireDestination>.songDetailsIds() = mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }
 

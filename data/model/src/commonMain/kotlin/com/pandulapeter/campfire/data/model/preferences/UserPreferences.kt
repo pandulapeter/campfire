@@ -38,6 +38,12 @@ data class UserPreferences(
      */
     val areChordsEnabled: Boolean,
     /**
+     * Whether the app has songs at all: their tab, every way into one, and with them the setlists, which are lists of
+     * songs. Off, the app is a metronome, a tuner, and a chord and scale reference; the library stays as it is and keeps
+     * travelling through imports, exports and sync runs.
+     */
+    val areSongsEnabled: Boolean = true,
+    /**
      * Whether the app has setlists at all: their tab and every way of putting a song into one. Off, the files stay in
      * the library and keep travelling through imports, exports and sync runs; they are only out of sight.
      */

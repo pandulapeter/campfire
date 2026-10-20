@@ -14,6 +14,10 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 /**
  * The Features switches that take a screen out of the app, see [CampfireDestination.isEnabled].
  *
+ * @property areSongsEnabled Whether the Songs tab is there, and with it every screen a song is read or edited on. Off, the
+ *   app opens on the first tool switched on rather than on the songs, see [CampfireDestination.TopLevel.home].
+ * @property areSetlistsEnabled Whether the Setlists tab is there, which needs the songs as well: a setlist is a list of
+ *   them.
  * @property isChordLibraryEnabled Whether the Chords tab is there, which follows the Chord diagrams switch: the tab is
  *   those diagrams, every one of them, and with the chords switched off there is nothing to finger either.
  * @property areScalesEnabled Whether the Scales tab is there, and with it the scales a chord sheet suggests: a switch of
@@ -22,6 +26,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
  *   switch, disabled by the Scales switch, as the chord diagrams follow theirs.
  */
 internal data class FeatureSwitches(
+    val areSongsEnabled: Boolean,
     val areSetlistsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isTunerEnabled: Boolean,
@@ -34,7 +39,8 @@ internal data class FeatureSwitches(
 
         /** The switches as [preferences] have them, every one on where nothing has been read. */
         fun of(preferences: UserPreferences?) = FeatureSwitches(
-            areSetlistsEnabled = preferences?.areSetlistsEnabled != false,
+            areSongsEnabled = preferences?.areSongsEnabled != false,
+            areSetlistsEnabled = preferences?.areSongsEnabled != false && preferences?.areSetlistsEnabled != false,
             isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
             isTunerEnabled = preferences?.isTunerEnabled != false,
             isChordLibraryEnabled = preferences?.areChordsEnabled != false && preferences?.areChordDiagramsEnabled != false,

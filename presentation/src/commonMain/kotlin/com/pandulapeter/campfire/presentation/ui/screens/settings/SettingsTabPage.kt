@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -43,15 +48,22 @@ internal fun SettingsTabPage(
     contentPadding = contentPadding,
     section = {
         when (tab) {
-            SettingsTab.GENERAL -> GeneralSections(viewModel = viewModel, userPreferences = userPreferences)
-            SettingsTab.FEATURES -> FeaturesSections(
+            SettingsTab.GENERAL -> GeneralSections(
                 viewModel = viewModel,
                 userPreferences = userPreferences,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
             )
-            SettingsTab.SONGS -> {
+            SettingsTab.FEATURES -> FeaturesSections(viewModel = viewModel, userPreferences = userPreferences)
+            SettingsTab.PREFERENCES -> {
                 ChordsSection(viewModel = viewModel, userPreferences = userPreferences)
-                SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences)
+                // The chords are written the same way in the Chords and Scales tabs, while all of this is about songs.
+                AnimatedVisibility(
+                    visible = userPreferences?.areSongsEnabled != false,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences)
+                }
             }
             SettingsTab.LIBRARY -> {
                 SyncSection(viewModel = viewModel)

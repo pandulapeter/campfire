@@ -83,6 +83,7 @@ internal class UserPreferencesMappersTest {
     fun `features default to on and chords keep the lyrics only switch they replaced`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(true, defaults.areChordsEnabled)
+        assertEquals(true, defaults.areSongsEnabled)
         assertEquals(true, defaults.areSetlistsEnabled)
         assertEquals(true, defaults.isMetronomeEnabled)
         assertEquals(true, defaults.isTunerEnabled)

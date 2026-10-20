@@ -19,12 +19,14 @@ import kotlin.test.assertTrue
 internal class FeatureDestinationsTest {
 
     private fun features(
+        areSongsEnabled: Boolean = true,
         areSetlistsEnabled: Boolean = true,
         isMetronomeEnabled: Boolean = true,
         isTunerEnabled: Boolean = true,
         isChordLibraryEnabled: Boolean = true,
         areScalesEnabled: Boolean = true,
     ) = FeatureSwitches(
+        areSongsEnabled = areSongsEnabled,
         areSetlistsEnabled = areSetlistsEnabled,
         isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
@@ -121,5 +123,97 @@ internal class FeatureDestinationsTest {
         )
 
         assertEquals(listOf(CampfireDestination.Songs), state.withoutDisabledFeatures(features(areSetlistsEnabled = false)).backStack)
+    }
+
+    @Test
+    fun `the songs take the setlists with them, and the first tool left becomes home`() {
+        val songsOff = FeatureSwitches.of(testPreferences().copy(areSongsEnabled = false))
+        assertFalse(songsOff.areSongsEnabled)
+        assertFalse(songsOff.areSetlistsEnabled)
+        assertEquals(CampfireDestination.Songs, CampfireDestination.TopLevel.home(features()))
+        assertEquals(CampfireDestination.Metronome, CampfireDestination.TopLevel.home(songsOff))
+        assertEquals(CampfireDestination.Tuner, CampfireDestination.TopLevel.home(songsOff.copy(isMetronomeEnabled = false)))
+        assertEquals(
+            CampfireDestination.Settings,
+            CampfireDestination.TopLevel.home(
+                songsOff.copy(isMetronomeEnabled = false, isTunerEnabled = false, isChordLibraryEnabled = false, areScalesEnabled = false),
+            ),
+        )
+        val song = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
+        assertFalse(CampfireDestination.isEnabled(song, songsOff))
+        assertFalse(CampfireDestination.isEnabled(CampfireDestination.SongEditor(fileName = "a.cho"), songsOff))
+        assertTrue(CampfireDestination.isEnabled(CampfireDestination.ImportReport, songsOff))
+    }
+
+    @Test
+    fun `a stack is rooted at the home screen the switches leave`() {
+        val songsOff = features(areSongsEnabled = false, areSetlistsEnabled = false)
+        val song = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
+
+        assertEquals(listOf(CampfireDestination.Metronome, CampfireDestination.Settings), listOf(CampfireDestination.Songs, CampfireDestination.Settings).rootedAt(songsOff))
+        assertEquals(listOf(CampfireDestination.Metronome, CampfireDestination.Tuner), listOf(CampfireDestination.Songs, CampfireDestination.Tuner).rootedAt(songsOff))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Metronome), listOf(CampfireDestination.Songs, CampfireDestination.Metronome).rootedAt(songsOff))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Metronome), listOf(CampfireDestination.Songs, song).rootedAt(songsOff))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Metronome), emptyList<CampfireDestination>().rootedAt(songsOff))
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), listOf(CampfireDestination.Metronome, CampfireDestination.Settings).rootedAt(features()))
+        assertEquals(listOf(CampfireDestination.Songs, song), listOf(CampfireDestination.Songs, song).rootedAt(features()))
+    }
+
+    @Test
+    fun `a screen switched back on becomes home without being navigated to`() {
+        val onlyTuner = features(
+            areSongsEnabled = false,
+            areSetlistsEnabled = false,
+            isMetronomeEnabled = false,
+            isChordLibraryEnabled = false,
+            areScalesEnabled = false,
+        )
+        val onboarding = CampfireDestination.Onboarding(isOpenedFromSettings = true)
+
+        assertEquals(listOf(CampfireDestination.Tuner, CampfireDestination.Settings), listOf(CampfireDestination.Settings).rootedAt(onlyTuner))
+        assertEquals(
+            listOf(CampfireDestination.Tuner, CampfireDestination.Settings, onboarding),
+            listOf(CampfireDestination.Settings, onboarding).rootedAt(onlyTuner),
+        )
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Tuner), listOf(CampfireDestination.Tuner).rootedAt(features()))
+    }
+
+    @Test
+    fun `an address of any screen switched off opens the home screen alone`() {
+        val home = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.GENERAL)
+        val allOff = features(
+            areSongsEnabled = false,
+            areSetlistsEnabled = false,
+            isMetronomeEnabled = false,
+            isTunerEnabled = false,
+            isChordLibraryEnabled = false,
+            areScalesEnabled = false,
+        )
+        val song = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
+        listOf(
+            listOf(CampfireDestination.Songs),
+            listOf(CampfireDestination.Songs, CampfireDestination.Setlists),
+            listOf(CampfireDestination.Songs, CampfireDestination.Metronome),
+            listOf(CampfireDestination.Songs, CampfireDestination.Tuner),
+            listOf(CampfireDestination.Songs, CampfireDestination.Chords),
+            listOf(CampfireDestination.Songs, CampfireDestination.Scales),
+            listOf(CampfireDestination.Songs, song),
+            listOf(CampfireDestination.Songs, song, CampfireDestination.SongEditor(fileName = "a.cho")),
+        ).forEach { backStack ->
+            assertEquals(listOf<CampfireDestination>(CampfireDestination.Settings), home.copy(backStack = backStack).withoutDisabledFeatures(allOff).backStack, "$backStack")
+        }
+    }
+
+    @Test
+    fun `an address with the songs switched off opens on the first tool, its search closed`() {
+        val search = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = true, isSetlistsSearchOpen = false, settingsTab = SettingsTab.GENERAL)
+        val tuner = search.copy(backStack = search.backStack + CampfireDestination.Tuner, isSongsSearchOpen = false)
+        val songsOff = features(areSongsEnabled = false, areSetlistsEnabled = false)
+
+        assertEquals(
+            search.copy(backStack = listOf(CampfireDestination.Metronome), isSongsSearchOpen = false),
+            search.withoutDisabledFeatures(songsOff),
+        )
+        assertEquals(tuner.copy(backStack = listOf(CampfireDestination.Metronome, CampfireDestination.Tuner)), tuner.withoutDisabledFeatures(songsOff))
     }
 }

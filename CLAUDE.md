@@ -147,6 +147,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Feature switches in Settings → Features only hide, never write or delete: `ui`.
+- Songs can be switched off (Settings only), taking the setlists. The app's root is always the first main screen
+  switched on, Settings once every one is off (Features then says so, with a wink): `ui`.
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
 - Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui/tabs`,
   `chordpro`.

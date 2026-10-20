@@ -49,6 +49,13 @@ sealed interface CampfireDestination : NavKey {
             internal fun entries(features: FeatureSwitches) = entries.filter { CampfireDestination.isEnabled(it, features) }
 
             /**
+             * The screen at the bottom of every back stack, which the app opens on and every Back ends on: the first
+             * top level screen switched on, so the songs while they are on, and otherwise the first tool. Settings,
+             * which no switch takes, is the last one left.
+             */
+            internal fun home(features: FeatureSwitches) = entries(features).first()
+
+            /**
              * Maps a [NavEntry][androidx.navigation3.runtime.NavEntry] content key back to the destination it
              * belongs to, since the entries only expose their content keys.
              */
@@ -59,17 +66,19 @@ sealed interface CampfireDestination : NavKey {
     companion object {
 
         /**
-         * Whether [destination] belongs to a feature that is switched on: the setlists screen and a song read from a
-         * setlist to the setlists, the metronome screen to the metronome, the tuner screen to the tuner, the chords screen
-         * to the chord diagrams, the scales screen to the scales. Everything else is always there.
+         * Whether [destination] belongs to a feature that is switched on: the songs screen, a song, and its editor to the
+         * songs, the setlists screen and a song read from a setlist to the setlists too, the metronome screen to the
+         * metronome, the tuner screen to the tuner, the chords screen to the chord diagrams, the scales screen to the
+         * scales. Everything else is always there.
          */
         internal fun isEnabled(destination: CampfireDestination, features: FeatureSwitches) = when (destination) {
+            Songs, is SongEditor -> features.areSongsEnabled
             Setlists -> features.areSetlistsEnabled
             Metronome -> features.isMetronomeEnabled
             Tuner -> features.isTunerEnabled
             Chords -> features.isChordLibraryEnabled
             Scales -> features.areScalesEnabled
-            is SongDetails -> features.areSetlistsEnabled || destination.setlistFileName == null
+            is SongDetails -> if (destination.setlistFileName == null) features.areSongsEnabled else features.areSetlistsEnabled
             else -> true
         }
     }

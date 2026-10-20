@@ -44,14 +44,14 @@ internal enum class SyncConsentAnswer {
 
 /**
  * Where the answer to a consent asked from [origin] goes on [backStack]: only onto a stack nobody has built on since the
- * app started — the songs, the settings screen Android brings back, or an owed onboarding still on its first page
+ * app started — the home screen, the settings screen Android brings back, or an owed onboarding still on its first page
  * ([onboardingStep]), which a start up that still owes it opens while the code is being exchanged, and
  * which is moved on to its Dropbox page rather than covered by Settings.
  */
 internal fun syncConsentAnswerOf(backStack: List<CampfireDestination>, onboardingStep: OnboardingStep, origin: SyncConsentOrigin?) = when {
-    backStack == listOf(CampfireDestination.Songs, CampfireDestination.Onboarding(isOpenedFromSettings = false)) ->
+    backStack.drop(1) == listOf(CampfireDestination.Onboarding(isOpenedFromSettings = false)) ->
         if (onboardingStep == OnboardingStep.entries.first()) SyncConsentAnswer.ONBOARDING_ON_SYNC_PAGE else SyncConsentAnswer.NOTHING
-    backStack != listOf(CampfireDestination.Songs) && backStack != listOf(CampfireDestination.Songs, CampfireDestination.Settings) -> SyncConsentAnswer.NOTHING
+    backStack.size > 1 && backStack.drop(1) != listOf(CampfireDestination.Settings) -> SyncConsentAnswer.NOTHING
     origin == SyncConsentOrigin.ONBOARDING -> SyncConsentAnswer.ONBOARDING
     origin == SyncConsentOrigin.ONBOARDING_FROM_SETTINGS -> SyncConsentAnswer.ONBOARDING_FROM_SETTINGS
     else -> SyncConsentAnswer.SETTINGS
@@ -64,7 +64,7 @@ internal fun Navigator.rememberSyncConsentOrigin() = keepSyncConsentOrigin(syncC
  * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
  * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen's About tab where that was what opened it, or
  * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
- * songs the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
+ * home screen the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
  * an owed onboarding still on its first page, which a start up that still owes it opens while the
  * code is being exchanged and which is moved on to its Dropbox page (see [syncConsentAnswerOf]); an onboarding
  * Android brings back is already on the page that says how it went. The code exchange this

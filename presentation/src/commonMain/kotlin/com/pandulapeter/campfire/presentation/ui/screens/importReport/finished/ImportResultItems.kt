@@ -89,13 +89,14 @@ private val ImportResult.isClean
 /**
  * Every section with a heading and a count, and its files under it. A song the library holds opens in a pager over
  * the songs of its section; one that was converted from another format says so, and opens in the editor from its own
- * button outside performance mode, since a conversion is a best attempt worth checking.
+ * button outside performance mode, since a conversion is a best attempt worth checking. With the songs switched off
+ * there is nowhere to open one, and [onOpenSong] is null.
  */
 internal fun LazyListScope.sections(
     sections: List<ImportReportSection>,
     isFiltered: Boolean,
     isPerformanceModeEnabled: Boolean,
-    onOpenSong: (songFileNames: List<String>, index: Int) -> Unit,
+    onOpenSong: ((songFileNames: List<String>, index: Int) -> Unit)?,
     onEditSong: (String) -> Unit,
 ) {
     if (isFiltered && sections.isEmpty()) {
@@ -123,8 +124,8 @@ internal fun LazyListScope.sections(
             ImportReportRowItem(
                 modifier = ItemWidth.animateItem(),
                 row = row,
-                canEdit = row.isConverted && row.isSong && !isPerformanceModeEnabled,
-                onClick = if (row.isSong) {
+                canEdit = row.isConverted && row.isSong && !isPerformanceModeEnabled && onOpenSong != null,
+                onClick = if (row.isSong && onOpenSong != null) {
                     { onOpenSong(songFileNames, songFileNames.indexOf(row.fileName).coerceAtLeast(0)) }
                 } else {
                     null

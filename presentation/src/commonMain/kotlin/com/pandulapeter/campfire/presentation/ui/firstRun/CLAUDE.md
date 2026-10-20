@@ -45,8 +45,8 @@
   import screen (or the one song it opens) follows as the onboarding leaves.
 - The first run's preferences write sets `UserPreferences.isOnboardingPending`; only the onboarding leaving the back
   stack (finished, skipped, or backed out of from page one) clears it (`onBackStackChanged`), before any import screen
-  is pushed. A start that finds it still owed opens it again onto a stack of only Songs, and What's new is recorded
-  rather than shown over it.
+  is pushed. A start that finds it still owed opens it again onto a stack of only its home screen, and What's new is
+  recorded rather than shown over it.
 
 ### What's new
 

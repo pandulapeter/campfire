@@ -36,7 +36,8 @@ import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The second section of the Songs tab: what the app adds to a song's text and to its cards.
+ * The second section of the Preferences tab: what the app adds to a song's text and to its cards, only there while the songs
+ * are switched on.
  */
 @Composable
 internal fun SongDisplaySection(

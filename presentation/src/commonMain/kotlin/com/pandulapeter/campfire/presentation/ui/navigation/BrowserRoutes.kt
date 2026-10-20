@@ -17,12 +17,12 @@ import com.pandulapeter.campfire.data.model.song.Song
  * The addresses of the web build, relative to the folder the page is served from and still percent-encoded. Every
  * entry of the browser's history the app writes is one of these:
  *
- * - `` — the songs, and `search` over them while their search is open;
+ * - `songs`, and `songs/search` over them while their search is open;
  * - `setlists`, and `setlists/search`;
  * - `metronome`;
  * - `tuner`;
- * - `settings/general`, directly on top of the songs, and `settings/features`, `settings/songs`, `settings/library` or
- *   `settings/about` on top of that while another tab is open — a Back from any other tab goes to General before it
+ * - `settings/general`, directly on top of the home screen, and `settings/preferences`, `settings/library`,
+ *   `settings/features` or `settings/about` on top of that while another tab is open — a Back from any other tab goes to General before it
  *   leaves the screen, so General is a step of its own, while one tab picked after another replaces the entry rather
  *   than adding one (`settings` alone opens the tab that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
@@ -36,9 +36,14 @@ import com.pandulapeter.campfire.data.model.song.Song
  *   through before it leaves, the way it closes a dialog, and the entry is put back on top while there is a page left;
  * - `setlists` again while a setlist's songs are being reordered with the search closed, so that Back ends the mode
  *   before it leaves the screen;
- * - `` again while songs are being selected, under `search` where the search is open too, so that Back closes the
- *   search, then ends the mode, and only then leaves the page;
+ * - `songs` again while songs are being selected, under `songs/search` where the search is open too, so that Back
+ *   closes the search, then ends the mode, and only then leaves the page;
  * - and, on top of any of them, the same address again while a dialog, a sheet or a menu is open over it.
+ *
+ * The bare address names no screen: it opens the home screen (`CampfireDestination.TopLevel.home`) and is written over
+ * with that screen's address, as `search` is with `songs/search`, which it was before the songs had an address of their
+ * own. That is what keeps an address the same whichever screen the app opens on, the songs or, with them switched off,
+ * the first tool.
  *
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
@@ -58,10 +63,10 @@ internal object BrowserRoutes {
         inputs.backStack.forEach { destination ->
             when (destination) {
                 CampfireDestination.Songs -> {
-                    add(ROOT)
+                    add(SONGS)
                     // The selection mode is a step of its own under an open search, which Back closes first.
-                    if (inputs.isSongSelecting) add(ROOT)
-                    if (inputs.isSongsSearchOpen) add(SEARCH)
+                    if (inputs.isSongSelecting) add(SONGS)
+                    if (inputs.isSongsSearchOpen) add("$SONGS/$SEARCH")
                 }
 
                 CampfireDestination.Setlists -> {
@@ -136,6 +141,7 @@ internal object BrowserRoutes {
         return when (segments.size) {
             0 -> home
             1 -> when (segments[0]) {
+                SONGS -> home
                 SEARCH -> home.copy(isSongsSearchOpen = true)
                 SETLISTS -> home.copy(backStack = home.backStack + CampfireDestination.Setlists)
                 METRONOME -> home.copy(backStack = home.backStack + CampfireDestination.Metronome)
@@ -147,6 +153,7 @@ internal object BrowserRoutes {
             }
 
             2 -> when (segments[0]) {
+                SONGS -> home.copy(isSongsSearchOpen = true).takeIf { segments[1] == SEARCH }
                 SETLISTS -> home.copy(backStack = home.backStack + CampfireDestination.Setlists, isSetlistsSearchOpen = true).takeIf { segments[1] == SEARCH }
                 SETTINGS -> SettingsTab.entries.firstOrNull { it.pathSegment == segments[1] }?.let { tab ->
                     home.copy(backStack = home.backStack + CampfireDestination.Settings, settingsTab = tab)
@@ -247,6 +254,7 @@ internal object BrowserRoutes {
     private val SettingsTab.pathSegment get() = name.lowercase()
 
     private const val ROOT = ""
+    private const val SONGS = "songs"
     private const val SEARCH = "search"
     private const val SETLISTS = "setlists"
     private const val METRONOME = "metronome"

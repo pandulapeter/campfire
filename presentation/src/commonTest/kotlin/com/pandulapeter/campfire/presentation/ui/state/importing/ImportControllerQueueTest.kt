@@ -59,6 +59,7 @@ class ImportControllerQueueTest {
     private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
+    private var areSongsEnabled = true
     private var plannedSongs = listOf(songEntry("new.cho"))
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private lateinit var dialogHost: DialogHost
@@ -92,6 +93,7 @@ class ImportControllerQueueTest {
                 backStack.removeAll { it is CampfireDestination.SongEditor }
                 backStack += CampfireDestination.SongEditor.newSong()
             },
+            areSongsEnabled = { areSongsEnabled },
             songLookup = library,
             launchFileTransfer = { null },
             isLeaving = { false },
@@ -205,6 +207,33 @@ class ImportControllerQueueTest {
         runCurrent()
         assertEquals(listOf("{title: Song}\n{artist: Band}\n[G]Hello"), newSongTexts)
         assertEquals(0, importCount)
+        assertTrue(openedSongs.isEmpty())
+    }
+
+    @Test
+    fun `with the songs switched off a pasted song is written and nothing is opened`() = runTest {
+        areSongsEnabled = false
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        val settled = enqueuePaste()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertTrue(newSongTexts.isEmpty())
+        assertEquals(1, importCount)
+        assertTrue(openedSongs.isEmpty())
+        assertTrue(settled.isCompleted)
+    }
+
+    @Test
+    fun `with the songs switched off a song handed over is written and not opened`() = runTest {
+        areSongsEnabled = false
+        startController()
+        handOver()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertEquals(1, importCount)
         assertTrue(openedSongs.isEmpty())
     }
 

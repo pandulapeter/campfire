@@ -108,6 +108,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialogRestorer
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
@@ -150,7 +151,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -496,6 +499,7 @@ class CampfireViewModel(
         reportState = importReportState,
         openImportedSong = { navigator.openImportedSong(it) },
         openNewSongEditor = { text, suggestion -> editorSession.openNewSongEditor(text, suggestion) },
+        areSongsEnabled = { preferencesController.areSongsEnabled.value },
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
@@ -712,6 +716,11 @@ class CampfireViewModel(
         viewModelScope.launch {
             // Performance mode leaves no row menu to start the mode from, and no way to act on what is ticked.
             preferencesController.isPerformanceModeEnabled.collect { if (it) songSelection.end() }
+        }
+        viewModelScope.launch {
+            // From the first read on, so that a start with the songs switched off opens on the first tool rather than
+            // on a songs screen that is not there.
+            preferencesController.userPreferences.map { FeatureSwitches.of(it) }.distinctUntilChanged().collect { navigator.followFeatureSwitches(it) }
         }
         savedStateStore.startPersisting(
             songFilter = _songFilter,

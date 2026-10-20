@@ -10,6 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +34,8 @@ import androidx.compose.ui.unit.dp
 
 /**
  * A row that is one switch. Flipping it is felt, on and off alike, as a switch of the platform's own is on both phone
- * platforms - Material's draws the change and leaves the hand out of it.
+ * platforms - Material's draws the change and leaves the hand out of it. A description that changes with another switch
+ * cross-fades into the new one while the row grows or shrinks to it.
  */
 @Composable
 internal fun SwitchListItem(
@@ -59,7 +64,12 @@ internal fun SwitchListItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
             if (description != null) {
-                Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AnimatedContent(
+                    targetState = description,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                ) { shownDescription ->
+                    Text(text = shownDescription, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
         Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null)

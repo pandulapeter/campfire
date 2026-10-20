@@ -152,7 +152,8 @@ internal fun Messages(
         null -> null
     }
     val importFinished = head?.value as? Message.ImportFinished
-    val songToOpen = importFinished?.result?.convertedSongToOpen
+    val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
+    val songToOpen = importFinished?.result?.convertedSongToOpen?.takeIf { areSongsEnabled }
     val actionLabel = when {
         songToOpen != null -> stringResource(Res.string.import_open)
         importFinished?.hasDetails == true -> stringResource(Res.string.import_details)

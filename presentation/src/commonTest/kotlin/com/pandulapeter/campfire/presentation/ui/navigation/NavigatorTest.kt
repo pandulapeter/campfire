@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
@@ -84,6 +85,44 @@ class NavigatorTest {
         navigator.selectTopLevelDestination(CampfireDestination.Metronome)
         navigator.selectTopLevelDestination(CampfireDestination.Setlists)
         assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Setlists), navigator.backStack.toList())
+    }
+
+    @Test
+    fun `with the songs switched off a top level screen is put on top of the first tool`() = runTest {
+        val navigator = navigator(backgroundScope)
+        topLevelDestinations = listOf(CampfireDestination.Metronome, CampfireDestination.Tuner, CampfireDestination.Settings)
+        navigator.followFeatureSwitches(FeatureSwitches.of(testPreferences().copy(areSongsEnabled = false)))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Metronome), navigator.backStack.toList())
+        navigator.selectTopLevelDestination(CampfireDestination.Tuner)
+        assertEquals(listOf(CampfireDestination.Metronome, CampfireDestination.Tuner), navigator.backStack.toList())
+        navigator.selectTopLevelDestination(CampfireDestination.Metronome)
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Metronome), navigator.backStack.toList())
+    }
+
+    @Test
+    fun `the songs switched off under the settings screen leave it over the first tool, and back on over the songs`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Settings)
+        navigator.followFeatureSwitches(FeatureSwitches.of(testPreferences().copy(areSongsEnabled = false)))
+        assertEquals(listOf(CampfireDestination.Metronome, CampfireDestination.Settings), navigator.backStack.toList())
+        navigator.followFeatureSwitches(FeatureSwitches.of(testPreferences()))
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
+    }
+
+    @Test
+    fun `switching a screen back on from the settings screen leaves the user there`() = runTest {
+        val navigator = navigator(backgroundScope)
+        val allOff = testPreferences().copy(
+            areSongsEnabled = false,
+            isMetronomeEnabled = false,
+            isTunerEnabled = false,
+            areChordsEnabled = false,
+            areScalesEnabled = false,
+        )
+        navigator.followFeatureSwitches(FeatureSwitches.of(allOff))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Settings), navigator.backStack.toList())
+        navigator.followFeatureSwitches(FeatureSwitches.of(allOff.copy(isTunerEnabled = true)))
+        assertEquals(listOf(CampfireDestination.Tuner, CampfireDestination.Settings), navigator.backStack.toList())
     }
 
     @Test

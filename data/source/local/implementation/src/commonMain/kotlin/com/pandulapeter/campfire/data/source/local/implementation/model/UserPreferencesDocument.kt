@@ -24,6 +24,7 @@ internal data class UserPreferencesDocument(
     // The inverse of UserPreferences.areChordsEnabled, stored under the name the switch had before, so that a document
     // written either way still says the same thing.
     val isLyricsOnlyModeEnabled: Boolean = false,
+    val areSongsEnabled: Boolean = true,
     val areSetlistsEnabled: Boolean = true,
     val isMetronomeEnabled: Boolean = true,
     val isTunerEnabled: Boolean = true,

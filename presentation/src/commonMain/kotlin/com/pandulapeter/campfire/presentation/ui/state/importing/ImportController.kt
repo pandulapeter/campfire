@@ -65,6 +65,8 @@ import kotlin.time.Duration.Companion.seconds
  * @param openImportedSong Opens the one song the system handed over, see `Navigator.openImportedSong`.
  * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
  *   `EditorSession.openNewSongEditor`.
+ * @param areSongsEnabled Whether the app has songs to open, which it does not with the Songs switch off: a file or a
+ *   text sent to the app is then imported as any batch is, with nothing opened and no editor started on it.
  * @param songLookup The library as the screens look songs up in it, which the song to open is waited for in.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
@@ -77,6 +79,7 @@ internal class ImportController(
     private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
     private val openNewSongEditor: suspend (text: String, suggestion: SharedTextTitle?) -> Unit,
+    private val areSongsEnabled: () -> Boolean,
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
@@ -293,7 +296,7 @@ internal class ImportController(
                 // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing.
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
-                val newSong = if (request.isNewSongFromText) plan.newSongOf() else null
+                val newSong = if (request.isNewSongFromText && areSongsEnabled()) plan.newSongOf() else null
                 if (newSong != null) {
                     // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
                     // and it is the queue that opens it, since it may have to wait for whatever is on screen.
@@ -430,7 +433,7 @@ internal class ImportController(
             val songToOpen = songToOpen(
                 plan = plan,
                 result = result,
-                shouldOpenSong = request.shouldOpenSong || request.isNewSongFromText,
+                shouldOpenSong = (request.shouldOpenSong || request.isNewSongFromText) && areSongsEnabled(),
                 isConvertedSongOpened = request.isNewSongFromText,
             )
             val isReportShown = isReported && reportState.isOnBackStack

@@ -76,9 +76,15 @@ internal class PreferencesController(
 
     /**
      * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
-     * bar in the app has something it takes away.
+     * bar in the app has something it takes away. Off while the songs are switched off, since its switch goes with
+     * them: the library actions of Settings would otherwise stay disabled with nothing on screen saying why.
      */
-    val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asState(scope, false)
+    val isPerformanceModeEnabled = userPreferences
+        .map { it?.isPerformanceModeEnabled == true && it.areSongsEnabled }
+        .asState(scope, false)
+
+    /** Whether the app has songs at all, which the import asks before it opens one, see [UserPreferences.areSongsEnabled]. */
+    val areSongsEnabled = userPreferences.map { it?.areSongsEnabled != false }.asState(scope, true)
 
     /** The top level screens the navigation chrome offers, which are only those of the features switched on. */
     val topLevelDestinations = userPreferences
@@ -135,6 +141,8 @@ internal class PreferencesController(
         val shapes = chordVoicings[voicingKey].orEmpty().let { if (shape == null) it - chordId else it + (chordId to shape) }
         copy(chordVoicings = if (shapes.isEmpty()) chordVoicings - voicingKey else chordVoicings + (voicingKey to shapes))
     }
+
+    fun setSongsEnabled(value: Boolean) = changeUserPreferences { copy(areSongsEnabled = value) }
 
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 

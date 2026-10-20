@@ -79,27 +79,27 @@ class BrowserRoutesTest {
 
     /** The states every address the app writes stands for, with the paths they make. */
     private val statesWithPaths = listOf(
-        home to listOf(""),
-        home.copy(isSongsSearchOpen = true) to listOf("", "search"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists)) to listOf("", "setlists"),
+        home to listOf("songs"),
+        home.copy(isSongsSearchOpen = true) to listOf("songs", "songs/search"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists)) to listOf("songs", "setlists"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists), isSetlistsSearchOpen = true) to
-            listOf("", "setlists", "setlists/search"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Metronome)) to listOf("", "metronome"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Tuner)) to listOf("", "tuner"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Chords)) to listOf("", "chords"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Scales)) to listOf("", "scales"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings)) to listOf("", "settings/general"),
+            listOf("songs", "setlists", "setlists/search"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Metronome)) to listOf("songs", "metronome"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Tuner)) to listOf("songs", "tuner"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Chords)) to listOf("songs", "chords"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Scales)) to listOf("songs", "scales"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings)) to listOf("songs", "settings/general"),
         home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings), settingsTab = SettingsTab.LIBRARY) to
-            listOf("", "settings/general", "settings/library"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"))) to listOf("", "song/a"),
-        home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("c.chopro"))) to listOf("", "song/c.chopro"),
+            listOf("songs", "settings/general", "settings/library"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"))) to listOf("songs", "song/a"),
+        home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("c.chopro"))) to listOf("songs", "song/c.chopro"),
         home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("катюша.cho"))) to
-            listOf("", "song/%D0%BA%D0%B0%D1%82%D1%8E%D1%88%D0%B0"),
+            listOf("songs", "song/%D0%BA%D0%B0%D1%82%D1%8E%D1%88%D0%B0"),
         home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"), CampfireDestination.SongEditor(fileName = "a.cho"))) to
-            listOf("", "song/a", "song/a/edit"),
+            listOf("songs", "song/a", "song/a/edit"),
         home.copy(
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists, songDetails("a.cho", "b.cho", setlistFileName = "set.setlist.json", index = 1)),
-        ) to listOf("", "setlists", "setlist/set/b"),
+        ) to listOf("songs", "setlists", "setlist/set/b"),
     )
 
     @Test
@@ -108,16 +108,16 @@ class BrowserRoutesTest {
 
     @Test
     fun `the selection mode repeats the songs under their search`() {
-        assertEquals(listOf("", ""), BrowserRoutes.paths(inputs(home, isSongSelecting = true)))
-        assertEquals(listOf("", "", "search"), BrowserRoutes.paths(inputs(home.copy(isSongsSearchOpen = true), isSongSelecting = true)))
+        assertEquals(listOf("songs", "songs"), BrowserRoutes.paths(inputs(home, isSongSelecting = true)))
+        assertEquals(listOf("songs", "songs", "songs/search"), BrowserRoutes.paths(inputs(home.copy(isSongsSearchOpen = true), isSongSelecting = true)))
     }
 
     @Test
     fun `the reorder mode repeats the setlists only while their search is closed`() {
         val setlists = home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists))
-        assertEquals(listOf("", "setlists", "setlists"), BrowserRoutes.paths(inputs(setlists, isSetlistReordering = true)))
+        assertEquals(listOf("songs", "setlists", "setlists"), BrowserRoutes.paths(inputs(setlists, isSetlistReordering = true)))
         assertEquals(
-            listOf("", "setlists", "setlists/search"),
+            listOf("songs", "setlists", "setlists/search"),
             BrowserRoutes.paths(inputs(setlists.copy(isSetlistsSearchOpen = true), isSetlistReordering = true)),
         )
     }
@@ -125,7 +125,7 @@ class BrowserRoutesTest {
     @Test
     fun `something open over the screen repeats its address`() {
         val state = home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho")))
-        assertEquals(listOf("", "song/a", "song/a"), BrowserRoutes.paths(inputs(state, hasOverlay = true)))
+        assertEquals(listOf("songs", "song/a", "song/a"), BrowserRoutes.paths(inputs(state, hasOverlay = true)))
     }
 
     @Test
@@ -134,7 +134,7 @@ class BrowserRoutesTest {
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
         )
         val paths = BrowserRoutes.paths(inputs(state))
-        assertEquals(listOf("", "settings/general", "settings/general"), paths)
+        assertEquals(listOf("songs", "settings/general", "settings/general"), paths)
         assertEquals(paths.size, BrowserRoutes.entryCount(state))
         assertEquals(
             listOf<CampfireDestination>(CampfireDestination.Songs, CampfireDestination.Settings),
@@ -165,6 +165,15 @@ class BrowserRoutesTest {
         home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"))).withoutIds(),
         BrowserRoutes.resolve(path = "song/a/edit", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = true)?.withoutIds(),
     )
+
+    @Test
+    fun `the bare address and the old search address open the songs`() {
+        assertEquals(home, BrowserRoutes.resolve(path = "", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false))
+        assertEquals(
+            home.copy(isSongsSearchOpen = true),
+            BrowserRoutes.resolve(path = "search", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false),
+        )
+    }
 
     @Test
     fun `a bare settings address keeps the tab that was open`() = assertEquals(

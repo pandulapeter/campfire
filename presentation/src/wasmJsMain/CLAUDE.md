@@ -59,7 +59,7 @@ fire it on tab close.
 - Every screen has an address (`BrowserRoutes`, `ui/navigation/CLAUDE.md`) and the browser's history is the app's back
   stack. A dialog, sheet, or menu, the reorder mode, the selection mode, and the onboarding each get an entry repeating
   the address under it; the unsaved changes question gets none (it answers a Back). An address naming nothing in the
-  library opens the songs, resolved behind the launch screen.
+  library opens the home screen, resolved behind the launch screen.
 - `BrowserHistoryEffect` (`wasmJsMain/.../navigation/BrowserHistory.kt`): the app decides, the history follows via
   `pushState`, `replaceState` (settings tab to tab, setlist paging, renamed file), or `history.go`. Each entry is
   stamped with its depth, which is how `popstate` tells where the browser went.

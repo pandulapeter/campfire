@@ -9,10 +9,25 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_warning
 import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -22,37 +37,43 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
+import com.pandulapeter.campfire.presentation.resources.settings_everything_off
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
-import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
-import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions_description
 import com.pandulapeter.campfire.presentation.resources.settings_scales_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup_description
+import com.pandulapeter.campfire.presentation.resources.settings_songs_description
+import com.pandulapeter.campfire.presentation.resources.settings_songs_description_without_setlists
+import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.settings_tuner_description
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
- * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. Read only mode is
- * first: it is the one that decides what the rest of the app is still allowed to do. Then what a song page shows, the
- * most musical first, and the tab that is only a tab. The two switches that let the app reach the network are a group
- * of their own, so that what can make a request is found in one place rather than among the rest.
+ * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
+ * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - each switch that has no tab of its own
+ * right after the one it depends on: the chords before the chord diagrams that are their tab, the scale suggestions
+ * after the scales. The two switches that let the app reach the network are a group of their own, so that what can
+ * make a request is found in one place rather than among the rest.
  */
 @Composable
 internal fun FeaturesSections(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-    isPerformanceModeEnabled: Boolean,
 ) {
-    PlayingSection(viewModel = viewModel, userPreferences = userPreferences, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    PlayingSection(viewModel = viewModel, userPreferences = userPreferences)
     OnlineSection(viewModel = viewModel, userPreferences = userPreferences)
 }
 
@@ -60,13 +81,41 @@ internal fun FeaturesSections(
 private fun PlayingSection(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-    isPerformanceModeEnabled: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_playing)) {
+    // With every screen switched off Settings is the only one left, and the app opens on it (TopLevel.home).
+    AnimatedSettingsRow(isVisible = CampfireDestination.TopLevel.home(FeatureSwitches.of(userPreferences)) == CampfireDestination.Settings) {
+        EverythingOffCard()
+    }
     SwitchListItem(
-        title = stringResource(Res.string.settings_read_only_mode),
-        description = stringResource(Res.string.settings_read_only_mode_description),
-        isChecked = isPerformanceModeEnabled,
-        onCheckedChange = viewModel.preferencesController::setPerformanceModeEnabled,
+        title = stringResource(Res.string.songs),
+        // The setlists go with the songs, so they are named only while their own switch has not taken them already.
+        description = stringResource(
+            if (userPreferences?.areSetlistsEnabled != false) Res.string.settings_songs_description else Res.string.settings_songs_description_without_setlists,
+        ),
+        isChecked = userPreferences?.areSongsEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setSongsEnabled,
+    )
+    // Disabled rather than hidden with the songs off, as the chord diagrams are with the chords off: a setlist is a list
+    // of songs, so without them there is nothing it could hold.
+    SwitchListItem(
+        title = stringResource(Res.string.setlists),
+        description = stringResource(Res.string.settings_setlists_description),
+        isChecked = userPreferences?.areSetlistsEnabled != false,
+        isEnabled = userPreferences?.areSongsEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setSetlistsEnabled,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.metronome),
+        description = stringResource(Res.string.settings_metronome_description),
+        isChecked = userPreferences?.isMetronomeEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setMetronomeEnabled,
+    )
+    // Off, nothing in the app can ask for the microphone.
+    SwitchListItem(
+        title = stringResource(Res.string.tuner),
+        description = stringResource(Res.string.settings_tuner_description),
+        isChecked = userPreferences?.isTunerEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setTunerEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.settings_chords),
@@ -99,25 +148,37 @@ private fun PlayingSection(
         isEnabled = userPreferences?.areScalesEnabled != false && userPreferences?.areChordsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
     )
-    SwitchListItem(
-        title = stringResource(Res.string.metronome),
-        description = stringResource(Res.string.settings_metronome_description),
-        isChecked = userPreferences?.isMetronomeEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setMetronomeEnabled,
-    )
-    // Off, nothing in the app can ask for the microphone.
-    SwitchListItem(
-        title = stringResource(Res.string.tuner),
-        description = stringResource(Res.string.settings_tuner_description),
-        isChecked = userPreferences?.isTunerEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setTunerEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.setlists),
-        description = stringResource(Res.string.settings_setlists_description),
-        isChecked = userPreferences?.areSetlistsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setSetlistsEnabled,
-    )
+}
+
+/**
+ * What the app has become with every screen switched off, on a card like the onboarding's note about Settings, so that it
+ * reads as a word about the whole app rather than about one of the switches under it. A polite live region, since it
+ * arrives in answer to the switch just flipped.
+ */
+@Composable
+private fun EverythingOffCard() = Surface(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+    shape = MaterialTheme.shapes.large,
+    color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_warning),
+            contentDescription = null,
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(Res.string.settings_everything_off),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
 }
 
 @Composable
@@ -125,11 +186,14 @@ private fun OnlineSection(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_online)) {
+    // Both are about songs, so both are disabled while the songs are off, the way the setlists are.
+    val areSongsEnabled = userPreferences?.areSongsEnabled != false
     // Off, nothing is asked of either catalogue for a song's details: the button in the Edit song details form is gone.
     SwitchListItem(
         title = stringResource(Res.string.settings_song_details_lookup),
         description = stringResource(Res.string.settings_song_details_lookup_description),
         isChecked = userPreferences?.isSongDetailsLookupEnabled == true,
+        isEnabled = areSongsEnabled,
         onCheckedChange = viewModel.preferencesController::setSongDetailsLookupEnabled,
     )
     // Off, no cover is fetched from anywhere, which is what somebody who does not want a song file to make the app
@@ -138,6 +202,7 @@ private fun OnlineSection(
         title = stringResource(Res.string.settings_cover_art),
         description = stringResource(Res.string.settings_cover_art_description),
         isChecked = userPreferences?.isCoverArtEnabled == true,
+        isEnabled = areSongsEnabled,
         onCheckedChange = viewModel.preferencesController::setCoverArtEnabled,
     )
 }

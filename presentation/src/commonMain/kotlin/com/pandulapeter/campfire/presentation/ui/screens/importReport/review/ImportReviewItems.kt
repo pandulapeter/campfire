@@ -64,7 +64,7 @@ internal fun LazyListScope.reviewSections(
     onEntriesChosenChange: (Collection<ImportEntryKey>, Boolean) -> Unit,
     onConflictResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
     onGroupConflictResolutionSelected: (keys: Collection<ImportEntryKey>, isFiltered: Boolean, ImportConflictResolution) -> Unit,
-    onOpenSong: (songFileNames: List<String>, index: Int) -> Unit,
+    onOpenSong: ((songFileNames: List<String>, index: Int) -> Unit)?,
 ) {
     if (isFiltered && sections.isEmpty()) {
         item(key = "empty", contentType = "text") {
@@ -105,7 +105,7 @@ internal fun LazyListScope.reviewSections(
                 choices = choices,
                 onChosenChange = { key, isChosen -> onEntriesChosenChange(listOf(key), isChosen) },
                 onResolutionSelected = onConflictResolutionSelected,
-                onOpenLibrarySong = { fileName -> onOpenSong(librarySongFileNames, librarySongFileNames.indexOf(fileName).coerceAtLeast(0)) },
+                onOpenLibrarySong = onOpenSong?.let { open -> { fileName -> open(librarySongFileNames, librarySongFileNames.indexOf(fileName).coerceAtLeast(0)) } },
             )
         }
     }
