@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_incr
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_decrease
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_increase
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import org.jetbrains.compose.resources.painterResource
@@ -62,8 +63,10 @@ internal fun TimeSignaturePicker(
         horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
         verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
+        val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
         COMMON_TIME_SIGNATURES.forEach { common ->
             SelectableChip(
+                modifier = placement,
                 isSelected = common == timeSignature,
                 role = Role.RadioButton,
                 onClick = { onChange(common) },

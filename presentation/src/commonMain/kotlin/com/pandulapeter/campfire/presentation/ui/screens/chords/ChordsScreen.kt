@@ -148,7 +148,7 @@ internal fun ChordsScreen(
     ) {
         LazyVerticalGrid(
             modifier = Modifier
-                .widthIn(max = layout.pageMaxWidth(sections = 2))
+                .widthIn(max = layout.animatedPageMaxWidth(sections = 2))
                 .fillMaxSize()
                 .fadingTopEdge(
                     scrolled = { pinnedSearchTopFade(gridState, fadeHeight) },

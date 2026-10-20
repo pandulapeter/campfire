@@ -149,7 +149,7 @@ The view model facade, the composition root, and the product rules every screen 
   - **Read only** (`isPerformanceModeEnabled`): see Performance mode.
   - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
-    Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument chips stay (keyboard capo
+    Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard capo
     rule, tuner).
   - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet; independent of both chord switches. The
     scale sheet's chord rows follow Chord diagrams.

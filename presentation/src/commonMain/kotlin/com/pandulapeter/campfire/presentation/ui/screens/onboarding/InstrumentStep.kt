@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -35,15 +34,15 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_strings
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_title
-import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentChipRow
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
 import com.pandulapeter.campfire.presentation.ui.instrument.tuningStringsLabel
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * "What do you play?", the one instrument the chord diagrams and the tuner are set up for ([UserPreferences.instrument])
- * and its tuning, picked through the same two chips and sheets the song details screen, the Tuner, the Chords tab, and
- * Settings offer, so that the onboarding teaches the control the player will meet again rather than one of its own.
- * The chips show what the app is set to now, a fresh installation's six-string guitar included.
+ * and its tuning, picked through the same pill and sheets the song details screen, the Tuner, the Chords, and the
+ * Scales tabs offer, so that the onboarding teaches the control the player will meet again rather than one of its own.
+ * The pill shows what the app is set to now, a fresh installation's six-string guitar included.
  *
  * Under them the answer is shown on what it changes: a few chords drawn for it in [chordTuning], where it has diagrams,
  * and the open strings the tuner will listen for, where it has a tuning, crossfading as either is picked again.
@@ -70,10 +69,7 @@ internal fun InstrumentStep(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
-        // Centered, so its width is animated: the tuning chip only fades, and the instrument's would otherwise jump
-        // sideways as it comes and goes.
-        InstrumentChipRow(
-            modifier = Modifier.animateContentSize(),
+        InstrumentPill(
             instrument = instrument,
             tuning = tuning,
             notation = notation,
@@ -89,7 +85,7 @@ internal fun InstrumentStep(
 }
 
 /**
- * The chords and the open strings under the chips, as wide as the page whatever it holds, so that a change only animates
+ * The chords and the open strings under the pill, as wide as the page whatever it holds, so that a change only animates
  * its height.
  */
 @Composable

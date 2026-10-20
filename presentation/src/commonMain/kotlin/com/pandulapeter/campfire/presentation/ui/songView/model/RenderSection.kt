@@ -46,16 +46,16 @@ private const val DESCRIPTION_LENGTH = 40
 private val WHITESPACE = Regex("\\s+")
 
 /**
- * What the instrument and tuning chips at the top of a song's first section name: part of the section's content, since
- * how wide their labels are decides how many lines they take, and the measured sizes of a section are kept by it.
+ * What the instrument and tuning pill at the top of a song's first section names: part of the section's content, since
+ * how wide its labels are decides whether the tuner fits beside it, and the measured sizes of a section are kept by it.
  *
- * @param tuning The tuning the tuning chip names, a leaving one included until it has faded out, since it is laid out
- * until then; null where there is no tuning chip, an instrument with a single tuning, so that two instruments without
+ * @param tuning The tuning the pill's tuning half names, a leaving one included until it has faded out, since it is laid out
+ * until then; null where there is no tuning half, an instrument with a single tuning, so that two instruments without
  * one are not told apart by a tuning nobody sees.
- * @param notation What the tuning chip names the tuning's note in.
+ * @param notation What the tuning half names the tuning's note in.
  */
 @Immutable
-internal data class InstrumentChipsContent(
+internal data class InstrumentPillContent(
     val instrument: UserPreferences.Instrument,
     val tuning: InstrumentTuning?,
     val notation: ChordNotation,
@@ -81,7 +81,7 @@ internal sealed interface RenderSection {
      * [withMetadataSection].
      * @param hasTuner Whether the tuner's button is drawn among them, part of the content for the same reason.
      * @param hasMetronome Whether the metronome's button is drawn among them, part of the content for the same reason.
-     * @param instrumentChips What the instrument and tuning chips at its top name, null where it has none, part of the
+     * @param instrumentPill What the instrument and tuning pill at its top names, null where it has none, part of the
      * content for the same reason, see [withChordsSection].
      */
     @Immutable
@@ -91,7 +91,7 @@ internal sealed interface RenderSection {
         val readsDefaults: Boolean = false,
         val hasTuner: Boolean = false,
         val hasMetronome: Boolean = false,
-        val instrumentChips: InstrumentChipsContent? = null,
+        val instrumentPill: InstrumentPillContent? = null,
     ) : RenderSection
 
     /**

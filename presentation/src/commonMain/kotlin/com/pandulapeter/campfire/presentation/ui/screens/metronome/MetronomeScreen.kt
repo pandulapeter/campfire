@@ -105,7 +105,7 @@ internal fun MetronomeScreen(
             isVisible = true,
             isProminent = true,
             // As wide as the page under it, so that the bar ends where the rows it heads end.
-            pageMaxWidth = layout.pageMaxWidth(sections = 2),
+            pageMaxWidth = layout.animatedPageMaxWidth(sections = 2),
             contentPadding = contentPadding.only(start = true, end = true),
         )
         SettingsPage(

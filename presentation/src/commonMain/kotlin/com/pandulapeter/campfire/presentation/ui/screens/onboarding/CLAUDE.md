@@ -17,7 +17,7 @@ Campfire again") opens it again.
 
 Welcome carries the one note that everything can be changed in Settings; no later page repeats it.
 
-- **Instrument** uses the app-wide chips (`InstrumentChipRow`).
+- **Instrument** uses the app-wide pill (`InstrumentPill`).
 - **Features** cards are the coarse Features switches, in order: chords, scales, metronome, tuner. Chords also switch
   chord diagrams, scales also switch scale suggestions (one write each), and setlists are left to Settings, to keep the
   list short. No roles (singer / player) are asked: the page asks about features, not people.

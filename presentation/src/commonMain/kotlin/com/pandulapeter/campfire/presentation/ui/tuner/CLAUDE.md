@@ -61,7 +61,7 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   unison pair is one note to the tuner, so its segments act together. None for the keyboard and Other. Another instrument's
   strings crossfade in while their room resizes unclipped; a row leaving is drawn as it was but plays nothing
   (`isStringOf`).
-- **The tab alone** offers the instrument and tuning chips and the reference pitch; there is no Chromatic switch, since
+- **The tab alone** offers the instrument and tuning pill and the reference pitch; there is no Chromatic switch, since
   Other reads every note. **The sheet offers neither**: it tunes to the player's instrument and the tab's settings.
 - **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
   note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
@@ -71,7 +71,7 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
 
 The tab pins the tools' instrument row (`ui/instrument/ToolInstrumentSetting`, as the Chords and Scales tabs start):
 its title in a line of the list bar's height whose end holds the reference pitch, its stepper pill and a filled 48dp
-play circle exactly where the list screens' pill and New button stand (`NEW_ITEM_BUTTON_*`), and the chips under that
+play circle exactly where the list screens' pill and New button stand (`NEW_ITEM_BUTTON_*`), and the pill under that
 line.
 The display follows, above a `SettingsPage` that is all header, as wide as the display (`headerColumns`): the notice,
 the issue line, and the strings, untitled and centered under the display (the sheet keeps their title). It keeps the

@@ -21,7 +21,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -35,7 +38,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
  * empty), the room growing and shrinking as the grouping comes and goes, so that the screen moves rather than jumps.
  * The row itself is drawn once over every tool screen ([SharedToolsTabRow]), so that its indicator slides from one
  * tool to the next while the screens fade through under it; only while the screens carry a chrome of their own (a card
- * dealt over them, see [CampfireScreens]) does this draw a copy of it in that room, which moves with the screen.
+ * dealt over them, see [CampfireScreens]) does this draw a copy of it in that room, which moves with the screen, and
+ * keeps its tabs while the room closes over it, so that the copy is covered rather than gone at once.
  */
 @Composable
 internal fun ToolScreenFrame(
@@ -48,6 +52,8 @@ internal fun ToolScreenFrame(
     onToolSelected: (CampfireDestination.TopLevel) -> Unit,
     content: @Composable () -> Unit,
 ) = Column(modifier = Modifier.fillMaxSize()) {
+    val lastTools = remember { mutableStateOf(tools) }
+    SideEffect { if (tools.isNotEmpty()) lastTools.value = tools }
     val tabRowHeight by animateDpAsState(
         targetValue = if (tools.isEmpty()) 0.dp else TOOLS_TAB_ROW_HEIGHT,
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
@@ -59,12 +65,13 @@ internal fun ToolScreenFrame(
             .clipToBounds(),
         contentAlignment = Alignment.BottomStart,
     ) {
-        if (isTabRowDrawn && tools.isNotEmpty()) {
+        val shownTools = tools.ifEmpty { lastTools.value }
+        if (isTabRowDrawn && shownTools.isNotEmpty() && (tools.isNotEmpty() || tabRowHeight > 0.dp)) {
             ToolsTabRow(
                 modifier = Modifier
                     .padding(contentPadding.only(start = true, end = true))
                     .wrapContentHeight(unbounded = true),
-                tools = tools,
+                tools = shownTools,
                 selected = destination,
                 metronomeBeat = metronomeBeat,
                 isKeyboard = isKeyboard,

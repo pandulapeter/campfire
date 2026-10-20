@@ -10,7 +10,8 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Pull to refresh for sync ?
+- Global sync indicator, maybe pull to refresh on mobile
+- Metronome indicator sizing issues
 - Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)

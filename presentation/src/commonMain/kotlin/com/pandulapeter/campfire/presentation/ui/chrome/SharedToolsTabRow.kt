@@ -37,8 +37,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 /**
  * The one [ToolsTabRow] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
  * laid over the room each of them keeps for it, next to the rail's room ([railWidth]) and under the status bar as the
- * screens are. It fades in and out as the stack arrives at a tool or leaves for another screen, while the screens fade
- * through under it, and keeps the tool it was on through its exit so that the indicator does not slide away first. The
+ * screens are. It fades in and out as the stack arrives at a tool or leaves for another screen, and as a resized window
+ * groups the tools behind the Tools item ([tools] not empty) or lets them go, while the screens fade through under it
+ * or move into the room they keep for it; it keeps the tools and the tool it was on through its exit so that the
+ * indicator does not slide away nor the tabs go blank first. The
  * background is painted across the whole width and under the status bar as well as behind the row, so that nothing of
  * the screens fading through shows beside or above it.
  *
@@ -57,7 +59,11 @@ internal fun SharedToolsTabRow(
 ) {
     val current = viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.TopLevel
     val lastShownTool = remember { mutableStateOf(current?.takeIf { it in tools }) }
-    SideEffect { if (current in tools) lastShownTool.value = current }
+    val lastShownTools = remember { mutableStateOf(tools) }
+    SideEffect {
+        if (current in tools) lastShownTool.value = current
+        if (tools.isNotEmpty()) lastShownTools.value = tools
+    }
     AnimatedVisibility(
         modifier = modifier,
         visible = current in tools,
@@ -71,7 +77,7 @@ internal fun SharedToolsTabRow(
                 .background(MaterialTheme.colorScheme.background)
                 .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)
                 .padding(contentPadding.only(start = true, end = true)),
-            tools = tools,
+            tools = tools.ifEmpty { lastShownTools.value },
             selected = current?.takeIf { it in tools } ?: lastShownTool.value,
             metronomeBeat = metronomeBeat,
             isKeyboard = isKeyboard,

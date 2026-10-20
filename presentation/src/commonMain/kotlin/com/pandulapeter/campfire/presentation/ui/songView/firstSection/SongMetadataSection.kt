@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
-import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_START_PADDING
+import com.pandulapeter.campfire.presentation.ui.songView.HEADER_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 /**
  * The first section of the song: the key, capo, tempo and time, which are always on the page, since they are what is
  * played, or where [isSongInfoShown] the card of what the song is, which holds them as its Song defaults tiles, headed
- * by the instrument and tuning chips where it has them. A whole, uncuttable section.
+ * by the instrument and tuning pill where it has one. A whole, uncuttable section.
  *
  * @param playingControls What sets those four, where they are set here rather than only read: the song details screen
  * hands them down outside read only mode, see [SongPlayingControls].
@@ -54,14 +54,15 @@ import com.pandulapeter.campfire.presentation.localization.textResource
  * @param readsDefaults Whether the line of text names a capo of none, and the default tempo and time signature, too, see
  * [withMetadataSection].
  * @param animatesControls Whether the controls travel to the places a new layout gives them, which the song's own
- * sections decide (see `SectionMotion`): never while a pinch or a window edge being dragged changes the layout every frame.
+ * sections decide (see `SectionMotion`), and a window edge being dragged too, which leaves their sizes alone: never while
+ * a pinch changes them on every frame.
  * @param titleStyle The style of the section titles of the lyrics, which the controls are as tall as; what the card
  * holds scales with [fontScale] the way the lyrics do.
  * @param chordStyle The style the chords of the lyrics are set in, already scaled, which the line of text read only mode
  * draws the four values in: the key and the capo are read in the chords' accent color, and in the chords' size they read
  * as part of what is played rather than as a caption above it.
- * @param instrumentChips The instrument and tuning chips that head the section, above what they are as much about as the
- * controls are: how the whole song is played (see [withChordsSection]); null where there are none. It fades in and out rather than
+ * @param instrumentPill The instrument and tuning pill that heads the section, above what it is as much about as the
+ * controls are: how the whole song is played (see [withChordsSection]); null where there is none. It fades in and out rather than
  * the section growing towards it, since the layout reads the section's size as it is measured.
  */
 @Composable
@@ -77,35 +78,36 @@ internal fun SongMetadataSection(
     titleStyle: TextStyle,
     chordStyle: TextStyle,
     fontScale: Float,
-    instrumentChips: (@Composable () -> Unit)? = null,
+    instrumentPill: (@Composable () -> Unit)? = null,
 ) = Column(modifier = modifier) {
     // Kept while it fades out, so that it leaves as it was rather than as nothing.
-    val lastChip = remember { LastInstrumentChips() }
-    instrumentChips?.let { lastChip.content = it }
-    val chipsVisibility = remember { MutableTransitionState(instrumentChips != null) }
-        .apply { targetState = instrumentChips != null }
-    // The tuner stands with the chips for as long as they are drawn, fading in and out with them, and joins the values
+    val lastPill = remember { LastInstrumentPill() }
+    instrumentPill?.let { lastPill.content = it }
+    val pillVisibility = remember { MutableTransitionState(instrumentPill != null) }
+        .apply { targetState = instrumentPill != null }
+    // The tuner stands with the pill for as long as it is drawn, fading in and out with them, and joins the values
     // only once they have gone: one button at a time.
-    val isTunerWithChips = chipsVisibility.targetState || chipsVisibility.currentState
+    val isTunerWithPill = pillVisibility.targetState || pillVisibility.currentState
     AnimatedVisibility(
-        visibleState = chipsVisibility,
+        visibleState = pillVisibility,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        // The chips' names stand on the controls' keyline by reaching out of it as the section pills do: the row starts
-        // their own padding short of it rather than drawing them shifted, so that it counts that width as room to wrap in.
+        // The pill reaches out of the controls' keyline as far as the section pills do, so that its edge lines up with
+        // theirs: the row starts that far short of it rather than drawing the pill shifted, so that it counts that width as
+        // room to wrap the tuner in.
         FlowRow(
-            modifier = Modifier.padding(start = 12.dp - PICKER_CHIP_START_PADDING, end = 12.dp, bottom = INSTRUMENT_CHIPS_GAP),
-            horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
-            verticalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
+            modifier = Modifier.padding(start = 12.dp - HEADER_HORIZONTAL_PADDING, end = 12.dp, bottom = INSTRUMENT_PILL_GAP),
+            horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
+            verticalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
         ) {
-            lastChip.content?.invoke()
+            lastPill.content?.invoke()
             if (playingTools != null) {
                 SongPlayingToolButtons(
                     tools = playingTools,
                     // Only the tuner ever stands here, wherever the values put the metronome.
-                    places = playingTools.places(hasInstrumentChips = true, hasChordValues = false, hasClickValues = false),
-                    place = PlayingToolPlace.AFTER_INSTRUMENT_CHIPS,
+                    places = playingTools.places(hasInstrumentPill = true, hasChordValues = false, hasClickValues = false),
+                    place = PlayingToolPlace.AFTER_INSTRUMENT_PILL,
                     height = songControlHeight(titleStyle),
                     fontScale = fontScale,
                 )
@@ -127,7 +129,7 @@ internal fun SongMetadataSection(
             style = chordStyle,
             toolHeight = songControlHeight(titleStyle),
             fontScale = fontScale,
-            hasInstrumentChips = isTunerWithChips,
+            hasInstrumentPill = isTunerWithPill,
         )
     } else {
         SongPlayingControlsRow(
@@ -136,13 +138,13 @@ internal fun SongMetadataSection(
             isAnimated = animatesControls,
             titleStyle = titleStyle,
             fontScale = fontScale,
-            hasInstrumentChips = isTunerWithChips,
+            hasInstrumentPill = isTunerWithPill,
         )
     }
 }
 
-/** What the section's instrument chips last drew, see [SongMetadataSection]. Not a state: nothing is redrawn because of it. */
-private class LastInstrumentChips(var content: (@Composable () -> Unit)? = null)
+/** What the section's instrument pill last drew, see [SongMetadataSection]. Not a state: nothing is redrawn because of it. */
+private class LastInstrumentPill(var content: (@Composable () -> Unit)? = null)
 
 /**
  * The four values read rather than set, on one line. With [tools], the key and the capo are one group and the tempo and
@@ -159,7 +161,7 @@ private fun SongPlayingMetadata(
     style: TextStyle,
     toolHeight: Dp,
     fontScale: Float,
-    hasInstrumentChips: Boolean,
+    hasInstrumentPill: Boolean,
 ) {
     val chordValues = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
@@ -177,7 +179,7 @@ private fun SongPlayingMetadata(
         )
     } else {
         val places = tools.places(
-            hasInstrumentChips = hasInstrumentChips,
+            hasInstrumentPill = hasInstrumentPill,
             hasChordValues = chordValues.isNotEmpty(),
             hasClickValues = clickValues.isNotEmpty(),
         )
@@ -248,7 +250,7 @@ private val PLAYING_VALUES_GROUP_GAP = 16.dp
 private val PLAYING_VALUES_TOOL_GAP = 12.dp
 
 /**
- * Between the instrument chip and the tuning chip, between their lines, and under them, as between the song's playing
- * tools and between the rows of its controls, so that a line of chips over the controls reads as one more of their rows.
+ * Between the instrument pill and the tuner after it, between their lines, and under them, as between the song's playing
+ * tools and between the rows of its controls, so that the pill's line over the controls reads as one more of their rows.
  */
-private val INSTRUMENT_CHIPS_GAP = 8.dp
+private val INSTRUMENT_PILL_GAP = 8.dp

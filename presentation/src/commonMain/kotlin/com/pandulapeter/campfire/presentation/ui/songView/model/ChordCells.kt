@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * What a song's Chords section needs beyond the song: the instrument in the player's hands and the tuning it is in,
- * which its chip names, the tuning the diagrams are drawn for, the shapes the player chose in it (under its
+ * which its pill names, the tuning the diagrams are drawn for, the shapes the player chose in it (under its
  * [ChordTuning.voicingKey]), whether the section is folded, and what its header and its diagrams do.
  *
  * @param tuning The tuning the diagrams are drawn for, null for an instrument without shapes, which draws none.
@@ -32,13 +32,13 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
  * @param onChordClicked Opens the sheet of the chord a diagram was tapped on, by the name the page shows it with; null in
  * read only mode (performance mode, or a song read from an archived setlist), which takes the controls off the page.
- * @param onInstrumentClicked Opens the sheet of the instrument, from its chip at the top of the song's first section;
+ * @param onInstrumentClicked Opens the sheet of the instrument, from its pill at the top of the song's first section;
  * offered in read only mode too, since it changes this device's preference rather than the song or the setlist.
- * @param onTuningClicked Opens the sheet of the instrument's tuning, from the chip after the instrument's.
+ * @param onTuningClicked Opens the sheet of the instrument's tuning, from the pill's half after the instrument's.
  * @param showsDefinitionsOnly Whether the section holds the song's own definitions and nothing else, each on the
  * instrument it is written for, which is the editor's preview: it shows what is being written, and the app's own shapes
  * are not written.
- * @param notation The reader's notation: what the chip names a tuning's note in, and what the preview's definitions'
+ * @param notation The reader's notation: what the pill names a tuning's note in, and what the preview's definitions'
  * names are read in.
  */
 @Immutable
@@ -91,20 +91,20 @@ internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = so
 /**
  * [sections] with the Chords section after the metadata section, or first where there is none: the diagrams are part of
  * how the song is played, which the metadata section starts with. None where there is no chord to draw. A song that has
- * chords also gets the instrument and tuning chips where they are offered ([instrumentChips], what they name), at the
- * top of the metadata section ([RenderSection.Metadata.instrumentChips]), since like the transposition and the capo under them
- * they are about how the whole song is played; they stay for an instrument without shapes, which leaves no [cells],
- * since they are what brings the diagrams back. A song without chords has nothing to draw on any instrument.
+ * chords also gets the instrument and tuning pill where it is offered ([instrumentPill], what it names), at the
+ * top of the metadata section ([RenderSection.Metadata.instrumentPill]), since like the transposition and the capo under it
+ * it is about how the whole song is played; it stays for an instrument without shapes, which leaves no [cells],
+ * since it is what brings the diagrams back. A song without chords has nothing to draw on any instrument.
  */
 internal fun withChordsSection(
     sections: List<RenderSection>,
     cells: List<ChordCell>,
     isFolded: Boolean,
     hasChords: Boolean,
-    instrumentChips: InstrumentChipsContent?,
+    instrumentPill: InstrumentPillContent?,
 ): List<RenderSection> {
     val metadata = (sections.firstOrNull() as? RenderSection.Metadata)
-        ?.let { if (hasChords && instrumentChips != null) it.copy(instrumentChips = instrumentChips) else it }
+        ?.let { if (hasChords && instrumentPill != null) it.copy(instrumentPill = instrumentPill) else it }
     val rest = if (metadata != null) sections.drop(1) else sections
     return listOfNotNull(metadata) + listOfNotNull(RenderSection.Chords(cells = cells, isFolded = isFolded).takeIf { cells.isNotEmpty() }) + rest
 }

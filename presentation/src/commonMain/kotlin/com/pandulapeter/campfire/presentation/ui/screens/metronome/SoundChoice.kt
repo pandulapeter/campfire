@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_sound_click
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_cowbell
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_hi_hat
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_woodblock
+import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 
@@ -43,8 +44,10 @@ internal fun SoundChoice(
     horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
     verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {
+    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
     MetronomeSound.entries.forEach { sound ->
         SelectableChip(
+            modifier = placement,
             isSelected = sound == selected,
             role = Role.RadioButton,
             onClick = { onSelected(sound) },

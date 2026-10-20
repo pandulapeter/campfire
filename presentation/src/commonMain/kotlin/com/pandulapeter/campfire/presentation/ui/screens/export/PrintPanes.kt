@@ -11,11 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.animateBounds
-import androidx.compose.animation.core.SpringSpec
-import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,13 +20,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Dp
+import com.pandulapeter.campfire.presentation.ui.components.spatialBoundsSpec
 
 /**
  * The options beside the preview, [optionsWidth] wide at its start, or filling the width where that is null,
@@ -49,7 +45,7 @@ internal fun PrintPanes(
     arrangement.animateFloat(transitionSpec = { motionScheme.defaultSpatialSpec() }, label = "PrintPanesProgress") {
         it?.value ?: 0f
     }
-    val spec = motionScheme.paneBoundsSpec()
+    val spec = motionScheme.spatialBoundsSpec()
     val boundsTransform = remember(arrangement, spec) {
         BoundsTransform { _, _ -> if (arrangement.currentState != arrangement.targetState) spec else snap() }
     }
@@ -68,10 +64,4 @@ internal fun PrintPanes(
             }
         }
     }
-}
-
-/** The motion scheme's spatial spring for the bounds of a pane, settling within a pixel. */
-private fun MotionScheme.paneBoundsSpec() = when (val spec = defaultSpatialSpec<Rect>()) {
-    is SpringSpec -> spring(dampingRatio = spec.dampingRatio, stiffness = spec.stiffness, visibilityThreshold = Rect.VisibilityThreshold)
-    else -> spec
 }

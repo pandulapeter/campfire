@@ -48,7 +48,7 @@ internal class PlacementMotion(private val coroutineScope: CoroutineScope) {
     }
 
     /**
-     * Forgets every item, while the layout is not animated: a change that keeps coming (a pinch, a window edge dragged) is
+     * Forgets every item, while the layout is not animated: a change that keeps coming and resizes the items (a pinch) is
      * followed frame by frame, and a travel that started before it would otherwise go on from a place the item has left.
      */
     fun clear() = offsets.clear()

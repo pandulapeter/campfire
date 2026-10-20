@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The tools a song is played with, as buttons of the song's own first section rather than of the app bar: the tuner next
- * to the instrument and tuning chips where they are shown, else the transposition and the capo, which say what the
+ * to the instrument and tuning pill where it is shown, else the transposition and the capo, which say what the
  * strings are tuned for, and the metronome next to the tempo and
  * the time signature, which say what it plays. The bar is left with what is about the song itself. They are there in
  * read only mode too, after the line of text the values are read in there, since neither changes anything about a song.
@@ -88,7 +88,7 @@ internal fun rememberSongPlayingTools(
 }
 
 /** Which of the groups of the playing values each of the [SongPlayingTools] follows, see [playingToolPlaces]. */
-internal enum class PlayingToolPlace { AFTER_INSTRUMENT_CHIPS, AFTER_CHORD_VALUES, AFTER_CLICK_VALUES, ALONE }
+internal enum class PlayingToolPlace { AFTER_INSTRUMENT_PILL, AFTER_CHORD_VALUES, AFTER_CLICK_VALUES, ALONE }
 
 /** Where the tuner and the metronome buttons go, each null where that tool is switched off. */
 internal data class PlayingToolPlaces(
@@ -97,15 +97,15 @@ internal data class PlayingToolPlaces(
 )
 
 /**
- * Where the buttons of [SongPlayingTools] stand among the playing values: the tuner after the instrument and tuning chips
- * ([hasInstrumentChips]), which name what it tunes, else after the key and the capo ([hasChordValues]), the metronome after the tempo and the time signature ([hasClickValues]). A song shown without the
+ * Where the buttons of [SongPlayingTools] stand among the playing values: the tuner after the instrument and tuning pill
+ * ([hasInstrumentPill]), which name what it tunes, else after the key and the capo ([hasChordValues]), the metronome after the tempo and the time signature ([hasClickValues]). A song shown without the
  * values a button belongs next to — the chords switched off, or a song on the keyboard with no chords to transpose —
  * has it after the other group instead, and one shown with neither has the buttons on their own.
  */
 internal fun playingToolPlaces(
     hasTuner: Boolean,
     hasMetronome: Boolean,
-    hasInstrumentChips: Boolean,
+    hasInstrumentPill: Boolean,
     hasChordValues: Boolean,
     hasClickValues: Boolean,
 ): PlayingToolPlaces {
@@ -117,7 +117,7 @@ internal fun playingToolPlaces(
     return PlayingToolPlaces(
         tuner = when {
             !hasTuner -> null
-            hasInstrumentChips -> PlayingToolPlace.AFTER_INSTRUMENT_CHIPS
+            hasInstrumentPill -> PlayingToolPlace.AFTER_INSTRUMENT_PILL
             else -> placeOf(PlayingToolPlace.AFTER_CHORD_VALUES, hasChordValues, hasClickValues)
         },
         metronome = if (hasMetronome) placeOf(PlayingToolPlace.AFTER_CLICK_VALUES, hasClickValues, hasChordValues) else null,
@@ -125,10 +125,10 @@ internal fun playingToolPlaces(
 }
 
 /** Where [playingToolPlaces] put the buttons of these tools, the playing values being as said. */
-internal fun SongPlayingTools.places(hasInstrumentChips: Boolean, hasChordValues: Boolean, hasClickValues: Boolean) = playingToolPlaces(
+internal fun SongPlayingTools.places(hasInstrumentPill: Boolean, hasChordValues: Boolean, hasClickValues: Boolean) = playingToolPlaces(
     hasTuner = onTunerClicked != null,
     hasMetronome = metronome != null,
-    hasInstrumentChips = hasInstrumentChips,
+    hasInstrumentPill = hasInstrumentPill,
     hasChordValues = hasChordValues,
     hasClickValues = hasClickValues,
 )

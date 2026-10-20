@@ -408,7 +408,9 @@ internal fun CampfireScreens(
             },
         )
         // Not while the screens draw a chrome of their own, each tool screen a row of its own with it (ToolScreenFrame).
-        if (!chromeInScreens && groupedTools.isNotEmpty()) {
+        // Composed while the tools have items of their own too, so that it fades in and out as a resized window groups
+        // them and lets them go.
+        if (!chromeInScreens) {
             SharedToolsTabRow(
                 viewModel = viewModel,
                 tools = groupedTools,

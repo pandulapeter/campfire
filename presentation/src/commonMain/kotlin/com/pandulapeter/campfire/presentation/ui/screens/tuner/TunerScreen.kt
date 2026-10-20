@@ -148,7 +148,7 @@ internal fun TunerScreen(
                     .padding(top = TOOL_GROUP_GAP)
                     .padding(contentPadding.only(start = true, end = true))
                     .widthIn(
-                        max = layout.pageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
+                        max = layout.animatedPageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
                             contentPadding.calculateEndPadding(layoutDirection),
                     ),
                 state = state,

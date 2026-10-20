@@ -17,13 +17,14 @@ One instrument for the whole app.
   only the five with shapes), as the tuner, the tab retuning, and the tuning names do.
 - This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
-- Picked by two `PickerChip`s (`InstrumentChips.kt`; the tuning chip only for an instrument with more than one) opening
-  `InstrumentSheet` / `TuningSheet`. They stand on the song details first section (read only included, since they change
-  a device preference), the Tuner tab, the Chords and the Scales tabs, and the onboarding; never
-  Settings. Other is what the tuner reads every note for; there is no Chromatic switch.
+- Picked by one `InstrumentPill` of two halves split by a divider (the tuning half only for an instrument with more than
+  one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning name is cut short first), and
+  everywhere exactly `songControlHeight` of its text style, so on a song it matches the transposition stepper. It
+  stands on the song details first section (read only included, since it changes a device preference), the Tuner, the
+  Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every note for; there is no Chromatic switch.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
-  no instrument: `withTuning` tunes the picked instrument, and chips ask `isStandard`.
+  no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
 
 ## How a song is played on the keyboard
 

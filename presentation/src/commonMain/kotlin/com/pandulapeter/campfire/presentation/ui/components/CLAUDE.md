@@ -34,6 +34,13 @@ always read before then. Lists keep the plain indicator (the launch screen cover
   sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
 - `fadingVerticalEdges`: lists inside a dialog; never a sheet's content.
 
+### `PlacementAnimation.kt`
+
+- `Modifier.animatePlacement`: a child of a wrapping row (chips, color discs) travels to where its parent now places it
+  instead of jumping, as a resized window or a wider neighbour sends it to another line. Only moves inside the parent
+  travel, so a start-aligned row follows a dragged window edge frame by frame. First in the child's modifiers; never in
+  lazy list items, whose reused nodes would travel from the previous item's places.
+
 ### Scrolling performance
 
 - Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use

@@ -84,8 +84,8 @@ import kotlin.math.roundToInt
  * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
  * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
  *
- * The instrument and the tuning the diagrams are drawn for are chosen from the chips heading the song's first section
- * ([SongInstrumentChips], see [withChordsSection]), which an instrument without shapes, and so without this section,
+ * The instrument and the tuning the diagrams are drawn for are chosen from the pill heading the song's first section
+ * ([SongInstrumentPill], see [withChordsSection]), which an instrument without shapes, and so without this section,
  * keeps.
  *
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].

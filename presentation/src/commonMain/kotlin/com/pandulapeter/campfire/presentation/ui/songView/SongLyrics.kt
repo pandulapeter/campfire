@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayi
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
-import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentChipsContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentPillContent
 import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
@@ -90,6 +90,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * back. While it is not zero the sections also stop springing to their new place: the layout is following a width
  * that changes on every frame, and springing after each of those only makes it lag behind.
  * @param sectionMotion How the sections get to the place a change of the layout gives them, see [SectionMotion].
+ * @param isTextScaling Whether the [SectionMotion.GLIDE] is a pinch, which changes the playing controls' sizes on every
+ * frame, so that they follow it as the sections do; where it is a window edge being dragged they keep their sizes and
+ * only rearrange now and then, and travel to their new places as they do.
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
  * @param canFitText Whether a song a few lines too long for its pages may be set a little smaller to save one. False
@@ -148,6 +151,7 @@ internal fun SongLyrics(
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
     sectionMotion: SectionMotion = SectionMotion.SPRING,
+    isTextScaling: Boolean = false,
     fontScale: Float = 1f,
     canFitText: Boolean = true,
     foldedSections: Set<String> = emptySet(),
@@ -178,16 +182,16 @@ internal fun SongLyrics(
     val hasTuner = playingTools?.onTunerClicked != null
     val hasMetronome = playingTools?.metronome != null
     val shownTuning = chordDiagrams?.instrumentTuning?.takeIf { chordDiagrams.instrument.tunings.size > 1 }
-    val tuningChipVisibility = remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
-    // A section is measured in the frame its content first appears in, and a leaving tuning chip is still laid out while it
-    // fades: the content keeps naming that chip's tuning until the fade has ended, so that the section is measured again
+    val tuningVisibility = remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
+    // A section is measured in the frame its content first appears in, and a leaving tuning half of the instrument pill is still laid
+    // out while it fades: the content keeps naming that half's tuning until the fade has ended, so that the section is measured again
     // without it then. Not a state: the fade's own state is what changes the content.
     val lastShownTuning = remember { LastShownTuning() }
     shownTuning?.let { lastShownTuning.value = it }
-    val instrumentChips = chordDiagrams?.takeIf { it.onInstrumentClicked != null }?.let {
-        InstrumentChipsContent(
+    val instrumentPill = chordDiagrams?.takeIf { it.onInstrumentClicked != null }?.let {
+        InstrumentPillContent(
             instrument = it.instrument,
-            tuning = shownTuning ?: lastShownTuning.value.takeIf { !tuningChipVisibility.isIdle || tuningChipVisibility.currentState },
+            tuning = shownTuning ?: lastShownTuning.value.takeIf { !tuningVisibility.isIdle || tuningVisibility.currentState },
             notation = it.notation,
         )
     }
@@ -195,7 +199,7 @@ internal fun SongLyrics(
         model = model,
         chordDiagrams = chordDiagrams,
         scaleSuggestions = scaleSuggestions,
-        instrumentChips = instrumentChips,
+        instrumentPill = instrumentPill,
         shouldShowTempo = shouldShowTempo,
         isSongInfoShown = isSongInfoShown,
         isSongInfoEditable = isSongInfoEditable,
@@ -371,6 +375,7 @@ internal fun SongLyrics(
                     fitDeferral = fitDeferral,
                     sectionMotion = sectionMotion,
                     isResizing = isResizing,
+                    isTextScaling = isTextScaling,
                     notation = model.notation,
                     isSongInfoShown = isSongInfoShown,
                     songInfoEditing = songInfoEditing,
@@ -378,7 +383,7 @@ internal fun SongLyrics(
                     playingTools = playingTools,
                     chordDiagrams = chordDiagrams,
                     scaleSuggestions = shownScaleSuggestions,
-                    tuningChipVisibility = tuningChipVisibility,
+                    tuningVisibility = tuningVisibility,
                     chordLayouts = chordLayouts,
                     onChordFoldToggled = onChordFoldToggled,
                     hasChordFoldBeenToggled = hasChordFoldBeenToggled,
@@ -415,7 +420,7 @@ private fun CutSongNotice(
     color = MaterialTheme.colorScheme.onSurfaceVariant,
 )
 
-/** What the tuning chip of [SongLyrics] last named. */
+/** What the instrument pill's tuning half of [SongLyrics] last named. */
 private class LastShownTuning(var value: InstrumentTuning? = null)
 
 private val MIN_COLUMN_WIDTH = 384.dp

@@ -19,8 +19,8 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
 - **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
   is exactly `songControlHeight` (the pill's `titleStyle` plus `HEADER_VERTICAL_PADDING`). Scaling a pill whole towered
   over the page. `UserPreferences.MIN_FONT_SCALE` is what keeps them big enough to hit.
-- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the instrument and tuning chips where they are
-  shown (while they fade, too, so it is never shown twice), else after the capo (or the transposition); the metronome
+- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the instrument and tuning pill where it is
+  shown (while it fades, too, so it is never shown twice), else after the capo (or the transposition); the metronome
   after the time signature; a button whose group is absent goes after the other (`playingToolPlaces`, tested). With
   chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
 - Whether the section holds either button is part of `RenderSection.Metadata`, since measured sizes are keyed by it.
@@ -30,8 +30,8 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
   neck); split around the tools.
 - In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under
   one key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
-- The section's content holds what the instrument and tuning chips name (`InstrumentChipsContent`), since label widths
-  decide line count and a section's measured size is keyed by its content; a leaving tuning chip is named until it has
-  faded out.
-- Chips reach out of their column like a section's pill, so a line-starting chip's name sits on the lyrics' keyline; a
-  chip that doesn't fit goes under the other whole.
+- The section's content holds what the instrument and tuning pill names (`InstrumentPillContent`), since label widths
+  decide whether the tuner fits beside it and a section's measured size is keyed by its content; a leaving tuning half
+  is named until it has faded out.
+- The pill reaches out of its column as far as a section's pill, so their edges line up; the tuner goes under it whole
+  where it does not fit.

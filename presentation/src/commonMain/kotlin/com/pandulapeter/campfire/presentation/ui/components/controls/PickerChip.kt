@@ -89,10 +89,6 @@ internal fun PickerChip(
     }
 }
 
-/**
- * Before a picker chip's text, which is also how far a chip that starts a line of a song reaches out of its column to the
- * left, so that its text stands on the keyline the lyrics and the section titles do, as a section's pill does.
- */
-internal val PICKER_CHIP_START_PADDING = 12.dp
+private val PICKER_CHIP_START_PADDING = 12.dp
 private val PICKER_CHIP_END_PADDING = 8.dp
 private val PICKER_CHIP_CHEVRON_GAP = 2.dp

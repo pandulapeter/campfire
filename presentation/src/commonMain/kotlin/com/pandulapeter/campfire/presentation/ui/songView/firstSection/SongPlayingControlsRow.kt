@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
  * steppers, the tempo's pill ending in the segment that taps one in, and the time signature after them, read rather
  * than set. They are laid out in balanced rows ([BalancedRows]) — all four side by side, two and two, or one under the
  * other — rather than flowed, since three over one reads as an accident. The [tools] end the groups they belong to: the
- * tuner after the capo (or the transposition where there is no capo) unless the instrument chips above hold it, the
+ * tuner after the capo (or the transposition where there is no capo) unless the instrument pill above holds it, the
  * metronome after the time signature, so that
  * two and two they stand in a column of their own at the end of either row (see [playingToolPlaces]).
  *
@@ -56,11 +56,11 @@ internal fun SongPlayingControlsRow(
     isAnimated: Boolean,
     titleStyle: TextStyle,
     fontScale: Float,
-    hasInstrumentChips: Boolean,
+    hasInstrumentPill: Boolean,
 ) {
     val height = songControlHeight(titleStyle)
     val places = tools?.places(
-        hasInstrumentChips = hasInstrumentChips,
+        hasInstrumentPill = hasInstrumentPill,
         hasChordValues = controls.key != null || controls.capo != null,
         hasClickValues = controls.tempo != null || controls.timeSignature != null,
     )

@@ -35,9 +35,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 /**
  * The instrument at the top of a tool's page (the Chords, the Scales, and the Tuner tabs), the same on all three: its
  * title in a line of the list screens' bar height, with [trailing] at its end where their pill and New button stand
- * (the Tuner's reference pitch), and the [InstrumentChipRow] under that line at the full width, so that the corner's
- * circle never covers a chip that wrapped under it. A page with nothing in the corner keeps the line all the same, so
- * that the chips stand at one height whichever tool is picked.
+ * (the Tuner's reference pitch), and the [InstrumentPill] under that line, so that the corner's circle never covers it.
+ * A page with nothing in the corner keeps the line all the same, so that the pill stands at one height whichever tool is
+ * picked.
  */
 @Composable
 internal fun ToolInstrumentSetting(
@@ -57,7 +57,7 @@ internal fun ToolInstrumentSetting(
             .padding(start = 16.dp, end = NEW_ITEM_BUTTON_END_INSET),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Set as a settings row's title is, as Settings titles the same chips.
+        // Set as a settings row's title is.
         Text(
             modifier = Modifier.weight(1f).padding(end = NEW_ITEM_BUTTON_GAP),
             text = stringResource(Res.string.instrument),
@@ -68,8 +68,8 @@ internal fun ToolInstrumentSetting(
         )
         trailing?.invoke()
     }
-    InstrumentChipRow(
-        // The New button's circle is as far from the line's bottom as from its top; the chips leave as much again.
+    InstrumentPill(
+        // The New button's circle is as far from the line's bottom as from its top; the pill leaves as much again.
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = NEW_ITEM_BUTTON_TOP_INSET),
         instrument = instrument,
         tuning = tuning,

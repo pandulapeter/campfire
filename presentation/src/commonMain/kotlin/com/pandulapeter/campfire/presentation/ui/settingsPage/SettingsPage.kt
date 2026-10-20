@@ -9,22 +9,32 @@
  */
 package com.pandulapeter.campfire.presentation.ui.settingsPage
 
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.spatialBoundsSpec
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
@@ -38,7 +48,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  * A page holds no more than two sections, so the columns are either all of them or one: a section never moves to
  * another column because the one above it grew, which is what would happen to a staggered grid when a section changes
  * height. The settings tabs pass one column whatever the width (see [SettingsTabPage]); the Metronome and the Tuner,
- * whose two sections are both about the one instrument on screen, are the pages that spread out.
+ * whose two sections are both about the one instrument on screen, are the pages that spread out. A window resized
+ * across the width that decides it slides the sections from one arrangement to the other, the header's width following
+ * on the same spring, rather than having them jump to their new places.
  *
  * It is a plain scrolling layout rather than a lazy list. A lazy list has no notion of a section that holds several
  * rows, a tab is a few dozen rows that are cheap to keep composed, and rows that come and go inside a section
@@ -66,7 +78,7 @@ internal fun SettingsPage(
     secondSection: (@Composable () -> Unit)? = null,
 ) {
     val sections = listOfNotNull(section, secondSection)
-    val columns = if (sectionColumns >= sections.size) sections.map { listOf(it) } else listOf(sections)
+    val columnCount = if (sectionColumns >= sections.size) sections.size else 1
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -76,22 +88,63 @@ internal fun SettingsPage(
             .padding(contentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
     ) {
         if (header != null) {
-            val headerSpan = maxOf(columns.size, minOf(headerColumns, sectionColumns), 1)
+            val headerSpan = maxOf(columnCount, minOf(headerColumns, sectionColumns), 1)
+            val headerMaxWidth by animateDpAsState(
+                targetValue = MAX_COLUMN_WIDTH * headerSpan + SECTION_GAP * (headerSpan - 1),
+                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+            )
             Column(
                 // As wide as the columns under it at most, so that it ends where they do.
-                modifier = Modifier.widthIn(max = MAX_COLUMN_WIDTH * headerSpan + SECTION_GAP * (headerSpan - 1)).fillMaxWidth(),
+                modifier = Modifier.widthIn(max = headerMaxWidth).fillMaxWidth(),
                 content = header,
             )
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.Start)) {
-            columns.forEach { column ->
-                Column(
-                    // Not filling its share, or the share would win over the maximum width and the columns of a wide
-                    // window would never stop growing; the sections fill whatever this settles at.
-                    modifier = Modifier.weight(1f, fill = false).widthIn(max = MAX_COLUMN_WIDTH),
-                    verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
-                ) {
-                    column.forEach { section -> section() }
+        SectionColumns(sections = sections, columnCount = columnCount)
+    }
+}
+
+/**
+ * The sections of a [SettingsPage], side by side in [columnCount] columns of at most [MAX_COLUMN_WIDTH] or stacked in
+ * one. Each section is a child of this one layout in either arrangement, rather than of a `Row` or of the `Column` of
+ * its column, so that it keeps its state and its bounds across a change of arrangement and slides to its new place and
+ * width (`animateBounds`) - only then, since a resize within one arrangement is followed as it comes.
+ */
+@Composable
+private fun SectionColumns(
+    sections: List<@Composable () -> Unit>,
+    columnCount: Int,
+) {
+    val arrangement = updateTransition(targetState = columnCount, label = "SettingsPageColumns")
+    val motionScheme = MaterialTheme.motionScheme
+    // A child animation on the same spring keeps the transition running for as long as the sections travel, which is what
+    // tells a change of arrangement from a resize in the frames after the first one.
+    arrangement.animateFloat(transitionSpec = { motionScheme.defaultSpatialSpec() }, label = "SettingsPageColumnsProgress") {
+        it.toFloat()
+    }
+    val spec = motionScheme.spatialBoundsSpec()
+    val boundsTransform = remember(arrangement, spec) {
+        BoundsTransform { _, _ -> if (arrangement.currentState != arrangement.targetState) spec else snap() }
+    }
+    LookaheadScope {
+        val sectionBounds = Modifier.animateBounds(lookaheadScope = this, boundsTransform = boundsTransform)
+        Layout(
+            modifier = Modifier.fillMaxWidth(),
+            content = { sections.forEach { section -> Box(modifier = sectionBounds) { section() } } },
+        ) { measurables, constraints ->
+            val gap = SECTION_GAP.roundToPx()
+            val columnWidth = minOf(MAX_COLUMN_WIDTH.roundToPx(), (constraints.maxWidth - gap * (columnCount - 1)) / columnCount).coerceAtLeast(0)
+            val placeables = measurables.map { it.measure(Constraints(maxWidth = columnWidth)) }
+            val height = if (columnCount > 1) {
+                placeables.maxOfOrNull { it.height } ?: 0
+            } else {
+                placeables.sumOf { it.height } + gap * (placeables.size - 1).coerceAtLeast(0)
+            }
+            layout(constraints.maxWidth, height) {
+                var x = 0
+                var y = 0
+                placeables.forEach { placeable ->
+                    placeable.placeRelative(x, y)
+                    if (columnCount > 1) x += columnWidth + gap else y += placeable.height + gap
                 }
             }
         }

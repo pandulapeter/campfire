@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.tuner.tuningLabel
 
 /**
- * The tuning of the instrument in the player's hands, opened from the tuning chip next to the instrument's wherever that
+ * The tuning of the instrument in the player's hands, opened from the instrument pill's tuning half wherever that pill
  * is: its tunings as a list, standard first, each named the way the tuner names it and with its open strings under it in
  * the chord notation, since those are what the diagrams are drawn on and the tuner listens for. A pick is written at once
  * and closes the sheet, as the [InstrumentSheet]'s does.

@@ -112,6 +112,9 @@ campfire.log / campfire.log.1          desktop only: bounded process log
 
 - **Every user-caused change is animated** (fade, size, crossfade, morph). Data arriving or a wrong initial value is
   fixed at the source so the first frame is right, never animated over.
+- **A resized window moves nothing abruptly**: what a new width or height rearranges (a column count, chips wrapping
+  onto another line, a tab row or chrome coming or going) travels or at least crossfades, never jumps
+  (`components/PlacementAnimation.kt` for wrapping rows, `SettingsPage`'s sliding sections for columns).
 - **Content scrolled under a bar fades out** (`fadingTopEdge` / `fadingVerticalEdges` in `components/EdgeFade.kt`,
   `ListTopFade`); bars never gain elevation, shadow, or a divider.
 - **Every modal with a text input is a bottom sheet** (`TextFieldBottomSheet` over `CampfireBottomSheet`), the date

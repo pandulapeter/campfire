@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.settingsPage
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -39,6 +42,17 @@ internal data class PageWidthLayout(
      */
     fun pageMaxWidth(sections: Int) =
         if (sectionColumns >= sections) MAX_COLUMN_WIDTH * sections + SECTION_GAP * (sections - 1) else MAX_COLUMN_WIDTH
+
+    /**
+     * [pageMaxWidth], carried on the spatial spring from one width to the other as a window is resized across the
+     * width that sets the sections side by side, so that what is pinned above them grows and shrinks with the page
+     * rather than jumping.
+     */
+    @Composable
+    fun animatedPageMaxWidth(sections: Int): Dp = animateDpAsState(
+        targetValue = pageMaxWidth(sections),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+    ).value
 
     companion object {
 

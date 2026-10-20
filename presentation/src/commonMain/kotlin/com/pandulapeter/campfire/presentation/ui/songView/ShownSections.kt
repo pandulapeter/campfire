@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songView
 
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
-import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentChipsContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentPillContent
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.model.withScalesSection
@@ -33,7 +33,7 @@ internal fun rememberShownSections(
     model: SongLyricsModel,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
-    instrumentChips: InstrumentChipsContent?,
+    instrumentPill: InstrumentPillContent?,
     shouldShowTempo: Boolean,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean,
@@ -83,13 +83,13 @@ internal fun rememberShownSections(
             }
         }
         lastCells.value = cells
-        val withChords = remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentChips) {
+        val withChords = remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentPill) {
             withChordsSection(
                 sections = sections,
                 cells = cells,
                 isFolded = chordDiagrams?.isFolded == true,
                 hasChords = model.hasChords,
-                instrumentChips = instrumentChips,
+                instrumentPill = instrumentPill,
             )
         }
         remember(withChords, model.scaleGroups, scaleSuggestions?.isFolded) {

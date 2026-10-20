@@ -39,8 +39,8 @@ import kotlinx.coroutines.withContext
  * @param notation The notation [song] is written in, which decides what is a chord in the brackets of a comment.
  * @param chordTuning The tuning [chords] were collected for, which their pending shapes are looked for in.
  * @param hasChords Whether the song has a chord the Chords section could draw on some instrument, which [chords] does not
- * say where there was no tuning to collect them for (an instrument without shapes): the instrument and tuning chips still
- * head the song's first section then ([RenderSection.Metadata.instrumentChips]), since they are what brings the diagrams
+ * say where there was no tuning to collect them for (an instrument without shapes): the instrument and tuning pill still
+ * heads the song's first section then ([RenderSection.Metadata.instrumentPill]), since it is what brings the diagrams
  * back.
  */
 internal class SongLyricsModel(

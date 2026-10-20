@@ -14,7 +14,7 @@ The Scales tab: every scale of `chordpro/scales` in one key, browsed by family, 
 destination (`CampfireDestination.Scales`, `/scales` on the web), the fourth tool behind the Tools item, following its
 own Features switch (`areScalesEnabled`), not the chord ones. Offered in read only mode: it writes no file.
 
-- One lazy grid: the controls (instrument and tuning chips, the shared app-wide preference written at once), the
+- One lazy grid: the controls (instrument and tuning pill, the shared app-wide preference written at once), the
   search with the key pill before it as on the Chords tab, the family row (Common first, one line scrolling sideways,
   its scroll kept in `ScaleLibraryState`), which a non-empty search swaps for a heading naming what it found, then a
   cell per scale, titled in the key ("C Dorian") as the Chords tab names each chord in the key. The controls scroll

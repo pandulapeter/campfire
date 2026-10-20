@@ -46,7 +46,7 @@ internal fun SongSectionItem(
     animatesControls: Boolean,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
-    tuningChipVisibility: MutableTransitionState<Boolean>,
+    tuningVisibility: MutableTransitionState<Boolean>,
     chordLayouts: ChordCellLayouts?,
     onChordFoldToggled: (() -> Unit)?,
     isChordsSectionFadingIn: Boolean,
@@ -71,13 +71,12 @@ internal fun SongSectionItem(
         titleStyle = headerStyle,
         chordStyle = chordStyle,
         fontScale = fontScale,
-        instrumentChips = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentChips != null }?.let { onInstrumentClicked ->
+        instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->
             {
-                SongInstrumentChips(
+                SongInstrumentPill(
                     chordDiagrams = chordDiagrams,
                     headerStyle = headerStyle,
-                    fontScale = fontScale,
-                    tuningChipVisibility = tuningChipVisibility,
+                    tuningVisibility = tuningVisibility,
                     onInstrumentClicked = onInstrumentClicked,
                     onTuningClicked = chordDiagrams.onTuningClicked ?: {},
                 )

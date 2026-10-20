@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import androidx.compose.foundation.layout.Arrangement
@@ -47,12 +48,14 @@ internal fun CardDetailsChoice(
     horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
     verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {
+    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
     listOf(
         CardDetailOption(Res.string.card_detail_key, details.isKeyShown, areChordsEnabled) { details.copy(isKeyShown = it) },
         CardDetailOption(Res.string.card_detail_tempo, details.isTempoShown(isMetronomeEnabled), true) { details.copy(isTempoShown = it) },
         CardDetailOption(Res.string.card_detail_duration, details.isDurationShown, true) { details.copy(isDurationShown = it) },
     ).filter { it.isAvailable }.forEach { option ->
         SelectableChip(
+            modifier = placement,
             isSelected = option.isShown,
             isEnabled = isEnabled,
             role = Role.Checkbox,

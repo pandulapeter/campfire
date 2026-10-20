@@ -125,7 +125,7 @@ sealed interface DialogType {
      */
     data object Instrument : DialogType
 
-    /** The tuning of the instrument in the player's hands, opened from the tuning chip next to the instrument's. */
+    /** The tuning of the instrument in the player's hands, opened from the instrument pill's tuning half. */
     data object Tuning : DialogType
 
     /** The notation chords are written in, opened from its chip in Settings. */
