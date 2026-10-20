@@ -335,8 +335,8 @@
     <string name="settings_read_only_mode">Read only</string>
     <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering, and transposing are hidden, so nothing can be changed by accident</string>
     <string name="settings_read_only_mode_description_without_setlists">Locks the app while you play: editing, deleting, and transposing are hidden, so nothing can be changed by accident</string>
-    <string name="settings_songs_description">The Songs and Setlists tabs, for a metronome, tuner, and chord reference only. Off, your songs are only hidden: none is deleted.</string>
-    <string name="settings_songs_description_without_setlists">The Songs tab, for a metronome, tuner, and chord reference only. Off, your songs are only hidden: none is deleted.</string>
+    <string name="settings_songs_description">The Songs and Setlists tabs. Switch them off to use Campfire only as a metronome, a tuner, and a chord and scale reference: your songs are only hidden, none is deleted.</string>
+    <string name="settings_songs_description_without_setlists">The Songs tab. Switch it off to use Campfire only as a metronome, a tuner, and a chord and scale reference: your songs are only hidden, none is deleted.</string>
     <string name="settings_everything_off">Everything is switched off, so Campfire is now an app for changing the settings of Campfire. Switch something back on to make it useful again.</string>
     <string name="settings_chords">Chords</string>
     <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition, and the capo. Off, every song is lyrics only.</string>
