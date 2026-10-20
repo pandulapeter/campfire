@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /** One item of the navigation bar or rail: a top level screen, or the tools behind one item (see [areToolsGrouped]). */
@@ -30,29 +31,18 @@ internal const val MAX_NAVIGATION_BAR_ITEMS = 5
 
 /**
  * Whether the chrome offers the tools ([CampfireDestination.TopLevel.tools]) behind one Tools item, which opens them
- * with a row of tabs over their screens: on the bar, on a rail in a short window ([isShortWindow], a phone on its side),
- * whose height does not hold six items, and on any rail whose items at the reader's text size would not all fit it
- * ([railCapacity], see [railItemCapacity]), and only while the [destinations] of the features switched on would not all
- * fit it. A rail that holds them lists every screen, so a window that grows past the bar or the short height hands the
- * tools back their own items.
+ * with a button group over their screens: on the bar, and on any rail whose items at the reader's text size would not
+ * all fit it ([railCapacity], see [railCapacityIn]), and only while the [destinations] of the features switched on would
+ * not all fit it. A rail that holds them lists every screen, so a window that grows past the bar or tall enough for
+ * every item hands the tools back their own items.
  */
 internal fun areToolsGrouped(
     kind: NavigationChromeKind,
     destinations: List<CampfireDestination.TopLevel>,
-    isShortWindow: Boolean,
     railCapacity: Int,
-) = (kind == NavigationChromeKind.BAR || isShortWindow || destinations.size > railCapacity) &&
+) = (kind == NavigationChromeKind.BAR || destinations.size > railCapacity) &&
     destinations.size > MAX_NAVIGATION_BAR_ITEMS &&
     destinations.count { it in CampfireDestination.TopLevel.tools } > 1
-
-/**
- * How many items a navigation rail [railHeight] tall holds, its items [itemHeight] tall with Material's gap between
- * them and its padding above and below: what decides, with the reader's text size in [itemHeight], whether the
- * tools must go behind one item on a rail that is not short. The rail does not scroll, so an item past its end could
- * not be reached at all.
- */
-internal fun railItemCapacity(railHeight: Dp, itemHeight: Dp): Int =
-    ((railHeight - RAIL_VERTICAL_PADDING * 2 + RAIL_ITEM_GAP) / (itemHeight + RAIL_ITEM_GAP)).toInt().coerceAtLeast(0)
 
 /**
  * How many items each kind of rail holds in the window, both worked out together: the root does not know the chrome's
@@ -71,19 +61,46 @@ internal data class RailCapacity(
 }
 
 /**
- * A rail item's height without its label's line: Material's indicator and paddings, 56dp in all at a 16dp label. The
- * label's line grows with the reader's text size; its auto-sizing can only shorten an item, so a count from these
- * groups at worst slightly early.
+ * How many items each rail [railHeight] tall (the window less the rail's insets) holds whole, its labels' lines
+ * [railLabelHeight] and [expandedRailLabelHeight] tall at the reader's text size: what decides whether the tools must
+ * go behind one item. Neither rail scrolls, so an item past its end could not be reached at all, and one more item
+ * than fits is the first count that groups.
  */
-internal val RAIL_ITEM_BASE_HEIGHT = 40.dp
+internal fun railCapacityIn(railHeight: Dp, railLabelHeight: Dp, expandedRailLabelHeight: Dp) = RailCapacity(
+    rail = itemCapacity(
+        height = railHeight - RAIL_VERTICAL_PADDING * 2,
+        itemHeight = max(RAIL_ITEM_MIN_HEIGHT, RAIL_ITEM_BASE_HEIGHT + railLabelHeight),
+        gap = RAIL_ITEM_GAP,
+    ),
+    expandedRail = itemCapacity(
+        height = railHeight - EXPANDED_NAVIGATION_RAIL_TOP_PADDING,
+        itemHeight = max(EXPANDED_RAIL_ITEM_MIN_HEIGHT, expandedRailLabelHeight + EXPANDED_RAIL_ITEM_INDICATOR_PADDING),
+        gap = 0.dp,
+    ),
+)
+
+private fun itemCapacity(height: Dp, itemHeight: Dp, gap: Dp) = ((height + gap) / (itemHeight + gap)).toInt().coerceAtLeast(0)
 
 /**
- * An expanded rail item's least height, and what its label beside the icon adds to its line. That rail puts no gap
- * between its items, which [railItemCapacity] counts anyway, so it groups up to six gaps early, below the height where
- * every item fits at the default text size.
+ * The gap the expanded rail leaves above its first item, in place of the default that leaves room for a header it does
+ * not have; the same as the collapsed rail's, so that the items stay put as the window crosses from the one to the other.
+ * It leaves none below.
  */
-internal val EXPANDED_RAIL_ITEM_MIN_HEIGHT = 56.dp
-internal val EXPANDED_RAIL_ITEM_LABEL_PADDING = 16.dp
+internal val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
+
+/**
+ * Material's `NavigationRailItem` heights: at least 56dp, else its icon, its indicator's paddings, and the gap above
+ * the label, which is all of it but the label's line. The label's auto-sizing only narrows it, never shortens its line.
+ */
+private val RAIL_ITEM_MIN_HEIGHT = 56.dp
+private val RAIL_ITEM_BASE_HEIGHT = 40.dp
+
+/**
+ * Material's expanded `WideNavigationRailItem` heights: its indicator, 56dp at the least, is the label's line beside
+ * the icon padded by 16dp above and below. That rail puts no gap between its items.
+ */
+private val EXPANDED_RAIL_ITEM_MIN_HEIGHT = 56.dp
+private val EXPANDED_RAIL_ITEM_INDICATOR_PADDING = 32.dp
 
 /** Material's `NavigationRail` spacing: its items' column is padded by this above and below and spaced by it. */
 private val RAIL_VERTICAL_PADDING = 4.dp

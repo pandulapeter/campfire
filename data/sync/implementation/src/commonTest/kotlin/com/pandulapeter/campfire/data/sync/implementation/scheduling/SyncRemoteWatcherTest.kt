@@ -134,6 +134,20 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `a wait that reached the service starts the retries over`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        val offline: suspend () -> Boolean = { throw SyncNetworkException("Offline") }
+        world.provider.awaitAnswers.addAll(listOf(offline, offline, { false }, offline))
+        world.synchronizeAndWatch()
+        world.provider.writeElsewhere(song(2), TWO)
+
+        // Two failures wait 30 seconds and a minute; after the quiet answer, the next one waits 30 seconds again.
+        advanceTimeBy(2.minutes + 5.seconds)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
     fun `a cursor the service no longer takes brings a run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
         world.synchronizeAndWatch()

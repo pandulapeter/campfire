@@ -211,8 +211,12 @@ internal class FakeSyncProvider(
     /** Runs before [changesSince] answers, which is where a test makes it fail. */
     var onChangesSince: suspend () -> Unit = {}
 
+    /** Answers the next waits in place of the feed, in order: where a test makes one fail, or end with nothing changed. */
+    val awaitAnswers = ArrayDeque<suspend () -> Boolean>()
+
     override suspend fun awaitChanges(cursor: String): Boolean {
         awaitCount++
+        awaitAnswers.removeFirstOrNull()?.let { return it() }
         feed.first { it.size > cursor.toInt() }
         return true
     }

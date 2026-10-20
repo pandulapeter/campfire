@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
 
 /**
- * The switch between the tools behind the Tools item of the navigation bar or of a short window's rail (see
+ * The switch between the tools behind the Tools item of the navigation bar or of a rail too short for every item (see
  * [areToolsGrouped]): a connected button group rather than a row of tabs, so that it does not read as the pages of one
  * screen that a swipe would turn, as the settings screen's tabs are. The selected button fills and morphs in place
  * instead of an indicator travelling across the row, matching the tool screens fading through under it rather than

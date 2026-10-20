@@ -153,8 +153,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
 - Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui/tabs`,
   `chordpro`.
-- With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar, a short
-  window's rail, or a rail too short for every item: `ui/chrome`.
+- With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar or a rail
+  too short for every item: `ui/chrome`.
 - One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, and onboarding:
   `ui/instrument`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:

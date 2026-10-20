@@ -11,11 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
-import com.pandulapeter.campfire.presentation.ui.chrome.EXPANDED_RAIL_ITEM_LABEL_PADDING
-import com.pandulapeter.campfire.presentation.ui.chrome.EXPANDED_RAIL_ITEM_MIN_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.chrome.RAIL_ITEM_BASE_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
-import com.pandulapeter.campfire.presentation.ui.chrome.railItemCapacity
+import com.pandulapeter.campfire.presentation.ui.chrome.railCapacityIn
 import com.pandulapeter.campfire.presentation.ui.chrome.withMinTopEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -35,10 +31,8 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.max
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
@@ -94,14 +88,13 @@ internal fun CampfireContent(
     val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
     val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = isCoverArtEnabled)
 
-    // The window's height rather than what the keyboard leaves of it, so that the grouping of the tools never flips while
-    // typing, and derived, so that a window being resized recomposes only in the frame it crosses the line.
-    val windowInfo = LocalWindowInfo.current
-    val isShortWindow by remember(windowInfo) { derivedStateOf { windowInfo.containerDpSize.height < SHORT_WINDOW_HEIGHT } }
     // How many items each rail holds at the reader's text size, from the window's height less the rail's insets, which
-    // are the system bars' and never the keyboard's. The insets are read through a state: every platform but Android
-    // hands out a new, fixed insets instance on every composition (see KeyboardAwarePadding), which a derived state
-    // remembered once would never see change. A line height goes through the density's font scale, non-linear included.
+    // are the system bars' and never the keyboard's, so that the grouping of the tools never flips while typing, and
+    // derived, so that a window being resized recomposes only in the frame it crosses a line. The insets are read through
+    // a state: every platform but Android hands out a new, fixed insets instance on every composition (see
+    // KeyboardAwarePadding), which a derived state remembered once would never see change. A line height goes through the
+    // density's font scale, non-linear included.
+    val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     val typography = MaterialTheme.typography
     val railLabelHeight = with(density) { typography.labelMedium.lineHeight.toDp() }
@@ -111,12 +104,10 @@ internal fun CampfireContent(
         derivedStateOf {
             val insets = railInsets.value
             val railHeight = windowInfo.containerDpSize.height - with(density) { (insets.getTop(density) + insets.getBottom(density)).toDp() }
-            RailCapacity(
-                rail = railItemCapacity(railHeight = railHeight, itemHeight = RAIL_ITEM_BASE_HEIGHT + railLabelHeight),
-                expandedRail = railItemCapacity(
-                    railHeight = railHeight,
-                    itemHeight = max(EXPANDED_RAIL_ITEM_MIN_HEIGHT, expandedRailLabelHeight + EXPANDED_RAIL_ITEM_LABEL_PADDING),
-                ),
+            railCapacityIn(
+                railHeight = railHeight,
+                railLabelHeight = railLabelHeight,
+                expandedRailLabelHeight = expandedRailLabelHeight,
             )
         }
     }
@@ -131,7 +122,6 @@ internal fun CampfireContent(
             NavigationChrome(
                 kind = chromeKind,
                 destinations = topLevelDestinations,
-                isShortWindow = isShortWindow,
                 railCapacity = railCapacity,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 metronomeBeat = metronomeBeat,
@@ -150,7 +140,6 @@ internal fun CampfireContent(
                 windowSize = windowSize,
                 chromeKind = chromeKind,
                 chromeSize = chromeSize,
-                isShortWindow = isShortWindow,
                 railCapacity = railCapacity,
                 songColumnWidth = songColumnWidth,
                 chromeInScreens = chromeInScreens,

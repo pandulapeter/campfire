@@ -755,7 +755,7 @@ class CampfireViewModel(
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) = selectTopLevelDestination(destination, destinationWhenAtTop = null)
 
     /**
-     * The chrome's Tools item (the navigation bar's, or a short window's rail's), opening [destination] (see
+     * The chrome's Tools item (the navigation bar's, or a rail's too short for every item), opening [destination] (see
      * `toolsItemDestination`): pressed again on a tool at its top, it goes on to the first tool switched on, as the Settings
      * item goes on to General.
      */

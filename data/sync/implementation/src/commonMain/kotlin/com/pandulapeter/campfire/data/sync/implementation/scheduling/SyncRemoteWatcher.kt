@@ -43,10 +43,11 @@ internal class SyncRemoteWatcher(
         var failures = 0
         while (true) {
             try {
-                if (!point.folder.awaitChanges(cursor)) continue
+                val hasChanges = point.folder.awaitChanges(cursor)
+                failures = 0
+                if (!hasChanges) continue
                 val changes = point.folder.changesSince(cursor)
                 cursor = changes.cursor
-                failures = 0
                 val isOtherDevices = point.hasOtherChangesThanPreferences(changes) ||
                     SyncedPreferencesDocument.FILE_NAME in changes.documents &&
                     point.isOtherPreferences(point.folder.downloadDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)

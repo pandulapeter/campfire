@@ -42,9 +42,10 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
 ### The Tools item
 
 - A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six or more screens on, Metronome, Tuner,
-  Chords, and Scales go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, on a rail
-  in a short window (`SHORT_WINDOW_HEIGHT`), and on any rail too short for every item at the reader's text size
-  (`railItemCapacity`). Five or fewer screens never group, nor does a lone tool.
+  Chords, and Scales go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, and on
+  any rail too short to show every item whole at the reader's text size (`railCapacityIn`, which repeats Material's
+  item heights, paddings, and gaps for each rail, so a rail spreads the tools out the moment they all fit). Five or
+  fewer screens never group, nor does a lone tool.
   The tools are switched by a connected button group (`ToolsButtonGroup`), not tabs, so it does not read as pages to
   swipe like the settings tabs; only the selected button is named and wider, or "Metronome" is cut at 360dp.
 - The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool

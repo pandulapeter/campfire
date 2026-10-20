@@ -30,13 +30,12 @@ internal class NavigationBarItemsTest {
     private fun shownItems(
         destinations: List<CampfireDestination.TopLevel>,
         kind: NavigationChromeKind = NavigationChromeKind.BAR,
-        isShortWindow: Boolean = false,
         railCapacity: Int = Int.MAX_VALUE,
-    ) = navigationBarItems(destinations, areToolsGrouped(kind, destinations, isShortWindow, railCapacity)).filter { it.second }.map { it.first }
+    ) = navigationBarItems(destinations, areToolsGrouped(kind, destinations, railCapacity)).filter { it.second }.map { it.first }
 
     @Test
     fun `a bar with no room for every screen offers the tools behind one item`() {
-        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = false, railCapacity = Int.MAX_VALUE))
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, railCapacity = Int.MAX_VALUE))
         assertEquals(
             listOf(NavigationBarItem.Destination(Songs), NavigationBarItem.Destination(Setlists), NavigationBarItem.Tools, NavigationBarItem.Destination(Settings)),
             shownItems(all),
@@ -45,24 +44,14 @@ internal class NavigationBarItemsTest {
 
     @Test
     fun `a tall rail offers every screen`() {
-        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = false, railCapacity = Int.MAX_VALUE))
-        assertFalse(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, isShortWindow = false, railCapacity = Int.MAX_VALUE))
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all, railCapacity = Int.MAX_VALUE))
+        assertFalse(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, railCapacity = Int.MAX_VALUE))
     }
 
     @Test
-    fun `a rail in a short window groups the tools`() {
-        assertTrue(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = true, railCapacity = Int.MAX_VALUE))
-        assertTrue(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, isShortWindow = true, railCapacity = Int.MAX_VALUE))
-        assertEquals(
-            listOf(NavigationBarItem.Destination(Songs), NavigationBarItem.Destination(Setlists), NavigationBarItem.Tools, NavigationBarItem.Destination(Settings)),
-            shownItems(all, NavigationChromeKind.RAIL, isShortWindow = true),
-        )
-    }
-
-    @Test
-    fun `a rail too short for every screen groups the tools whatever the window's height`() {
-        assertTrue(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = false, railCapacity = 6))
-        assertTrue(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, isShortWindow = false, railCapacity = 6))
+    fun `a rail too short for every screen groups the tools`() {
+        assertTrue(areToolsGrouped(NavigationChromeKind.RAIL, all, railCapacity = 6))
+        assertTrue(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, railCapacity = 6))
         assertEquals(
             listOf(NavigationBarItem.Destination(Songs), NavigationBarItem.Destination(Setlists), NavigationBarItem.Tools, NavigationBarItem.Destination(Settings)),
             shownItems(all, NavigationChromeKind.RAIL, railCapacity = 6),
@@ -71,40 +60,53 @@ internal class NavigationBarItemsTest {
 
     @Test
     fun `a rail that holds every screen lists them all`() {
-        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = false, railCapacity = 7))
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all, railCapacity = 7))
     }
 
     @Test
-    fun `a rail's capacity counts its items and the gaps between them`() {
-        assertEquals(7, railItemCapacity(424.dp, 56.dp))
-        assertEquals(6, railItemCapacity(423.dp, 56.dp))
-        assertEquals(7, railItemCapacity(536.dp, 72.dp))
-        assertEquals(6, railItemCapacity(500.dp, 72.dp))
+    fun `a rail holds every item that fits whole, with the gaps between them`() {
+        assertEquals(7, railCapacityIn(424.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).rail)
+        assertEquals(6, railCapacityIn(423.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).rail)
+        assertEquals(7, railCapacityIn(536.dp, railLabelHeight = 32.dp, expandedRailLabelHeight = 20.dp).rail)
+        assertEquals(6, railCapacityIn(535.dp, railLabelHeight = 32.dp, expandedRailLabelHeight = 20.dp).rail)
+    }
+
+    @Test
+    fun `a rail's items keep their least height under a small text size`() {
+        assertEquals(6, railCapacityIn(423.dp, railLabelHeight = 12.dp, expandedRailLabelHeight = 15.dp).rail)
+        assertEquals(6, railCapacityIn(395.dp, railLabelHeight = 12.dp, expandedRailLabelHeight = 15.dp).expandedRail)
+    }
+
+    @Test
+    fun `an expanded rail holds every item that fits whole, with no gaps between them`() {
+        assertEquals(7, railCapacityIn(396.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).expandedRail)
+        assertEquals(6, railCapacityIn(395.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).expandedRail)
+        assertEquals(7, railCapacityIn(508.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 40.dp).expandedRail)
+        assertEquals(6, railCapacityIn(507.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 40.dp).expandedRail)
     }
 
     @Test
     fun `a bar is grouped whatever its height`() {
-        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = true, railCapacity = Int.MAX_VALUE))
-        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = false, railCapacity = Int.MAX_VALUE))
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, railCapacity = Int.MAX_VALUE))
     }
 
     @Test
-    fun `a short rail with five screens lists them all`() {
-        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists - Scales, isShortWindow = true, railCapacity = Int.MAX_VALUE))
+    fun `five screens are never grouped, however short the rail`() {
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists - Scales, railCapacity = 4))
     }
 
     @Test
     fun `a bar that fits every screen switched on offers each of them`() {
         val fitting = all - Setlists - Scales
-        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, fitting, isShortWindow = false, railCapacity = Int.MAX_VALUE))
+        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, fitting, railCapacity = Int.MAX_VALUE))
         assertEquals(fitting.map { NavigationBarItem.Destination(it) }, shownItems(fitting))
     }
 
     @Test
     fun `the four tools are grouped behind one item, which never holds a tool alone`() {
         assertEquals(listOf(Metronome, Tuner, Chords, Scales), CampfireDestination.TopLevel.tools)
-        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all - Setlists, isShortWindow = false, railCapacity = Int.MAX_VALUE))
-        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, listOf(Songs, Setlists, Scales, Settings), isShortWindow = false, railCapacity = Int.MAX_VALUE))
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all - Setlists, railCapacity = Int.MAX_VALUE))
+        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, listOf(Songs, Setlists, Scales, Settings), railCapacity = Int.MAX_VALUE))
     }
 
     @Test

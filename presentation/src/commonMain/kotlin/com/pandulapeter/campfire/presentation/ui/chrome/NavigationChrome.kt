@@ -41,7 +41,6 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationItemPresence
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.chrome.collapsingNavigationItem
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
@@ -55,9 +54,6 @@ private const val MIN_NAVIGATION_ITEM_WEIGHT = 0.001f
 /** How far a navigation label that does not fit its item is made smaller before it is cut short instead. */
 private const val MIN_NAVIGATION_LABEL_SCALE = 0.75f
 
-/** The gap the collapsed [NavigationRail] leaves above its first item. */
-private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
-
 /**
  * The navigation bar (under 600dp), navigation rail or expanded navigation rail (see [navigationChromeKind]) that
  * every top level screen shares. It belongs to the bottom of the deck rather than to any one screen: it is laid out
@@ -65,7 +61,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long
  * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
  * [CampfireScreens]), which moves with the screen and which the card covers. Where the chrome has no room for every top
- * level screen, as on the bar, on a rail in a short window, or on one too short for every item, it offers the tools behind one Tools item
+ * level screen, as on the bar or on a rail too short for every item, it offers the tools behind one Tools item
  * ([areToolsGrouped]), whose screens then carry a button group between them ([ToolsButtonGroup]).
  *
  * @param destinations The top level screens of the features switched on, see `PreferencesController.topLevelDestinations`.
@@ -74,8 +70,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  *   wide rail - and nothing but the shrink should change on screen.
  * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
- * @param isShortWindow Whether the window is shorter than [SHORT_WINDOW_HEIGHT], where a rail has no room for six items.
- * @param railCapacity How many items each kind of rail holds at the reader's text size, see [railItemCapacity]: the
+ * @param railCapacity How many items each kind of rail holds at the reader's text size, see [railCapacityIn]: the
  *   same for every copy of the chrome and for the tools' tabs, which would otherwise disagree on the grouping.
  * @param lastTool The tool the Tools item opens where none is on screen, see [toolsItemDestination].
  * @param isKeyboard Whether the player's instrument is a keyboard, which the Chords item's icon is drawn for.
@@ -85,7 +80,6 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
 internal fun NavigationChrome(
     kind: NavigationChromeKind,
     destinations: List<CampfireDestination.TopLevel>,
-    isShortWindow: Boolean,
     railCapacity: RailCapacity,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     metronomeBeat: MetronomeIconBeat,
@@ -96,7 +90,7 @@ internal fun NavigationChrome(
 ) {
     // Worked out for this chrome's own kind rather than handed in for the window's: the scaffold composes the chrome it
     // is leaving for the length of a handover, and that one keeps its own grouping while it fades.
-    val items = navigationBarItems(destinations, areToolsGrouped(kind, destinations, isShortWindow, railCapacity.of(kind)))
+    val items = navigationBarItems(destinations, areToolsGrouped(kind, destinations, railCapacity.of(kind)))
     val onItemClick: (NavigationBarItem) -> Unit = { item ->
         when (item) {
             is NavigationBarItem.Destination -> onDestinationSelected(item.destination)

@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandHorizontally
@@ -286,7 +286,7 @@ internal fun SongsScreen(
  * standing preference, and a list that is shorter than the library with nothing on screen saying why reads as songs
  * having gone missing. The badge is not Material's default error red: nothing is wrong, the list is only narrowed.
  * The side panel needs no such mark, since the selected chips are in it. A back gesture that would reset the filters
- * fades the badge with the finger ([badgeRecession], see [songFilterBackRecession]).
+ * fades the badge and the fill with the finger ([badgeRecession], see [songFilterBackRecession]).
  */
 @Composable
 private fun SongFiltersAction(
@@ -312,16 +312,25 @@ private fun SongFiltersAction(
             }
         },
     ) {
-        Crossfade(targetState = isSongFilterActive) { isActive ->
+        // The two funnels are faded by hand rather than by a Crossfade, so that a back gesture can take the fill away
+        // with the finger and the fade a completed one starts carries on from wherever the gesture left it.
+        val activeFill = animateFloatAsState(
+            targetValue = if (isSongFilterActive) 1f else 0f,
+            animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        )
+        val fill = { minOf(activeFill.value, 1f - badgeRecession()) }
+        Box {
             Icon(
-                painter = painterResource(if (isActive) Res.drawable.ic_filter else Res.drawable.ic_filter_outline),
+                modifier = Modifier.graphicsLayer { alpha = 1f - fill() },
+                painter = painterResource(Res.drawable.ic_filter_outline),
+                contentDescription = if (isSongFilterActive) null else stringResource(Res.string.songs_filter),
+            )
+            Icon(
+                modifier = Modifier.graphicsLayer { alpha = fill() },
+                painter = painterResource(Res.drawable.ic_filter),
                 // The badge and the fill are drawn and nothing else, so a screen reader would otherwise never hear that
                 // the list is narrowed.
-                contentDescription = if (isActive) {
-                    stringResource(Res.string.songs_filter_active)
-                } else {
-                    stringResource(Res.string.songs_filter)
-                },
+                contentDescription = if (isSongFilterActive) stringResource(Res.string.songs_filter_active) else null,
             )
         }
     }
