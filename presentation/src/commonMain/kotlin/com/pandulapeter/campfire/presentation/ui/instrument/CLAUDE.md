@@ -21,7 +21,7 @@ One instrument for the whole app.
   one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning name is cut short first), and
   everywhere exactly `songControlHeight` of its text style, so on a song it matches the transposition stepper. It
   stands on the song details first section (read only included, since it changes a device preference), the Tuner, the
-  Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every note for; there is no Chromatic switch.
+  Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every note for, so the Tuner leaves its Strings / Chromatic toggle out for it.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
   no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
