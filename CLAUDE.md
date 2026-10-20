@@ -199,7 +199,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 
 - **Sync** (`data/sync/implementation`, `data/source/remote/api`): no Campfire server; a run belongs to the app, not
   the screen; content decides what changed, never a clock; a run that would delete most of the library on either side
-  stops and asks; a run starts on every return to the front, and another device's change starts one while in front.
+  stops and asks; a run starts on every return to the front, unless the last one was stopped or is waiting for an
+  answer about deletions, and another device's change starts one while in front.
 - **Metronome** (`metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a timer; a
   click never outlives its screen; tempo overrides live where transpositions do.
 - **Tuner** (`tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers its

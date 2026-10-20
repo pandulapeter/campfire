@@ -124,12 +124,15 @@ internal class SyncRunScheduler(
     }
 
     /**
-     * Starts an automatic run for the app coming back to the front, unless the last run was stopped or cut short: that
-     * is reported rather than repeated, as at a launch. It carries whatever an automatic run was waiting to carry.
+     * Starts an automatic run for the app coming back to the front, unless the last run was stopped or cut short, which
+     * is reported rather than repeated, as at a launch, or is waiting for an answer about deletions, which Sync now and a
+     * change to the library still ask again. It carries whatever an automatic run was waiting to carry.
      */
     fun synchronizeOnReturn() {
         val state = stateHolder.value as? SyncState.Connected ?: return
-        if (state.lastOutcome == SyncOutcome.Interrupted) return
+        // A question about deletions waits for its answer: asking it again would only take its rows off the screen for
+        // the length of a run that stops at the same place.
+        if (state.lastOutcome == SyncOutcome.Interrupted || state.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) return
         if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) scheduledRun.value = null
     }
 

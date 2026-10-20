@@ -21,7 +21,8 @@
   `SyncProgress()` in the state before returning, so the shell can hand it to the platform keep-alive in the same
   callback.
 - The app coming back to the front starts an automatic run (`synchronizeOnReturn`), except after `Interrupted`, which
-  is reported rather than repeated, as at a launch.
+  is reported rather than repeated, as at a launch, and while a deletion question is open, which waits for its answer
+  (Sync now and a library change still ask again).
 - `SyncRemoteWatcher` watches the provider's change feed while the app is in front, from `SyncRunner.watchPoint`: the
   cursor of a completed run's last listing with the index it left. A change whose revision the index holds, a deletion
   of a file it no longer holds (names matched ignoring case and Unicode form, as the run files them), or a

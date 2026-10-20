@@ -19,7 +19,11 @@ import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSongRepository
 import com.pandulapeter.campfire.data.sync.implementation.RunCounter
+import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
+import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
@@ -33,9 +37,11 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
@@ -272,6 +278,31 @@ class SyncRunSchedulerTest {
     }
 
     @Test
+    fun `returning to the app leaves an open deletion question alone`() = runTest {
+        val library = (1..10).associate { song(it) to "Song $it".encodeToByteArray() }
+        val world = world(
+            files = library,
+            index = SyncIndexDocument.of(
+                providerId = SyncProviderId.DROPBOX.id,
+                accountId = TEST_ACCOUNT.indexKey(),
+                lastSyncedAt = 1,
+                syncedPreferences = null,
+                index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
+            ).encoded(),
+        )
+        world.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+        val question = assertIs<SyncOutcome.DeletionsNeedConfirmation>(world.lastOutcome)
+        val runs = world.runs.count
+
+        world.scheduler.synchronizeOnReturn()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(question, world.lastOutcome)
+        assertEquals(runs, world.runs.count)
+    }
+
+    @Test
     fun `a run the network failed is tried again as soon as the device is back online`() = runTest {
         val world = world()
         world.provider.failListingOnce()
@@ -317,6 +348,7 @@ class SyncRunSchedulerTest {
         files: Map<SyncKey, ByteArray> = emptyMap(),
         onDownload: suspend (SyncKey) -> Unit = {},
         localFiles: Map<SyncKey, ByteArray> = emptyMap(),
+        index: String? = null,
     ): World {
         val environment = testEnvironment()
         val connectivityMonitor = FakeConnectivityMonitor()
@@ -339,7 +371,7 @@ class SyncRunSchedulerTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
-            indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
+            indexStore = SyncIndexStore(FakeSyncIndexLocalSource(index = index, onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(RecordingSongRepository(), RecordingSetlistRepository(), environment),
             stateHolder = stateHolder,
             environment = environment,

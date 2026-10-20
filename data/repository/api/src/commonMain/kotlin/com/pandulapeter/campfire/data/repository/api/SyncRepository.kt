@@ -130,8 +130,9 @@ interface SyncRepository {
 
     /**
      * Starts a run nobody pressed a button for, for the app coming back to the front, where the cloud folder may have
-     * moved on while it was away. Does nothing while nothing is connected, while a run is going, or after a run that
-     * was stopped or cut short, which is reported rather than repeated, as at a launch.
+     * moved on while it was away. Does nothing while nothing is connected, while a run is going, after a run that was
+     * stopped or cut short, which is reported rather than repeated, as at a launch, or while a question about deletions
+     * waits for its answer.
      */
     fun synchronizeOnReturn()
 
