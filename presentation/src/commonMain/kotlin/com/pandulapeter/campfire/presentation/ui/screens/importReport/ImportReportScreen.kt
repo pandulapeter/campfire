@@ -91,6 +91,13 @@ internal fun ImportReportScreen(
     val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val warning = importFeatureWarning(
+        areSongsEnabled = areSongsEnabled,
+        areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
+        hasSetlists = (shown as? ImportReport.Review)?.plan?.setlists?.isNotEmpty() == true ||
+            (shown as? ImportReport.Finished)?.result?.importedSetlistFileNames?.isNotEmpty() == true,
+    )
     val searchState = viewModel.importReportState.search
     val query by searchState.activeQuery.collectAsStateWithLifecycle("")
     // Read through the state rather than off the stage, so that a tick recomposes the rows and the counts that read
@@ -158,7 +165,7 @@ internal fun ImportReportScreen(
                         contentPadding = listPadding,
                         searchFieldIndex = REVIEW_HEADER_ITEM_COUNT.takeIf { reviewSections.isNotEmpty() },
                     ) { listState ->
-                        reviewHeader(plan = stage.plan, choices = choices)
+                        reviewHeader(plan = stage.plan, choices = choices, warning = warning)
                         if (reviewSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = REVIEW_HEADER_ITEM_COUNT)
                         reviewSections(
                             sections = matchingReviewSections,
@@ -186,7 +193,7 @@ internal fun ImportReportScreen(
                         contentPadding = listPadding,
                         searchFieldIndex = FINISHED_HEADER_ITEM_COUNT.takeIf { resultSections.isNotEmpty() },
                     ) { listState ->
-                        finishedHeader(stage.result)
+                        finishedHeader(result = stage.result, warning = warning)
                         if (resultSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = FINISHED_HEADER_ITEM_COUNT)
                         sections(
                             sections = matchingResultSections,

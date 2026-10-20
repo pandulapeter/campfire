@@ -9,12 +9,17 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.finished
 
+import com.pandulapeter.campfire.presentation.ui.components.WarningCard
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFeatureWarning
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ItemWidth
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.text
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ReportNote
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.SectionTitle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -63,22 +68,30 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 
 /** What the import came to in one sentence, above the files it is about. */
-internal fun LazyListScope.finishedHeader(result: ImportResult?) {
+internal fun LazyListScope.finishedHeader(
+    result: ImportResult?,
+    warning: ImportFeatureWarning?,
+) {
     item(key = "summary", contentType = "text") {
         val isError = result == null || result.isFailed
-        Text(
+        Column(
             modifier = ItemWidth.padding(horizontal = 16.dp),
-            text = stringResource(
-                when {
-                    result == null -> Res.string.import_status_unknown_failure
-                    result.isFailed -> Res.string.import_status_partial
-                    result.isClean -> Res.string.import_report_clean
-                    else -> Res.string.import_report_left_out
-                },
-            ),
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-        )
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            warning?.let { WarningCard(text = it.text()) }
+            Text(
+                text = stringResource(
+                    when {
+                        result == null -> Res.string.import_status_unknown_failure
+                        result.isFailed -> Res.string.import_status_partial
+                        result.isClean -> Res.string.import_report_clean
+                        else -> Res.string.import_report_left_out
+                    },
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 

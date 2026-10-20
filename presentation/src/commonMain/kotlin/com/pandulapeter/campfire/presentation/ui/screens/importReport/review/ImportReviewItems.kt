@@ -9,16 +9,23 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
+import com.pandulapeter.campfire.presentation.ui.components.WarningCard
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFeatureWarning
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ItemWidth
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.text
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ReportNote
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
@@ -44,12 +51,16 @@ import org.jetbrains.compose.resources.StringResource
 internal fun LazyListScope.reviewHeader(
     plan: ImportPlan,
     choices: () -> ImportChoices,
+    warning: ImportFeatureWarning?,
 ) = item(key = "summary", contentType = "summary") {
     val summary by remember(plan) { derivedStateOf { importReviewSummary(plan, choices()) } }
-    ImportReviewSummaryCard(
+    Column(
         modifier = ItemWidth.padding(horizontal = 16.dp),
-        summary = summary,
-    )
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        warning?.let { WarningCard(text = it.text()) }
+        ImportReviewSummaryCard(modifier = Modifier.fillMaxWidth(), summary = summary)
+    }
 }
 
 /**

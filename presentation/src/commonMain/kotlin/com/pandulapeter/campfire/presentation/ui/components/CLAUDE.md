@@ -22,6 +22,11 @@ covers the generic pieces at the root.
 - Keys travel only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a
   frame in and only if nothing has focus yet, so a form's first field keeps the caret. The key is always consumed.
 
+### `WarningCard.kt`
+
+What a switch flipped elsewhere has done to a whole screen, on the onboarding note's card with a warning icon: the
+everything-off note in Settings → Features, and the import screen's warning about songs or setlists switched off.
+
 ### `DelayedLoadingIndicator.kt`
 
 Song details, the editor, and the export screen and its preview: fades in after 300ms, since one local file is nearly

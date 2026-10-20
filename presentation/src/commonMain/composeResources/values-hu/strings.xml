@@ -106,6 +106,8 @@
     <string name="import_review_title">Importálás áttekintése</string>
     <string name="import_review_title_empty">Nincs mit importálni</string>
     <string name="import_review_from">Forrás: %1$s</string>
+    <string name="import_warning_songs_off">A dalok ki vannak kapcsolva a Beállításokban, így semmi, amit itt importálsz, nem jelenik meg, amíg vissza nem kapcsolod őket.</string>
+    <string name="import_warning_setlists_off">A listák ki vannak kapcsolva a Beállításokban, így az itt importált listák nem jelennek meg, amíg vissza nem kapcsolod őket.</string>
     <string name="import_review_demo_library">Bemutató könyvtár</string>
     <plurals name="import_review_confirm">
         <item quantity="one">%1$d fájl importálása</item>

@@ -9,25 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_warning
 import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -54,11 +42,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_tuner_descripti
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.WarningCard
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
@@ -150,36 +138,13 @@ private fun PlayingSection(
     )
 }
 
-/**
- * What the app has become with every screen switched off, on a card like the onboarding's note about Settings, so that it
- * reads as a word about the whole app rather than about one of the switches under it. A polite live region, since it
- * arrives in answer to the switch just flipped.
- */
+/** What the app has become with every screen switched off, announced since it arrives with the switch just flipped. */
 @Composable
-private fun EverythingOffCard() = Surface(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-    shape = MaterialTheme.shapes.large,
-    color = MaterialTheme.colorScheme.secondaryContainer,
-    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-) {
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_warning),
-            contentDescription = null,
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = stringResource(Res.string.settings_everything_off),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-}
+private fun EverythingOffCard() = WarningCard(
+    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    text = stringResource(Res.string.settings_everything_off),
+    isAnnounced = true,
+)
 
 @Composable
 private fun OnlineSection(

@@ -106,6 +106,8 @@
     <string name="import_review_title">Review the import</string>
     <string name="import_review_title_empty">Nothing to import</string>
     <string name="import_review_from">From %1$s</string>
+    <string name="import_warning_songs_off">Songs are switched off in Settings, so nothing imported here will show until you switch them back on.</string>
+    <string name="import_warning_setlists_off">Setlists are switched off in Settings, so the setlists imported here won\'t show until you switch them back on.</string>
     <string name="import_review_demo_library">Demo library</string>
     <plurals name="import_review_confirm">
         <item quantity="one">Import %1$d file</item>
