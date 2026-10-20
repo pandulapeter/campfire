@@ -114,6 +114,7 @@ internal class SyncEngine(
         var pass = 0
         var unresolved = emptySet<SyncKey>()
         var cursor: String? = null
+        var documentRevisions = emptyMap<String, String>()
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -121,6 +122,7 @@ internal class SyncEngine(
             val listing = provider.list()
             val listed = listing.files
             cursor = listing.cursor
+            documentRevisions = listing.documentRevisions
             index = withoutForeignEntries(index = index, listed = listed)
             val localListing = readLocalStates()
             val tooLarge = localListing.tooLarge
@@ -184,6 +186,7 @@ internal class SyncEngine(
         return Result.Completed(
             summary = summary,
             cursor = cursor,
+            documentRevisions = documentRevisions,
             index = SyncIndexDocument.of(
                 providerId = provider.id.id,
                 accountId = accountId,
@@ -562,10 +565,12 @@ internal class SyncEngine(
         /**
          * @param cursor The cursor of the last listing, see `RemoteListing.cursor`: every change made after it is either
          *   this run's, and so in [index], or one the run did not see.
+         * @param documentRevisions The folder-level documents' revisions, as the run's last listing named them.
          */
         data class Completed(
             val summary: SyncSummary,
             val cursor: String?,
+            val documentRevisions: Map<String, String>,
             val index: SyncIndexDocument,
         ) : Result
 

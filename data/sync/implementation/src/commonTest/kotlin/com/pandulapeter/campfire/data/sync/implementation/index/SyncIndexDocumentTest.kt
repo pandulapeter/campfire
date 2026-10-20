@@ -15,12 +15,15 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * `sync-index.json` as devices already have it on disk. The store reads it leniently, so a field renamed in
@@ -53,7 +56,8 @@ class SyncIndexDocumentTest {
                 "syncedPreferences": {
                     "version": 1
                 },
-                "syncedPreferencesFields": ["capo", "tags"]
+                "syncedPreferencesFields": ["capo", "tags"],
+                "syncedPreferencesRevision": "r3"
             }
             """.trimIndent(),
         )
@@ -71,6 +75,7 @@ class SyncIndexDocumentTest {
                 ),
                 syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1))),
                 syncedPreferencesFields = setOf("capo", "tags"),
+                syncedPreferencesRevision = "r3",
             ),
             document,
         )
@@ -84,6 +89,28 @@ class SyncIndexDocumentTest {
     }
 
     /** As the versions before automatic runs were marked and before the per-song preferences were synced wrote it. */
+    @Test
+    fun `an index pairs its preferences with the revision it saw`() {
+        val preferences = JsonObject(mapOf("version" to JsonPrimitive(1)))
+        val document = SyncIndexDocument(accountId = "dropbox:dbid:1", syncedPreferences = preferences, syncedPreferencesRevision = "r1")
+        val name = SyncedPreferencesDocument.FILE_NAME
+
+        val unchanged = document.unchangedPreferences("dropbox:dbid:1", mapOf(name to "r1"))
+        assertEquals("r1", unchanged?.revision)
+        assertContentEquals(SyncedPreferencesDocument.encode(preferences), unchanged?.bytes)
+        assertNull(document.unchangedPreferences("dropbox:dbid:1", mapOf(name to "r2")))
+        assertNull(document.unchangedPreferences("dropbox:dbid:1", emptyMap()))
+        assertNull(document.unchangedPreferences("dropbox:dbid:2", mapOf(name to "r1")))
+        assertNull(document.copy(syncedPreferencesRevision = "").unchangedPreferences("dropbox:dbid:1", mapOf(name to "")))
+    }
+
+    @Test
+    fun `an index without a preferences revision never skips the download`() {
+        val document = SyncIndexDocument(accountId = "dropbox:dbid:1", syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1))))
+
+        assertNull(document.unchangedPreferences("dropbox:dbid:1", mapOf(SyncedPreferencesDocument.FILE_NAME to "r1")))
+    }
+
     @Test
     fun `an index written before the newer fields existed is read whole`() = runTest {
         val document = load(

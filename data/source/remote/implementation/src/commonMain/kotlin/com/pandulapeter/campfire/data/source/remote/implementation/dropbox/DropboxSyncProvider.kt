@@ -220,6 +220,7 @@ internal class DropboxSyncProvider(
 
     override suspend fun list(): RemoteListing {
         val files = mutableListOf<RemoteFile>()
+        val documents = mutableMapOf<String, String>()
         var response = requests.rpc(
             url = LIST_FOLDER_URL,
             body = """{"path":"","recursive":true,"include_deleted":false}""",
@@ -227,6 +228,7 @@ internal class DropboxSyncProvider(
             browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
         )
         files += response.entries.toRemoteFiles()
+        documents += response.entries.toDocumentRevisions()
         while (response.hasMore) {
             // Without a cursor the next page would be asked for as page "", which Dropbox would not have sent.
             if (response.cursor.isEmpty()) throw SyncNetworkException("Dropbox's listing named no next page.")
@@ -237,8 +239,9 @@ internal class DropboxSyncProvider(
                 browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
             )
             files += response.entries.toRemoteFiles()
+            documents += response.entries.toDocumentRevisions()
         }
-        return RemoteListing(files = files, cursor = response.cursor.ifEmpty { null })
+        return RemoteListing(files = files, cursor = response.cursor.ifEmpty { null }, documentRevisions = documents)
     }
 
     override suspend fun awaitChanges(cursor: String) = changeFeed.awaitChanges(cursor)

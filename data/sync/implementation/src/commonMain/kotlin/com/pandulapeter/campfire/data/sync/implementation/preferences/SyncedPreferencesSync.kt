@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.flow.Flow
@@ -78,11 +79,13 @@ internal class SyncedPreferencesSync(
         .map { }
 
     /**
-     * Settles the document and answers the one to remember as the last synced, or null where it could not be settled -
-     * the preferences unreadable here, or another device writing the document under every attempt - which leaves the
-     * previous one in place for the next run.
+     * Settles the document and answers the one to remember as the last synced, with the folder's revision of it, or null
+     * where it could not be settled - the preferences unreadable here, or another device writing the document under
+     * every attempt - which leaves the previous one in place for the next run.
      *
      * @param base The document the last run left behind, or null where no run has synced it with this account yet.
+     * @param unchanged The folder's document as the last settle left it, when the run's listing shows it unchanged since,
+     *   used in place of the first download; a retry after a conflict always downloads.
      * @param keptFileNames The files this run could not move, whose songs keep their preferences although they are not
      *   in the library on this device.
      * @param onLocalSettled Told the base a run stopped from here on has to remember, once the preferences hold what the
@@ -93,9 +96,10 @@ internal class SyncedPreferencesSync(
     suspend fun synchronize(
         provider: SyncFolder,
         base: JsonObject?,
+        unchanged: RemoteDocument?,
         keptFileNames: Collection<String>,
         onLocalSettled: (JsonObject?) -> Unit,
-    ): JsonObject? {
+    ): SettledPreferences? {
         if (userPreferencesRepository.loadUserPreferencesIfNeeded() == null) return null
         // Folded name to this device's spelling, which is the one its screens read the preferences under. Two names of
         // one song only exist on a file system that tells case apart, and the service refuses one of them anyway; the
@@ -113,15 +117,17 @@ internal class SyncedPreferencesSync(
         // prune the very entry the first attempt kept.
         val baseSongNames = SyncedPreferencesDocument.songNamesOf(base).mapTo(hashSetOf()) { it.folded() }
         var previous = base
-        repeat(MAXIMUM_ATTEMPTS) {
-            val remote = provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
+        repeat(MAXIMUM_ATTEMPTS) { attempt ->
+            val remote = unchanged.takeIf { attempt == 0 } ?: provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
             val remoteDocument = remote?.bytes?.let(SyncedPreferencesDocument::decode)
             if (remoteDocument != null && SyncedPreferencesDocument.isNewerFormat(remoteDocument)) {
                 // The version that bumped the format is the one that has to keep this one's values, so the document is
                 // neither applied nor written over. Null would report a failure no retry can mend until the app is
-                // updated, and an empty base names no song, so a later run with it only ever adds, as with none.
+                // updated, and an empty base names no song, so a later run with it only ever adds, as with none. The folder
+                // holds another document than that base, so the two are never paired with its revision, or the next run
+                // would merge against the base without downloading and write over the newer format.
                 logger.log("${SyncedPreferencesDocument.FILE_NAME} was written by a newer version of Campfire; it is left alone.")
-                return previous ?: JsonObject(emptyMap())
+                return SettledPreferences(document = previous ?: JsonObject(emptyMap()), revision = null)
             }
             // A document that is missing, or is not one this version can read, is taken as unchanged since the last run
             // rather than as one that removed everything: this device's values stay, and are uploaded in its place.
@@ -169,14 +175,14 @@ internal class SyncedPreferencesSync(
                 }
             }
             onLocalSettled(effectiveRemote)
-            if (merged == remoteDocument) return merged
+            if (merged == remoteDocument) return SettledPreferences(document = merged, revision = remote.revision)
             val result = provider.uploadDocument(
                 name = SyncedPreferencesDocument.FILE_NAME,
                 bytes = SyncedPreferencesDocument.encode(merged),
                 expectedRevision = remote?.revision,
             )
             when (result) {
-                is RemoteWriteResult.Written -> return merged
+                is RemoteWriteResult.Written -> return SettledPreferences(document = merged, revision = result.revision)
                 // Written elsewhere since it was read. The preferences here already hold what the document said then,
                 // so that is the base the next attempt merges what was written since against.
                 RemoteWriteResult.Conflict -> previous = effectiveRemote

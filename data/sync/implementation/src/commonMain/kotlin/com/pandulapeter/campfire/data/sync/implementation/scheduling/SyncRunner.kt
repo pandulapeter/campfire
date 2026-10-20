@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationEx
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -168,10 +169,13 @@ internal class SyncRunner(
                         // From here on a Stop must never write an index older than the one the engine returned, nor,
                         // once the preferences are written here, one whose preferences base predates them.
                         latestIndex = { result.index }
-                        val syncedPreferences = synchronizePreferences(provider, result) { base ->
+                        // The index loaded at the start, not the engine's: only it pairs the base with the revision
+                        // the folder had for it, which the engine's rebuilt index leaves null.
+                        val unchanged = document.unchangedPreferences(connected.account.indexKey(), result.documentRevisions)
+                        val settled = synchronizePreferences(provider, result, unchanged) { base ->
                             latestIndex = { result.index.copy(syncedPreferences = base) }
                         }
-                        val summary = result.summary.copy(havePreferencesFailed = syncedPreferences == null)
+                        val summary = result.summary.copy(havePreferencesFailed = settled == null)
                         // Only a run that moved everything it set out to move is one the two sides were in step after.
                         // One with failures keeps the time of the last run that was, which is also what "Last synced
                         // successfully" goes on saying while the next run is going.
@@ -182,7 +186,8 @@ internal class SyncRunner(
                         }
                         val completed = result.index.copy(
                             lastSyncedAt = syncedAt,
-                            syncedPreferences = syncedPreferences ?: result.index.syncedPreferences,
+                            syncedPreferences = settled?.document ?: result.index.syncedPreferences,
+                            syncedPreferencesRevision = settled?.revision,
                         )
                         latestIndex = { completed }
                         indexStore.save(completed)
@@ -245,19 +250,22 @@ internal class SyncRunner(
     }
 
     /**
-     * Settles `preferences.json` once the library files have been, and answers the document to remember, or null where
-     * it could not be settled. A failure that ends a run (refused, the network, a full folder) ends this one with its
+     * Settles `preferences.json` once the library files have been, and answers the document to remember with the folder's
+     * revision of it, or null where it could not be settled; [unchanged] stands in for the first download, see
+     * [SyncedPreferencesSync.synchronize]. A failure that ends a run (refused, the network, a full folder) ends this one with its
      * reason: anything else is the one document's problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
      * next run tries again.
      */
     private suspend fun synchronizePreferences(
         provider: SyncProvider,
         result: SyncEngine.Result.Completed,
+        unchanged: RemoteDocument?,
         onLocalSettled: (JsonObject?) -> Unit,
     ) = try {
         syncedPreferencesSync.synchronize(
             provider = provider,
             base = result.index.syncedPreferences,
+            unchanged = unchanged,
             keptFileNames = result.summary.failed,
             onLocalSettled = onLocalSettled,
         )

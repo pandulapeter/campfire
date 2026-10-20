@@ -18,4 +18,6 @@
 - An index that exists and cannot be read ends the run as `STORAGE` before anything is written. Only one that reads but
   does not decode is taken for none. **Never rename its fields** (`SyncIndexDocumentTest` reads devices' real files),
   since lenient decoding would read a renamed field as an empty index.
+- `syncedPreferencesRevision` is the folder's revision of `preferences.json` holding exactly `syncedPreferences`; only
+  a completed settle writes it, every other write of a run leaves it null, so that run's successor downloads.
 - An `isRunInProgress` marker found at `restore` is reported as interrupted and stops the launch run.

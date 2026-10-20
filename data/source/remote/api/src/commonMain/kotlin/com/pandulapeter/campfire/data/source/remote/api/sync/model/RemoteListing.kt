@@ -18,8 +18,12 @@ package com.pandulapeter.campfire.data.source.remote.api.sync.model
  *
  * @param cursor Where the service's feed of changes stood when the listing was taken, opaque like a revision, or null
  *   for a provider that offers no such feed.
+ * @param documentRevisions The revision of each folder-level document (see
+ *   [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.downloadDocument]) by name, as listed. A provider
+ *   that does not say leaves it empty, which costs the run a download, never a wrong answer.
  */
 data class RemoteListing(
     val files: List<RemoteFile>,
     val cursor: String? = null,
+    val documentRevisions: Map<String, String> = emptyMap(),
 )

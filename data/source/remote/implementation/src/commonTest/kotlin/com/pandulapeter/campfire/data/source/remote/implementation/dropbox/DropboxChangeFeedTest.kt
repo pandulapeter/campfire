@@ -43,6 +43,34 @@ class DropboxChangeFeedTest {
     }
 
     @Test
+    fun `a listing names the revision of each document at the top of the folder`() = runTest {
+        var pages = 0
+        val provider = dropboxProvider {
+            pages++
+            if (pages == 1) {
+                respondJson(
+                    """{"entries":[
+                        {".tag":"file","name":"preferences.json","path_lower":"/preferences.json","rev":"r9"},
+                        {".tag":"folder","name":"songs","path_lower":"/songs"}
+                    ],"cursor":"page 2","has_more":true}""",
+                )
+            } else {
+                respondJson(
+                    """{"entries":[
+                        {".tag":"file","name":"a.cho","path_lower":"/songs/a.cho","rev":"r1","size":1,"content_hash":"h1"},
+                        {".tag":"file","name":"notes.txt","path_lower":"/notes.txt"}
+                    ],"cursor":"page 3","has_more":false}""",
+                )
+            }
+        }
+
+        val listing = provider.list()
+
+        assertEquals(mapOf("preferences.json" to "r9"), listing.documentRevisions)
+        assertEquals(listOf("a.cho"), listing.files.map { it.name })
+    }
+
+    @Test
     fun `a listing without a cursor names none`() = runTest {
         val provider = dropboxProvider { respondJson(EMPTY_LISTING) }
 

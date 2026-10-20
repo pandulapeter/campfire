@@ -18,6 +18,9 @@ written only once non-empty, so older documents keep their bytes.
 - Merged as a JSON tree, so unknown fields and unreadable values of known fields pass through untouched. The index names
   the fields the base's writer owned; others are removed from the base so a newly owned field merges as add-only. A new
   field joins `SyncedPreferencesDocument.OWNED_FIELDS`.
+- The folder's document is not downloaded when the run's listing shows the revision the index pairs with the base
+  (`syncedPreferencesRevision`, written only beside the document a settle left in the folder); a retry after a
+  conflict always downloads.
 - A folder document that is missing or unreadable is merged as the base, never as a removal of everything; one with a
   newer `version` is neither applied nor overwritten.
 - A song no longer in the library loses its entry, except a file the run failed on or one the folder gained since the

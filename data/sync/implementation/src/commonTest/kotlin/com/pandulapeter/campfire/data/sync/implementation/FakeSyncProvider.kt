@@ -127,6 +127,7 @@ internal class FakeSyncProvider(
 
     private fun listing() = RemoteListing(
         cursor = feed.value.size.toString(),
+        documentRevisions = documents.mapValues { it.value.second },
         files = files.also { listCount++ }.map { (key, file) ->
             remoteFile(key, file.first, file.second)
         },
@@ -190,7 +191,11 @@ internal class FakeSyncProvider(
     /** Runs before [downloadDocument] answers, which is where a test makes it fail. */
     var onDownloadDocument: suspend () -> Unit = {}
 
+    /** How many times [downloadDocument] was asked. */
+    var documentDownloadCount = 0
+
     override suspend fun downloadDocument(name: String): RemoteDocument? {
+        documentDownloadCount++
         onDownloadDocument()
         return documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
     }

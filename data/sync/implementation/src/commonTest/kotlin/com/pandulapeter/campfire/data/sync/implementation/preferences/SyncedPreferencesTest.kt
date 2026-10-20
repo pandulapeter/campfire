@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -367,7 +368,7 @@ class SyncedPreferencesTest {
     fun `a first run uploads what is set here`() = runTest {
         val provider = FakeSyncProvider()
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
-        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
         assertEquals(remoteDocumentOf(provider), synced)
         assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(synced!!).capos)
     }
@@ -377,7 +378,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"tempo":140}}""") to "r1"
         val preferences = FakeUserPreferencesRepository()
-        sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("a.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(mapOf("a.cho" to 140), preferences.current.tempos)
         assertEquals("r1", provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).second)
     }
@@ -390,6 +391,7 @@ class SyncedPreferencesTest {
         sync(preferences, library("a.cho")).synchronize(
             provider,
             base = document("""{"gone.cho":{"tempo":140}}"""),
+            unchanged = null,
             keptFileNames = emptyList(),
             onLocalSettled = {},
         )
@@ -405,9 +407,10 @@ class SyncedPreferencesTest {
         val synced = sync(preferences, library("a.cho")).synchronize(
             provider,
             base = document("""{"a.cho":{"capo":1}}"""),
+            unchanged = null,
             keptFileNames = emptyList(),
             onLocalSettled = {},
-        )
+        )?.document
         assertEquals(mapOf("a.cho" to 1, "s.cho" to 3), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
         assertTrue("s.cho" in SyncedPreferencesDocument.songNamesOf(synced))
     }
@@ -417,7 +420,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
-        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
         assertEquals(mapOf("a.cho" to 1, "s.cho" to 3), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
         assertTrue("s.cho" in SyncedPreferencesDocument.songNamesOf(synced))
     }
@@ -439,6 +442,7 @@ class SyncedPreferencesTest {
         sync(preferences, library("a.cho", "b.cho")).synchronize(
             provider,
             base = document("""{"a.cho":{"capo":1}}"""),
+            unchanged = null,
             keptFileNames = emptyList(),
             onLocalSettled = {},
         )
@@ -453,8 +457,8 @@ class SyncedPreferencesTest {
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
         val synchronization = sync(preferences, library("a.cho"))
-        val firstBase = synchronization.synchronize(provider, base = document("""{"a.cho":{"capo":1}}"""), keptFileNames = emptyList(), onLocalSettled = {})
-        synchronization.synchronize(provider, base = firstBase, keptFileNames = emptyList(), onLocalSettled = {})
+        val firstBase = synchronization.synchronize(provider, base = document("""{"a.cho":{"capo":1}}"""), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
+        synchronization.synchronize(provider, base = firstBase, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(mapOf("a.cho" to 1), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
         assertEquals(mapOf("a.cho" to 1), preferences.current.capos)
     }
@@ -464,7 +468,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Big.cho":{"tempo":140}}""") to "r1"
         val preferences = FakeUserPreferencesRepository()
-        sync(preferences, library()).synchronize(provider, base = null, keptFileNames = listOf("big.cho"), onLocalSettled = {})
+        sync(preferences, library()).synchronize(provider, base = null, unchanged = null, keptFileNames = listOf("big.cho"), onLocalSettled = {})
         assertEquals(mapOf("big.cho" to 140), preferences.current.tempos)
     }
 
@@ -480,7 +484,7 @@ class SyncedPreferencesTest {
             }
         }
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
-        val synced = sync(preferences, library("a.cho", "b.cho")).synchronize(provider, base = document("{}"), keptFileNames = emptyList(), onLocalSettled = {})
+        val synced = sync(preferences, library("a.cho", "b.cho")).synchronize(provider, base = document("{}"), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
         val expected = SyncedPreferences(capos = mapOf("a.cho" to 2, "b.cho" to 3))
         assertEquals(expected, SyncedPreferences.of(preferences.current))
         assertEquals(expected, SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)))
@@ -498,11 +502,11 @@ class SyncedPreferencesTest {
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
         val synchronization = sync(preferences, library("a.cho", "b.cho"))
 
-        assertNull(synchronization.synchronize(provider, base = document("{}"), keptFileNames = emptyList(), onLocalSettled = {}))
+        assertNull(synchronization.synchronize(provider, base = document("{}"), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {}))
 
         // The other device has stopped writing, and the next run starts from the base the unsettled one left in place.
         provider.onUploadDocument = {}
-        synchronization.synchronize(provider, base = document("{}"), keptFileNames = emptyList(), onLocalSettled = {})
+        synchronization.synchronize(provider, base = document("{}"), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         val expected = mapOf("a.cho" to 2, "b.cho" to 3)
         assertEquals(expected, preferences.current.capos)
         assertEquals(expected, SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
@@ -513,16 +517,67 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
         val step = sync(preferences, library("a.cho"))
-        val synced = step.synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        val synced = step.synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
         provider.onUploadDocument = { throw AssertionError("Uploaded a document that was in step.") }
-        assertEquals(synced, step.synchronize(provider, base = synced, keptFileNames = emptyList(), onLocalSettled = {}))
+        assertEquals(synced, step.synchronize(provider, base = synced, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document)
+    }
+
+    @Test
+    fun `a document the folder still holds as the last run left it is not downloaded`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1}}""") to "r1"
+        provider.onDownloadDocument = { throw AssertionError("Downloaded an unchanged document.") }
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        val settled = sync(preferences, library("a.cho")).synchronize(
+            provider,
+            base = document("""{"a.cho":{"capo":1}}"""),
+            unchanged = RemoteDocument(encoded("""{"a.cho":{"capo":1}}"""), "r1"),
+            keptFileNames = emptyList(),
+            onLocalSettled = {},
+        )
+        assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+        assertEquals(provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).second, settled?.revision)
+    }
+
+    @Test
+    fun `a document written elsewhere after the listing is merged on the second attempt`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"b.cho":{"tempo":90}}""") to "r2"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        sync(preferences, library("a.cho", "b.cho")).synchronize(
+            provider,
+            base = document("""{"a.cho":{"capo":1}}"""),
+            unchanged = RemoteDocument(encoded("""{"a.cho":{"capo":1}}"""), "r1"),
+            keptFileNames = emptyList(),
+            onLocalSettled = {},
+        )
+        val expected = SyncedPreferences(tempos = mapOf("b.cho" to 90), capos = mapOf("a.cho" to 2))
+        assertEquals(expected, SyncedPreferences.of(preferences.current))
+        assertEquals(expected, SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)))
+    }
+
+    @Test
+    fun `a document written elsewhere after the listing, with nothing to upload, is not paired with its revision`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"b.cho":{"tempo":90}}""") to "r2"
+        provider.onUploadDocument = { throw AssertionError("Uploaded a document that was in step.") }
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
+        val settled = sync(preferences, library("a.cho", "b.cho")).synchronize(
+            provider,
+            base = document("""{"a.cho":{"capo":1}}"""),
+            unchanged = RemoteDocument(encoded("""{"a.cho":{"capo":1}}"""), "r1"),
+            keptFileNames = emptyList(),
+            onLocalSettled = {},
+        )
+        assertEquals(document("""{"a.cho":{"capo":1}}"""), settled?.document)
+        assertEquals("r1", settled?.revision)
     }
 
     @Test
     fun `a document deleted from the folder removes nothing and is written again`() = runTest {
         val provider = FakeSyncProvider()
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
-        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
         assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
     }
@@ -544,8 +599,9 @@ class SyncedPreferencesTest {
         provider.onUploadDocument = { throw AssertionError("Wrote over a document of a newer format.") }
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
         val base = document("""{"a.cho":{"capo":2}}""")
-        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = base, keptFileNames = emptyList(), onLocalSettled = {})
-        assertEquals(base, synced)
+        val settled = sync(preferences, library("a.cho")).synchronize(provider, base = base, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
+        assertEquals(base, settled?.document)
+        assertNull(settled?.revision)
         assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
         assertEquals("r1", provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).second)
     }
@@ -558,7 +614,7 @@ class SyncedPreferencesTest {
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
         assertEquals(
             JsonObject(emptyMap()),
-            sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {}),
+            sync(preferences, library("a.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document,
         )
     }
 
@@ -567,7 +623,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{}""") to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
-        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{}"""), keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{}"""), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
         assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
     }
@@ -580,12 +636,12 @@ class SyncedPreferencesTest {
         val step = sync(preferences, library("a.cho"))
         var changes = 0
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { step.localChanges.collect { changes++ } }
-        val synced = step.synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        val synced = step.synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})?.document
         assertEquals(mapOf("a.cho" to 3), preferences.current.capos)
         assertEquals(0, changes)
         preferences.updateUserPreferences { it.copy(capos = mapOf("a.cho" to 4)) }
         assertEquals(1, changes)
-        step.synchronize(provider, base = synced, keptFileNames = emptyList(), onLocalSettled = {})
+        step.synchronize(provider, base = synced, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         preferences.updateUserPreferences { it.copy(capos = mapOf("a.cho" to 3)) }
         assertEquals(2, changes)
     }
@@ -595,7 +651,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Foo.cho":{"capo":3}}""") to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(transpositions = mapOf("foo.cho" to 2)))
-        sync(preferences, library("foo.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("foo.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(SyncedPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
         assertEquals(document("""{"Foo.cho":{"capo":3,"transposition":2}}"""), remoteDocumentOf(provider))
     }
@@ -605,7 +661,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Foo.cho":{"capo":3},"foo.cho":{"tempo":90}}""") to "r1"
         val preferences = FakeUserPreferencesRepository()
-        sync(preferences, library("foo.cho")).synchronize(provider, base = null, keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("foo.cho")).synchronize(provider, base = null, unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(SyncedPreferences(tempos = mapOf("foo.cho" to 90), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
         assertEquals(document("""{"Foo.cho":{"capo":3,"tempo":90}}"""), remoteDocumentOf(provider))
     }
@@ -618,7 +674,7 @@ class SyncedPreferencesTest {
         val preferences = FakeUserPreferencesRepository(
             defaultUserPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("Foo.cho" to 3)),
         )
-        sync(preferences, library("foo.cho")).synchronize(provider, base = document(stored), keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("foo.cho")).synchronize(provider, base = document(stored), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(SyncedPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
         assertEquals(document("""{"Foo.cho":{"capo":3,"transposition":2}}"""), remoteDocumentOf(provider))
     }
@@ -627,7 +683,7 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = bytes to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
-        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), keptFileNames = emptyList(), onLocalSettled = {})
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), unchanged = null, keptFileNames = emptyList(), onLocalSettled = {})
         assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
         assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
     }

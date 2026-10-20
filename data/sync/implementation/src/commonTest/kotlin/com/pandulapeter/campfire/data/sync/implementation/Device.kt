@@ -37,13 +37,17 @@ internal class Device(
     /** A run that must complete, after which the index is kept and the synced preferences settled. */
     suspend fun sync(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) {
         val completed = assertIs<SyncEngine.Result.Completed>(syncResult(cloud, deletionPolicy))
-        val syncedPreferences = preferencesSync?.synchronize(
+        val settled = preferencesSync?.synchronize(
             provider = cloud,
             base = completed.index.syncedPreferences,
+            unchanged = index.unchangedPreferences(ACCOUNT_ID, completed.documentRevisions),
             keptFileNames = completed.summary.failed,
             onLocalSettled = {},
         )
-        index = completed.index.copy(syncedPreferences = syncedPreferences ?: completed.index.syncedPreferences)
+        index = completed.index.copy(
+            syncedPreferences = settled?.document ?: completed.index.syncedPreferences,
+            syncedPreferencesRevision = settled?.revision,
+        )
     }
 
     /** A run whatever it comes to; only [sync] keeps what a completed one leaves. */

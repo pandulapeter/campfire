@@ -24,6 +24,13 @@ internal fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
     )
 }
 
+/**
+ * The revisions of the files at the top of the app folder, where `documentPath` puts the documents, by name. An entry
+ * without a revision, which [DropboxEntry] decodes as "", names none, so it costs a download.
+ */
+internal fun List<DropboxEntry>.toDocumentRevisions() = filter { it.tag == "file" && it.depth == 1 && it.rev.isNotEmpty() }
+    .associate { it.name to it.rev }
+
 /** Only the two library folders, one level deep: anything the user put deeper into the app folder is theirs. */
 internal fun DropboxEntry.libraryKind() = LibraryFileKind.entries
     .firstOrNull { pathLower.startsWith("/${it.id}/") }

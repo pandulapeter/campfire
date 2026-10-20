@@ -250,6 +250,29 @@ class TwoDeviceSyncTest {
         assertConverges(a, b)
     }
 
+    @Test
+    fun `a device downloads the preferences only when another device changed them`() = runTest {
+        val a = Device(shared(), FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("song_1.cho" to 2))))
+        val b = Device(shared(), FakeUserPreferencesRepository())
+        a.sync(cloud)
+        b.sync(cloud)
+        a.sync(cloud)
+        val downloads = cloud.documentDownloadCount
+
+        a.sync(cloud)
+
+        assertEquals(downloads, cloud.documentDownloadCount)
+
+        b.preferences!!.updateUserPreferences { it.copy(capos = it.capos + ("song_2.cho" to 3)) }
+        b.sync(cloud)
+        val downloadsBefore = cloud.documentDownloadCount
+        a.sync(cloud)
+
+        assertEquals(downloadsBefore + 1, cloud.documentDownloadCount)
+        assertPreferencesEverywhere(SyncedPreferences(capos = mapOf("song_1.cho" to 2, "song_2.cho" to 3)), a, b)
+        assertConverges(a, b)
+    }
+
     /** Three songs both devices have, settled with the cloud: enough that deleting one is not the whole library. */
     private fun shared() = librarySongs(3)
 
