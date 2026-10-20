@@ -32,7 +32,7 @@
   of one set of chords once between them, so modulated last choruses never outweigh the song.
 - Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian) holding half its chords
   answers; it may leave out two distinct chords or a third of them, each a `ScaleException` (`ScaleExceptions`: a minor
-  home's own minor scales, else the closest of a secondary dominant's target harmonic minor, the chord's root, and the
+  home's own minor scales, Phrygian for its ♭II, else the closest of a secondary dominant's target harmonic minor, the chord's root, and the
   home's root, ties in that order). Below two thirds a part stands alone but never joins another; a home of two of
   three chords is a guess dropped beside any other group. A **rock riff** is power, suspended, or major chords on I,
   ♭III, IV, V, ♭VI, ♭VII (a thirdless one on ♭V too, the blues note) with a ♭III or ♭VI one chord in eight (♭VII alone

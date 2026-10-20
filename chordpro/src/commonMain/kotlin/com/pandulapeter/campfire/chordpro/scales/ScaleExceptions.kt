@@ -18,8 +18,9 @@ internal object ScaleExceptions {
      * The chords of [chords] (written as [names], on the roots spelled [rootNames]) that [home] on [root] (spelled
      * [rootName]) does not hold, the most played first, then in play order, each with the scales to play over it.
      *
-     * With a natural-minor home, the minor scales on its root that hold it (harmonic minor and Dorian change one note of
-     * it, melodic minor two): a minor song's major V and IV are its own raised seventh and sixth. Otherwise the closest
+     * With a natural-minor home, the minor scales on its root that hold it (harmonic minor, Dorian, and Phrygian change
+     * one note of it, melodic minor two): a minor song's major V and IV are its own raised seventh and sixth, and its
+     * ♭II, the Andalusian and metal chord, its lowered second, never the ♭II's own major scale. Otherwise the closest
      * to the home's notes, by the first scale of each, of: the harmonic minor a secondary dominant leads into (the E7 of
      * a song in C is A harmonic minor, where E Mixolydian is three notes away), the scales of seven notes on the chord's
      * own root, the common ones first, each kind the closest first (the D7 of a song in C is D Mixolydian), and a common
@@ -73,5 +74,5 @@ internal object ScaleExceptions {
     private const val FOURTH_LETTER_STEP = 3
     private const val NATURAL_MINOR_ID = "natural_minor"
     private val harmonicMinor = Scales.fromId("harmonic_minor")!!
-    private val minorScales = listOf("harmonic_minor", "dorian", "melodic_minor").map(Scales::fromId).requireNoNulls()
+    private val minorScales = listOf("harmonic_minor", "dorian", "phrygian", "melodic_minor").map(Scales::fromId).requireNoNulls()
 }

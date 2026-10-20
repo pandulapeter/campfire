@@ -66,6 +66,13 @@ class ScaleExceptionsTest {
     }
 
     @Test
+    fun `a flat second in a minor song is its Phrygian`() {
+        assertEquals(listOf(Triple("Bb", "A", "phrygian")), group("Am Bb Am Bb", key = "Am").exceptions.map { it.first })
+        assertEquals(listOf(Triple("Bb", "A", "phrygian"), Triple("E7", "A", "harmonic_minor")), group("Am Dm Bb E7").exceptions.map { it.first })
+        assertEquals(listOf(Triple("Ab", "G", "phrygian")), group("Gm Ab Gm Ab Gm", key = "Gm").exceptions.map { it.first })
+    }
+
+    @Test
     fun `a borrowed chord is played over the home's own mode where that is closest`() {
         assertEquals(listOf("C" to "minor_pentatonic"), groups("C Ab Bb C").map { it.home })
         assertEquals(listOf(Triple("G", "A", "mixolydian")), group("A D E E7 A D E E7 A D E E7 G", key = "A").exceptions.map { it.first })
