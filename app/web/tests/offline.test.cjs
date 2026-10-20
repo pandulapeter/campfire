@@ -73,6 +73,25 @@ test('the worker sends a screen\'s address to the form the site\'s 404 page prod
         action: 'redirect',
         location: `${SCOPE}?/scales`,
     });
+    assert.deepEqual(plain(route(`${SCOPE}songs`, 'navigate')), {
+        action: 'redirect',
+        location: `${SCOPE}?/songs`,
+    });
+});
+
+test('the worker and the development server know every first segment the app writes', () => {
+    const routesOf = file => JSON.parse(fs.readFileSync(file, 'utf8').match(/var ROUTES = (\[[^\]]*\]);/)[1].replace(/'/g, '"'));
+    const browserRoutes = fs.readFileSync(
+        path.join(__dirname, '../../../presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/navigation/BrowserRoutes.kt'),
+        'utf8',
+    );
+    // Every segment constant starts an address but the bare root and an editor's trailing "edit".
+    const segments = [...browserRoutes.matchAll(/private const val [A-Z_]+ = "([^"]*)"/g)]
+        .map(match => match[1])
+        .filter(segment => segment !== '' && segment !== 'edit');
+    const worker = routesOf(path.join(resources, 'service-worker.js'));
+    assert.deepEqual([...worker].sort(), [...segments].sort());
+    assert.deepEqual(routesOf(path.join(__dirname, '../webpack.config.d/routes.js')), worker);
 });
 
 test('the worker leaves alone what is not the app\'s', () => {

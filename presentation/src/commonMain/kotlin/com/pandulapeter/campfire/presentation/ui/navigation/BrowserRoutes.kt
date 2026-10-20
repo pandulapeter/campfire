@@ -49,7 +49,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
  *
  * A new first segment has to be added to `ROUTES` in `app/web`'s `service-worker.js` and `webpack.config.d/routes.js`
- * too, or its address does not open offline or on the development server.
+ * too, or its address does not open offline or on the development server; `app/web/tests/offline.test.cjs` fails until
+ * it is, reading the segments from this file's constants.
  */
 internal object BrowserRoutes {
 
