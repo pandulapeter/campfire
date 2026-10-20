@@ -113,6 +113,22 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a transpose inside a section starts a part in the new key`() {
+        val groups = transposed(
+            """
+            {key: C}
+            {start_of_chorus: Chorus}
+            [F]One [G]two [C]three
+            {transpose: 1}
+            [F]Four [G]five [C]six
+            {end_of_chorus}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("C" to "major", "Db" to "major"), groups.map { it.rootName to it.scales.first().id })
+        assertEquals(listOf(listOf("Chorus"), listOf("Chorus")), groups.map { it.labels })
+    }
+
+    @Test
     fun `a chorus leaving the verse's scale gets the scales that fit it`() {
         val groups = groups(
             """

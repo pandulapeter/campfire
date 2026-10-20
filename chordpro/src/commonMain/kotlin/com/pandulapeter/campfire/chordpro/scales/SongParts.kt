@@ -25,20 +25,28 @@ internal object SongParts {
 
     /**
      * Every section of [song] that plays a chord, its continuations with it, each with the notes of its chords and the
-     * roots it plays, and the key in force at it. A chorus recall that plays the chords of the chorus before it joins
-     * that chorus's part without counting them again; one whose chords differ, a recall after a `{transpose}`, which the
-     * transposer has moved, is a part of its own, of the chorus's kind.
+     * roots it plays, and the key in force at it. A `{transpose}` inside a section cuts it, and the rest is a part of
+     * its own under the new key, since the transposer has moved its chords. A chorus recall that plays the chords of the
+     * chorus before it joins that chorus's part without counting them again; one whose chords differ, a recall after
+     * a `{transpose}`, which the transposer has moved, is a part of its own, of the chorus's kind.
      */
     fun of(song: ChordProSong): List<SongPart> {
         var key = song.metadata.key?.let(::keyOf)
         val parts = mutableListOf<SongPart>()
         var chorus: SongPart? = null
+        var isModulated = false
         song.blocks.forEach { block ->
             when (block) {
-                is ChordProBlock.Transpose -> key = block.key?.let(::keyOf) ?: key
+                is ChordProBlock.Transpose -> {
+                    key = block.key?.let(::keyOf) ?: key
+                    isModulated = true
+                }
                 is ChordProBlock.Section -> {
                     val chords = playedIn(listOf(block))
-                    val previous = parts.lastOrNull()?.takeIf { block.isContinuation && (it.blocks.last() as? ChordProBlock.Section)?.type == block.type }
+                    val previous = parts.lastOrNull()?.takeIf {
+                        block.isContinuation && !isModulated && (it.blocks.last() as? ChordProBlock.Section)?.type == block.type
+                    }
+                    isModulated = false
                     when {
                         previous != null -> {
                             previous.blocks += block
