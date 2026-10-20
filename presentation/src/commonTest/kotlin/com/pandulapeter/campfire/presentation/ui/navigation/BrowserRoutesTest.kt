@@ -16,6 +16,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -271,6 +272,55 @@ class BrowserRoutesTest {
                 openOnboarding = CampfireDestination.Onboarding(isOpenedFromSettings = true),
             ).backStack,
         )
+    }
+
+    private fun features(
+        areSongsEnabled: Boolean = true,
+        areToolsEnabled: Boolean = true,
+    ) = FeatureSwitches(
+        areSongsEnabled = areSongsEnabled,
+        areSetlistsEnabled = areSongsEnabled,
+        isMetronomeEnabled = areToolsEnabled,
+        isTunerEnabled = areToolsEnabled,
+        isChordLibraryEnabled = areToolsEnabled,
+        areScalesEnabled = areToolsEnabled,
+        areScaleSuggestionsEnabled = areToolsEnabled,
+    )
+
+    private fun resolveForward(path: String, depth: Int, features: FeatureSwitches, current: NavigationState = home) = BrowserRoutes.resolveForward(
+        path = path,
+        depth = depth,
+        songs = songs,
+        setlists = setlists,
+        current = current,
+        isPerformanceModeEnabled = false,
+        features = features,
+    )
+
+    @Test
+    fun `a settings tab's address is opened forward with every main screen switched off`() {
+        val features = features(areSongsEnabled = false, areToolsEnabled = false)
+        val onGeneral = home.copy(backStack = listOf(CampfireDestination.Settings))
+        val resolved = resolveForward("settings/preferences", depth = 1, features = features, current = onGeneral)
+        val restored = resolved?.withoutDisabledFeatures(features)
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Settings), restored?.backStack)
+        assertEquals(SettingsTab.PREFERENCES, restored?.settingsTab)
+    }
+
+    @Test
+    fun `a tool's address is opened forward with the songs switched off`() {
+        assertNotNull(resolveForward("tuner", depth = 1, features = features(areSongsEnabled = false)))
+    }
+
+    @Test
+    fun `a switched-off screen's address is refused going forward`() {
+        assertNull(resolveForward("song/a", depth = 1, features = features(areSongsEnabled = false)))
+    }
+
+    @Test
+    fun `an address deeper or shallower than its entry is refused`() {
+        assertNotNull(resolveForward("settings/preferences", depth = 2, features = features()))
+        assertNull(resolveForward("settings/preferences", depth = 1, features = features()))
     }
 
     /** A song details screen is identified by an id made up when it is opened, which no address carries. */

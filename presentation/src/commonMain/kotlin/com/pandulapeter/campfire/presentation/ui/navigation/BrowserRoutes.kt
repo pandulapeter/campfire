@@ -200,6 +200,27 @@ internal object BrowserRoutes {
     }
 
     /**
+     * The place [path] names, as [resolve] has it, where a browser Forward to the entry at [depth] may open it, or null.
+     * An address stands for a whole stack, which is only this entry when it is as deep as the entry is. One that is
+     * not - the editor of a song whose setlist page underneath was paged on, which forgot what the entry above it was
+     * when it was rewritten - would take away the screens under it and leave the browser an entry ahead of the app, for
+     * every further Forward to do the same again. It is refused, and the browser is taken back to where the app stayed.
+     * The depth is that of the stack the app will actually be on, rooted on the home screen the switches leave
+     * ([withoutDisabledFeatures], which `Navigator.restoreNavigationState` applies), since [resolve] builds every
+     * address on the songs.
+     */
+    fun resolveForward(
+        path: String,
+        depth: Int,
+        songs: List<Song>,
+        setlists: List<Setlist>,
+        current: NavigationState,
+        isPerformanceModeEnabled: Boolean,
+        features: FeatureSwitches,
+    ) = resolve(path = path, songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
+        ?.takeIf { entryCount(it.withoutDisabledFeatures(features)) == depth + 1 }
+
+    /**
      * [state] with its back stack cut short at the first screen that names a song or a setlist the library no longer
      * holds, which is what a history entry the browser returns to may do: the library changes while the entry waits.
      * A song read from a setlist pages through what the setlist holds now, as it does when the setlist's row is tapped

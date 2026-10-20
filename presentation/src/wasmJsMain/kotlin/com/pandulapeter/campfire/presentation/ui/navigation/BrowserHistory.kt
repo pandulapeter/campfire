@@ -188,6 +188,7 @@ private class BrowserHistory(
         val songs = viewModel.libraryState.allSongs.value
         val setlists = viewModel.libraryState.setlists.value
         val isPerformanceModeEnabled = viewModel.preferencesController.isPerformanceModeEnabled.value
+        val features = FeatureSwitches.of(viewModel.preferencesController.userPreferencesState.value.data)
         val openOnboarding = viewModel.navigator.backStack.lastOrNull { it is CampfireDestination.Onboarding } as? CampfireDestination.Onboarding
         val state = entry?.state
             ?.let {
@@ -202,20 +203,16 @@ private class BrowserHistory(
             }
             ?: (path ?: entry?.path)
                 ?.let {
-                    BrowserRoutes.resolve(
+                    BrowserRoutes.resolveForward(
                         path = it,
+                        depth = to,
                         songs = songs,
                         setlists = setlists,
                         current = viewModel.navigator.navigationState,
                         isPerformanceModeEnabled = isPerformanceModeEnabled,
+                        features = features,
                     )
                 }
-                // An address stands for a whole stack built up from the songs, which is only this entry when it is as deep as
-                // the entry is. One that is not - the editor of a song whose setlist page underneath was paged on, which
-                // forgot what the entry above it was when it was rewritten - would take away the screens under it and leave
-                // the browser an entry ahead of the app, for every further Forward to do the same again. It is refused, and
-                // the browser is taken back to where the app stayed.
-                ?.takeIf { BrowserRoutes.entryCount(it) == to + 1 }
         // Refused or not, the browser is on that entry now: if the app stays where it was, synchronizing takes the
         // browser back to it.
         while (entries.size <= to) entries += Entry(path = null)

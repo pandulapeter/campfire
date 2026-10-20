@@ -72,7 +72,8 @@ fire it on tab close.
   - a non-General settings tab sits on top of an existing `settings/general` entry (`isSettingsBackToGeneral`);
   - a deep link's songs entry is skipped by Back until the user touches the page (unavoidable).
 - Forward restores the `NavigationState` recorded for the entry, trimmed to what the library still holds and never
-  reopening a finished, skipped, or closed onboarding; an address is only used if it is exactly as deep as the entry.
+  reopening a finished, skipped, or closed onboarding; an address is only used if it is exactly as deep as the entry
+  once rooted on the home screen the switches leave (`BrowserRoutes.resolveForward`).
 - Performance mode allows no editor: `song/{song}/edit` opens the song (address rewritten), and Forward stops at it.
 - The page starts at depth zero however deep it was loaded; earlier entries belong to a gone document and reload the
   app. The launch address goes to `LaunchState.navigateOnLaunch` on first composition, so the launch screen
