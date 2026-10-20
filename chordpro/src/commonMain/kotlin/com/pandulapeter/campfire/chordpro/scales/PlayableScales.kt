@@ -22,8 +22,8 @@ import com.pandulapeter.campfire.chordpro.model.Chord
  * - **The minor pentatonic and the blues over a major sound that has a flat third or seventh**: after a Mixolydian
  *   home's major pentatonic; over a dominant blues, every chord a major one on the first, fourth, or fifth step, the
  *   first or the fourth a dominant seventh (C7 F G, C F7 G, but not the plain cadence C F G7); and over a rock riff, every
- *   chord a power chord, major triad, or dominant seventh on I, ♭III, IV, V, ♭VI, or ♭VII, the flat ones a quarter of
- *   them at least (E G A, C B♭ F, A5 C5 D5).
+ *   chord a power chord, major triad, or dominant seventh on I, ♭III, IV, V, ♭VI, or ♭VII, or a thirdless one on ♭V, the
+ *   flat ones a quarter of them at least (E G A, C B♭ F, A5 C5 D5, G5 B♭5 D♭5).
  *   The flat third against the chords' major third is the sound of the style, which no scale holding the notes plays, so
  *   a dominant blues is a fit with no scale holding it. A rock riff is not: its ♭III and ♭VII are the roots of every
  *   key a step or a fourth away, and as a fit it would hold a verse and a chorus in two keys together.

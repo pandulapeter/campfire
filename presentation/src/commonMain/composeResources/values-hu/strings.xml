@@ -734,11 +734,11 @@
     <string name="scale_aliases_natural_minor">Eol</string>
     <string name="scale_aliases_ionian_sharp_5">Bővített dúr</string>
     <string name="scale_aliases_dorian_sharp_4">Román moll, Ukrán dór</string>
-    <string name="scale_aliases_phrygian_dominant">Spanyol fríg, fríg dúr, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_phrygian_dominant">Spanyol fríg, Fríg dúr, Hijaz, Freygish, Ahava Rabbah</string>
     <string name="scale_aliases_ultralocrian">Szuperlokriszi ♭♭7</string>
     <string name="scale_aliases_melodic_minor">Jazz-moll</string>
     <string name="scale_aliases_dorian_flat_2">Fríg ♮6</string>
-    <string name="scale_aliases_lydian_dominant">Akusztikus, Felhangskála, líd ♭7, mixolíd ♯4</string>
+    <string name="scale_aliases_lydian_dominant">Akusztikus, Felhangskála, Líd ♭7, Mixolíd ♯4</string>
     <string name="scale_aliases_mixolydian_flat_6">Eol domináns, Hindu</string>
     <string name="scale_aliases_locrian_natural_2">Félszűkített</string>
     <string name="scale_aliases_altered">Szuperlokriszi, Szűkített egészhangú</string>

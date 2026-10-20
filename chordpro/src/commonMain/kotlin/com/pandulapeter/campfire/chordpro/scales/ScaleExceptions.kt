@@ -24,8 +24,9 @@ internal object ScaleExceptions {
      * to the home's notes, by the first scale of each, of: the harmonic minor a secondary dominant leads into (the E7 of
      * a song in C is A harmonic minor, where E Mixolydian is three notes away), the scales of seven notes on the chord's
      * own root, the common ones first, each kind the closest first (the D7 of a song in C is D Mixolydian), and a common
-     * scale of seven notes on the home's root (the ♭VII of a major song is its key's Mixolydian, one note away where the
-     * ♭VII's own major scale is two); a tie goes in that order, so a jazz blues's F7 stays F Mixolydian rather than its
+     * scale of seven notes on the home's root other than a harmonic or melodic minor, which no player calls in a major
+     * or modal song (the ♭VII of a major song is its key's Mixolydian, one note away where the ♭VII's own major scale
+     * is two); a tie goes in that order, so a jazz blues's F7 stays F Mixolydian rather than its
      * notes said as C Dorian. The pentatonics and the blues a lone chord is offered would clash with the key around it. A
      * chord nothing holds is not named; how often one is played decides whether a song shows it ([SongScaleSuggestions]).
      */
