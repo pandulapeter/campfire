@@ -159,7 +159,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
+        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 1f)),
         // Uptown Girl with the metronome panel open under its title, not playing, as the tuner shot shows it under its sheet.
         Triple(
             "tablet-song-metronome",
