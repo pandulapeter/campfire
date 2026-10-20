@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -115,6 +116,12 @@ internal fun SongsScreen(
     val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !songGroups.isLibraryRead)
     val clipboardReader = rememberClipboardTextReader()
+    val badgeRecession = songFilterBackRecession(
+        isBackEnabled = isSongFilterActive && !isSelecting && !isSearchOpen && visibleDialog == null &&
+            !LocalOverlayState.current.isAnyMenuOpen && viewModel.navigator.backStack.size == 1,
+        isSongFilterActive = isSongFilterActive,
+        onBackCompleted = viewModel.songListState::clearSongFilter,
+    )
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
@@ -241,6 +248,7 @@ internal fun SongsScreen(
                         ) {
                             SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
+                                badgeRecession = badgeRecession,
                                 onClick = { viewModel.dialogHost.showDialog(DialogType.SongFilters) },
                             )
                         }
@@ -277,12 +285,14 @@ internal fun SongsScreen(
  * is filled in and carries a badge in the accent color, since a filter hides songs for the moment rather than as a
  * standing preference, and a list that is shorter than the library with nothing on screen saying why reads as songs
  * having gone missing. The badge is not Material's default error red: nothing is wrong, the list is only narrowed.
- * The side panel needs no such mark, since the selected chips are in it.
+ * The side panel needs no such mark, since the selected chips are in it. A back gesture that would reset the filters
+ * fades the badge with the finger ([badgeRecession], see [songFilterBackRecession]).
  */
 @Composable
 private fun SongFiltersAction(
     modifier: Modifier = Modifier,
     isSongFilterActive: Boolean,
+    badgeRecession: () -> Float,
     onClick: () -> Unit,
 ) = PillIconButton(
     modifier = modifier,
@@ -295,7 +305,10 @@ private fun SongFiltersAction(
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
-                Badge(containerColor = MaterialTheme.colorScheme.primary)
+                Badge(
+                    modifier = Modifier.graphicsLayer { alpha = 1f - badgeRecession() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                )
             }
         },
     ) {

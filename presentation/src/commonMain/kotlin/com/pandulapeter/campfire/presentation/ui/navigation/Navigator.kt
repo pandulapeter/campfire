@@ -460,7 +460,7 @@ internal class Navigator(
             isSearchOpen = songsSearch().isOpen.value,
             isSelecting = isSongSelecting(),
             stackSize = backStack.size,
-            // Only the desktop's Escape resets the filters; a system back on the last screen leaves the app as it was.
+            // The songs screen's own back handler resets the filters, and the desktop's Escape, before a back gets here.
             isFilterShown = false,
         )
         when (step) {

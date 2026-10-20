@@ -22,6 +22,14 @@ The songs screen.
   (`KeepCardsInPlaceAcrossSearch`, `SearchCardHold`, narrated by `ListAnchor` on the bar's spring); closing unscrolled
   over the same songs puts it back where it was.
 
+## Back resets the filters
+
+- With Songs the whole back stack, a back (gesture, system button, the web's Escape) resets the tag and language
+  filters instead of leaving the app, once no search is open and no selection is on (`songFilterBackRecession`); the
+  desktop's Escape does it in its key handler. A predictive gesture fades the filter action's badge with the finger.
+- The web's browser Back is not taken: the filters get no history entry, since one pushed again on returning from
+  another tab has no user gesture behind it, and Chrome's Back skips such entries.
+
 ## The add songs hint
 
 - While the whole library holds fewer than three songs (the demo library is two), the list ends in `AddSongsHintCard`:
