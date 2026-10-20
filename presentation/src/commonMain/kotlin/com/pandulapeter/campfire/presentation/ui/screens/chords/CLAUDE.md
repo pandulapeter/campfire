@@ -17,7 +17,7 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 ## What it shows
 
 - One lazy grid whose first item is the instrument (`ChordLibraryControls`, the tools' shared
-  `ToolInstrumentSetting`: its title in a line of the list bar's height, as on the Tuner tab, the pill under it), so it scrolls away and a phone on its side
+  `ToolInstrumentSetting`: the pill alone, where the Tuner tab's stands, the line ending at its bottom), so it scrolls away and a phone on its side
   keeps a row of diagrams above the keyboard. The search under it is a sticky item (`pinnedSearchField`, shared with the
   Scales tab), with the key before it as the editor's transposing pill (`LibraryKeyStepper`, the twelve keys going
   round): the way to every chord the key leaves out, so it stays reachable. The instrument, the key and search line, the

@@ -383,7 +383,6 @@
     <string name="settings_accidentals_flats">Flats (♭)</string>
     <string name="settings_accidentals_sharps">Sharps (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
-    <string name="instrument">Instrument</string>
     <string name="instrument_choose">Choose instrument</string>
     <string name="instrument_tuning_standard">Standard tuning</string>
     <string name="instrument_tuning_choose">Choose tuning</string>

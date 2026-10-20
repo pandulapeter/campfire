@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntr
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
+import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.noteName
 import com.pandulapeter.campfire.presentation.ui.tuner.noteNameWithOctave
@@ -47,8 +48,9 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The frequency of A4 everything is tuned from, stepped by a hertz or typed the way the tempo is (and reset to 440 from
  * the focused value the same way), and a toggle that plays that A until it is tapped again: the pill and the filled
- * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`). There is no label
- * to read; a screen reader hears the note with the frequency.
+ * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`), the pill as tall as
+ * the instrument's beside it, as on a song's page. There is no label to read; a screen reader hears the note with the
+ * frequency.
  */
 @Composable
 internal fun ReferencePitchControls(
@@ -64,6 +66,8 @@ internal fun ReferencePitchControls(
     horizontalArrangement = Arrangement.spacedBy(NEW_ITEM_BUTTON_GAP),
 ) {
     Stepper(
+        // As tall as the instrument pill at the start of the line, as a song's steppers are as tall as its pill.
+        height = songControlHeight(MaterialTheme.typography.titleSmall),
         value = stringResource(Res.string.tuner_reference_pitch_value, referencePitch),
         valueDescription = stringResource(Res.string.tuner_reference_pitch, noteNameWithOctave(REFERENCE_NOTE, notation), referencePitch),
         widestValues = Pitch.REFERENCE_PITCH_RANGE.let { listOf(it.first, it.last) }.map { stringResource(Res.string.tuner_reference_pitch_value, it) },

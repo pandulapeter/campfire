@@ -383,7 +383,6 @@
     <string name="settings_accidentals_flats">Bé (♭)</string>
     <string name="settings_accidentals_sharps">Kereszt (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
-    <string name="instrument">Hangszer</string>
     <string name="instrument_choose">Hangszer kiválasztása</string>
     <string name="instrument_tuning_standard">Normál hangolás</string>
     <string name="instrument_tuning_choose">Hangolás kiválasztása</string>

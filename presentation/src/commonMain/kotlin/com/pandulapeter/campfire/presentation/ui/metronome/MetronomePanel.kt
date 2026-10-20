@@ -124,7 +124,8 @@ internal fun MetronomePanel(
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + startPadding,
                 end = contentPadding.calculateEndPadding(layoutDirection) + endPadding,
-                bottom = PANEL_PADDING,
+                // A prominent panel heads a settings page, whose own top padding and first title already part it from the rows.
+                bottom = if (isProminent) 0.dp else PANEL_PADDING,
             )
             .height(height),
         verticalAlignment = Alignment.CenterVertically,
