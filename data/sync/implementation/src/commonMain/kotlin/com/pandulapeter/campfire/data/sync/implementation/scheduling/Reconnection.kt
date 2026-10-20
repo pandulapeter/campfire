@@ -10,11 +10,16 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 
-/** Waits [duration], or less if the device gets its connection back in the meantime: what a network failure waits. */
+/**
+ * Waits [duration], or less if the device gets its connection back in the meantime: what a network failure waits. A
+ * monitor whose flow ends without emitting (the desktop's is empty) still waits the full length, since an exception
+ * thrown here would end the scheduler's or the change feed's loop for the rest of the process.
+ */
 internal suspend fun ConnectivityMonitor.awaitReconnection(duration: Duration) {
-    withTimeoutOrNull(duration) { reconnections.first() }
+    withTimeoutOrNull(duration) { reconnections.firstOrNull() ?: awaitCancellation() }
 }
