@@ -364,7 +364,8 @@ public object SongScaleGroups {
                 val centre = rankedRoots(listOf(part)).first()
                 PlayedPart(
                     blocks = part.blocks,
-                    plays = part.blocks.count { it !is ChordProBlock.Section || !it.isContinuation },
+                    // The rest of a section a `{transpose}` cut is a part of its own, played once like any other.
+                    plays = part.blocks.withIndex().count { (index, block) -> index == 0 || block !is ChordProBlock.Section || !block.isContinuation },
                     names = part.names.toSet(),
                     chords = part.chords.toList(),
                     centre = centre.pitchClass,

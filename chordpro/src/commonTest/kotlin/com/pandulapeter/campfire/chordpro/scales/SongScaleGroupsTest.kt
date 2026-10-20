@@ -129,6 +129,26 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `the rest of a cut section is played once, so a chord outside its key there is a moment`() {
+        val groups = SongScaleSuggestions.of(
+            ChordProTransposer.transpose(
+                ChordProParser.parse(
+                    """
+                    {key: C}
+                    {start_of_verse: Verse}
+                    [C]One [F]two [G]three [C]four
+                    {transpose: 2}
+                    [C]Five [F]six [E7]seven [Am]eight
+                    {end_of_verse}
+                    """.trimIndent(),
+                ),
+                0,
+            ),
+        )
+        assertEquals(listOf("F#7"), groups.flatMap { group -> group.exceptions.map { it.chordName } })
+    }
+
+    @Test
     fun `a chorus leaving the verse's scale gets the scales that fit it`() {
         val groups = groups(
             """
