@@ -180,6 +180,10 @@ wrong or undo it".
   the `% s` in `100% sure` is a format specifier to it (`pluralTextResource(Res.plurals.x, count, count.toString(),
   text)` for a `<plurals>` that carries such text). Keys are lower_snake_case, grouped by intent, and an
   existing key is reused rather than duplicated.
+- **Hints name no input device**: every platform is used with a mouse, a finger, or a keyboard, so a hint says
+  "Select a string", never "Tap" or "Click" (Hungarian: "Válassz ki", never "Koppints" or "Kattints"), and an
+  accident is "by accident", not "an accidental tap". Where any input will do, say so ("Select anything on the page or
+  press a key"). Exempt: a feature named for its gesture (Tap tempo) and a named shortcut (Ctrl+V).
 - Exempt: file names, preference keys, serialization identifiers, ChordPro directive names.
 
 ## Clean up after changes

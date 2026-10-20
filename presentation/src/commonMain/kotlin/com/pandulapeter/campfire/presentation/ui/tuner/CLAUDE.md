@@ -63,19 +63,23 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   unison pair is one note to the tuner, so its segments act together. None for the keyboard and Other. Another instrument's
   strings crossfade in while their room resizes unclipped; a row leaving is drawn as it was but plays nothing
   (`isStringOf`).
-- **The tab alone** offers the instrument and tuning pill and the reference pitch; there is no Chromatic switch, since
-  Other reads every note. **The sheet offers neither**: it tunes to the player's instrument and the tab's settings.
+- **The tab alone** offers the instrument and tuning pill and the reference pitch. Both offer the Strings / Chromatic
+  toggle (`TunerModeToggle`, `TunerSettings.mode`, stored as `mode`: an older document's `isChromatic` is a dropped
+  switch's, and ignored), extra small: in the sheet's header, and on the tab under the play circle, its end at the
+  circle's. Chromatic reads every note and dims the pill without changing the instrument, which the chord diagrams and
+  scales share. The toggle is hidden for the keyboard and Other, whose pill is never dimmed; on the tab it only fades,
+  keeping its line, so the display never moves.
 - **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
   note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
   spoken form for screen readers (`spokenNoteName`).
 
 ## Layout
 
-The tab pins the tools' instrument row (`ui/instrument/ToolInstrumentSetting`, as the Chords and Scales tabs start):
-the instrument pill at the start of a line of the list bar's height whose end holds the reference pitch, its stepper
-pill and a filled 48dp play circle exactly where the list screens' pill and New button stand (`NEW_ITEM_BUTTON_*`); the
-instrument pill gives up width (its tuning cut short) before it reaches them. No label.
+The tab pins the tools' instrument row (`ui/instrument/ToolInstrumentSetting`, as the Chords and Scales tabs start)
+and the mode toggle under it: the instrument pill at the start of a line of the list bar's height whose end holds the
+reference pitch, its stepper pill and a filled 48dp play circle exactly where the list screens' pill and New button
+stand (`NEW_ITEM_BUTTON_*`); the instrument pill gives up width (its tuning cut short) before it reaches them. No label.
 The display follows, above a `SettingsPage` that is all header, as wide as the display (`headerColumns`): the notice,
-the issue line, and the strings, untitled and centered under the display (the sheet keeps their title). It keeps the
-screen on while it hears. The gaps are the tools' `TOOL_GROUP_GAP`. The sheet scrolls everything under
-its header: the same display at the same size (compact only in a short window), then the issue line and strings.
+the issue line, and the strings, untitled but with their hint, centered under the display (the sheet keeps their
+title). It keeps the screen on while it hears. The gaps are the tools' `TOOL_GROUP_GAP`. The sheet scrolls everything
+under its header: the same display at the same size (compact only in a short window), then the issue line and strings.

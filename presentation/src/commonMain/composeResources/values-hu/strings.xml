@@ -23,7 +23,7 @@
     <string name="retry">Újra</string>
     <string name="add_demo_library">Bemutató könyvtár hozzáadása</string>
     <string name="confirm_exit_title">Bezárod a Campfire-t?</string>
-    <string name="confirm_exit_message">Az Escape bezárja az alkalmazást, ha már nincs hová visszalépni.</string>
+    <string name="confirm_exit_message">Biztosan ki szeretnél lépni az alkalmazásból?</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Fájlok importálása</string>
@@ -333,8 +333,8 @@
     <string name="settings_features">Funkciók</string>
     <string name="settings_group_performance">Előadás</string>
     <string name="settings_read_only_mode">Csak olvasás</string>
-    <string name="settings_read_only_mode_description">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
-    <string name="settings_read_only_mode_description_without_setlists">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
+    <string name="settings_read_only_mode_description">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így semmi sem változhat meg véletlenül</string>
+    <string name="settings_read_only_mode_description_without_setlists">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés és a transzponálás eltűnik, így semmi sem változhat meg véletlenül</string>
     <string name="settings_songs_description">A Dalok és a Listák fül, ha csak metronómként, hangolóként és akkordtárként használnád. Kikapcsolva csak elrejti őket, egyetlen dal sem törlődik.</string>
     <string name="settings_songs_description_without_setlists">A Dalok fül, ha csak metronómként, hangolóként és akkordtárként használnád. Kikapcsolva csak elrejti a dalokat, egyetlen dal sem törlődik.</string>
     <string name="settings_everything_off">Minden ki van kapcsolva, így a Campfire most egy alkalmazás a Campfire beállítására. Kapcsolj vissza valamit, hogy újra hasznos legyen.</string>
@@ -466,7 +466,7 @@
     <string name="settings_privacy_policy_description">Mit kezel az alkalmazás az adataiddal</string>
     <string name="settings_open_source_licenses">Nyílt forráskódú licencek</string>
     <string name="settings_open_source_licenses_description">A könyvtárak, betűtípusok és akkordfogások, amelyekre a Campfire épül, és a licenceik</string>
-    <string name="open_source_licenses_intro">A Campfire nyílt forráskódú, és mások munkájára épül. Koppints egy elemre a licence elolvasásához.</string>
+    <string name="open_source_licenses_intro">A Campfire nyílt forráskódú, és mások munkájára épül. Válassz ki egy elemet a licence elolvasásához.</string>
     <string name="open_source_licenses_show">Licenc megjelenítése</string>
     <string name="open_source_licenses_hide">Licenc elrejtése</string>
     <string name="open_source_licenses_project">A projekt oldala</string>
@@ -485,7 +485,7 @@
     <string name="metronome_group_rhythm">Ritmus</string>
     <string name="metronome_group_playback">Lejátszás</string>
     <string name="metronome_time_signature">Ütemmutató</string>
-    <string name="metronome_accent_hint">Koppints egy ütésre a fenti ütemben a hangsúlyozásához vagy némításához.</string>
+    <string name="metronome_accent_hint">Válassz ki egy ütést a fenti ütemben a hangsúlyozásához vagy némításához.</string>
     <string name="metronome_beats_decrease">Kevesebb ütés</string>
     <string name="metronome_beats_increase">Több ütés</string>
     <string name="metronome_beat_unit_decrease">Hosszabb hang</string>
@@ -509,7 +509,7 @@
     <string name="metronome_animate">Animáció ütésre</string>
     <string name="metronome_vibrate">Rezgés ütésre</string>
     <string name="metronome_audio_unavailable">Nincs hangkimenet, ezért az ütés csak látható.</string>
-    <string name="metronome_audio_waiting">Koppints bárhová, hogy a böngésző lejátszhassa a hangot.</string>
+    <string name="metronome_audio_waiting">Válassz ki bármit az oldalon, vagy nyomj meg egy billentyűt, hogy a böngésző lejátszhassa a hangot.</string>
     <string name="metronome_stopped_refused">A metronóm most nem tud hangot adni, talán egy hívás miatt.</string>
     <string name="metronome_stopped_interrupted">A metronóm egy hívás vagy egy másik alkalmazás miatt leállt.</string>
     <string name="metronome_stopped_disconnected">A metronóm leállt, mert a hangeszköz lecsatlakozott.</string>
@@ -563,7 +563,8 @@
     <string name="tuner_tuning_key">%1$s hangolás</string>
     <string name="tuner_tuning_modal">%1$s modális</string>
     <string name="tuner_strings">Húrok</string>
-    <string name="tuner_strings_description">Koppints egy húrra, hogy meghalld a hangját, majd újra, hogy leállítsd.</string>
+    <string name="tuner_mode_chromatic">Kromatikus</string>
+    <string name="tuner_strings_description">Válassz ki egy húrt, hogy meghalld a hangját, majd újra, hogy leállítsd.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">%1$d. húr, %2$s</string>
     <string name="tuner_string_pair">%1$d. húr párja, %2$s</string>
@@ -586,7 +587,7 @@
     <string name="tuner_notice_not_supported">Ez a böngésző nem engedi, hogy egy oldal a mikrofont használja.</string>
     <string name="tuner_notice_failed">A mikrofont nem sikerült megnyitni.</string>
     <string name="tuner_notice_silent">Még semmi sem hallatszik. Ha szól egy húr, ellenőrizd, hogy a mikrofon nincs-e elnémítva vagy teljesen lehalkítva, és hogy a Campfire használhatja-e.</string>
-    <string name="tuner_notice_waiting">Koppints bárhová, hogy a böngésző hallgathasson.</string>
+    <string name="tuner_notice_waiting">Válassz ki bármit az oldalon, vagy nyomj meg egy billentyűt, hogy a böngésző hallgathasson.</string>
     <string name="tuner_use_microphone">Mikrofon használata</string>
     <string name="tuner_notice_silent_enhancements">Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e. A Windows a kitartott hangot zajként is eltávolíthatja: kapcsold ki a hangbeállításokban a mikrofon hangjavításait.</string>
     <string name="tuner_open_settings">Beállítások megnyitása</string>

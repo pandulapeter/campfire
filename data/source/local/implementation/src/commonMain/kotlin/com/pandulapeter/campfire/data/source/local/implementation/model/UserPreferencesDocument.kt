@@ -132,10 +132,14 @@ internal data class MetronomeSettingsDocument(
  * names no instrument, so the diagrams' is taken). Its default is blank rather than the `chromatic` it once was, since
  * that default was never written: a document without the key is a tuner nobody set, which opens on the instrument like
  * a fresh installation's.
+ *
+ * [mode] is not named `isChromatic`, the key of a Chromatic switch that an older version wrote and a later one dropped:
+ * what that one still says was left behind by a player who has tuned to their strings since.
  */
 @Serializable
 internal data class TunerSettingsDocument(
     val instrument: String = "",
+    val mode: String = "strings",
     val referencePitch: Int = 440,
     val hasTurnedOnMicrophone: Boolean = false,
 )

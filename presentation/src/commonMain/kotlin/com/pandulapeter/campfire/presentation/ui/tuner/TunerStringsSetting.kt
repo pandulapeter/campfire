@@ -14,10 +14,12 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,6 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_strings_description
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
@@ -45,7 +48,7 @@ import com.pandulapeter.campfire.tuner.api.model.TunerConfig
  * changes; the fade is what hides what reaches past it.
  *
  * @param isTitled Whether they stand under their title and what a tap does, as a setting among the sheet's rows; the tab
- * sets them alone, centered under its display, as the instrument the display is listening to.
+ * sets them centered under its display, as the instrument the display is listening to, with what a tap does under them.
  */
 @Composable
 internal fun TunerStringsSetting(
@@ -92,13 +95,20 @@ internal fun TunerStringsSetting(
             }
         } else {
             // A tool's group gap under the display (TOOL_GROUP_GAP), the page's own top padding counted.
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TOOL_GROUP_GAP - PAGE_TOP_PADDING, bottom = 12.dp),
-                contentAlignment = Alignment.TopCenter,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 strings(Modifier.widthIn(max = MAX_COLUMN_WIDTH))
+                Text(
+                    modifier = Modifier.widthIn(max = MAX_COLUMN_WIDTH).padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                    text = stringResource(Res.string.tuner_strings_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }

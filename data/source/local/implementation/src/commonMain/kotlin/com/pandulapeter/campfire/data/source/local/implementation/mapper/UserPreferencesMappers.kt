@@ -225,11 +225,13 @@ private fun UserPreferencesDocument.tunings(): Map<String, String> {
 }
 
 internal fun TunerSettingsDocument.toModel() = TunerSettings(
+    mode = TunerSettings.Mode.entries.firstOrNull { it.id == mode } ?: TunerSettings.Mode.STRINGS,
     referencePitch = referencePitch.coerceIn(TunerSettings.REFERENCE_PITCH_RANGE),
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )
 
 internal fun TunerSettings.toDocument() = TunerSettingsDocument(
+    mode = mode.id,
     referencePitch = referencePitch,
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )

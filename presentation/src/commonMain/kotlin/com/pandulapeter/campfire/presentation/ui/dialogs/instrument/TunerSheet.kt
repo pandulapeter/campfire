@@ -13,9 +13,11 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +45,8 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRo
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerModeToggle
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
@@ -55,10 +59,11 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  * where the chords and the metronome are both switched off and that section is not there), so that a string that went
  * flat between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size
  * (compact only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of
- * the instrument in the player's hands, all of it scrolling under the sheet's header. The instrument is the app's one,
- * set from the instrument chip of the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the
- * song's first section, and the reference pitch and the chromatic switch are set on the tab alone, the way the metronome
- * panel plays with the Metronome tab's presets without offering them. It listens while it is up and the app is in front,
+ * the instrument in the player's hands, with whether it reads them or every note ([TunerModeToggle]) in the header,
+ * all of it scrolling under the sheet's header. The instrument is the app's one, set from the instrument chip of
+ * the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the song's first section, and the
+ * reference pitch is set on the tab alone, the way the metronome panel plays with the Metronome tab's presets without
+ * offering them. It listens while it is up and the app is in front,
  * and the view model stops it as the sheet closes.
  */
 @Composable
@@ -83,6 +88,7 @@ internal fun TunerSheet(
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
     val tunedNotes by viewModel.tunerController.tunedNotes.collectAsStateWithLifecycle()
+    val mode = viewModel.tunerController.tunerSettings.collectAsStateWithLifecycle().value.mode
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel.tunerController::setTunerListening,
@@ -94,6 +100,21 @@ internal fun TunerSheet(
     )
     CampfireBottomSheet(
         title = stringResource(Res.string.tuner),
+        actions = {
+            // The keyboard and Other are read note by note either way.
+            AnimatedVisibility(
+                visible = userPreferences?.instrumentTuning != null,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                TunerModeToggle(
+                    // As far from the edge as the close button's icon is from the other one.
+                    modifier = Modifier.padding(end = 12.dp),
+                    mode = mode,
+                    onModeSelected = { value -> viewModel.tunerController.updateTunerSettings { copy(mode = value) } },
+                )
+            }
+        },
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()

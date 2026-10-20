@@ -23,7 +23,7 @@
     <string name="retry">Retry</string>
     <string name="add_demo_library">Add the demo library</string>
     <string name="confirm_exit_title">Close Campfire?</string>
-    <string name="confirm_exit_message">Escape closes the app once there is nothing left to go back from.</string>
+    <string name="confirm_exit_message">Are you sure you want to leave the app?</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Importing files</string>
@@ -333,8 +333,8 @@
     <string name="settings_features">Features</string>
     <string name="settings_group_performance">Performance</string>
     <string name="settings_read_only_mode">Read only</string>
-    <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering, and transposing are hidden, so an accidental tap can\'t change anything</string>
-    <string name="settings_read_only_mode_description_without_setlists">Locks the app while you play: editing, deleting, and transposing are hidden, so an accidental tap can\'t change anything</string>
+    <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering, and transposing are hidden, so nothing can be changed by accident</string>
+    <string name="settings_read_only_mode_description_without_setlists">Locks the app while you play: editing, deleting, and transposing are hidden, so nothing can be changed by accident</string>
     <string name="settings_songs_description">The Songs and Setlists tabs, for a metronome, tuner, and chord reference only. Off, your songs are only hidden: none is deleted.</string>
     <string name="settings_songs_description_without_setlists">The Songs tab, for a metronome, tuner, and chord reference only. Off, your songs are only hidden: none is deleted.</string>
     <string name="settings_everything_off">Everything is switched off, so Campfire is now an app for changing the settings of Campfire. Switch something back on to make it useful again.</string>
@@ -466,7 +466,7 @@
     <string name="settings_privacy_policy_description">What the app does with your data</string>
     <string name="settings_open_source_licenses">Open-source licenses</string>
     <string name="settings_open_source_licenses_description">The libraries, fonts, and chord shapes Campfire is built with, and their licenses</string>
-    <string name="open_source_licenses_intro">Campfire is open source, and it is built with the work of others. Tap an entry to read its license.</string>
+    <string name="open_source_licenses_intro">Campfire is open source, and it is built with the work of others. Select an entry to read its license.</string>
     <string name="open_source_licenses_show">Show the license</string>
     <string name="open_source_licenses_hide">Hide the license</string>
     <string name="open_source_licenses_project">Project page</string>
@@ -485,7 +485,7 @@
     <string name="metronome_group_rhythm">Rhythm</string>
     <string name="metronome_group_playback">Playback</string>
     <string name="metronome_time_signature">Time signature</string>
-    <string name="metronome_accent_hint">Tap a beat in the bar above to accent or mute it.</string>
+    <string name="metronome_accent_hint">Select a beat in the bar above to accent or mute it.</string>
     <string name="metronome_beats_decrease">Fewer beats</string>
     <string name="metronome_beats_increase">More beats</string>
     <string name="metronome_beat_unit_decrease">Longer note</string>
@@ -509,7 +509,7 @@
     <string name="metronome_animate">Animate on the beat</string>
     <string name="metronome_vibrate">Vibrate on the beat</string>
     <string name="metronome_audio_unavailable">There is no sound output, so the beat is only shown.</string>
-    <string name="metronome_audio_waiting">Tap anywhere to let the browser play the sound.</string>
+    <string name="metronome_audio_waiting">Select anything on the page or press a key to let the browser play the sound.</string>
     <string name="metronome_stopped_refused">The metronome could not play sound right now, maybe because of a call.</string>
     <string name="metronome_stopped_interrupted">The metronome stopped for a call or another app.</string>
     <string name="metronome_stopped_disconnected">The metronome stopped because the audio device went away.</string>
@@ -563,7 +563,8 @@
     <string name="tuner_tuning_key">%1$s tuning</string>
     <string name="tuner_tuning_modal">%1$s modal</string>
     <string name="tuner_strings">Strings</string>
-    <string name="tuner_strings_description">Tap a string to hear its note, and again to stop it.</string>
+    <string name="tuner_mode_chromatic">Chromatic</string>
+    <string name="tuner_strings_description">Select a string to hear its note, and again to stop it.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">String %1$d, %2$s</string>
     <string name="tuner_string_pair">Pair of string %1$d, %2$s</string>
@@ -586,7 +587,7 @@
     <string name="tuner_notice_not_supported">This browser does not let a page use the microphone.</string>
     <string name="tuner_notice_failed">The microphone could not be opened.</string>
     <string name="tuner_notice_silent">Nothing is heard yet. If a string is playing, check that the microphone is not muted or turned all the way down, and that Campfire may use it.</string>
-    <string name="tuner_notice_waiting">Tap anywhere to let the browser listen.</string>
+    <string name="tuner_notice_waiting">Select anything on the page or press a key to let the browser listen.</string>
     <string name="tuner_use_microphone">Use the microphone</string>
     <string name="tuner_notice_silent_enhancements">Check that the microphone is not muted and that Campfire may use it. Windows can also remove a held note as noise: turn off Audio enhancements for this microphone in the sound settings.</string>
     <string name="tuner_open_settings">Open settings</string>

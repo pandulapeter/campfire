@@ -299,13 +299,13 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun `tuner settings survive saving and reloading and a reference pitch out of range is held within it`() {
-        val settings = TunerSettings(referencePitch = 432, hasTurnedOnMicrophone = true)
+        val settings = TunerSettings(mode = TunerSettings.Mode.CHROMATIC, referencePitch = 432, hasTurnedOnMicrophone = true)
         val preferences = UserPreferencesDocument().toModel().copy(isTunerEnabled = false, tunerSettings = settings)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(settings, reloaded.tunerSettings)
         assertEquals(false, reloaded.isTunerEnabled)
         assertEquals(TunerSettings(), UserPreferencesDocumentFormat.decode("{}").document.toModel().tunerSettings)
-        // An older document's isChromatic key is ignored: Other is the instrument the tuner reads every note for.
+        // An older document's isChromatic key is ignored: it is what a dropped switch was left at.
         assertEquals(TunerSettings(), UserPreferencesDocumentFormat.decode("""{"tunerSettings": {"isChromatic": true}}""").document.toModel().tunerSettings)
         assertEquals(466, UserPreferencesDocument(tunerSettings = TunerSettingsDocument(referencePitch = 1_000)).toModel().tunerSettings.referencePitch)
     }
