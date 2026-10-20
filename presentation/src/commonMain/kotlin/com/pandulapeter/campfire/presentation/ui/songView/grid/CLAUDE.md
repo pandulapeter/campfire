@@ -17,7 +17,9 @@ with the step keys, fewest pages first.
   from intrinsic heights; a failing candidate jumps to the smallest count that could fit. A single-column window skips
   the search.
 - Column width 384–560dp scaled by `fontScale` (`NARROW_COLUMN_WIDTH`, 288dp, below). Columns narrow to their widest
-  content; a row's leftover width is shared evenly around its columns, clear of the step buttons where needed.
+  content, but a row is centered by the widths its columns were given (`SectionWidths.slotWidths`), the leftover shared
+  evenly around them, clear of the step buttons where needed: where lines wrap jumps as the text grows, and would move
+  the columns sideways with it.
 - **Several counts fit one row → the most even fill** (`balancedAmong`); more columns only by a margin and wrapping no
   more lines.
 - **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): a single-row page's columns are

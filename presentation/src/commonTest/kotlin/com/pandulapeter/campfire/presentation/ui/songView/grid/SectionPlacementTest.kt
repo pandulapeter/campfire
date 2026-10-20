@@ -38,11 +38,12 @@ class SectionPlacementTest {
         unitHeights: IntArray,
         cellWidths: Array<IntArray>,
         unitWidths: IntArray,
+        slotWidths: Array<IntArray> = cellWidths,
         layoutDirection: LayoutDirection = LayoutDirection.Ltr,
         piecePadding: IntArray = IntArray(units.sectionStarts.size - 1),
     ) = placeSections(
         grid = grid,
-        widths = SectionWidths(columnWidths = unitWidths, cellWidths = cellWidths, unitWidths = unitWidths),
+        widths = SectionWidths(columnWidths = unitWidths, cellWidths = cellWidths, slotWidths = slotWidths, unitWidths = unitWidths),
         unitHeights = unitHeights,
         dividerHeight = 0,
         units = units,
@@ -84,6 +85,15 @@ class SectionPlacementTest {
         val rtl = place(oneRowOfTwo, units, intArrayOf(100, 100), cellWidths, unitWidths, layoutDirection = LayoutDirection.Rtl)
         assertEquals(starts[0] + 300 - 200, rtl.positions[0].x)
         assertEquals(ltr.positions[1], rtl.positions[1])
+    }
+
+    @Test
+    fun `columns narrowed by what they show stay where the width they were given puts them`() {
+        val units = songUnitsOf(listOf(listOf(listOf(100)), listOf(listOf(100))))
+        val slotWidths = arrayOf(intArrayOf(400, 400))
+        val wide = place(oneRowOfTwo, units, intArrayOf(100, 100), arrayOf(intArrayOf(380, 390)), intArrayOf(380, 390), slotWidths)
+        val narrow = place(oneRowOfTwo, units, intArrayOf(100, 100), arrayOf(intArrayOf(250, 300)), intArrayOf(250, 300), slotWidths)
+        assertEquals(wide.positions.map { it.x }, narrow.positions.map { it.x })
     }
 
     @Test

@@ -15,10 +15,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.LayoutDirection
 
-/** How wide every column, cell and unit of a decided grid is, worked out before the units are measured at those widths. */
+/**
+ * How wide every column, cell and unit of a decided grid is, worked out before the units are measured at those widths:
+ * [cellWidths] what a cell shows, [slotWidths] the room a row is centered by.
+ */
 internal class SectionWidths(
     val columnWidths: IntArray,
     val cellWidths: Array<IntArray>,
+    val slotWidths: Array<IntArray>,
     val unitWidths: IntArray,
 )
 
@@ -27,8 +31,7 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
     val (grid, _, fitScale) = decided
     val unitCount = units.unitSections.size
     val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth, fitScale) }
-    // A column is only as wide as the widest thing in it, up to the width it was given, so that a row can be centered
-    // by what it shows rather than by the empty space its columns leave after short lines. Only a card needs its width
+    // A column is only as wide as the widest thing in it, up to the width it was given. Only a card needs its width
     // to decide the grid; everything else wraps at the column's width, which is the same height at any width it fits
     // in, so the widths of the rest are only asked for here, once, for the grid that won.
     val cellWidths = Array(grid.columnCounts.size) { row -> IntArray(grid.columnCounts[row]) }
@@ -47,6 +50,16 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
         val singleColumnWidth = cellWidths.indices.filter { grid.columnCounts[it] == 1 }.maxOfOrNull { cellWidths[it][0] } ?: 0
         cellWidths.forEachIndexed { row, widths -> if (grid.columnCounts[row] == 1) widths[0] = singleColumnWidth }
     }
+    // A row is centered by the widths its columns were given rather than by what they show: what they show depends on
+    // where their lines happen to wrap, which jumps back and forth as the text grows, and would move every column of
+    // the row sideways with it. A wide row, whose sections are each as wide as they need, is centered by those.
+    val slotWidths = Array(grid.columnCounts.size) { row ->
+        if (grid.wideRows[row]) cellWidths[row].copyOf() else IntArray(grid.columnCounts[row])
+    }
+    for (unit in 0 until unitCount) {
+        val row = grid.rows[unit]
+        if (!grid.wideRows[row]) slotWidths[row][grid.columns[unit]] = maxOf(slotWidths[row][grid.columns[unit]], columnWidths[unit])
+    }
     // A card narrower than its cell keeps its own width; everything else takes the cell's, so that its lines, which
     // take their direction from their own content, start at the same edge as the other lines of the cell. In a wide row,
     // where every section has a width of its own, a section is as wide as its widest line instead, every chunk of it
@@ -59,7 +72,7 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
             else -> cellWidths[grid.rows[unit]][grid.columns[unit]]
         }
     }
-    return SectionWidths(columnWidths = columnWidths, cellWidths = cellWidths, unitWidths = unitWidths)
+    return SectionWidths(columnWidths = columnWidths, cellWidths = cellWidths, slotWidths = slotWidths, unitWidths = unitWidths)
 }
 
 /** Where the decided grid puts every unit and every card, and whether the song is scrolled by its rows. */
@@ -98,7 +111,7 @@ internal fun placeSections(
     heldSpreads: ColumnSpreads?,
     heldPageShifts: Map<Int, Int>?,
 ): SectionPlacement {
-    val cellWidths = widths.cellWidths
+    val slotWidths = widths.slotWidths
     val unitWidths = widths.unitWidths
     val hasSeveralPages = grid.pageCount > 1
     // A single column that is not paged has no rows to tell apart, so it is laid out as one, without dividers or space
@@ -109,7 +122,7 @@ internal fun placeSections(
         grid.arrange(unitHeights, sectionGapPx, rowGapPx, unitSections = units.unitSections, piecePadding = piecePadding).height > availableHeightPx ||
             hasSeveralPages && rowViewportHeight != null
         )
-    val cellStarts = cellStartsOf(grid, cellWidths, width, layoutWidth, isInset, endInsetPx, columnGapPx, layoutDirection)
+    val cellStarts = cellStartsOf(grid, slotWidths, width, layoutWidth, isInset, endInsetPx, columnGapPx, layoutDirection)
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight != null
     val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight else 0
     // How much of the viewport a row has with the scroll resting on the divider above it: measured from the row's top
@@ -149,12 +162,12 @@ internal fun placeSections(
         val row = grid.rows[index]
         val column = grid.columns[index]
         val cellStart = cellStarts[row][column]
-        // A card narrower than its cell sits at the cell's start, which is its right edge in a right to left layout. A
+        // What is narrower than its slot sits at the slot's start, which is its right edge in a right to left layout. A
         // wide row is a single column of sections as wide as each needs, so each of them is centered in it, as the
         // columns of every other row are centered in the width.
         val x = when {
-            grid.wideRows[row] -> cellStart + (cellWidths[row][column] - unitWidths[index]) / 2
-            layoutDirection == LayoutDirection.Rtl -> cellStart + cellWidths[row][column] - unitWidths[index]
+            grid.wideRows[row] -> cellStart + (slotWidths[row][column] - unitWidths[index]) / 2
+            layoutDirection == LayoutDirection.Rtl -> cellStart + slotWidths[row][column] - unitWidths[index]
             else -> cellStart
         }
         IntOffset(x = x, y = arrangement.tops[index])
@@ -169,12 +182,12 @@ internal fun placeSections(
 }
 
 /**
- * Where every cell of [grid] starts: the cells of a row spread evenly across the width, or every row in one block
+ * Where every cell of [grid] starts, [slotWidths] wide: the cells of a row spread evenly across the width, or every row in one block
  * where the grid shares a keyline.
  */
 internal fun cellStartsOf(
     grid: SectionGrid,
-    cellWidths: Array<IntArray>,
+    slotWidths: Array<IntArray>,
     width: Int,
     layoutWidth: Int,
     isInset: Boolean,
@@ -210,11 +223,11 @@ internal fun cellStartsOf(
         // Every row is placed in one block centered as a whole: a single column's rows at its start edge, and a pair of
         // narrow sections with the first there too and the second from the middle of the block, or as far from the
         // first as a column gap where that is further.
-        val blockWidth = cellWidths.maxOfOrNull { widths -> widths.sum() + columnGapPx * (widths.size - 1) } ?: 0
+        val blockWidth = slotWidths.maxOfOrNull { widths -> widths.sum() + columnGapPx * (widths.size - 1) } ?: 0
         val blockStart = startsOf(intArrayOf(blockWidth)).first()
         val isLtr = layoutDirection == LayoutDirection.Ltr
-        Array(cellWidths.size) { row ->
-            val widths = cellWidths[row]
+        Array(slotWidths.size) { row ->
+            val widths = slotWidths[row]
             IntArray(widths.size) { column ->
                 val offset = if (column == 0) {
                     0
@@ -225,7 +238,7 @@ internal fun cellStartsOf(
             }
         }
     } else {
-        Array(cellWidths.size) { row -> startsOf(cellWidths[row]) }
+        Array(slotWidths.size) { row -> startsOf(slotWidths[row]) }
     }
 }
 
