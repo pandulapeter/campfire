@@ -271,6 +271,7 @@ class SongScaleGroupsTest {
         assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G", key = "D Minor")))
         assertEquals(listOf("Bb" to "major"), rootAndFirst(song("Bb Eb F Gm", key = "B♭")))
         assertEquals(listOf("Bb" to "major"), rootAndFirst(song("Bb Eb F Gm", key = "B♭ Major")))
+        assertEquals(listOf("A" to "mixolydian"), rootAndFirst(song("A G D A", key = "A Mixolydian")))
         assertEquals(listOf("E"), groups(song("Am Dm E", key = "A minor")).single().exceptions.map { it.chordName })
         assertEquals(listOf("A" to "major"), rootAndFirst(song("A D E", key = "Amaj")))
     }

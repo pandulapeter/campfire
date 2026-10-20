@@ -91,11 +91,11 @@ internal object SongParts {
 
     /**
      * The key [text] names, minor where what follows its root starts with an `m` other than `ma`, in either case (`Am`,
-     * `A minor`, `A Minor`, `A-moll`), so that `Amaj`, `A major`, and `A mayor` stay major.
+     * `A minor`, `A Minor`, `A-moll`), so that `Amaj`, `A major`, `A mayor`, and `A Mixolydian` stay major.
      */
     private fun keyOf(text: String): SongKey? = rootOf(text)?.let { root ->
         val mode = ChordProChordRewriter.keyWordOf(text.trim().drop(root.name.length))
-        SongKey(root, isMinor = mode.startsWith('m') && mode.getOrNull(1) != 'a')
+        SongKey(root, isMinor = mode.startsWith('m') && mode.getOrNull(1) != 'a' && !mode.startsWith("mixo"))
     }
 
     /**
