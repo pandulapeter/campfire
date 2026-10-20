@@ -61,8 +61,9 @@ only once its fade has been played (the scale sheet replaces a tone every quarte
   scale), since giving it back between notes resumes and pauses another app's music; stopped only once the fade-out
   shaper reads silence (≤ 1 s), since the mixer applies fades late and an early stop pops.
 - **iOS**: `IosTunerSession`, shared by input and tone: `playAndRecord` / `measurement` / `defaultToSpeaker`, no
-  Bluetooth option, only when record permission is granted; otherwise `playback` for a tone (touching a recording
-  category without permission makes the system prompt). Input is a 4096-frame tap on the input node, started only when
+  Bluetooth option, while the input holds it (a tone joining keeps it); a tone alone takes `playback`, louder on the
+  speaker and never a recording category without permission (which makes the system prompt); an input joining a tone
+  switches the category, which ends the tone. Input is a 4096-frame tap on the input node, started only when
   granted; interruption = busy, configuration change = disconnected, media services reset = failed, and no tap for 1 s
   = disconnected (reopened once), since another audio user's deactivation stops it with no notice. Tone: a
   `ToneStream` fed to a player node on its own engine (20 ms buffers, three in flight, as the metronome); the player's

@@ -54,7 +54,7 @@ internal class IosAudioInput(private val session: IosTunerSession) : AudioInput 
     override suspend fun start(listener: AudioInputListener): AudioInputStart {
         stop()
         if (!session.isRecordingAllowed) return AudioInputStart.Refused(TunerStopReason.PERMISSION_DENIED)
-        if (!session.acquire()) return AudioInputStart.Refused(TunerStopReason.MICROPHONE_BUSY)
+        if (!session.acquireForInput()) return AudioInputStart.Refused(TunerStopReason.MICROPHONE_BUSY)
         val engine = AVAudioEngine()
         val input = engine.inputNode
         val format = input.outputFormatForBus(0u)

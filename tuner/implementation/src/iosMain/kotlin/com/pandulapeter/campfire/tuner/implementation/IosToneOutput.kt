@@ -90,7 +90,7 @@ internal class IosToneOutput(private val session: IosTunerSession) : ToneOutput 
     }
 
     private fun start(render: (sampleRate: Int) -> ShortArray, onLost: () -> Unit): Boolean {
-        if (!session.acquire()) return false
+        if (!session.acquireForTone()) return false
         val sampleRate = AVAudioSession.sharedInstance().sampleRate.toInt().takeIf { it > 0 } ?: ToneOutput.DEFAULT_SAMPLE_RATE
         val format = AVAudioFormat(standardFormatWithSampleRate = sampleRate.toDouble(), channels = 1u)
         val engine = AVAudioEngine()
