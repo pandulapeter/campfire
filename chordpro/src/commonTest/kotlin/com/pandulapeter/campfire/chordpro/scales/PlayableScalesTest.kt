@@ -171,6 +171,11 @@ class PlayableScalesTest {
         assertEquals(listOf("lydian"), firstOf("Cmaj7#11", 1))
         assertEquals(listOf("major", "lydian"), firstOf("Cmaj7", 2))
         assertEquals(listOf("mixolydian"), firstOf("C7", 1))
+        assertEquals(listOf("whole_tone", "augmented"), firstOf("Caug", 2))
+        assertEquals(listOf("lydian_augmented", "ionian_sharp_5"), firstOf("Cmaj7#5", 2))
+        assertEquals(listOf("melodic_minor", "harmonic_minor"), firstOf("CmMaj7", 2))
+        assertEquals(listOf("blues", "minor_pentatonic"), firstOf("E7#9", 2))
+        assertEquals(listOf("lydian_dominant"), firstOf("C9#11", 1))
     }
 
     @Test
