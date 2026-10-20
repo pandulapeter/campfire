@@ -17,7 +17,7 @@ plugin, targeting `nonMinifiedRelease`. Not a test: it asserts nothing and CI ne
 - Two collections, run in name order (`@FixMethodOrder`; JUnit's default is a hash order). `a_journeys`, for the Baseline
   Profile only: cold start (a first run plants the demo library and walks the onboarding with **Next** to **Start
   playing**), song list flings, a demo song opened and flung, Setlists and
-  the demo setlist, the tools (**Tools** on a phone's bar opens the Metronome, then its Tuner and Chords tabs; a tall
+  the demo setlist, the tools (**Tools** on a phone's bar opens the Metronome, then its Tuner, Chords, and Scales buttons; a tall
   rail gives each its own item; the tuner asks for nothing without a tap), and Settings. `b_startup`, with
   `includeInStartupProfile`: a cold start until the first demo card, nothing else, so the startup profile (which lays out
   the DEX with `dexLayoutOptimization`) holds only what a launch needs. Data is never cleared between them, so the walk

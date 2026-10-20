@@ -91,15 +91,15 @@ class BaselineProfileGenerator {
                 device.waitForIdle()
             }
         }
-        // With six screens on, a phone's bar groups Metronome, Tuner, and Chords behind one Tools item, which opens the
-        // Metronome on a fresh install with a row of tabs over the tools; a taller rail gives each its own item instead.
+        // With six screens on, a phone's bar groups Metronome, Tuner, Chords, and Scales behind one Tools item, which
+        // opens the Metronome on a fresh install with a button group over the tools; a taller rail gives each its own item.
         (waitFor(By.text("Tools")) ?: waitFor(By.text("Metronome")))?.click()
         device.waitForIdle()
-        // Nothing on the tab asks for anything without a tap, so it is visited like the others.
-        waitFor(By.text("Tuner"))?.click()
-        device.waitForIdle()
-        waitFor(By.text("Chords"))?.click()
-        device.waitForIdle()
+        // Nothing on the Tuner asks for anything without a tap, so it is visited like the others.
+        listOf("Tuner", "Chords", "Scales").forEach { tool ->
+            toolButton(tool)?.click()
+            device.waitForIdle()
+        }
         waitFor(By.text("Settings"))?.click()
         device.waitForIdle()
     }
@@ -119,6 +119,9 @@ class BaselineProfileGenerator {
     }
 
     private fun MacrobenchmarkScope.waitFor(selector: BySelector): UiObject2? = device.wait(Until.findObject(selector), STEP_TIMEOUT)
+
+    /** A tool's button in the group, which names an unselected tool only in its content description, or its rail item. */
+    private fun MacrobenchmarkScope.toolButton(label: String): UiObject2? = device.findObject(By.desc(label)) ?: waitFor(By.text(label))
 
     private fun MacrobenchmarkScope.flingScrollable(direction: Direction) {
         device.findObject(By.scrollable(true))?.let { list ->
