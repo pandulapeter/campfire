@@ -37,6 +37,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
@@ -111,6 +113,9 @@ internal fun ScaleSheet(
     val geometry = remember(scale, root, strings, instrument) { scaleDiagramGeometryOf(scale, root, strings, instrument) }
     val state = viewModel.scaleLibrary
     val playingScaleNote by viewModel.tunerController.playingScaleNote.collectAsStateWithLifecycle()
+    // A scale sounds only while its sheet can be seen, as the tuner's tones do (TunerListeningEffect): out of sight the
+    // run would play on, and a hidden web tab stretches each of its notes to a second.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.tunerController.stopScale() }
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
         subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
