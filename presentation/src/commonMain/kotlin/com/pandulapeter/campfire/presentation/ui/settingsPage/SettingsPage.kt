@@ -125,7 +125,8 @@ private fun SectionColumns(
     ) { measurables, constraints ->
         // Read while measuring, so that the frames of a slide only lay the sections out again.
         if (measurables.isEmpty()) return@Layout layout(constraints.maxWidth, 0) {}
-        val progress = sideBySide.value
+        // The expressive spring overshoots its target, which would slide a section over the header or past the page's edge.
+        val progress = sideBySide.value.coerceIn(0f, 1f)
         val gap = SECTION_GAP.roundToPx()
         val maxColumnWidth = MAX_COLUMN_WIDTH.roundToPx()
         val stackedWidth = minOf(maxColumnWidth, constraints.maxWidth)
