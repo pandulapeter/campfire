@@ -10,11 +10,16 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
+import io.ktor.utils.io.ClosedReadChannelException
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -22,6 +27,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -66,6 +72,34 @@ class DropboxChangeFeedTest {
         val provider = dropboxProvider(configure = { install(HttpTimeout) }) { respondJson("""{"changes":false}""") }
 
         assertFalse(provider.awaitChanges("cursor 1"))
+    }
+
+    @Test
+    fun `a wait cut off without an answer is the network failing, and is sent once`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider(configure = { install(HttpTimeout) }) {
+            requests++
+            throw ClosedReadChannelException()
+        }
+
+        assertFailsWith<SyncNetworkException> { provider.awaitChanges("cursor 1") }
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `a stalled wait fails within the call's own bound`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider(
+            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = false) },
+            engineDispatcher = StandardTestDispatcher(testScheduler),
+        ) {
+            requests++
+            awaitCancellation()
+        }
+
+        assertFailsWith<SyncNetworkException> { provider.awaitChanges("cursor 1") }
+        assertEquals(1, requests)
+        assertTrue(currentTime <= DropboxChangeFeed.LONGPOLL_CALL_TIMEOUT_MILLIS + 1_000, "The wait took $currentTime ms to fail.")
     }
 
     @Test

@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -212,6 +213,64 @@ class SyncRemoteWatcherTest {
         advanceTimeBy(2.minutes + 5.seconds)
 
         assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `a poll the service held and then lost is asked again at once`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.provider.awaitAnswers.add {
+            delay(5.minutes)
+            throw SyncNetworkException("The server closed the connection.")
+        }
+        world.synchronizeAndWatch()
+        advanceTimeBy(1.minutes)
+
+        world.provider.writeElsewhere(song(2), TWO)
+        advanceTimeBy(4.minutes + AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(2, world.runs.count)
+        assertContentEquals(TWO, world.local.files[song(2)])
+    }
+
+    @Test
+    fun `a poll lost soon after it was sent still waits before it is asked again`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.provider.awaitAnswers.add {
+            delay(10.seconds)
+            throw SyncNetworkException("Connection refused.")
+        }
+        world.synchronizeAndWatch()
+
+        world.provider.writeElsewhere(song(2), TWO)
+        advanceTimeBy(10.seconds + AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(1, world.runs.count)
+        assertEquals(1, world.provider.awaitCount)
+
+        advanceTimeBy(30.seconds)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `a feed listing that keeps failing after a held poll still waits longer and longer`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.provider.awaitAnswers.add {
+            delay(5.minutes)
+            throw SyncNetworkException("The server closed the connection.")
+        }
+        world.synchronizeAndWatch()
+        world.provider.writeElsewhere(song(2), TWO)
+        var listings = 0
+        world.provider.onChangesSince = {
+            listings++
+            throw SyncNetworkException("Offline")
+        }
+
+        advanceTimeBy(30.minutes)
+
+        // After the held poll at 301 s, then after 30 s, 1, 2, and every 5 minutes: eight in half an hour.
+        assertEquals(8, listings)
     }
 
     @Test

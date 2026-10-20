@@ -31,8 +31,10 @@ internal class DropboxChangeFeed(
 
     /**
      * `list_folder/longpoll`, which takes no token: the cursor is all it goes by. Dropbox holds the request for
-     * [LONGPOLL_TIMEOUT_SECONDS] plus up to a minute and a half of its own, so the call's own bounds are raised past
-     * that, or the silence of a folder nobody touches would read as a dead connection.
+     * [LONGPOLL_TIMEOUT_SECONDS] plus the minute and a half of its own that Dropbox documents (104 s was measured), so
+     * the call's own bounds are raised past that, or the silence of a folder nobody touches would read as a dead
+     * connection. It is sent once and never retried here: what a poll that ends without an answer means is the watcher's
+     * call (`SyncRemoteWatcher`), which asks again at once after one the service held.
      */
     suspend fun awaitChanges(cursor: String): Boolean {
         val response = transport {
@@ -87,7 +89,10 @@ internal class DropboxChangeFeed(
          */
         const val LONGPOLL_TIMEOUT_SECONDS = 240
 
-        /** The wait Dropbox was asked for, the minute and a half it may add to it, and half a minute for the network. */
+        /**
+         * The wait Dropbox was asked for, the minute and a half it documents adding, with half a minute for the network,
+         * which also covers the 104 s once measured.
+         */
         const val LONGPOLL_CALL_TIMEOUT_MILLIS = (LONGPOLL_TIMEOUT_SECONDS + 90 + 30) * 1000L
     }
 }

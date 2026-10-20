@@ -54,7 +54,8 @@ interface SyncFolder {
      *
      * A wait the service asks for before the next one is waited here, before answering. A cursor the service no longer
      * accepts answers true: what changed since is unknown, and [changesSince] says so by throwing. Throws
-     * [SyncNetworkException] for a service that cannot be reached. Only called with a cursor the provider handed out.
+     * [SyncNetworkException] for a service that cannot be reached, or a wait that ended without an answer (a connection
+     * closed or timed out while the service held it). Only called with a cursor the provider handed out.
      */
     suspend fun awaitChanges(cursor: String): Boolean
 

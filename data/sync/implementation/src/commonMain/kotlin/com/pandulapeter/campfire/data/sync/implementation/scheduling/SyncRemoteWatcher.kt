@@ -44,7 +44,19 @@ internal class SyncRemoteWatcher(
         var failures = 0
         while (true) {
             try {
-                if (!point.folder.awaitChanges(cursor)) {
+                val askedAt = environment.timeSource.markNow()
+                val hasChanges = try {
+                    point.folder.awaitChanges(cursor)
+                } catch (exception: SyncNetworkException) {
+                    // Held for a minute and then lost - the far end closing a quiet poll, the call's own bound, a
+                    // connection that went silent, a middlebox at its idle limit - so the link carried it, and the next
+                    // poll, asked at once with the same cursor, reports whatever came meanwhile. A poll can be held this
+                    // long at most once a minute.
+                    if (askedAt.elapsedNow() < HELD_POLL) throw exception
+                    failures = 0
+                    continue
+                }
+                if (!hasChanges) {
                     failures = 0
                     continue
                 }
@@ -63,7 +75,7 @@ internal class SyncRemoteWatcher(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: SyncNetworkException) {
-                // Offline, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
+                // Offline, refused, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
                 // device is back online, and nothing that changed meanwhile is lost by waiting.
                 connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])
                 failures++
@@ -80,5 +92,12 @@ internal class SyncRemoteWatcher(
     private companion object {
         /** The waits after the feed could not be reached, the last one repeated. */
         val NETWORK_RETRY_DELAYS: List<Duration> = listOf(30.seconds, 1.minutes, 2.minutes, 5.minutes)
+
+        /**
+         * How long a poll has to have been open for its failure to count as the service holding it and then losing it
+         * rather than as the link failing: past the 20 s connect timeout of the engines that have one, well short of the
+         * minutes a quiet folder's poll is held. Such a poll is asked again at once, which can repeat at most this often.
+         */
+        val HELD_POLL: Duration = 1.minutes
     }
 }

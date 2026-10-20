@@ -54,9 +54,9 @@ Silent failures go to the injected `Logger`.
   `content_hash`, which the bytes must match, or that file fails (not the run). An answer that cannot be decoded is
   `SyncNetworkException`: a 200 HTML page comes from something in between, not from Dropbox.
 - Watching (`DropboxChangeFeed`): `list_folder/longpoll` on `notify.dropboxapi.com` takes the cursor of a listing's
-  last page and no token, held 240 s (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's up to
-  90 s, with the call's own bounds raised past that; its `backoff` is waited before answering, and a `reset` cursor
-  answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
+  last page and no token, held 240 s (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's
+  documented 90 s (104 s measured), with the call's own bounds raised past that; its `backoff` is waited before
+  answering, and a `reset` cursor answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
   document, since a library folder deleted whole may come as one entry.
 - `ConnectivityMonitor` (per platform, in `network/`): offline-to-online changes only, never the starting state, and
   nothing that needs a permission prompt. Android: the default network becoming validated (`ACCESS_NETWORK_STATE`,
@@ -71,8 +71,9 @@ Silent failures go to the injected `Logger`.
 - Retries on 408, 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s
   doubling to 32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as
   `SyncNetworkException` instead. Transport failures are retried too, counted apart from the waits: timeouts six times,
-  anything else (a reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend. A first
-  sync *will* be rate limited; it must not fail for it.
+  anything else (a reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend; the
+  longpoll alone is sent once, and the watcher decides what its failure means. A first sync *will* be rate limited; it
+  must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a
