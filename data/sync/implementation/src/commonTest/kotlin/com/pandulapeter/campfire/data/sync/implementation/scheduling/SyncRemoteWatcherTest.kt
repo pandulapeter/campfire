@@ -82,6 +82,34 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `this device's own upload under another spelling brings no run`() = runTest {
+        val world = world(localFiles = mapOf(song("Song") to ONE), remoteFiles = mapOf(song("song") to ONE), ignoresCase = true)
+        world.synchronizeAndWatch()
+
+        world.local.files[song("Song")] = TWO
+        world.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        advanceTimeBy(1.hours)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `another device's deletion under another spelling is brought over`() = runTest {
+        val world = world(
+            localFiles = mapOf(song(1) to ONE, song("Song") to TWO),
+            remoteFiles = mapOf(song(1) to ONE, song("song") to TWO),
+            ignoresCase = true,
+        )
+        world.synchronizeAndWatch()
+
+        world.provider.deleteElsewhere(song("song"))
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(2, world.runs.count)
+        assertEquals(setOf(song(1)), world.local.files.keys)
+    }
+
+    @Test
     fun `another device's preferences bring a run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
         world.synchronizeAndWatch()
@@ -279,11 +307,15 @@ class SyncRemoteWatcherTest {
         }
     }
 
-    private fun TestScope.world(localFiles: Map<SyncKey, ByteArray>): World {
+    private fun TestScope.world(
+        localFiles: Map<SyncKey, ByteArray>,
+        remoteFiles: Map<SyncKey, ByteArray> = emptyMap(),
+        ignoresCase: Boolean = false,
+    ): World {
         val environment = testEnvironment()
         val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
-        val provider = FakeSyncProvider(account = TEST_ACCOUNT)
+        val provider = FakeSyncProvider(files = remoteFiles, account = TEST_ACCOUNT, ignoresCase = ignoresCase)
         val syncProviders = SyncProviders(listOf(provider))
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
