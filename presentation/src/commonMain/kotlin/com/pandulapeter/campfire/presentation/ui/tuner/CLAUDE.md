@@ -22,7 +22,8 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   on exit (`AppExitController`). `TunerListeningEffect` stops and restarts it with the screen's lifecycle (app hidden,
   screen locked, required update drawn over), so the system's recording indicator is lit exactly while a tuner shows.
 - The scale sheet's play toggle (`toggleScale`) steps through its notes as tones, each replacing the last; it ends with
-  its sheet (`stopScale` on any dialog change away from it) and with `stopTuner`.
+  its sheet (`stopScale` on any dialog change away from it) and with `stopTuner`; a note the platform refuses ends the
+  run (`refusedTones`).
 
 ## Microphone permission
 

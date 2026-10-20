@@ -42,7 +42,10 @@ public interface Tuner {
     /** Closes the microphone, which is what puts the system's recording indicator out. */
     public fun stopListening()
 
-    /** Plays [note] (a MIDI note number) at [referencePitch] until [stopTone], replacing a tone that already sounds. */
+    /**
+     * Plays [note] (a MIDI note number) at [referencePitch] until [stopTone], replacing a tone that already sounds. A tone
+     * the platform will not play is never shown as [TunerState.tone] and counts in [TunerState.refusedTones].
+     */
     public fun playTone(note: Int, referencePitch: Int)
 
     public fun stopTone()

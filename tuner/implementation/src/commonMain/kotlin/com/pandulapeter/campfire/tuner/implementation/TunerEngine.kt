@@ -108,7 +108,7 @@ internal class TunerEngine(
             render = { sampleRate -> ToneSynthesizer.loopOf(frequency, sampleRate) },
             onLost = { onEngine { if (toneId == toneSession) stopToneNow() } },
         )
-        setTone(note.takeIf { isPlaying })
+        if (isPlaying) setTone(note) else setTone(null, refusedTones = _state.value.refusedTones + 1)
     }
 
     override fun stopTone() = onEngine { stopToneNow() }
@@ -196,9 +196,10 @@ internal class TunerEngine(
         setTone(null)
     }
 
-    private fun setTone(note: Int?) {
+    /** Publishes [note] and [refusedTones] in one state, so that no collector sees a refused tone gone before it counts. */
+    private fun setTone(note: Int?, refusedTones: Int = _state.value.refusedTones) {
         if (_state.value.tone != null && note == null) toneEndedAt = timeSource.markNow()
-        _state.value = _state.value.copy(tone = note)
+        _state.value = _state.value.copy(tone = note, refusedTones = refusedTones)
     }
 
     private fun closeInput() {

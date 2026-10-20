@@ -233,6 +233,24 @@ class TunerEngineTest {
     }
 
     @Test
+    fun `a refused tone is counted and never shown`() = runTest {
+        val engine = engine()
+        output.isPlayable = false
+        engine.playTone(note = 69, referencePitch = 440)
+        runCurrent()
+        assertNull(engine.state.value.tone)
+        assertEquals(1, engine.state.value.refusedTones)
+        engine.playTone(note = 64, referencePitch = 440)
+        runCurrent()
+        assertEquals(2, engine.state.value.refusedTones)
+        output.isPlayable = true
+        engine.playTone(note = 64, referencePitch = 440)
+        runCurrent()
+        assertEquals(64, engine.state.value.tone)
+        assertEquals(2, engine.state.value.refusedTones)
+    }
+
+    @Test
     fun `an input that stops delivering frames lets go of the reading`() = runTest {
         val engine = engine()
         input.signal = sine(330f)

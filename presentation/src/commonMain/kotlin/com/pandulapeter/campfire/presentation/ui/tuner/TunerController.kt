@@ -133,7 +133,8 @@ internal class TunerController(
      * Each note is timed from the moment the tuner says it sounds, not from the moment it was asked for: the first tone
      * of a session opens the platform's output on the engine's thread, which can take longer than a note lasts, and a
      * clock started at the request would cut the first note short and find the second one queued behind it. A note the
-     * output never starts (focus refused) is waited for only so long, then the run goes on.
+     * platform refuses (focus refused) ends the run, since every later one would be refused the same way, in silence; one
+     * only slow to start is waited for only so long, then the run goes on.
      *
      * [playingScaleNote] moves on first and the note follows [SCALE_NOTE_LEAD_MILLIS] later, the time the sheet's circle
      * takes to reach its degree, so that the circle arriving reads as what plays the note. The lead comes out of the
@@ -147,8 +148,16 @@ internal class TunerController(
             notes.forEachIndexed { index, note ->
                 _playingScaleNote.value = index
                 delay(SCALE_NOTE_LEAD_MILLIS.toLong())
+                val refusals = tuner.state.value.refusedTones
                 tuner.playTone(note, tunerSettings.value.referencePitch)
-                withTimeoutOrNull(SCALE_NOTE_START_TIMEOUT_MILLIS) { tuner.state.first { it.tone == note } }
+                val answer = withTimeoutOrNull(SCALE_NOTE_START_TIMEOUT_MILLIS) {
+                    tuner.state.first { it.tone == note || it.refusedTones != refusals }
+                }
+                if (answer != null && answer.tone != note) {
+                    // The engine has already published no tone, so there is nothing to stop.
+                    _playingScaleNote.value = null
+                    return@launch
+                }
                 delay(if (index == notes.lastIndex) SCALE_LAST_NOTE_MILLIS else SCALE_NOTE_MILLIS - SCALE_NOTE_LEAD_MILLIS)
             }
             tuner.stopTone()

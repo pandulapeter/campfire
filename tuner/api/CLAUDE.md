@@ -17,6 +17,7 @@ domain type leaks in and the engine reads no settings of its own. Explicit API m
   and the web, where opening the input is the only question there is. `setStartable` is the web's gesture rule, as on
   `Metronome`.
 - **No reading is published while a tone sounds, or briefly after**, since the microphone would hear the speaker.
+- `TunerState.refusedTones` only grows, so a caller can tell its tone's refusal from one still on its way.
 - `StringCourses`: `strings` includes each course's partner string, since a twelve-string's octave string plucked alone
   would otherwise read as the wrong string far out of tune. A twelve-string guitar has no presets of its own; it uses
   the six-string's, with `TWELVE_STRING.partnersOf` adding the other string of each course.
