@@ -13,24 +13,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
@@ -219,8 +212,8 @@ private fun ColumnScope.ConnectedSyncSettings(
     }
     // Never swapped for "Stop syncing" in its own place: the second tap of a double tap lands on whatever the first
     // one put under the finger, and a run would be stopped the moment it started, or started again the moment it
-    // stopped. The rows that come and go with a run are the questions above it, which collapse, and the progress row
-    // under it, which expands away from it.
+    // stopped. The rows that come and go with a run are the questions above it, which collapse, and Stop syncing under
+    // it, which expands away from it.
     ActionListItem(
         title = stringResource(Res.string.settings_sync_now),
         icon = painterResource(Res.drawable.ic_sync),
@@ -228,16 +221,13 @@ private fun ColumnScope.ConnectedSyncSettings(
         isEmphasized = false,
         onClick = { viewModel.syncController.synchronizeLibrary() },
     )
-    AnimatedSettingsRow(value = syncState.progress) { progress ->
-        Column {
-            SyncProgressIndicator(progress = progress)
-            ActionListItem(
-                title = stringResource(Res.string.settings_sync_cancel),
-                icon = painterResource(Res.drawable.ic_clear),
-                isEmphasized = false,
-                onClick = viewModel.syncController::cancelSynchronization,
-            )
-        }
+    AnimatedSettingsRow(value = syncState.progress) {
+        ActionListItem(
+            title = stringResource(Res.string.settings_sync_cancel),
+            icon = painterResource(Res.drawable.ic_clear),
+            isEmphasized = false,
+            onClick = viewModel.syncController::cancelSynchronization,
+        )
     }
     ActionListItem(
         title = stringResource(Res.string.settings_sync_disconnect),
@@ -248,22 +238,28 @@ private fun ColumnScope.ConnectedSyncSettings(
 }
 
 /**
- * What [statusText] says, short of its words: a run going, a clean finish, and no run yet all say when the last one
- * finished, so they share a key, and the words of the time since change on their own as it passes. The line moves only
- * when a run ends, or when what it reports turns into something else to read.
+ * What [statusText] says, short of its words: a clean finish and no run yet both say when the last one finished, so they
+ * share a key, and the words of the time since change on their own as it passes, as a run's counts do as it moves files.
+ * The line moves only when a run starts, starts counting, or ends, or when what it reports turns into something else to
+ * read.
  */
-private val SyncState.Connected.statusKey: Pair<KClass<out SyncOutcome>?, Long?>
-    get() = when (val outcome = lastOutcome?.takeIf { progress == null }) {
+private val SyncState.Connected.statusKey: Pair<KClass<*>?, Any?>
+    get() = progress?.let { SyncProgress::class to it.isPreparing } ?: (outcomeKey to lastSyncedAt)
+
+private val SyncState.Connected.outcomeKey: KClass<out SyncOutcome>?
+    get() = when (val outcome = lastOutcome) {
         null -> null
         is SyncOutcome.Success -> outcome.takeIf {
             it.summary.failed.isNotEmpty() || it.summary.conflicts.isNotEmpty() || it.summary.havePreferencesFailed
         }?.let { SyncOutcome.Success::class }
         else -> outcome::class
-    } to lastSyncedAt
+    }
 
 /**
  * The one line under the account name: what is happening now, or what the last run ended in. A failure stays there
- * until something replaces it, rather than going past in a snackbar the user may not have been looking at.
+ * until something replaces it, rather than going past in a snackbar the user may not have been looking at. A run's
+ * progress takes this line rather than a row of its own, so a run starting resizes nothing above Sync now; how far it
+ * has got is already drawn by `SyncProgressBar` along the top of the window.
  */
 @Composable
 private fun SyncState.Connected.statusText(): String = when (val current = progress) {
@@ -316,37 +312,7 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
         null -> lastSyncedText(lastSyncedAt)
     }
 
-    // While a run is going, what it is doing is on the progress row just below; repeating it here would say the
-    // same thing twice, so this line keeps answering the question the progress row does not: when it last finished.
-    else -> lastSyncedText(lastSyncedAt)
-}
-
-/**
- * Determinate as soon as there is anything to count, and indeterminate before that: the number of files a run has
- * to move is only known once both sides have been listed, and a bar sitting at zero for that whole time reads as a
- * sync that is stuck rather than one that is still looking.
- */
-@Composable
-private fun SyncProgressIndicator(
-    modifier: Modifier = Modifier,
-    progress: SyncProgress,
-) = Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-    Text(
-        text = progress.text(),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    val fraction = progress.fraction
-    if (fraction == null) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
-    } else {
-        // Animated, or a run that finishes several files between frames would make the bar jump.
-        val animatedFraction by animateFloatAsState(targetValue = fraction, label = "syncProgress")
-        LinearProgressIndicator(
-            progress = { animatedFraction },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        )
-    }
+    else -> current.text()
 }
 
 @Composable

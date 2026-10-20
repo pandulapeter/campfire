@@ -40,7 +40,7 @@ as do the wide layout's pages.
   each), plus a spanning `header`.
 - Every section is titled, has no background, and no tab uses a card.
 - A `verticalScroll`, not a lazy list: **every row is first composed in its current state**; rows that come and go
-  (demo offer, sync progress, web storage) use `AnimatedSettingsRow`, which keeps the last value while leaving. Controls
+  (demo offer, Stop syncing, web storage) use `AnimatedSettingsRow`, which keeps the last value while leaving. Controls
   that don't fit a row's end are a `SettingsSubsection`.
 - A pending sync deletion question puts a dot on the Library tab (and pane entry) instead of opening it; read through a
   derived state so per-file progress doesn't recompose the screen.
@@ -59,8 +59,9 @@ as do the wide layout's pages.
 ## `SyncSettings.kt`
 
 - Driven entirely by `SyncState`. **No action takes another's place as its state changes** (a double tap's second half
-  would hit the opposite action): "Sync now" stays and is disabled during a run, "Stop syncing" is in the progress row,
-  a connection failure's reason sits under Connect.
+  would hit the opposite action): "Sync now" stays and is disabled during a run, "Stop syncing" appears under it,
+  a connection failure's reason sits under Connect. A run's progress takes the status line under the account instead of
+  a row of its own (the bar is `SyncProgressBar`'s, along the top of the window).
 - `ConnectionFailed` is drawn as the invitation with the reason; pressing again goes to `Connecting`, which clears it.
   `Connecting` is left through Cancel whether or not the attempt still runs (on the web it never does).
 - Empty `viewModel.syncController.syncProviders` (no key in the build) says so instead of offering a button that can't work.
