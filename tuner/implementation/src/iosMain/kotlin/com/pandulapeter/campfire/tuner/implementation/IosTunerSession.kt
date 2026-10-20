@@ -27,6 +27,7 @@ import platform.AVFAudio.AVAudioSessionRecordPermissionGranted
 import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
 import platform.AVFAudio.setActive
 import platform.Foundation.NSError
+import platform.Foundation.NSLock
 
 /**
  * The audio session the microphone and the tones share, active while either of them is in use and given back with
@@ -35,17 +36,19 @@ import platform.Foundation.NSError
  * Bluetooth option, so that a headset never becomes the input; without it, a tone alone is `playback`, since touching
  * a recording category with no permission is what makes the system ask on its own.
  *
- * Both users call in from the tuner's one confined coroutine, so the count needs no lock.
+ * The input takes and gives it back from the tuner's one confined coroutine, but the tones give it back from their feed
+ * thread or a system notification once they have faded out, so the count is kept under a lock.
  */
 @Single
 internal class IosTunerSession {
 
+    private val lock = NSLock()
     private var users = 0
 
     val isRecordingAllowed get() = AVAudioSession.sharedInstance().recordPermission == AVAudioSessionRecordPermissionGranted
 
     /** Takes the session for one more user; false where the system would not activate it. */
-    fun acquire(): Boolean {
+    fun acquire(): Boolean = locked {
         val session = AVAudioSession.sharedInstance()
         val isActive = memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
@@ -57,17 +60,26 @@ internal class IosTunerSession {
             isSet && session.setActive(true, error.ptr)
         }
         if (isActive) users++
-        return isActive
+        isActive
     }
 
-    fun release() {
-        if (users == 0) return
+    fun release() = locked {
+        if (users == 0) return@locked
         users--
         if (users == 0) {
             memScoped {
                 val error = alloc<ObjCObjectVar<NSError?>>()
                 AVAudioSession.sharedInstance().setActive(false, AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, error.ptr)
             }
+        }
+    }
+
+    private inline fun <T> locked(action: () -> T): T {
+        lock.lock()
+        try {
+            return action()
+        } finally {
+            lock.unlock()
         }
     }
 }

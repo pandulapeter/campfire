@@ -210,9 +210,17 @@ internal fun stopTunerTone(fadeSeconds: Double): Unit = js(
         if (!tone) return;
         tuner.tone = null;
         var now = tuner.context.currentTime;
-        tone.gain.gain.cancelScheduledValues(now);
-        tone.gain.gain.setValueAtTime(tone.gain.gain.value, now);
-        tone.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
+        var gain = tone.gain.gain;
+        // A stop during the fade-in holds the ramp where it is, to the sample. Reading the value instead gives what it was
+        // at the start of the last rendered block, up to a quarter of the fade away, and starting the fade-out from there
+        // is a step. Firefox has no cancelAndHoldAtTime, and only there the value is read.
+        if (gain.cancelAndHoldAtTime) {
+            gain.cancelAndHoldAtTime(now);
+        } else {
+            gain.cancelScheduledValues(now);
+            gain.setValueAtTime(gain.value, now);
+        }
+        gain.linearRampToValueAtTime(0, now + fadeSeconds);
         tone.source.stop(now + fadeSeconds * 2);
         setTimeout(function () { tuner.suspendIfIdle(); }, fadeSeconds * 4000);
     }"""

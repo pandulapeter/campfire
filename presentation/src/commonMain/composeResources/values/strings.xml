@@ -635,6 +635,7 @@
     <string name="scales_steps_whole">W</string>
     <string name="scales_steps_half">H</string>
     <string name="scales_steps_augmented">3</string>
+    <string name="scales_play">Play the scale</string>
     <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
     <string name="scales_mode_of">Mode %1$s of %2$s</string>
     <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->

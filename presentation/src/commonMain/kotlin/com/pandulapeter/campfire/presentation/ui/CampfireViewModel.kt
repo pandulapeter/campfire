@@ -270,6 +270,10 @@ class CampfireViewModel(
             // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.
             if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) tunerController.stopTuner()
         }
+        addBeforeDialogChange { previousDialog, dialogType ->
+            // A scale plays only under the sheet that shows it: closed, or covered by a chord's sheet, it stops.
+            if (previousDialog is DialogType.Scale && dialogType != previousDialog) tunerController.stopScale()
+        }
         addOpenDialogsChange { before, after ->
             savedDialogRestorer.onOpenDialogsChanged(after)
             coverArtSearchController.onOpenDialogsChanged(before = before, after = after)

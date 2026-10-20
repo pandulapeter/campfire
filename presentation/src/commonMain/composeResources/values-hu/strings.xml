@@ -634,6 +634,7 @@
     <string name="scales_steps_whole">1</string>
     <string name="scales_steps_half">½</string>
     <string name="scales_steps_augmented">1½</string>
+    <string name="scales_play">A skála lejátszása</string>
     <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
     <string name="scales_mode_of">%2$s, %1$s. modus</string>
     <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->

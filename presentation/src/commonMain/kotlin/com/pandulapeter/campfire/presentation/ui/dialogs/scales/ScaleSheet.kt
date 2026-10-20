@@ -11,19 +11,27 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.scales
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -49,18 +57,21 @@ import com.pandulapeter.campfire.presentation.resources.scales_labels_notes
 import com.pandulapeter.campfire.presentation.resources.scales_labels_show_degrees
 import com.pandulapeter.campfire.presentation.resources.scales_labels_show_notes
 import com.pandulapeter.campfire.presentation.resources.scales_mode_of
+import com.pandulapeter.campfire.presentation.resources.scales_play
 import com.pandulapeter.campfire.presentation.resources.scales_relative_minor
 import com.pandulapeter.campfire.presentation.resources.scales_sevenths
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
+import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
@@ -71,13 +82,15 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.scales.scaleStepsText
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
+import com.pandulapeter.campfire.presentation.ui.scales.scaleToneNotes
 import com.pandulapeter.campfire.presentation.ui.scales.shownScaleNoteNames
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * One scale in one key, titled with both and the notes spelled under the title: the scale on the player's instrument,
  * its notes labelled with their degrees or their names, the formula and the steps, what it is a mode of and its other
- * names, and for a seven-note scale the chords it stacks into, each opening that chord's sheet over this one.
+ * names, and for a seven-note scale the chords it stacks into, each opening that chord's sheet over this one. Beside the
+ * formula, a button plays the scale once up through the tuner's reference tones.
  *
  * The instrument, the tuning and the notation are read from the preferences as it is drawn, never from the screen it was
  * opened over (see [DialogType.Scale]); nothing can change them under the sheet, whose chips are behind it, and if
@@ -97,6 +110,7 @@ internal fun ScaleSheet(
     val root = ChordProChords.parse(rootName)?.root ?: 0
     val geometry = remember(scale, root, strings, instrument) { scaleDiagramGeometryOf(scale, root, strings, instrument) }
     val state = viewModel.scaleLibrary
+    val playingScaleNote by viewModel.tunerController.playingScaleNote.collectAsStateWithLifecycle()
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
         subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
@@ -131,7 +145,17 @@ internal fun ScaleSheet(
                 geometry = geometry,
                 labels = state.labels,
             )
-            ScaleFormula(scale = scale)
+            ScaleFormula(
+                scale = scale,
+                playingNote = playingScaleNote,
+                onTogglePlaying = {
+                    // The tones and the click share one audio session on iOS, which the tones reconfigure for the tuner,
+                    // so the two never sound together: a scale played over a song's metronome stops the click, as opening
+                    // the tuner sheet does.
+                    viewModel.metronomeController.stopMetronome()
+                    viewModel.tunerController.toggleScale(scaleToneNotes(scale, root))
+                },
+            )
             ScaleRelations(scale = scale, rootName = rootName, notation = notation)
             val tuning = userPreferences?.chordTuning()
             if (dialog.showsChords && tuning != null && FeatureSwitches.of(userPreferences).isChordLibraryEnabled && scale.intervals.size == 7) {
@@ -230,23 +254,68 @@ private fun ScaleLabelsToggle(
     }
 }
 
-/** The degrees of the scale with their accidental signs, and the steps between them. */
+/**
+ * The degrees of the scale with their accidental signs, and the steps between them, centered on the sheet with the
+ * button that plays the scale at their end: an empty space as wide as the button at their start keeps them centered.
+ * While the scale plays, a circle stands behind the degree sounding ([playingNote] indexes the notes played, whose last
+ * is the root an octave up, so it comes back to the first degree).
+ */
 @Composable
-private fun ScaleFormula(scale: Scale) {
-    Text(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 16.dp, end = 16.dp),
-        text = scale.degrees.joinToString("  ", transform = ::displayedDegree),
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
+private fun ScaleFormula(
+    scale: Scale,
+    playingNote: Int?,
+    onTogglePlaying: () -> Unit,
+) = Row(
+    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 16.dp, end = 16.dp),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Spacer(modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE))
+    Column(
+        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+    ) {
+        ScaleDegrees(
+            scale = scale,
+            playingDegree = playingNote?.rem(scale.degrees.size),
+        )
+        Text(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            text = scaleStepsText(scale),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+    ScalePlayButton(
+        isPlaying = playingNote != null,
+        onTogglePlaying = onTogglePlaying,
     )
-    Text(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 16.dp, end = 16.dp),
-        text = scaleStepsText(scale),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-    )
+}
+
+/** The Tuner tab's reference tone toggle, here playing the scale once up and turning back to Play when it ends. */
+@Composable
+private fun ScalePlayButton(
+    isPlaying: Boolean,
+    onTogglePlaying: () -> Unit,
+) {
+    val description = stringResource(Res.string.scales_play)
+    FilledIconToggleButton(
+        modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
+        checked = isPlaying,
+        onCheckedChange = { onTogglePlaying() },
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            checkedContainerColor = MaterialTheme.colorScheme.primary,
+            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    ) {
+        PlayStopMark(
+            modifier = Modifier.semantics { contentDescription = description },
+            isPlaying = isPlaying,
+            size = 20.dp,
+            color = LocalContentColor.current,
+        )
+    }
 }
 
 /**

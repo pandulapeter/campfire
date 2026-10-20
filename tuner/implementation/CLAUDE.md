@@ -45,12 +45,15 @@ Only `:app:di` sees this module. Nothing reaches the network; nothing heard is k
   fault.
 - `ToneSynthesizer`: a loop of whole periods (frequency adjusted ≤ 0.02 cents) with three harmonics, since phone
   speakers cannot play a low string's fundamental.
+- `ToneStream` (tested): the tones as samples for an output that fills its own buffers, every start, replacement
+  (a crossfade), and stop a ramp written into them; a faded voice is dropped only after writing its silence.
 - `SampleRing`: lock-free single writer/reader; the writer publishes its count after the samples.
 
 ### The platforms
 
 Every input turns voice processing off (gain control and noise suppression remove a held note) and none starts
-Bluetooth SCO. Every tone fades over 10 ms.
+Bluetooth SCO. Every tone fades over 10 ms, sample-accurately, and **nothing audible is ever cut**: an output stops
+only once its fade has been played (the scale sheet replaces a tone every quarter second).
 
 - **Android**: `AudioRecord` at 48 kHz, `UNPROCESSED` where available else `VOICE_RECOGNITION`; refused before opening
   without `RECORD_AUDIO`; silenced by a call (`AudioRecordingCallback`, Android 10+) is busy. Tone: static `AudioTrack`
@@ -60,8 +63,11 @@ Bluetooth SCO. Every tone fades over 10 ms.
   Bluetooth option, only when record permission is granted; otherwise `playback` for a tone (touching a recording
   category without permission makes the system prompt). Input is a 4096-frame tap on the input node, started only when
   granted; interruption = busy, configuration change = disconnected, media services reset = failed, and no tap for 1 s
-  = disconnected (reopened once), since another audio user's deactivation stops it with no notice. Tone: a player node
-  on its own engine, one faded copy then the loop.
+  = disconnected (reopened once), since another audio user's deactivation stops it with no notice. Tone: a
+  `ToneStream` fed to a player node on its own engine (20 ms buffers, three in flight, as the metronome); the player's
+  volume is never the fade (applied once per render cycle). A replacement crossfades on the same engine; a stop fades
+  the stream and the feed thread tears the engine down after the silence and the output latency have played.
+  `IosTunerSession` counts under a lock, since that release comes from the feed thread.
 - **Desktop**: `TargetDataLine` at 48 kHz on a daemon thread. The JVM cannot ask for permission and a refusal arrives
   as silence, so a line hearing only zeros for 3 s is reopened (swapped in only if listening has not stopped or
   restarted meanwhile; each capture thread closes the line it ends with; macOS answers its prompt after the line
@@ -70,7 +76,9 @@ Bluetooth SCO. Every tone fades over 10 ms.
   (`WebTunerAudio`, `window.__campfireTuner`). Stream kept only once connected; a failed graph ends its tracks.
   Capture-phase listener resumes the context while a tuner screen shows (`setStartable`), `WAITING_FOR_GESTURE` until
   then. Closing ends the tracks (browser indicator off); a generation counter ends tracks of an answer arriving after
-  a close. Nothing calls back into Kotlin, so ended tracks and context state are read every poll.
+  a close. Nothing calls back into Kotlin, so ended tracks and context state are read every poll. A tone's stop holds
+  its gain ramp with `cancelAndHoldAtTime` (reading `gain.value` only in Firefox), since the read value is a block
+  stale.
 
 `RecordedStringsTest` (`desktopTest`) reads every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by its
 note (see its README).

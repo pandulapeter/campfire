@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUse
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.scales.SCALE_NOTE_LEAD_MILLIS
 import com.pandulapeter.campfire.presentation.ui.instrument.courses
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.asState
@@ -26,17 +27,22 @@ import com.pandulapeter.campfire.tuner.api.model.StringCourses
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The tuner: its settings, listening while a tuner screen asks for it, and the reference tones. Nothing of it outlives
+ * The tuner: its settings, listening while a tuner screen asks for it, the reference tones, and the scale sheet's run of
+ * them. Nothing of it outlives
  * the screen it is used on - the view model stops it as that screen leaves the back stack or the sheet closes, and the
  * screen as the app goes out of sight.
  *
@@ -74,6 +80,13 @@ internal class TunerController(
 
     /** The notes heard in tune since the microphone was opened, which the strings row ticks off, see [tunedNotesAfter]. */
     val tunedNotes = _tunedNotes.asStateFlow()
+
+    private val _playingScaleNote = MutableStateFlow<Int?>(null)
+
+    /** Which of the scale sheet's notes sounds now, as an index into those [toggleScale] plays, or null between runs. */
+    val playingScaleNote = _playingScaleNote.asStateFlow()
+
+    private var scaleJob: Job? = null
 
     private val config get() = tunerConfig.value
 
@@ -113,7 +126,50 @@ internal class TunerController(
         if (tuner.state.value.tone == note) tuner.stopTone() else tuner.playTone(note, tunerSettings.value.referencePitch)
     }
 
+    /**
+     * Plays [notes] (MIDI note numbers) one after the other as reference tones at the tuner's reference pitch, each
+     * replacing the last, or stops them where they are already playing.
+     *
+     * Each note is timed from the moment the tuner says it sounds, not from the moment it was asked for: the first tone
+     * of a session opens the platform's output on the engine's thread, which can take longer than a note lasts, and a
+     * clock started at the request would cut the first note short and find the second one queued behind it. A note the
+     * output never starts (focus refused) is waited for only so long, then the run goes on.
+     *
+     * [playingScaleNote] moves on first and the note follows [SCALE_NOTE_LEAD_MILLIS] later, the time the sheet's circle
+     * takes to reach its degree, so that the circle arriving reads as what plays the note. The lead comes out of the
+     * note before, so the tempo is the same.
+     */
+    fun toggleScale(notes: List<Int>) {
+        if (_playingScaleNote.value != null) return stopScale()
+        // Set before the run starts, so that a second tap in the same frame already finds a scale to stop.
+        _playingScaleNote.value = 0
+        scaleJob = scope.launch {
+            notes.forEachIndexed { index, note ->
+                _playingScaleNote.value = index
+                delay(SCALE_NOTE_LEAD_MILLIS.toLong())
+                tuner.playTone(note, tunerSettings.value.referencePitch)
+                withTimeoutOrNull(SCALE_NOTE_START_TIMEOUT_MILLIS) { tuner.state.first { it.tone == note } }
+                delay(if (index == notes.lastIndex) SCALE_LAST_NOTE_MILLIS else SCALE_NOTE_MILLIS - SCALE_NOTE_LEAD_MILLIS)
+            }
+            tuner.stopTone()
+            _playingScaleNote.value = null
+        }
+    }
+
+    /**
+     * Ends a scale that is playing. The run and this share the scope's one thread, so a cancelled run never gets to play
+     * another note after the tone is stopped here.
+     */
+    fun stopScale() {
+        if (_playingScaleNote.value == null) return
+        scaleJob?.cancel()
+        scaleJob = null
+        tuner.stopTone()
+        _playingScaleNote.value = null
+    }
+
     fun stopTuner() {
+        stopScale()
         tuner.stopListening()
         tuner.stopTone()
     }
@@ -151,19 +207,26 @@ internal class TunerController(
     }
 
     /**
-     * Tells the engine whether a tuner screen is showing, see `Tuner.setStartable`: the Tuner tab on top of [backStack],
-     * or the tuner sheet as [visibleDialog], while the tuner is switched on.
+     * Tells the engine whether a screen that plays its tones is showing, see `Tuner.setStartable`: the Tuner tab on top of
+     * [backStack], or the tuner sheet as [visibleDialog], while the tuner is switched on, and the scale sheet, whose notes
+     * are its tones whether the tuner is switched on or not.
      */
     fun startStartableRule(backStack: List<CampfireDestination>, visibleDialog: StateFlow<DialogType?>) = scope.launch {
         combine(
             snapshotFlow { backStack.lastOrNull() },
             visibleDialog,
             userPreferences.map { it?.isTunerEnabled != false },
-        ) { top, dialog, isTunerEnabled -> isTunerEnabled && (top == CampfireDestination.Tuner || dialog is DialogType.Tuner) }
+        ) { top, dialog, isTunerEnabled ->
+            dialog is DialogType.Scale || isTunerEnabled && (top == CampfireDestination.Tuner || dialog is DialogType.Tuner)
+        }
             .distinctUntilChanged()
             .collect(tuner::setStartable)
     }
 }
+
+private const val SCALE_NOTE_MILLIS = 250L
+private const val SCALE_LAST_NOTE_MILLIS = 600L
+private const val SCALE_NOTE_START_TIMEOUT_MILLIS = 2_000L
 
 /** What the instrument in the player's hands is tuned to, a fresh installation's guitar before the preferences are read. */
 private val UserPreferences?.listenedTuning get() = if (this == null) InstrumentTuning.GUITAR else instrumentTuning

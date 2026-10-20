@@ -22,3 +22,11 @@
   scales; opened from a chord sheet, this sheet has no chord rows (`showsChords`), so dialogs never stack deeper than two.
 - The sheet's neck gives the dots the room: rows about a fret tall (`sheetHeight`), a narrow open column, fret numbers
   sized from the frets; inlays stay faint and small.
+- A play toggle beside the formula (balanced by an empty space so the formula stays centered) plays the scale once up,
+  root to octave over middle C, through the tuner's reference tones (`TunerController.toggleScale`, `scaleToneNotes`),
+  at the tuner's reference pitch whether the tuner is switched on or not. It stops the metronome (iOS shares the audio
+  session) and stops when the sheet closes or is covered, and the web's gesture rule counts the sheet as a tone screen.
+- The degree sounding gets a circle behind it in the formula (`ScaleDegrees`), sliding from degree to degree, growing
+  and fading in at the start, shrinking and fading out at the end, sized for the widest degree, and back to the first
+  degree for the octave; the neck is left alone. The circle moves first and each note sounds as it arrives
+  (`SCALE_NOTE_LEAD_MILLIS`, the circle's travel time), so the circle seems to play it.
