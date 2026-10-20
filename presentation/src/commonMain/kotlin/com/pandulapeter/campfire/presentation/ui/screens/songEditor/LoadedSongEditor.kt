@@ -60,6 +60,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -282,11 +283,13 @@ internal fun LoadedSongEditor(
                 AnimatedVisibility(visible = !isControlRowHidden) {
                     EditorControlRow(
                         contentPadding = contentPadding,
-                        // The summary reads the key into the standard notation, and the field is in the editor's.
-                        key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) }?.let(ChordProNotation::keyWithAccidentalSigns),
+                        // The summary reads the key into the standard notation, and the field is in the editor's. A key
+                        // that names none is shown as the question mark of no key, as the field marks it as an error.
+                        key = summary.metadata.key?.takeIf(ChordProTransposer::isKey)?.let { songRenderer.editorKeyOf(it, notation) }
+                            ?.let(ChordProNotation::keyWithAccidentalSigns),
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
-                        // even before a chord has been written under it.
-                        isTranspositionEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
+                        // even before a chord has been written under it - where the transposition can move it at all.
+                        isTranspositionEnabled = summary.hasChords || summary.metadata.key?.let(ChordProTransposer::isMovableKey) == true,
                         onTransposed = { semitones ->
                             textFieldState.replaceWithTransposition(songRenderer.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals, notation))
                         },

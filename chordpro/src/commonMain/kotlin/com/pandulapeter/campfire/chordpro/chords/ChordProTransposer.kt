@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.TabPlayer
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.ChordRewrite
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.anyWrittenChordName
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.keepingLowercaseMinors
@@ -102,6 +103,19 @@ public object ChordProTransposer {
             },
         )
     }
+
+    /**
+     * Whether a `{key}` value names a key, which the editor marks where it does not: a note with anything after it
+     * (`D dorian`, `Dm (capo 2)`, `a-moll`), but not `S`. It may still be one [transposeText] cannot move, see
+     * [isMovableKey].
+     */
+    public fun isKey(key: String): Boolean = ChordProChordRewriter.isKey(key)
+
+    /**
+     * Whether [transposeText] moves a song's `{key}` of [key], read the way it reads one, so that a stepper offering to
+     * move a song with no chords offers it only where the key would change: `D dorian` and `a-moll` stay as written.
+     */
+    public fun isMovableKey(key: String): Boolean = "{key: $key}".let { line -> transposeText(line, 1) != line }
 
     /**
      * Where [offset] of [before] is in [after], for an [after] that [transposeText] made of [before]: an editor that

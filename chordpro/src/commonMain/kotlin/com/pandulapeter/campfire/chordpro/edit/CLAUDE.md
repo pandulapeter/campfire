@@ -25,6 +25,8 @@
 ### `ChordProHighlighter`
 
 Lives here so "what is a chord" is decided once. A directive the parser reads and drops is one `INVALID` token, decided
-by the parser's own functions; an *empty* value is not invalid. `highlight(text, previous)` reads from the first changed
-line until a line past the edit is the old one in the same state (open environment, once-only kinds said, header key)
-and on the same side of the body's start, and must always equal `tokenize`: the tests type and delete through a song.
+by the parser's own functions; an *empty* value is not invalid. A `{key}` is kept by the parser whatever it says, but
+is marked where it does not start with a note (`ChordProChordRewriter.isKey`: `S` is, `a-moll` and `D dorian` are not),
+and still counts as the song's one key. `highlight(text, previous)` reads from the first changed line until a line past
+the edit is the old one in the same state (open environment, once-only kinds said, header key) and on the same side of
+the body's start, and must always equal `tokenize`: the tests type and delete through a song.

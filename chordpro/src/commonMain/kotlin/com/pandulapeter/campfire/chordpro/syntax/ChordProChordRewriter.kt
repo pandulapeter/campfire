@@ -141,6 +141,23 @@ internal object ChordProChordRewriter {
     internal fun keyWordOf(suffix: String) = suffix.trimStart { it.isWhitespace() || it == '-' }.lowercase()
 
     /**
+     * Whether [key] names a key at all, however much is written after its note: it has to start with a chord name
+     * (`F#m`, `a`, `Lam`) or a note in the Central European spelling (`Esz`, `fisz`, `Fis`), ended by whitespace, a
+     * dash or a parenthesis, so that `D dorian`, `Dm (capo 2)`, `Bb-Dur`, `a-moll` and `Esz-dúr` are keys and `S` and
+     * `capo 2` are not. Whether the transposition can move it is another question: it moves only a chord name or a key
+     * spelled out the way [renameKey] reads one.
+     */
+    internal fun isKey(key: String): Boolean {
+        val text = key.trim()
+        val noteEnd = (1 until text.length).firstOrNull { text[it].isWhitespace() || text[it] == '-' || text[it] == '(' } ?: text.length
+        val note = text.substring(0, noteEnd)
+        return ChordProChordNames.isChordName(note) ||
+            ChordProChordNames.lowercaseMinorExpanded(note) != null ||
+            ChordProChordNames.latinExpanded(note) != null ||
+            centralEuropeanNote.matches(note)
+    }
+
+    /**
      * The names [rewriteChords] hands to its rename that decide how a song is written — its key and the chords of the lines
      * of its sections, without rewriting anything. The brackets of comments and labels and the chorus a recall repeats are
      * left out, for the reason [rewriteBlock] gives, and so are the definitions, which follow their chords.
@@ -384,6 +401,9 @@ internal object ChordProChordRewriter {
         val start = length - trimStart().length
         return substring(0, start) + replacement + substring(start + trimmedLine.length)
     }
+
+    /** A note as a German or Hungarian chart names it: `B`, `H`, `Fis`, `Es`, `As`, `Cisz`, `Esz`, in either case. */
+    private val centralEuropeanNote = Regex("[a-h]((is|es|s)z?)?", RegexOption.IGNORE_CASE)
 
     internal val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll", "mayor", "menor", "majeur", "mineur", "maggiore", "minore")
 }

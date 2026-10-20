@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.TunerReading
+import kotlin.math.roundToInt
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -176,16 +177,36 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
-        // One song at three text sizes, which the page crossfades between to show that the columns follow the text size:
-        // the whole song in four columns, the first page ending after Verse 2 in three, and after Verse 1 in two.
-        Triple("laptop-song-small", Device.LAPTOP, song("laptop-song-small", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1f)),
-        Triple("laptop-song-medium", Device.LAPTOP, song("laptop-song-medium", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.4f)),
-        Triple("laptop-song-large", Device.LAPTOP, song("laptop-song-large", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 2.325f)),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho", scroll = EDITOR_SCROLL)),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
+    ).plus(
+        // One song at every text size the page's slider stops at, with its chords and without, for the demo that the
+        // columns follow the text size. Named after the size as the app shows it; at each of them page one ends where a
+        // section ends, chords or not, which is what websiteSweep is for finding.
+        TEXT_SIZE_DEMO_FONT_SCALES.flatMap { fontScale ->
+            listOf(true, false).map { areChordsEnabled ->
+                val name = "laptop-song-${(fontScale * 100).roundToInt()}-${if (areChordsEnabled) "chords" else "lyrics"}"
+                Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale, extra = chords(areChordsEnabled)))
+            }
+        },
     ).flatMap { (name, device, shot) ->
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
             Triple("$name-${uiMode.id}", device, shot.inTheme(uiMode))
+        }
+    }
+}
+
+/**
+ * I'll Be There for You on the laptop at every text size from 100% to 250% in steps of 2.5%, with its chords and
+ * without, for choosing the sizes the page's text size slider stops at: the ones at which page one ends where a section
+ * ends, in both modes. Rendered only with `--only sweep`, into `Sweep/`, in the dark theme alone, since the theme
+ * changes nothing of the layout.
+ */
+internal val websiteSweep: List<Triple<String, Device, Shot>> by lazy {
+    (0..60).map { 1f + it * 0.025f }.flatMap { fontScale ->
+        listOf(true, false).map { areChordsEnabled ->
+            val name = "sweep-%05.1f-%s".format(fontScale * 100, if (areChordsEnabled) "chords" else "lyrics")
+            Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale, extra = chords(areChordsEnabled)))
         }
     }
 }
@@ -208,6 +229,10 @@ private val tuner = mapOf(
 )
 
 private const val UPTOWN_GIRL = "billy_joel-uptown_girl.cho"
+private const val ILL_BE_THERE_FOR_YOU = "the_rembrandts-ill_be_there_for_you.cho"
+
+/** The text sizes the website's text size slider stops at, as the demo's columns are laid out: see `websiteShots`. */
+private val TEXT_SIZE_DEMO_FONT_SCALES = listOf(1f, 1.2f, 1.4f, 1.75f, 2.1f, 2.3f)
 private const val EDITOR_SCROLL = 0.3f
 private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.cho"
 
@@ -222,6 +247,12 @@ private suspend fun PrepareScope.hear(reading: TunerReading) {
     (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading)
     settle()
 }
+
+/**
+ * Whether the songs show their chords, or lyrics alone, as the Chords switch in Settings sets it: the document stores
+ * the switch's old name, the inverse of `UserPreferences.areChordsEnabled`.
+ */
+private fun chords(areChordsEnabled: Boolean): Map<String, JsonElement> = mapOf("isLyricsOnlyModeEnabled" to JsonPrimitive(!areChordsEnabled))
 
 private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = mapOf(
     "metronomeSettings" to buildJsonObject {

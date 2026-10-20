@@ -23,9 +23,10 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The same stepper for the editor, where transposing rewrites the file instead of changing how it is read. There is
  * no amount to show and nothing to reset to, so the value is the key the song is in - or a question mark, since a
- * file that declares no `{key}` still has chords that move.
+ * file that declares no `{key}`, or one that names no key, still has chords that move.
  *
- * @param isEnabled False for a song with no chords, where both buttons would rewrite nothing.
+ * @param isEnabled False for a song with neither chords nor a key the transposition moves, where both buttons would
+ *   rewrite nothing.
  */
 @Composable
 internal fun TextTranspositionControls(

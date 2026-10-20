@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter.TokenType
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -332,6 +333,9 @@ class ChordProHighlighterTest {
             "{capo: -1}",
             "{duration: about 4 min}",
             "{transpose: up}",
+            "{key: S}",
+            "{key: capo 2}",
+            "{meta: key xyz}",
             "{meta: cover not an address}",
             "{meta: link ftp://example.com}",
             "{language: und}",
@@ -356,6 +360,10 @@ class ChordProHighlighterTest {
             "{key: a-moll}",
             "{key: Esz-dúr}",
             "{key: D dorian}",
+            "{key: fisz-moll}",
+            "{key: H}",
+            "{key: Sol mayor}",
+            "{key: (G)}",
             "{transpose: -3f}",
             "{transpose}",
             "{time}",
@@ -386,6 +394,7 @@ class ChordProHighlighterTest {
         assertEquals(listOf("{year: 1999}", "  {meta: year 2000}"), duplicates("{year: 1998}\n{year: 1999}\n  {meta: year 2000}"))
         assertEquals(listOf("{key: G}"), duplicates("{key: }\n\nla\n{key: G}"))
         assertEquals(emptyList(), duplicates("{key: }\n{key: G}\n\nla"))
+        assertEquals(listOf("{key: G}"), duplicates("{key: S}\n{key: G}\n\nla"))
         assertEquals(listOf("{title: }"), duplicates("{title: }\n{title: A}\n{title: }"))
         assertEquals(listOf("{meta: cover https://b.com/b.jpg}"), duplicates("{meta: cover https://a.com/a.jpg}\n{meta: cover https://b.com/b.jpg}"))
     }
@@ -443,7 +452,8 @@ class ChordProHighlighterTest {
         "lyricist" -> lyricist
         "album" -> album
         "year" -> year
-        "key" -> key
+        // The parser keeps any key, but one that names none is as good as missing to the stepper that shows it.
+        "key" -> key?.takeIf(ChordProTransposer::isKey)
         "capo" -> capo
         "tempo" -> ChordProTempo.parse(tempo)
         "time" -> ChordProTime.parse(time)

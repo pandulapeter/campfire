@@ -108,8 +108,8 @@ repository; the user reviews and commits.
    followed by banner 1's three exported images and then banner 2's.
 7. **The website**: `python3 -I .claude/skills/store-screenshots/scripts/website_screenshots.py
    tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "<Desktop folder>/Website -
-   Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size of the file it
-   replaces, as WebP, and the link preview as `og-image.jpg`. It finds the website's repository as a sibling folder
+   Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size the site
+   draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. It finds the website's repository as a sibling folder
    named `CampfireWebsite` (the owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where
    there is none it writes to the Desktop folder and says so. Without `--link-preview`, `og-image.jpg` is left alone.
 8. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies
@@ -147,11 +147,15 @@ results image the iPad's 2 and the iPhone's 3, all dark.
 The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
 Alive 95% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner
 sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets; I'll Be
-There for You on the laptop at 100% (the whole song, in four columns), 140% (after Verse 2) and 232.5% (after Verse 1).
-The laptop's editor is scrolled past Thinking Out Loud's directives. A song longer than a page is cut wherever
-a column ends, so these were found by rendering every size from 80% to 130% in steps of 2.5% and reading where page
-one ends; if a song, a device or the layout changes, try again the same way. **Never fold the Chords section (or
-anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
+There for You on the laptop at the six sizes the page's text size slider stops at, 100, 120, 140, 175, 210, and 230%,
+each with its chords and without (the page's Chords switch), chosen so that page one ends where a section ends in
+both: with chords after the Outro (the whole song), the Solo, Chorus 2, Verse 2, Verse 1, and Verse 1 again; without,
+the whole song up to 175%, then after a chorus. The laptop's editor is scrolled past Thinking Out Loud's directives. A
+song longer than a page is cut wherever a column ends, so these were found by rendering every size and reading where
+page one ends: for the laptop `./gradlew :tools:screenshots:run --args="--out <folder> --only sweep"` renders I'll Be
+There for You from 100% to 250% in steps of 2.5%, both ways, into `<folder>/Sweep/`; the tablet shots were found the
+same way by hand, from 80% to 130%. If a song, a device or the layout changes, try again the same way. **Never fold the
+Chords section (or anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
 a 14" MacBook Pro (`Device.LAPTOP`).
 
 ## Changing a shot

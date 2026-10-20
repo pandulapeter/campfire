@@ -8,11 +8,12 @@
 
 """
 Copies the website's screenshots from a render of the tool's `website` set into campfire-songbook.com's repository:
-every `<name>.png` of the render's Website folder that the site already has as `assets/screenshots/<name>.webp`, scaled
-to that file's own size and saved as WebP, and, when one is given, the link preview Screenshot Bro exported as
-`assets/og-image.jpg`, at the size of the one it replaces. The repository is the one passed with --website, or else a
-sibling of this one named as the owner's checkout is (CampfireWebsite) or as a plain clone is (campfire-website). Where
-none is there, the files go to the fallback folder instead, with the sizes the site has always used, and it says so.
+every `<name>.png` of the render's Website folder as `assets/screenshots/<name>.webp`, scaled to the size the site
+draws that device at (SIZES, which the pages' width and height attributes and the stylesheet's aspect ratios repeat),
+and, when one is given, the link preview Screenshot Bro exported as `assets/og-image.jpg`, at the size of the one it
+replaces. The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
+is (CampfireWebsite) or as a plain clone is (campfire-website). Where none is there, the files go to the fallback folder
+instead, and it says so. A file the site no longer links stays where it is: remove it there.
 
 Usage: python3 -I website_screenshots.py <render folder>/Website <fallback folder> [--link-preview <png>] [--website <repo>]
 """
@@ -24,7 +25,10 @@ import sys
 from PIL import Image
 
 SIBLINGS = ("CampfireWebsite", "campfire-website")
-SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (2000, 1255)}
+# The laptop's window is 2000 by 1255 pixels, shown no wider than about 1100 device pixels on the page, so its shots are
+# saved at 1600, which keeps the text sharp on a 2x screen at half the bytes; the two dozen of the text size demo load
+# together.
+SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (1600, 1004)}
 OG_SIZE = (1200, 630)
 QUALITY = 86
 
@@ -58,7 +62,7 @@ def main():
     screenshots.mkdir(parents=True, exist_ok=True)
     for source in renders:
         output = screenshots / f"{source.stem}.webp"
-        size = Image.open(output).size if output.exists() else SIZES[source.stem.split("-")[0]]
+        size = SIZES[source.stem.split("-")[0]]
         Image.open(source).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(output, "WEBP", quality=QUALITY, method=6)
         print(f"{output} {size} {output.stat().st_size // 1024} KB")
     if arguments.link_preview is None:

@@ -22,7 +22,7 @@ import kotlin.system.exitProcess
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
- * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. The paths the run needs are passed in by the build as
+ * shot's id, or `listing`, `banners`, `website`, `promo` or `sweep`) renders part of them. The paths the run needs are passed in by the build as
  * system properties.
  */
 fun main(args: Array<String>) {
@@ -49,9 +49,12 @@ fun main(args: Array<String>) {
     }
     val websiteJobs = websiteShots.map { (name, device, shot) -> Job("website", "Website", name, device, shot) }
     val promoJobs = promoShots.map { Job("promo", "Promo", it.name, it.device, it.shot, isClip = it.isClip) }
-    val renders = (listing + bannerJobs + websiteJobs + promoJobs)
-        // The promotional video's footage is a minute of frames, so a run renders it only when it is asked for by name.
-        .filter { if (only == null) it.set != "promo" else it.set in only || it.device.name in only || it.shot.id in only }
+    val sweepJobs = websiteSweep.map { (name, device, shot) -> Job("sweep", "Sweep", name, device, shot) }
+    // The promotional video's footage is a minute of frames, and the sweep over a hundred renders of one song, so a run
+    // renders them only when their set is asked for by name, never along with their device.
+    val byNameOnly = setOf("promo", "sweep")
+    val renders = (listing + bannerJobs + websiteJobs + promoJobs + sweepJobs)
+        .filter { if (only == null) it.set !in byNameOnly else it.set in only || (it.set !in byNameOnly && (it.device.name in only || it.shot.id in only)) }
     var failures = 0
     runBlocking(Dispatchers.Main) {
         renders.forEachIndexed { index, job ->

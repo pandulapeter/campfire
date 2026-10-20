@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNashville
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
@@ -58,7 +59,9 @@ public object ChordProHighlighter {
         /**
          * A whole directive line whose value the app reads as something - a time signature, a tempo, a capo, a
          * duration, a transposition, a cover, a link, a language or a chord's shape - but cannot make sense of, so that it is as good as
-         * missing from the song. A key is never one: whatever it says is kept and shown as written. It takes the place of the directive's own tokens rather than lying over them.
+         * missing from the song, or a key that names none (`S`). The parser keeps any key and the app shows it as written, so a key
+         * that starts with a note is never one, whatever follows it (`a-moll`, `D dorian`). It takes the place of the directive's own
+         * tokens rather than lying over them.
          */
         INVALID,
 
@@ -189,7 +192,8 @@ public object ChordProHighlighter {
                 // is how a `{start_of_abc: …}` line is left alone like the notation after it.
                 val isInDelegate = scanned.isDelegatedAfter
                 val isUnreadable = !isInDelegate && directive.isUnreadable()
-                val onceOnlyKind = if (isInDelegate || isUnreadable) null else directive.onceOnlyKind()
+                // A key that names none is still the song's key to the parser, so it is said once like any other.
+                val onceOnlyKind = if (isInDelegate) null else directive.onceOnlyKind()?.takeIf { !isUnreadable || it == KEY }
                 val isReadPast = onceOnlyKind != null &&
                     (onceOnlyKind in saidOnce || (onceOnlyKind == KEY && index >= bodyStart && hasHeaderKey))
                 if (onceOnlyKind == KEY && index < bodyStart) hasHeaderKey = true
@@ -272,7 +276,8 @@ public object ChordProHighlighter {
 
     /**
      * Whether this is a directive the parser reads a value out of, holding a value it then drops: the same functions
-     * read it here as there, so that a line is marked exactly when the song comes out without what it says. A
+     * read it here as there, so that a line is marked exactly when the song comes out without what it says. A key is
+     * the one exception, kept by the parser whatever it says but marked where it names no key. A
      * `{meta: time 3/4}` is the `{time}` it stands for. A directive with no value is left alone: it is what the
      * editor writes into the header for the value to be typed into, and a `{transpose}` without one is a valid one
      * besides, going back to the transposition before it.
@@ -286,6 +291,7 @@ public object ChordProHighlighter {
         }
         return when {
             !ChordProMetaItems.isReadableValue(directive.name, value) -> true
+            directive.name == KEY -> !ChordProChordRewriter.isKey(value)
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
             ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
             ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null

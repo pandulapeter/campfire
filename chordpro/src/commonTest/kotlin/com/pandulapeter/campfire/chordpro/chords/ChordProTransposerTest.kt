@@ -326,6 +326,26 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a key is one that starts with a note, whatever follows it`() {
+        listOf("F#m", "a", "Bb-Dur", "Dm (capo 2)", "a-moll", "Esz-dúr", "D dorian", "Lam").forEach { key ->
+            assertEquals(true, ChordProTransposer.isKey(key), key)
+        }
+        listOf("S", "capo 2", "xyz", "Sharp").forEach { key ->
+            assertEquals(false, ChordProTransposer.isKey(key), key)
+        }
+    }
+
+    @Test
+    fun `only a key the text transposition changes is movable`() {
+        listOf("F#m", "a", "Bb-Dur", "G major").forEach { key ->
+            assertEquals(true, ChordProTransposer.isMovableKey(key), key)
+        }
+        listOf("S", "D dorian", "Dm (capo 2)", "a-moll").forEach { key ->
+            assertEquals(false, ChordProTransposer.isMovableKey(key), key)
+        }
+    }
+
+    @Test
     fun `the braces of a delegate block are not directives to the transposition`() {
         assertEquals("{start_of_ly}\n{ key G }\n{end_of_ly}", ChordProTransposer.transposeText("{start_of_ly}\n{ key G }\n{end_of_ly}", 2))
     }
