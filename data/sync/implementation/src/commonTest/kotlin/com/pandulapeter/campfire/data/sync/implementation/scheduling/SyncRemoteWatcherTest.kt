@@ -96,6 +96,24 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `another device's preferences are not lost to a failed download`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.synchronizeAndWatch()
+        world.provider.onDownloadDocument = {
+            world.provider.onDownloadDocument = {}
+            throw SyncNetworkException("Offline")
+        }
+
+        world.provider.writeDocumentElsewhere(
+            name = SyncedPreferencesDocument.FILE_NAME,
+            bytes = SyncedPreferencesDocument.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
+        )
+        advanceTimeBy(1.minutes)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
     fun `this device's own uploads bring no run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE, song(2) to TWO))
         world.synchronizeAndWatch()

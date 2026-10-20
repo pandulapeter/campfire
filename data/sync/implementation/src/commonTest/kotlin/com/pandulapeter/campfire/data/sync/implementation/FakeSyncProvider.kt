@@ -187,7 +187,13 @@ internal class FakeSyncProvider(
     /** Runs before a document upload answers, which is where a test writes the document "elsewhere" under it. */
     var onUploadDocument: suspend (String) -> Unit = {}
 
-    override suspend fun downloadDocument(name: String) = documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
+    /** Runs before [downloadDocument] answers, which is where a test makes it fail. */
+    var onDownloadDocument: suspend () -> Unit = {}
+
+    override suspend fun downloadDocument(name: String): RemoteDocument? {
+        onDownloadDocument()
+        return documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
+    }
 
     override suspend fun uploadDocument(
         name: String,

@@ -48,10 +48,11 @@ internal class SyncRemoteWatcher(
                 failures = 0
                 if (!hasChanges) continue
                 val changes = point.folder.changesSince(cursor)
-                cursor = changes.cursor
                 val isOtherDevices = point.hasOtherChangesThanPreferences(changes) ||
                     SyncedPreferencesDocument.FILE_NAME in changes.documents &&
                     point.isOtherPreferences(point.folder.downloadDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
+                // Moved on only once the changes are judged, so a preferences download that failed asks again about them.
+                cursor = changes.cursor
                 if (isOtherDevices) {
                     scheduler.schedule()
                     return
