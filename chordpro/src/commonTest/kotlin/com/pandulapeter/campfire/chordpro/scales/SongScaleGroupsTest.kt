@@ -242,6 +242,10 @@ class SongScaleGroupsTest {
     fun `a minor key is read from its m`() {
         assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E", key = "A minor")))
         assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E", key = "Am")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E", key = "A Minor")))
+        assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G", key = "D Minor")))
+        assertEquals(listOf("Bb" to "major"), rootAndFirst(song("Bb Eb F Gm", key = "B♭")))
+        assertEquals(listOf("Bb" to "major"), rootAndFirst(song("Bb Eb F Gm", key = "B♭ Major")))
         assertEquals(listOf("E"), groups(song("Am Dm E", key = "A minor")).single().exceptions.map { it.chordName })
         assertEquals(listOf("A" to "major"), rootAndFirst(song("A D E", key = "Amaj")))
     }

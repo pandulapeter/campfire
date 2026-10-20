@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 
@@ -77,22 +78,27 @@ internal object SongParts {
     }
 
     /**
-     * The key [text] names, minor where what follows its root starts with a lowercase `m` other than `ma` (`Am`,
-     * `A minor`, `A-moll`), so that `Amaj`, `A major`, and `A mayor` stay major.
+     * The key [text] names, minor where what follows its root starts with an `m` other than `ma`, in either case (`Am`,
+     * `A minor`, `A Minor`, `A-moll`), so that `Amaj`, `A major`, and `A mayor` stay major.
      */
     private fun keyOf(text: String): SongKey? = rootOf(text)?.let { root ->
-        val mode = text.trim().drop(root.name.length).trimStart('-', ' ')
+        val mode = ChordProChordRewriter.keyWordOf(text.trim().drop(root.name.length))
         SongKey(root, isMinor = mode.startsWith('m') && mode.getOrNull(1) != 'a')
     }
 
-    /** The root a chord name or a key starts with, spelled as written: `Eb` for `Ebm7` and for `Eb minor`. */
+    /**
+     * The root a chord name or a key starts with, spelled as written: `Eb` for `Ebm7` and for `Eb minor`; a key typed
+     * with a sign (`B♭`) is spelled `Bb`, the way the chords are.
+     */
     private fun rootOf(name: String): SpelledNote? {
         val trimmed = name.trim()
         val letter = trimmed.firstOrNull()?.uppercaseChar()?.takeIf { it in 'A'..'G' } ?: return null
-        val accidental = trimmed.getOrNull(1)?.takeIf { it == '#' || it == 'b' }
+        val accidental = trimmed.getOrNull(1)?.let { accidentalLetters[it] }
         val spelled = letter + (accidental?.toString() ?: "")
         return ChordProChords.pitchClass(spelled)?.let { SpelledNote(it, spelled) }
     }
+
+    private val accidentalLetters = mapOf('#' to '#', '♯' to '#', 'b' to 'b', '♭' to 'b')
 }
 
 /**
