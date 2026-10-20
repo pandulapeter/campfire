@@ -45,10 +45,11 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
   Chords, and Scales go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, on a rail
   in a short window (`SHORT_WINDOW_HEIGHT`), and on any rail too short for every item at the reader's text size
   (`railItemCapacity`). Five or fewer screens never group, nor does a lone tool.
-  The tools' tab row scrolls like the settings tabs (`ToolsTabRow`): four equal tabs would cut "Metronome" at 360dp.
+  The tools are switched by a connected button group (`ToolsButtonGroup`), not tabs, so it does not read as pages to
+  swipe like the settings tabs; only the selected button is named and wider, or "Metronome" is cut at 360dp.
 - The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool
   on top, else `Navigator.lastTool`, else the first enabled (`toolsItemDestination`); pressed again it scrolls to top,
   then goes to the first tool (`ScrollToTopRequest.destinationWhenAtTop`).
-- One `SharedToolsTabRow` is laid over all tool screens (each keeps room via `ToolScreenFrame`) so its indicator slides;
-  while a card or the export screen is over them each draws its own copy, like the chrome copies. **Tabs switch, never
-  page**, so a swipe never brings the tuner (and its microphone) on screen in passing.
+- One `SharedToolsButtonGroup` is laid over all tool screens (each keeps room via `ToolScreenFrame`) so its selection
+  morphs; while a card or the export screen is over them each draws its own copy, like the chrome copies. **The tools
+  switch, never page**, so a swipe never brings the tuner (and its microphone) on screen in passing.

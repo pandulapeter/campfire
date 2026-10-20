@@ -66,7 +66,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
  * [CampfireScreens]), which moves with the screen and which the card covers. Where the chrome has no room for every top
  * level screen, as on the bar, on a rail in a short window, or on one too short for every item, it offers the tools behind one Tools item
- * ([areToolsGrouped]), whose screens then carry a row of tabs between them ([ToolsTabRow]).
+ * ([areToolsGrouped]), whose screens then carry a button group between them ([ToolsButtonGroup]).
  *
  * @param destinations The top level screens of the features switched on, see `PreferencesController.topLevelDestinations`.
  *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not

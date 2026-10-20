@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationScrim
 import com.pandulapeter.campfire.presentation.ui.chrome.NoChromeRoom
 import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
-import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsTabRow
+import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsButtonGroup
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
 import com.pandulapeter.campfire.presentation.ui.chrome.TopLevelScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
@@ -221,9 +221,9 @@ internal fun CampfireScreens(
             null
         }
     }
-    // The tools the chrome offers behind its Tools item, and so the tabs their screens are switched by; none where every
+    // The tools the chrome offers behind its Tools item, and so the buttons their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
-    // over between the two, so that the tabs come and go once as a window crosses from the bar to a taller rail.
+    // over between the two, so that the buttons come and go once as a window crosses from the bar to a taller rail.
     val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations, isShortWindow, railCapacity.of(chromeKind))) {
         CampfireDestination.TopLevel.tools.filter { it in topLevelDestinations }
     } else {
@@ -233,7 +233,7 @@ internal fun CampfireScreens(
         ToolScreenFrame(
             destination = destination,
             tools = groupedTools,
-            isTabRowDrawn = chromeInScreens,
+            isButtonGroupDrawn = chromeInScreens,
             contentPadding = shellContentPadding,
             metronomeBeat = metronomeBeat,
             isKeyboard = isKeyboard,
@@ -411,7 +411,7 @@ internal fun CampfireScreens(
         // Composed while the tools have items of their own too, so that it fades in and out as a resized window groups
         // them and lets them go.
         if (!chromeInScreens) {
-            SharedToolsTabRow(
+            SharedToolsButtonGroup(
                 viewModel = viewModel,
                 tools = groupedTools,
                 railWidth = railWidth,

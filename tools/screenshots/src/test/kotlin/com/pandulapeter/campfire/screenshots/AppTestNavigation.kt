@@ -15,7 +15,6 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -80,18 +79,18 @@ internal fun AppTestScope.openSetlistDetails() {
 /** Opens the Scales tab of a phone, behind the Tools item of its navigation bar. */
 internal fun AppTestScope.openScales() {
     tap(hasText(string(Res.string.tools)) and hasClickAction())
-    // The family row's "Scales" title is not clickable, so the click action picks the tab, which a large text size
-    // leaves off the end of the scrolling tab row.
-    val scalesTab = hasText(string(Res.string.scales)) and hasClickAction()
-    onNode(scalesTab).performScrollTo()
-    tap(scalesTab)
+    // The family row's "Scales" title is not clickable, so the click action picks the button.
+    tap(toolButton(string(Res.string.scales)))
 }
 
 /** Opens the Chords tab of a phone, behind the Tools item of its navigation bar. */
 internal fun AppTestScope.openChords() {
     tap(hasText(string(Res.string.tools)) and hasClickAction())
-    tap(hasText(string(Res.string.chords)) and hasClickAction())
+    tap(toolButton(string(Res.string.chords)))
 }
+
+/** A tool's button among the tools, which shows its name only while selected and is named by its description otherwise. */
+private fun toolButton(name: String) = (hasText(name) or hasContentDescription(name)) and hasClickAction()
 
 /** Turns the onboarding of a first run with Next until its last page, the one Start playing finishes it from. */
 internal fun AppTestScope.openOnboardingLastPage() {

@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.StringResource
 
-/** The name of a top level screen: its item in the navigation chrome, and its tab among the tools ([ToolsTabRow]). */
+/** The name of a top level screen: its item in the navigation chrome, and its button among the tools ([ToolsButtonGroup]). */
 internal val CampfireDestination.TopLevel.label: StringResource
     get() = when (this) {
         CampfireDestination.Songs -> Res.string.songs

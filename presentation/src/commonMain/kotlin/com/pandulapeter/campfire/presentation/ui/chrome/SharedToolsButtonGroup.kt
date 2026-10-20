@@ -35,20 +35,20 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * The one [ToolsTabRow] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
+ * The one [ToolsButtonGroup] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
  * laid over the room each of them keeps for it, next to the rail's room ([railWidth]) and under the status bar as the
  * screens are. It fades in and out as the stack arrives at a tool or leaves for another screen, and as a resized window
  * groups the tools behind the Tools item ([tools] not empty) or lets them go, while the screens fade through under it
  * or move into the room they keep for it; it keeps the tools and the tool it was on through its exit so that the
- * indicator does not slide away nor the tabs go blank first. The
- * background is painted across the whole width and under the status bar as well as behind the row, so that nothing of
- * the screens fading through shows beside or above it.
+ * selection does not move away nor the buttons go blank first. The background is painted across the whole width and
+ * under the status bar as well as behind the group, so that nothing of the screens fading through shows beside or above
+ * it.
  *
  * It reads the back stack itself rather than being handed what is on top, so that a change of screens recomposes the
- * row rather than everything [CampfireScreens] lays out.
+ * group rather than everything [CampfireScreens] lays out.
  */
 @Composable
-internal fun SharedToolsTabRow(
+internal fun SharedToolsButtonGroup(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     tools: List<CampfireDestination.TopLevel>,
@@ -70,7 +70,7 @@ internal fun SharedToolsTabRow(
         enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
         exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
     ) {
-        ToolsTabRow(
+        ToolsButtonGroup(
             modifier = Modifier
                 .padding(ChromeRoomPadding(start = railWidth, bottom = NoChromeRoom))
                 .fillMaxWidth()

@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The icon of a top level screen: its navigation item's, and its tab's among the tools ([ToolsTabRow]). The Metronome's
+ * The icon of a top level screen: its navigation item's, and its button's among the tools ([ToolsButtonGroup]). The Metronome's
  * swings and pulses with the click, and the Chords' is drawn for the player's instrument.
  */
 @Composable

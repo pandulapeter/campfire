@@ -34,18 +34,18 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * A tool's screen with the room for [ToolsTabRow] above it while the tools are behind the chrome's Tools item ([tools] not
+ * A tool's screen with the room for [ToolsButtonGroup] above it while the tools are behind the chrome's Tools item ([tools] not
  * empty), the room growing and shrinking as the grouping comes and goes, so that the screen moves rather than jumps.
- * The row itself is drawn once over every tool screen ([SharedToolsTabRow]), so that its indicator slides from one
- * tool to the next while the screens fade through under it; only while the screens carry a chrome of their own (a card
+ * The group itself is drawn once over every tool screen ([SharedToolsButtonGroup]), so that its selection morphs from
+ * one tool to the next while the screens fade through under it; only while the screens carry a chrome of their own (a card
  * dealt over them, see [CampfireScreens]) does this draw a copy of it in that room, which moves with the screen, and
- * keeps its tabs while the room closes over it, so that the copy is covered rather than gone at once.
+ * keeps its buttons while the room closes over it, so that the copy is covered rather than gone at once.
  */
 @Composable
 internal fun ToolScreenFrame(
     destination: CampfireDestination.TopLevel,
     tools: List<CampfireDestination.TopLevel>,
-    isTabRowDrawn: Boolean,
+    isButtonGroupDrawn: Boolean,
     contentPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
@@ -54,20 +54,20 @@ internal fun ToolScreenFrame(
 ) = Column(modifier = Modifier.fillMaxSize()) {
     val lastTools = remember { mutableStateOf(tools) }
     SideEffect { if (tools.isNotEmpty()) lastTools.value = tools }
-    val tabRowHeight by animateDpAsState(
-        targetValue = if (tools.isEmpty()) 0.dp else TOOLS_TAB_ROW_HEIGHT,
+    val buttonGroupHeight by animateDpAsState(
+        targetValue = if (tools.isEmpty()) 0.dp else TOOLS_BUTTON_GROUP_HEIGHT,
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
     )
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(tabRowHeight)
+            .height(buttonGroupHeight)
             .clipToBounds(),
         contentAlignment = Alignment.BottomStart,
     ) {
         val shownTools = tools.ifEmpty { lastTools.value }
-        if (isTabRowDrawn && shownTools.isNotEmpty() && (tools.isNotEmpty() || tabRowHeight > 0.dp)) {
-            ToolsTabRow(
+        if (isButtonGroupDrawn && shownTools.isNotEmpty() && (tools.isNotEmpty() || buttonGroupHeight > 0.dp)) {
+            ToolsButtonGroup(
                 modifier = Modifier
                     .padding(contentPadding.only(start = true, end = true))
                     .wrapContentHeight(unbounded = true),
