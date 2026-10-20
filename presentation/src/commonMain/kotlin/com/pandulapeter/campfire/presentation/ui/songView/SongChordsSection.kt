@@ -61,6 +61,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -91,6 +92,7 @@ import kotlin.math.roundToInt
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
  * every chunk they come back in.
+ * @param isAnimated Whether a diagram a new width sends to another row travels there (see [ChordRowsBlock]).
  */
 @Composable
 internal fun SongChordsSection(
@@ -101,6 +103,7 @@ internal fun SongChordsSection(
     chordDiagrams: ChordDiagrams?,
     onFoldToggled: (() -> Unit)?,
     isFadingIn: Boolean,
+    isAnimated: Boolean,
     headerStyle: TextStyle,
     fontScale: Float,
 ) = Column(modifier = modifier) {
@@ -128,6 +131,7 @@ internal fun SongChordsSection(
         firstSlot = items.first,
         lastSlot = items.last,
         isLastSlot = items.last == section.itemCount - 1,
+        isAnimated = isAnimated,
         onCellClicked = chordDiagrams?.onChordClicked?.let { onChordClicked -> { cell -> onChordClicked(layouts.cells[cell].name) } },
     )
 }
@@ -143,7 +147,9 @@ internal fun SongChordsSection(
  * than the block is held to it, its names clipped at its edge, as a composed cell was held to its row.
  *
  * A cell whose chord is drawn with another shape than it was crossfades from the old diagram to the new one (see
- * [rememberChordShapeCrossfade]).
+ * [rememberChordShapeCrossfade]). Where [isAnimated], a cell a new width sends to another row, or a neighbour grown
+ * wider pushes along, travels there ([PlacementMotion]); otherwise, as while a pinch resizes every cell on every
+ * frame, each is drawn where it now is.
  *
  * Where [onCellClicked] is given, a press on a cell lights the whole of its row's height behind it, as a button's
  * press would, and a tap that the scroll did not take is answered with the cell's index; a screen reader is offered the
@@ -156,9 +162,13 @@ private fun ChordRowsBlock(
     firstSlot: Int,
     lastSlot: Int,
     isLastSlot: Boolean,
+    isAnimated: Boolean,
     onCellClicked: ((cell: Int) -> Unit)?,
 ) {
     val paint = chordCellPaint()
+    val motionScope = rememberCoroutineScope()
+    // A new set of cells numbers them anew, so none of them travels from where a cell of the old set was.
+    val motion = remember(layouts, motionScope) { PlacementMotion(motionScope) }
     // The width the block was last placed at, which is all its cells depend on that composition does not know: kept
     // rather than the cells, so that a new layout of the cells is described from it at once.
     var shownWidth by remember { mutableIntStateOf(-1) }
@@ -257,19 +267,26 @@ private fun ChordRowsBlock(
             .drawBehind {
                 val width = size.width.roundToInt()
                 val starts = layouts.rowStartsAt(width)
-                var y = 0f
-                for (row in slotRows(starts.size, firstSlot, lastSlot, isLastSlot)) {
+                var y = 0
+                val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
+                if (!isAnimated) {
+                    motion.clear()
+                } else if (!rows.isEmpty()) {
+                    motion.retain((starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: layouts.cells.size)).toSet())
+                }
+                for (row in rows) {
                     var x = 0
                     val rowHeight = layouts.rowHeight(starts, row)
                     for (cell in layouts.cellsOfRow(starts, row)) {
                         val cellWidth = minOf(layouts.cellWidths[cell], width)
-                        val cellLeft = if (isRightToLeft) width - x - cellWidth else x
+                        val target = IntOffset(if (isRightToLeft) width - x - cellWidth else x, y)
+                        val (cellLeft, cellTop) = if (isAnimated) motion.positionOf(cell, target) else target
                         if (cell == pressedCell && pressProgress > 0f) {
                             val inset = layouts.gap / 2f
                             drawRoundRect(
                                 color = pressColor,
                                 alpha = pressProgress,
-                                topLeft = Offset(cellLeft - inset, y - inset),
+                                topLeft = Offset(cellLeft - inset, cellTop - inset),
                                 size = Size(cellWidth + inset * 2, rowHeight + inset * 2),
                                 cornerRadius = CornerRadius(PRESSED_CORNER_RADIUS.toPx()),
                             )
@@ -278,7 +295,7 @@ private fun ChordRowsBlock(
                             layouts = layouts,
                             cell = cell,
                             left = cellLeft.toFloat(),
-                            top = y,
+                            top = cellTop.toFloat(),
                             width = cellWidth,
                             isRightToLeft = isRightToLeft,
                             paint = paint,

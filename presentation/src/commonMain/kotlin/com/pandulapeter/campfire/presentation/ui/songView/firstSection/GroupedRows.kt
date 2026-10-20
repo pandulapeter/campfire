@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
+import com.pandulapeter.campfire.presentation.ui.songView.PlacementMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope

@@ -107,7 +107,7 @@ internal fun LookaheadScope.SongSectionChildren(
                 songInfoEditing = songInfoEditing,
                 playingControls = playingControls,
                 playingTools = playingTools,
-                animatesControls = !isResizing && (sectionMotion == SectionMotion.SPRING || sectionMotion == SectionMotion.GLIDE && !isTextScaling),
+                animatesRows = !isResizing && (sectionMotion == SectionMotion.SPRING || sectionMotion == SectionMotion.GLIDE && !isTextScaling),
                 chordDiagrams = chordDiagrams,
                 scaleSuggestions = scaleSuggestions,
                 tuningVisibility = tuningVisibility,

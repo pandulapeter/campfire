@@ -71,8 +71,9 @@ builds what it draws, `grid/` places it.
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece. The page dividers
   are drawn by the layout over both, at the main pass's tops, not composed.
 - **Motion** (`SectionMotion`): a single change springs with `animateBounds`; continuous changes (pinch, resize, title
-  row collapse, metronome panel) follow directly, only a new grid's jump glided (`SectionGlides`). The playing controls
-  travel to a new arrangement during those too, except a pinch, which resizes them every frame (`isTextScaling`).
+  row collapse, metronome panel) follow directly, only a new grid's jump glided (`SectionGlides`). The playing controls,
+  the chord diagrams, and the scale chips travel to a new arrangement of their rows during those too (`PlacementMotion`),
+  except a pinch, which resizes them every frame (`isTextScaling`).
 - `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px: animated sections are measured no
   taller than half that (`maxAnimatedSectionHeight`).
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.layout.IntrinsicMeasureScope
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.chords.SCALE_CHIPS_TITLE_GAP
@@ -42,7 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
  * measures a chunk by.
  *
  * Every row but the last is followed by a chip gap and the last by [trailingGap], so that a cut leaves the gap at
- * the bottom of a page rather than at the top of the next.
+ * the bottom of a page rather than at the top of the next. Where [isAnimated], a chip a new width sends to another
+ * line, or a neighbour grown wider pushes along, travels there ([PlacementMotion]); otherwise, as while a pinch resizes
+ * every chip on every frame, each is placed where it now is.
  */
 @Composable
 internal fun ScaleChipRows(
@@ -53,34 +57,47 @@ internal fun ScaleChipRows(
     slots: IntRange,
     trailingGap: Dp,
     notation: ChordNotation,
+    isAnimated: Boolean,
     onScaleSelected: (scaleId: String, rootName: String) -> Unit,
-) = Layout(
-    modifier = modifier,
-    content = {
-        if (title != null) {
-            ScaleChipsTitle(
-                title = title,
-                textAlign = TextAlign.Start,
+) {
+    val motionScope = rememberCoroutineScope()
+    val motion = remember(motionScope) { PlacementMotion(motionScope) }
+    Layout(
+        modifier = modifier,
+        content = {
+            if (title != null) {
+                ScaleChipsTitle(
+                    title = title,
+                    textAlign = TextAlign.Start,
+                )
+            }
+            scales.forEach { scale ->
+                ScaleChip(
+                    scale = scale,
+                    rootName = rootName,
+                    notation = notation,
+                    onScaleSelected = onScaleSelected,
+                )
+            }
+        },
+        measurePolicy = remember(title != null, slots, trailingGap, motion, isAnimated) {
+            ScaleChipRowsMeasurePolicy(
+                hasTitle = title != null,
+                slots = slots,
+                trailingGap = trailingGap,
+                motion = motion,
+                isAnimated = isAnimated,
             )
-        }
-        scales.forEach { scale ->
-            ScaleChip(
-                scale = scale,
-                rootName = rootName,
-                notation = notation,
-                onScaleSelected = onScaleSelected,
-            )
-        }
-    },
-    measurePolicy = remember(title != null, slots, trailingGap) {
-        ScaleChipRowsMeasurePolicy(hasTitle = title != null, slots = slots, trailingGap = trailingGap)
-    },
-)
+        },
+    )
+}
 
 private class ScaleChipRowsMeasurePolicy(
     private val hasTitle: Boolean,
     private val slots: IntRange,
     private val trailingGap: Dp,
+    private val motion: PlacementMotion,
+    private val isAnimated: Boolean,
 ) : MeasurePolicy {
 
     override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
@@ -92,6 +109,14 @@ private class ScaleChipRowsMeasurePolicy(
         val rows = slotRows(starts.size, slots.first, slots.last, isLastSlot = false)
         val title = if (hasTitle && !rows.isEmpty()) measurables.first().measure(Constraints(maxWidth = width)) else null
         val height = rowsHeight(starts, rows, chips.map { it.height }, title?.height)
+        // The lookahead pass of the song's sections is where they are headed, so the chips are placed there at once; and
+        // only the chips this chunk shows are kept, so that one another chunk held comes in placed rather than travelling.
+        val animatedMotion = motion.takeIf { isAnimated && !isLookingAhead }
+        if (!isAnimated) {
+            motion.clear()
+        } else if (animatedMotion != null && !rows.isEmpty()) {
+            animatedMotion.retain((starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: chips.size)).toSet())
+        }
         return layout(width = width, height = height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
             var y = 0
             if (title != null) {
@@ -102,7 +127,11 @@ private class ScaleChipRowsMeasurePolicy(
                 var x = 0
                 val cells = starts[row] until (starts.getOrNull(row + 1) ?: chips.size)
                 for (cell in cells) {
-                    chips[cell].placeRelative(x, y)
+                    if (animatedMotion == null) {
+                        chips[cell].placeRelative(x, y)
+                    } else with(animatedMotion) {
+                        place(placeable = chips[cell], key = cell, target = IntOffset(x, y))
+                    }
                     x += chips[cell].width + gap
                 }
                 y += cells.maxOf { chips[it].height } + gap

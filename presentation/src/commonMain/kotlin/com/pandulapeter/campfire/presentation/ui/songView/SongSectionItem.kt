@@ -32,7 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 
-/** One chunk of a section of [SongLyrics], drawn by what kind of section it is. */
+/**
+ * One chunk of a section of [SongLyrics], drawn by what kind of section it is.
+ *
+ * @param animatesRows Whether what the first, Chords, and Scales sections set in rows that wrap (the playing controls,
+ * the diagrams, the chips) travels to where a new layout puts it rather than jumping there.
+ */
 @Composable
 internal fun SongSectionItem(
     modifier: Modifier,
@@ -43,7 +48,7 @@ internal fun SongSectionItem(
     songInfoEditing: SongInfoEditing?,
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
-    animatesControls: Boolean,
+    animatesRows: Boolean,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
     tuningVisibility: MutableTransitionState<Boolean>,
@@ -67,7 +72,7 @@ internal fun SongSectionItem(
         playingControls = playingControls,
         playingTools = playingTools,
         readsDefaults = section.readsDefaults,
-        animatesControls = animatesControls,
+        animatesControls = animatesRows,
         titleStyle = headerStyle,
         lyricsStyle = lyricsStyle,
         fontScale = fontScale,
@@ -92,6 +97,7 @@ internal fun SongSectionItem(
         chordDiagrams = chordDiagrams,
         onFoldToggled = onChordFoldToggled,
         isFadingIn = isChordsSectionFadingIn,
+        isAnimated = animatesRows,
         headerStyle = headerStyle,
         fontScale = fontScale,
     )
@@ -102,6 +108,7 @@ internal fun SongSectionItem(
         items = items,
         scaleSuggestions = scaleSuggestions,
         isFadingIn = isScalesSectionFadingIn,
+        isAnimated = animatesRows,
         headerStyle = headerStyle,
         fontScale = fontScale,
     )

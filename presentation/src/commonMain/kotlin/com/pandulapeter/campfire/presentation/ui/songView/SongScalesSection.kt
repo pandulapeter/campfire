@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
  *
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in every
  * chunk they come back in.
+ * @param isAnimated Whether a chip a new width sends to another line travels there (see [ScaleChipRows]).
  */
 @Composable
 internal fun SongScalesSection(
@@ -58,6 +59,7 @@ internal fun SongScalesSection(
     items: IntRange,
     scaleSuggestions: ScaleSuggestions?,
     isFadingIn: Boolean,
+    isAnimated: Boolean,
     headerStyle: TextStyle,
     fontScale: Float,
 ) = Column(
@@ -116,6 +118,7 @@ internal fun SongScalesSection(
                         else -> 16.dp
                     },
                     notation = scaleSuggestions.notation,
+                    isAnimated = isAnimated,
                     onScaleSelected = scaleSuggestions.onScaleClicked,
                 )
             }

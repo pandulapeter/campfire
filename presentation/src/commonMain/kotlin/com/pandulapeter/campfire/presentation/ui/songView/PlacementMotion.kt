@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.songView.firstSection
+package com.pandulapeter.campfire.presentation.ui.songView
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -20,16 +20,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Where each of a layout's children is drawn while it travels, by the child's key ([GroupedRows]' items, a
- * [PlayingControl]'s label and control). The animations are started from the placement, which is the one place the new
- * positions are known, and read there too, so a frame of the travel only places the items again rather than measuring
+ * Where each of a layout's children is drawn while it travels, by the child's key (the first section's grouped rows and
+ * playing controls, the Scales section's chips), or each thing a block draws ([SongChordsSection]'s diagrams). The
+ * animations are started where the new positions are known - the placement, or the drawing of what is drawn rather than
+ * composed - and read there too, so a frame of the travel only places or draws the items again rather than measuring
  * them.
  */
 internal class PlacementMotion(private val coroutineScope: CoroutineScope) {
 
     private val offsets = mutableMapOf<Any, Animatable<IntOffset, *>>()
 
-    fun Placeable.PlacementScope.place(placeable: Placeable, key: Any, target: IntOffset) {
+    fun Placeable.PlacementScope.place(placeable: Placeable, key: Any, target: IntOffset) = placeable.placeRelative(positionOf(key, target))
+
+    /** Where the item of [key] is now that it is headed for [target], which is state: reading it follows the travel. */
+    fun positionOf(key: Any, target: IntOffset): IntOffset {
         val offset = offsets.getOrPut(key) { Animatable(target, IntOffset.VectorConverter) }
         if (offset.targetValue != target) {
             coroutineScope.launch {
@@ -39,7 +43,7 @@ internal class PlacementMotion(private val coroutineScope: CoroutineScope) {
                 )
             }
         }
-        placeable.placeRelative(offset.value)
+        return offset.value
     }
 
     /** Forgets every item that is no longer among [keys], so that one coming back is placed rather than sent travelling. */
