@@ -58,6 +58,10 @@ Silent failures go to the injected `Logger`.
   90 s, with the call's own bounds raised past that; its `backoff` is waited before answering, and a `reset` cursor
   answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
   document, since a library folder deleted whole may come as one entry.
+- `ConnectivityMonitor` (per platform, in `network/`): offline-to-online changes only, never the starting state, and
+  nothing that needs a permission prompt. Android: the default network becoming validated (`ACCESS_NETWORK_STATE`,
+  install-time); iOS: the Network framework's path monitor; web: the `online` event; desktop: nothing, the JVM has no
+  such callback.
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.

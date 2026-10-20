@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
+import com.pandulapeter.campfire.data.sync.implementation.FakeConnectivityMonitor
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
@@ -148,6 +149,21 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `the feed is asked again as soon as the device is back online`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.provider.awaitAnswers.add { throw SyncNetworkException("Offline") }
+        world.synchronizeAndWatch()
+        world.provider.writeElsewhere(song(2), TWO)
+        advanceTimeBy(5.seconds)
+
+        world.connectivity.reconnect()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(2, world.runs.count)
+        assertContentEquals(TWO, world.local.files[song(2)])
+    }
+
+    @Test
     fun `a cursor the service no longer takes brings a run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
         world.synchronizeAndWatch()
@@ -214,6 +230,7 @@ class SyncRemoteWatcherTest {
         val runs: RunCounter,
         val provider: FakeSyncProvider,
         val local: FakeLibraryFileLocalSource,
+        val connectivity: FakeConnectivityMonitor,
     ) {
 
         /** A first run, then the watching the app does while in front, for as long as the test lasts. */
@@ -226,6 +243,7 @@ class SyncRemoteWatcherTest {
 
     private fun TestScope.world(localFiles: Map<SyncKey, ByteArray>): World {
         val environment = testEnvironment()
+        val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
         val provider = FakeSyncProvider(account = TEST_ACCOUNT)
         val syncProviders = SyncProviders(listOf(provider))
@@ -255,16 +273,18 @@ class SyncRemoteWatcherTest {
             stateHolder = stateHolder,
             libraryChanges = LibraryChanges(),
             syncedPreferencesSync = syncedPreferencesSync,
+            connectivityMonitor = connectivityMonitor,
             environment = environment,
         )
         runCurrent()
         return World(
             scope = this,
             scheduler = scheduler,
-            watcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, environment = environment),
+            watcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, connectivityMonitor = connectivityMonitor, environment = environment),
             runs = runs,
             provider = provider,
             local = libraryFileLocalSource,
+            connectivity = connectivityMonitor,
         )
     }
 

@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
+import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthori
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -322,6 +324,18 @@ internal fun SyncIndexDocument.encoded() = syncIndexJson.encodeToString(this)
 internal fun decodeSyncIndex(text: String) = syncIndexJson.decodeFromString<SyncIndexDocument>(text)
 
 /** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
+/** A device whose connection comes back when a test says so, with [reconnect]. */
+internal class FakeConnectivityMonitor : ConnectivityMonitor {
+
+    private val events = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    override val reconnections: Flow<Unit> = events
+
+    fun reconnect() {
+        events.tryEmit(Unit)
+    }
+}
+
 internal class RunCounter {
     var count = 0
         private set

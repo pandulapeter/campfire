@@ -54,6 +54,7 @@ internal fun TestScope.syncRepository(
     setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
     userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
     logger: Logger = Logger.Standard,
+    connectivityMonitor: FakeConnectivityMonitor = FakeConnectivityMonitor(),
 ): SyncRepositoryImpl {
     val environment = testEnvironment(logger = logger)
     val syncProviders = SyncProviders(listOf(provider))
@@ -80,6 +81,7 @@ internal fun TestScope.syncRepository(
         stateHolder = stateHolder,
         libraryChanges = LibraryChanges(),
         syncedPreferencesSync = syncedPreferencesSync,
+        connectivityMonitor = connectivityMonitor,
         environment = environment,
     )
     return SyncRepositoryImpl(
@@ -97,7 +99,7 @@ internal fun TestScope.syncRepository(
             environment = environment,
         ),
         scheduler = scheduler,
-        remoteWatcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, environment = environment),
+        remoteWatcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, connectivityMonitor = connectivityMonitor, environment = environment),
     )
 }
 

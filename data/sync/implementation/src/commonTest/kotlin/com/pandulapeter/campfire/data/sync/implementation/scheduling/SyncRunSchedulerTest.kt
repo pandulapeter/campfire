@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
+import com.pandulapeter.campfire.data.sync.implementation.FakeConnectivityMonitor
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
@@ -270,6 +271,20 @@ class SyncRunSchedulerTest {
         assertEquals(1, world.runs.count)
     }
 
+    @Test
+    fun `a run the network failed is tried again as soon as the device is back online`() = runTest {
+        val world = world()
+        world.provider.failListingOnce()
+        world.scheduler.schedule()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        world.connectivity.reconnect()
+        advanceTimeBy(MARGIN)
+
+        assertEquals(2, world.runs.count)
+        assertIs<SyncOutcome.Success>(world.lastOutcome)
+    }
+
     private fun FakeSyncProvider.failListingOnce() {
         onList = {
             onList = {}
@@ -293,6 +308,7 @@ class SyncRunSchedulerTest {
         val stateHolder: SyncStateHolder,
         val runs: RunCounter,
         val provider: FakeSyncProvider,
+        val connectivity: FakeConnectivityMonitor,
     ) {
         val lastOutcome get() = (stateHolder.value as? SyncState.Connected)?.lastOutcome
     }
@@ -303,6 +319,7 @@ class SyncRunSchedulerTest {
         localFiles: Map<SyncKey, ByteArray> = emptyMap(),
     ): World {
         val environment = testEnvironment()
+        val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
         val provider = FakeSyncProvider(files = files, onDownload = onDownload, account = TEST_ACCOUNT)
         val syncProviders = SyncProviders(listOf(provider))
@@ -332,10 +349,11 @@ class SyncRunSchedulerTest {
             stateHolder = stateHolder,
             libraryChanges = LibraryChanges(),
             syncedPreferencesSync = syncedPreferencesSync,
+            connectivityMonitor = connectivityMonitor,
             environment = environment,
         )
         runCurrent()
-        return World(scheduler = scheduler, stateHolder = stateHolder, runs = runs, provider = provider)
+        return World(scheduler = scheduler, stateHolder = stateHolder, runs = runs, provider = provider, connectivity = connectivityMonitor)
     }
 
     private companion object {

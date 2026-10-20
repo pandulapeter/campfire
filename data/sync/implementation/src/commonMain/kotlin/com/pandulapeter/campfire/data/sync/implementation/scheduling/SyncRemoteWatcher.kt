@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.annotation.Single
 import kotlin.time.Duration
@@ -30,6 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class SyncRemoteWatcher(
     private val runner: SyncRunner,
     private val scheduler: SyncRunScheduler,
+    private val connectivityMonitor: ConnectivityMonitor,
     private val environment: SyncEnvironment,
 ) {
 
@@ -58,9 +59,9 @@ internal class SyncRemoteWatcher(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: SyncNetworkException) {
-                // Offline, or Dropbox busy: the same cursor is asked about again once the wait is over, and nothing
-                // that changed meanwhile is lost by waiting.
-                delay(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])
+                // Offline, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
+                // device is back online, and nothing that changed meanwhile is lost by waiting.
+                connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])
                 failures++
             } catch (exception: Exception) {
                 // A cursor the service no longer takes, or an answer nothing here expected: only a run's fresh listing

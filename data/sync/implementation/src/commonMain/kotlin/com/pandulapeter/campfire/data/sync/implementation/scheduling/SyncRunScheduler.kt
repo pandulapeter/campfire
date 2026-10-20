@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -43,7 +44,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * When a run starts: at once when it is asked for, or - for the automatic one every change asks for - once the library
  * has stayed unchanged for [AUTOMATIC_RUN_DELAY], and never while another is going. A run the network failed is tried
- * again after [NETWORK_RETRY_DELAYS] for as long as the app is alive.
+ * again after [NETWORK_RETRY_DELAYS], or as soon as the device is back online, for as long as the app is alive.
  */
 @Single
 internal class SyncRunScheduler(
@@ -51,6 +52,7 @@ internal class SyncRunScheduler(
     private val stateHolder: SyncStateHolder,
     libraryChanges: LibraryChanges,
     syncedPreferencesSync: SyncedPreferencesSync,
+    private val connectivityMonitor: ConnectivityMonitor,
     private val environment: SyncEnvironment,
 ) {
 
@@ -88,7 +90,8 @@ internal class SyncRunScheduler(
         scope.launch {
             scheduledRun.collectLatest { scheduled ->
                 if (scheduled == null) return@collectLatest
-                delay(-scheduled.dueAt.elapsedNow())
+                // A retry starts early once the device is back online: its wait is sized for an outage of unknown length.
+                if (scheduled.isRetry) connectivityMonitor.awaitReconnection(-scheduled.dueAt.elapsedNow()) else delay(-scheduled.dueAt.elapsedNow())
                 syncJob.load()?.join()
                 if (scheduledRun.compareAndSet(scheduled, null)) startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
             }
