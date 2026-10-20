@@ -323,7 +323,6 @@ internal fun SyncIndexDocument.encoded() = syncIndexJson.encodeToString(this)
 
 internal fun decodeSyncIndex(text: String) = syncIndexJson.decodeFromString<SyncIndexDocument>(text)
 
-/** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
 /** A device whose connection comes back when a test says so, with [reconnect]. */
 internal class FakeConnectivityMonitor : ConnectivityMonitor {
 
@@ -336,6 +335,7 @@ internal class FakeConnectivityMonitor : ConnectivityMonitor {
     }
 }
 
+/** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
 internal class RunCounter {
     var count = 0
         private set
