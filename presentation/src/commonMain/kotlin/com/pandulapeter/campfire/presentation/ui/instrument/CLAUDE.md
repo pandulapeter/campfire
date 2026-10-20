@@ -18,8 +18,9 @@ One instrument for the whole app.
 - This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
 - Picked by one `InstrumentPill` of two halves split by a divider (the tuning half only for an instrument with more than
-  one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning name is cut short first), and
-  everywhere exactly `songControlHeight` of its text style, so on a song it matches the transposition stepper. It
+  one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning's name is cut short first, down
+  to 40% of the pill, then the instrument's: `tuningHalfMaxWidth`), and everywhere exactly `songControlHeight` of its
+  text style, so on a song it matches the transposition stepper. It
   stands on the song details first section (read only included, since it changes a device preference), the Tuner, the
   Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every note for, so
   the Tuner leaves its Strings / Chromatic toggle out for it.

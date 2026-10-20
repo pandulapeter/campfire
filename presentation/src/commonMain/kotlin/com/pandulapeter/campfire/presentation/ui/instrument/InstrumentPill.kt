@@ -34,11 +34,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -58,8 +63,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * for an instrument with more than one, so that the tuning is a choice in sight rather than one at the end of a long
  * list. Two choices rather than one, since diagrams for the wrong instrument or tuning look just as right as the ones for
  * the right one. It is exactly as tall as a song's playing controls set in [style] are (`songControlHeight`), so that on a
- * song's page it lines up with the transposition stepper under it, and keeps to one line: the tuning, the longer of the
- * two names, is cut short where the line is too narrow for both. The tuning half fades in and out with the instrument's
+ * song's page it lines up with the transposition stepper under it, and keeps to one line: the tuning's name, the longer
+ * of the two, is cut short first where the line is too narrow for both, down to a share of the pill, and then the
+ * instrument's name (see [InstrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
  * tunings and the pill resizes with it.
  *
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
@@ -84,7 +90,7 @@ internal fun InstrumentPill(
 ) {
     // Only the tuning half coming and going and a name changing animate the pill's width, each by itself. Animating every
     // change of the row's size instead would have the pill trail behind its text while a pinch scales a song's page.
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Layout(measurePolicy = InstrumentPillMeasurePolicy, content = {
         val shownTuning = tuning?.takeIf { instrument.tunings.size > 1 }
         // Kept while it fades out, so that it leaves as it was rather than as nothing. Not a state: nothing is redrawn
         // because of it.
@@ -107,7 +113,6 @@ internal fun InstrumentPill(
             onClick = onInstrumentClicked,
         )
         AnimatedVisibility(
-            modifier = Modifier.weight(1f, fill = false),
             visibleState = tuningState,
             enter = fadeIn() + expandHorizontally(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
             exit = fadeOut() + shrinkHorizontally(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
@@ -138,6 +143,37 @@ internal fun InstrumentPill(
                 )
             }
         }
+    })
+}
+
+/**
+ * Lays out the halves of an [InstrumentPill] side by side, giving the tuning half its room first: whatever the instrument's
+ * name leaves, but never less than its share of the pill (`tuningHalfMaxWidth`), so that the tuning's name is cut short
+ * before the instrument's and is never left no room at all. The tuning half is measured at its animated width, so while
+ * it expands the instrument gives up only what it actually takes. Both halves are measured from no minimum width, since
+ * the `Surface` hands its own minimums on to its content, and at their natural widths where the width is unbounded,
+ * which is also how a parent's intrinsic queries are answered (the sum of the halves', as a `Row` gives).
+ */
+private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constraints ->
+    val halfConstraints = constraints.copy(minWidth = 0)
+    val instrument = measurables[0]
+    // A tuning half that has fully left emits nothing.
+    val tuning = measurables.getOrNull(1)
+    val tuningPlaceable: Placeable?
+    val instrumentPlaceable: Placeable
+    if (tuning == null || !constraints.hasBoundedWidth) {
+        tuningPlaceable = tuning?.measure(halfConstraints)
+        instrumentPlaceable = instrument.measure(halfConstraints)
+    } else {
+        val instrumentWidth = instrument.maxIntrinsicWidth(constraints.maxHeight)
+        tuningPlaceable = tuning.measure(halfConstraints.copy(maxWidth = tuningHalfMaxWidth(constraints.maxWidth, instrumentWidth)))
+        instrumentPlaceable = instrument.measure(halfConstraints.copy(maxWidth = constraints.maxWidth - tuningPlaceable.width))
+    }
+    val width = constraints.constrainWidth(instrumentPlaceable.width + (tuningPlaceable?.width ?: 0))
+    val height = constraints.constrainHeight(maxOf(instrumentPlaceable.height, tuningPlaceable?.height ?: 0))
+    layout(width, height) {
+        instrumentPlaceable.placeRelative(0, (height - instrumentPlaceable.height) / 2)
+        tuningPlaceable?.placeRelative(instrumentPlaceable.width, (height - tuningPlaceable.height) / 2)
     }
 }
 
