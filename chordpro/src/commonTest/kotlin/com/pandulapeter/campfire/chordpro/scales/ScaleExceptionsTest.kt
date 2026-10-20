@@ -75,6 +75,12 @@ class ScaleExceptionsTest {
     }
 
     @Test
+    fun `a borrowed chord of a major song is its parallel natural minor's, never a harmonic minor on the key`() {
+        assertEquals(listOf(Triple("Ab", "C", "natural_minor")), group("C Am F Ab G C", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("Fm7", "F", "dorian")), group("Cmaj7 Am7 Fm7 Cmaj7", key = "C").exceptions.map { it.first })
+    }
+
+    @Test
     fun `a borrowed chord is played over the home's own mode where that is closest`() {
         assertEquals(listOf("C" to "minor_pentatonic"), groups("C Ab Bb C").map { it.home })
         assertEquals(listOf(Triple("G", "A", "mixolydian")), group("A D E E7 A D E E7 A D E E7 G", key = "A").exceptions.map { it.first })

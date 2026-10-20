@@ -54,8 +54,11 @@ internal object ScaleExceptions {
         val onChordRoot = PlayableScales.over(chord)
             .filter { it.intervals.size == HOME_SCALE_SIZE && holdsChord(it, chord.root, chord) }
             .sortedWith(compareBy({ it !in Scales.common }, { distance(it, chord.root) }))
+        // A borrowed chord of a major song comes from its parallel natural minor and the major modes, never from a
+        // harmonic or melodic minor on the key's root, which a player would not call in a major song even where it is a
+        // note closer: the A♭ of a song in C is C natural minor's, not C harmonic minor's.
         val onHomeRoot = Scales.common
-            .filter { it != home && it.intervals.size == HOME_SCALE_SIZE && holdsChord(it, homeRoot.root, chord) }
+            .filter { it != home && it.id !in raisedMinorIds && it.intervals.size == HOME_SCALE_SIZE && holdsChord(it, homeRoot.root, chord) }
             .sortedBy { distance(it, homeRoot.root) }
         return listOfNotNull(target, Answer(chordRootName, chord.root, onChordRoot), homeRoot.copy(scales = onHomeRoot))
             .filter { it.scales.isNotEmpty() }
@@ -77,6 +80,7 @@ internal object ScaleExceptions {
     private const val FOURTH = 5
     private const val FOURTH_LETTER_STEP = 3
     private const val NATURAL_MINOR_ID = "natural_minor"
+    private val raisedMinorIds = setOf("harmonic_minor", "melodic_minor")
     private val harmonicMinor = Scales.fromId("harmonic_minor")!!
     private val minorScales = listOf("harmonic_minor", "dorian", "phrygian", "melodic_minor").map(Scales::fromId).requireNoNulls()
 }
