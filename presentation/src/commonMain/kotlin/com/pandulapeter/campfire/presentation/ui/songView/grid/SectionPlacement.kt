@@ -182,8 +182,9 @@ internal fun placeSections(
 }
 
 /**
- * Where every cell of [grid] starts, [slotWidths] wide: the cells of a row spread evenly across the width, or every row in one block
- * where the grid shares a keyline.
+ * Where every cell of [grid] starts, [slotWidths] wide: the cells of a row spread evenly across the width, a row of
+ * fewer columns than the fullest (the last page, as a rule) packed from the start edge of the fullest one, or every row
+ * in one block where the grid shares a keyline.
  */
 internal fun cellStartsOf(
     grid: SectionGrid,
@@ -238,7 +239,26 @@ internal fun cellStartsOf(
             }
         }
     } else {
-        Array(slotWidths.size) { row -> startsOf(slotWidths[row]) }
+        val starts = Array(slotWidths.size) { row -> startsOf(slotWidths[row]) }
+        fun shownCount(row: Int) = slotWidths[row].count { it > 0 }
+        // A row of fewer columns starts where the columns of the fullest one do, rather than spread out on its own: a
+        // last page of one column would otherwise sit in the middle of the screen, away from where every page before it
+        // started. A wide row is a staff of tablature centered whole, and is left so.
+        val fullRow = slotWidths.indices.filter { !grid.wideRows[it] }.maxByOrNull(::shownCount) ?: return starts
+        val fullColumns = slotWidths[fullRow].indices.filter { slotWidths[fullRow][it] > 0 }
+        val fullStart = fullColumns.minOfOrNull { starts[fullRow][it] } ?: return starts
+        val fullEnd = fullColumns.maxOf { starts[fullRow][it] + slotWidths[fullRow][it] }
+        val regionStart = if (isInset && layoutDirection == LayoutDirection.Rtl) endInsetPx else 0
+        val regionEnd = if (isInset && layoutDirection == LayoutDirection.Ltr) layoutWidth else width
+        for (row in slotWidths.indices) {
+            if (grid.wideRows[row] || shownCount(row) >= shownCount(fullRow)) continue
+            val widths = slotWidths[row]
+            val blockWidth = widths.sum() + columnGapPx * (shownCount(row) - 1).coerceAtLeast(0)
+            val blockStart = if (layoutDirection == LayoutDirection.Ltr) fullStart else fullEnd - blockWidth
+            var x = blockStart.coerceAtMost(regionEnd - blockWidth).coerceAtLeast(regionStart)
+            starts[row] = IntArray(widths.size) { column -> x.also { if (widths[column] > 0) x += widths[column] + columnGapPx } }
+        }
+        starts
     }
 }
 

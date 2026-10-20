@@ -19,7 +19,7 @@ with the step keys, fewest pages first.
 - Column width 384–560dp scaled by `fontScale` (`NARROW_COLUMN_WIDTH`, 288dp, below). Columns narrow to their widest
   content, but a row is centered by the widths its columns were given (`SectionWidths.slotWidths`), the leftover shared
   evenly around them, clear of the step buttons where needed: where lines wrap jumps as the text grows, and would move
-  the columns sideways with it.
+  the columns sideways with it. A row of fewer columns (the last page) starts at the fullest row's start edge.
 - **Several counts fit one row → the most even fill** (`balancedAmong`); more columns only by a margin and wrapping no
   more lines.
 - **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): section gaps widened first (by at

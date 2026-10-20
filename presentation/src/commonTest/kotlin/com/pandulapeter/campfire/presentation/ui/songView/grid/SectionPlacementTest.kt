@@ -88,6 +88,16 @@ class SectionPlacementTest {
     }
 
     @Test
+    fun `a row of fewer columns starts where the fullest row does, mirrored in a right to left layout`() {
+        val grid = SectionGrid(rows = intArrayOf(0, 0, 0, 1), columns = intArrayOf(0, 1, 2, 0), columnCounts = intArrayOf(3, 1))
+        val slotWidths = arrayOf(intArrayOf(300, 300, 300), intArrayOf(300))
+        val ltr = cellStarts(grid, slotWidths)
+        assertEquals(ltr[0][0], ltr[1][0])
+        val rtl = cellStarts(grid, slotWidths, layoutDirection = LayoutDirection.Rtl)
+        assertEquals(rtl[0][2] + 300, rtl[1][0] + 300)
+    }
+
+    @Test
     fun `columns narrowed by what they show stay where the width they were given puts them`() {
         val units = songUnitsOf(listOf(listOf(listOf(100)), listOf(listOf(100))))
         val slotWidths = arrayOf(intArrayOf(400, 400))
