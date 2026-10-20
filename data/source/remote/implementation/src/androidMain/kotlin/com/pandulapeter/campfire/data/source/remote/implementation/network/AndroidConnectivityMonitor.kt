@@ -35,18 +35,21 @@ internal class AndroidConnectivityMonitor(
             awaitClose()
             return@callbackFlow
         }
-        var isOnline = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.isValidated() == true
+        var defaultNetwork = connectivityManager.activeNetwork
+        var isOnline = connectivityManager.getNetworkCapabilities(defaultNetwork)?.isValidated() == true
         val callback = object : ConnectivityManager.NetworkCallback() {
 
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                 // Android repeats a network's capabilities as other details of it change, so only the change is told.
                 val wasOnline = isOnline
+                defaultNetwork = network
                 isOnline = networkCapabilities.isValidated()
                 if (isOnline && !wasOnline) trySend(Unit)
             }
 
             override fun onLost(network: Network) {
-                isOnline = false
+                // The network given up in a switch can be told lost after its successor's capabilities arrived.
+                if (network == defaultNetwork) isOnline = false
             }
         }
         try {
