@@ -101,6 +101,16 @@ class PlayableScalesTest {
     }
 
     @Test
+    fun `a power chord on the flat fifth is the riff's blues note, a triad there is not`() {
+        fun isRiff(vararg names: String) = PlayableScales.isRockRiff(7, names.map { ChordProChords.parse(it)!! })
+        assertTrue(isRiff("G5", "Bb5", "C5", "G5", "Bb5", "Db5", "C5"))
+        assertFalse(isRiff("G5", "Bb5", "C5", "G5", "Bb5", "Db", "C5"))
+        val group = SongScaleGroups.of(ChordProParser.parse("{start_of_verse}\n[G5]x [Bb5]x [C5]x [G5]x [Bb5]x [Db5]x [C5]x\n{end_of_verse}")).single()
+        assertEquals("G" to listOf("minor_pentatonic", "blues"), group.rootName to group.scales.take(2).map { it.id })
+        assertTrue(group.exceptions.isEmpty())
+    }
+
+    @Test
     fun `a dominant seventh chord's sheet offers the blues after Mixolydian`() {
         val scales = PlayableScales.over(ChordProChords.parse("A7")!!).map { it.id }
         assertTrue(scales.indexOf("mixolydian") < scales.indexOf("blues"))

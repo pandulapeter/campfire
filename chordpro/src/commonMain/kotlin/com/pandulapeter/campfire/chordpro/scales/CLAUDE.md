@@ -35,8 +35,8 @@
   home's own minor scales, else the closest of a secondary dominant's target harmonic minor, the chord's root, and the
   home's root, ties in that order). Below two thirds a part stands alone but never joins another; a home of two of
   three chords is a guess dropped beside any other group. A **rock riff** is power, suspended, or major chords on I,
-  ♭III, IV, V, ♭VI, ♭VII with a ♭III or ♭VI one chord in eight (♭VII alone is Mixolydian's), or any flat step with
-  no third anywhere; it leads with its minor pentatonic and blues, has no exceptions, and riffs on one root join
+  ♭III, IV, V, ♭VI, ♭VII (a thirdless one on ♭V too, the blues note) with a ♭III or ♭VI one chord in eight (♭VII alone
+  is Mixolydian's), or any flat step with no third anywhere; it leads with its minor pentatonic and blues, has no exceptions, and riffs on one root join
   whatever home their chords lean to.
 - **`SongScaleSuggestions`** is what a song shows, groups offering one first scale on one root joined (never two rows
   saying the same): the home (`ScaleGroup.isHome`, the group playing half the chords), then at most three moments,

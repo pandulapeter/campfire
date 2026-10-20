@@ -99,7 +99,8 @@ public object PlayableScales {
     /**
      * Whether [chords] are a rock riff on [root]: each a chord with no third (a power or a suspended chord), a major
      * triad, or a dominant seventh on its first,
-     * flat third, fourth, fifth, flat sixth, or flat seventh step (the minor pentatonic's roots and rock's ♭VI), with a
+     * flat third, fourth, fifth, flat sixth, or flat seventh step (the minor pentatonic's roots and rock's ♭VI), or a
+     * chord with no third on the flat fifth, the blues scale's own note (the D♭5 of Smoke on the Water), with a
      * ♭III or ♭VI, the minor key's roots Mixolydian lacks, played as at least one chord in [MIN_MINOR_SHARE], or any flat
      * step where no chord has a third. A power chord has no third to clash with the minor pentatonic's, so A5 C5 D5 is
      * the plainest riff of all, a suspended one passing in it none either. A ♭VII is Mixolydian's own: I IV ♭VII is a
@@ -107,7 +108,10 @@ public object PlayableScales {
      */
     internal fun isRockRiff(root: Int, chords: List<Chord>): Boolean {
         if (chords.isEmpty()) return false
-        val isOnRiffStep = chords.all { chord -> (chord.root - root).mod(12) in riffSteps && (chord.isMajorOrDominant || chord.hasNoThird) }
+        val isOnRiffStep = chords.all { chord ->
+            val step = (chord.root - root).mod(12)
+            step in riffSteps && (chord.isMajorOrDominant || chord.hasNoThird) || step == FLAT_FIFTH && chord.hasNoThird
+        }
         val minorRoots = chords.count { (it.root - root).mod(12) in minorRiffSteps }
         // With no third anywhere, nothing says major, so any flat step is the riff's.
         val isThirdless = chords.all { it.hasNoThird } && chords.any { (it.root - root).mod(12) in flatRiffSteps }
@@ -120,6 +124,7 @@ public object PlayableScales {
     private const val HOME_SCALE_SIZE = 7
     private const val MIN_MINOR_SHARE = 8
     private const val MAJOR_THIRD = 4
+    private const val FLAT_FIFTH = 6
     private const val MINOR_SEVENTH = 10
     private const val MAJOR_PENTATONIC_ID = "major_pentatonic"
     private const val MINOR_PENTATONIC_ID = "minor_pentatonic"
