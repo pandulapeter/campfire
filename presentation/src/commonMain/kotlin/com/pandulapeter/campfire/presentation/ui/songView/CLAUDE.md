@@ -32,15 +32,19 @@ builds what it draws, `grid/` places it.
   Scale suggestions are on (`ScaleSuggestions`, null otherwise); read only mode keeps it, since a scale sheet writes
   nothing; none for a songbook (over `MAX_CUT_SECTION_COUNT` sections). One fold for every song
   (`UserPreferences.isScaleSectionFolded`).
-- Cut between its rows of chips like the Chords section between its rows of diagrams: each row of chips (a group's, then
-  one per chord it leaves out) has one slot per chip (`RenderSection.Scales.rowStarts`), and every chunk composes its group's chips but places only its own rows
-  (`ScaleChipRows`), since which row a chip lands in depends on the width being tried.
-- Its groups are the catalogue's (see `chordpro/scales`), labelled by `songScaleGroupsOf` (tested): one group names
-  nothing; otherwise each group lists its sections' page headings, a kind it holds whole said once ("Verse"), split
-  kinds by number ("Verse 3"), headless parts as the rest of the song. A kind is said once only where the group holds
-  every chorded section of it; a heading another group (or none) also has is numbered by occurrence ("Verse (3)"),
-  several headless groups are named by their first words, and a named group with headless parts says so. At most three chips a group, and one chord it leaves out, with one chip (a common scale where one holds the chord),
-  titled "Over E7" in every song; the Scales tab has the rest.
+- Cut only between its rows of chips (a group's, then one per chord of it worth a scale), never between the lines one
+  row wraps into, so a title always heads all of its chips. Each row has one slot per chip
+  (`RenderSection.Scales.rowStarts`), and a chunk places only its own rows (`ScaleChipRows`), since which line a chip
+  lands on depends on the width being tried.
+- Its groups are `SongScaleSuggestions`' (see `chordpro/scales`): the home, then at most three moments between the
+  other keys, the sections on a centre of their own, and the chords worth a scale of their own, labelled by
+  `songScaleGroupsOf` (tested). The home names nothing, most of the song being played over it, and a moment names its
+  sections. A song with no home names each group by its sections' page headings: a kind it holds whole said once
+  ("Verse"), split kinds by number ("Verse 3"), headless parts as the rest of the song. A kind is said once only where
+  the group holds every chorded section of it; a heading another group (or none) also has is numbered by occurrence
+  ("Verse (3)"), several headless groups are named by their first words, and a named group with headless parts says
+  so. At most three chips a group, and one chip a chord (a common scale where one holds the chord), titled "Over E7"
+  ("Over F♯7 and F♯" where one scale serves several) in every song; the Scales tab and the chord's sheet have the rest.
 - **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
   sheet.
 

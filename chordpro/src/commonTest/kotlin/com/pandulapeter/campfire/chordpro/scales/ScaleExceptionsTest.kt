@@ -31,12 +31,16 @@ class ScaleExceptionsTest {
     private val ScaleException.first get() = Triple(chordName, rootName, scales.first().id)
 
     @Test
-    fun `a secondary dominant is an exception to the major key`() {
+    fun `a secondary dominant of a minor chord is played as the harmonic minor it leads into`() {
         val group = group("C A7 Dm G7")
         assertEquals("C" to "major", group.home)
-        assertEquals(listOf(Triple("A7", "A", "mixolydian")), group.exceptions.map { it.first })
-        assertTrue("mixolydian_flat_6" in group.exceptions.single().scales.map { it.id })
+        assertEquals(listOf(Triple("A7", "D", "harmonic_minor")), group.exceptions.map { it.first })
+        assertEquals(listOf(Triple("E7", "A", "harmonic_minor")), group("C E7 Am F G", key = "C").exceptions.map { it.first })
     }
+
+    @Test
+    fun `a secondary dominant of a major chord is Mixolydian on its own root`() =
+        assertEquals(listOf(Triple("D7", "D", "mixolydian")), group("C F D7 G7 C").exceptions.map { it.first })
 
     @Test
     fun `a major fifth in a minor key is the harmonic minor of the key`() {
@@ -62,10 +66,9 @@ class ScaleExceptionsTest {
     }
 
     @Test
-    fun `a borrowed chord is an exception on its own root`() {
-        val group = group("C Ab Bb C")
-        assertEquals("C" to "mixolydian", group.home)
-        assertEquals(listOf("Ab" to "Ab"), group.exceptions.map { it.chordName to it.rootName })
+    fun `a borrowed chord is played over the home's own mode where that is closest`() {
+        assertEquals(listOf("C" to "minor_pentatonic"), groups("C Ab Bb C").map { it.home })
+        assertEquals(listOf(Triple("G", "A", "mixolydian")), group("A D E E7 A D E E7 A D E E7 G", key = "A").exceptions.map { it.first })
         assertEquals(listOf("Bb", "E7"), group("Am Dm Bb E7").exceptions.map { it.chordName })
     }
 
@@ -77,19 +80,25 @@ class ScaleExceptionsTest {
     }
 
     @Test
-    fun `a song most of whose chords no scale holds has no group`() = assertTrue(groups("G B C Cm").isEmpty())
+    fun `a song most of whose chords no scale holds has no group`() = assertTrue(groups("C F# Bb E Ab D").isEmpty())
+
+    @Test
+    fun `a home holding half the chords answers a part of borrowed chords on its own`() {
+        val creep = group("G B Cmaj7 Cm", key = "G")
+        assertEquals("G" to "major", creep.home)
+        assertEquals(listOf(Triple("B", "E", "harmonic_minor")), creep.exceptions.filter { it.chordName == "B" }.map { it.first })
+        assertTrue(creep.exceptions.any { it.chordName == "Cm" })
+    }
 
     @Test
     fun `a home leaving out more than two chords and a third of them has no group`() {
-        assertTrue(groups("C# F# E F# B E D C#m Bm").isEmpty())
+        assertTrue(groups("C Ebm F#m A Dbm Em").isEmpty())
         assertEquals("C" to "major", group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").home)
     }
 
     @Test
-    fun `a chord played less than once in eight is no exception`() {
-        assertTrue(group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").exceptions.isEmpty())
-        assertEquals(listOf("E7"), group("C E7 Am F G C E7 Am A7 Dm G7 C").exceptions.map { it.chordName })
-    }
+    fun `every chord a home leaves out is an exception, the most played first`() =
+        assertEquals(listOf("E7", "A7"), group("C E7 Am F G C E7 Am A7 Dm G7 C").exceptions.map { it.chordName })
 
     @Test
     fun `a dominant blues has no exceptions`() {
@@ -103,8 +112,7 @@ class ScaleExceptionsTest {
     fun `a diatonic song with one outside chord keeps its group`() {
         val group = group("C F G E")
         assertEquals("C" to "major", group.home)
-        assertEquals(listOf("E"), group.exceptions.map { it.chordName })
-        assertTrue("phrygian_dominant" in group.exceptions.single().scales.map { it.id })
+        assertEquals(listOf(Triple("E", "A", "harmonic_minor")), group.exceptions.map { it.first })
     }
 
     @Test

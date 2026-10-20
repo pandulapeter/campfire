@@ -13,15 +13,16 @@ import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.scales.Scale
 
 /**
- * A chord a [SongScaleGroup]'s scales leave out, with the scales to play over it: one row of chips of the Scales section,
- * titled by the chord.
+ * A chord of a [SongScaleGroup] worth a scale of its own, with the scales to play over it: one row of chips of the
+ * Scales section, titled by the chord.
  *
- * @property chordName The chord as the page shows it, in the reader's notation.
+ * @property chordNames The chords the scales are played over, as the page shows them in the reader's notation, in play
+ *   order: more than one where one scale serves several, a V and its V7.
  * @property rootName The note [scales] are played on, in the standard notation.
  */
 @Immutable
 internal data class SongScaleException(
-    val chordName: String,
+    val chordNames: List<String>,
     val rootName: String,
     val scales: List<Scale>,
 )

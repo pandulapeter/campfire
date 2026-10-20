@@ -144,15 +144,13 @@ banner 1, light and in reverse order in banner 2. The Play Store banner is the A
 preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2 and the iPhone's 1, and its search
 results image the iPad's 2 and the iPhone's 3, all dark.
 
-The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
-Alive 95% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner
-sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets; I'll Be
-There for You on the laptop at the six sizes the page's text size slider stops at, 100, 120, 140, 175, 210, and 230%,
-where page one ends after the Outro (the whole song), the Solo, Chorus 2, Verse 2, Verse 1, and Verse 1 again. The
-laptop's editor is scrolled past Thinking Out Loud's directives. A song longer than a page is cut wherever a column
-ends, so these were found by rendering every size and reading where page one ends: for the laptop `./gradlew
-:tools:screenshots:run --args="--out <folder> --only sweep"` renders I'll Be There for You from 100% to 250% in steps
-of 2.5% into `<folder>/Sweep/`; the tablet shots were found the same way by hand, from 80% to 130%. If a song, a device or the layout changes, try again the same way. **Never fold the
+The website's tablet songs are set at the text size where page one ends exactly where a section ends, never inside one:
+Still Alive 95% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the
+tuner sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets. A song
+longer than a page is cut wherever a column ends, so these were found by rendering every size from 80% to 130% and
+reading where page one ends; if a song, a device or the layout changes, try again the same way. The laptop's text size
+demo is I'll Be There for You at every 10% from 100% to 230%, the app's own steps, wherever page one ends. The laptop's
+editor is scrolled past Thinking Out Loud's directives. **Never fold the
 Chords section (or anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
 a 14" MacBook Pro (`Device.LAPTOP`).
 

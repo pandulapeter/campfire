@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.chordpro.scales.Scale
 
 /**
  * One row of chips of a [RenderSection.Scales]: the group at [groupIndex]'s own, or, where [exception] is set, the one
- * for a chord that group's scales leave out, drawn after it.
+ * for a chord of that group worth a scale of its own, drawn after it.
  */
 @Immutable
 internal data class ScaleChipBlock(

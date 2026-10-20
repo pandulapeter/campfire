@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 import unittest
 
-from check_sizes import FILE_LINES, FUNCTION_LINES, changed, judged, measure, top_level_functions
+from check_sizes import FILE_LINES, FUNCTION_LINES, changed, checked_tree, judged, measure, top_level_functions
 
 COMPOSABLE = """@Composable
 internal fun SongCard(
@@ -64,7 +64,7 @@ class SizesTest(unittest.TestCase):
             "presentation/src/wasmJsMain/CLAUDE.md": "w ",
             "presentation/src/commonMain/kotlin/ui/CLAUDE.md": "w ",
         }, modules=("chordpro",))
-        self.assertEqual([2500, 1500, 1500, 600], [sizes[path][1] for path in (
+        self.assertEqual([2500, 1500, 1500, 1000], [sizes[path][1] for path in (
             "CLAUDE.md",
             "chordpro/CLAUDE.md",
             "presentation/src/wasmJsMain/CLAUDE.md",
@@ -127,6 +127,26 @@ class ChangedTest(unittest.TestCase):
             finally:
                 os.chdir(working_directory)
             self.assertEqual({"New.kt": "Old.kt", "Edited.kt": "Edited.kt", "Added.kt": None}, paths)
+
+    def test_the_shell_hook_judges_files_git_does_not_track_yet(self):
+        with tempfile.TemporaryDirectory() as directory:
+            subprocess.run(["git", "-C", directory, "init", "-q"], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", directory, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base"],
+                check=True,
+                capture_output=True,
+            )
+            os.makedirs(os.path.join(directory, "module", "src", "commonMain"))
+            with open(os.path.join(directory, "module", "src", "commonMain", "Untracked.kt"), "w") as file:
+                file.write("x\n" * (FILE_LINES + 1))
+            working_directory = os.getcwd()
+            os.chdir(directory)
+            try:
+                failures = checked_tree()
+            finally:
+                os.chdir(working_directory)
+            self.assertEqual(1, len(failures))
+            self.assertIn("Untracked.kt", failures[0])
 
 
 if __name__ == "__main__":

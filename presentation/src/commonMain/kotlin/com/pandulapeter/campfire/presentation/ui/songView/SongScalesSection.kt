@@ -28,20 +28,25 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scales_and_
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_from
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_other
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_over
+import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_several
+import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_two
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleException
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
 /**
  * One chunk of the scales the song is played over: the slots [items] names (counted as [RenderSection.Scales.itemCount]),
  * a section of its own after the chords whose first chunk is headed by a pill that folds it as the Chords section's does,
- * one choice for every song. A group of rows of chips per group of sections one set of scales fits, each named by those
- * sections where the song needs more than one ("Intro, Verse, Chorus" over C's, "Solo" over D's), a group of sections the
- * page heads with nothing named as the rest of the song, or by its first words where several are, then a row per chord those scales leave out, titled by the chord
- * ("Over E7") in every song, and each line of chips a slot the section may be cut between, as the Chords section's rows
- * of diagrams are ([ScaleChipRows]). A chip opens its scale's sheet.
+ * one choice for every song. A group of rows of chips per group of sections one set of scales fits: the home first,
+ * titled by nothing, as most of the song is played over it, then each other key or centre named by its sections
+ * ("Bridge 3"); a song in several keys with no home names every group ("Intro, Verse, Chorus" over C's, "Solo" over
+ * D's), one of sections the page heads with nothing as the rest of the song, or by its first words where several are.
+ * After each group a row per chord of it worth a scale of its own, titled by the chord ("Over E7") in every song, , each
+ * line of chips a slot, as the Chords section's rows of diagrams are ([ScaleChipRows]), though the section is cut only
+ * between rows, so that a title always heads all of its chips. A chip opens its scale's sheet.
  *
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in every
  * chunk they come back in.
@@ -95,8 +100,8 @@ internal fun SongScalesSection(
                 if (slots.isEmpty()) return@forEachIndexed
                 val title = when {
                     slots.first != 0 -> null
-                    row.exception != null -> stringResource(Res.string.song_details_scales_over, row.exception.chordName)
-                    isGrouped -> section.groups[row.groupIndex].title(other)
+                    row.exception != null -> row.exception.title()
+                    isGrouped -> section.groups[row.groupIndex].takeIf { !it.isHome }?.title(other)
                     else -> null
                 }
                 ScaleChipRows(
@@ -116,6 +121,17 @@ internal fun SongScalesSection(
             }
         }
     }
+}
+
+/**
+ * What a row of chips over chords is titled: "Over E7", "Over F♯7 and F♯", or "Over A7, D7, and G7", the list said as
+ * the language says one.
+ */
+@Composable
+private fun SongScaleException.title(): String = when (chordNames.size) {
+    1 -> stringResource(Res.string.song_details_scales_over, chordNames.single())
+    2 -> stringResource(Res.string.song_details_scales_over_two, chordNames[0], chordNames[1])
+    else -> stringResource(Res.string.song_details_scales_over_several, chordNames.dropLast(1).joinToString(", "), chordNames.last())
 }
 
 /**

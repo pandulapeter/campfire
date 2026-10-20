@@ -22,6 +22,16 @@
             "statusMessage": "Checking file and function sizes"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && python3 .github/scripts/check_sizes.py --shell-hook",
+            "statusMessage": "Checking file and function sizes"
+          }
+        ]
       }
     ]
   }

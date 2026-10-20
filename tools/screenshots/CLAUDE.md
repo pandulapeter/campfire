@@ -15,8 +15,7 @@ The store screenshots, rendered rather than taken: a plain JVM module that draws
 Nothing depends on it; the `store-screenshots` skill drives it, and its test source set holds the app's UI tests.
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
-  `--args="--out <folder> --only <names>"`. `Website.kt` adds the website's shots, and its `sweep` set (rendered only
-  by name) one song at every text size, for choosing the sizes of the website's text size slider; `Banners.kt` the
+  `--args="--out <folder> --only <names>"`. `Website.kt` adds the website's shots; `Banners.kt` the
   multi-shot rows (README banners, Play feature graphic, website link preview).
 - **The library is a copy, never committed**: `library/` (gitignored) holds a data folder's `library/`, `covers/`, and
   `preferences/preferences.json`. Every render copies it into its own temporary `user.home` (the desktop file storage

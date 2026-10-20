@@ -140,7 +140,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             ),
         ),
         // I'm Gonna Be (500 Miles) on a guitar in standard tuning, every chord of it in E major so that its Scales section
-        // has a set for the whole song, with the scale sheet open over it on E major pentatonic.
+        // has a set for the whole song, with the scale sheet open over it on E major.
         Triple(
             "tablet-song-scales",
             Device.IPAD,
@@ -155,7 +155,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
                 drive = {
                     openSong(FIVE_HUNDRED_MILES)
-                    viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "major_pentatonic", rootName = "E"))
+                    viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = "major", rootName = "E"))
                 },
             ),
         ),
@@ -181,8 +181,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         Triple("laptop-setlists", Device.LAPTOP, setlists),
     ).plus(
         // One song at every text size the page's slider stops at, for the demo that the columns follow the text size.
-        // Named after the size as the app shows it; at each of them page one ends where a section ends, which is what
-        // websiteSweep is for finding.
+        // Named after the size as the app shows it.
         TEXT_SIZE_DEMO_FONT_SCALES.map { fontScale ->
             val name = "laptop-song-${(fontScale * 100).roundToInt()}"
             Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale))
@@ -191,18 +190,6 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
             Triple("$name-${uiMode.id}", device, shot.inTheme(uiMode))
         }
-    }
-}
-
-/**
- * I'll Be There for You on the laptop at every text size from 100% to 250% in steps of 2.5%, for choosing the sizes the
- * page's text size slider stops at: the ones at which page one ends where a section ends. Rendered only with
- * `--only sweep`, into `Sweep/`, in the dark theme alone, since the theme changes nothing of the layout.
- */
-internal val websiteSweep: List<Triple<String, Device, Shot>> by lazy {
-    (0..60).map { 1f + it * 0.025f }.map { fontScale ->
-        val name = "sweep-%05.1f".format(fontScale * 100)
-        Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale))
     }
 }
 
@@ -226,8 +213,8 @@ private val tuner = mapOf(
 private const val UPTOWN_GIRL = "billy_joel-uptown_girl.cho"
 private const val ILL_BE_THERE_FOR_YOU = "the_rembrandts-ill_be_there_for_you.cho"
 
-/** The text sizes the website's text size slider stops at, as the demo's columns are laid out: see `websiteShots`. */
-private val TEXT_SIZE_DEMO_FONT_SCALES = listOf(1f, 1.2f, 1.4f, 1.75f, 2.1f, 2.3f)
+/** The text sizes the website's text size slider stops at: from 100% to 230% in the app's own steps of 10%. */
+private val TEXT_SIZE_DEMO_FONT_SCALES = (10..23).map { it / 10f }
 private const val EDITOR_SCROLL = 0.3f
 private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.cho"
 

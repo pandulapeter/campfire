@@ -26,7 +26,7 @@ from PIL import Image
 
 SIBLINGS = ("CampfireWebsite", "campfire-website")
 # The laptop's window is 2000 by 1255 pixels, shown no wider than about 1100 device pixels on the page, so its shots are
-# saved at 1600, which keeps the text sharp on a 2x screen at half the bytes; the dozen of the text size demo load
+# saved at 1600, which keeps the text sharp on a 2x screen at half the bytes; the 14 of the text size demo load
 # together.
 SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (1600, 1004)}
 OG_SIZE = (1200, 630)

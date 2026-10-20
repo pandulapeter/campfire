@@ -151,9 +151,11 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `the key names the centre only where its scale holds the section`() {
-        assertEquals(listOf("C" to "major", "G" to "major"), rootAndFirst(song("C F G C", "G D Em C", key = "C")))
-        assertEquals(listOf("C" to "major", "F" to "major"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
+    fun `the key names the centre wherever its own scale holds half the section, the chords deciding otherwise`() {
+        val inKey = groups(song("C F G C", "G D Em C", key = "C")).single()
+        assertEquals("C" to listOf("D"), inKey.rootName to inKey.exceptions.map { it.chordName })
+        assertEquals(listOf("C" to "major", "C" to "mixolydian"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
+        assertEquals(listOf("C" to "major", "E" to "major"), rootAndFirst(song("C F G C", "E A B E", key = "C")))
         assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", key = "D")))
         assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm Em", key = "Am")))
     }
@@ -184,14 +186,14 @@ class SongScaleGroupsTest {
             [A]x [C]x [G]x
             {end_of_verse}
             {start_of_chorus: Chorus}
-            [D]x [F]x [G]x
+            [Eb]x [Bb]x [Ab]x [Eb]x
             {end_of_chorus}
             {start_of_bridge: Bridge}
             [A]x [C]x [G]x
             {end_of_bridge}
             """,
         )
-        assertEquals(listOf(listOf("Intro", "Bridge")), groups.map { it.labels })
+        assertEquals(listOf(listOf("Intro", "Bridge"), listOf("Chorus")), groups.map { it.labels })
     }
 
     @Test
@@ -201,7 +203,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a rock verse and a chorus in another key are two short answers`() {
+    fun `a rock verse joins a riff of other chords on its root, and a chorus in another key stands apart`() {
         val groups = groups(
             """
             {key: A}
@@ -226,7 +228,7 @@ class SongScaleGroupsTest {
             """,
         )
         assertEquals(listOf("A" to "minor_pentatonic", "C" to "mixolydian"), groups.map { it.rootName to it.scales.first().id })
-        assertTrue(groups.all { it.exceptions.isEmpty() })
+        assertTrue(groups.first().exceptions.isEmpty())
     }
 
     @Test

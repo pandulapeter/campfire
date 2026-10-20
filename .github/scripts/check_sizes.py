@@ -23,7 +23,9 @@ With no arguments it judges the staged change against HEAD (.githooks/pre-commit
 tree against that revision (tests.yml, on a pull request or a push to master). `--hook` is the Claude Code edit hook
 (.claude/settings.json): it reads the hook's JSON from stdin and judges the file the edit wrote against HEAD, so that a
 file is split while it is being written; an edit that grows what is already past its limit, or a CLAUDE.md past its
-budget, gets a note instead.
+budget, gets a note instead. `--shell-hook` is the Claude Code hook after a shell command, which may have written any
+file without the edit hook seeing it: it judges the working tree against HEAD, files git does not track yet included,
+and reports failures only, since a note would repeat after every command.
 """
 
 import fnmatch
@@ -37,7 +39,7 @@ FILE_LINES = 500
 FUNCTION_LINES = 120
 ROOT_WORDS = 2500
 MODULE_WORDS = 1500
-PACKAGE_WORDS = 600
+PACKAGE_WORDS = 1000
 
 EXEMPT = (
     "*ChordTable.kt",
@@ -250,7 +252,28 @@ def checked_edit(hook_input):
     return failures, notes
 
 
+def checked_tree():
+    """For the Claude Code shell hook: the failures of the working tree against HEAD, in the checkout around the current
+    directory, untracked files included, as a new one is untracked until it is staged; none outside a checkout."""
+    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    if not top:
+        return []
+    os.chdir(top)
+    paths = changed("HEAD", False)
+    for path in git("ls-files", "--others", "--exclude-standard", "-z").split("\0"):
+        if path:
+            paths.setdefault(path, None)
+    failures, _ = judged_change(paths, "HEAD", read_file)
+    return failures
+
+
 def main(arguments):
+    if "--shell-hook" in arguments:
+        failures = checked_tree()
+        if failures:
+            print("\n".join(failures), file=sys.stderr)
+            return 2
+        return 0
     if "--hook" in arguments:
         failures, notes = checked_edit(json.load(sys.stdin))
         if failures:

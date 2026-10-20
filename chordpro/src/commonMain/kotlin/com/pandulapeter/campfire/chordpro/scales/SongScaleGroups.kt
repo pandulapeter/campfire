@@ -9,15 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.scales
 
-import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
-import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
-import com.pandulapeter.campfire.chordpro.model.GridToken
-import com.pandulapeter.campfire.chordpro.model.SectionType
-import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
-import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 
 /**
  * The scales a song can be played over, part by part: a song that one scale fits whole is one group, and a song that
@@ -44,10 +37,13 @@ import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 public object SongScaleGroups {
 
     /** The groups of [song], which is in the standard notation, in the order their first sections are played. */
-    public fun of(song: ChordProSong): List<ScaleGroup> {
-        val parts = partsOf(song)
+    public fun of(song: ChordProSong): List<ScaleGroup> = playedGroupsOf(song).map { it.group }
+
+    /** [of] with the chords each group plays, for [SongScaleSuggestions] to weigh them by. */
+    internal fun playedGroupsOf(song: ChordProSong): List<PlayedGroup> {
+        val parts = SongParts.of(song)
         if (parts.isEmpty()) return emptyList()
-        fitOf(parts)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.groupOf(parts)) }
+        fitOf(parts)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.playedGroupOf(parts)) }
         val groups = mutableListOf<Group>()
         parts.forEach { part ->
             val own = fitOf(listOf(part)) ?: return@forEach
@@ -71,7 +67,7 @@ public object SongScaleGroups {
             }
         }
         val answers = groups.filter { !it.isGuess }
-        return (answers.ifEmpty { groups }).map { it.fit.groupOf(it.parts) }
+        return (answers.ifEmpty { groups }).map { it.fit.playedGroupOf(it.parts) }
     }
 
     /**
@@ -79,8 +75,8 @@ public object SongScaleGroups {
      * have one. What a viewer counts a song's parts over, so that a part no group holds is counted the same way.
      */
     public fun playsChords(block: ChordProBlock): Boolean = when (block) {
-        is ChordProBlock.Section -> playedIn(listOf(block)).isNotEmpty()
-        is ChordProBlock.ChorusRecall -> playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>()).isNotEmpty()
+        is ChordProBlock.Section -> SongParts.playedIn(listOf(block)).isNotEmpty()
+        is ChordProBlock.ChorusRecall -> SongParts.playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>()).isNotEmpty()
         else -> false
     }
 
@@ -89,13 +85,19 @@ public object SongScaleGroups {
      * of their own stay apart unless one key holds both, so that a major verse and a Mixolydian chorus are two answers,
      * though a home scale would hold most of both. A part only a home scale with exceptions fits joins one the same
      * home on the same root fits, so a verse with a secondary dominant joins its key's chorus and a bridge in another
-     * key does not. The eight-note answers are kept among themselves, since their passing tone would join anything.
+     * key does not, and a rock riff, led by the minor pentatonic rather than its home, joins only another. The eight-note
+     * answers are kept among themselves, since their passing tone would join anything.
      */
     private fun canJoin(group: Fit, part: Fit, combined: Fit) = when {
         group.level == Level.TONAL && part.level == Level.TONAL -> combined.level == Level.TONAL
         group.level == Level.PASSING || part.level == Level.PASSING -> group.level == Level.PASSING && part.level == Level.PASSING
+        // Half the chords answers a part on its own, a song of borrowed chords like G B C Cm, but a join of two parts needs
+        // two thirds, or the floor would let a rock verse and a pre-chorus in another key share a home holding neither.
+        combined.level == Level.THIN && (group.level != Level.THIN || part.level != Level.THIN) -> false
+        // Riffs on one root are played over its minor pentatonic whatever home their chords lean to.
+        listOf(group, part, combined).all { it.isRockRiff } -> listOf(group, part).all { it.root.pitchClass == combined.root.pitchClass }
         else -> combined.level != Level.PASSING && listOf(group, part).all {
-            it.root.pitchClass == combined.root.pitchClass && familyOf(it.home) == familyOf(combined.home)
+            it.root.pitchClass == combined.root.pitchClass && familyOf(it.home) == familyOf(combined.home) && it.isRockRiff == combined.isRockRiff
         }
     }
 
@@ -103,26 +105,80 @@ public object SongScaleGroups {
     private fun familyOf(scale: Scale) = if (scale.id in minorFamilyIds) NATURAL_MINOR_ID else scale.id
 
     /**
-     * The scales to play over [parts] and the root they are heard in, or null where nothing fits them, the first of:
+     * The scales to play over [parts] and the root they are heard in, or null where nothing fits them. The key in force
+     * at the first part (`{key}`, or the key a `{transpose}` names) is the author's word for the root, so every answer
+     * on it is tried first ([keyFitOf]); only where none holds the part, a modulated section, is the root guessed from
+     * the chords ([guessedFitOf]).
+     */
+    private fun fitOf(parts: List<SongPart>): Fit? {
+        val harmony = Harmony(parts)
+        return powerRiffFitOf(harmony) ?: harmony.key?.let { keyFitOf(harmony, it) } ?: guessedFitOf(harmony)
+    }
+
+    /**
+     * The rock riff fit of a part where half the chords have no third, on the key's root (else the best scored one),
+     * read before any scale holding it: chords without a third fit a dozen modes, none of them the style. A riff of
+     * triads keeps its third, a G F C vamp being Mixolydian, so it is read in turn ([looseFitOf]).
+     */
+    private fun powerRiffFitOf(harmony: Harmony): Fit? {
+        if (harmony.chords.count { it.hasNoThird } * 2 < harmony.chords.size) return null
+        val root = harmony.key?.root ?: harmony.ranked.first()
+        if (!PlayableScales.isRockRiff(root.pitchClass, harmony.chords)) return null
+        return looseFitOf(harmony, listOf(root to looseCountsOn(harmony, root)))
+    }
+
+    /** [fit] said as natural minor where its home is harmonic or melodic minor, see [guessedFitOf]. */
+    private fun saidAsNaturalMinor(harmony: Harmony, fit: Fit) =
+        (if (fit.home.id in raisedMinorIds) minorHomeFitOn(harmony, fit.root, Level.TONAL) else null) ?: fit
+
+    /**
+     * The fit on the root of [key], the first of: a scale of [key]'s third holding every chord ([Level.TONAL]: major
+     * or Mixolydian for a major key; natural minor, harmonic minor, or Dorian for a minor one), the minor family
+     * holding each chord of a minor key, a dominant blues, and a home with exceptions ([looseFitOf]): the key's own
+     * scale, major or the minor family, or its mode (Mixolydian, Dorian) where the key's tonic chord is
+     * played (any home for a rock riff, whose third is the style's, not the key's). A part in the relative minor of a
+     * major key is then said in the key, its V named as an exception, since its notes are the key's but that one; a mode
+     * with exceptions and no tonic chord is no reading of a key, or capo shapes in C under `{key: D}` would read as D
+     * Mixolydian.
+     */
+    private fun keyFitOf(harmony: Harmony, key: SongKey): Fit? {
+        val root = key.root
+        harmony.holding(root, if (key.isMinor) minorKeyScaleIds + DORIAN_ID else majorKeyScaleIds + MIXOLYDIAN_ID)?.let { home ->
+            return tonalFitOn(harmony, root, home)?.let { saidAsNaturalMinor(harmony, it) }
+        }
+        if (key.isMinor) minorFamilyFitOn(harmony, root)?.let { return it }
+        if (PlayableScales.isDominantBlues(root.pitchClass, harmony.chords)) suggestedFitOn(harmony, root)?.let { return it }
+        val isRockRiff = PlayableScales.isRockRiff(root.pitchClass, harmony.chords)
+        val third = if (key.isMinor) MINOR_THIRD else MAJOR_THIRD
+        val playsTonic = harmony.chords.any { it.root == root.pitchClass && third in it.intervals }
+        val mode = if (key.isMinor) DORIAN_ID else MIXOLYDIAN_ID
+        val homes = setOfNotNull(if (key.isMinor) NATURAL_MINOR_ID else MAJOR_ID, mode.takeIf { playsTonic })
+        return looseFitOf(harmony, listOf(root to looseCountsOn(harmony, root) { isRockRiff || it.id in homes }))
+    }
+
+    /**
+     * The fit of a part whose root nothing names or the key's root fits nothing of, the first of:
      *
      * - **A key** ([Level.TONAL], [tonalFitOf]): a scale of at most seven notes holds every chord, or they are a dominant
      *   blues. A harmonic or melodic minor home is said as natural minor, the chords it leaves out named with the minor
      *   scale that holds them, since a player hears a minor song's major V as an exception, not as another scale.
-     * - **The minor family** ([Level.TONAL]): natural, harmonic, or melodic minor on the minor key's root (else the best
-     *   scored one) holds each chord, the home natural minor and the rest named as in a key.
-     * - **A home with exceptions** ([Level.LOOSE]): on the key's root, the best scored one, or the first chord's, the
-     *   first where major, natural minor (the minor family holding a chord counting), Dorian, or Mixolydian holds at
-     *   least two thirds of the chords played, leaving out at most two distinct chords or a third of them; the chords it
-     *   leaves out are named with the scales to play over each.
-     *   Only these roots, never further down the scores, or `C A7 Dm G7` would read as D minor.
+     * - **The minor family** ([Level.TONAL]): natural, harmonic, or melodic minor on the best scored root holds each
+     *   chord, the home natural minor and the rest named as in a key.
+     * - **A home with exceptions** ([Level.LOOSE], [Level.THIN] below two thirds): on the best scored root or the first
+     *   chord's, whichever a home holds more of (the scores' favourite on a tie, as half the chords is a floor it often
+     *   clears with a worse home than the first chord's: F major for C F G E). Only these roots, never further down the
+     *   scores, or `C A7 Dm G7` would read as D minor.
      * - **A passing tone** ([Level.PASSING]): an eight-note scale on the best scored root, which holds a passing tone
      *   no scale of seven does. It answers what scale a part is in no better than none, so it never joins a key.
      */
-    private fun fitOf(parts: List<Part>): Fit? {
-        val harmony = Harmony(parts)
-        return tonalFitOf(harmony)?.let { fit -> (if (fit.home.id in raisedMinorIds) minorHomeFitOn(harmony, fit.root, Level.TONAL) else null) ?: fit }
-            ?: minorFamilyFitOf(harmony)
-            ?: looseFitOf(harmony)
+    private fun guessedFitOf(harmony: Harmony): Fit? {
+        val roots = listOfNotNull(harmony.ranked.first(), harmony.roots.first())
+            .distinctBy { it.pitchClass }
+            .map { it to looseCountsOn(harmony, it) }
+            .sortedByDescending { (_, counts) -> counts.max() }
+        return tonalFitOf(harmony)?.let { saidAsNaturalMinor(harmony, it) }
+            ?: minorFamilyFitOn(harmony, harmony.ranked.first())
+            ?: looseFitOf(harmony, roots)
             ?: harmony.ranked.first().let { root ->
                 PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.let { Fit(root, it.scales, Level.PASSING, it.scales.first()) }
             }
@@ -132,71 +188,75 @@ public object SongScaleGroups {
      * The fit of a scale of at most seven notes holding every chord of [harmony], or a dominant blues, on the root its
      * chords are heard in, its scales led by the scale that decided the root (the fit's home), or null where none is.
      *
-     * The root is, in this order: the key in force at the first part where its own scale holds the chords (major, or
-     * natural then harmonic minor for a minor key); the best scored root ([rankedRoots]) a major, natural minor, or
-     * harmonic minor scale holds the chords on, unless the first chord's root or the key's ranks above it and Mixolydian
-     * or Dorian holds them there; else the best scored root with a fit. Lydian, Phrygian, and Locrian are never chosen
-     * as a centre, since a chart almost never sits on them, and a mode is taken only where the part starts on it or the
-     * key names it, which every modal song a player calls modal does.
+     * The root is the best scored root ([rankedRoots]) a major, natural minor, or harmonic minor scale holds the chords
+     * on, unless the first chord's root ranks above it and Mixolydian or Dorian holds them there; else the best scored
+     * root with a fit. Lydian, Phrygian, and Locrian are never chosen as a centre, since a chart almost never sits on
+     * them, and a mode is taken only where the part starts on it, which every modal song a player calls modal does.
      */
     private fun tonalFitOf(harmony: Harmony): Fit? {
-        val key = harmony.key
-        key?.let { harmony.holding(it.root, if (it.isMinor) minorKeyScaleIds else majorKeyScaleIds) }?.let { return tonalFitOn(harmony, key.root, it) }
         val ranked = harmony.ranked
         val homeIndex = ranked.indexOfFirst { harmony.holding(it, homeScaleIds) != null }
-        val modeCandidates = listOfNotNull(harmony.roots.first().pitchClass, key?.root?.pitchClass)
-        val modeRoots = (ranked.filter { it.pitchClass in modeCandidates } + listOfNotNull(key?.root))
-            .distinctBy { it.pitchClass }
-            .filter { homeIndex == -1 || ranked.indexOfFirst { root -> root.pitchClass == it.pitchClass } in 0 until homeIndex }
-        modeRoots.firstNotNullOfOrNull { root -> harmony.holding(root, modeScaleIds)?.let { tonalFitOn(harmony, root, it) } }?.let { return it }
+        val modeRoot = ranked.firstOrNull { it.pitchClass == harmony.roots.first().pitchClass }
+            ?.takeIf { homeIndex == -1 || ranked.indexOf(it) < homeIndex }
+        modeRoot?.let { root -> harmony.holding(root, modeScaleIds)?.let { return tonalFitOn(harmony, root, it) } }
         if (homeIndex != -1) ranked[homeIndex].let { root -> return tonalFitOn(harmony, root, harmony.holding(root, homeScaleIds)!!) }
-        return ranked.firstNotNullOfOrNull { root ->
-            PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.takeIf { it.isFit }?.let { suggestion ->
-                // A dominant blues is a fit no scale holds; its home is then the first it suggests.
-                val home = suggestion.scales.firstOrNull { it.intervals.size <= HOME_SCALE_SIZE && harmony.holds(it, root) } ?: suggestion.scales.first()
-                Fit(root, suggestion.scales, Level.TONAL, home)
-            }
-        }
+        return ranked.firstNotNullOfOrNull { root -> suggestedFitOn(harmony, root) }
     }
 
-    private fun tonalFitOn(harmony: Harmony, root: Root, home: Scale) =
+    private fun tonalFitOn(harmony: Harmony, root: SpelledNote, home: Scale) =
         PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.let { Fit(root, listOf(home) + (it.scales - home), Level.TONAL, home) }
 
-    /** The minor family's fit on the minor key's root, else the best scored one, where each chord is held by one of it. */
-    private fun minorFamilyFitOf(harmony: Harmony): Fit? {
-        val root = harmony.key?.takeIf { it.isMinor }?.root ?: harmony.ranked.first()
+    /** What [PlayableScales] suggests on [root] where it is a fit, a dominant blues being one no scale holds. */
+    private fun suggestedFitOn(harmony: Harmony, root: SpelledNote) = PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.takeIf { it.isFit }?.let { suggestion ->
+        // A dominant blues is a fit no scale holds; its home is then the first it suggests.
+        val home = suggestion.scales.firstOrNull { it.intervals.size <= HOME_SCALE_SIZE && harmony.holds(it, root) } ?: suggestion.scales.first()
+        Fit(root, suggestion.scales, Level.TONAL, home)
+    }
+
+    /** The minor family's fit on [root], where each chord is held by one of it. */
+    private fun minorFamilyFitOn(harmony: Harmony, root: SpelledNote): Fit? {
         if (harmony.chords.any { chord -> minorFamily.none { holdsChord(it, root.pitchClass, chord) } }) return null
         return minorHomeFitOn(harmony, root, Level.TONAL)
     }
 
     /** [harmony] said as natural minor on [root], or null where it holds none of its chords. */
-    private fun minorHomeFitOn(harmony: Harmony, root: Root, level: Level): Fit? {
+    private fun minorHomeFitOn(harmony: Harmony, root: SpelledNote, level: Level): Fit? {
         val home = naturalMinor
         val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
         if (held.isEmpty()) return null
-        return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, exceptionsOf(harmony, root, home))
+        return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
     }
 
-    /** The home scale holding two thirds of [harmony]'s chords with the rest as exceptions, see [fitOf]. */
-    private fun looseFitOf(harmony: Harmony): Fit? {
-        val roots = listOfNotNull(harmony.key?.root, harmony.ranked.first(), harmony.roots.first()).distinctBy { it.pitchClass }
+    /** How many chords of [harmony] each of [looseHomes] holds on [root], -1 for a home [isAllowed] rules out. */
+    private fun looseCountsOn(harmony: Harmony, root: SpelledNote, isAllowed: (Scale) -> Boolean = { true }) = looseHomes.map { home ->
+        val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
+        if (isAllowed(home)) harmony.chords.count { chord -> holders.any { holdsChord(it, root.pitchClass, chord) } } else -1
+    }
+
+    /**
+     * The home scale holding at least half of [harmony]'s chords with the rest as exceptions, on the first of [roots]
+     * one does, each with what [looseCountsOn] counts on it: the first of major, natural minor (the minor family holding
+     * a chord counting), Dorian, or Mixolydian holding the most, leaving out at most two distinct chords or a third of
+     * them; the chords it leaves out are named with the scales to play over each.
+     */
+    private fun looseFitOf(harmony: Harmony, roots: List<Pair<SpelledNote, List<Int>>>): Fit? {
         val total = harmony.chords.size
-        return roots.firstNotNullOfOrNull { root ->
-            val counts = looseHomes.map { home ->
-                val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
-                harmony.chords.count { chord -> holders.any { holdsChord(it, root.pitchClass, chord) } }
-            }
+        return roots.firstNotNullOfOrNull { (root, counts) ->
             val isRockRiff = PlayableScales.isRockRiff(root.pitchClass, harmony.chords)
-            // A rock riff's chords are all major, so of the homes holding as many of them, Mixolydian's major third and
-            // flat seventh are its sound, and every riff on one root then has one home to join on.
-            val best = looseHomes.indexOf(mixolydian).takeIf { isRockRiff && counts[it] == counts.max() } ?: counts.indexOf(counts.max())
-            if (counts[best] * 3 < total * 2) return@firstNotNullOfOrNull null
+            // Of the homes holding as many of a riff's chords, Mixolydian (its major chords' third and flat seventh) is its
+            // sound, or natural minor where no chord has a major third.
+            val riffHome = if (harmony.chords.any { MAJOR_THIRD in it.intervals }) mixolydian else naturalMinor
+            val best = looseHomes.indexOf(riffHome).takeIf { isRockRiff && counts[it] == counts.max() } ?: counts.indexOf(counts.max())
+            if (counts[best] * 2 < total) return@firstNotNullOfOrNull null
+            val level = if (counts[best] * 3 < total * 2) Level.THIN else Level.LOOSE
             val home = looseHomes[best]
-            // The floor counts how often a chord is played, and the minor family as one, but every distinct chord the
-            // home leaves out is named, so more than two of them must stay within a third of the distinct chords: past
-            // that, the answer is a list of exceptions that says nothing about the part.
+            // The floor counts how often a chord is played, and so do the distinct chords the home leaves out, the minor
+            // family as one home in both: more than two of them must stay within a third of the distinct chords, past
+            // which the home says nothing about the part. A home holding less than two thirds counts only itself, or
+            // the family's three scales between them would hold half of any minor chords at all (C Ebm F#m A Dbm Em).
             val distinct = harmony.chords.distinct()
-            val outside = distinct.count { !holdsChord(home, root.pitchClass, it) }
+            val holders = if (home.id == NATURAL_MINOR_ID && level == Level.LOOSE) minorFamily else listOf(home)
+            val outside = distinct.count { chord -> holders.none { holdsChord(it, root.pitchClass, chord) } }
             if (outside > MAX_LOOSE_EXCEPTIONS && outside * 3 > distinct.size) return@firstNotNullOfOrNull null
             val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
             // The chords left out are what makes a rock riff: its minor pentatonic and blues are played over all of them,
@@ -204,10 +264,10 @@ public object SongScaleGroups {
             // The home still decides what the part joins.
             if (isRockRiff) {
                 val scales = (PlayableScales.rockRiffScales + home + PlayableScales.over(root.pitchClass, held)).distinct()
-                return@firstNotNullOfOrNull Fit(root, scales, Level.LOOSE, home)
+                return@firstNotNullOfOrNull Fit(root, scales, level, home)
             }
-            if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, Level.LOOSE)
-            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), Level.LOOSE, home, exceptionsOf(harmony, root, home))
+            if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, level)
+            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
         }
     }
 
@@ -218,7 +278,7 @@ public object SongScaleGroups {
      * loop too, since a section is repeated. Ties go to more chords that are not a dominant seventh, then the first
      * chord's root, then the last one's.
      */
-    private fun rankedRoots(parts: List<Part>): List<Root> {
+    private fun rankedRoots(parts: List<SongPart>): List<SpelledNote> {
         val played = parts.flatMap { it.roots }
         val first = played.first().pitchClass
         val last = played.last().pitchClass
@@ -239,201 +299,83 @@ public object SongScaleGroups {
         scores[first] = (scores[first] ?: 0) + 1
         scores[last] = (scores[last] ?: 0) + 1
         return played.distinctBy { it.pitchClass }.sortedWith(
-            compareByDescending<Root> { scores[it.pitchClass] ?: 0 }
+            compareByDescending<SpelledNote> { scores[it.pitchClass] ?: 0 }
                 .thenByDescending { counts[it.pitchClass] ?: 0 }
                 .thenByDescending { it.pitchClass == first }
                 .thenByDescending { it.pitchClass == last },
         )
     }
 
-    private val Chord.isDominantSeventh get() = intervals.map { it.mod(12) }.let { MAJOR_THIRD in it && MINOR_SEVENTH in it }
-
-    /**
-     * The chords of [harmony] that [home] on [root] does not hold, the most played first, then in play order, each with
-     * the scales to play over it. With a natural-minor home, the minor scales on its root that hold it (harmonic minor
-     * and Dorian change one note of it, melodic minor two): a minor song's major V and IV are its own raised seventh and
-     * sixth. Otherwise the scales of seven notes on the chord's own root that hold it, the common ones first, each kind
-     * the closest to the home's notes first; the pentatonics and the blues a lone chord is offered would clash with the
-     * key around it. A chord nothing holds is not named, and neither is one played less than once in [MIN_EXCEPTION_SHARE]
-     * chords: a passing secondary dominant or a borrowed chord at the end is over before a player could change scale.
-     */
-    private fun exceptionsOf(harmony: Harmony, root: Root, home: Scale): List<ScaleException> {
-        val homeNotes = Scales.pitchClasses(home, root.pitchClass)
-        return harmony.chords.indices
-            .filter { !homeNotes.containsAll(notesOf(harmony.chords[it])) }
-            .groupBy { harmony.chords[it] }
-            .entries
-            .filter { it.value.size * MIN_EXCEPTION_SHARE >= harmony.chords.size }
-            .sortedByDescending { it.value.size }
-            .mapNotNull { (chord, indices) ->
-                val name = harmony.names[indices.first()]
-                if (home.id == NATURAL_MINOR_ID) {
-                    minorExceptionScales.filter { holdsChord(it, root.pitchClass, chord) }.takeIf { it.isNotEmpty() }?.let {
-                        return@mapNotNull ScaleException(chordName = name, rootName = root.name, scales = it)
-                    }
-                }
-                PlayableScales.over(chord)
-                    .filter { it.intervals.size == HOME_SCALE_SIZE && holdsChord(it, chord.root, chord) }
-                    .sortedWith(compareBy({ it !in Scales.common }, { scale -> Scales.pitchClasses(scale, chord.root).count { it !in homeNotes } }))
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { ScaleException(chordName = name, rootName = harmony.roots[indices.first()].name, scales = it) }
-            }
-    }
-
-    private fun notesOf(chord: Chord) = chord.intervals.mapTo(mutableSetOf()) { (chord.root + it).mod(12) }
-
-    private fun holdsChord(scale: Scale, root: Int, chord: Chord) = Scales.pitchClasses(scale, root).containsAll(notesOf(chord))
-
-    /**
-     * Every section of [song] that plays a chord, its continuations with it, each with the notes of its chords and the
-     * roots it plays, and the key in force at it. A chorus recall that plays the chords of the chorus before it joins
-     * that chorus's part without counting them again; one whose chords differ, a recall after a `{transpose}`, which the
-     * transposer has moved, is a part of its own, of the chorus's kind.
-     */
-    private fun partsOf(song: ChordProSong): List<Part> {
-        var key = song.metadata.key?.let(::keyOf)
-        val parts = mutableListOf<Part>()
-        var chorus: Part? = null
-        song.blocks.forEach { block ->
-            when (block) {
-                is ChordProBlock.Transpose -> key = block.key?.let(::keyOf) ?: key
-                is ChordProBlock.Section -> {
-                    val chords = playedIn(listOf(block))
-                    val previous = parts.lastOrNull()?.takeIf { block.isContinuation && (it.blocks.last() as? ChordProBlock.Section)?.type == block.type }
-                    when {
-                        previous != null -> {
-                            previous.blocks += block
-                            previous.add(chords)
-                        }
-                        chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply {
-                            add(chords)
-                            if (block.type == SectionType.Chorus) chorus = this
-                        }
-                    }
-                }
-                is ChordProBlock.ChorusRecall -> {
-                    val chords = playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>())
-                    val recalled = chorus
-                    when {
-                        recalled != null && chords.map { it.name } == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
-                        chords.isNotEmpty() -> parts += Part(mutableListOf(block), key).apply { add(chords) }
-                    }
-                }
-                else -> Unit
-            }
-        }
-        return parts.filter { it.roots.isNotEmpty() }
-    }
-
-    /** The chords [sections] play, in order, each read once. */
-    private fun playedIn(sections: List<ChordProBlock.Section>) = sections.flatMap { it.lines.flatMap { line -> line.chordNames() } }.mapNotNull { name ->
-        ChordProChords.parse(name)?.let { chord -> rootOf(name)?.let { PlayedChord(name, it, chord) } }
-    }
-
-    /** The chord names one line plays, by what kind of line it is: the walk `ChordProChords.namesIn` takes. */
-    private fun ChordProLine.chordNames(): List<String> = when (this) {
-        is ChordProLine.Lyrics -> chords.filter { !it.isAnnotation }.map { it.name }
-        is ChordProLine.Grid -> tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
-        is ChordProLine.Tab -> ChordProTabTransposer.chordNames(listOf(text))
-        ChordProLine.Blank -> emptyList()
-    }
-
-    /**
-     * The key [text] names, minor where what follows its root starts with a lowercase `m` other than `ma` (`Am`,
-     * `A minor`, `A-moll`), so that `Amaj`, `A major`, and `A mayor` stay major.
-     */
-    private fun keyOf(text: String): Key? = rootOf(text)?.let { root ->
-        val mode = text.trim().drop(root.name.length).trimStart('-', ' ')
-        Key(root, isMinor = mode.startsWith('m') && mode.getOrNull(1) != 'a')
-    }
-
-    /** The root a chord name or a key starts with, spelled as written: `Eb` for `Ebm7` and for `Eb minor`. */
-    private fun rootOf(name: String): Root? {
-        val trimmed = name.trim()
-        val letter = trimmed.firstOrNull()?.uppercaseChar()?.takeIf { it in 'A'..'G' } ?: return null
-        val accidental = trimmed.getOrNull(1)?.takeIf { it == '#' || it == 'b' }
-        val spelled = letter + (accidental?.toString() ?: "")
-        return ChordProChords.pitchClass(spelled)?.let { Root(it, spelled) }
-    }
-
-    /**
-     * Sections played together, a section with its continuations, or a chorus recall: each of [blocks] a
-     * `ChordProBlock.Section` or a `ChordProBlock.ChorusRecall`.
-     */
-    private class Part(val blocks: MutableList<ChordProBlock>, val key: Key?) {
-        val names = mutableListOf<String>()
-        val chords = mutableListOf<Chord>()
-        val roots = mutableListOf<Root>()
-
-        val sections get() = blocks.filterIsInstance<ChordProBlock.Section>()
-
-        /**
-         * What a part is of, so that a second verse finds the first: its first section's type, and its label without a
-         * number. A recall part's first section is the chorus's own, so a recall is of its chorus's kind.
-         */
-        val kind get() = blocks.firstNotNullOf { block ->
-            (block as? ChordProBlock.ChorusRecall)?.blocks?.filterIsInstance<ChordProBlock.Section>()?.firstOrNull() ?: block as? ChordProBlock.Section
-        }.let { it.type to it.label?.trimEnd { char -> char.isDigit() || char.isWhitespace() }?.lowercase() }
-
-        fun add(played: List<PlayedChord>) = played.forEach { (name, root, chord) ->
-            names += name
-            roots += root
-            // The bass of a slash chord is left out: it is a voicing, and a passing bass note is often outside the scale.
-            chords += Chord(root = chord.root, intervals = chord.intervals)
-        }
-    }
-
-    private data class PlayedChord(val name: String, val root: Root, val chord: Chord)
-
     /** The chords of a list of parts, read once for every fit tried on them. */
-    private class Harmony(parts: List<Part>) {
+    private class Harmony(parts: List<SongPart>) {
         val key = parts.first().key
         val names = parts.flatMap { it.names }
         val chords = parts.flatMap { it.chords }
         val roots = parts.flatMap { it.roots }
         val ranked by lazy { rankedRoots(parts) }
-        private val notes = chords.flatMapTo(mutableSetOf()) { notesOf(it) }
+        private val notes = chords.flatMapTo(mutableSetOf()) { it.notes }
 
-        fun holds(scale: Scale, root: Root) = Scales.pitchClasses(scale, root.pitchClass).containsAll(notes)
+        fun holds(scale: Scale, root: SpelledNote) = Scales.pitchClasses(scale, root.pitchClass).containsAll(notes)
+
+        /** The chords [home] on [root] leaves out, each with what to play over it ([ScaleExceptions]). */
+        fun exceptionsTo(home: Scale, root: SpelledNote) = ScaleExceptions.of(chords, names, roots.map { it.name }, root.pitchClass, root.name, home)
 
         /** The first of the scales [ids] names that holds every chord on [root]. */
-        fun holding(root: Root, ids: List<String>) = ids.firstNotNullOfOrNull { id -> Scales.fromId(id)?.takeIf { holds(it, root) } }
+        fun holding(root: SpelledNote, ids: List<String>) = ids.firstNotNullOfOrNull { id -> Scales.fromId(id)?.takeIf { holds(it, root) } }
     }
 
-    private class Group(val parts: MutableList<Part>, var fit: Fit) {
+    private class Group(val parts: MutableList<SongPart>, var fit: Fit) {
         /** A home leaving out one of at most three chords, see [of]; a rock riff, which has no exceptions, is no guess. */
-        val isGuess get() = fit.level == Level.LOOSE && fit.exceptions.isNotEmpty() && parts.flatMap { it.chords }.distinct().size <= MAX_GUESSED_CHORDS
+        val isGuess get() = (fit.level == Level.LOOSE || fit.level == Level.THIN) && fit.exceptions.isNotEmpty() && parts.flatMap { it.chords }.distinct().size <= MAX_GUESSED_CHORDS
     }
 
     /**
      * What [fitOf] answers: the [scales] on [root], the [home] scale that decided them, and the chords it leaves out.
      */
     private class Fit(
-        val root: Root,
+        val root: SpelledNote,
         val scales: List<Scale>,
         val level: Level,
         val home: Scale,
         val exceptions: List<ScaleException> = emptyList(),
     ) {
-        fun groupOf(parts: List<Part>) = ScaleGroup(parts.flatMap { it.blocks }, root.name, scales, exceptions)
+        /** Whether this is a rock riff's fit, led by the minor pentatonic rather than its home. */
+        val isRockRiff get() = home != scales.first()
+
+        fun playedGroupOf(parts: List<SongPart>) = PlayedGroup(
+            group = ScaleGroup(parts.flatMap { it.blocks }, root.name, scales, exceptions),
+            rootPitchClass = root.pitchClass,
+            names = parts.flatMap { it.names },
+            rootNames = parts.flatMap { part -> part.roots.map { it.name } },
+            chords = parts.flatMap { it.chords },
+            parts = parts.map { part ->
+                val centre = rankedRoots(listOf(part)).first()
+                PlayedPart(
+                    blocks = part.blocks,
+                    plays = part.blocks.count { it !is ChordProBlock.Section || !it.isContinuation },
+                    names = part.names.toSet(),
+                    chords = part.chords.toList(),
+                    centre = centre.pitchClass,
+                    centreName = centre.name,
+                )
+            },
+        )
     }
 
     /** How sure a fit is of a part's key, see [fitOf]. */
-    private enum class Level { TONAL, LOOSE, PASSING }
-
-    private class Root(val pitchClass: Int, val name: String)
-
-    private class Key(val root: Root, val isMinor: Boolean)
+    private enum class Level { TONAL, LOOSE, THIN, PASSING }
 
     private const val HOME_SCALE_SIZE = 7
+    private const val MINOR_THIRD = 3
     private const val MAJOR_THIRD = 4
     private const val FIFTH = 7
-    private const val MINOR_SEVENTH = 10
     private const val CADENCE_SCORE = 2
     private const val MAX_LOOSE_EXCEPTIONS = 2
     private const val MAX_GUESSED_CHORDS = 3
-    private const val MIN_EXCEPTION_SHARE = 8
     private const val NATURAL_MINOR_ID = "natural_minor"
+    private const val MAJOR_ID = "major"
+    private const val DORIAN_ID = "dorian"
+    private const val MIXOLYDIAN_ID = "mixolydian"
     private val naturalMinor = Scales.fromId(NATURAL_MINOR_ID)!!
     private val majorKeyScaleIds = listOf("major")
     private val minorKeyScaleIds = listOf(NATURAL_MINOR_ID, "harmonic_minor")
@@ -444,5 +386,4 @@ public object SongScaleGroups {
     private val minorFamily = minorFamilyIds.map(Scales::fromId).requireNoNulls()
     private val looseHomes = listOf("major", NATURAL_MINOR_ID, "dorian", "mixolydian").map(Scales::fromId).requireNoNulls()
     private val mixolydian = looseHomes.last()
-    private val minorExceptionScales = listOf("harmonic_minor", "dorian", "melodic_minor").map(Scales::fromId).requireNoNulls()
 }

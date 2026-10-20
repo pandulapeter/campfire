@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
+import com.pandulapeter.campfire.chordpro.scales.SongScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
@@ -31,7 +32,9 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  * @property hasUnnamed Whether the group also holds sections the page heads with nothing, besides the named ones.
  * @property opening The first words of a group with no named section, where more than one group has none, so that the
  *   two are told apart; null otherwise.
- * @property exceptions The chords [scales] leave out, each with its own row of chips.
+ * @property exceptions The chords of the group worth a scale of their own, each with its own row of chips.
+ * @property isHome Whether the group is what most of the song is played over, which no title names: the rows after it
+ *   are its moments.
  */
 @Immutable
 internal data class SongScaleGroup(
@@ -42,52 +45,57 @@ internal data class SongScaleGroup(
     val joinsSeveral: Boolean,
     val hasUnnamed: Boolean,
     val opening: String?,
+    val isHome: Boolean,
 )
 
 /**
- * The groups of scales [song] (in the standard notation) is played over ([SongScaleGroups]), each named by the headings
- * of its sections in the order the song plays them, numbered the way the page numbers them. Where a group holds every
+ * The groups of scales [song] (in the standard notation) is played over ([SongScaleSuggestions]: the home first, named by
+ * nothing, then the other keys and centres worth a change of scale; or, for a song in several keys with no home, every
+ * group), each named by the headings of its sections in the order the song plays them, numbered the way the page
+ * numbers them. Where a group holds every
  * section of a kind that plays a chord, and more than one, the kind is said once, at the first of them ("Verse" for
  * both verses); a lone one keeps its heading ("Take 5"), and the numbered ones are named where the verses are split
  * between groups ("Verse 3" for the one after a modulation). A heading another group, or no group, also has is numbered
  * by its occurrences among the song's chorded sections ("Verse (1, 2)" and "Verse (3)" where the page numbers nothing),
  * and several groups with no named section are told apart by their first words. At most [MAX_GROUP_SCALES] scales a
  * group (the home scale, then what a player reaches for first), since a row of rarities buries the answer and the
- * Scales tab has every other one, and [MAX_GROUP_EXCEPTIONS] chord it leaves out, the most played, with
- * [MAX_EXCEPTION_SCALES] scale, the common one first, every chord named as the page shows it in [notation].
+ * Scales tab has every other one, and [MAX_EXCEPTION_SCALES] scale over each of its chords worth one, the common one
+ * first, every chord named as the page shows it in [notation].
  */
 internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels, notation: ChordNotation): List<SongScaleGroup> {
     val numbered = song.blocks.withNumberedSections(labels)
-    val groups = SongScaleGroups.of(song.copy(blocks = numbered))
+    val groups = SongScaleSuggestions.of(song.copy(blocks = numbered))
     if (groups.isEmpty()) return emptyList()
     val shownNames = ChordProNotation.shownNames(song, notation)
     val exceptions = groups.map { group ->
-        group.exceptions.take(MAX_GROUP_EXCEPTIONS).map { exception ->
+        group.exceptions.map { exception ->
             SongScaleException(
-                chordName = ChordProNotation.withAccidentalSigns(shownNames[exception.chordName] ?: exception.chordName),
+                chordNames = (listOf(exception.chordName) + exception.otherChordNames).map { name ->
+                    ChordProNotation.withAccidentalSigns(shownNames[name] ?: name)
+                },
                 rootName = exception.rootName,
                 scales = exception.scales.filter { it in Scales.common }.ifEmpty { exception.scales }.take(MAX_EXCEPTION_SCALES),
             )
         }
     }
-    if (groups.size == 1) {
-        return listOf(
-            SongScaleGroup(
-                label = null,
-                rootName = groups.single().rootName,
-                scales = chipsOf(groups.single().scales),
-                exceptions = exceptions.single(),
-                joinsSeveral = false,
-                hasUnnamed = false,
-                opening = null,
-            ),
-        )
-    }
+    // A song one group fits names nothing, and neither does a home, most of the song being played over it.
+    fun untitled(index: Int) = SongScaleGroup(
+        label = null,
+        rootName = groups[index].rootName,
+        scales = chipsOf(groups[index].scales),
+        exceptions = exceptions[index],
+        joinsSeveral = false,
+        hasUnnamed = false,
+        opening = null,
+        isHome = groups[index].isHome,
+    )
+    if (groups.size == 1) return listOf(untitled(0))
     val played = numbered.filter(SongScaleGroups::playsChords).mapNotNull { block -> block.headingOf(labels)?.let { block to it } }
     val kindCounts = played.map { it.second }.filter { it.isNotEmpty() }.groupingBy(::kindOf).eachCount()
     val headers = groups.map { group -> group.blocks.mapNotNull { it.headingOf(labels) } }
-    val headless = headers.count { group -> group.none { it.isNotEmpty() } }
+    val headless = groups.indices.count { index -> !groups[index].isHome && headers[index].none { it.isNotEmpty() } }
     return groups.mapIndexed { index, group ->
+        if (group.isHome) return@mapIndexed untitled(index)
         val named = headers[index].filter { it.isNotEmpty() }
         val ofKind = named.groupingBy(::kindOf).eachCount()
         val names = named.map { header ->
@@ -102,6 +110,7 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
             joinsSeveral = names.size > 1,
             hasUnnamed = names.isNotEmpty() && headers[index].any { it.isEmpty() },
             opening = if (names.isEmpty() && headless > 1) group.blocks.firstOrNull()?.opening() else null,
+            isHome = false,
         )
     }
 }
@@ -159,5 +168,4 @@ private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
 private val KIND_NUMBER = Regex("""\s+\d{1,4}$""")
 
 internal const val MAX_GROUP_SCALES = 3
-internal const val MAX_GROUP_EXCEPTIONS = 1
 internal const val MAX_EXCEPTION_SCALES = 1

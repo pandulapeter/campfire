@@ -662,6 +662,10 @@
     <string name="song_details_scales_and_unnamed_several">%1$s és a cím nélküli részek</string>
     <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
     <string name="song_details_scales_over">%1$s akkordhoz</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">%1$s és %2$s akkordhoz</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">%1$s és %2$s akkordhoz</string>
     <string name="scale_major">dúr</string>
     <string name="scale_dorian">dór</string>
     <string name="scale_phrygian">fríg</string>

@@ -663,6 +663,10 @@
     <string name="song_details_scales_and_unnamed_several">%1$s, and the parts without a heading</string>
     <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
     <string name="song_details_scales_over">Over %1$s</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">Over %1$s and %2$s</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">Over %1$s, and %2$s</string>
     <string name="scale_major">major</string>
     <string name="scale_dorian">Dorian</string>
     <string name="scale_phrygian">Phrygian</string>

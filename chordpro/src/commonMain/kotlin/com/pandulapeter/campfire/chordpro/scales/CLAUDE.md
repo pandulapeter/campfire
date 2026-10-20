@@ -19,23 +19,36 @@
   a slash chord's bass, and never offers the chromatic scale, which holds every chord.
 - **`SongScaleGroups`** splits a song only where it must: one group when a scale fits it whole, else sections join, in
   play order, the first group they still share a scale with (one with a section of the same chords, then their own
-  kind's, then the last, then any), so a verse after a modulated solo goes back to the verses and a bridge replaying
-  the intro goes with it. A home holding two of at most three chords is a guess, dropped beside any other group. Groups are decided on scales of at most seven notes: an eight-note
-  scale's passing tone would let a major verse and a Mixolydian chorus share one. Roots: the key in force (`{key}`, or
-  the key a `{transpose}` names) where its scale holds the chords, else the best scored root (chords on it, the first
-  and last, cadences into it) a major or minor scale holds them on, a Mixolydian or Dorian centre only where the part
-  starts on it or the key names it. **The song is read as it stands**:
-  the transposer has moved the chords after a `{transpose}` and renamed its key before a page shows them, so a
-  `{transpose}` is never applied here, or a modulated verse would read two steps up. A chorus recall is counted again
-  only where its chords differ from the chorus's (one after a `{transpose}`). Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
-  thirds of its chords answers, unless it leaves out more than two distinct chords and more than a third of them, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
-  home's own harmonic minor, Dorian, or melodic minor where one does), unless it is played less than once in eight
-  chords; below that floor the part is left out. A rock riff a home holds this way leads with its minor pentatonic and
-  blues and has no exceptions, its home Mixolydian where that holds as many chords as any.
+  kind's, then the last, then any), so a verse after a modulated solo goes back to the verses. Groups are decided on
+  scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus.
+  **A riff of power chords comes first**: where half the chords have no third, a riff on the key's root (else the
+  scored one) is read before any mode holding it. **Then the key decides the root**: the key in force (`{key}`, or the
+  key a `{transpose}` names), a scale of its third holding the part, a minor key's family, a dominant blues, then its
+  own major or minor family as a home with exceptions, its mode too where its tonic chord is played (capo shapes in C
+  under `{key: D}` play no D, so they never read as D Mixolydian). Only where none fits is the root scored (chords on
+  it, the first and last, cadences into it), a mode only where the part starts on it. **The song is read as it
+  stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here. A chorus
+  recall counts again only where its chords differ.
+- Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian) holding half its chords
+  answers; it may leave out two distinct chords or a third of them, each a `ScaleException` (`ScaleExceptions`: a minor
+  home's own minor scales, else the closest of a secondary dominant's target harmonic minor, the chord's root, and the
+  home's root, ties in that order). Below two thirds a part stands alone but never joins another; a home of two of
+  three chords is a guess dropped beside any other group. A **rock riff** is power, suspended, or major chords on I,
+  ♭III, IV, V, ♭VI, ♭VII with a ♭III or ♭VI one chord in eight (♭VII alone is Mixolydian's), or any flat step with
+  no third anywhere; it leads with its minor pentatonic and blues, has no exceptions, and riffs on one root join
+  whatever home their chords lean to.
+- **`SongScaleSuggestions`** is what a song shows, groups offering one first scale on one root joined (never two rows
+  saying the same): the home (`ScaleGroup.isHome`, the group playing half the chords), then at most three moments,
+  the other keys (not a relative one, whose notes are the home's), parts on a centre of their own that hardly play the
+  root (a bridge on the IV, offered as the scale on it holding most of its chords), the exceptions, and dominants whose
+  third the group's first scale lacks (a blues's IV7 and V7). A section is one moment, a centre before a key, and
+  chords offered one scale on one root are one (a V and its V7); a chord counts only where the row it is played under
+  leaves it out. A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
+  and it must be one chord in 32 or come back in two plays; a key or an exception counts double. Nothing fills an
+  unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
   pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic
   and blues also after a Mixolydian home's major one, over a dominant blues with the I or IV a seventh, and over a rock
-  riff of major chords on I, ♭III, IV, V, ♭VII), then the other common holders, other seven-note ones, hexatonics and
-  smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.
+  riff), then the other common holders, other seven-note ones, hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.
 - A chord sheet puts its quality's textbook scales first (`ChordScaleChoices`), and an altered dominant (♭9, ♭5, ♯5) is
   never a blues.

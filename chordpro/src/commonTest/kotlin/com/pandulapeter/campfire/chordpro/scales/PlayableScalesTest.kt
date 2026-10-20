@@ -25,6 +25,13 @@ class PlayableScalesTest {
     private fun over(root: Int, vararg names: String) = PlayableScales.over(root, names.map { ChordProChords.parse(it)!! }).map { it.id }
 
     @Test
+    fun `a rock riff plays its flat chords as a quarter of its chords at least, not one closing a long I IV V`() {
+        fun isRiff(vararg names: String) = PlayableScales.isRockRiff(9, names.map { ChordProChords.parse(it)!! })
+        assertTrue(isRiff("A", "C", "D", "A"))
+        assertFalse(isRiff("A", "D", "E", "E7", "A", "D", "E", "E7", "G"))
+    }
+
+    @Test
     fun `a major key offers the pentatonic and hexatonic inside its scale, right after the common ones`() {
         val scales = over(0, "C", "F", "G")
         assertTrue("major_pentatonic" in scales && "major_hexatonic" in scales)
@@ -81,8 +88,16 @@ class PlayableScalesTest {
     fun `a rock riff offers the minor pentatonic and the blues on its root`() {
         assertEquals(listOf("minor_pentatonic", "blues"), over(4, "E", "G", "A", "E").take(2))
         assertEquals(listOf("minor_pentatonic", "blues"), over(0, "C", "Eb", "F", "C").take(2))
-        assertFalse(PlayableScales.isRockRiff(0, listOf("C", "Ab", "Bb").map { ChordProChords.parse(it)!! }))
+        assertTrue(PlayableScales.isRockRiff(0, listOf("C", "Ab", "Bb").map { ChordProChords.parse(it)!! }))
         assertFalse(PlayableScales.isRockRiff(0, listOf("C", "F", "G").map { ChordProChords.parse(it)!! }))
+    }
+
+    @Test
+    fun `power chords and a suspended chord passing among them are a riff, a minor chord is not`() {
+        fun isRiff(vararg names: String) = PlayableScales.isRockRiff(9, names.map { ChordProChords.parse(it)!! })
+        assertTrue(isRiff("A5", "C5", "A5", "D5", "A5", "C5", "A5"))
+        assertTrue(isRiff("A5", "C4", "A5", "D5", "F", "D", "A", "G"))
+        assertFalse(isRiff("A5", "C5", "Dm"))
     }
 
     @Test

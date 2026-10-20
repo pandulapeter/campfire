@@ -163,8 +163,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   shape picked there applies everywhere: `ui/screens/chords`.
 - The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument
   included; 12-TET only. Scale suggestions (a switch under Scales, as Chord diagrams is under Chords) add a song's Scales
-  section, grouped by the parts each set fits, and a chord sheet's scales: `ui/screens/scales`, `ui/songView`,
-  `chordpro/scales`.
+  section, one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
+  `ui/screens/scales`, `ui/songView`, `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
 - Under three songs, the songs list ends in a hint on pasting from a website and importing another app's songs:
