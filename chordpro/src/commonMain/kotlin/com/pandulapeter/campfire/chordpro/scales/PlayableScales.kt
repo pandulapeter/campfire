@@ -147,7 +147,7 @@ public object PlayableScales {
     private val insideHexatonics = scalesOf("major_hexatonic", "minor_hexatonic")
     /** What a rock riff ([isRockRiff]) is played over besides the scales holding it, on its root. */
     internal val rockRiffScales = scalesOf(MINOR_PENTATONIC_ID, "blues")
-    private val dominantBluesScales = scalesOf(MINOR_PENTATONIC_ID, "blues", MAJOR_PENTATONIC_ID, "major_blues", MIXOLYDIAN_ID)
+    private val dominantBluesScales = scalesOf(MINOR_PENTATONIC_ID, "blues", MAJOR_PENTATONIC_ID, MIXOLYDIAN_ID, "major_blues")
 
     private fun scalesOf(vararg ids: String) = ids.map(Scales::fromId).requireNoNulls()
 }

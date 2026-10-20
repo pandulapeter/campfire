@@ -50,7 +50,7 @@ class PlayableScalesTest {
     @Test
     fun `a dominant blues offers the blues scales no scale holding its chords could`() {
         val scales = over(0, "C7", "F7", "G7")
-        assertEquals(listOf("minor_pentatonic", "blues", "major_pentatonic", "major_blues", "mixolydian"), scales)
+        assertEquals(listOf("minor_pentatonic", "blues", "major_pentatonic", "mixolydian", "major_blues"), scales)
         assertTrue(PlayableScales.isDominantBlues(0, listOf(ChordProChords.parse("C9")!!)))
         assertFalse(PlayableScales.isDominantBlues(0, listOf(ChordProChords.parse("C7")!!, ChordProChords.parse("Dm")!!)))
     }
@@ -76,7 +76,7 @@ class PlayableScalesTest {
         assertEquals(listOf("F7"), bossa.exceptions.map { it.chordName })
         assertFalse(isBlues("C", "F", "G7"))
         assertFalse("blues" in over(0, "C", "F", "G7"))
-        assertEquals(listOf("minor_pentatonic", "blues", "major_pentatonic", "major_blues", "mixolydian"), over(0, "C", "F7", "G").take(5))
+        assertEquals(listOf("minor_pentatonic", "blues", "major_pentatonic", "mixolydian", "major_blues"), over(0, "C", "F7", "G").take(5))
     }
 
     @Test
