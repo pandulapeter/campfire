@@ -177,7 +177,11 @@ private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constrain
     }
 }
 
-/** One half of an [InstrumentPill]: the whole height of the pill is its touch target, its name crossfading as it changes. */
+/**
+ * One half of an [InstrumentPill]: the whole height of the pill is its touch target, its name crossfading as it changes.
+ * On a touch screen a half still takes a touch 48 dp tall, since Compose extends a small target's touch area to the
+ * minimum touch target size, as the `Stepper`'s buttons do; only its drawn height is the song's control height.
+ */
 @Composable
 private fun InstrumentPillHalf(
     modifier: Modifier = Modifier,

@@ -19,11 +19,11 @@ One instrument for the whole app.
   every caller goes through it.
 - Picked by one `InstrumentPill` of two halves split by a divider (the tuning half only for an instrument with more than
   one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning's name is cut short first, down
-  to 40% of the pill, then the instrument's: `tuningHalfMaxWidth`), and everywhere exactly `songControlHeight` of its
-  text style, so on a song it matches the transposition stepper. It
-  stands on the song details first section (read only included, since it changes a device preference), the Tuner, the
-  Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every note for, so
-  the Tuner leaves its Strings / Chromatic toggle out for it.
+  to 40% of the pill, then the instrument's: `tuningHalfMaxWidth`), and everywhere drawn exactly `songControlHeight` of
+  its text style, so on a song it matches the transposition stepper, and touched 48 dp tall (Compose's minimum touch
+  target). It stands on the song details first section (read only included, since it changes a device preference),
+  the Tuner, the Chords, and the Scales tabs, and the onboarding; never Settings. Other is what the tuner reads every
+  note for, so the Tuner leaves its Strings / Chromatic toggle out for it.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
   no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
