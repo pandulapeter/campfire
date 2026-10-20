@@ -83,15 +83,19 @@ public object PlayableScales {
     }
 
     /**
-     * Whether [chords] are a dominant blues on [root]: each a chord with a major third on its first, fourth or fifth
-     * step, and the first or the fourth step's a dominant seventh, its third and flat seventh both there. A seventh on
-     * the fifth alone is the plain cadence of every hymn and folk song, no blues. A first step with a flat ninth, a flat
-     * fifth, or a sharp fifth is an altered dominant, whose alteration the blues scales' natural fifth and ninth clash
-     * with; an altered turnaround elsewhere leaves the other bars a blues. A sharp ninth is the blues third, so it stays.
+     * Whether [chords] are a dominant blues on [root]: each a chord with a major third and no major seventh on its
+     * first, fourth or fifth step, and the first or the fourth step's a dominant seventh, its third and flat seventh
+     * both there. A seventh on the fifth alone is the plain cadence of every hymn and folk song, no blues, and a major
+     * seventh on the tonic (a Cmaj7 beside an F7) is a bossa's, which the blues scales' flat seventh clashes with. A
+     * first step with a flat ninth, a flat fifth, or a sharp fifth is an altered dominant, whose alteration the blues
+     * scales' natural fifth and ninth clash with; an altered turnaround elsewhere leaves the other bars a blues. A sharp
+     * ninth is the blues third, so it stays.
      */
     internal fun isDominantBlues(root: Int, chords: List<Chord>): Boolean {
         if (chords.isEmpty()) return false
-        val isMajorOnBluesStep = chords.all { (it.root - root).mod(12) in bluesSteps && MAJOR_THIRD in it.intervals }
+        val isMajorOnBluesStep = chords.all { chord ->
+            (chord.root - root).mod(12) in bluesSteps && chord.intervals.map { it.mod(12) }.let { MAJOR_THIRD in it && MAJOR_SEVENTH !in it }
+        }
         val isAltered = chords.any { chord -> (chord.root - root).mod(12) == 0 && chord.intervals.any { it.mod(12) in alterations } }
         return isMajorOnBluesStep && !isAltered && chords.any { (it.root - root).mod(12) in seventhSteps && MINOR_SEVENTH in it.intervals }
     }
@@ -126,6 +130,7 @@ public object PlayableScales {
     private const val MAJOR_THIRD = 4
     private const val FLAT_FIFTH = 6
     private const val MINOR_SEVENTH = 10
+    private const val MAJOR_SEVENTH = 11
     private const val MAJOR_PENTATONIC_ID = "major_pentatonic"
     private const val MINOR_PENTATONIC_ID = "minor_pentatonic"
     private const val MIXOLYDIAN_ID = "mixolydian"
