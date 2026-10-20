@@ -60,6 +60,7 @@ class ImportControllerQueueTest {
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
     private var areSongsEnabled = true
+    private var onPrepare: () -> Unit = {}
     private var plannedSongs = listOf(songEntry("new.cho"))
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private lateinit var dialogHost: DialogHost
@@ -103,6 +104,7 @@ class ImportControllerQueueTest {
             prepareImport = object : PrepareImportUseCase {
                 override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
                     prepareCount++
+                    onPrepare()
                     return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs)
                 }
             },
@@ -211,30 +213,71 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `with the songs switched off a pasted song is written and nothing is opened`() = runTest {
+    fun `with the songs switched off a pasted song is reviewed and written only once imported`() = runTest {
         areSongsEnabled = false
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
         val settled = enqueuePaste()
+        assertReviewedAndWrittenOnceImported(settled)
+    }
+
+    @Test
+    fun `with the songs switched off a song handed over is reviewed, written once imported and not opened`() = runTest {
+        areSongsEnabled = false
+        startController()
+        val settled = handOver()
+        assertReviewedAndWrittenOnceImported(settled)
+    }
+
+    private fun TestScope.assertReviewedAndWrittenOnceImported(settled: CompletableDeferred<Unit>) {
         runCurrent()
         Snapshot.sendApplyNotifications()
         runCurrent()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertEquals(0, importCount)
         assertTrue(newSongTexts.isEmpty())
+        controller.confirmImport()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
         assertEquals(1, importCount)
         assertTrue(openedSongs.isEmpty())
+        assertFalse(CampfireDestination.ImportReport in backStack)
         assertTrue(settled.isCompleted)
     }
 
     @Test
-    fun `with the songs switched off a song handed over is written and not opened`() = runTest {
+    fun `a switch turned on while a songs-off share is read still ends in its review`() = runTest {
         areSongsEnabled = false
+        onPrepare = { areSongsEnabled = true }
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
-        handOver()
+        enqueuePaste()
         runCurrent()
         Snapshot.sendApplyNotifications()
         runCurrent()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(newSongTexts.isEmpty())
+        assertEquals(0, importCount)
+        controller.confirmImport()
+        runCurrent()
         assertEquals(1, importCount)
-        assertTrue(openedSongs.isEmpty())
+        assertFalse(controller.isImporting.value)
+    }
+
+    @Test
+    fun `a switch turned off while a share is read ends in its review, not in the editor`() = runTest {
+        onPrepare = { areSongsEnabled = false }
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        Snapshot.sendApplyNotifications()
+        runCurrent()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(newSongTexts.isEmpty())
+        assertTrue(backStack.none { it is CampfireDestination.SongEditor })
+        assertEquals(0, importCount)
     }
 
     @Test

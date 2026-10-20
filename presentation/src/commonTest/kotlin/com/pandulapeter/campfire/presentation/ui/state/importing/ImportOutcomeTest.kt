@@ -21,22 +21,28 @@ class ImportOutcomeTest {
 
     @Test
     fun `an import the user started is reviewed`() {
-        assertTrue(requestOf("a.cho", "b.cho", shouldOpenSong = false).isReviewed)
+        assertTrue(requestOf("a.cho", "b.cho", shouldOpenSong = false).isReviewed(areSongsEnabled = true))
     }
 
     @Test
     fun `a single song file the system handed over is opened rather than reviewed`() {
-        assertFalse(requestOf("a.cho", shouldOpenSong = true).isReviewed)
+        assertFalse(requestOf("a.cho", shouldOpenSong = true).isReviewed(areSongsEnabled = true))
     }
 
     @Test
     fun `an archive the system handed over is still reviewed`() {
-        assertTrue(requestOf("library.zip", shouldOpenSong = true).isReviewed)
+        assertTrue(requestOf("library.zip", shouldOpenSong = true).isReviewed(areSongsEnabled = true))
     }
 
     @Test
     fun `an import that asks for no review is not reviewed`() {
-        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReviewed)
+        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReviewed(areSongsEnabled = true))
+    }
+
+    @Test
+    fun `with the songs switched off a single song file the system handed over is reviewed, the demo library still not`() {
+        assertTrue(requestOf("a.cho", shouldOpenSong = true).isReviewed(areSongsEnabled = false))
+        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReviewed(areSongsEnabled = false))
     }
 
     @Test

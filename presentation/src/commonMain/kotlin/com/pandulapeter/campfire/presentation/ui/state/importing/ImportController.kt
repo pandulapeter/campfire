@@ -66,7 +66,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
  *   `EditorSession.openNewSongEditor`.
  * @param areSongsEnabled Whether the app has songs to open, which it does not with the Songs switch off: a file or a
- *   text sent to the app is then imported as any batch is, with nothing opened and no editor started on it.
+ *   text sent to the app is then reviewed as any batch is, with nothing opened and no editor started on it.
  * @param songLookup The library as the screens look songs up in it, which the song to open is waited for in.
  * @param launchFileTransfer See [com.pandulapeter.campfire.presentation.ui.screens.export.ExportController.launchFileTransfer].
  * @param isLeaving Whether the desktop process is on its way out, which starts no batch any more.
@@ -155,8 +155,8 @@ internal class ImportController(
 
     /**
      * Files the system handed over: opened with Campfire, shared to it, or dropped onto it. Where that turns out to be
-     * one song, the song is what the user was after rather than the library it went into, so it is opened, and a single
-     * song file is written without a review unless its name is taken, see [isReviewed].
+     * one song, the song is what the user was after rather than the library it went into, so it is opened, and while the
+     * songs are switched on a single song file is written without a review unless its name is taken, see [isReviewed].
      *
      * @return Completed once the batch has settled, see [enqueueImport].
      */
@@ -235,7 +235,7 @@ internal class ImportController(
         // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
         // holds by construction; it is kept so that a second caller could not start an import over a running one.
         if (request.source.isEmpty || _isImporting.value || activeRequest != null) return null
-        val isReviewed = request.isReviewed
+        val isReviewed = request.isReviewed(areSongsEnabled = areSongsEnabled())
         if (isReviewed) {
             activeRequest = request
             // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
@@ -293,16 +293,19 @@ internal class ImportController(
 
             is Preparation.Planned -> {
                 // The plan carries everything the rest of the import needs, while the request lives for as long as the
-                // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing.
+                // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing. The
+                // switch is asked again first, since the source is what tells a lone song file apart: one turned off while
+                // the batch was read must not open an editor on a screen the switch removes, and sends it to the review.
+                val isReviewedNow = request.isReviewed(areSongsEnabled = areSongsEnabled())
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
-                val newSong = if (request.isNewSongFromText && areSongsEnabled()) plan.newSongOf() else null
+                val newSong = if (request.isNewSongFromText && !isReviewed && areSongsEnabled()) plan.newSongOf() else null
                 if (newSong != null) {
                     // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
                     // and it is the queue that opens it, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
                     return newSong
-                } else if (isReviewed || plan.hasConflicts || request.isNewSongFromText && plan.loneSong == null) {
+                } else if (isReviewed || isReviewedNow || plan.hasConflicts || request.isNewSongFromText && plan.loneSong == null) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.

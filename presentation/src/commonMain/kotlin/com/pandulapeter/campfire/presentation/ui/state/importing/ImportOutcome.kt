@@ -19,10 +19,13 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * is the one thing that still puts the screen up for it. A song picked from the app's own Import files is reviewed,
  * since one row and an Import is what the user asked to see; a document or an archive is reviewed whoever picked it.
  * A text pasted as a new song is not reviewed while it is being read: it is a form once it turns out to be one song, and
- * the import screen comes up only for what it turns out to be otherwise.
+ * the import screen comes up only for what it turns out to be otherwise. With the songs switched off nothing is opened
+ * and no editor is started, so what skips the review because it would be opened is reviewed after all, under the import
+ * screen's warning that it will not be seen; the demo library stays unreviewed whatever the switch.
  */
-internal val ImportRequest.isReviewed
-    get() = shouldReview && !isNewSongFromText && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
+internal fun ImportRequest.isReviewed(areSongsEnabled: Boolean) = shouldReview && (
+    !areSongsEnabled || !isNewSongFromText && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
+)
 
 private fun isSingleSong(name: String) = LibraryFiles.isSongFileName(name) && !LibraryFiles.isArchiveFileName(name)
 
