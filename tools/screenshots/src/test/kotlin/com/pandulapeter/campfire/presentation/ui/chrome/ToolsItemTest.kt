@@ -33,13 +33,13 @@ import kotlin.test.assertTrue
 internal class ToolsItemTest {
 
     @Test
-    fun `a short window puts the tools behind one item on the rail`() = runAppTest(window = TestWindow(width = RAIL_WIDTH, height = 479.dp)) {
+    fun `a rail too short for every item puts the tools behind one`() = runAppTest(window = TestWindow(width = RAIL_WIDTH, height = 400.dp)) {
         onNodeWithText(string(Res.string.tools)).assertExists()
         tools().forEach { onNodeWithText(it).assertDoesNotExist() }
     }
 
     @Test
-    fun `a window just tall enough keeps every tool on the rail`() = runAppTest(window = TestWindow(width = RAIL_WIDTH, height = 480.dp)) {
+    fun `a rail tall enough for every item keeps every tool on it`() = runAppTest(window = TestWindow(width = RAIL_WIDTH, height = 480.dp)) {
         onNodeWithText(string(Res.string.tools)).assertDoesNotExist()
         tools().forEach { onNodeWithText(it).assertExists() }
     }
@@ -60,7 +60,7 @@ internal class ToolsItemTest {
     private fun AppTestScope.tools() = listOf(string(Res.string.metronome), string(Res.string.tuner), string(Res.string.chords), string(Res.string.scales))
 }
 
-/** Taller than a short window, and too short for every item at twice the text size. */
+/** Tall enough for every item at the usual text size, and too short for them at twice it. */
 private val LARGE_TEXT_RAIL_HEIGHT = 500.dp
 
 /** Wide enough for a rail rather than a navigation bar, which groups the tools at any height. */
