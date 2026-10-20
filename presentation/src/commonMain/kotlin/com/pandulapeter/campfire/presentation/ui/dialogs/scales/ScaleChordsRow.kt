@@ -31,7 +31,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryCell
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellMinWidth
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
-import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
 
 /**
  * One row of a scale's chords under [title]: a cell per degree that stacks into a chord, its numeral over it, drawn with
@@ -60,7 +59,6 @@ internal fun ScaleChordsRow(
         modifier = Modifier
             .padding(top = 8.dp)
             .fillMaxWidth()
-            .fadingHorizontalEdges(scrollState)
             .horizontalScroll(scrollState)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
