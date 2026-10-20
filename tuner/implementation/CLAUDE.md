@@ -71,7 +71,9 @@ only once its fade has been played (the scale sheet replaces a tone every quarte
 - **Desktop**: `TargetDataLine` at 48 kHz on a daemon thread. The JVM cannot ask for permission and a refusal arrives
   as silence, so a line hearing only zeros for 3 s is reopened (swapped in only if listening has not stopped or
   restarted meanwhile; each capture thread closes the line it ends with; macOS answers its prompt after the line
-  opens). Tone: `SourceDataLine` writing its own fades.
+  opens). Tone: one `SourceDataLine` fed a `ToneStream` by a daemon thread, a replacement crossfading on the same
+  line; closed once a line buffer of the stream's silence is written and drained, a tone asked for before that joining
+  the stream.
 - **Web**: `getUserMedia` (processing off) into an `AnalyserNode` on the tuner's `AudioContext`, shared with the tone
   (`WebTunerAudio`, `window.__campfireTuner`). Stream kept only once connected; a failed graph ends its tracks.
   Capture-phase listener resumes the context while a tuner screen shows (`setStartable`), `WAITING_FOR_GESTURE` until
