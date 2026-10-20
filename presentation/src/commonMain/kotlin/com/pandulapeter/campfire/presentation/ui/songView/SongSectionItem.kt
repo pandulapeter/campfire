@@ -69,7 +69,7 @@ internal fun SongSectionItem(
         readsDefaults = section.readsDefaults,
         animatesControls = animatesControls,
         titleStyle = headerStyle,
-        chordStyle = chordStyle,
+        lyricsStyle = lyricsStyle,
         fontScale = fontScale,
         instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->
             {
@@ -122,7 +122,7 @@ internal fun SongSectionItem(
     is RenderSection.Timing -> SongTimingLine(
         modifier = modifier,
         timing = section,
-        style = chordStyle,
+        style = lyricsStyle,
     )
 
     is RenderSection.Lines -> LinesSectionItem(

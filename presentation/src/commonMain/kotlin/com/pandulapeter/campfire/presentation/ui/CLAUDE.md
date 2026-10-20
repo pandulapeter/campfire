@@ -113,9 +113,10 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### How a song is played is set in the song itself
 
-- Transposition, capo, tempo, and time signature are the first section of the song details grid, each next to its
-  control (the Transposition stepper names the written key it takes the chords to; the tempo stepper ends in Tap). They
-  scale with the text, hence the floor `UserPreferences.MIN_FONT_SCALE`.
+- Transposition, capo, tempo, and time signature are the first section of the song details grid, after the instrument
+  pill (the unlabelled transposition stepper names the written key it takes the chords to; the tempo stepper ends in Tap,
+  followed only by a time signature other than 4/4). Layout: `songView/firstSection`. They scale with the text, hence the floor
+  `UserPreferences.MIN_FONT_SCALE`.
 - Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
   signature is written into the file** (`{time}`), and the click counts by it.
 - **Song defaults sheet** (from About the song's Song defaults tile only) edits the file's four values; empty means the

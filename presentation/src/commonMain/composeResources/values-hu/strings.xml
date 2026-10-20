@@ -923,6 +923,7 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
+    <string name="song_details_time_signature">Ütemmutató: %1$s</string>
     <string name="song_details_key_change">Hangnem: %1$s</string>
     <string name="tab_notice_octave_up">Egy oktávval feljebb téve, hogy a fogólapon maradjon</string>
     <string name="tab_notice_octave_down">Egy oktávval lejjebb téve, hogy a fogólapon maradjon</string>

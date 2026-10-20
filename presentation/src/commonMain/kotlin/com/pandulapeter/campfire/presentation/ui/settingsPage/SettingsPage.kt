@@ -9,14 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.settingsPage
 
-import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,14 +23,13 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.components.spatialBoundsSpec
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
@@ -99,54 +94,52 @@ internal fun SettingsPage(
                 content = header,
             )
         }
-        SectionColumns(sections = sections, columnCount = columnCount)
+        SectionColumns(sections = sections, isSideBySide = columnCount > 1)
     }
 }
 
 /**
- * The sections of a [SettingsPage], side by side in [columnCount] columns of at most [MAX_COLUMN_WIDTH] or stacked in
- * one. Each section is a child of this one layout in either arrangement, rather than of a `Row` or of the `Column` of
- * its column, so that it keeps its state and its bounds across a change of arrangement and slides to its new place and
- * width (`animateBounds`) - only then, since a resize within one arrangement is followed as it comes.
+ * The sections of a [SettingsPage], side by side in columns of at most [MAX_COLUMN_WIDTH] where [isSideBySide] or
+ * stacked in one. Each section is a child of this one layout in either arrangement, rather than of a `Row` or of the `Column` of
+ * its column, so that it keeps its state across a change of arrangement and slides to its new place and width - only
+ * then, since a resize within one arrangement is followed as it comes.
+ *
+ * The slide is this layout's own: it measures and places the sections between the two arrangements, at their own height
+ * every frame. Not `animateBounds`, which holds a section at the size it is headed for and its content to that size, so
+ * that a row expanding or shrinking inside a section spills over the one under it for as long as it moves.
  */
 @Composable
 private fun SectionColumns(
     sections: List<@Composable () -> Unit>,
-    columnCount: Int,
+    isSideBySide: Boolean,
 ) {
-    val arrangement = updateTransition(targetState = columnCount, label = "SettingsPageColumns")
-    val motionScheme = MaterialTheme.motionScheme
-    // A child animation on the same spring keeps the transition running for as long as the sections travel, which is what
-    // tells a change of arrangement from a resize in the frames after the first one.
-    arrangement.animateFloat(transitionSpec = { motionScheme.defaultSpatialSpec() }, label = "SettingsPageColumnsProgress") {
-        it.toFloat()
-    }
-    val spec = motionScheme.spatialBoundsSpec()
-    val boundsTransform = remember(arrangement, spec) {
-        BoundsTransform { _, _ -> if (arrangement.currentState != arrangement.targetState) spec else snap() }
-    }
-    LookaheadScope {
-        val sectionBounds = Modifier.animateBounds(lookaheadScope = this, boundsTransform = boundsTransform)
-        Layout(
-            modifier = Modifier.fillMaxWidth(),
-            content = { sections.forEach { section -> Box(modifier = sectionBounds) { section() } } },
-        ) { measurables, constraints ->
-            val gap = SECTION_GAP.roundToPx()
-            val columnWidth = minOf(MAX_COLUMN_WIDTH.roundToPx(), (constraints.maxWidth - gap * (columnCount - 1)) / columnCount).coerceAtLeast(0)
-            val placeables = measurables.map { it.measure(Constraints(maxWidth = columnWidth)) }
-            val height = if (columnCount > 1) {
-                placeables.maxOfOrNull { it.height } ?: 0
-            } else {
-                placeables.sumOf { it.height } + gap * (placeables.size - 1).coerceAtLeast(0)
-            }
-            layout(constraints.maxWidth, height) {
-                var x = 0
-                var y = 0
-                placeables.forEach { placeable ->
-                    placeable.placeRelative(x, y)
-                    if (columnCount > 1) x += columnWidth + gap else y += placeable.height + gap
-                }
-            }
+    val sideBySide = animateFloatAsState(
+        targetValue = if (isSideBySide) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+    )
+    Layout(
+        modifier = Modifier.fillMaxWidth(),
+        // A section may be several SettingsSections (a settings tab's), so each is a column of its own rather than a
+        // child of this layout or of a Box, which would draw them over one another.
+        content = { sections.forEach { section -> Column(verticalArrangement = Arrangement.spacedBy(SECTION_GAP)) { section() } } },
+    ) { measurables, constraints ->
+        // Read while measuring, so that the frames of a slide only lay the sections out again.
+        if (measurables.isEmpty()) return@Layout layout(constraints.maxWidth, 0) {}
+        val progress = sideBySide.value
+        val gap = SECTION_GAP.roundToPx()
+        val maxColumnWidth = MAX_COLUMN_WIDTH.roundToPx()
+        val stackedWidth = minOf(maxColumnWidth, constraints.maxWidth)
+        val sideBySideWidth = minOf(maxColumnWidth, (constraints.maxWidth - gap * (measurables.size - 1)) / measurables.size)
+        val columnWidth = lerp(stackedWidth, sideBySideWidth, progress).coerceAtLeast(0)
+        val placeables = measurables.map { it.measure(Constraints(maxWidth = columnWidth)) }
+        var stackedY = 0
+        val positions = placeables.mapIndexed { index, placeable ->
+            IntOffset(x = lerp(0, index * (sideBySideWidth + gap), progress), y = lerp(stackedY, 0, progress))
+                .also { stackedY += placeable.height + gap }
+        }
+        val height = placeables.indices.maxOf { positions[it].y + placeables[it].height }
+        layout(constraints.maxWidth, height) {
+            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(positions[index]) }
         }
     }
 }

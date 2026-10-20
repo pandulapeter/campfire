@@ -15,7 +15,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.material3.MotionScheme
 import androidx.compose.ui.geometry.Rect
 
-/** The motion scheme's spatial spring for the bounds `animateBounds` carries a pane or a section through, settling within a pixel. */
+/** The motion scheme's spatial spring for the bounds `animateBounds` carries a pane through, settling within a pixel. */
 internal fun MotionScheme.spatialBoundsSpec() = when (val spec = defaultSpatialSpec<Rect>()) {
     is SpringSpec -> spring(dampingRatio = spec.dampingRatio, stiffness = spec.stiffness, visibilityThreshold = Rect.VisibilityThreshold)
     else -> spec

@@ -24,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 
 /**
- * How a [Stepper]'s value is written. Its digits are tabular, every one as wide as the others, so that a number is as
- * wide as any other with as many digits and the ends of a range are the widest values of it (see [StepperValueRoom]).
+ * How a [Stepper]'s value is written: in the weight of the labels and pills around it, the instrument pill's and the
+ * section headers' among them, so that none of them reads as a different kind of control; a changed value is set apart
+ * by its color. Its digits are tabular, every one as wide as the others, so that a number is as wide as any other with
+ * as many digits and the ends of a range are the widest values of it (see [StepperValueRoom]).
  */
 @Composable
 internal fun stepperValueStyle(fontScale: Float) = MaterialTheme.typography.labelLarge.scaled(fontScale).copy(
-    fontWeight = FontWeight.Bold,
+    fontWeight = FontWeight.Medium,
     fontFeatureSettings = "tnum",
 )
 

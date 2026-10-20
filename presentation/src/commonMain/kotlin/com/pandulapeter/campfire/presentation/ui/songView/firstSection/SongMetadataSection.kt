@@ -58,12 +58,13 @@ import com.pandulapeter.campfire.presentation.localization.textResource
  * a pinch changes them on every frame.
  * @param titleStyle The style of the section titles of the lyrics, which the controls are as tall as; what the card
  * holds scales with [fontScale] the way the lyrics do.
- * @param chordStyle The style the chords of the lyrics are set in, already scaled, which the line of text read only mode
- * draws the four values in: the key and the capo are read in the chords' accent color, and in the chords' size they read
- * as part of what is played rather than as a caption above it.
- * @param instrumentPill The instrument and tuning pill that heads the section, above what it is as much about as the
- * controls are: how the whole song is played (see [withChordsSection]); null where there is none. It fades in and out rather than
- * the section growing towards it, since the layout reads the section's size as it is measured.
+ * @param lyricsStyle The style the lyrics are set in, already scaled, which the line of text read only mode draws the
+ * four values in, so that in the lyrics' size they read as part of what is played rather than as a caption above it;
+ * only the key is set as a chord is, being one (see [playingValuesText]).
+ * @param instrumentPill The instrument and tuning pill that starts the section, since it is as much about how the whole
+ * song is played as the controls are (see [withChordsSection]): the first of their groups, on their first line where
+ * the next fits beside it; null where there is none. It fades in and out rather than the section growing towards it,
+ * since the layout reads the section's size as it is measured.
  */
 @Composable
 internal fun SongMetadataSection(
@@ -76,7 +77,7 @@ internal fun SongMetadataSection(
     readsDefaults: Boolean,
     animatesControls: Boolean,
     titleStyle: TextStyle,
-    chordStyle: TextStyle,
+    lyricsStyle: TextStyle,
     fontScale: Float,
     instrumentPill: (@Composable () -> Unit)? = null,
 ) = Column(modifier = modifier) {
@@ -88,31 +89,29 @@ internal fun SongMetadataSection(
     // The tuner stands with the pill for as long as it is drawn, fading in and out with them, and joins the values
     // only once they have gone: one button at a time.
     val isTunerWithPill = pillVisibility.targetState || pillVisibility.currentState
-    AnimatedVisibility(
-        visibleState = pillVisibility,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        // The pill reaches out of the controls' keyline as far as the section pills do, so that its edge lines up with
-        // theirs: the row starts that far short of it rather than drawing the pill shifted, so that it counts that width as
-        // room to wrap the tuner in.
-        FlowRow(
-            modifier = Modifier.padding(start = 12.dp - HEADER_HORIZONTAL_PADDING, end = 12.dp, bottom = INSTRUMENT_PILL_GAP),
-            horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
-            verticalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
+    val toolHeight = songControlHeight(titleStyle)
+    val pillGroup = @Composable { pillModifier: Modifier ->
+        AnimatedVisibility(
+            visibleState = pillVisibility,
+            enter = fadeIn(),
+            exit = fadeOut(),
         ) {
-            lastPill.content?.invoke()
-            if (playingTools != null) {
-                SongPlayingToolButtons(
-                    tools = playingTools,
-                    // Only the tuner ever stands here, wherever the values put the metronome.
-                    places = playingTools.places(hasInstrumentPill = true, hasChordValues = false, hasClickValues = false),
-                    place = PlayingToolPlace.AFTER_INSTRUMENT_PILL,
-                    height = songControlHeight(titleStyle),
-                    fontScale = fontScale,
-                )
-            }
+            InstrumentPillRow(
+                modifier = pillModifier,
+                pill = lastPill.content,
+                tools = playingTools,
+                toolHeight = toolHeight,
+                fontScale = fontScale,
+            )
         }
+    }
+    // The pill reaches out of the read values' keyline as far as the section pills do, so that its edge lines up with
+    // theirs, counting the width it reaches out by as room to wrap the tuner in. The controls start on that keyline
+    // themselves, every line of them with a pill.
+    val reachingOutPill = @Composable { pillGroup(Modifier.reachingOutBy(HEADER_HORIZONTAL_PADDING)) }
+    // Where nothing else is drawn in lines, the pill has a line of its own over the rest, reaching out the same way.
+    if (isSongInfoShown || playingControls == null && playingTools == null) {
+        pillGroup(Modifier.padding(start = 12.dp - HEADER_HORIZONTAL_PADDING, end = 12.dp, bottom = INSTRUMENT_PILL_GAP))
     }
     if (isSongInfoShown) {
         SongInfoCard(
@@ -126,10 +125,11 @@ internal fun SongMetadataSection(
             tools = playingTools,
             readsDefaults = readsDefaults,
             isAnimated = animatesControls,
-            style = chordStyle,
-            toolHeight = songControlHeight(titleStyle),
+            style = lyricsStyle,
+            toolHeight = toolHeight,
             fontScale = fontScale,
             hasInstrumentPill = isTunerWithPill,
+            instrumentPill = reachingOutPill,
         )
     } else {
         SongPlayingControlsRow(
@@ -139,17 +139,44 @@ internal fun SongMetadataSection(
             titleStyle = titleStyle,
             fontScale = fontScale,
             hasInstrumentPill = isTunerWithPill,
+            instrumentPill = { pillGroup(Modifier) },
         )
     }
 }
 
-/** What the section's instrument pill last drew, see [SongMetadataSection]. Not a state: nothing is redrawn because of it. */
+/** The instrument and tuning [pill] with the tuner after it, which goes under it whole where it does not fit beside it. */
+@Composable
+private fun InstrumentPillRow(
+    modifier: Modifier = Modifier,
+    pill: (@Composable () -> Unit)?,
+    tools: SongPlayingTools?,
+    toolHeight: Dp,
+    fontScale: Float,
+) = FlowRow(
+    modifier = modifier,
+    horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
+    verticalArrangement = Arrangement.spacedBy(INSTRUMENT_PILL_GAP),
+) {
+    pill?.invoke()
+    if (tools != null) {
+        SongPlayingToolButtons(
+            tools = tools,
+            // Only the tuner ever stands here, wherever the values put the metronome.
+            places = tools.places(hasInstrumentPill = true, hasChordValues = false, hasClickValues = false),
+            place = PlayingToolPlace.AFTER_INSTRUMENT_PILL,
+            height = toolHeight,
+            fontScale = fontScale,
+        )
+    }
+}
+
 private class LastInstrumentPill(var content: (@Composable () -> Unit)? = null)
 
 /**
  * The four values read rather than set, on one line. With [tools], the key and the capo are one group and the tempo and
  * the time signature another, each ended by the buttons that belong to it (see [playingToolPlaces]), laid out like the
- * controls: side by side where they fit, one under the other where they do not.
+ * controls ([GroupedRows]) after the [instrumentPill], which the section draws over the line instead where there are no
+ * tools.
  */
 @Composable
 private fun SongPlayingMetadata(
@@ -162,10 +189,11 @@ private fun SongPlayingMetadata(
     toolHeight: Dp,
     fontScale: Float,
     hasInstrumentPill: Boolean,
+    instrumentPill: @Composable () -> Unit,
 ) {
     val chordValues = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
-        metadata.capo?.takeIf { readsDefaults || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to true },
+        metadata.capo?.takeIf { readsDefaults || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to false },
     )
     val clickValues = listOfNotNull(
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) to false },
@@ -183,29 +211,31 @@ private fun SongPlayingMetadata(
             hasChordValues = chordValues.isNotEmpty(),
             hasClickValues = clickValues.isNotEmpty(),
         )
-        BalancedRows(
+        GroupedRows(
             modifier = modifier.padding(horizontal = 12.dp),
-            gap = PLAYING_VALUES_GROUP_GAP,
+            gap = INSTRUMENT_PILL_GAP,
+            groupGap = PLAYING_VALUES_GROUP_GAP,
             minRowHeight = toolHeight,
             isAnimated = isAnimated,
-        ) {
-            listOf(
+            groups = listOf(instrumentPill) + listOf(
                 PlayingToolPlace.AFTER_CHORD_VALUES to chordValues,
                 PlayingToolPlace.AFTER_CLICK_VALUES to clickValues,
                 PlayingToolPlace.ALONE to emptyList(),
-            ).forEach { (place, values) ->
-                PlayingValuesGroup(
-                    modifier = Modifier.layoutId(place),
-                    values = values,
-                    tools = tools,
-                    places = places,
-                    place = place,
-                    style = style,
-                    toolHeight = toolHeight,
-                    fontScale = fontScale,
-                )
-            }
-        }
+            ).map { (place, values) ->
+                {
+                    PlayingValuesGroup(
+                        modifier = Modifier.layoutId(place),
+                        values = values,
+                        tools = tools,
+                        places = places,
+                        place = place,
+                        style = style,
+                        toolHeight = toolHeight,
+                        fontScale = fontScale,
+                    )
+                }
+            },
+        )
     }
 }
 
@@ -250,7 +280,7 @@ private val PLAYING_VALUES_GROUP_GAP = 16.dp
 private val PLAYING_VALUES_TOOL_GAP = 12.dp
 
 /**
- * Between the instrument pill and the tuner after it, between their lines, and under them, as between the song's playing
- * tools and between the rows of its controls, so that the pill's line over the controls reads as one more of their rows.
+ * Between the instrument pill and the tuner after it, between the lines of the section, and under the pill where it has
+ * a line of its own, as between the song's playing tools and between the controls of a group.
  */
 private val INSTRUMENT_PILL_GAP = 8.dp

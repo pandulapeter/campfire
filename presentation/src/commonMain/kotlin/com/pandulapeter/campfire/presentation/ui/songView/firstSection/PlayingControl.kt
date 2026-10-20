@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.components.scaled
  * The label stands before the control while the two fit side by side, and above it where they do not: at a large text
  * size on a phone, a long label (Hungarian's "Transzponálás") and a stepper grown with the text are wider than the
  * screen together, and a row would hand the control only what the label left, cutting its value and its Tap segment
- * off. Where [isAnimated], the control springs between the two places, as the items of [BalancedRows] do.
+ * off. Where [isAnimated], the control springs between the two places, as the items of [GroupedRows] do.
  */
 @Composable
 internal fun PlayingControl(

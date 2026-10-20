@@ -32,8 +32,8 @@ internal class SongPlayingControls(
     /** Null with the metronome switched off. */
     val tempo: SongTempoControl?,
     /**
-     * The time signature as the file writes it, or the one the click counts the bar by where it names none. Null with
-     * the metronome switched off, since the bar it counts is the click's.
+     * The time signature the click counts the bar by, as the file writes it. Null where it is 4/4, as the song lists leave
+     * it out, and with the metronome switched off, since the bar it counts is the click's.
      */
     val timeSignature: String?,
 )

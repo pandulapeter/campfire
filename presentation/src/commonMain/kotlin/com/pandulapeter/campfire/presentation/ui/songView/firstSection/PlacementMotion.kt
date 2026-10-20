@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Where each of a layout's children is drawn while it travels, by the child's key ([BalancedRows]' items, a
+ * Where each of a layout's children is drawn while it travels, by the child's key ([GroupedRows]' items, a
  * [PlayingControl]'s label and control). The animations are started from the placement, which is the one place the new
  * positions are known, and read there too, so a frame of the travel only places the items again rather than measuring
  * them.

@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
@@ -24,7 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.SEMITONES_PER_OCTAVE
 import com.pandulapeter.campfire.presentation.ui.playing.shownFor
-import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionValue
 import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
 
 /**
@@ -64,10 +65,12 @@ internal fun rememberSongPlayingControls(
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            transpositionLabel(transposition, viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling))
+            transpositionValue(transposition, viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling))
         }
     }
-    val timeSignature = song.timeSignatureOrDefault.toString()
+    // Left out where it is 4/4, as the song lists leave it out: nearly every song is, and it is what the click counts
+    // where the file names none.
+    val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }?.toString()
     val fileName = song.fileName
     return remember(
         viewModel,
@@ -117,7 +120,7 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            timeSignature = timeSignature.takeIf { shouldShowTempo },
+            timeSignature = timeSignature?.takeIf { shouldShowTempo },
         )
     }
 }

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.instrument
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -81,25 +84,31 @@ internal fun InstrumentPill(
 ) {
     // Only the tuning half coming and going and a name changing animate the pill's width, each by itself. Animating every
     // change of the row's size instead would have the pill trail behind its text while a pinch scales a song's page.
-    Row(
-        modifier = Modifier.padding(horizontal = INSTRUMENT_PILL_EDGE_PADDING),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        InstrumentPillHalf(
-            text = instrumentLabel(instrument),
-            onClickLabel = stringResource(Res.string.instrument_choose),
-            style = style,
-            isEnabled = isEnabled,
-            onClick = onInstrumentClicked,
-        )
+    Row(verticalAlignment = Alignment.CenterVertically) {
         val shownTuning = tuning?.takeIf { instrument.tunings.size > 1 }
         // Kept while it fades out, so that it leaves as it was rather than as nothing. Not a state: nothing is redrawn
         // because of it.
         val lastShownTuning = remember { LastTuning() }
         shownTuning?.let { lastShownTuning.value = it }
+        val tuningState = tuningVisibility ?: remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
+        // The room between the pill's rounded end and the name is the last half's, so that its press and ripple reach the
+        // end of the pill; the instrument half gives it up as the tuning half comes in, at the pace that half grows.
+        val instrumentEndPadding by animateDpAsState(
+            targetValue = if (tuningState.targetState) INSTRUMENT_PILL_HALF_PADDING else INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        )
+        InstrumentPillHalf(
+            text = instrumentLabel(instrument),
+            onClickLabel = stringResource(Res.string.instrument_choose),
+            style = style,
+            isEnabled = isEnabled,
+            startPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
+            endPadding = instrumentEndPadding,
+            onClick = onInstrumentClicked,
+        )
         AnimatedVisibility(
             modifier = Modifier.weight(1f, fill = false),
-            visibleState = tuningVisibility ?: remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null },
+            visibleState = tuningState,
             enter = fadeIn() + expandHorizontally(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
             exit = fadeOut() + shrinkHorizontally(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
         ) {
@@ -123,6 +132,8 @@ internal fun InstrumentPill(
                     onClickLabel = stringResource(Res.string.instrument_tuning_choose),
                     style = style,
                     isEnabled = isEnabled,
+                    startPadding = INSTRUMENT_PILL_HALF_PADDING,
+                    endPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
                     onClick = { if (!isLeaving) onTuningClicked() },
                 )
             }
@@ -138,12 +149,14 @@ private fun InstrumentPillHalf(
     onClickLabel: String,
     style: TextStyle,
     isEnabled: Boolean,
+    startPadding: Dp,
+    endPadding: Dp,
     onClick: () -> Unit,
 ) = Box(
     modifier = modifier
         .fillMaxHeight()
         .clickable(enabled = isEnabled, onClickLabel = onClickLabel, role = Role.Button, onClick = onClick)
-        .padding(horizontal = INSTRUMENT_PILL_HALF_PADDING),
+        .padding(start = startPadding, end = endPadding),
     contentAlignment = Alignment.Center,
 ) {
     val fadeSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
@@ -164,7 +177,7 @@ private fun InstrumentPillHalf(
 /** What the tuning half of [InstrumentPill] last named. */
 private class LastTuning(var value: InstrumentTuning? = null)
 
-/** Between the pill's rounded ends and the halves, whose own touch targets would otherwise run into the curve. */
+/** Between the pill's rounded ends and the room around the names, inside the halves' presses (see [InstrumentPill]). */
 private val INSTRUMENT_PILL_EDGE_PADDING = 4.dp
 
 /** On either side of each name in an [InstrumentPill]. */

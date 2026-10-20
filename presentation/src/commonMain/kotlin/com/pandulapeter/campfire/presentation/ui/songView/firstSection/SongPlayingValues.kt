@@ -17,13 +17,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * Values of how the song is played on one line, the ones marked in the accent color: that is the color of the chords,
- * which are what the key and the capo decide, while the tempo and the time signature are the click's.
+ * Values of how the song is played on one line, in the lyrics' style, the one marked (the key) set as the chords are,
+ * bold and in their accent color, since it is a chord; the capo, the tempo, and the time signature are read plainly.
  */
 @Composable
 internal fun SongPlayingValues(
@@ -47,7 +48,7 @@ internal fun playingValuesText(values: List<Pair<String, Boolean>>): AnnotatedSt
     return buildAnnotatedString {
         values.forEachIndexed { index, (value, isAccented) ->
             if (index > 0) append(PLAYING_VALUE_SEPARATOR)
-            if (isAccented) withStyle(SpanStyle(color = accentColor)) { append(value) } else append(value)
+            if (isAccented) withStyle(SpanStyle(color = accentColor, fontWeight = FontWeight.Bold)) { append(value) } else append(value)
         }
     }
 }

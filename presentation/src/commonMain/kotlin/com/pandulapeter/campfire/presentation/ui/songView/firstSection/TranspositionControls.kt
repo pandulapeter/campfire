@@ -23,13 +23,14 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_u
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionValue
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun TranspositionControls(
     modifier: Modifier = Modifier,
     transposition: Int,
-    /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
+    /** The key the song is written in after transposing, shown instead of the amount when the file declares one. */
     key: String? = null,
     widestValues: List<String> = emptyList(),
     isDefault: Boolean = transposition == 0,
@@ -41,7 +42,9 @@ internal fun TranspositionControls(
     modifier = modifier,
     fontScale = fontScale,
     height = height,
-    value = transpositionLabel(transposition, key),
+    value = transpositionValue(transposition, key),
+    // The semitones are said too, as a key alone would not tell a listener how far the song has moved.
+    valueDescription = transpositionLabel(transposition, key),
     widestValues = widestValues,
     isDefault = isDefault,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),

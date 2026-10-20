@@ -37,4 +37,15 @@ class TranspositionLabelTest {
     fun `a blank key is left out`() {
         assertEquals("+3", transpositionLabel(3, " "))
     }
+
+    @Test
+    fun `the stepper reads the key alone where there is one`() {
+        assertEquals("C", transpositionValue(2, "C"))
+    }
+
+    @Test
+    fun `the stepper reads the semitones where there is no key`() {
+        assertEquals("+3", transpositionValue(3, null))
+        assertEquals("-2", transpositionValue(-2, " "))
+    }
 }
