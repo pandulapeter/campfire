@@ -258,13 +258,12 @@ internal class SongArrangement(
  * `snappedScrollTarget`), and its last page can be brought to the top like the others.
  *
  * A page that is a single row is set the way a designer sets a page with room to spare, wherever there is a
- * [centeredRowHeight] to set it in: every column of it is centered on its own in the page's height - the height of its
- * tallest column, or [centeredRowHeight] where that is more - the way the columns of a row are centered in its width.
- * The space a column leaves first widens the gaps between its sections, by no more than [maxExtraSectionGap] (sections
- * pulled further apart than that read as strangers rather than as one song) and no more than it keeps above and below
- * them, and the rest is shared out above and below, a little less of it above, since what is centered exactly reads
- * as sitting low - a column holding a piece of a section cut across two as well, which held against the cut would
- * lean away from the column beside it. Where [heldSpreads] has a column, it keeps the top and the gaps it was placed at
+ * [centeredRowHeight] to set it in: its columns are centered as one block in the page's height - the height of its
+ * tallest column, or [centeredRowHeight] where that is more - all of them starting at the same top. The space a column
+ * leaves first widens the gaps between its sections, by no more than [maxExtraSectionGap] (sections pulled further
+ * apart than that read as strangers rather than as one song) and no more than it keeps above and below them; what the
+ * tallest column then leaves is shared out above and below the block, a little less of it above, since what is
+ * centered exactly reads as sitting low, and a shorter column ends higher. Where [heldSpreads] has a column, it keeps the top and the gaps it was placed at
  * there instead, as far as they still fit (see [ColumnCenteringHold]). A page of several rows is moved down whole by a
  * little less than half of what it leaves of [centeredRowHeight] instead, or where [heldPageShifts] has the row that
  * starts it, by what it was moved down by there, as far as the page still fits. The divider above a page stays where
@@ -356,7 +355,10 @@ internal fun SectionGrid.arrange(
     cellCount = 0
     for (index in heights.indices) if (startsCell(index)) cellStarts[cellCount++] = index
     val cellEnds = IntArray(cellStarts.size) { cell -> if (cell < cellStarts.lastIndex) cellStarts[cell + 1] else heights.size }
-    val columnSpreads = HashMap<Long, ColumnSpread>()
+    val extraGaps = IntArray(cellStarts.size)
+    val spacesLeft = IntArray(cellStarts.size)
+    // What the tallest column of each page leaves of it once its gaps are widened, which places every column's top.
+    val pageSpacesLeft = IntArray(pageTops.size) { Int.MAX_VALUE }
     for (cell in cellStarts.indices) {
         val cellStart = cellStarts[cell]
         val cellEnd = cellEnds[cell]
@@ -373,10 +375,27 @@ internal fun SectionGrid.arrange(
             // would be justified, its first section against the top of the screen and its last against the bottom.
             else -> minOf(maxExtraSectionGap, freeSpace / (gapCount + 2))
         }
-        val spaceLeft = freeSpace - extraGap * gapCount
-        // A column ending or starting with a piece of a section cut across two is centered like any other: held
-        // against the cut, the two columns would lean away from each other across the page.
-        val columnTop = if (held != null) held.top.coerceIn(0, spaceLeft.coerceAtLeast(0)) else spaceLeft * SPACE_ABOVE_PERCENT / 100
+        extraGaps[cell] = extraGap
+        spacesLeft[cell] = freeSpace - extraGap * gapCount
+        pageSpacesLeft[page] = minOf(pageSpacesLeft[page], spacesLeft[cell])
+    }
+    val columnSpreads = HashMap<Long, ColumnSpread>()
+    for (cell in cellStarts.indices) {
+        val cellStart = cellStarts[cell]
+        val cellEnd = cellEnds[cell]
+        val page = pages[cellStart]
+        if (!isSingleRowPage[page]) continue
+        val key = columnKey(rows[cellStart], columns[cellStart])
+        val held = heldSpreads?.get(key)
+        val extraGap = extraGaps[cell]
+        // The columns of a page share one top, the row centered as a block by its tallest column: where the eye goes
+        // back up to the next column, or to the next page after a turn, its first line is where the last one's was,
+        // which columns centered each on their own would scatter.
+        val columnTop = if (held != null) {
+            held.top.coerceIn(0, spacesLeft[cell].coerceAtLeast(0))
+        } else {
+            pageSpacesLeft[page].coerceAtLeast(0) * SPACE_ABOVE_PERCENT / 100
+        }
         columnSpreads[key] = ColumnSpread(top = columnTop, extraGap = extraGap)
         var gapsAbove = 0
         for (index in cellStart until cellEnd) {

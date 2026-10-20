@@ -21,11 +21,12 @@ import kotlinx.coroutines.delay
 
 /**
  * Keeps every column where it was for a moment after a fold is toggled, rather than centering it in its page again at
- * once: a column is centered by its height, so a fold would otherwise move the sections above it too, the very header
- * that was tapped among them, and a second tap aimed at it would miss. Once [isHolding] turns false the columns are
- * centered again, which their sections spring to like any other change. [spreads] is what the layout last placed them
- * at while nothing held them, and [pageShifts] how far it moved the pages of several rows down, with the
- * [columnCounts] and [joinsPrevious] of the grid it placed them in: a grid paired into other pages has other columns.
+ * once: the columns are centered by the tallest, and a fold widens or narrows its column's gaps, so a fold would
+ * otherwise move the sections above it too, the very header that was tapped among them, and a second tap aimed at it
+ * would miss. Once [isHolding] turns false the columns are centered again, which their sections spring to like any
+ * other change. [spreads] is what the layout last placed them at while nothing held them, and [pageShifts] how far it
+ * moved the pages of several rows down, with the [columnCounts] and [joinsPrevious] of the grid it placed them in: a
+ * grid paired into other pages has other columns.
  */
 internal class ColumnCenteringHold {
 

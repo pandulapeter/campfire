@@ -149,15 +149,15 @@ class SectionGridTest {
             centeredRowHeight = 500,
             maxExtraSectionGap = 60,
         )
-        // The gap grows by no more than it may, and the rest of the room is shared out above and below each column,
-        // which is centered on its own, a little less of it above than below.
-        assertContentEquals(intArrayOf(99, 279, 157), arrangement.tops)
+        // The gap grows by no more than it may, and what the tallest column then leaves is shared out above and below
+        // the columns, which start at one top, a little less of it above than below.
+        assertContentEquals(intArrayOf(99, 279, 99), arrangement.tops)
         assertContentEquals(listOf(379), arrangement.pageBottoms)
         assertEquals(379, arrangement.height)
     }
 
     @Test
-    fun `every column of a page is spread over it as far as its own room allows`() {
+    fun `the columns of a page share a top, each spread as far as its own room allows`() {
         val grid = SectionGrid(rows = IntArray(5), columns = intArrayOf(0, 0, 1, 1, 1), columnCounts = intArrayOf(2))
         val arrangement = grid.arrange(
             heights = IntArray(5) { 100 },
@@ -166,12 +166,13 @@ class SectionGridTest {
             centeredRowHeight = 400,
             maxExtraSectionGap = 60,
         )
-        // The short column's gap grows by all it may, the full one's by as much as it keeps above and below it.
-        assertContentEquals(intArrayOf(54, 234, 13, 148, 283), arrangement.tops)
+        // The short column's gap grows by all it may, the full one's by as much as it keeps above and below it, and
+        // both start where the full one does.
+        assertContentEquals(intArrayOf(13, 193, 13, 148, 283), arrangement.tops)
     }
 
     @Test
-    fun `a column holding a piece of a cut section is centered like any other`() {
+    fun `a column holding a piece of a cut section starts at the page's top like any other`() {
         val grid = SectionGrid(rows = IntArray(3), columns = intArrayOf(0, 1, 1), columnCounts = intArrayOf(2))
         val arrangement = grid.arrange(
             heights = IntArray(3) { 100 },
@@ -182,7 +183,7 @@ class SectionGridTest {
             unitSections = intArrayOf(0, 0, 1),
         )
         // Neither the end of the cut section's first piece nor the start of its second is held against the cut.
-        assertContentEquals(intArrayOf(180, 99, 279), arrangement.tops)
+        assertContentEquals(intArrayOf(99, 99, 279), arrangement.tops)
     }
 
     @Test
@@ -199,10 +200,10 @@ class SectionGridTest {
         val before = arrange(intArrayOf(100, 100, 150), held = null)
         // The first section folds: centered again, the column would move down, but held, it stays where it was.
         val held = arrange(intArrayOf(40, 100, 150), held = before.columnSpreads)
-        assertContentEquals(intArrayOf(99, 219, 157), held.tops)
-        assertContentEquals(intArrayOf(126, 246, 157), arrange(intArrayOf(40, 100, 150), held = null).tops)
+        assertContentEquals(intArrayOf(99, 219, 99), held.tops)
+        assertContentEquals(intArrayOf(126, 246, 126), arrange(intArrayOf(40, 100, 150), held = null).tops)
         // Unfolded past what the page holds below it, the column is moved up only as far as it has to be.
-        assertContentEquals(intArrayOf(20, 400, 157), arrange(intArrayOf(300, 100, 150), held = before.columnSpreads).tops)
+        assertContentEquals(intArrayOf(20, 400, 99), arrange(intArrayOf(300, 100, 150), held = before.columnSpreads).tops)
     }
 
     @Test

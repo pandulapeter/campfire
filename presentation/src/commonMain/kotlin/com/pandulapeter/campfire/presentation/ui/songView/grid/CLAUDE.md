@@ -22,8 +22,9 @@ with the step keys, fewest pages first.
   the columns sideways with it.
 - **Several counts fit one row → the most even fill** (`balancedAmong`); more columns only by a margin and wrapping no
   more lines.
-- **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): a single-row page's columns are
-  centered, section gaps widened first (by at most a chorded line), the rest 45% above, since exact centering reads low.
+- **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): section gaps widened first (by at
+  most a chorded line), then a single-row page's columns centered as one block by the tallest, 45% above, since exact
+  centering reads low. They share one top, so the eye finds the next column's first line where the last one's was.
   The room is the one the grid was decided for, so it never scrolls. `ColumnSpreads` is what the hold freezes.
 - Rows are read across like systems of sheet music, never column by column. **A section taller than the screen gets a
   row of its own**: a pedal reader cannot go back up to a column beside it.
