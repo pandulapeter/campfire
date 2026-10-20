@@ -117,7 +117,7 @@ interface SyncRepository {
 
     /**
      * Asks for a run that nobody pressed a button for: the one every change the app makes to a song or setlist file asks
-     * for on its own. It starts five seconds after the last such request rather than after the first, so that a burst of
+     * for on its own. It starts a second after the last such request rather than after the first, so that a burst of
      * edits - a few tags toggled, an import of a hundred files - is carried by one run. A request made while a run is
      * going is honoured after that run, which may have read the library before the change. Ignored while nothing is
      * connected.

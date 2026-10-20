@@ -230,7 +230,7 @@ internal class SyncRunScheduler(
 
     internal companion object {
         /** How long the library has to stay unchanged before an automatic run starts, see [schedule]. */
-        val AUTOMATIC_RUN_DELAY = 5.seconds
+        val AUTOMATIC_RUN_DELAY = 1.seconds
 
         /** The waits before each retry of a run the network failed, the last one repeated for as long as the app lives. */
         val NETWORK_RETRY_DELAYS: List<Duration> = listOf(1.minutes, 2.minutes, 5.minutes, 15.minutes, 30.minutes)
