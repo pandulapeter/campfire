@@ -89,12 +89,12 @@ internal fun CampfireContent(
     val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = isCoverArtEnabled)
 
     // How many items each rail holds at the reader's text size, from the window's height less the rail's insets, which
-    // are the system bars' and never the keyboard's, so that the grouping of the tools does not flip while typing (except
-    // in a browser that shortens the page for its keyboard, Firefox on Android, where the window itself changes its
-    // size), and derived, so that a window being resized recomposes only in the frame it crosses a line. The insets are read through
-    // a state: every platform but Android hands out a new, fixed insets instance on every composition (see
-    // KeyboardAwarePadding), which a derived state remembered once would never see change. A line height goes through the
-    // density's font scale, non-linear included.
+    // are the system bars' and never the keyboard's, so that the grouping of the tools does not flip while typing
+    // (except in a browser that shortens the page for its keyboard, Firefox on Android, where the window itself changes
+    // its size), and derived, so that a window being resized recomposes only in the frame it crosses a line. The insets
+    // are read through a state: every platform but Android hands out a new, fixed insets instance on every composition
+    // (see KeyboardAwarePadding), which a derived state remembered once would never see change. A line height goes
+    // through the density's font scale, non-linear included.
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     val typography = MaterialTheme.typography
