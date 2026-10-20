@@ -40,7 +40,7 @@ public object Scales {
         ),
         scale(
             "phrygian_dominant", ScaleFamily.HARMONIC_MINOR_MODES, "0 1 4 5 7 8 10", "1 b2 3 4 5 b6 b7", "harmonic_minor" to 5,
-            listOf("Spanish Phrygian", "Hijaz", "Freygish", "Ahava Rabbah"),
+            listOf("Spanish Phrygian", "Phrygian major", "Hijaz", "Freygish", "Ahava Rabbah"),
         ),
         scale("lydian_sharp_2", ScaleFamily.HARMONIC_MINOR_MODES, "0 3 4 6 7 9 11", "1 #2 3 #4 5 6 7", "harmonic_minor" to 6),
         scale(
@@ -55,7 +55,7 @@ public object Scales {
         scale("lydian_augmented", ScaleFamily.MELODIC_MINOR_MODES, "0 2 4 6 8 9 11", "1 2 3 #4 #5 6 7", "melodic_minor" to 3),
         scale(
             "lydian_dominant", ScaleFamily.MELODIC_MINOR_MODES, "0 2 4 6 7 9 10", "1 2 3 #4 5 6 b7", "melodic_minor" to 4,
-            listOf("Acoustic", "Overtone"),
+            listOf("Acoustic", "Overtone", "Lydian ♭7", "Mixolydian ♯4"),
         ),
         scale(
             "mixolydian_flat_6", ScaleFamily.MELODIC_MINOR_MODES, "0 2 4 5 7 8 10", "1 2 3 4 5 b6 b7", "melodic_minor" to 5,

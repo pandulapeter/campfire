@@ -735,11 +735,11 @@
     <string name="scale_aliases_natural_minor">Aeolian</string>
     <string name="scale_aliases_ionian_sharp_5">Augmented major</string>
     <string name="scale_aliases_dorian_sharp_4">Romanian minor, Ukrainian Dorian</string>
-    <string name="scale_aliases_phrygian_dominant">Spanish Phrygian, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_phrygian_dominant">Spanish Phrygian, Phrygian major, Hijaz, Freygish, Ahava Rabbah</string>
     <string name="scale_aliases_ultralocrian">Super Locrian ♭♭7</string>
     <string name="scale_aliases_melodic_minor">Jazz minor</string>
     <string name="scale_aliases_dorian_flat_2">Phrygian ♮6</string>
-    <string name="scale_aliases_lydian_dominant">Acoustic, Overtone</string>
+    <string name="scale_aliases_lydian_dominant">Acoustic, Overtone, Lydian ♭7, Mixolydian ♯4</string>
     <string name="scale_aliases_mixolydian_flat_6">Aeolian dominant, Hindu</string>
     <string name="scale_aliases_locrian_natural_2">Half-diminished</string>
     <string name="scale_aliases_altered">Super Locrian, Diminished whole tone</string>
