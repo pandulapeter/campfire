@@ -114,6 +114,26 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `a preferences download that keeps failing is tried again less and less often`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.synchronizeAndWatch()
+        var downloads = 0
+        world.provider.onDownloadDocument = {
+            downloads++
+            throw SyncNetworkException("Offline")
+        }
+
+        world.provider.writeDocumentElsewhere(
+            name = SyncedPreferencesDocument.FILE_NAME,
+            bytes = SyncedPreferencesDocument.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
+        )
+        advanceTimeBy(30.minutes)
+
+        // Tried at once, then after 30 s, 1, 2, and every 5 minutes: nine times in half an hour, not sixty.
+        assertEquals(9, downloads)
+    }
+
+    @Test
     fun `this device's own uploads bring no run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE, song(2) to TWO))
         world.synchronizeAndWatch()
