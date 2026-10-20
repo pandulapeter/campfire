@@ -167,5 +167,5 @@ private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
 
 private val KIND_NUMBER = Regex("""\s+\d{1,4}$""")
 
-internal const val MAX_GROUP_SCALES = 3
+internal const val MAX_GROUP_SCALES = 4
 internal const val MAX_EXCEPTION_SCALES = 1
