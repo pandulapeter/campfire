@@ -70,8 +70,9 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
  * The Tuner tab: the instrument ([ToolInstrumentSetting]) at the top, as on the Chords and the Scales tabs, with the
- * reference pitch ([ReferencePitchControls]) on its line, in the corner the list screens' pill and New button stand in, then what is
- * heard ([TunerDisplay]), all pinned, as wide as a page of two sections like the Metronome tab's bar, and under them,
+ * reference pitch ([ReferencePitchControls]) on its line, in the corner the list screens' pill and New button stand in, or
+ * under the pill, at the same end, where the line is too narrow for both (`ToolInstrumentSetting`), then what is heard
+ * ([TunerDisplay]), all pinned, as wide as a page of two sections like the Metronome tab's bar, and under them,
  * scrolling, the strings ([TunerStringsSetting]), centered under the display they are played against. Under the
  * play circle, whether it reads the strings or every note ([TunerModeToggle]); chromatic, the instrument is dimmed and
  * does not open. The instrument and the reference pitch are offered here rather than on the sheet

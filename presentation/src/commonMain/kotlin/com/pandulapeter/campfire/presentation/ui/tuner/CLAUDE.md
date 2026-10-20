@@ -79,7 +79,11 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
 The tab pins the tools' instrument row (`ui/instrument/ToolInstrumentSetting`, as the Chords and Scales tabs start)
 and the mode toggle under it: the instrument pill at the start of a line of the list bar's height whose end holds the
 reference pitch, its stepper pill and a filled 48dp play circle exactly where the list screens' pill and New button
-stand (`NEW_ITEM_BUTTON_*`); the instrument pill gives up width (its tuning cut short) before it reaches them. No label.
+stand (`NEW_ITEM_BUTTON_*`); the instrument pill gives up width (its tuning cut short) before it reaches them. Where it
+could then show less than an em of its tuning (large text on a phone; the default size on a 360 dp phone keeps about
+17 dp, as the controls take 214 dp), the pill keeps the line and they slide under it, still at the end, so the mode
+toggle stays under the play circle; the line grows with them and only on width, never on the keyboard
+(`ui/instrument/ToolInstrumentLines.kt`). No label.
 The display follows, above a `SettingsPage` that is all header, as wide as the display (`headerColumns`): the notice,
 the issue line, and the strings, untitled but with their hint, centered under the display (the sheet keeps their
 title). It keeps the screen on while it hears. The gaps are the tools' `TOOL_GROUP_GAP`. The sheet scrolls everything

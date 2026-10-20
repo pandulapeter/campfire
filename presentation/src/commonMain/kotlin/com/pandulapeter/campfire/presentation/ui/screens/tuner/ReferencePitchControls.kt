@@ -48,8 +48,8 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The frequency of A4 everything is tuned from, stepped by a hertz or typed the way the tempo is (and reset to 440 from
  * the focused value the same way), and a toggle that plays that A until it is tapped again: the pill and the filled
- * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`), the pill as tall as
- * the instrument's beside it, as on a song's page. There is no label to read; a screen reader hears the note with the
+ * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`), under the instrument
+ * where the line is too narrow for both, the pill as tall as the instrument's beside it, as on a song's page. There is no label to read; a screen reader hears the note with the
  * frequency.
  */
 @Composable

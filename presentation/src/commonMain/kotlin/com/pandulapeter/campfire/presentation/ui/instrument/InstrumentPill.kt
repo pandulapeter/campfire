@@ -44,7 +44,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -91,7 +90,7 @@ internal fun InstrumentPill(
     // Only the tuning half coming and going and a name changing animate the pill's width, each by itself. Animating every
     // change of the row's size instead would have the pill trail behind its text while a pinch scales a song's page.
     Layout(measurePolicy = InstrumentPillMeasurePolicy, content = {
-        val shownTuning = tuning?.takeIf { instrument.tunings.size > 1 }
+        val shownTuning = shownTuning(instrument, tuning)
         // Kept while it fades out, so that it leaves as it was rather than as nothing. Not a state: nothing is redrawn
         // because of it.
         val lastShownTuning = remember { LastTuning() }
@@ -217,8 +216,5 @@ private fun InstrumentPillHalf(
 /** What the tuning half of [InstrumentPill] last named. */
 private class LastTuning(var value: InstrumentTuning? = null)
 
-/** Between the pill's rounded ends and the room around the names, inside the halves' presses (see [InstrumentPill]). */
-private val INSTRUMENT_PILL_EDGE_PADDING = 4.dp
-
-/** On either side of each name in an [InstrumentPill]. */
-private val INSTRUMENT_PILL_HALF_PADDING = 12.dp
+/** The tuning an [InstrumentPill] names beside [instrument]: [tuning], where the instrument has more than one to pick from. */
+internal fun shownTuning(instrument: UserPreferences.Instrument, tuning: InstrumentTuning?) = tuning?.takeIf { instrument.tunings.size > 1 }
