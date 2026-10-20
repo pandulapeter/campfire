@@ -17,7 +17,8 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
 - Compose reports no IME inset on the web, so `ProvideKeyboardInsets` uses the VirtualKeyboard API's `overlaysContent`
   (Chrome, Edge, Samsung Internet), reads `geometrychange`, animates it, and provides it as the `ime` of
   `LocalPlatformWindowInsets`; the window keeps its size. Firefox falls back on the viewport's
-  `interactive-widget=resizes-content` (the canvas shrinks). Safari ignores both and pans.
+  `interactive-widget=resizes-content` (the canvas shrinks), which to the app is a window resize: the rails' tools
+  grouping can change with it. Safari ignores both and pans.
 - The browser's media session is cleared from the engine's own playback state, not only from the composition, since a
   hidden tab's composition stops collecting.
 - Dropped files are imported; a dropped folder is read to the bottom like the desktop's (`FilePicker.wasmJs.kt`), its
