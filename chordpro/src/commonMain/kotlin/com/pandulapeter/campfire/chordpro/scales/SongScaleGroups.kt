@@ -27,9 +27,12 @@ import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
  * Groups are decided by a key, a home scale holding most of the chords with the rest named as exceptions, or, last, an
  * eight-note scale (see [fitOf]), so a song splits where its parts need different ones. Sections are grouped in the order
  * the song plays them, each joining the group whose chords it can share an answer with ([canJoin]): first one holding a
- * section of its own kind (a second verse goes with the first), then the group the section before it is in, then any
- * other, so that a verse after the solo goes back to the verses rather than starting a group of its own. A section that
- * fits no group starts one, and one no home scale holds two thirds of is left out. The root of a group is
+ * section with the same chords (a bridge that replays the intro goes with the intro), then one holding a section of its
+ * own kind (a second verse goes with the first), then the group the section before it is in, then any other, so that a
+ * verse after the solo goes back to the verses rather than starting a group of its own. A section that fits no group
+ * starts one, and one no home scale holds two thirds of is left out. A group only a home with exceptions fits, of at
+ * most three distinct chords, is a guess (two of three chords on a home), left out where the song has another group; a
+ * rock riff is not one, its minor pentatonic being the answer. The root of a group is
  * the key in force at its first section (the song's `{key}`, or the key the last `{transpose}` before it names) where
  * that key's scale holds its chords, else the root its chords are heard in, scored by how often, where, and after what
  * each is played (see [fitOf]).
@@ -48,11 +51,13 @@ public object SongScaleGroups {
         val groups = mutableListOf<Group>()
         parts.forEach { part ->
             val own = fitOf(listOf(part)) ?: return@forEach
+            val chords = part.chords.toSet()
             val candidates = groups.sortedBy { group ->
                 when {
-                    group.parts.any { it.kind == part.kind } -> 0
-                    group === groups.last() -> 1
-                    else -> 2
+                    group.parts.any { it.chords.toSet() == chords } -> 0
+                    group.parts.any { it.kind == part.kind } -> 1
+                    group === groups.last() -> 2
+                    else -> 3
                 }
             }
             val joined = candidates.firstNotNullOfOrNull { group ->
@@ -65,7 +70,8 @@ public object SongScaleGroups {
                 groups += Group(mutableListOf(part), own)
             }
         }
-        return groups.map { it.fit.groupOf(it.parts) }
+        val answers = groups.filter { !it.isGuess }
+        return (answers.ifEmpty { groups }).map { it.fit.groupOf(it.parts) }
     }
 
     /**
@@ -180,7 +186,10 @@ public object SongScaleGroups {
                 val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
                 harmony.chords.count { chord -> holders.any { holdsChord(it, root.pitchClass, chord) } }
             }
-            val best = counts.indexOf(counts.max())
+            val isRockRiff = PlayableScales.isRockRiff(root.pitchClass, harmony.chords)
+            // A rock riff's chords are all major, so of the homes holding as many of them, Mixolydian's major third and
+            // flat seventh are its sound, and every riff on one root then has one home to join on.
+            val best = looseHomes.indexOf(mixolydian).takeIf { isRockRiff && counts[it] == counts.max() } ?: counts.indexOf(counts.max())
             if (counts[best] * 3 < total * 2) return@firstNotNullOfOrNull null
             val home = looseHomes[best]
             // The floor counts how often a chord is played, and the minor family as one, but every distinct chord the
@@ -189,12 +198,16 @@ public object SongScaleGroups {
             val distinct = harmony.chords.distinct()
             val outside = distinct.count { !holdsChord(home, root.pitchClass, it) }
             if (outside > MAX_LOOSE_EXCEPTIONS && outside * 3 > distinct.size) return@firstNotNullOfOrNull null
-            if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, Level.LOOSE)
             val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
-            // The chords left out are what makes a rock riff, so its minor pentatonic and blues are asked of all of them.
-            val riff = if (PlayableScales.isRockRiff(root.pitchClass, harmony.chords)) PlayableScales.rockRiffScales else emptyList()
-            val scales = (listOf(home) + riff + PlayableScales.over(root.pitchClass, held)).distinct()
-            Fit(root, scales, Level.LOOSE, home, exceptionsOf(harmony, root, home))
+            // The chords left out are what makes a rock riff: its minor pentatonic and blues are played over all of them,
+            // the flat third against the chords' major one being the style, so they lead and nothing is an exception.
+            // The home still decides what the part joins.
+            if (isRockRiff) {
+                val scales = (PlayableScales.rockRiffScales + home + PlayableScales.over(root.pitchClass, held)).distinct()
+                return@firstNotNullOfOrNull Fit(root, scales, Level.LOOSE, home)
+            }
+            if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, Level.LOOSE)
+            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), Level.LOOSE, home, exceptionsOf(harmony, root, home))
         }
     }
 
@@ -241,7 +254,8 @@ public object SongScaleGroups {
      * and Dorian change one note of it, melodic minor two): a minor song's major V and IV are its own raised seventh and
      * sixth. Otherwise the scales of seven notes on the chord's own root that hold it, the common ones first, each kind
      * the closest to the home's notes first; the pentatonics and the blues a lone chord is offered would clash with the
-     * key around it. A chord nothing holds is not named.
+     * key around it. A chord nothing holds is not named, and neither is one played less than once in [MIN_EXCEPTION_SHARE]
+     * chords: a passing secondary dominant or a borrowed chord at the end is over before a player could change scale.
      */
     private fun exceptionsOf(harmony: Harmony, root: Root, home: Scale): List<ScaleException> {
         val homeNotes = Scales.pitchClasses(home, root.pitchClass)
@@ -249,6 +263,7 @@ public object SongScaleGroups {
             .filter { !homeNotes.containsAll(notesOf(harmony.chords[it])) }
             .groupBy { harmony.chords[it] }
             .entries
+            .filter { it.value.size * MIN_EXCEPTION_SHARE >= harmony.chords.size }
             .sortedByDescending { it.value.size }
             .mapNotNull { (chord, indices) ->
                 val name = harmony.names[indices.first()]
@@ -385,7 +400,10 @@ public object SongScaleGroups {
         fun holding(root: Root, ids: List<String>) = ids.firstNotNullOfOrNull { id -> Scales.fromId(id)?.takeIf { holds(it, root) } }
     }
 
-    private class Group(val parts: MutableList<Part>, var fit: Fit)
+    private class Group(val parts: MutableList<Part>, var fit: Fit) {
+        /** A home leaving out one of at most three chords, see [of]; a rock riff, which has no exceptions, is no guess. */
+        val isGuess get() = fit.level == Level.LOOSE && fit.exceptions.isNotEmpty() && parts.flatMap { it.chords }.distinct().size <= MAX_GUESSED_CHORDS
+    }
 
     /**
      * What [fitOf] answers: the [scales] on [root], the [home] scale that decided them, and the chords it leaves out.
@@ -413,6 +431,8 @@ public object SongScaleGroups {
     private const val MINOR_SEVENTH = 10
     private const val CADENCE_SCORE = 2
     private const val MAX_LOOSE_EXCEPTIONS = 2
+    private const val MAX_GUESSED_CHORDS = 3
+    private const val MIN_EXCEPTION_SHARE = 8
     private const val NATURAL_MINOR_ID = "natural_minor"
     private val naturalMinor = Scales.fromId(NATURAL_MINOR_ID)!!
     private val majorKeyScaleIds = listOf("major")
@@ -423,5 +443,6 @@ public object SongScaleGroups {
     private val minorFamilyIds = listOf(NATURAL_MINOR_ID, "harmonic_minor", "melodic_minor")
     private val minorFamily = minorFamilyIds.map(Scales::fromId).requireNoNulls()
     private val looseHomes = listOf("major", NATURAL_MINOR_ID, "dorian", "mixolydian").map(Scales::fromId).requireNoNulls()
+    private val mixolydian = looseHomes.last()
     private val minorExceptionScales = listOf("harmonic_minor", "dorian", "melodic_minor").map(Scales::fromId).requireNoNulls()
 }

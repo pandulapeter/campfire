@@ -19,9 +19,11 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
  *   them on the page.
  * @property rootName The root every scale is played on, a note in the standard notation.
  * @property scales The scales on [rootName] to play over the sections' chords, the home scale that holds most of them
- *   first, then what [PlayableScales.over] suggests for the chords it holds, in its order.
- * @property exceptions The chords of [blocks] the first of [scales] does not hold, each with what to play over it
- *   instead, the most played first; empty where it holds them all.
+ *   first (a rock riff's minor pentatonic and blues before it), then what [PlayableScales.over] suggests for the chords
+ *   it holds, in its order.
+ * @property exceptions The chords of [blocks] the home scale does not hold and that are played often enough to change
+ *   scale for, each with what to play over it instead, the most played first; empty where it holds them all, or the
+ *   sections are a rock riff, whose chords the minor pentatonic is played over by design.
  */
 public data class ScaleGroup(
     val blocks: List<ChordProBlock>,

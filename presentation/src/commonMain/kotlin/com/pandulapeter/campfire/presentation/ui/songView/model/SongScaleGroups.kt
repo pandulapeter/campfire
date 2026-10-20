@@ -52,8 +52,9 @@ internal data class SongScaleGroup(
  * between groups ("Verse 3" for the one after a modulation). A heading another group, or no group, also has is numbered
  * by its occurrences among the song's chorded sections ("Verse (1, 2)" and "Verse (3)" where the page numbers nothing),
  * and several groups with no named section are told apart by their first words. At most [MAX_GROUP_SCALES] scales a
- * group, the common ones first, since a long row of rarities buries the answer, and [MAX_GROUP_EXCEPTIONS] chords it
- * leaves out, the most played, [MAX_EXCEPTION_SCALES] scales each, every chord named as the page shows it in [notation].
+ * group (the home scale, then what a player reaches for first), since a row of rarities buries the answer and the
+ * Scales tab has every other one, and [MAX_GROUP_EXCEPTIONS] chord it leaves out, the most played, with
+ * [MAX_EXCEPTION_SCALES] scale, the common one first, every chord named as the page shows it in [notation].
  */
 internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels, notation: ChordNotation): List<SongScaleGroup> {
     val numbered = song.blocks.withNumberedSections(labels)
@@ -157,6 +158,6 @@ private fun kindOf(header: String) = header.replace(KIND_NUMBER, "")
 
 private val KIND_NUMBER = Regex("""\s+\d{1,4}$""")
 
-internal const val MAX_GROUP_SCALES = 5
-internal const val MAX_GROUP_EXCEPTIONS = 3
-internal const val MAX_EXCEPTION_SCALES = 3
+internal const val MAX_GROUP_SCALES = 3
+internal const val MAX_GROUP_EXCEPTIONS = 1
+internal const val MAX_EXCEPTION_SCALES = 1

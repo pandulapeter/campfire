@@ -167,12 +167,66 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a rock riff is played over the minor pentatonic and the blues on its root`() {
-        listOf("E G A E" to "G", "C Eb F C" to "Eb").forEach { (chords, outside) ->
+    fun `a rock riff is played over the minor pentatonic and the blues on its root, with no exceptions`() {
+        listOf("E G A E", "C Eb F C").forEach { chords ->
             val group = groups(song(chords)).single()
-            assertEquals(listOf("major", "minor_pentatonic", "blues"), group.scales.take(3).map { it.id }, chords)
-            assertEquals(listOf(outside), group.exceptions.map { it.chordName }, chords)
+            assertEquals(listOf("minor_pentatonic", "blues", "mixolydian"), group.scales.take(3).map { it.id }, chords)
+            assertTrue(group.exceptions.isEmpty(), chords)
         }
+    }
+
+    @Test
+    fun `a section replaying another's chords joins its group before one of its own kind`() {
+        val groups = groups(
+            """
+            {key: A}
+            {start_of_verse: Intro}
+            [A]x [C]x [G]x
+            {end_of_verse}
+            {start_of_chorus: Chorus}
+            [D]x [F]x [G]x
+            {end_of_chorus}
+            {start_of_bridge: Bridge}
+            [A]x [C]x [G]x
+            {end_of_bridge}
+            """,
+        )
+        assertEquals(listOf(listOf("Intro", "Bridge")), groups.map { it.labels })
+    }
+
+    @Test
+    fun `a guess on three chords is left out beside a better answer, and kept alone`() {
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G C Am F G", "D F G", key = "C")))
+        assertEquals(1, groups(song("D F G", key = "A")).size)
+    }
+
+    @Test
+    fun `a rock verse and a chorus in another key are two short answers`() {
+        val groups = groups(
+            """
+            {key: A}
+            {start_of_verse}
+            [A]x [A]x [C]x [G]x
+            {end_of_verse}
+            {start_of_prechorus}
+            [D]x [F]x [G]x
+            {end_of_prechorus}
+            {start_of_chorus}
+            [C]x [Gm]x [Am]x [A#]x [F]x [Dm]x [A]x
+            {end_of_chorus}
+            {start_of_bridge}
+            [A]x [C]x [G]x
+            {end_of_bridge}
+            {start_of_chorus}
+            [C]x [Gm]x [Am]x [A#]x [F]x [Dm]x
+            {end_of_chorus}
+            {start_of_outro}
+            [C]x [Gm]x [Am]x [A#]x [F]x [Fm]x [C]x
+            {end_of_outro}
+            """,
+        )
+        assertEquals(listOf("A" to "minor_pentatonic", "C" to "mixolydian"), groups.map { it.rootName to it.scales.first().id })
+        assertTrue(groups.all { it.exceptions.isEmpty() })
     }
 
     @Test

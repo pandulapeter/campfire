@@ -91,9 +91,9 @@ class SongScaleGroupsTest {
 
     @Test
     fun `an exception is named in the reader's notation, capped`() {
-        val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Bb]two [F]three [G]four\n{end_of_verse}"), labels, ChordNotation.GERMAN)
+        val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Am]two [Bb]three [F]four [G]five\n{end_of_verse}"), labels, ChordNotation.GERMAN)
         assertEquals(listOf("B"), german.single().exceptions.map { it.chordName })
-        val crowded = groups("[C]x [Dm]x [Em]x [F]x [G]x [Am]x [Cmaj7]x [Dm7]x [G7]x [Fmaj7]x [Am7]x [Em7]x [A7]x [E7]x [D7]x [Bb]x [C]x")
+        val crowded = groups("[C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x [C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x")
         assertEquals(MAX_GROUP_EXCEPTIONS, crowded.single().exceptions.size)
         assertTrue(crowded.single().exceptions.all { it.scales.size <= MAX_EXCEPTION_SCALES })
     }

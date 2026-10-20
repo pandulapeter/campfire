@@ -18,8 +18,9 @@
 - `ScaleChords.scalesContaining` is **root-anchored** (a C triad is in F major too, which is no help over a C), ignores
   a slash chord's bass, and never offers the chromatic scale, which holds every chord.
 - **`SongScaleGroups`** splits a song only where it must: one group when a scale fits it whole, else sections join, in
-  play order, the first group they still share a scale with (their own kind's, then the last, then any), so a verse
-  after a modulated solo goes back to the verses. Groups are decided on scales of at most seven notes: an eight-note
+  play order, the first group they still share a scale with (one with a section of the same chords, then their own
+  kind's, then the last, then any), so a verse after a modulated solo goes back to the verses and a bridge replaying
+  the intro goes with it. A home holding two of at most three chords is a guess, dropped beside any other group. Groups are decided on scales of at most seven notes: an eight-note
   scale's passing tone would let a major verse and a Mixolydian chorus share one. Roots: the key in force (`{key}`, or
   the key a `{transpose}` names) where its scale holds the chords, else the best scored root (chords on it, the first
   and last, cadences into it) a major or minor scale holds them on, a Mixolydian or Dorian centre only where the part
@@ -28,7 +29,9 @@
   `{transpose}` is never applied here, or a modulated verse would read two steps up. A chorus recall is counted again
   only where its chords differ from the chorus's (one after a `{transpose}`). Where no scale holds a part, a home scale (major, the minor family as one, Dorian, Mixolydian) holding two
   thirds of its chords answers, unless it leaves out more than two distinct chords and more than a third of them, each chord it leaves out a `ScaleException` with seven-note scales holding it (a minor
-  home's own harmonic minor, Dorian, or melodic minor where one does); below that floor the part is left out.
+  home's own harmonic minor, Dorian, or melodic minor where one does), unless it is played less than once in eight
+  chords; below that floor the part is left out. A rock riff a home holds this way leads with its minor pentatonic and
+  blues and has no exceptions, its home Mixolydian where that holds as many chords as any.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
   pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic
   and blues also after a Mixolydian home's major one, over a dominant blues with the I or IV a seventh, and over a rock

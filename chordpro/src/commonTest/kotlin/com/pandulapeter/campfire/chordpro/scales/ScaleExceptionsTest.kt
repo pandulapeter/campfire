@@ -82,7 +82,13 @@ class ScaleExceptionsTest {
     @Test
     fun `a home leaving out more than two chords and a third of them has no group`() {
         assertTrue(groups("C# F# E F# B E D C#m Bm").isEmpty())
-        assertEquals(3, group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").exceptions.size)
+        assertEquals("C" to "major", group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").home)
+    }
+
+    @Test
+    fun `a chord played less than once in eight is no exception`() {
+        assertTrue(group("C Dm Em F G Am Cmaj7 Dm7 G7 Fmaj7 Am7 A7 E7 D7 C").exceptions.isEmpty())
+        assertEquals(listOf("E7"), group("C E7 Am F G C E7 Am A7 Dm G7 C").exceptions.map { it.chordName })
     }
 
     @Test
