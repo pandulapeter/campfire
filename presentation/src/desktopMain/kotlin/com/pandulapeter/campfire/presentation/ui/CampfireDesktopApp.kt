@@ -30,6 +30,7 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.EscapeStep
 import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
@@ -167,9 +168,12 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
             isSearchOpen = navigator.searches.isCurrentSearchOpen,
             isSelecting = songSelection.isSongSelecting,
             stackSize = navigator.backStack.size,
+            isFilterShown = navigator.backStack.lastOrNull() == CampfireDestination.Songs &&
+                songListState.isSongFilterActive.value,
         )
         when (step) {
             EscapeStep.CLOSE_SEARCH -> navigator.searches.closeCurrentSearch()
+            EscapeStep.CLEAR_FILTERS -> songListState.clearSongFilter()
             EscapeStep.END_REORDERING, EscapeStep.END_SELECTION, EscapeStep.GO_BACK -> navigator.navigateBack()
             EscapeStep.EXIT -> appExitController.confirmExit(onExit)
         }

@@ -10,8 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Improvements
-- Global sync indicator, maybe pull to refresh on mobile
-- Tuner chromatic toggle
 - Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)

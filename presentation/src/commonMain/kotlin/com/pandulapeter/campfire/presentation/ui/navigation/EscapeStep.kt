@@ -15,6 +15,7 @@ internal enum class EscapeStep {
     CLOSE_SEARCH,
     END_SELECTION,
     GO_BACK,
+    CLEAR_FILTERS,
     EXIT,
 }
 
@@ -24,12 +25,21 @@ internal enum class EscapeStep {
  * rebuilds the stack around it, so the setlists screen is reached with the songs screen still under it, and every step
  * back there would otherwise leave the tab with the search still open behind it. The song selection comes after the
  * search rather than before it, unlike the reorder mode: the selection is put together through the search, and ending
- * the mode is the step that loses something. Only then is a screen left, or the app, from the last one.
+ * the mode is the step that loses something. Only then is a screen left. On the last one, the tag and language filters
+ * the songs screen shows ([isFilterShown]) are reset before the app asks to close: a filtered list is a state to leave,
+ * like a search, and the close question over it would skip that step.
  */
-internal fun escapeStepOf(isReordering: Boolean, isSearchOpen: Boolean, isSelecting: Boolean, stackSize: Int) = when {
+internal fun escapeStepOf(
+    isReordering: Boolean,
+    isSearchOpen: Boolean,
+    isSelecting: Boolean,
+    stackSize: Int,
+    isFilterShown: Boolean,
+) = when {
     isReordering -> EscapeStep.END_REORDERING
     isSearchOpen -> EscapeStep.CLOSE_SEARCH
     isSelecting -> EscapeStep.END_SELECTION
     stackSize > 1 -> EscapeStep.GO_BACK
+    isFilterShown -> EscapeStep.CLEAR_FILTERS
     else -> EscapeStep.EXIT
 }

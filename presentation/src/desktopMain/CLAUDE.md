@@ -31,8 +31,9 @@ The desktop shell, called by `:app:desktop`.
 
 - Which keys are shortcuts is one common, tested table for desktop and web (`ui/AppShortcuts.kt`: `appShortcutOf`, then
   `perform`); each shell only names its keys.
-- **Escape**, in order: dismiss what is open on top, close the top screen's search, pop the back stack, or ask
-  `DialogType.ConfirmExit` (an extra Escape is a habit, not a decision; the close button and system quit don't ask).
+- **Escape**, in order: dismiss what is open on top, close the top screen's search, pop the back stack, reset the
+  filters of a songs screen left last (`EscapeStep.CLEAR_FILTERS`), or ask `DialogType.ConfirmExit` (an extra Escape is
+  a habit, not a decision; the close button and system quit don't ask).
   - "Open on top" is `visibleDialog` plus `overlayState.isAnyMenuOpen` (`LocalOverlayState`, also given to sheets a
     screen hosts itself, like the editor's search). A window key handler runs before Compose turns Escape into a back
     event, so missing one here pops the stack behind the modal.

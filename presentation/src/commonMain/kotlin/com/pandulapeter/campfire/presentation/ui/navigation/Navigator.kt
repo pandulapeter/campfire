@@ -460,11 +460,13 @@ internal class Navigator(
             isSearchOpen = songsSearch().isOpen.value,
             isSelecting = isSongSelecting(),
             stackSize = backStack.size,
+            // Only the desktop's Escape resets the filters; a system back on the last screen leaves the app as it was.
+            isFilterShown = false,
         )
         when (step) {
             EscapeStep.END_REORDERING -> return endSetlistReordering()
             EscapeStep.END_SELECTION -> return endSongSelection()
-            EscapeStep.CLOSE_SEARCH, EscapeStep.GO_BACK, EscapeStep.EXIT -> Unit
+            EscapeStep.CLOSE_SEARCH, EscapeStep.GO_BACK, EscapeStep.CLEAR_FILTERS, EscapeStep.EXIT -> Unit
         }
         when {
             hasUnsavedEditorChanges() && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
