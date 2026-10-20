@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.api.sync
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
@@ -38,12 +39,32 @@ interface SyncFolder {
      * Everything in the remote library folder.
      *
      * Every run lists the whole folder rather than asking what changed. For a library of songs that is one request,
-     * and it is right even when a previous run was interrupted half way - which a delta would not be. A provider
-     * that wants to offer live updates has somewhere to put a cursor; nothing needs one yet. Whatever else the user
+     * and it is right even when a previous run was interrupted half way - which a delta would not be. The cursor the
+     * listing carries is only for [awaitChanges] and [changesSince]. Whatever else the user
      * keeps in the folder may be listed too. The engine leaves out what [LibraryFileKind.matches] does not recognise
      * and refuses to download what is too large to be a song, so a provider does neither.
      */
     suspend fun list(): RemoteListing
+
+    /**
+     * Waits until something in the folder changes after [cursor] (a [RemoteListing.cursor] or a [RemoteChanges.cursor])
+     * and answers true, or answers false once the service has waited for a few minutes without one, for the caller to
+     * ask again. Made while the app is in front only, so that another device's change reaches this one without a
+     * request every few seconds: the service holds the one request open, and nothing is sent while nothing changes.
+     *
+     * A wait the service asks for before the next one is waited here, before answering. A cursor the service no longer
+     * accepts answers true: what changed since is unknown, and [changesSince] says so by throwing. Throws
+     * [SyncNetworkException] for a service that cannot be reached. Only called with a cursor the provider handed out.
+     */
+    suspend fun awaitChanges(cursor: String): Boolean
+
+    /**
+     * What changed in the folder after [cursor], this device's own writes included, and the cursor to carry on from.
+     * Only library files and the folder's own documents are reported, by the same rules as [list] and
+     * [downloadDocument]. Throws [SyncNetworkException] for a service that cannot be reached, and anything else for a
+     * cursor it no longer accepts, after which only a new [list] gives a cursor to go on with.
+     */
+    suspend fun changesSince(cursor: String): RemoteChanges
 
     /**
      * The file as it is now, with the revision of what was fetched rather than the one [list] named: another device may

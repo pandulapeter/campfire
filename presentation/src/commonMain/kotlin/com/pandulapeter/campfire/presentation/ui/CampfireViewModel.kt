@@ -85,6 +85,8 @@ import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
+import com.pandulapeter.campfire.domain.api.sync.SynchronizeOnReturnUseCase
+import com.pandulapeter.campfire.domain.api.sync.WatchRemoteChangesUseCase
 import com.pandulapeter.campfire.domain.api.setlists.UpdateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
@@ -200,6 +202,8 @@ class CampfireViewModel(
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
+    private val synchronizeOnReturn: SynchronizeOnReturnUseCase,
+    private val watchRemoteChanges: WatchRemoteChangesUseCase,
     private val startScheduledSynchronization: StartScheduledSynchronizationUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val searchCoverArt: SearchCoverArtUseCase,
@@ -378,6 +382,8 @@ class CampfireViewModel(
         forgetSyncConnection = forgetSyncConnection,
         restoreSync = restoreSync,
         synchronizeLibrary = synchronizeLibrary,
+        synchronizeOnReturn = synchronizeOnReturn,
+        watchRemoteChanges = watchRemoteChanges,
         cancelSynchronization = cancelSynchronization,
     )
 

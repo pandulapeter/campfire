@@ -20,5 +20,13 @@
 - `startScheduledSynchronization` (the app leaving the front) starts the run on the caller's thread and puts
   `SyncProgress()` in the state before returning, so the shell can hand it to the platform keep-alive in the same
   callback.
+- The app coming back to the front starts an automatic run (`synchronizeOnReturn`), except after `Interrupted`, which
+  is reported rather than repeated, as at a launch.
+- `SyncRemoteWatcher` watches the provider's change feed while the app is in front, from `SyncRunner.watchPoint`: the
+  cursor of a completed run's last listing with the index it left. A change whose revision the index holds, a deletion
+  of a file it no longer holds, or a `preferences.json` that decodes to the one the run left, is this device's own;
+  anything else schedules a run and stops watching until that run hands over a new point. A run clears the point as it
+  starts and only a completed one sets it, so a stopped run or an open deletion question is never restarted by the
+  feed. A feed that cannot be reached is asked again later; any other failure schedules a run.
 - `SyncLibraryRefresher` re-reads only the files a run changed, never a rescan, after any ending.
 - Tests advance `SyncEnvironment`'s scope with `runCurrent` / `advanceTimeBy`, never `advanceUntilIdle`.

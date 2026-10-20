@@ -44,7 +44,7 @@ internal class SyncServiceStarter(private val activity: Activity) {
     /**
      * The service is only started once the app is being left: in front, the activity keeps the process alive anyway,
      * and a foreground service shows its notification - Stop button and all - at once, which for the run every edit
-     * starts ten seconds later would be a notification after nearly every change the user makes. What arrives while the
+     * starts a few seconds later would be a notification after nearly every change the user makes. What arrives while the
      * app is in front is kept for [onLeaving]; what arrives after it starts the service there and then.
      */
     fun onSyncNotificationChanged(notification: SyncNotification?) {

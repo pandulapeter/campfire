@@ -53,6 +53,11 @@ Silent failures go to the injected `Logger`.
   A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure), and its `size` and
   `content_hash`, which the bytes must match, or that file fails (not the run). An answer that cannot be decoded is
   `SyncNetworkException`: a 200 HTML page comes from something in between, not from Dropbox.
+- Watching (`DropboxChangeFeed`): `list_folder/longpoll` on `notify.dropboxapi.com` takes the cursor of a listing's
+  last page and no token, held 240 s (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's up to
+  90 s, with the call's own bounds raised past that; its `backoff` is waited before answering, and a `reset` cursor
+  answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
+  document, since a library folder deleted whole may come as one entry.
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.

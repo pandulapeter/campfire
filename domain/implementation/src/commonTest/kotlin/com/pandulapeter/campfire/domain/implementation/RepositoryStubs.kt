@@ -118,6 +118,8 @@ internal open class SyncRepositoryStub : SyncRepository {
     override suspend fun forgetStoredConnection(): Unit = unexpected()
     override fun synchronize(deletionPolicy: SyncDeletionPolicy): Boolean = unexpected()
     override fun scheduleSynchronization(): Unit = unexpected()
+    override fun synchronizeOnReturn(): Unit = unexpected()
+    override suspend fun watchRemoteChanges(): Unit = unexpected()
     override fun startScheduledSynchronization(): SyncProgress? = unexpected()
     override fun cancelSynchronization(): Unit = unexpected()
 }

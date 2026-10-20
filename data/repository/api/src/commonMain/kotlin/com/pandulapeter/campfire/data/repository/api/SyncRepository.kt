@@ -117,7 +117,7 @@ interface SyncRepository {
 
     /**
      * Asks for a run that nobody pressed a button for: the one every change the app makes to a song or setlist file asks
-     * for on its own. It starts ten seconds after the last such request rather than after the first, so that a burst of
+     * for on its own. It starts five seconds after the last such request rather than after the first, so that a burst of
      * edits - a few tags toggled, an import of a hundred files - is carried by one run. A request made while a run is
      * going is honoured after that run, which may have read the library before the change. Ignored while nothing is
      * connected.
@@ -127,6 +127,22 @@ interface SyncRepository {
      * run it stops, since a run the user has just stopped must not start again on its own a few seconds later.
      */
     fun scheduleSynchronization()
+
+    /**
+     * Starts a run nobody pressed a button for, for the app coming back to the front, where the cloud folder may have
+     * moved on while it was away. Does nothing while nothing is connected, while a run is going, or after a run that
+     * was stopped or cut short, which is reported rather than repeated, as at a launch.
+     */
+    fun synchronizeOnReturn()
+
+    /**
+     * Watches the cloud folder for other devices' changes until cancelled, and asks for a run
+     * ([scheduleSynchronization]) when one arrives. For while the app is in front only: the service holds one request
+     * open at a time, which costs nearly nothing while nothing changes, but it is still a connection kept up, and a
+     * phone in the background has no use for it. Watches only from where a completed run left the folder, and nothing
+     * while a provider offers no feed of changes.
+     */
+    suspend fun watchRemoteChanges()
 
     /**
      * Starts the run [scheduleSynchronization] is waiting to start without waiting any longer, and does nothing when

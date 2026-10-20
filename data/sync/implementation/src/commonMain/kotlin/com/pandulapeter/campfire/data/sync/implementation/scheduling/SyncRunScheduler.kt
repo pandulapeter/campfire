@@ -120,6 +120,16 @@ internal class SyncRunScheduler(
         scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY, isRetry = false)
     }
 
+    /**
+     * Starts an automatic run for the app coming back to the front, unless the last run was stopped or cut short: that
+     * is reported rather than repeated, as at a launch. It carries whatever an automatic run was waiting to carry.
+     */
+    fun synchronizeOnReturn() {
+        val state = stateHolder.value as? SyncState.Connected ?: return
+        if (state.lastOutcome == SyncOutcome.Interrupted) return
+        if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) scheduledRun.value = null
+    }
+
     fun startScheduled(): SyncProgress? {
         val scheduled = scheduledRun.value
         when {
@@ -127,7 +137,7 @@ internal class SyncRunScheduler(
             // A phone's keep-alive is for carrying a change the user just made; a retry started offline inside a
             // foreground service would only fail at once. It stays armed for the debounce, if the process lives.
             scheduled.isRetry && !scheduled.dueAt.hasPassedNow() -> Unit
-            // The debounce chains the waiting run right behind the one that is going, as it would have in ten seconds.
+            // The debounce chains the waiting run right behind the one that is going, as it would have a moment later.
             syncJob.load()?.isActive == true -> scheduledRun.compareAndSet(scheduled, scheduled.copy(dueAt = environment.timeSource.markNow()))
             // Started here rather than left to the debounce, which would start it on another thread a moment later:
             // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
@@ -204,6 +214,7 @@ internal class SyncRunScheduler(
     /** Drops the waiting run and stops the one that is going, waiting for it to let go: what a disconnect needs. */
     suspend fun stopForDisconnect() {
         scheduledRun.value = null
+        runner.forgetWatchPoint()
         networkFailureCount.store(0)
         syncJob.exchange(null)?.cancelAndJoin()
         // Again after the join, which waits for afterRun: a retry it armed in the instant before the cancellation is gone.
@@ -215,7 +226,7 @@ internal class SyncRunScheduler(
 
     internal companion object {
         /** How long the library has to stay unchanged before an automatic run starts, see [schedule]. */
-        val AUTOMATIC_RUN_DELAY = 10.seconds
+        val AUTOMATIC_RUN_DELAY = 5.seconds
 
         /** The waits before each retry of a run the network failed, the last one repeated for as long as the app lives. */
         val NETWORK_RETRY_DELAYS: List<Duration> = listOf(1.minutes, 2.minutes, 5.minutes, 15.minutes, 30.minutes)

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnectionManager
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibraryRefresher
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRemoteWatcher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
@@ -96,6 +97,7 @@ internal fun TestScope.syncRepository(
             environment = environment,
         ),
         scheduler = scheduler,
+        remoteWatcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, environment = environment),
     )
 }
 

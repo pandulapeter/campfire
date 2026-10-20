@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnectionManager
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRemoteWatcher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -32,6 +33,7 @@ internal class SyncRepositoryImpl(
     stateHolder: SyncStateHolder,
     private val connectionManager: SyncConnectionManager,
     private val scheduler: SyncRunScheduler,
+    private val remoteWatcher: SyncRemoteWatcher,
 ) : SyncRepository {
 
     override val syncState = stateHolder.state
@@ -52,6 +54,10 @@ internal class SyncRepositoryImpl(
     override fun synchronize(deletionPolicy: SyncDeletionPolicy) = scheduler.synchronize(deletionPolicy)
 
     override fun scheduleSynchronization() = scheduler.schedule()
+
+    override fun synchronizeOnReturn() = scheduler.synchronizeOnReturn()
+
+    override suspend fun watchRemoteChanges() = remoteWatcher.watch()
 
     override fun startScheduledSynchronization() = scheduler.startScheduled()
 

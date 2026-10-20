@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
@@ -45,6 +47,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.update.AppUpdateGate
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeHapticsEffect
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeNotificationEffect
+import com.pandulapeter.campfire.presentation.ui.sync.SyncLifecycleEffects
+import com.pandulapeter.campfire.presentation.ui.sync.SyncProgressBar
 import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncNotifications
 import com.pandulapeter.campfire.presentation.ui.launch.LaunchScreenGate
 import kotlinx.coroutines.flow.Flow
@@ -105,6 +109,7 @@ fun CampfireApp(
             }
         }
     }
+    SyncLifecycleEffects(viewModel.syncController)
     // The editor's unsaved text goes to disk whenever the app stops being the one in front, and a waiting sync run
     // starts, see AppExitController.onAppPaused. ON_PAUSE rather than ON_STOP: it always comes first, and an app swiped
     // away from iOS's app switcher may never have got any further. The run is handed to the platform right here, while
@@ -175,6 +180,11 @@ fun CampfireApp(
                     isThemeSettled = isThemeSettled,
                     launchScreenColors = launchScreenColors,
                     onAppReady = onAppReady,
+                )
+                val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+                SyncProgressBar(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    progress = (syncState as? SyncState.Connected)?.progress,
                 )
             }
         }

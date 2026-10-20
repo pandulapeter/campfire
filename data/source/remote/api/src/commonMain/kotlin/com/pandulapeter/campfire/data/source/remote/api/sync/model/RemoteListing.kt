@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.data.source.remote.api.sync.model
 /**
  * Everything in the remote library folder.
  *
- * A wrapper rather than a bare list because this is where a "what changed since" token would go if live updates are
- * ever wanted - Dropbox calls it a `list_folder` cursor, Drive a `startPageToken`. Sync does not need one: it lists
- * the whole folder every run, which for a library of songs is a single request and is right even after a run that
- * was interrupted half way.
+ * Sync lists the whole folder every run, which for a library of songs is a single request and is right even after a run
+ * that was interrupted half way. [cursor] is only for watching the folder afterwards, see
+ * [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.awaitChanges].
+ *
+ * @param cursor Where the service's feed of changes stood when the listing was taken, opaque like a revision, or null
+ *   for a provider that offers no such feed.
  */
 data class RemoteListing(
     val files: List<RemoteFile>,
+    val cursor: String? = null,
 )

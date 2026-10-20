@@ -244,6 +244,32 @@ class SyncRunSchedulerTest {
         assertEquals(1, world.runs.count)
     }
 
+    @Test
+    fun `returning to the app starts a run that carries the waiting one`() = runTest {
+        val world = world()
+
+        world.scheduler.schedule()
+        world.scheduler.synchronizeOnReturn()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(1, world.runs.count)
+    }
+
+    @Test
+    fun `returning to the app after a stopped run starts nothing`() = runTest {
+        val world = world()
+        world.provider.onList = { world.scheduler.cancel() }
+        world.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+        world.provider.onList = {}
+
+        world.scheduler.synchronizeOnReturn()
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(SyncOutcome.Interrupted, world.lastOutcome)
+        assertEquals(1, world.runs.count)
+    }
+
     private fun FakeSyncProvider.failListingOnce() {
         onList = {
             onList = {}

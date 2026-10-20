@@ -29,6 +29,13 @@ internal data class DropboxListFolderResponse(
     @SerialName("has_more") val hasMore: Boolean,
 )
 
+/** What `list_folder/longpoll` answers: whether anything changed, and how long to wait before asking again. */
+@Serializable
+internal data class DropboxLongpollResponse(
+    val changes: Boolean,
+    @SerialName("backoff") val backoffSeconds: Long? = null,
+)
+
 @Serializable
 internal data class DropboxEntry(
     @SerialName(".tag") val tag: String = "",

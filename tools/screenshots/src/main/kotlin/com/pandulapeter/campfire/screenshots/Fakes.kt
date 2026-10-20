@@ -88,6 +88,10 @@ private class ConnectedSyncRepository : SyncRepository {
 
     override fun scheduleSynchronization() = Unit
 
+    override fun synchronizeOnReturn() = Unit
+
+    override suspend fun watchRemoteChanges() = Unit
+
     override fun startScheduledSynchronization(): SyncProgress? = null
 
     override fun cancelSynchronization() = Unit

@@ -18,11 +18,14 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 
 /**
  * A remote folder held in memory, for running [SyncEngine] against. Revisions are a counter per write, which is all
@@ -41,6 +44,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  * answers once it has cleared them, which the caller runs in the background; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
  * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
  * what finishing an authorization does, which is where a test stores credentials and then gives up or fails.
+ * Every write and deletion goes into a feed of changes, read with [awaitChanges] and [changesSince] from the position a
+ * listing's cursor names, and [writeElsewhere] and [deleteElsewhere] are another device's changes reaching the folder.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -121,14 +126,9 @@ internal class FakeSyncProvider(
     }
 
     private fun listing() = RemoteListing(
+        cursor = feed.value.size.toString(),
         files = files.also { listCount++ }.map { (key, file) ->
-            RemoteFile(
-                kind = key.kind,
-                name = key.name,
-                revision = file.second,
-                contentHash = contentHashOf(file.first),
-                size = sizes[key] ?: file.first.size.toLong(),
-            )
+            remoteFile(key, file.first, file.second)
         },
     )
 
@@ -163,6 +163,7 @@ internal class FakeSyncProvider(
         if (files[target]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[target] = bytes to revision
+        feed.value += target.path
         return RemoteWriteResult.Written(revision)
     }
 
@@ -172,7 +173,10 @@ internal class FakeSyncProvider(
         val (refused, deleted) = deletions.partition { it.name in refusedDeletions }
         deleted.forEach { deletion ->
             val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
-            if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) files -= target
+            if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) {
+                files -= target
+                feed.value += target.path
+            }
         }
         return refused.associateWith { "refused" }
     }
@@ -194,6 +198,60 @@ internal class FakeSyncProvider(
         if (documents[name]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         documents[name] = bytes to revision
+        feed.value += name
         return RemoteWriteResult.Written(revision)
     }
+
+    /** Every file path and document name written or deleted, in order; a cursor is a position in it. */
+    private val feed = MutableStateFlow(emptyList<String>())
+
+    /** How many times [awaitChanges] was asked. */
+    var awaitCount = 0
+
+    /** Runs before [changesSince] answers, which is where a test makes it fail. */
+    var onChangesSince: suspend () -> Unit = {}
+
+    override suspend fun awaitChanges(cursor: String): Boolean {
+        awaitCount++
+        feed.first { it.size > cursor.toInt() }
+        return true
+    }
+
+    override suspend fun changesSince(cursor: String): RemoteChanges {
+        onChangesSince()
+        val changed = feed.value.drop(cursor.toInt()).toSet()
+        val keys = changed.mapNotNull(SyncKey::fromPath)
+        return RemoteChanges(
+            files = keys.mapNotNull { key -> files[key]?.let { (bytes, revision) -> remoteFile(key, bytes, revision) } },
+            deletedFiles = keys.filter { it !in files }.map { RemoteChanges.DeletedFile(kind = it.kind, name = it.name) },
+            documents = changed.filterTo(mutableSetOf()) { SyncKey.fromPath(it) == null },
+            cursor = feed.value.size.toString(),
+        )
+    }
+
+    /** Another device writing [key]. */
+    fun writeElsewhere(key: SyncKey, bytes: ByteArray) {
+        files[key] = bytes to "r${nextRevision++}"
+        feed.value += key.path
+    }
+
+    /** Another device deleting [key]. */
+    fun deleteElsewhere(key: SyncKey) {
+        files -= key
+        feed.value += key.path
+    }
+
+    /** Another device writing the document [name]. */
+    fun writeDocumentElsewhere(name: String, bytes: ByteArray) {
+        documents[name] = bytes to "r${nextRevision++}"
+        feed.value += name
+    }
+
+    private fun remoteFile(key: SyncKey, bytes: ByteArray, revision: String) = RemoteFile(
+        kind = key.kind,
+        name = key.name,
+        revision = revision,
+        contentHash = contentHashOf(bytes),
+        size = sizes[key] ?: bytes.size.toLong(),
+    )
 }

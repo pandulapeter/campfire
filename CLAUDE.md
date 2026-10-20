@@ -21,7 +21,8 @@ changing code there.
 
 Only these, all in `:data:source:remote:implementation`, the only module that makes a network call:
 
-- **Sync**, off until the user connects their own cloud folder in Settings; no Campfire server exists.
+- **Sync**, off until the user connects their own cloud folder in Settings; no Campfire server exists. While the app
+  is in front it also holds one long poll open on the folder's change feed.
 - **Cover images**: downloaded once from the address a song file names, then kept on the device.
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
@@ -198,7 +199,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 
 - **Sync** (`data/sync/implementation`, `data/source/remote/api`): no Campfire server; a run belongs to the app, not
   the screen; content decides what changed, never a clock; a run that would delete most of the library on either side
-  stops and asks.
+  stops and asks; a run starts on every return to the front, and another device's change starts one while in front.
 - **Metronome** (`metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a timer; a
   click never outlives its screen; tempo overrides live where transpositions do.
 - **Tuner** (`tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers its

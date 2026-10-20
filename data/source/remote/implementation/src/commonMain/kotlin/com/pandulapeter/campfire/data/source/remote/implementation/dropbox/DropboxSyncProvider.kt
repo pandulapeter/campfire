@@ -78,6 +78,8 @@ internal class DropboxSyncProvider(
 
     private val requests = DropboxTransport(httpClientHolder = httpClientHolder, tokens = tokens)
 
+    private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests)
+
     override suspend fun isConnected() = credentialsStore.load()?.takeIf { it.providerId == id.id }?.refreshToken?.isNotEmpty() == true
 
     // Authorization
@@ -236,8 +238,12 @@ internal class DropboxSyncProvider(
             )
             files += response.entries.toRemoteFiles()
         }
-        return RemoteListing(files = files)
+        return RemoteListing(files = files, cursor = response.cursor.ifEmpty { null })
     }
+
+    override suspend fun awaitChanges(cursor: String) = changeFeed.awaitChanges(cursor)
+
+    override suspend fun changesSince(cursor: String) = changeFeed.changesSince(cursor)
 
     override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
         val response = downloadResponse(remotePath(kind, name))
@@ -413,20 +419,6 @@ internal class DropboxSyncProvider(
         if (response.tag == "complete") return response.entries
         val reason = JsonPrimitive(response.failed?.tagPath() ?: response.tag)
         return deletions.map { DropboxDeleteBatchEntry(tag = "failure", failure = JsonObject(mapOf(".tag" to reason))) }
-    }
-
-    private fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
-        if (entry.tag != "file") return@mapNotNull null
-        val kind = LibraryFileKind.entries.firstOrNull { entry.pathLower.startsWith("/${it.id}/") } ?: return@mapNotNull null
-        // Only the two library folders, one level deep: anything the user put deeper into the app folder is theirs.
-        if (entry.pathLower.count { it == '/' } != 2) return@mapNotNull null
-        RemoteFile(
-            kind = kind,
-            name = entry.name,
-            revision = entry.rev,
-            contentHash = entry.contentHash,
-            size = entry.size,
-        )
     }
 
     private fun remotePath(kind: LibraryFileKind, name: String) = "/${kind.id}/$name"

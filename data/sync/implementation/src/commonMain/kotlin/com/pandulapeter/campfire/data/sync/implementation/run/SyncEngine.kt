@@ -113,11 +113,14 @@ internal class SyncEngine(
         // settles it.
         var pass = 0
         var unresolved = emptySet<SyncKey>()
+        var cursor: String? = null
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
             onProgress(SyncProgress())
-            val listed = provider.list().files
+            val listing = provider.list()
+            val listed = listing.files
+            cursor = listing.cursor
             index = withoutForeignEntries(index = index, listed = listed)
             val localListing = readLocalStates()
             val tooLarge = localListing.tooLarge
@@ -180,6 +183,7 @@ internal class SyncEngine(
 
         return Result.Completed(
             summary = summary,
+            cursor = cursor,
             index = SyncIndexDocument.of(
                 providerId = provider.id.id,
                 accountId = accountId,
@@ -555,8 +559,13 @@ internal class SyncEngine(
 
     sealed interface Result {
 
+        /**
+         * @param cursor The cursor of the last listing, see `RemoteListing.cursor`: every change made after it is either
+         *   this run's, and so in [index], or one the run did not see.
+         */
         data class Completed(
             val summary: SyncSummary,
+            val cursor: String?,
             val index: SyncIndexDocument,
         ) : Result
 

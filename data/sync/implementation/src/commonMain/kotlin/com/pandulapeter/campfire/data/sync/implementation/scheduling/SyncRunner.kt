@@ -32,6 +32,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingExcept
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -69,6 +71,19 @@ internal class SyncRunner(
     private var indexWriteJob: Job? = null
     private var lastIndexWrite: TimeMark? = null
 
+    private val _watchPoint = MutableStateFlow<SyncWatchPoint?>(null)
+
+    /**
+     * Where [SyncRemoteWatcher] watches the folder from: set by a run that completed, and cleared as soon as one starts,
+     * since its own writes would read as another device's, and by a disconnect. Any other ending leaves it cleared, which
+     * keeps a run the user stopped, or one waiting for an answer about deletions, from being started again by the feed.
+     */
+    val watchPoint = _watchPoint.asStateFlow()
+
+    fun forgetWatchPoint() {
+        _watchPoint.value = null
+    }
+
     /** Runs [block] under the run lock, so that no run is halfway through anything while it goes. */
     suspend fun <T> withRunLock(block: suspend () -> T): T = mutex.withLock { block() }
 
@@ -97,6 +112,7 @@ internal class SyncRunner(
                 return@withLock
             }
             val connected = stateHolder.value as? SyncState.Connected ?: return@withLock
+            _watchPoint.value = null
             stateHolder.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
             // it did transfer stay known, and only the rest look unsynced next time.
@@ -170,6 +186,14 @@ internal class SyncRunner(
                         )
                         latestIndex = { completed }
                         indexStore.save(completed)
+                        _watchPoint.value = result.cursor?.let { cursor ->
+                            SyncWatchPoint(
+                                folder = provider,
+                                cursor = cursor,
+                                index = completed.toIndex(),
+                                syncedPreferences = completed.syncedPreferences,
+                            )
+                        }
                         // Reads only what the run changed, which for most runs is nothing.
                         libraryRefresher.refreshAfterRun()
                         stateHolder.updateConnected {

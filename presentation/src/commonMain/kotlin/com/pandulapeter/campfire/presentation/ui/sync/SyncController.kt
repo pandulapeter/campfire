@@ -22,6 +22,8 @@ import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
+import com.pandulapeter.campfire.domain.api.sync.SynchronizeOnReturnUseCase
+import com.pandulapeter.campfire.domain.api.sync.WatchRemoteChangesUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
@@ -44,6 +46,8 @@ internal class SyncController(
     private val forgetSyncConnection: ForgetSyncConnectionUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
+    private val synchronizeOnReturn: SynchronizeOnReturnUseCase,
+    private val watchRemoteChanges: WatchRemoteChangesUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
 ) {
 
@@ -109,6 +113,12 @@ internal class SyncController(
     fun synchronizeLibrary(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) = synchronizeLibrary.invoke(deletionPolicy)
 
     fun cancelSynchronization() = cancelSynchronization.invoke()
+
+    /** The app came back to the front, where the cloud folder may have moved on while it was away. */
+    fun onAppReturned() = synchronizeOnReturn.invoke()
+
+    /** Brings other devices' changes over while the caller runs, which is while the app is in front. */
+    suspend fun watchRemoteChanges() = watchRemoteChanges.invoke()
 
     /**
      * Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a first
