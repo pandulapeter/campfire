@@ -24,8 +24,9 @@ import org.koin.core.annotation.Single
 
 /**
  * A static `AudioTrack` looping the one buffer for ever (`setLoopPoints`), at the device's own output rate, with a
- * `VolumeShaper` for the fades. A tone takes transient audio focus, as a notification sound does, and a loss of it
- * stops the tone rather than leaving it to come back on its own.
+ * `VolumeShaper` for the fades. Tones take transient audio focus, as a notification sound does, held for as long as one
+ * follows another and given back when they stop or it is lost; a loss stops the tone rather than leaving it to come back
+ * on its own.
  */
 @Single
 internal class AndroidToneOutput(
@@ -43,14 +44,42 @@ internal class AndroidToneOutput(
     private var track: AudioTrack? = null
     private var focusRequest: AudioFocusRequest? = null
 
+    /**
+     * The onLost of the tone sounding now, which the focus listener calls rather than that of the tone that asked for the
+     * focus, since the engine ignores a replaced tone's loss. Set by [play] on the engine's thread, read on the main looper.
+     */
+    @Volatile
+    private var onLost: () -> Unit = {}
+
+    @Volatile
+    private var isFocusLost = false
+
     override fun play(render: (sampleRate: Int) -> ShortArray, onLost: () -> Unit): Boolean {
-        stop()
-        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-            .setAudioAttributes(attributes)
-            .setOnAudioFocusChangeListener({ change -> if (change < 0) onLost() }, handler)
-            .build()
-        if (audioManager.requestAudioFocus(focusRequest) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) return false
-        this.focusRequest = focusRequest
+        // The loss the engine posts to its own thread can arrive after the next note's play, and reach a replaced tone's
+        // onLost, which it ignores. The listener marks the loss before reading onLost, and this sets onLost before reading
+        // the mark, so either the new tone's onLost is called or the focus is asked for again here, which a call refuses.
+        this.onLost = onLost
+        fadeOutTrack()
+        // A held focus is kept from one tone to the next (a scale): giving it back between notes resumes and pauses
+        // another app's music.
+        if (focusRequest == null || isFocusLost) {
+            abandonFocus()
+            isFocusLost = false
+            val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                .setAudioAttributes(attributes)
+                .setOnAudioFocusChangeListener(
+                    { change ->
+                        if (change < 0) {
+                            isFocusLost = true
+                            this.onLost()
+                        }
+                    },
+                    handler,
+                )
+                .build()
+            if (audioManager.requestAudioFocus(focusRequest) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) return false
+            this.focusRequest = focusRequest
+        }
         val sampleRate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull() ?: ToneOutput.DEFAULT_SAMPLE_RATE
         val loop = render(sampleRate)
         val track = try {
@@ -85,9 +114,13 @@ internal class AndroidToneOutput(
     }
 
     override fun stop() {
+        fadeOutTrack()
+        abandonFocus()
+    }
+
+    private fun fadeOutTrack() {
         val track = track ?: return
         this.track = null
-        abandonFocus()
         val fadeOut = try {
             track.createVolumeShaper(fade(floatArrayOf(1f, 0f))).also { it.apply(VolumeShaper.Operation.PLAY) }
         } catch (_: IllegalStateException) {

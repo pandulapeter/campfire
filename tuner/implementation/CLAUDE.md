@@ -57,8 +57,9 @@ only once its fade has been played (the scale sheet replaces a tone every quarte
 
 - **Android**: `AudioRecord` at 48 kHz, `UNPROCESSED` where available else `VOICE_RECOGNITION`; refused before opening
   without `RECORD_AUDIO`; silenced by a call (`AudioRecordingCallback`, Android 10+) is busy. Tone: static `AudioTrack`
-  with loop points and a `VolumeShaper` under transient focus (loss ends it); stopped only once the fade-out shaper
-  reads silence (≤ 1 s), since the mixer applies fades late and an early stop pops.
+  with loop points and a `VolumeShaper` under transient focus (loss ends it), held while one tone replaces another (a
+  scale), since giving it back between notes resumes and pauses another app's music; stopped only once the fade-out
+  shaper reads silence (≤ 1 s), since the mixer applies fades late and an early stop pops.
 - **iOS**: `IosTunerSession`, shared by input and tone: `playAndRecord` / `measurement` / `defaultToSpeaker`, no
   Bluetooth option, only when record permission is granted; otherwise `playback` for a tone (touching a recording
   category without permission makes the system prompt). Input is a 4096-frame tap on the input node, started only when
