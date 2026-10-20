@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,7 +77,8 @@ internal fun ToolsButtonGroup(
         .background(MaterialTheme.colorScheme.background)
         // The tabs carried the gutter in their own padding; the buttons' containers reach their edges, so the group
         // keeps the one every list of the app keeps.
-        .padding(horizontal = 16.dp),
+        .padding(horizontal = 16.dp)
+        .selectableGroup(),
     horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     verticalAlignment = Alignment.CenterVertically,
 ) {
@@ -89,7 +93,11 @@ internal fun ToolsButtonGroup(
             modifier = Modifier
                 .weight(weight)
                 .height(ToggleButtonDefaults.MinHeight)
-                .semantics { if (!isSelected) contentDescription = label },
+                // One choice of several, as Material's single-select group reads, not a checkbox each.
+                .semantics {
+                    role = Role.RadioButton
+                    if (!isSelected) contentDescription = label
+                },
             checked = isSelected,
             onCheckedChange = { onSelected(tool) },
             shapes = when (index) {
