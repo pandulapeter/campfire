@@ -12,18 +12,15 @@ package com.pandulapeter.campfire.presentation.ui.screens.tuner
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.tools
-import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
 import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.openTuner
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
@@ -55,7 +52,6 @@ internal class ReferencePitchEntryTest {
     }
 
     private fun AppTestScope.openReferencePitch() {
-        tap(hasText(string(Res.string.tools)) and hasClickAction())
-        tap(hasText(string(Res.string.tuner)) and hasClickAction())
+        openTuner()
     }
 }

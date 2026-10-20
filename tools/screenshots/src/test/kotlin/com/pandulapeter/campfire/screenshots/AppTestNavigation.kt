@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.tools
+import com.pandulapeter.campfire.presentation.resources.tuner
 
 /** Taps the node [matcher] finds as a finger does, which leaves no pointer hovering over the screen to draw a highlight. */
 internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
@@ -87,6 +88,12 @@ internal fun AppTestScope.openScales() {
 internal fun AppTestScope.openChords() {
     tap(hasText(string(Res.string.tools)) and hasClickAction())
     tap(toolButton(string(Res.string.chords)))
+}
+
+/** Opens the Tuner tab of a phone, behind the Tools item of its navigation bar. */
+internal fun AppTestScope.openTuner() {
+    tap(hasText(string(Res.string.tools)) and hasClickAction())
+    tap(toolButton(string(Res.string.tuner)))
 }
 
 /** A tool's button among the tools, which shows its name only while selected and is named by its description otherwise. */

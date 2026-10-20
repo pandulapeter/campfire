@@ -12,6 +12,8 @@
 ### Improvements
 - Global sync indicator, maybe pull to refresh on mobile
 - Tuner chromatic toggle
+- Chord horizontal pager on the Scale bottom sheet doesn't need gradient fade
+- Chord / Scale playback?
 - Update store descriptions to include the chord diagram library and other new features + new title
 
 ## Midterm (in the next versions)

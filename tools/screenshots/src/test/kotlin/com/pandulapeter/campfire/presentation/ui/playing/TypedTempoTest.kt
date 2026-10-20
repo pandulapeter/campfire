@@ -30,7 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUTTON_LENGTH
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
@@ -106,7 +105,8 @@ internal class TypedTempoTest {
     fun `a press outside the stepper ends typing and keeps the typed tempo`() = runAppTest {
         openSong()
         typeTempo("132")
-        tap(hasText(string(Res.string.song_editor_insert_time)))
+        // The song's first comment, plain text near the stepper that takes the press without acting on it.
+        tap(hasText("Pick the strings one at a time", substring = true))
         tempoField().assertIsNotFocused()
         assertEquals("132", tempo())
     }
