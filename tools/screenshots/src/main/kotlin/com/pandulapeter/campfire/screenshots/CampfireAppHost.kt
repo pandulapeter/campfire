@@ -117,7 +117,7 @@ internal class CampfireAppHost(
      * The app as a window shows it, inside [chrome]'s bars, with the window owners the view model is created from. The
      * view model is created (and handed to [onViewModel]) as soon as this is composed, but the app is composed only
      * once [isPrepared], so a state a screen reads as it is first composed can be set before. [keyboardHeight] is the
-     * on-screen keyboard's, reported to the app as the platform would while it is up; nothing draws it.
+     * on-screen keyboard's, reported to the app as the platform would while it is up; only [overlay] may draw one.
      */
     @OptIn(InternalComposeUiApi::class)
     @Composable

@@ -122,7 +122,10 @@ internal open class PrepareScope(
     }
 }
 
-/** What a [Shot] drives the app with once it is on screen: the view model, and touches on what the screen shows. */
+/**
+ * What a [Shot] drives the app with once it is on screen: the view model, touches on what the screen shows, and the
+ * [keyboard] a clip raises and types on.
+ */
 internal class ShotScope(
     viewModel: CampfireViewModel,
     device: Device,
@@ -130,6 +133,7 @@ internal class ShotScope(
     settle: suspend (milliseconds: Long) -> Unit,
     private val scene: ImageComposeScene,
     private val captureFrame: suspend () -> Unit,
+    val keyboard: OnScreenKeyboard,
 ) : PrepareScope(viewModel, device, language, settle) {
 
     /**

@@ -8,7 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import React from "react";
-import { AbsoluteFill, Easing, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, Freeze, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame } from "remotion";
 import {
   Accent,
   Backdrop,
@@ -34,21 +34,21 @@ import {
 
 // The cue sheet: every scene starts on a bar or halfway through one (90 frames = 1.5 s at 160 BPM).
 const S = {
-  intro: { from: 0, bars: 2 },
-  // The iPad, its song already open, and the setlist both come in on a third beat: bar 4's D and bar 6's D/F♯.
-  songs: { from: 2 * BAR, bars: 1.5 },
-  song: { from: 3.5 * BAR, bars: 2 },
-  setlist: { from: 5.5 * BAR, bars: 1.5 },
-  transpose: { from: 7 * BAR, bars: 2 },
-  metronome: { from: 9 * BAR, bars: 2 },
-  // The tuner leaves as soon as its string is in tune, on bar 13's downbeat, and the Chords tab comes in on that bar's G.
-  tuner: { from: 11 * BAR, bars: 1.5 },
-  chords: { from: 12.5 * BAR, bars: 1.5 },
-  // The Scales tab has bar 15 to itself; the export rides the riser into bar 17, where the laptop comes in, and the
-  // light sweeps across it a beat later.
-  scales: { from: 14 * BAR, bars: 1 },
-  export: { from: 15 * BAR, bars: 1 },
-  everywhere: { from: 16 * BAR, bars: 2 },
+  // The song list is on screen from the first frame, under the name and the promise, and scrolls from bar 3; the iPad,
+  // its song already open, comes in on bar 4's D.
+  opening: { from: 0, bars: 3.5 },
+  song: { from: 3.5 * BAR, bars: 1.5 },
+  transpose: { from: 5 * BAR, bars: 2 },
+  metronome: { from: 7 * BAR, bars: 2 },
+  // The tuner leaves as soon as its string is in tune, on bar 11's downbeat, and the Chords tab comes in on that bar's G.
+  tuner: { from: 9 * BAR, bars: 1.5 },
+  chords: { from: 10.5 * BAR, bars: 1.5 },
+  // The Scales tab has bar 13 to itself; the laptop comes in on bar 14, where the music goes to E, and the light sweeps
+  // across it a beat later. The setlist brings the dark back with the A on bar 16.
+  scales: { from: 12 * BAR, bars: 1 },
+  everywhere: { from: 13 * BAR, bars: 2 },
+  setlist: { from: 15 * BAR, bars: 2 },
+  export: { from: 17 * BAR, bars: 1 },
   values: { from: 18 * BAR, bars: 1 },
   outro: { from: 19 * BAR, bars: 1 },
 };
@@ -73,22 +73,21 @@ export const Promo: React.FC = () => (
 const Bars: React.FC = () => {
   const frame = useCurrentFrame();
   const light = ease(frame, [S.everywhere.from + LIGHT_FROM, S.everywhere.from + LIGHT_TO], [0, 1], Easing.out(Easing.cubic));
-  const dark = interpolate(frame, [S.values.from - 4, S.values.from + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const dark = interpolate(frame, [S.setlist.from - 4, S.setlist.from + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ background: C.bg }}>
       <style>{fontFaces}</style>
       <Backdrop light={light * (1 - dark)} />
-      {scene(S.intro, <Intro />)}
-      {scene(S.songs, <Songs />)}
+      {scene(S.opening, <Opening />)}
       {scene(S.song, <Song />)}
-      {scene(S.setlist, <Setlist />)}
       {scene(S.transpose, <Transpose />)}
       {scene(S.metronome, <Metronome />)}
       {scene(S.tuner, <Tuner />)}
       {scene(S.chords, <Chords />)}
       {scene(S.scales, <Scales />)}
-      {scene(S.export, <Export />)}
       {scene(S.everywhere, <Everywhere />)}
+      {scene(S.setlist, <Setlist />)}
+      {scene(S.export, <Export />)}
       {scene(S.values, <Values />, false)}
       {scene(S.outro, <Outro />, false)}
     </AbsoluteFill>
@@ -161,131 +160,139 @@ const Place: React.FC<{ x?: number; y: number; at: number; rotate?: number; from
   );
 };
 
-// ─── Bars 1–2: the icon, the name, the promise ────────────────────────────────────────────────
+// ─── Bars 1–4½: the library on screen from the first frame, under the icon, the name, and the promise ─
 
-const Intro: React.FC = () => {
+/**
+ * The icon landing on bar 1's downbeat beside the name, which spells itself in from the second beat, and "Lyrics."
+ * "Chords." "Wherever you play." on bar 2's first three stabs: above the phone in the portrait frame, across the top of
+ * a square one, and in the headline's column on the left of a landscape one.
+ */
+const Brand: React.FC<{ exitAt: number }> = ({ exitAt }) => {
   const frame = useCurrentFrame();
+  const format = useFormat();
   const icon = spring({ frame, fps: 60, config: { damping: 9, stiffness: 120, mass: 0.7 } });
   const ring = ease(frame, [0, 40], [0, 1], Easing.out(Easing.cubic));
-  const word = "Campfire";
-  const lift = ease(frame, [BAR - 10, BAR + 12], [0, -240]);
-  const iconScale = ease(frame, [BAR - 10, BAR + 12], [1, 0.62]);
-  const lines = ["Lyrics.", "Chords.", "Wherever you play."];
+  const exit = ease(frame, [exitAt, exitAt + 14], [0, 1], Easing.in(Easing.cubic));
+  const place: React.CSSProperties = {
+    portrait: { top: 110, transform: "scale(1)" },
+    square: { top: 14, transform: "scale(0.58)" },
+    landscape: { top: 540, transform: "translate(-80px, -50%) scale(0.9)" },
+  }[format];
+  const line = (text: string, i: number) => {
+    // A stiff spring started four frames early, so each word is at full size on its stab and overshoots just after it,
+    // the punch of the hit; bar 2's fourth hit, which has no word, leaves them still.
+    const p = spring({ frame: frame - (BAR + i * BEAT - 4), fps: 60, config: { damping: 13, stiffness: 380, mass: 0.5 } });
+    return (
+      <span key={text} style={{ display: "inline-block", margin: "0 14px", transform: `scale(${p}) translateY(${(1 - p) * 30}px)`, opacity: Math.min(1, p * 2) }}>
+        {text}
+      </span>
+    );
+  };
   return (
-    <Stage band={[300, 1500]} full>
-      <div
-        style={{
-          position: "absolute",
-          left: 540,
-          top: 760 + lift,
-          width: 760,
-          height: 760,
-          transform: "translate(-50%, -50%)",
-          borderRadius: 999,
-          border: `6px solid ${C.orange}`,
-          opacity: (1 - ring) * 0.8,
-          scale: `${0.3 + ring * 0.9}`,
-        }}
-      />
-      <Img
-        src={staticFile("icons/app_icon.png")}
-        style={{
-          position: "absolute",
-          left: 540,
-          top: 760 + lift,
-          width: 330,
-          height: 330,
-          transform: `translate(-50%, -50%) scale(${icon * iconScale}) rotate(${(1 - icon) * -40}deg)`,
-        }}
-      />
-      <div style={{ position: "absolute", top: 990 + lift * 1.35, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 150, letterSpacing: -5, color: C.ink }}>
-        {word.split("").map((ch, i) => {
-          // Started early by the frames the spring takes to all but arrive, so the first letter is there on beat 2.
-          const p = spring({ frame: frame - (BEAT - 6) - i * 2.4, fps: 60, config: { damping: 12, stiffness: 160, mass: 0.6 } });
-          return (
-            <span key={i} style={{ display: "inline-block", transform: `translateY(${(1 - p) * 80}px) scale(${0.6 + p * 0.4})`, opacity: p }}>
-              {ch}
-            </span>
-          );
-        })}
-      </div>
-      {lines.map((line, i) => {
-        // A stiff spring started four frames early, so each line is at full size on its stab (bar 2, beats 1–3) and
-        // overshoots just after it, the punch of the hit; bar 2's fourth hit, which has no line, leaves them still.
-        const p = spring({ frame: frame - (BAR + i * BEAT - 4), fps: 60, config: { damping: 13, stiffness: 380, mass: 0.5 } });
-        return (
+    <div
+      style={{
+        position: "absolute",
+        left: 0,
+        width: 1080,
+        transformOrigin: "50% 0",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        fontFamily: SANS,
+        letterSpacing: -3,
+        opacity: 1 - exit,
+        ...place,
+        translate: `0 ${-exit * 40}px`,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 34 }}>
+        <div style={{ position: "relative", width: 150, height: 150 }}>
           <div
-            key={line}
             style={{
               position: "absolute",
-              top: 1000 + i * 130,
-              left: 0,
-              right: 0,
-              textAlign: "center",
-              fontFamily: SANS,
-              // Lighter than the name above them, so they read as its subtitle rather than as three more titles; the
-              // orange line, the smallest, a step heavier to hold its own.
-              fontWeight: i === 2 ? 500 : 400,
-              fontSize: i === 2 ? 92 : 112,
-              letterSpacing: -3,
-              color: i === 2 ? C.orange : C.ink,
-              transform: `scale(${p}) translateY(${(1 - p) * 40}px)`,
-              opacity: Math.min(1, p * 2),
+              inset: -120,
+              borderRadius: 999,
+              border: `5px solid ${C.orange}`,
+              // Not on the first frame, which a feed may freeze on, where the icon it bursts from has no size yet.
+              opacity: (1 - ring) * 0.8 * Math.min(1, frame / 3),
+              scale: `${0.3 + ring * 0.9}`,
             }}
-          >
-            {line}
-          </div>
-        );
-      })}
-    </Stage>
+          />
+          <Img
+            src={staticFile("icons/app_icon.png")}
+            style={{ width: 150, height: 150, transform: `scale(${icon}) rotate(${(1 - icon) * -40}deg)` }}
+          />
+        </div>
+        <div style={{ fontWeight: 700, fontSize: 132, letterSpacing: -5, color: C.ink }}>
+          {"Campfire".split("").map((ch, i) => {
+            // Started early by the frames the spring takes to all but arrive, so the first letter is there on beat 2.
+            const p = spring({ frame: frame - (BEAT - 6) - i * 2.4, fps: 60, config: { damping: 12, stiffness: 160, mass: 0.6 } });
+            return (
+              <span key={i} style={{ display: "inline-block", transform: `translateY(${(1 - p) * 60}px) scale(${0.6 + p * 0.4})`, opacity: p }}>
+                {ch}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      {/* Lighter than the name, so they read as its subtitle rather than as more titles; the orange line a step heavier
+          to hold its own. */}
+      <div style={{ marginTop: 18, fontSize: 92, fontWeight: 400, color: C.ink, whiteSpace: "nowrap" }}>
+        {line("Lyrics.", 0)}
+        {line("Chords.", 1)}
+      </div>
+      <div style={{ marginTop: 4, fontSize: 84, fontWeight: 500, color: C.orange, whiteSpace: "nowrap" }}>{line("Wherever you play.", 2)}</div>
+    </div>
   );
 };
 
-// ─── Bars 3–4½: the library, with its colored tags ─────────────────────────────────────────────
+/** The list starts scrolling on bar 2's downbeat; its search opens on bar 3's, where the phone rises over the headline. */
+const SCROLL_AT = BAR;
+const SEARCH_AT = 2 * BAR;
 
-const TAGS: [string, string][] = [
-  ["Rock", "#EF7A75"],
-  ["Pop", "#CE93D8"],
-  ["Folk", "#DCE775"],
-  ["Blues", "#7BB8F5"],
-  ["Soul", "#81C995"],
-  ["Disco", "#F48FB1"],
-];
-const TAG_SPOTS: [number, number, number][] = [
-  [170, 760, -6],
-  [915, 860, 5],
-  [150, 1150, 4],
-  [930, 1290, -5],
-  [190, 1520, -3],
-  [890, 1640, 6],
-];
+const Opening: React.FC = () => {
+  const frame = useCurrentFrame();
+  const format = useFormat();
+  // The phone fills the frame from its first picture, which a feed may freeze on, and shrinks into place over the first
+  // bar, about its top edge so that the name has the room above it.
+  const shrink = ease(frame, [0, BAR], [1.45, 1], Easing.inOut(Easing.cubic));
+  // Only the portrait frame has room for the headline under the phone; the others keep their headline where it is.
+  const rise = format === "portrait" ? ease(frame, [SEARCH_AT - 6, SEARCH_AT + 24], [0, -440], Easing.inOut(Easing.cubic)) : 0;
+  return (
+    <AbsoluteFill>
+      <Stage band={[590, 1830]}>
+        <div style={{ position: "absolute", left: 540, top: 600 + rise, transform: `translateX(-50%) scale(${shrink})`, transformOrigin: "50% 0" }}>
+          <Phone height={1180}>
+            {/* The clip's first frame until bar 2, where the finger starts dragging the list. */}
+            <Freeze frame={SCROLL_AT} active={(f) => f < SCROLL_AT}>
+              <Sequence from={SCROLL_AT} layout="none">
+                <Clip name="songs-search" />
+              </Sequence>
+            </Freeze>
+          </Phone>
+        </div>
+      </Stage>
+      <Brand exitAt={SEARCH_AT - 14} />
+      <Headline
+        top={format === "portrait" ? 1480 : 230}
+        at={SEARCH_AT + 8}
+        lines={["Your whole songbook,", <Accent key="a">beautifully organized.</Accent>]}
+        size={84}
+        exitAt={S.opening.bars * BAR - 14}
+      />
+    </AbsoluteFill>
+  );
+};
 
-const Songs: React.FC = () => (
-  <AbsoluteFill>
-    <Headline top={230} at={0} lines={["Your whole songbook,", <Accent key="a">beautifully organized.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
-    <Stage band={[590, 1830]}>
-      <Place y={1210} at={2}>
-        <Phone height={1180}>
-          <Clip name="songs-scroll" />
-        </Phone>
-      </Place>
-      {/* One a beat from the third, as many as the scene has beats for. */}
-      {TAGS.slice(0, 4).map(([text, color], i) => (
-        <Chip key={text} at={beat(2 + i)} x={TAG_SPOTS[i][0]} y={TAG_SPOTS[i][1]} rotate={TAG_SPOTS[i][2]} color={color} text={text} />
-      ))}
-    </Stage>
-  </AbsoluteFill>
-);
-
-// ─── Bars 4½–6½: a song opened on the iPad, its page turned on the riser ──────────────────────
+// ─── Bars 4½–5: a song opened on the iPad, its scales suggested, its page turned ──────────────
 
 const IPAD_ASPECT = 2752 / 2064;
 
 /** A chip's spring takes about five frames to be mostly there, so a chip meant to land on [n] starts that early. */
 const onBeat = (n: number) => n * BEAT - 5;
 
-// The clip starts with the song open and turns to its second page on its 90th frame, bar 5's third beat; the page stays
-// up, with its chip, until the scene leaves.
+// The clip starts with the song open, its Scales section under its chords on the first page, and turns to its second
+// page on its 90th frame, bar 5's third beat; the page stays up, with its chip, until the scene leaves.
 const Song: React.FC = () => (
   <AbsoluteFill>
     <Stage band={[590, 1830]}>
@@ -294,33 +301,17 @@ const Song: React.FC = () => (
           <Clip name="open-song" />
         </Slate>
       </Place>
-      <Chip at={onBeat(2)} x={530} y={1650} color={C.orange} icon="♪" text="Every chord, with diagrams" size={46} rotate={-2} />
-      <Chip at={onBeat(4)} x={760} y={735} color={C.lilac} icon="⇅" text="Pedal & tap to turn pages" size={44} rotate={4} />
+      {/* Each on an edge of the tablet, near what it names: the diagrams at the top left, the scales under them on the
+          left, the page-turn button at the bottom right. */}
+      <Chip at={onBeat(2)} x={380} y={752} color={C.orange} icon="♪" text="Every chord, with diagrams" size={42} rotate={-3} />
+      <Chip at={onBeat(3)} x={250} y={1250} color={C.lilac} icon="♯" text="Scale suggestions" size={42} rotate={-4} />
+      <Chip at={onBeat(4)} x={720} y={1548} color={C.orange} icon="⇅" text="Pedal & tap to turn pages" size={42} rotate={3} />
     </Stage>
-    <Headline top={230} at={0} lines={["Lyrics and chords,", <Accent key="a">fit to any screen.</Accent>]} size={84} exitAt={2 * BAR - 14} />
+    <Headline top={230} at={0} lines={["Lyrics and chords,", <Accent key="a">fit to any screen.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
   </AbsoluteFill>
 );
 
-// ─── Bars 6½–7: a setlist rearranged by a drag ────────────────────────────────────────────────
-
-const Setlist: React.FC = () => (
-  <AbsoluteFill>
-    <Stage band={[590, 1830]}>
-      {/* The clip lifts Ring of Fire by its grip on its 20th frame and drops it in second place on its 113th, the sixth
-          beat, inside the soundtrack's tom fill. */}
-      <Place y={1215} at={-6} rotate={-3} enter="right">
-        <Phone height={1180}>
-          <Clip name="setlist-reorder" />
-        </Phone>
-      </Place>
-      <Chip at={onBeat(1)} x={850} y={1500} color={C.lilac} icon="⇅" text="Drag to reorder" size={44} rotate={5} />
-      <Chip at={onBeat(2)} x={225} y={645} color={C.orange} icon="⏳" text="Countdown" size={44} rotate={-5} />
-    </Stage>
-    <Headline top={230} at={0} lines={["Setlists,", <Accent key="a">in the order you play.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
-  </AbsoluteFill>
-);
-
-// ─── Bars 8–9: a song transposed and then renotated live, a change a beat ─────────────────────
+// ─── Bars 6–7: a song transposed and then renotated live, a change a beat ─────────────────────
 
 /**
  * What the song's first chord is on each of the scene's eight beats, and what the badge says under it: the soundtrack
@@ -386,7 +377,7 @@ const Transpose: React.FC = () => {
   );
 };
 
-// ─── Bars 10–11: the metronome, playing the soundtrack's own tempo ────────────────────────────
+// ─── Bars 8–9: the metronome, playing the soundtrack's own tempo ────────────────────────────
 
 const Metronome: React.FC = () => {
   const frame = useCurrentFrame();
@@ -430,7 +421,7 @@ const Metronome: React.FC = () => {
   );
 };
 
-// ─── Bars 12–13: the tuner, until its string is in tune ───────────────────────────────────────
+// ─── Bars 10–11: the tuner, until its string is in tune ───────────────────────────────────────
 
 const Tuner: React.FC = () => {
   const frame = useCurrentFrame();
@@ -472,20 +463,18 @@ const Tuner: React.FC = () => {
   );
 };
 
-// ─── Bars 13½–14: the Chords tab, from bar 13's third beat: every instrument, then a shape picked ─
+// ─── Bars 11½–12: the Chords tab, from bar 11's third beat, on the keyboard and then the ukulele ─
 
-// Every instrument the diagrams are drawn for (the twelve-string is drawn as a guitar), one a beat on alternate sides of the phone, the keyboard, the ukulele and
-// the guitar as the clip switches to each; they stay until the scene leaves: text, x, y, rotation, frame.
+// Every instrument the diagrams are drawn for (the twelve-string is drawn as a guitar), one a beat on alternate sides of
+// the phone: the keyboard as the scene opens on it, the ukulele as the clip switches to it on bar 12's downbeat, which it
+// then stays on, and the rest after it; they stay until the scene leaves: text, x, y, rotation, frame.
 const INSTRUMENTS: [string, number, number, number, number][] = [
   ["Keyboard", 185, 790, -6, 6],
-  ["Mandolin", 915, 900, 5, 23],
-  ["Ukulele", 170, 1120, 4, 45],
-  ["Guitar", 920, 1250, -5, 68],
-  ["Banjo", 190, 1460, -3, 90],
+  ["Ukulele", 915, 900, 5, 45],
+  ["Guitar", 170, 1120, 4, 68],
+  ["Mandolin", 920, 1250, -5, 90],
+  ["Banjo", 190, 1460, -3, 113],
 ];
-
-/** The clip opens the guitar's A on its 79th frame, half a beat before bar 14's third, and picks another shape on its 113th. */
-const SHEET_AT = 79;
 
 const Chords: React.FC = () => (
   <AbsoluteFill>
@@ -499,12 +488,11 @@ const Chords: React.FC = () => (
         <Chip key={text} at={at - 4} x={x} y={y} rotate={rotate} color={i % 2 ? C.orange : C.lilac} text={text} size={44} />
       ))}
     </Stage>
-    <Headline top={230} at={0} step={BEAT / 2} lines={["Every chord,", <Accent key="a">for every instrument.</Accent>]} size={84} exitAt={SHEET_AT - 14} />
-    <Headline top={230} at={SHEET_AT} step={BEAT / 2} lines={["Your favorite shape,", <Accent key="a">in every song.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
+    <Headline top={230} at={0} lines={["Chord diagrams", <Accent key="a">for your instrument.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
   </AbsoluteFill>
 );
 
-// ─── Bar 15: the Scales tab in A, and a scale's sheet opened over it ──────────────────────────
+// ─── Bar 13: the Scales tab in A, and a scale's sheet opened over it ──────────────────────────
 
 // The clip taps A's minor pentatonic on its 23rd frame, the second beat, and its sheet has slid up over the tab by the
 // third; nothing else moves, so the diagrams can be read.
@@ -521,33 +509,9 @@ const Scales: React.FC = () => (
   </AbsoluteFill>
 );
 
-// ─── Bar 16, its first three beats: a PDF for the music stand, over the riser into the light theme ──
+// ─── Bars 14–15: every platform, and the light theme ──────────────────────────────────────────
 
-const Export: React.FC = () => {
-  const frame = useCurrentFrame();
-  // A slow push in that rises with the riser.
-  const push = ease(frame, [0, S.export.bars * BAR], [1, 1.06], Easing.in(Easing.quad));
-  return (
-    <AbsoluteFill>
-      <Stage band={[590, 1830]}>
-        <Place y={1215} at={-6} rotate={3} enter="left">
-          <div style={{ transform: `scale(${push})` }}>
-            <Phone height={1180}>
-              <Clip name="export" />
-            </Phone>
-          </div>
-        </Place>
-        <Chip at={onBeat(1)} x={210} y={900} color={C.orange} icon="☰" text="Whole setlists" size={44} rotate={-5} />
-        <Chip at={onBeat(2)} x={870} y={1560} color={C.lilac} icon="♪" text="Individual songs" size={44} rotate={4} />
-      </Stage>
-      <Headline top={230} at={0} step={BEAT / 2} lines={["Print-ready PDFs,", <Accent key="a">for the music stand.</Accent>]} size={84} exitAt={S.export.bars * BAR - 14} />
-    </AbsoluteFill>
-  );
-};
-
-// ─── Bars 17–18: every platform, and the light theme ──────────────────────────────────────────
-
-// One thing a beat from bar 17's downbeat, where the soundtrack changes to E: the laptop comes in, the light theme sweeps
+// One thing a beat from bar 14's downbeat, where the soundtrack changes to E: the laptop comes in, the light theme sweeps
 // across it with the whoosh, opening fastest at first and covering the screen over a beat and a half, then the iPad,
 // then the phone.
 const DOWNBEAT = 0;
@@ -565,7 +529,7 @@ const Everywhere: React.FC = () => {
   return (
     <AbsoluteFill>
       <Stage band={[450, 1850]}>
-      {/* The laptop lands dark on bar 17's downbeat and takes the light theme on its second beat; the iPad, upright and
+      {/* The laptop lands dark on bar 14's downbeat and takes the light theme on its second beat; the iPad, upright and
           near its real size beside it, and the phone land over its lower edge on the third and fourth, the two of them
           centred under it. */}
       <Place x={540} y={760} at={-4} enter="top">
@@ -598,6 +562,49 @@ const Everywhere: React.FC = () => {
       </div>
       </Stage>
       <Headline top={230} at={0} lines={["On every device", <Accent key="a" light={t > 0.5}>you own.</Accent>]} size={84} color={ink} exitAt={S.everywhere.bars * BAR - 14} />
+    </AbsoluteFill>
+  );
+};
+
+// ─── Bars 16–17: back in the dark, a setlist rearranged by a drag ────────────────────────────
+
+const Setlist: React.FC = () => (
+  <AbsoluteFill>
+    <Stage band={[590, 1830]}>
+      {/* The clip lifts Ring of Fire by its grip on the second beat and drops it in second place on its 90th frame,
+          bar 17's downbeat, at the end of the soundtrack's fill. */}
+      <Place y={1215} at={-6} rotate={-3} enter="right">
+        <Phone height={1180}>
+          <Clip name="setlist-reorder" />
+        </Phone>
+      </Place>
+      <Chip at={onBeat(1)} x={850} y={1500} color={C.lilac} icon="⇅" text="Drag to reorder" size={44} rotate={5} />
+      <Chip at={onBeat(5)} x={225} y={645} color={C.orange} icon="⏳" text="Countdown" size={44} rotate={-5} />
+    </Stage>
+    <Headline top={230} at={0} lines={["Setlists,", <Accent key="a">in the order you play.</Accent>]} size={84} exitAt={2 * BAR - 14} />
+  </AbsoluteFill>
+);
+
+// ─── Bar 18: a PDF for the music stand ──────────────────────────────────────────────────────
+
+const Export: React.FC = () => {
+  const frame = useCurrentFrame();
+  // A slow push in over the bar, toward the four promises.
+  const push = ease(frame, [0, S.export.bars * BAR], [1, 1.06], Easing.in(Easing.quad));
+  return (
+    <AbsoluteFill>
+      <Stage band={[590, 1830]}>
+        <Place y={1215} at={-6} rotate={3} enter="left">
+          <div style={{ transform: `scale(${push})` }}>
+            <Phone height={1180}>
+              <Clip name="export" />
+            </Phone>
+          </div>
+        </Place>
+        <Chip at={onBeat(1)} x={210} y={900} color={C.orange} icon="☰" text="Whole setlists" size={44} rotate={-5} />
+        <Chip at={onBeat(2)} x={870} y={1560} color={C.lilac} icon="♪" text="Individual songs" size={44} rotate={4} />
+      </Stage>
+      <Headline top={230} at={0} step={BEAT / 2} lines={["Print-ready PDFs,", <Accent key="a">for the music stand.</Accent>]} size={84} exitAt={S.export.bars * BAR - 14} />
     </AbsoluteFill>
   );
 };

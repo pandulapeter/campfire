@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -78,6 +77,7 @@ internal suspend fun render(
     var viewModel: CampfireViewModel? = null
     var isPrepared by mutableStateOf(false)
     var isAppReady = false
+    val keyboard = OnScreenKeyboard()
     val scene = ImageComposeScene(
         width = device.widthPx,
         height = device.heightPx,
@@ -87,10 +87,13 @@ internal suspend fun render(
         host.Content(
             filePicker = ScreenshotFilePicker(canShare = device.platform.canShare),
             isPrepared = isPrepared,
-            keyboardHeight = 0.dp,
+            keyboardHeight = keyboard.height,
             onViewModel = { viewModel = it },
             onAppReady = { isAppReady = true },
-            overlay = { device.chrome.Overlay(appearance) },
+            overlay = {
+                OnScreenKeyboardView(keyboard = keyboard, appearance = appearance)
+                device.chrome.Overlay(appearance)
+            },
         )
     }
     var time = 0L
@@ -126,7 +129,7 @@ internal suspend fun render(
             while (!isAppReady) settle(FRAME_MILLIS)
         } ?: error("The app did not finish starting within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
         settle(SETTLE_MILLIS)
-        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = scene, captureFrame = ::captureFrame)
+        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = scene, captureFrame = ::captureFrame, keyboard = keyboard)
             .apply { shot.drive(this) }
         settle(SETTLE_MILLIS)
         // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather

@@ -44,17 +44,45 @@ internal class PromoShot(
 
 internal val promoShots: List<PromoShot> by lazy {
     listOf(
-        // The library sorted by artist, its colored tags on the cards, dragged up slowly by a finger.
+        // The library sorted by artist, its colored tags on the cards, dragged up by a finger for a bar; then its search
+        // opened on the next downbeat, the keyboard sliding up, and "hou" typed a letter a beat, the list narrowing to
+        // House of the Rising Sun at its top, which the next scene has open.
         PromoShot(
-            name = "songs-scroll",
+            name = "songs-search",
             device = Device.IPHONE,
             isClip = true,
             shot = Shot(
-                id = "songs-scroll",
+                id = "songs-search",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id)) },
                 prepare = { englishOnly() },
-                drive = { recordDrag(frames = 160, from = 0.85f, to = 0.15f) },
+                drive = {
+                    val query = viewModel.songListState.songsSearch.textFieldState
+                    var search = Offset.Zero
+                    record(frames = 245) { frame ->
+                        dragFrame(frame = frame, frames = SCROLL_FRAMES, from = 0.8f, to = 0.35f)
+                        when (frame) {
+                            SEARCH_FRAME - 4 -> {
+                                search = checkNotNull(centerOf(string("songs_search"))) { "The Songs screen has no search button." }
+                                touch(PointerEventType.Press, search)
+                            }
+                            SEARCH_FRAME -> touch(PointerEventType.Release, search)
+                        }
+                        if (frame >= SEARCH_FRAME) {
+                            // A keyboard slides up in about a quarter of a second, easing into place.
+                            val progress = ((frame - SEARCH_FRAME) / KEYBOARD_FRAMES.toFloat()).coerceIn(0f, 1f)
+                            keyboard.height = OnScreenKeyboard.FULL_HEIGHT * (1 - (1 - progress).pow(3))
+                        }
+                        // A key is lit from just before its letter lands until a few frames after, as a finger rests on it.
+                        TYPED.forEach { (at, letter) ->
+                            when (frame) {
+                                at - 3 -> keyboard.pressedKey = letter
+                                at -> query.edit { append(letter) }
+                                at + 4 -> keyboard.pressedKey = null
+                            }
+                        }
+                    }
+                },
             ),
         ),
         // House of the Rising Sun open on the iPad from the first frame, its picking pattern unfolded so that the song takes
@@ -179,8 +207,7 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
             ),
         ),
-        // The Chords tab in A, its diagrams redrawn for the ukulele and then the guitar after two beats on the keyboard,
-        // then its first chord tapped half a beat later and a shape other than the app's first picked on the sixth beat.
+        // The Chords tab in A on the keyboard, its diagrams redrawn for the ukulele on the third beat.
         PromoShot(
             name = "chords",
             device = Device.IPHONE,
@@ -191,26 +218,10 @@ internal val promoShots: List<PromoShot> by lazy {
                 preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.KEYBOARD.id)) },
                 prepare = { viewModel.chordLibrary.keyIndex = KEY_A },
                 drive = {
-                    // Where the guitar's A is drawn, read before the keyboard's wider cells move it.
-                    viewModel.preferencesController.setInstrument(UserPreferences.Instrument.GUITAR)
                     viewModel.selectTopLevelDestination(CampfireDestination.Chords)
                     settle()
-                    val cell = centersOf("A: ").first()
-                    viewModel.preferencesController.setInstrument(UserPreferences.Instrument.KEYBOARD)
-                    settle()
-                    var shape = cell
                     record(frames = 160) { frame ->
-                        INSTRUMENT_CHANGES[frame]?.let(viewModel.preferencesController::setInstrument)
-                        when (frame) {
-                            SHAPE_SHEET_FRAME - 4 -> touch(PointerEventType.Press, cell)
-                            SHAPE_SHEET_FRAME -> touch(PointerEventType.Release, cell)
-                            SHAPE_PICK_FRAME - 4 -> {
-                                // The cell under the sheet is labelled as its shapes are, so it is told apart by place.
-                                shape = centersOf("A: ").filter { (it - cell).getDistance() > 10f }[1]
-                                touch(PointerEventType.Press, shape)
-                            }
-                            SHAPE_PICK_FRAME -> touch(PointerEventType.Release, shape)
-                        }
+                        if (frame == UKULELE_FRAME) viewModel.preferencesController.setInstrument(UserPreferences.Instrument.UKULELE)
                     }
                 },
             ),
@@ -241,8 +252,8 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
             ),
         ),
-        // Friday Night by the Lake in its reorder mode, Ring of Fire dragged by its grip from fifth to second place over
-        // three beats, dropped on the sixth.
+        // Friday Night by the Lake in its reorder mode, Ring of Fire lifted by its grip on the second beat and dragged
+        // from fifth to second place, dropped on the fifth, the second bar's downbeat.
         PromoShot(
             name = "setlist-reorder",
             device = Device.IPHONE,
@@ -260,7 +271,7 @@ internal val promoShots: List<PromoShot> by lazy {
                     check(handles.size > 4) { "The setlist shows ${handles.size} rows to reorder." }
                     val from = handles[4]
                     val to = handles[1]
-                    record(frames = 160) { frame ->
+                    record(frames = 200) { frame ->
                         val progress = ((frame - REORDER_START_FRAME) / (REORDER_END_FRAME - REORDER_START_FRAME).toFloat()).coerceIn(0f, 1f)
                         val eased = progress * progress * (3 - 2 * progress)
                         val position = Offset(from.x, from.y + (to.y - from.y) * eased)
@@ -354,20 +365,23 @@ private suspend fun PrepareScope.englishOnly() {
 }
 
 /**
- * Records a finger put on the middle of the screen and moved from [from] to [to] of its height over [frames], easing
- * out, and lifted only after the last one, so that the list follows the finger and no fling carries it on. It moves at
- * its fastest from the first frame, since a finger that starts slowly is held long enough to be a long press.
+ * One frame of a finger put on the middle of the screen and moved from [from] to [to] of its height over [frames],
+ * easing out, and lifted only on the frame after the last, so that the list follows the finger and no fling carries it
+ * on. It moves at its fastest from the first frame, since a finger that starts slowly is held long enough to be a long
+ * press.
  */
-private suspend fun ShotScope.recordDrag(frames: Int, from: Float, to: Float) {
-    val x = device.widthPx / 2f
-    fun position(frame: Int): Offset {
-        val progress = 1 - (1 - frame / (frames - 1f)).pow(3)
-        return Offset(x, device.heightPx * (from + (to - from) * progress))
-    }
-    record(frames) { frame ->
-        touch(if (frame == 0) PointerEventType.Press else PointerEventType.Move, position(frame))
-    }
-    touch(PointerEventType.Release, position(frames - 1))
+private fun ShotScope.dragFrame(frame: Int, frames: Int, from: Float, to: Float) {
+    if (frame > frames) return
+    val progress = 1 - (1 - frame.coerceAtMost(frames - 1) / (frames - 1f)).pow(3)
+    val position = Offset(device.widthPx / 2f, device.heightPx * (from + (to - from) * progress))
+    touch(
+        when (frame) {
+            0 -> PointerEventType.Press
+            frames -> PointerEventType.Release
+            else -> PointerEventType.Move
+        },
+        position,
+    )
 }
 
 /** A string being tuned [frame]s after it was first heard: a damped swing from [start] cents into tune, with a tremble. */
@@ -390,6 +404,14 @@ private const val VIDEO_BPM = 160
 private const val FRAMES_PER_BEAT = 60 * 60f / VIDEO_BPM
 private const val IN_TUNE_CENTS = 3f
 
+/** The list is scrolled for the clip's first bar; its search opens on the next downbeat, and its keyboard slides up. */
+private const val SCROLL_FRAMES = 84
+private const val SEARCH_FRAME = 90
+private const val KEYBOARD_FRAMES = 15
+
+/** "hou", a letter on each of the search's bar's last three beats, which puts House of the Rising Sun at the top. */
+private val TYPED = listOf(113 to 'h', 135 to 'o', 158 to 'u')
+
 /** The song scene's fifth beat, 22.5 frames each, where the video shows its "Pedal & tap to turn pages" chip. */
 private const val PAGE_TURN_FRAME = 90
 /**
@@ -408,21 +430,14 @@ private val NOTATION_CHANGES = mapOf(
 /** Where A is among the Chords and the Scales tabs' keys, from C, in every spelling of the accidentals. */
 internal const val KEY_A = 9
 
-/** The instruments the Chords tab is switched to on its third and fourth beats, after two on the keyboard's. */
-private val INSTRUMENT_CHANGES = mapOf(
-    45 to UserPreferences.Instrument.UKULELE,
-    68 to UserPreferences.Instrument.GUITAR,
-)
+/** The Chords tab's third beat, where it turns from the keyboard to the ukulele and stays there. */
+private const val UKULELE_FRAME = 45
 
 /** Where the Scales tab's first family chip is dragged to, down the screen: its heading just under the tool tabs. */
 internal const val SCALE_FAMILIES_Y = 0.2f
 
 /** The second beat, on which the Scales tab's cell is released; its sheet has slid up by the third. */
 private const val SCALE_SHEET_FRAME = 23
-
-/** The sheet takes a pick only once it has slid into place, about half a second after the tap that opens it. */
-private const val SHAPE_SHEET_FRAME = 79
-private const val SHAPE_PICK_FRAME = 113
 
 /** Where the PDF preview's page is, down the phone's screen, for a finger to swipe it. */
 private const val EXPORT_PAGE_Y = 0.4f
@@ -434,9 +449,10 @@ private const val EXPORT_PAGE_Y = 0.4f
 private val PAGE_SWIPES = listOf(16 to true, 60 to false)
 private const val PAGE_SWIPE_FRAMES = 10
 
-private const val REORDER_PRESS_FRAME = 20
-private const val REORDER_START_FRAME = 26
-private const val REORDER_END_FRAME = 104
+/** The grip is pressed just before the second beat and released nine frames after the drag ends, on the fifth. */
+private const val REORDER_PRESS_FRAME = 16
+private const val REORDER_START_FRAME = 22
+private const val REORDER_END_FRAME = 81
 
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
 private const val COUNTRY_ROADS = "john_denver-take_me_home_country_roads.cho"

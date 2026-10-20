@@ -45,8 +45,10 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 - **Promo video footage** is `Promo.kt`, rendered only with `--only promo` into `Promo/`: stills and clips. `record`
   draws a frame every 1/60 s of the scene's clock as JPEGs, so animations play at their own speed however slow drawing
   is. A drag moves a finger a frame at a time (`touch`); a tap within a clip is press and release on separate frames at
-  the label's middle (`centerOf`; `centersOf` where several share a label), since `tap` settles between them. The
-  metronome runs at the video's 160 BPM. The video is composed in `tools/promo-video`.
+  the label's middle (`centerOf`; `centersOf` where several share a label), since `tap` settles between them. A clip
+  that types raises `OnScreenKeyboard`, a generic keyboard the overlay draws and the app is told of as the platform's
+  keyboard inset, and lights its keys. The metronome runs at the video's 160 BPM. The video is composed in
+  `tools/promo-video`.
 
 ## UI tests
 

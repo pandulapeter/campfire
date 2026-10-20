@@ -29,14 +29,15 @@ Remotion is not open source: free for individuals and companies of up to three p
   devices come in from varied sides. `soundtrack.py` places its hits with `t_of(bar, beat)` against the same bars.
 - **A scene's length or the tempo changes `Promo.tsx`, `soundtrack.py`, `cue-sheet.md`, and `VIDEO_BPM` in `Promo.kt`
   together.** A clip starts on its scene's first frame, so what it does on a beat is at a frame of the clip: the
-  frame constants in `Promo.kt` and the matching ones in `Promo.tsx` (`SHEET_AT`, `STEPS`, the chips' `at`).
+  frame constants in `Promo.kt` and the matching ones in `Promo.tsx` (`STEPS`, `SCROLL_AT`, the chips' `at`).
 - Scenes are laid out once, in portrait coordinates; `Stage` fits them into the square and landscape frames.
 
 ## What assumes today's app
 
-- The Chords and Scales tabs' key (`KEY_A`), how far the Scales tab is scrolled (`SCALE_FAMILIES_Y`) and the cell it
+- The Songs screen's search button (`songs_search`) and House of the Rising Sun heading what "hou" finds; the
+  Chords and Scales tabs' key (`KEY_A`), how far the Scales tab is scrolled (`SCALE_FAMILIES_Y`) and the cell it
   taps, the setlist's grip indexes, the drag and swipe positions, and the frames above, all in `Promo.kt`; the tuner
-  comes into tune around frame 90, bar 13's downbeat.
+  comes into tune around frame 90, bar 11's downbeat.
 - The claims on screen are text in `Promo.tsx`: the feature chips, the instruments the Chords clip switches to, the
   transposition badge (`STEPS`), the platform list, and "Free. No ads. No account. Offline."
 - Brand colors are the website's (`C` in `kit.tsx`); the tag colors are the app's `TagColor` dark variants.
@@ -60,7 +61,15 @@ Remotion is not open source: free for individuals and companies of up to three p
   are Regular or Medium; the badge's chord is JetBrains Mono Bold.
 - The music is a backing track in A major for the owner's electric guitar: drums, bass, synths, and effects, no
   guitars, recorded rather than synthesized drums, no bells.
-- Bar 16 is one thing a beat: the laptop in dark on the downbeat (where the music goes to E), the light theme sweeping
+- The chord chart (`soundtrack.py`'s docstring) is the owner's, who records guitars and likely the bass over it: the
+  scenes are fitted to the music, never the music to the scenes.
+- The first frame already shows the app (the song list, under the name), since many feeds freeze on it.
+- The transposition, the notations, the metronome, and the tuner scenes stay as they are.
+- The opening: the phone shrinks into place over bar 1, the list scrolls from bar 2, and on bar 3 the phone rises over
+  its headline while the search opens and "hou" is typed on a generic keyboard, leaving the song the iPad then shows.
+- The Chords scene has one headline, with no "every", and one instrument switch, keyboard to ukulele, never a quick run
+  of them.
+- Bar 14 is one thing a beat: the laptop in dark on the downbeat (where the music goes to E), the light theme sweeping
   across it on the second with the whoosh alone (`LIGHT_FROM`), then the iPad and the phone. Dark everywhere else.
 - The whoosh is clearly heard: `whoosh(..., 3.0)` (`soundtrack.py`).
 
