@@ -46,8 +46,8 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         ),
         // The setlists, from the top.
         Triple("phone-setlist", Device.IPHONE, setlists),
-        // The Metronome tab at its default 120 in 4/4, not playing.
-        Triple(
+        // The Metronome tab at its default 120 in 4/4, playing.
+        *playing(
             "phone-metronome",
             Device.IPHONE,
             Shot(
@@ -160,8 +160,9 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             ),
         ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 1f)),
-        // Uptown Girl with the metronome panel open under its title, not playing, as the tuner shot shows it under its sheet.
-        Triple(
+        // Uptown Girl with the metronome panel open under its title, playing, as the tuner shot shows it under its sheet
+        // (which stops the click).
+        *playing(
             "tablet-song-metronome",
             Device.IPAD,
             song("tablet-song-metronome", UPTOWN_GIRL, fontScale = UPTOWN_GIRL_FONT_SCALE, extra = metronome(isSongPanelShown = true)),
@@ -229,6 +230,31 @@ private suspend fun PrepareScope.hear(reading: TunerReading) {
     (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading)
     settle()
 }
+
+/**
+ * [shot] with its click started and no beat heard yet, then the same as each beat of the 4/4 bar is heard, named
+ * `<name>-beat-<n>`: the page flashes the beats one after another over the first, from what each of the others changes
+ * of it (`website_screenshots.py` keeps only that).
+ */
+private fun playing(name: String, device: Device, shot: Shot): Array<Triple<String, Device, Shot>> {
+    fun started(beat: Int?) = Shot(
+        id = shot.id,
+        uiMode = shot.uiMode,
+        language = shot.language,
+        preferences = shot.preferences,
+        prepare = shot.prepare,
+        drive = {
+            shot.drive(this)
+            settle()
+            viewModel.metronomeController.toggleMetronome()
+        },
+        beat = beat,
+    )
+    val beats = (0 until BEATS_PER_BAR).map { beat -> Triple("$name-beat-${beat + 1}", device, started(beat)) }
+    return (listOf(Triple(name, device, started(beat = null))) + beats).toTypedArray()
+}
+
+private const val BEATS_PER_BAR = 4
 
 private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = mapOf(
     "metronomeSettings" to buildJsonObject {

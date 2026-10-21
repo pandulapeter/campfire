@@ -109,7 +109,8 @@ repository; the user reviews and commits.
 7. **The website**: `python3 -I .claude/skills/store-screenshots/scripts/website_screenshots.py
    tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "<Desktop folder>/Website -
    Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size the site
-   draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. It finds the website's repository as a sibling folder
+   draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a playing
+   metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page fades in. It finds the website's repository as a sibling folder
    named `CampfireWebsite` (the owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where
    there is none it writes to the Desktop folder and says so. Without `--link-preview`, `og-image.jpg` is left alone.
 8. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies

@@ -11,7 +11,10 @@ Copies the website's screenshots from a render of the tool's `website` set into 
 every `<name>.png` of the render's Website folder as `assets/screenshots/<name>.webp`, scaled to the size the site
 draws that device at (SIZES, which the pages' width and height attributes and the stylesheet's aspect ratios repeat),
 and, when one is given, the link preview Screenshot Bro exported as `assets/og-image.jpg`, at the size of the one it
-replaces. The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
+replaces. The renders of a playing click's beats (`<name>-beat-<n>-<theme>.png`) are not copied as screenshots: what each
+changes of `<name>-<theme>.png`, the lit beat and the metronome mark's pulse, goes side by side into one transparent
+`<name>-beats-<theme>.webp`, a layer per beat at the screenshot's size, which the page fades over it in turn.
+The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
 is (CampfireWebsite) or as a plain clone is (campfire-website). Where none is there, the files go to the fallback folder
 instead, and it says so. A file the site no longer links stays where it is: remove it there.
 
@@ -20,9 +23,10 @@ Usage: python3 -I website_screenshots.py <render folder>/Website <fallback folde
 
 import argparse
 import pathlib
+import re
 import sys
 
-from PIL import Image
+from PIL import Image, ImageChops, ImageFilter
 
 SIBLINGS = ("CampfireWebsite", "campfire-website")
 # The laptop's window is 2000 by 1255 pixels, shown no wider than about 1100 device pixels on the page, so its shots are
@@ -31,6 +35,11 @@ SIBLINGS = ("CampfireWebsite", "campfire-website")
 SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (1600, 1004)}
 OG_SIZE = (1200, 630)
 QUALITY = 86
+BEAT = re.compile(r"(?P<name>.+)-beat-(?P<beat>\d+)-(?P<theme>light|dark)")
+# A pixel a beat changes by more than this (of 255, after scaling) is the beat's, with a few pixels around it, so that
+# the layer takes the edges of what lights up rather than cutting them where the change fades into the anti-aliasing.
+BEAT_THRESHOLD = 2
+BEAT_MARGIN = 5
 
 
 def website_assets(website):
@@ -42,6 +51,26 @@ def website_assets(website):
         return assets
     projects = pathlib.Path(__file__).resolve().parents[5]
     return next((projects / name / "assets" for name in SIBLINGS if (projects / name / "assets").is_dir()), None)
+
+
+def scaled(path, size):
+    return Image.open(path).convert("RGB").resize(size, Image.Resampling.LANCZOS)
+
+
+def save_beats(renders, screenshots, name, theme):
+    """The beats of the shot called name in theme, as a layer each, transparent wherever the beat changes nothing."""
+    size = SIZES[name.split("-")[0]]
+    still = scaled(renders / f"{name}-{theme}.png", size)
+    beats = sorted(renders.glob(f"{name}-beat-*-{theme}.png"), key=lambda path: int(BEAT.fullmatch(path.stem)["beat"]))
+    layers = Image.new("RGBA", (size[0] * len(beats), size[1]), (0, 0, 0, 0))
+    for index, path in enumerate(beats):
+        beat = scaled(path, size)
+        changed = ImageChops.difference(still, beat).convert("L").point(lambda value: 255 if value > BEAT_THRESHOLD else 0)
+        layers.paste(beat, (size[0] * index, 0), changed.filter(ImageFilter.MaxFilter(BEAT_MARGIN)))
+    output = screenshots / f"{name}-beats-{theme}.webp"
+    # Lossless, since what is drawn is a few flat blocks and the rest is empty: smaller than lossy, and without a seam.
+    layers.save(output, "WEBP", lossless=True, method=6)
+    print(f"{output} {len(beats)} × {size} {output.stat().st_size // 1024} KB")
 
 
 def main():
@@ -60,7 +89,11 @@ def main():
         print(f"The website's repository is not next to this one ({' or '.join(SIBLINGS)}), so the files go to {target}.")
     screenshots = target / "screenshots"
     screenshots.mkdir(parents=True, exist_ok=True)
+    for name, theme in sorted({(match["name"], match["theme"]) for match in map(BEAT.fullmatch, (source.stem for source in renders)) if match}):
+        save_beats(arguments.renders, screenshots, name, theme)
     for source in renders:
+        if BEAT.fullmatch(source.stem):
+            continue
         output = screenshots / f"{source.stem}.webp"
         size = SIZES[source.stem.split("-")[0]]
         Image.open(source).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(output, "WEBP", quality=QUALITY, method=6)
