@@ -18,6 +18,18 @@ internal class Harmony(val parts: List<SongPart>) {
     val chords = parts.flatMap { it.chords }
     val roots = parts.flatMap { it.roots }
     val ranked by lazy { rankedRoots(parts) }
+
+    /**
+     * The key in force shifted down by the capo, spelled as the part spells its chord there, where the part is heard on
+     * that root ([ranked]'s first), else null. The shifted root of the common capos is a chord every song in the written
+     * key plays (capo 5: its V, capo 7: its IV), so a chord on it is no evidence that the key names the sounding pitch:
+     * `{key: C}{capo: 5}` `C Am D7 G` would read in G, which holds it whole.
+     */
+    val capoKey by lazy {
+        val capo = parts.first().capo?.takeIf { it != 0 } ?: return@lazy null
+        val key = key ?: return@lazy null
+        ranked.first().takeIf { it.pitchClass == (key.root.pitchClass - capo).mod(12) }?.let { SongKey(it, key.isMinor) }
+    }
     private val notes = chords.flatMapTo(mutableSetOf()) { it.notes }
 
     fun holds(scale: Scale, root: SpelledNote) = Scales.pitchClasses(scale, root.pitchClass).containsAll(notes)

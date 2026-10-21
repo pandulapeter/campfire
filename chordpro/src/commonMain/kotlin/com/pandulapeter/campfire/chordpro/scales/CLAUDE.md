@@ -23,7 +23,9 @@
   scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus.
   **A riff of power chords comes first**: where half the chords have no third, a riff on the key's root (else the
   scored one) is read before any mode holding it. **Then the key decides the root**: the key in force (`{key}`, or the
-  key a `{transpose}` names): the key's own scale holding the part, then another key on the part's best scored root
+  key a `{transpose}` names, or, where `{capo}` is set and that key holds nothing of the part whole, the key a capo's
+  shapes play (`{key: G}{capo: 5}` over D shapes is D), only where it holds the part whole and the part is heard on its
+  root (capo 5's shifted root is the V, which a II7 in C would otherwise move the part to)): the key's own scale holding the part, then another key on the part's best scored root
   holding it whole where the key's tonic chord is only ever followed by that root's, inside the part at least once,
   and the part does not start on the key's root (a chorus on the IV is the IV's major, never the key's Mixolydian; the
   relative key and the I IV ♭VII IV loop are the key's), its mode holding the part, a minor key's family, a dominant

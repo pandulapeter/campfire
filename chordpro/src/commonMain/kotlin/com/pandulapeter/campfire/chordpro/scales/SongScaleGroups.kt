@@ -153,10 +153,18 @@ public object SongScaleGroups {
      * at the first part (`{key}`, or the key a `{transpose}` names) is the author's word for the root, so every answer
      * on it is tried first ([keyFitOf]); only where none holds the part, a modulated section, is the root guessed from
      * the chords ([guessedFitOf]), a vamp on one chord answered as the chord's own sheet is ([oneChordFitOf]).
+     *
+     * A capo chart may write its `{key}` as the sounding key over shapes in another (`{key: G}{capo: 5}` over D shapes),
+     * so where the written key holds nothing of the part whole, the key the shapes play ([Harmony.capoKey]) answers if
+     * it does; where neither does, the written key keeps its word.
      */
     private fun fitOf(parts: List<SongPart>): Fit? {
         val harmony = Harmony(parts)
-        return powerRiffFitOf(harmony) ?: harmony.key?.let { keyFitOf(harmony, it) } ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
+        powerRiffFitOf(harmony)?.let { return it }
+        val written = harmony.key?.let { keyFitOf(harmony, it) }
+        if (written?.level == Level.TONAL) return written
+        harmony.capoKey?.let { keyFitOf(harmony, it) }?.takeIf { it.level == Level.TONAL }?.let { return it }
+        return written ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
     }
 
     /**

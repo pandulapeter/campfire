@@ -33,6 +33,7 @@ internal object SongParts {
      */
     fun of(song: ChordProSong): List<SongPart> {
         var key = song.metadata.key?.let(::keyOf)
+        val capo = song.metadata.capo
         val parts = mutableListOf<SongPart>()
         var chorus: SongPart? = null
         var isModulated = false
@@ -53,7 +54,7 @@ internal object SongParts {
                             previous.blocks += block
                             previous.add(chords)
                         }
-                        chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key).apply {
+                        chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key, capo).apply {
                             add(chords)
                             if (block.type == SectionType.Chorus) chorus = this
                         }
@@ -67,7 +68,7 @@ internal object SongParts {
                     when {
                         recalled != null && names == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
                         sameRecall != null -> sameRecall.blocks += block
-                        chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key).apply { add(chords) }
+                        chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key, capo).apply { add(chords) }
                     }
                 }
                 else -> Unit
@@ -115,9 +116,10 @@ internal object SongParts {
 
 /**
  * Sections played together, a section with its continuations, or a chorus recall: each of [blocks] a
- * `ChordProBlock.Section` or a `ChordProBlock.ChorusRecall`.
+ * `ChordProBlock.Section` or a `ChordProBlock.ChorusRecall`, under [key] and the header's [capo] (a `{transpose}`
+ * renames the key, never the capo).
  */
-internal class SongPart(val blocks: MutableList<ChordProBlock>, val key: SongKey?) {
+internal class SongPart(val blocks: MutableList<ChordProBlock>, val key: SongKey?, val capo: Int?) {
     val names = mutableListOf<String>()
     val chords = mutableListOf<Chord>()
     val roots = mutableListOf<SpelledNote>()

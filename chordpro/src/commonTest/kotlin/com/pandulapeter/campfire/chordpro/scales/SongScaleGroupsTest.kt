@@ -42,8 +42,11 @@ class SongScaleGroupsTest {
 
     private fun rootAndFirst(text: String) = groups(text).map { it.rootName to it.scales.first().id }
 
-    /** A song of one section per entry of [sections], each chord a word of its own, under [key] where there is one. */
-    private fun song(vararg sections: String, key: String? = null) = (listOfNotNull(key?.let { "{key: $it}" }) +
+    /**
+     * A song of one section per entry of [sections], each chord a word of its own, under [key] and with [capo] where
+     * there is one.
+     */
+    private fun song(vararg sections: String, key: String? = null, capo: Int? = null) = (listOfNotNull(key?.let { "{key: $it}" }, capo?.let { "{capo: $it}" }) +
         sections.mapIndexed { index, chords ->
             "{start_of_verse: Part ${index + 1}}\n" + chords.split(' ').joinToString(" ") { "[$it]x" } + "\n{end_of_verse}"
         }).joinToString("\n")
@@ -514,6 +517,26 @@ class SongScaleGroupsTest {
             assertEquals(expected.first to "major", group.rootName to group.scales.first().id)
             assertEquals(listOf(expected.second), group.exceptions.map { it.chordName })
         }
+    }
+
+    @Test
+    fun `a capo chart keyed by its sounding key is read in the key of its shapes`() =
+        assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "G", capo = 5)))
+
+    @Test
+    fun `the written key keeps its word where it holds the part`() {
+        assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "D", capo = 5)))
+        assertEquals(listOf("G" to "major"), rootAndFirst(song("G C D G", key = "G", capo = 5)))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C F G C", key = "D", capo = 2)))
+        val secondaryDominant = groups(song("C Am D7 G C Am D7 G", key = "C", capo = 5)).single()
+        assertEquals("C" to "major", secondaryDominant.rootName to secondaryDominant.scales.first().id)
+        assertEquals(listOf("D7"), secondaryDominant.exceptions.map { it.chordName })
+    }
+
+    @Test
+    fun `a capo key is named only where the part is heard on it`() {
+        assertEquals("D", groups(song("D G A Bm D G A D", key = "G", capo = 5)).single().rootName)
+        assertEquals(listOf("Eb" to "major"), rootAndFirst(song("Eb Ab Bb Eb", key = "Ab", capo = 5)))
     }
 
     @Test
