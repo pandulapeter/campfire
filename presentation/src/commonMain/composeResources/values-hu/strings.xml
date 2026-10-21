@@ -1203,6 +1203,7 @@
     <string name="share_stop_all_failed">Nem sikerült minden megosztást leállítani. A még listázott linkek továbbra is működnek.</string>
     <string name="share_stop_all_failed_network">A megosztások leállításához kapcsolat kell a Dropboxszal. A még listázott linkek továbbra is működnek.</string>
     <string name="settings_sync_disconnect_shared_links">A megosztott linkek továbbra is működnek. Ugyanannak a fióknak az újbóli csatlakoztatásával kezelheted őket.</string>
+    <string name="settings_sync_disconnect_pending_stops">Az ezen az eszközön törölt dalok vagy listák egy része még nincs szinkronizálva. Ha valamelyiknek van megosztott linkje, az továbbra is működik, hacsak nem szinkronizálsz a leválasztás előtt.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Nem sikerült újra csatlakoztatni a Dropboxot. A meglévő kapcsolat továbbra is működik.</string>
 </resources>

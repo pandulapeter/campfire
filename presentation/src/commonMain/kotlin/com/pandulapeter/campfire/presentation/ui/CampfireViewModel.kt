@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.domain.api.songs.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.songs.DuplicateSongUseCase
 import com.pandulapeter.campfire.domain.api.sync.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
+import com.pandulapeter.campfire.domain.api.sharing.GetPendingShareStopsUseCase
 import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
@@ -218,6 +219,7 @@ class CampfireViewModel(
     private val searchSongDetails: SearchSongDetailsUseCase,
     private val loadSongCredits: LoadSongCreditsUseCase,
     getSharedLinks: GetSharedLinksUseCase,
+    getPendingShareStops: GetPendingShareStopsUseCase,
     createShareLink: CreateShareLinkUseCase,
     stopSharing: StopSharingUseCase,
     stopSharingEverything: StopSharingEverythingUseCase,
@@ -388,6 +390,7 @@ class CampfireViewModel(
         scope = viewModelScope,
         messageSink = messageSink,
         getSharedLinks = getSharedLinks,
+        getPendingShareStops = getPendingShareStops,
         createShareLink = createShareLink,
         stopSharing = stopSharing,
         stopSharingEverything = stopSharingEverything,

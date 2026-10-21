@@ -34,6 +34,13 @@ interface SharedLinksRepository {
      */
     val shares: Flow<List<Share>>
 
+    /**
+     * Whether this device has deleted a shared item whose link the account's list has not stopped yet (offline, or
+     * not applied since): forgotten with the account, so disconnecting now would leave that link working. Counts every
+     * deletion not applied yet, since only the list can tell which of them were shared.
+     */
+    val hasPendingStops: Flow<Boolean>
+
     /** Reads the account's list again into [shares]. Null when it worked. */
     suspend fun refresh(): SharingFailure?
 

@@ -42,7 +42,9 @@
     whole journal in order, best effort; what it cannot write the run applies. The applier and the run's step never
     apply at once: each holds `SharedLinksJournal.whileApplying` from loading the entries until it removes them, so
     `remove`'s first-equal match is always the entry applied.
-- Mirror and journal are forgotten with the index (disconnect, `forgetStoredConnection`, another account connected).
+- Mirror and journal are forgotten with the index (disconnect, `forgetStoredConnection`, another account connected):
+  a stop still in the journal then leaves its link working, which the Disconnect confirmation says
+  (`hasPendingStops`).
 
 ## Sharing (`SharedLinksRepositoryImpl`)
 

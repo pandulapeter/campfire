@@ -34,12 +34,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -768,6 +770,26 @@ class SharedLinksRepositoryImplTest {
         assertNotNull(copyDuringUpload)
         assertTrue(cloud.sharedFiles.isEmpty())
         assertEquals(emptyList(), registry(cloud).links)
+    }
+
+    @Test
+    fun `a deletion the list could not be told yet is a pending stop until it is applied`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.onDownloadDocument = { throw SyncNetworkException("offline") }
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+
+        repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+        advanceUntilIdle()
+        assertFalse(repository.hasPendingStops.first())
+
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "song.cho")
+        advanceUntilIdle()
+        assertTrue(repository.hasPendingStops.first())
+
+        provider.onDownloadDocument = {}
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "other.cho", "Other", copy))
+        assertFalse(repository.hasPendingStops.first())
     }
 
     /**

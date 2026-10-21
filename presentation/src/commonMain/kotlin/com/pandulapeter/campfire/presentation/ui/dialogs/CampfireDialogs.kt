@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_cover_a
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
+import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_pending_stops
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_shared_links
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
@@ -333,6 +334,12 @@ private fun CampfireDialog(
                     ""
                 } else {
                     " " + stringResource(Res.string.settings_sync_disconnect_shared_links)
+                } +
+                // Deletions not yet told to the account's list are forgotten with it, leaving any of their links working.
+                if (viewModel.shareLinkController.hasPendingStops.collectAsStateWithLifecycle().value) {
+                    " " + stringResource(Res.string.settings_sync_disconnect_pending_stops)
+                } else {
+                    ""
                 },
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
             onDismiss = viewModel.dialogHost::dismissDialog,

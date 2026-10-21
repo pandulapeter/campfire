@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
+import com.pandulapeter.campfire.domain.api.sharing.GetPendingShareStopsUseCase
 import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
@@ -36,6 +37,7 @@ internal class ShareLinkController(
     private val scope: CoroutineScope,
     private val messageSink: MessageSink,
     getSharedLinks: GetSharedLinksUseCase,
+    getPendingShareStops: GetPendingShareStopsUseCase,
     private val createShareLink: CreateShareLinkUseCase,
     private val stopSharing: StopSharingUseCase,
     private val stopSharingEverything: StopSharingEverythingUseCase,
@@ -44,6 +46,9 @@ internal class ShareLinkController(
 
     /** Everything shared from the connected account, as this device last saw it, most recently shared first. */
     val shares: StateFlow<List<Share>> = getSharedLinks().asState(scope, emptyList())
+
+    /** Whether disconnecting now would leave a deleted item's link working, see [GetPendingShareStopsUseCase]. */
+    val hasPendingStops: StateFlow<Boolean> = getPendingShareStops().asState(scope, false)
 
     private val _creations = MutableStateFlow<Map<ShareTarget, ShareCreation>>(emptyMap())
 

@@ -370,7 +370,8 @@ internal class SyncConnectionManager(
     /**
      * The shared links' mirror and journal describe the account's folder as the index does, and go with it. The shares
      * themselves stay in the folder: connecting the same account again brings them back, and the journal's renames
-     * not yet applied are lost with it, which can leave those shares orphaned until stopped.
+     * not yet applied are lost with it, which can leave those shares orphaned until stopped, and so are its stops, which
+     * leaves deleted items' links working (the Disconnect confirmation warns: `SharedLinksRepository.hasPendingStops`).
      */
     private suspend fun forgetSharedLinks() {
         quietly("clear the shared links mirror") { sharedLinksMirror.clear() }

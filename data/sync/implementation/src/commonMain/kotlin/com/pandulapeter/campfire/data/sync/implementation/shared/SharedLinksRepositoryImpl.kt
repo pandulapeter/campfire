@@ -31,6 +31,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -56,6 +57,11 @@ internal class SharedLinksRepositoryImpl(
     private val providers = syncProviders.all
 
     override val shares = combine(mirror.mirrored, journal.entries) { mirrored, pending -> pendingApplied(mirrored.document, pending).toShares() }
+        .distinctUntilChanged()
+
+    /** Renames do not count: one forgotten unapplied only leaves its share orphaned, and its link working as it should. */
+    override val hasPendingStops = journal.entries
+        .map { entries -> entries.any { it !is SharedLinksJournal.Entry.Rename } }
         .distinctUntilChanged()
 
     override suspend fun refresh(): SharingFailure? {

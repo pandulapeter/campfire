@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
+import com.pandulapeter.campfire.domain.api.sharing.GetPendingShareStopsUseCase
 import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
@@ -23,6 +24,8 @@ import com.pandulapeter.campfire.domain.api.sharing.StopSharingUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -140,13 +143,33 @@ class ShareLinkControllerTest {
         assertNull(controller.creations.value[songA])
     }
 
-    private fun TestScope.controller(stops: Stops = Stops(), creations: CreateShareLinkUseCase = Unused): Pair<ShareLinkController, MessageSink> {
+    @Test
+    fun `whether stops are pending follows the use case`() = runTest {
+        val pendingStops = MutableStateFlow(false)
+        val (controller) = controller(pendingStops = pendingStops)
+        runCurrent()
+        assertFalse(controller.hasPendingStops.value)
+
+        pendingStops.value = true
+        runCurrent()
+
+        assertTrue(controller.hasPendingStops.value)
+    }
+
+    private fun TestScope.controller(
+        stops: Stops = Stops(),
+        creations: CreateShareLinkUseCase = Unused,
+        pendingStops: Flow<Boolean> = flowOf(false),
+    ): Pair<ShareLinkController, MessageSink> {
         val messages = MessageSink(backgroundScope)
         val controller = ShareLinkController(
             scope = backgroundScope,
             messageSink = messages,
             getSharedLinks = object : GetSharedLinksUseCase {
                 override fun invoke() = flowOf(listOf(share))
+            },
+            getPendingShareStops = object : GetPendingShareStopsUseCase {
+                override fun invoke() = pendingStops
             },
             createShareLink = creations,
             stopSharing = stops,

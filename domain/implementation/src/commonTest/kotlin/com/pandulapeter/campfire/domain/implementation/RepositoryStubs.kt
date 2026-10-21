@@ -132,6 +132,7 @@ internal open class SyncRepositoryStub : SyncRepository {
 /** A [SharedLinksRepository] whose every member fails the same way, see [SongRepositoryStub]. */
 internal open class SharedLinksRepositoryStub : SharedLinksRepository {
     override val shares: Flow<List<Share>> get() = unexpected()
+    override val hasPendingStops: Flow<Boolean> get() = unexpected()
     override suspend fun refresh(): SharingFailure? = unexpected()
     override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray): CreateShareResult = unexpected()
     override suspend fun stopSharing(shareId: String): SharingFailure? = unexpected()
