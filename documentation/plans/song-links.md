@@ -18,6 +18,11 @@ store, and the installed app imports it after onboarding. There is still no Camp
 Revised 2026-10-20 for sync's change feed, its runs on every return to the front, and its network retries
 (`6498ee072`…`6136b5999`): §4.1, §5.1, §5.5, §6.4, §11.2, and §14.
 
+Revised 2026-10-21: the shared links are a Settings tab of their own, present while disconnected, instead of a sheet
+opened from the Library tab (decision 6, §6.4, §7.1, §11.1, and §14). No limit on how many items are shared
+(decision 10). A run builds only the copies whose inputs changed, and devices on different versions never undo each
+other's copies (§4.2, §5.1, §5.6, §11.2, and §14).
+
 **Read §11 (corner cases) before writing any code.** Most of this feature is its edges.
 
 ## 1. Decisions (settled with the user; do not reopen)
@@ -36,7 +41,8 @@ Revised 2026-10-20 for sync's change feed, its runs on every return to the front
    - Deleting the item in Campfire stops sharing it.
    - **Stop sharing** (export screen, Settings) deletes the shared file from Dropbox, and the link stops working.
 5. **A single song is shared as a zip too**, so both kinds take one path: download, then the import review.
-6. **Settings → Library → Shared links** lists everything shared from this Dropbox account, on every device.
+6. **Settings → Sharing**, a tab of its own, lists everything shared from this Dropbox account, on every device. It is
+   there while Dropbox is not connected too, inviting the user to connect (§7.1).
 7. **The recipient's screens never mention Dropbox.** The import screen names the song or setlist, and the landing
    page says "Download the file". The sharer's screens do mention Dropbox, since it is their account.
 8. **Install, then import:**
@@ -46,6 +52,10 @@ Revised 2026-10-20 for sync's change feed, its runs on every return to the front
    - **Web:** automatic.
 9. **`campfire://s/<payload>` is never the shared link.** It is only the target of the landing page's buttons and of
    Android's `intent://` (§9): a custom scheme has no fallback when the app is missing.
+10. **No limit on the number of shared items.** What a share costs scales with what changed, not with how many are
+    shared: a run uploads only the copies whose bytes changed (§5.1), and the registry is one small document. A limit
+    would be a rule to explain and a state to design for no protection. If Dropbox itself refuses a link, that is
+    `Refused` (§4.1), and step 0 notes any cap it finds.
 
 ## 2. Facts to establish first (step 0, throwaway code, findings written back here)
 
@@ -143,7 +153,8 @@ Dropbox is full".
 ```json
 { "version": 1, "links": [ {
     "shareId": "k3j…", "kind": "setlist", "fileName": "summer_gig.setlist.json", "title": "Summer gig",
-    "fileId": "…", "rlkey": "…", "sharedAt": "2026-10-16", "state": "ok"
+    "fileId": "…", "rlkey": "…", "sharedAt": "2026-10-16", "state": "ok",
+    "built": { "inputs": "…", "build": 412, "hash": "…" }
 } ] }
 ```
 
@@ -152,10 +163,14 @@ Dropbox is full".
   - `orphaned` (§5.4): the item is no longer in the library, and nobody stopped sharing it;
   - `tooLarge` (§5.3): the latest version could not be shared.
 - **`sharedAt`** is for display only, never a decision.
+- **`built`** says what the copy in Dropbox was last built from (§5.6): the fingerprint of its `inputs`, the `build`
+  number of the Campfire that built it, and the copy's content `hash`. A `tooLarge` entry's `built` describes the
+  inputs that did not fit, with no `hash`. Absent until the first run after the share, and on entries an older
+  version wrote, which simply means "build it".
 - **Edited only as operations**: read, change, `uploadDocument(expectedRevision)`, and on `Conflict` re-read and
   re-apply, up to 3 times.
-  - The operations are add an entry, remove an entry by `shareId`, set `fileName` / `title`, and set `state`. Each is
-    idempotent.
+  - The operations are add an entry, remove an entry by `shareId`, set `fileName` / `title`, set `state`, and set
+    `built`. Each is idempotent.
   - Unlike `preferences.json`, this needs no three-way merge and no base in the index.
 - **Not under the run lock.** The share's file and the registry entry are written with revision checks, so a sharing
   action and a run's shared-copy step never clobber each other (§11.2). Taking the lock would make the first share
@@ -190,14 +205,22 @@ completed index is saved and the watch point set, so a run that the step ends ne
 3. For each entry in the `ok` or `tooLarge` state:
    1. Find the item in the local library by `fileName`. If it is missing, the entry becomes `orphaned` (§5.4), and
       nothing is uploaded.
-   2. Build its zip (§5.2). Over `ImportLimits.MAX_IMPORT_SIZE`, the entry becomes `tooLarge` and the file is left as
-      it was, so the last version that fit keeps being served.
-   3. Compare the zip's Dropbox content hash (`crypto/ContentHash.kt`) with the listing's `content_hash` for
-      `/shared/<shareId>.zip`. If they are equal, do nothing: content decides, never a clock.
-   4. Otherwise, upload with `update:<listing revision>`.
-      - `Conflict` (another device uploaded in between) is dropped for this run.
+   2. Compute its inputs fingerprint (§5.6). **Skip the entry** (nothing read, built, or uploaded) when its `built`
+      has the same `inputs`, a `build` no older than this one, and either a `hash` equal to the listing's
+      `content_hash` for `/shared/<shareId>.zip`, or no `hash` while the entry is `tooLarge`.
+   3. Otherwise build its zip (§5.2). Over `ImportLimits.MAX_IMPORT_SIZE`, the entry becomes `tooLarge`, with `built`
+      naming these inputs and no `hash`, and the file is left as it was, so the last version that fit keeps being
+      served.
+   4. Compare the zip's Dropbox content hash (`crypto/ContentHash.kt`) with the listing's `content_hash` for
+      `/shared/<shareId>.zip`. If they are equal, upload nothing, and set `built` if it differs: content decides,
+      never a clock.
+   5. Otherwise, upload with `update:<listing revision>`, and on success set `built` (and `ok`).
+      - `Conflict` (another device uploaded in between) is dropped for this run, and `built` is left alone.
       - A missing file (deleted by hand in Dropbox, §11.3) makes the entry `orphaned`.
-   5. If the entry's `title` changed, update it in the registry (display only).
+   6. If the entry's `title` changed, update it in the registry (display only).
+   7. The run's registry changes (`built`, `state`, `title`) go in as **one** operation (§4.2) at the end of the step,
+      also when the step ends early on an error, keeping what was done up to then. A step that changed nothing writes
+      nothing.
 4. **Errors**: follow `synchronizePreferences`.
    - Rethrow cancellation and every `SyncRunEndingException` (authorization, the network, a full folder). The run
      then ends with that reason, and a `Failure(NETWORK)` is retried after `NETWORK_RETRY_DELAYS`, which brings the
@@ -223,6 +246,7 @@ completed index is saved and the watch point set, so a run that the step ends ne
 
 Anything that changes the bytes counts:
 - the setlist's title, description, date, countdown, archive flag, or order;
+- a newer version of Campfire than the copy's builder (its zips may be built differently, §5.6);
 - its entries' transposition, tempo, and capo;
 - any song's text;
 - a song added or removed.
@@ -248,7 +272,7 @@ a share.
 - **Missing without an explicit action**: the item was deleted outside Campfire, renamed on a device without the
   mirror, or its journal was lost with the app's data.
   - The entry becomes `orphaned`, and the file keeps serving the last version.
-  - Settings shows "No longer in your library" with **Stop sharing**.
+  - Settings → Sharing shows "No longer in your library" with **Stop sharing**.
   - If the item reappears under the same name (a delete-and-create still in flight from another device), the next run
     sets it back to `ok`.
 - **Order matters**: the journal is applied before items are looked up (§5.1, step 2), so a rename arriving in the
@@ -271,6 +295,43 @@ leaves (`scheduling/CLAUDE.md`).
     next registry read (§5.1, §7.1).
   - So the watcher ignores `shared-links.json` as it ignores this device's own `preferences.json`. Tested in
     `SyncRemoteWatcherTest`.
+
+### 5.6 Fingerprints: building only what changed
+
+A run already hashes every library file to plan the pass, and the completed index (`SyncEngine.Result.Completed`'s
+`index`) holds each file's `localHash` as the run left it. A copy's bytes are a function of its files and of the code
+that packs them, so the registry entry's `built` (§4.2) tells every device, without reading anything, whether its copy
+could differ from the one in Dropbox.
+
+- **The inputs fingerprint**: the content hash of one line per input, in this order:
+  - the kind and the item's `fileName` with its `localHash`;
+  - for a setlist, each song it names, in setlist order, with its `localHash`, or `-` when it is not in the library.
+    The names come from the setlist document, the one file read for a shared setlist on a run that skips it.
+- **The build number** (`campfire.buildNumber`, generated into `:data:sync:implementation` as
+  `:data:source:remote:implementation` already generates `CAMPFIRE_VERSION`) stands for the code that packs. It is
+  beside the inputs, not in them, so the rule can be "never older":
+  - **An update** finds `build` older than its own and rebuilds every copy once. Only those whose bytes really
+    changed are uploaded, so nothing has to be remembered when packing or export changes.
+  - **Devices on different versions never undo each other.** An older one skips a copy a newer one built from the
+    same inputs, where comparing bytes alone would have it upload its own every run, and the newer one re-upload
+    over it. An older one still rebuilds when its inputs differ (an edit made there), and the newer one then
+    rebuilds that once on its next run.
+- **Shared, not per device**: what one device built, every other device skips, since their files are the same once
+  synced. Nothing is kept locally, so a reinstall, cleared data, or another device costs nothing either.
+- **No fingerprint, so no skip**, when any input has no `localHash` in the index (a file the run did not see, such as
+  one written after its pass). The copy is built as without this section. Edits made after the pass change the next
+  run's fingerprint, so they are never missed, only left to that run.
+- **The listing still has the last word**: a skip also needs the listing's `content_hash` to equal `built.hash`, so a
+  copy replaced by hand in Dropbox, or uploaded by a run that died before its registry write, is rebuilt and checked
+  as before. A file missing from the listing is never skipped: step 5 finds it gone and marks the entry `orphaned`.
+- **Tests** (`shared/`, in `commonTest`, and `TwoDeviceSyncTest`):
+  - a second run with nothing changed reads no song file, builds no zip, and writes no registry;
+  - each input changing (the setlist, one of its songs, a song arriving that it names) rebuilds;
+  - a newer build rebuilds once, and uploads nothing when the bytes are the same;
+  - an older build skips a copy a newer one built, and two devices on different builds settle after one run each;
+  - a copy replaced remotely under an unchanged `built` is rebuilt and uploaded;
+  - a `tooLarge` entry is not rebuilt until an input changes;
+  - an entry with no `built` is built, and only uploaded when its bytes differ.
 
 ## 6. The export screen (`ui/screens/export`)
 
@@ -334,6 +395,9 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
     value with the target.
   - `Navigator.showSyncConsentAnswer` (`ui/sync/SyncConsent.kt:75`) reopens the export dialog on Link, under the same
     "the stack is still the start" condition it uses for Settings.
+- **Connecting from Settings → Sharing** (§7.1) comes back to that tab, not to General: `Navigator.settingsTab` lasts
+  only the session, so after Android's process death or the web's round trip it would be lost. Add a
+  `SyncConsentOrigin.SHARING`, which `showSyncConsentAnswer` treats as `SETTINGS` and then selects the Sharing tab.
 - **The first sync starts right away** (`ConnectSyncProviderUseCaseImpl` calls `synchronizeLibrary`). **Create link**
   does not wait for it.
 - **Connecting again for the scope** while already connected: `SyncConnectionManager.connect()` today remembers only a
@@ -368,22 +432,41 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
 
 ## 7. Settings and the rest of the app
 
-### 7.1 Settings → Library → Shared links
+### 7.1 Settings → Sharing
 
-- **The row**: in `LibrarySections.kt`, "Shared links" with the count, shown while connected and the mirror is not
-  empty.
-- **The sheet**: the row opens a bottom sheet (`DialogType.SharedLinks`, `CampfireBottomSheet`). Settings has no
-  sub-screens, so a sheet is the pattern.
-- **Refreshing**: opening it refreshes the mirror from the registry (one download). The list shows the mirror at once
-  and updates when the refresh lands, with no animation over arriving data (root UI rules).
-- **Each row** shows the title, a song or setlist icon, and "Shared on 16 October".
+- **The tab**: `SettingsTab.SHARING`, "Sharing", between Library and Features, in the tab row and the wide layout's
+  `SettingsCategoryPane` alike. It follows every rule in `ui/screens/settings/CLAUDE.md`: one column, titled sections
+  with no background, a `verticalScroll` whose rows are first composed in their current state, and its own address on
+  the web (`Navigator.settingsTab`).
+  - It is always there, connected or not, so sharing can be found before Dropbox is connected.
+  - The one exception is a build without sync (`SyncProviders` empty), where the Link format is hidden too (§6.1):
+    the tab is left out rather than saying it cannot work.
+- **Its states**, driven by `SyncState` and the mirror. Moving between them crossfades (a user's Connect or Stop
+  sharing causes it); the first frame is already the right state.
+
+  | State | The page |
+  | --- | --- |
+  | Not connected | "Share a song or setlist as a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices." **Connect Dropbox**. |
+  | Connecting, `ConnectionFailed` | As `SyncSettings.kt` draws them: Cancel; the reason under **Connect again**. |
+  | Scope missing | "Connect Dropbox again to allow Campfire to make links." **Connect again** (§6.4). |
+  | Connected, nothing shared | "Nothing shared yet. Choose Link when exporting a song or setlist to share it." |
+  | Connected, shared items | The list, then **Stop sharing everything**. |
+
+  - **Connect Dropbox** is `CampfireViewModel.connectSyncProvider`, the same call as Library → Sync, with the origin
+    `SHARING` (§6.4). There is no button that skips the sync explanation above it.
+- **Refreshing**: the tab settling into view (not merely being composed beside the current one) refreshes the mirror
+  from the registry, one download, at most once per visit. The list shows the mirror at once and updates when the
+  refresh lands, with no animation over arriving data (root UI rules).
+- **Each row** shows the title, a song or setlist icon, and "Shared on 16 October", most recent first.
   - An `orphaned` row shows "No longer in your library"; a `tooLarge` row shows "Too large to update".
   - Its three-dot menu is a popup, never a sheet. It offers **Copy link** and **Show QR code** (which opens the
     export screen on Link for that item), neither for `orphaned` rows, and **Stop sharing** with §6.2's
     confirmation.
-- **The sheet header** has **Stop sharing everything**, with a confirmation naming the count. It also deletes
-  unreferenced `/shared/` files.
+  - A stopped row leaves through `AnimatedSettingsRow`.
+- **Stop sharing everything** is the last row, alone in its own section, as the Library tab keeps rows that can't be
+  undone last. Its confirmation names the count. It also deletes unreferenced `/shared/` files.
 - **Offline**: the list shows the mirror, and **Stop sharing** says it needs a connection.
+- **Disconnecting** (from Library → Sync) clears the mirror (§7.2), so the tab returns to "Not connected".
 
 ### 7.2 Disconnect and account changes
 
@@ -636,7 +719,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 
 | Case | What happens |
 | --- | --- |
-| Not connected | The export screen offers Connect and says the library will sync (§6.2). |
+| Not connected | The export screen and Settings → Sharing offer Connect and say the library will sync (§6.2, §7.1). |
+| Connecting from Settings → Sharing, then process death (Android) or the web's round trip | `SyncConsentOrigin.SHARING` reopens Settings on the Sharing tab (§6.4). |
+| Many items shared | No limit (decision 10). A run builds only the copies whose inputs changed (§5.6), and uploads only those whose bytes changed. |
 | Connected, but the token predates the sharing scopes | `missing_scope` → "Connect Dropbox again…"; **never** `ConnectionFailed` (§4.1). |
 | Connecting from export on Android, process killed while in the browser | The connection is restored on return, and `SyncConsentOrigin.EXPORT` reopens the export dialog on Link (§6.4). |
 | Connecting from export on the web | The page comes back to `/app/`, and the `EXPORT` origin reopens the dialog (§6.4). The OAuth return clears the query **and the hash**, so a share payload must already be in session storage (§9.4). |
@@ -660,7 +745,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 | Two devices rebuild the same copy | Deterministic bytes (§5.2) give the same hash, so neither uploads. If both do, the second gets `Conflict` and drops it. |
 | A run ends in `DeletionsNeedConfirmation`, or fails | No rebuild; the next completed run does it. |
 | The step itself fails for the network | The run ends as `Failure(NETWORK)` and is retried after `NETWORK_RETRY_DELAYS` (§5.1). |
-| A run with nothing changed (a return to the front) | Every zip built hashes the same, and the registry comes from the mirror: no request beyond the listing (§5.1). |
+| A run with nothing changed (a return to the front) | Every inputs fingerprint matches its entry's `built`, so no zip is built, and the registry comes from the mirror: no request beyond the listing (§5.1, §5.6). |
+| The first run after an app update | Every copy is rebuilt once (its `build` is older), and only those whose bytes changed are uploaded (§5.6). |
+| Two devices on different versions | The older one skips what the newer one built from the same inputs; neither re-uploads the other's copy every run (§5.6). |
 | A share created or stopped while other devices are in front | No run anywhere: the feed ignores the registry (§5.5). The other mirrors catch up at their next registry read. |
 | **Stop syncing** pressed mid-run | It cancels the run, as today, so the step is skipped. |
 | Sync stays disconnected | Links keep serving the last version, and nothing updates them. The disconnect confirmation says so (§7.2). |
@@ -778,7 +865,7 @@ Each step builds and tests green on its own, one commit each.
    `DropboxTransportTest` and URL-parsing tests.
 5. **The registry, mirror, and journal** (§4.2), and `CreateShareLinkUseCase`, `StopSharingUseCase`, and
    `GetSharedLinksUseCase` in `:domain`. Use fakes of `SyncFolder` for the races in §11.1.
-6. **The run's shared-copy step** (§5), with cases in `TwoDeviceSyncTest`:
+6. **The run's shared-copy step** (§5), with §5.6's fingerprint tests, and cases in `TwoDeviceSyncTest`:
    - a rebuild;
    - a rename on one device, seen by the other;
    - a deletion;
@@ -790,7 +877,8 @@ Each step builds and tests green on its own, one commit each.
    pasted, dropped, and shared text.
 9. **The QR encoder and PNG** (§6.5), with ZXing in `desktopTest`.
 10. **The export screen's Link format**, connecting from it, and `SyncConsentOrigin.EXPORT` (§6).
-11. **Settings' Shared links sheet** and the disconnect wording (§7).
+11. **Settings' Sharing tab**, `SyncConsentOrigin.SHARING`, and the disconnect wording (§6.4, §7). A UI test in
+    `:tools:screenshots` opens the tab disconnected and with a seeded mirror.
 12. **The website** (§10).
 13. **Android** (§9.1): the filters, `handle`, and the install referrer.
 14. **iOS** (§9.2): associated domains, `openUrl`, and the first-launch clipboard card.
@@ -800,6 +888,7 @@ Each step builds and tests green on its own, one commit each.
     - the root `CLAUDE.md` (§7.4);
     - the `CLAUDE.md` files of `data/sync/implementation` (and `shared/`), `data/source/remote/implementation`,
       `presentation` (Export, Settings, importing), each `app/*` touched, and `domain/implementation`;
+    - `ui/screens/settings/CLAUDE.md`: six tabs, and the Sharing tab's line under "Tab contents";
     - the README's feature list and Third-party table.
 
 ## 15. What only a device can tell
