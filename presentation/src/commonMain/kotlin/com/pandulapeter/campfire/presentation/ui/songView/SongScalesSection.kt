@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.presentation.ui.songView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -30,6 +33,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scales_othe
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_over
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_several
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_two
+import com.pandulapeter.campfire.presentation.resources.song_details_scales_unheld
+import com.pandulapeter.campfire.presentation.ui.chords.SCALE_CHIPS_TITLE_GAP
+import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipsTitle
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
@@ -44,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
  * titled by nothing, as most of the song is played over it, then each other key or centre named by its sections
  * ("Bridge 3"); a song in several keys with no home names every group ("Intro, Verse, Chorus" over C's, "Solo" over
  * D's), one of sections the page heads with nothing as the rest of the song, or by its first words where several are.
+ * Chorded parts no group holds end the groups as a row with no chips that says so, the home then named as well.
  * After each group a row per chord of it worth a scale of its own, titled by the chord ("Over E7") in every song, , each
  * line of chips a slot, as the Chords section's rows of diagrams are ([ScaleChipRows]), though the section is cut only
  * between rows, so that a title always heads all of its chips. A chip opens its scale's sheet.
@@ -106,24 +113,56 @@ internal fun SongScalesSection(
                     isGrouped -> section.groups[row.groupIndex].takeIf { !it.isHome }?.title(other)
                     else -> null
                 }
-                ScaleChipRows(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = title,
-                    rootName = row.rootNameOf(section.groups),
-                    scales = row.scalesOf(section.groups),
-                    slots = slots,
-                    trailingGap = when {
-                        index == section.rows.lastIndex -> 0.dp
-                        section.rows[index + 1].groupIndex == row.groupIndex -> CHIP_GAP
-                        else -> 16.dp
-                    },
-                    notation = scaleSuggestions.notation,
-                    isAnimated = isAnimated,
-                    onScaleSelected = scaleSuggestions.onScaleClicked,
-                )
+                val trailingGap = when {
+                    index == section.rows.lastIndex -> 0.dp
+                    section.rows[index + 1].groupIndex == row.groupIndex -> CHIP_GAP
+                    else -> 16.dp
+                }
+                val scales = row.scalesOf(section.groups)
+                if (scales.isEmpty()) {
+                    // A row with no chips is the parts no scale above holds, its one slot always the first.
+                    UnheldScalesRow(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = trailingGap),
+                        title = title!!,
+                        text = stringResource(Res.string.song_details_scales_unheld),
+                    )
+                } else {
+                    ScaleChipRows(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = title,
+                        rootName = row.rootNameOf(section.groups),
+                        scales = scales,
+                        slots = slots,
+                        trailingGap = trailingGap,
+                        notation = scaleSuggestions.notation,
+                        isAnimated = isAnimated,
+                        onScaleSelected = scaleSuggestions.onScaleClicked,
+                    )
+                }
             }
         }
     }
+}
+
+/** The row of the chorded parts no scale above holds: their [title], and [text] saying so where chips would be. */
+@Composable
+private fun UnheldScalesRow(
+    modifier: Modifier = Modifier,
+    title: String,
+    text: String,
+) = Column(
+    modifier = modifier,
+) {
+    ScaleChipsTitle(
+        title = title,
+        textAlign = TextAlign.Start,
+    )
+    Text(
+        modifier = Modifier.padding(top = SCALE_CHIPS_TITLE_GAP),
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /**

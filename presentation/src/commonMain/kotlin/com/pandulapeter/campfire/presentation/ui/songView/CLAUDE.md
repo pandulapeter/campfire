@@ -39,7 +39,10 @@ builds what it draws, `grid/` places it.
 - Its groups are `SongScaleSuggestions`' (see `chordpro/scales`): the home, then at most three moments between the
   other keys, the sections on a centre of their own, and the chords worth a scale of their own, labelled by
   `songScaleGroupsOf` (tested). The home names nothing, most of the song being played over it, and a moment names its
-  sections. A song with no home names each group by its sections' page headings: a kind it holds whole said once
+  sections. A chorded section no row holds (a bridge nothing fits, a fourth key past the three moments, a part in
+  another key too short to be one) ends the section as a row of its own, named by its headings, with no chips and
+  `song_details_scales_unheld` under the title; the home is then named by its sections too, since it no longer covers
+  the song. A song with no home names each group by its sections' page headings: a kind it holds whole said once
   ("Verse"), split kinds by number ("Verse 3"), headless parts as the rest of the song. A kind is said once only where
   the group holds every chorded section of it; a heading another group (or none) also has is numbered by occurrence
   ("Verse (3)"), several headless groups are named by their first words, and a named group with headless parts says

@@ -667,6 +667,8 @@
     <string name="song_details_scales_over_two">Over %1$s and %2$s</string>
     <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
     <string name="song_details_scales_over_several">Over %1$s, and %2$s</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">No scale above holds these chords</string>
     <string name="scale_major">major</string>
     <string name="scale_dorian">Dorian</string>
     <string name="scale_phrygian">Phrygian</string>

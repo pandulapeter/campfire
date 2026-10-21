@@ -666,6 +666,8 @@
     <string name="song_details_scales_over_two">%1$s és %2$s akkordhoz</string>
     <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
     <string name="song_details_scales_over_several">%1$s és %2$s akkordhoz</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">A fenti skálák egyike sem illik ezekhez az akkordokhoz</string>
     <string name="scale_major">dúr</string>
     <string name="scale_dorian">dór</string>
     <string name="scale_phrygian">fríg</string>

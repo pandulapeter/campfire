@@ -33,8 +33,9 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  * @property opening The first words of a group with no named section, where more than one group has none, so that the
  *   two are told apart; null otherwise.
  * @property exceptions The chords of the group worth a scale of their own, each with its own row of chips.
+ * @property scales The group's chips; none for the row of the chorded sections no group holds, which says so instead.
  * @property isHome Whether the group is what most of the song is played over, which no title names: the rows after it
- *   are its moments.
+ *   are its moments. False for a home named by its sections, where a row of sections no group holds follows it.
  */
 @Immutable
 internal data class SongScaleGroup(
@@ -57,7 +58,9 @@ internal data class SongScaleGroup(
  * both verses); a lone one keeps its heading ("Take 5"), and the numbered ones are named where the verses are split
  * between groups ("Verse 3" for the one after a modulation). A heading another group, or no group, also has is numbered
  * by its occurrences among the song's chorded sections ("Verse (1, 2)" and "Verse (3)" where the page numbers nothing),
- * and several groups with no named section are told apart by their first words. At most [MAX_GROUP_SCALES] scales a
+ * and several groups with no named section are told apart by their first words. The chorded sections no group holds
+ * end the list as a row with no scales, named the same way (by its first words where it has no named section), and the
+ * home is then named by its sections too, since it no longer covers the song. At most [MAX_GROUP_SCALES] scales a
  * group (the home scale, then what a player reaches for first), since a row of rarities buries the answer and the
  * Scales tab has every other one, and [MAX_EXCEPTION_SCALES] scale over each of its chords worth one, the common one
  * first, every chord named as the page shows it in [notation].
@@ -78,7 +81,12 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
             )
         }
     }
-    // A song one group fits names nothing, and neither does a home, most of the song being played over it.
+    // A chorded section no group holds (a bridge no scale fits, a key past the moments, a part too short to be one) gets a
+    // row of its own with no chips, so that the page never lets the home pass for the scale of it. The engine returns the
+    // very blocks it was given, which is what makes identity the test.
+    val missing = numbered.filter(SongScaleGroups::playsChords).filter { block -> groups.none { group -> group.blocks.any { it === block } } }
+    // A song one group fits names nothing, and neither does a home, most of the song being played over it, unless parts
+    // no group holds are named after it: then it covers only what its sections say.
     fun untitled(index: Int) = SongScaleGroup(
         label = null,
         rootName = groups[index].rootName,
@@ -89,30 +97,39 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
         opening = null,
         isHome = groups[index].isHome,
     )
-    if (groups.size == 1) return listOf(untitled(0))
+    if (groups.size == 1 && missing.isEmpty()) return listOf(untitled(0))
     val played = numbered.filter(SongScaleGroups::playsChords).mapNotNull { block -> block.headingOf(labels)?.let { block to it } }
     val kindCounts = played.map { it.second }.filter { it.isNotEmpty() }.groupingBy(::kindOf).eachCount()
-    val headers = groups.map { group -> group.blocks.mapNotNull { it.headingOf(labels) } }
-    val headless = groups.indices.count { index -> !groups[index].isHome && headers[index].none { it.isNotEmpty() } }
-    return groups.mapIndexed { index, group ->
-        if (group.isHome) return@mapIndexed untitled(index)
-        val named = headers[index].filter { it.isNotEmpty() }
+    val rowBlocks = groups.filterNot { it.isHome && missing.isEmpty() }.map { it.blocks } + listOf(missing).filter { it.isNotEmpty() }
+    val headless = rowBlocks.count { blocks -> blocks.none { !it.headingOf(labels).isNullOrEmpty() } }
+
+    fun rowOf(blocks: List<ChordProBlock>, rootName: String, scales: List<Scale>, exceptions: List<SongScaleException>): SongScaleGroup {
+        val headers = blocks.mapNotNull { it.headingOf(labels) }
+        val named = headers.filter { it.isNotEmpty() }
         val ofKind = named.groupingBy(::kindOf).eachCount()
         val names = named.map { header ->
             val kind = kindOf(header)
-            if (ofKind.getValue(kind) > 1 && kindCounts[kind] == ofKind[kind]) kind else header.numberedAmong(played, group.blocks)
+            if (ofKind.getValue(kind) > 1 && kindCounts[kind] == ofKind[kind]) kind else header.numberedAmong(played, blocks)
         }.distinct()
-        SongScaleGroup(
+        // The missing row is told by its first words even where it is the only headless one: "the rest of the song" would
+        // claim the parts a home titled "Chorus and the parts without a heading" covers.
+        val isMissing = blocks === missing
+        return SongScaleGroup(
             label = names.joinToString(", ").ifEmpty { null },
-            rootName = group.rootName,
-            scales = chipsOf(group.scales),
-            exceptions = exceptions[index],
+            rootName = rootName,
+            scales = scales,
+            exceptions = exceptions,
             joinsSeveral = names.size > 1,
-            hasUnnamed = names.isNotEmpty() && headers[index].any { it.isEmpty() },
-            opening = if (names.isEmpty() && headless > 1) group.blocks.firstOrNull()?.opening() else null,
+            hasUnnamed = names.isNotEmpty() && headers.any { it.isEmpty() },
+            opening = if (names.isEmpty() && (headless > 1 || isMissing)) blocks.firstOrNull()?.opening() else null,
             isHome = false,
         )
     }
+    val rows = groups.mapIndexed { index, group ->
+        if (group.isHome && missing.isEmpty()) untitled(index) else rowOf(group.blocks, group.rootName, chipsOf(group.scales), exceptions[index])
+    }
+    if (missing.isEmpty()) return rows
+    return rows + rowOf(missing, groups.first().rootName, emptyList(), emptyList())
 }
 
 /** The heading the page gives a section or a recall, null for a continuation, which has none, and any other block. */

@@ -171,6 +171,38 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a part no scale holds is named, and so is the rest of the song`() {
+        val bridge = "{start_of_bridge}\n[C]x [F#]x [Bb]x [E]x [Ab]x [D]x\n{end_of_bridge}\n"
+        val groups = groups("{key: C}\n" + verse + chorus + bridge + chorus)
+        assertEquals(listOf("Verse, Chorus", "Bridge"), groups.map { it.label })
+        assertTrue(groups.last().scales.isEmpty() && groups.last().exceptions.isEmpty())
+        assertTrue(groups.none { it.isHome })
+        assertTrue(groups.first().scales.isNotEmpty())
+    }
+
+    @Test
+    fun `a key past the moment budget is named with no scales`() {
+        val groups = groups(
+            "{start_of_verse}\n[C]x [F]x [G]x [C]x [C]x [F]x [G]x [C]x [C]x [F]x [G]x [C]x [C]x [F]x [G]x [C]x\n{end_of_verse}\n" +
+                "{start_of_bridge}\n[D]x [G]x [A]x [D]x\n{end_of_bridge}\n" +
+                "{start_of_solo}\n[E]x [A]x [B]x [E]x\n{end_of_solo}\n" +
+                "{start_of_verse: Middle}\n[Bb]x [Eb]x [F]x [Bb]x\n{end_of_verse}\n" +
+                "{start_of_outro}\n[Ab]x [Db]x [Eb]x [Ab]x\n{end_of_outro}\n",
+        )
+        assertEquals(listOf("Verse", "Bridge", "Solo", "Middle", "Outro"), groups.map { it.label })
+        assertTrue(groups.last().scales.isEmpty())
+        assertTrue(groups.dropLast(1).all { it.scales.isNotEmpty() })
+    }
+
+    @Test
+    fun `a missing part without a heading is told by its first words`() {
+        val groups = groups("{key: C}\n" + chorus + "[C]One [F]two [G]three\n\n[C]Far [F#]out [Bb]and [E]away [Ab]we [D]go\n\n" + chorus)
+        assertNull(groups.last().label)
+        assertEquals("Far out and away we go", groups.last().opening)
+        assertTrue(groups.first().hasUnnamed)
+    }
+
+    @Test
     fun `the scales section stands after the chords, else after the metadata, else first`() {
         val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false)
         val scales = RenderSection.Scales(listOf(group), isFolded = false)
