@@ -101,23 +101,39 @@ internal class SharedLinksRepositoryImpl(
             }
             // The caller found no share of the item, but another device may have added one since. Every attempt of the
             // edit reads the list again, so that share is found at the latest on the attempt after the conflict its
-            // write caused, and answered instead: one item never has two links.
-            val edit = registry.edit(folder) { document ->
+            // write caused, and answered instead: one item never has two links. A share whose copy is gone is no share
+            // to answer, since its link opens nothing: this one takes its place in the same write.
+            val change = { document: SharedLinksDocument ->
                 val existing = document.entryFor(kind, fileName)
-                if (existing == null) {
-                    SharedLinksRegistry.Change(document.copy(links = document.links + entry), entry)
+                if (existing == null || existing.copyMissing) {
+                    SharedLinksRegistry.Change(document.copy(links = document.links.filterNot { it.shareId == existing?.shareId } + entry), entry)
                 } else {
                     SharedLinksRegistry.Change(null, existing)
                 }
             }
-            when (edit) {
-                is SharedLinksRegistry.Edit.Done -> {
-                    isKept = edit.result.shareId == shareId
-                    edit.result.toShare()?.let(CreateShareResult::Shared) ?: CreateShareResult.Failed(SharingFailure.UNKNOWN)
+            // Not cancellable, and isKept decided inside: once the list may have been written, this share has to learn
+            // whether it was, or the finally below would delete a copy the list names. A withContext whose caller was
+            // cancelled meanwhile may throw on its way out instead of returning, so nothing may be decided after it.
+            withContext(NonCancellable) {
+                val edit = try {
+                    registry.edit(folder, change)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    // The write may have landed before its answer was lost.
+                    return@withContext settleUnclearEdit(folder, shareId, exception.toSharingFailure("share $fileName")) { isKept = true }
                 }
+                when (edit) {
+                    is SharedLinksRegistry.Edit.Done -> {
+                        isKept = edit.result.shareId == shareId
+                        edit.result.toShare()?.let(CreateShareResult::Shared) ?: CreateShareResult.Failed(SharingFailure.UNKNOWN)
+                    }
 
-                is SharedLinksRegistry.Edit.FromNewerVersion -> CreateShareResult.Failed(SharingFailure.NEWER_VERSION)
-                SharedLinksRegistry.Edit.Contended -> CreateShareResult.Failed(SharingFailure.UNKNOWN)
+                    // The edit writes nothing then.
+                    is SharedLinksRegistry.Edit.FromNewerVersion -> CreateShareResult.Failed(SharingFailure.NEWER_VERSION)
+                    // An earlier attempt's write, its answer lost, may be the very one the later attempts met.
+                    SharedLinksRegistry.Edit.Contended -> settleUnclearEdit(folder, shareId, SharingFailure.UNKNOWN) { isKept = true }
+                }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -125,6 +141,8 @@ internal class SharedLinksRepositoryImpl(
             CreateShareResult.Failed(exception.toSharingFailure("share $fileName"))
         } finally {
             // A copy no list names is served by a link nobody was given, and only Stop sharing everything would find it.
+            // Deleted only where the list surely does not name it: one kept because nothing could tell is such a
+            // leftover at worst, which Stop sharing everything removes.
             if (isUploaded && !isKept) {
                 withContext(NonCancellable) {
                     failureOf("delete the unused shared copy $shareId") {
@@ -134,6 +152,34 @@ internal class SharedLinksRepositoryImpl(
                 }
             }
         }
+    }
+
+    /**
+     * What a share answers after an edit that may have written [shareId]'s entry without saying so: the entry's share
+     * where the list names it, and [failure] otherwise. [keep] is called where the copy has to stay: where the list
+     * names it, and where the list cannot be read either, since only a copy no list names may be deleted.
+     */
+    private suspend fun settleUnclearEdit(folder: SyncFolder, shareId: String, failure: SharingFailure, keep: () -> Unit): CreateShareResult {
+        val entry = try {
+            registeredEntry(folder, shareId)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            environment.logger.log("Could not tell whether the shared links name $shareId: ${exception::class.simpleName}")
+            keep()
+            return CreateShareResult.Failed(failure)
+        } ?: return CreateShareResult.Failed(failure)
+        keep()
+        return entry.toShare()?.let(CreateShareResult::Shared) ?: CreateShareResult.Failed(failure)
+    }
+
+    /**
+     * The entry of [shareId] after an edit that may have written it; null where the list surely does not name it. Throws
+     * where it cannot tell, a list of a later version included.
+     */
+    private suspend fun registeredEntry(folder: SyncFolder, shareId: String) = when (val read = registry.read(folder)) {
+        is SharedLinksRegistry.Read.Readable -> read.document.links.firstOrNull { it.shareId == shareId }
+        is SharedLinksRegistry.Read.FromNewerVersion -> throw IllegalStateException("The shared links are of version ${read.version}.")
     }
 
     override suspend fun stopSharing(shareId: String): SharingFailure? {

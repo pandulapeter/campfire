@@ -33,6 +33,9 @@ internal sealed interface LinkExportState {
     /** Connected, and the item is not shared yet. */
     data object NotShared : LinkExportState
 
+    /** The item's share lost its copy: its link opens nothing, and Create link makes a new one. */
+    data object CopyMissing : LinkExportState
+
     /** The share is being made. */
     data object Creating : LinkExportState
 
@@ -101,10 +104,12 @@ internal fun linkExportStateOf(
     }
     val ownCreation = creation?.takeIf { it.target == target }
     val share = shareOf(shares, target)
+    // A share whose copy is gone counts as none for making one: its link opens nothing, and the new share replaces it.
+    val isDead = share?.state == ShareState.COPY_MISSING
     return when {
         share != null && share.shareId in stoppingShareIds -> LinkExportState.Stopping
-        share != null -> LinkExportState.Shared(share)
-        ownCreation == null -> LinkExportState.NotShared
+        share != null && !isDead -> LinkExportState.Shared(share)
+        ownCreation == null -> if (isDead) LinkExportState.CopyMissing else LinkExportState.NotShared
         else -> when (val result = ownCreation.result) {
             null -> LinkExportState.Creating
             // The account's list is updated as the share is made, but the two arrive separately: this is the moment
@@ -137,7 +142,7 @@ internal fun linkActionOf(state: LinkExportState) = when (state) {
     LinkExportState.NotConnected -> LinkAction.CONNECT
     LinkExportState.Connecting -> LinkAction.CANCEL
     is LinkExportState.ConnectionFailed -> LinkAction.CONNECT_AGAIN
-    LinkExportState.NotShared -> LinkAction.CREATE
+    LinkExportState.NotShared, LinkExportState.CopyMissing -> LinkAction.CREATE
     LinkExportState.Creating, LinkExportState.Stopping -> null
     is LinkExportState.Shared -> LinkAction.COPY
     is LinkExportState.Failed -> when (state.problem) {

@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
+import com.pandulapeter.campfire.presentation.resources.settings_sharing_copy_missing
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_orphaned
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_show_qr_code
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_too_large
@@ -146,18 +147,18 @@ private fun SharedLinkActions(
     onShowQrCode: () -> Unit,
     onStop: () -> Unit,
 ) = ActionsMenu(contentDescription = stringResource(Res.string.settings_sharing_actions)) {
-    val isInLibrary = share.state != ShareState.ORPHANED
+    val isWorthHandingOut = share.state != ShareState.ORPHANED && share.state != ShareState.COPY_MISSING
     listOfNotNull(
         ActionsMenuItem(
             title = stringResource(Res.string.share_copy),
             icon = painterResource(Res.drawable.ic_duplicate),
             onClick = onCopy,
-        ).takeIf { isInLibrary },
+        ).takeIf { isWorthHandingOut },
         ActionsMenuItem(
             title = stringResource(Res.string.settings_sharing_show_qr_code),
             icon = painterResource(Res.drawable.ic_share),
             onClick = onShowQrCode,
-        ).takeIf { isInLibrary && canShowQrCode },
+        ).takeIf { isWorthHandingOut && canShowQrCode },
         ActionsMenuItem(
             title = stringResource(Res.string.share_stop),
             icon = painterResource(Res.drawable.ic_delete),
@@ -187,6 +188,7 @@ private fun StoppingIndicator() {
 private fun sharedLinkStatus(share: Share) = when (share.state) {
     ShareState.ORPHANED -> stringResource(Res.string.settings_sharing_orphaned)
     ShareState.TOO_LARGE -> stringResource(Res.string.settings_sharing_too_large)
+    ShareState.COPY_MISSING -> stringResource(Res.string.settings_sharing_copy_missing)
     ShareState.OK -> share.sharedAt?.let { sharedOnText(it) }
 }
 

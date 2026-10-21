@@ -30,8 +30,11 @@
 ## Sharing (`SharedLinksRepositoryImpl`)
 
 - A copy is named by a fresh `ShareIds` id, uploaded, linked, then added; a share of the same item found while adding
-  (another device's, by `LibraryFiles.isSameLibraryName`) is answered instead, so an item never has two links.
-- Whatever fails after the upload deletes the copy again, best effort; **Stop sharing** deletes the copy before the
+  (another device's, by `LibraryFiles.isSameLibraryName`) is answered instead, so an item never has two links. A share
+  whose copy is gone (`copyMissing`) is never answered: the new entry replaces it in the same write.
+- Whatever fails after the upload deletes the copy again, best effort, but only where the list surely does not name it:
+  the edit, its re-read where it threw or was contended, and that decision run as one `NonCancellable` block, and a
+  copy nothing could tell about is kept (a leftover at worst). **Stop sharing** deletes the copy before the
   entry, so no entry ever goes while its link still works. Settings' **Stop sharing everything**
   (`stopSharingEverythingNow`) deletes every copy the listing or the list names (leftovers of failed shares included),
   then removes the entries of those it deleted, after a failure too.
@@ -39,7 +42,7 @@
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 
 - Runs in `SyncRunner` after the preferences, before the completed index is saved and the watch point set. Skipped when
-  the listing has no shared copy and the journal is empty; the registry comes from the mirror when the listing names
+  the listing has no shared copy and no registry, and the journal is empty; the registry comes from the mirror when the listing names
   its revision and the journal is empty. The journal is applied first (a stop deletes the copy, then the entry; an id
   no copy can have, hand-edited, has none to delete: `deleteSharedCopy`, as Stop sharing too), and every change of the
   step goes in as one `SharedCopyChanges` edit at the end, also after a failure; journal entries are forgotten only
@@ -49,8 +52,10 @@
   `campfire.buildNumber`), and the listed hash (or none while `tooLarge`). Otherwise it is packed from the library's raw
   files as the export packs them (`SharedCopyContents`, undated) and uploaded only when its hash differs; a `Conflict`
   is dropped.
-- Never stopped by inference: an item missing from the library, or a copy missing from a listing as new as the
-  registry read, makes the entry `orphaned`; an item back under its name makes it `ok`.
+- Never stopped by inference: an item missing from the library makes the entry `orphaned`; an item back under its name
+  makes it `ok`. A copy missing from a listing as new as the registry read makes it `orphaned` and `copyMissing` for
+  good (a deleted file's link never comes back; a member, not a state, so older versions do not show it as working),
+  whatever the library holds; such an entry is never built again.
 - Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is
   `SyncSummary.haveSharedCopiesFailed`, which never makes a run incomplete.
 - The feed ignores `shared-links.json` (`SyncWatchPoint`): a share made or stopped anywhere starts no run.

@@ -33,9 +33,10 @@ internal fun SharedLinksEntry.toShare(): Share? {
         title = title,
         link = ShareLinks.create(kind = kind, shareId = shareId, fileId = fileId, rlkey = rlkey, title = title) ?: return null,
         sharedAt = sharedAt?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
-        state = when (state) {
-            SharedLinksEntry.STATE_ORPHANED -> ShareState.ORPHANED
-            SharedLinksEntry.STATE_TOO_LARGE -> ShareState.TOO_LARGE
+        state = when {
+            copyMissing -> ShareState.COPY_MISSING
+            state == SharedLinksEntry.STATE_ORPHANED -> ShareState.ORPHANED
+            state == SharedLinksEntry.STATE_TOO_LARGE -> ShareState.TOO_LARGE
             else -> ShareState.OK
         },
     )

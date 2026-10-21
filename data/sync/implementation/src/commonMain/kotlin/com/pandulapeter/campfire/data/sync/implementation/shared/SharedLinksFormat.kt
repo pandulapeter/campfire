@@ -92,7 +92,7 @@ internal object SharedLinksFormat {
     private const val VERSION_KEY = "version"
     private const val LINKS_KEY = "links"
     private val KNOWN_KEYS = setOf(VERSION_KEY, LINKS_KEY)
-    private val ENTRY_KEYS = setOf("shareId", "kind", "fileName", "title", "fileId", "rlkey", "sharedAt", "state", "built")
+    private val ENTRY_KEYS = setOf("shareId", "kind", "fileName", "title", "fileId", "rlkey", "sharedAt", "state", "built", "copyMissing")
 
     private val json = Json {
         ignoreUnknownKeys = true

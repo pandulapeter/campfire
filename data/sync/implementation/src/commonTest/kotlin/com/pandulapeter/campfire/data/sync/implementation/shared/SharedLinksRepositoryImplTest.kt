@@ -114,6 +114,44 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a list written before its answer was lost keeps the copy and answers the share`() = runTest {
+        val provider = FakeSyncProvider().apply { onDocumentWritten = { throw SyncNetworkException("answer lost") } }
+
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+
+        assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
+        assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
+    }
+
+    @Test
+    fun `a list that cannot be read after a lost answer keeps the copy and answers the failure`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.onDocumentWritten = {
+            provider.onDownloadDocument = { throw SyncNetworkException("offline") }
+            throw SyncNetworkException("answer lost")
+        }
+
+        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+
+        assertEquals(CreateShareResult.Failed(SharingFailure.NETWORK), result)
+        assertEquals(1, provider.sharedFiles.size)
+    }
+
+    @Test
+    fun `a share whose copy is gone is replaced by a new one`() = runTest {
+        val provider = FakeSyncProvider()
+        val dead = sharedEntry(shareId = "aaaaaaaaaaaaaaaa", kind = SharedLinkKind.SONG, fileName = "song.cho")
+            .copy(state = SharedLinksEntry.STATE_ORPHANED, copyMissing = true)
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(dead))
+
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+
+        assertTrue(share.shareId != dead.shareId)
+        assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
+        assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
+    }
+
+    @Test
     fun `a network failure between the upload and the list deletes the copy`() = runTest {
         val provider = FakeSyncProvider().apply { onUploadDocument = { throw SyncNetworkException("offline") } }
 

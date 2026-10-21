@@ -17,7 +17,9 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class SharedLinksFormatTest {
 
@@ -57,6 +59,29 @@ class SharedLinksFormatTest {
         )
 
         assertEquals(document, readable(SharedLinksFormat.encode(document)))
+    }
+
+    @Test
+    fun `a copy marked missing reads back as such, beside a member a later version added`() {
+        val text = """
+            { "links": [ {
+                "shareId": "aaaaaaaaaaaaaaaa", "kind": "song", "fileName": "a.cho", "title": "A", "fileId": "f",
+                "rlkey": "k", "state": "orphaned", "copyMissing": true, "colour": "red"
+            } ] }
+        """.trimIndent()
+
+        val entry = readable(SharedLinksFormat.encode(readable(text))).links.single()
+
+        assertTrue(entry.copyMissing)
+        assertEquals(mapOf("colour" to JsonPrimitive("red")), entry.unknownFields)
+        assertEquals(ShareState.COPY_MISSING, entry.toShare()?.state)
+    }
+
+    @Test
+    fun `an entry written before copies were marked missing has its copy`() {
+        val entry = readable("""{"links": [ {"shareId": "aaaaaaaaaaaaaaaa", "state": "orphaned"} ]}""").links.single()
+
+        assertFalse(entry.copyMissing)
     }
 
     @Test

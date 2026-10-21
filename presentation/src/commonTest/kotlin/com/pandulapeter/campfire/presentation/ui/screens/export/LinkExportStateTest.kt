@@ -71,6 +71,19 @@ class LinkExportStateTest {
     }
 
     @Test
+    fun `a share whose copy is gone says so and is replaced by a new one`() {
+        val dead = share(state = ShareState.COPY_MISSING)
+        assertEquals(LinkExportState.CopyMissing, stateOf(connected, listOf(dead)))
+        assertEquals(LinkAction.CREATE, linkActionOf(LinkExportState.CopyMissing))
+        assertEquals(LinkExportState.Creating, stateOf(connected, listOf(dead), creation = ShareCreation(target, result = null)))
+        val replacement = share().copy(shareId = "replacement")
+        assertEquals(
+            LinkExportState.Shared(replacement),
+            stateOf(connected, listOf(dead), creation = ShareCreation(target, CreateShareResult.Shared(replacement))),
+        )
+    }
+
+    @Test
     fun `a share being made or stopped is work in progress with nothing to press`() {
         assertEquals(LinkExportState.Creating, stateOf(connected, creation = ShareCreation(target, result = null)))
         val share = share()

@@ -30,13 +30,16 @@ import kotlinx.coroutines.CancellationException
  * date with the library a completed run left, applies this device's journal of renames and stops, and writes what
  * changed into the registry as one edit at the end, also when it ends early, keeping what was done up to then.
  *
- * It costs nothing when nothing is shared and the journal is empty, and only the listing when nothing changed: the
- * registry comes from the mirror where the listing names the revision it was read at, and a copy whose `built` matches
- * its inputs fingerprint ([sharedCopyFingerprint]) is neither read, built, nor uploaded. [buildNumber] stands for the
- * code that packs: a copy an older build made is built again once, one a newer build made is left alone.
+ * It costs nothing for an account that never shared (no registry) while the journal is empty, and only the listing
+ * when nothing changed: the registry comes from the mirror where the listing names the revision it was read at, and a
+ * copy whose `built` matches its inputs fingerprint ([sharedCopyFingerprint]) is neither read, built, nor uploaded.
+ * [buildNumber] stands for the code that packs: a copy an older build made is built again once, one a newer build made
+ * is left alone.
  *
- * A share is never stopped by inference: an item missing from the library, or a copy missing from the folder, only
- * makes the entry `orphaned`, which keeps serving the last version, and an item that comes back makes it `ok` again.
+ * A share is never stopped by inference: an item missing from the library only makes the entry `orphaned`, which keeps
+ * serving the last version, and an item that comes back makes it `ok` again. A copy missing from the folder makes it
+ * `orphaned` and `copyMissing` for good, since a deleted file's link never comes back; sharing the item again replaces
+ * it.
  */
 internal class SharedCopySync(
     private val libraryFileLocalSource: LibraryFileLocalSource,
@@ -61,7 +64,8 @@ internal class SharedCopySync(
         registryRevision: String?,
     ): Boolean {
         val pending = journal.load()
-        if (sharedFiles.isEmpty() && pending.isEmpty()) return true
+        // A registry is looked at even with no copy listed: copies deleted by hand leave entries whose links open nothing.
+        if (sharedFiles.isEmpty() && pending.isEmpty() && registryRevision == null) return true
         val (revision, document) = read(folder, registryRevision, pending.isEmpty()) ?: return true
         val changes = SharedCopyChanges()
         val applied = mutableListOf<SharedLinksJournal.Entry>()
@@ -163,6 +167,12 @@ internal class SharedCopySync(
 
         private suspend fun settleOrThrow(entry: SharedLinksEntry) {
             val kind = SharedLinkKind.fromId(entry.kind) ?: return
+            val remote = sharedFiles[entry.shareId]
+            // A deleted copy's link never comes back, whatever the library holds.
+            if (remote == null && isListingCurrent) return markCopyMissing(entry)
+            // Nor does a copy put back by hand: the entry stays `orphaned`, as a version that knows no `copyMissing`
+            // shows it, until sharing the item again replaces it.
+            if (entry.copyMissing) return
             val libraryKind = kind.libraryKind
             val indexed = index.find(libraryKind, entry.fileName)
             val localName = indexed?.key?.name ?: entry.fileName
@@ -170,7 +180,8 @@ internal class SharedCopySync(
             // the songs it names.
             val item = if (kind == SharedLinkKind.SETLIST || indexed == null) libraryFileLocalSource.readLibraryFile(libraryKind, localName) else null
             if ((kind == SharedLinkKind.SETLIST || indexed == null) && item == null) return orphan(entry)
-            val remote = sharedFiles[entry.shareId] ?: return if (isListingCurrent) orphan(entry) else Unit
+            // A share newer than the listing, which could not have seen its copy.
+            if (remote == null) return
             val songNames = item?.takeIf { kind == SharedLinkKind.SETLIST }?.let {
                 contents.setlistSongFileNames(it) ?: throw IllegalStateException("The setlist $localName cannot be read.")
             }
@@ -245,6 +256,11 @@ internal class SharedCopySync(
 
         private fun orphan(entry: SharedLinksEntry) {
             if (entry.state != SharedLinksEntry.STATE_ORPHANED) changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_ORPHANED) }
+        }
+
+        private fun markCopyMissing(entry: SharedLinksEntry) {
+            if (entry.copyMissing && entry.state == SharedLinksEntry.STATE_ORPHANED) return
+            changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_ORPHANED, copyMissing = true) }
         }
     }
 

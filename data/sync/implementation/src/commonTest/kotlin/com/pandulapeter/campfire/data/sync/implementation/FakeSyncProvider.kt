@@ -193,6 +193,9 @@ internal class FakeSyncProvider(
     /** Runs before a document upload answers, which is where a test writes the document "elsewhere" under it. */
     var onUploadDocument: suspend (String) -> Unit = {}
 
+    /** Runs once a document upload has written, before it answers, which is where a test loses the answer. */
+    var onDocumentWritten: suspend (String) -> Unit = {}
+
     /** Runs before [downloadDocument] answers, which is where a test makes it fail. */
     var onDownloadDocument: suspend () -> Unit = {}
 
@@ -215,6 +218,7 @@ internal class FakeSyncProvider(
         val revision = "r${nextRevision++}"
         documents[name] = bytes to revision
         feed.value += name
+        onDocumentWritten(name)
         return RemoteWriteResult.Written(revision)
     }
 

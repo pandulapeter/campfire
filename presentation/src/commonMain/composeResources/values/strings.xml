@@ -1166,6 +1166,7 @@
     <string name="share_remote_full">Your Dropbox is full.</string>
     <string name="share_newer_version">A newer version of Campfire last changed the links of this Dropbox account. Update Campfire to share from here.</string>
     <string name="share_missing">This is no longer in your library.</string>
+    <string name="share_copy_missing">This link no longer works: its copy was removed from your Dropbox. Create a new link to share it again.</string>
     <string name="share_failed">Couldn't make the link. Try again in a moment.</string>
     <string name="share_qr_code">QR code of the link</string>
     <string name="share_save_qr_code">Save QR code</string>
@@ -1188,6 +1189,7 @@
     <string name="settings_sharing_nothing_shared">Nothing shared yet. Choose Link when exporting a song or setlist to share it.</string>
     <string name="settings_sharing_stale">Couldn't read the links from Dropbox. This list is what this device last saw.</string>
     <string name="settings_sharing_orphaned">No longer in your library</string>
+    <string name="settings_sharing_copy_missing">Link no longer works</string>
     <string name="settings_sharing_too_large">Too large to update</string>
     <string name="settings_sharing_actions">Share actions</string>
     <string name="settings_sharing_show_qr_code">Show QR code</string>

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.domain.implementation.sharing
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
+import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
@@ -32,10 +33,12 @@ internal class CreateShareLinkUseCaseImpl(
         fileName: String,
         title: String,
     ): CreateShareResult {
-        // Read first, so that an item another device shared already gets that link back, before a copy is built.
+        // Read first, so that an item another device shared already gets that link back, before a copy is built. A share
+        // whose copy is gone opens nothing, so the item is shared anew, and the new share replaces it.
         sharedLinksRepository.refresh()?.let { return CreateShareResult.Failed(it) }
         sharedLinksRepository.shares.first()
             .firstOrNull { it.kind == kind && LibraryFiles.isSameLibraryName(it.fileName, fileName) }
+            ?.takeIf { it.state != ShareState.COPY_MISSING }
             ?.let { return CreateShareResult.Shared(it) }
         // Undated, so that the same files make the same bytes on every device, and a run that builds the copy again
         // from unchanged files finds nothing to upload.

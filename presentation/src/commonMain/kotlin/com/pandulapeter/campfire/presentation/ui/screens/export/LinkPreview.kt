@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.share_authorization
+import com.pandulapeter.campfire.presentation.resources.share_copy_missing
 import com.pandulapeter.campfire.presentation.resources.share_creating
 import com.pandulapeter.campfire.presentation.resources.share_failed
 import com.pandulapeter.campfire.presentation.resources.share_missing
@@ -93,6 +94,7 @@ private fun linkMessageOf(state: LinkExportState, kind: SharedLinkKind) = when (
     LinkExportState.Connecting -> stringResource(Res.string.settings_sync_connecting)
     is LinkExportState.ConnectionFailed -> stringResource(state.reason.connectionFailedMessage)
     LinkExportState.NotShared -> stringResource(if (kind == SharedLinkKind.SETLIST) Res.string.share_not_shared_setlist else Res.string.share_not_shared_song)
+    LinkExportState.CopyMissing -> stringResource(Res.string.share_copy_missing)
     is LinkExportState.Failed -> when (state.problem) {
         LinkProblem.SCOPE_MISSING -> stringResource(Res.string.share_scope_missing)
         LinkProblem.AUTHORIZATION -> stringResource(Res.string.share_authorization)

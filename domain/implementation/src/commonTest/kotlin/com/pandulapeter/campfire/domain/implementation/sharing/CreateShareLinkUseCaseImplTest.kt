@@ -41,6 +41,15 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
+    fun `an item whose share lost its copy is shared anew`() = runTest {
+        val repository = FakeSharedLinksRepository(afterRefresh = listOf(share(fileName = "gig.setlist.json", state = ShareState.COPY_MISSING)))
+
+        useCase(repository, setlist = { _, _, _ -> zip(1) }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
+
+        assertContentEquals(zip(1).bytes, repository.shared)
+    }
+
+    @Test
     fun `a setlist is shared whole, as an undated copy`() = runTest {
         val repository = FakeSharedLinksRepository()
         var request: Triple<String, Set<String>?, Boolean>? = null
@@ -107,14 +116,14 @@ class CreateShareLinkUseCaseImplTest {
 
     private fun zip(size: Int) = ExportedFile(name = "copy.zip", mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = ByteArray(size))
 
-    private fun share(fileName: String) = Share(
+    private fun share(fileName: String, state: ShareState = ShareState.OK) = Share(
         shareId = "aaaaaaaaaaaaaaaa",
         kind = SharedLinkKind.SETLIST,
         fileName = fileName,
         title = "Gig",
         link = ShareLinks.create(kind = SharedLinkKind.SETLIST, shareId = "aaaaaaaaaaaaaaaa", fileId = "f", rlkey = "k", title = "Gig")!!,
         sharedAt = null,
-        state = ShareState.OK,
+        state = state,
     )
 
     /** Shows [afterRefresh] once refreshed, and keeps the copy it was asked to share. */

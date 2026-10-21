@@ -39,6 +39,10 @@ internal data class SharedLinksDocument(
  * @param sharedAt `yyyy-MM-dd`, for display only.
  * @param state One of [STATE_OK], [STATE_ORPHANED], and [STATE_TOO_LARGE]; another version's unknown state reads as ok.
  * @param built What the copy in the folder was last built from, absent until a run first builds it.
+ * @param copyMissing The copy is gone from the folder, so the link opens nothing for good; [state] is then
+ * [STATE_ORPHANED]. A member rather than a state of its own: a version without it reads an unknown state as ok, and
+ * would show the dead link as working, while it keeps an unknown member and writes `orphaned` itself. Never cleared,
+ * since a copy put back by hand does not bring a deleted file's link back; sharing the item again replaces the entry.
  */
 @Serializable
 internal data class SharedLinksEntry(
@@ -51,6 +55,7 @@ internal data class SharedLinksEntry(
     val sharedAt: String? = null,
     val state: String = STATE_OK,
     val built: SharedCopyBuild? = null,
+    val copyMissing: Boolean = false,
     @Transient val unknownFields: Map<String, JsonElement> = emptyMap(),
 ) {
 

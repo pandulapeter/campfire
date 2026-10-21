@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.Share
+import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,9 @@ interface SharedLinksRepository {
      * Uploads [copy] as the shared copy of the library file [fileName], makes a public link to it, and adds it to the
      * account's list. The caller has checked [shares], just refreshed, for a share of the same item; one that another
      * device adds in the meantime is answered instead, and the copy uploaded here deleted, so an item never has two
-     * links. Whatever fails after the upload deletes the copy again, as far as it can.
+     * links. A share of the item whose copy is gone ([ShareState.COPY_MISSING]) is replaced by this one, never answered.
+     * Whatever fails after the upload deletes the copy again, as far as it can, except a copy the account's list may
+     * name: a failure that leaves unclear whether the list was written keeps it.
      *
      * Never throws but cancellation. Answers [CreateShareResult.Shared] or [CreateShareResult.Failed] only.
      */

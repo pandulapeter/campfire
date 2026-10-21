@@ -11,13 +11,16 @@ package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.sync.implementation.Device
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.GIG
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.song
+import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -159,6 +162,38 @@ class SharedCopySyncTest {
 
         assertEquals(0, cloud.documentDownloadCount)
         assertEquals(0, device.sharedContents.packCount)
+    }
+
+    @Test
+    fun `copies deleted by hand mark their shares as dead`() = runTest {
+        val device = sharedDevice()
+
+        cloud.sharedFiles.clear()
+        device.sync(cloud)
+
+        val entry = cloud.entryOf(SETLIST.shareId)
+        assertTrue(entry.copyMissing)
+        assertEquals(SharedLinksEntry.STATE_ORPHANED, entry.state)
+        val registry = cloud.documents.getValue(SharedLinksFormat.NAME).second
+        val downloads = cloud.documentDownloadCount
+        device.sync(cloud)
+        assertEquals(registry, cloud.documents.getValue(SharedLinksFormat.NAME).second)
+        assertEquals(downloads, cloud.documentDownloadCount)
+    }
+
+    @Test
+    fun `a copy missing from a listing older than the registry is left alone`() = runTest {
+        cloud.share(SETLIST)
+
+        sharedCopySync(library = FakeLibraryFileLocalSource(library()), environment = testEnvironment()).synchronize(
+            folder = cloud,
+            index = emptyMap(),
+            sharedFiles = emptyList(),
+            registryRevision = "older",
+        )
+
+        assertFalse(cloud.entryOf(SETLIST.shareId).copyMissing)
+        assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SETLIST.shareId).state)
     }
 
     /** A device with [library] whose setlist is shared, after the run that built its first copy. */

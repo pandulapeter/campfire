@@ -45,7 +45,8 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 
 - States (`linkExportStateOf`, pure and tested): the connection first (Connect Dropbox, which says the whole library
   syncs; Connecting with Cancel; a failure in Settings' words), then a share the account lists (`ShareLinkController`,
-  `ui/share/`), then how the last Create link went. Each failure is shown by what can be done: Connect again (missing
+  `ui/share/`; one whose copy is gone is `CopyMissing`, saying so and offering Create link, which replaces it), then how
+  the last Create link went. Each failure is shown by what can be done: Connect again (missing
   scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB (`LinkButton`, in
   `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
 - A creation runs in the view model's scope and is forgotten when the screen goes; a share just made shows before the
