@@ -59,6 +59,8 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
 `INTERNET`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS` (sync);
 `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `VIBRATE` (metronome); `RECORD_AUDIO` (tuner, asked only by a tap that opens a
 tuner; `android.hardware.microphone` is not required, so Play still offers the app without one).
+BIND_GET_INSTALL_REFERRER_SERVICE (com.google.android.finsky.permission) is merged from Play's Install Referrer
+library: IPC to the Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUDE.md`).
 
 ## Sync sign-in
 
