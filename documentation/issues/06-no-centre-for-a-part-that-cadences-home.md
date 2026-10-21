@@ -10,6 +10,10 @@
 # A part that cadences into the home's root is no centre of its own
 
 **Kind:** design  ·  **Severity:** medium  ·  **Platforms:** all
+**Challenged:** amended — a cadence lands home only on a chord that is no dominant seventh: as first written, a bridge on
+the IV approached through its own V7 (`F F Dm Dm F F G C7` in C, the `G → C7` a V/V → V of F) lost its F centre and
+was sent to C major with the C7 as an exception (probed); the rule now matches plan 03's `rankedRoots`, which scores no
+cadence into a secondary dominant.
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleSuggestions.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleSuggestionsTest.kt`,
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/CLAUDE.md`
@@ -92,21 +96,28 @@ What must survive (all probed at HEAD, all kept by the recommended rule):
 A decision between two rules; the first is recommended.
 
 **Option 1 (recommended): no centre where the part cadences into the group's root.** A cadence is what `rankedRoots`
-scores one as: a chord with a major third a fifth above the group's root, followed by a chord on the group's root, the
-part read as a loop (the last chord followed by the first). Add to `SongScaleSuggestions`:
+scores one as once lane G's plan 03 has landed: a chord with a major third a fifth above the group's root, followed by
+a chord on the group's root that is no dominant seventh, the part read as a loop (the last chord followed by the
+first). A dominant seventh on the root inside a part that hardly plays the root is a secondary dominant leading away,
+not home: `{key: C}` bridge `F F Dm Dm F F G C7` ×2 is the IV's own II→V→I (`G → C7 → F`), and must keep its F centre
+(probed at HEAD: `[Bridge] F: major_pentatonic, major`; without the dominant-seventh clause the bridge joins the home
+row with `over C7 → C mixolydian`). Add to `SongScaleSuggestions`:
 
 ```kotlin
     /**
-     * Whether the part cadences into [root]: a chord with a major third a fifth above it followed by a chord on it, the
-     * part read as a loop, as `SongScaleGroups.rankedRoots` scores a cadence. A part that resolves home that way is
-     * heard at home however little it plays the root, so it is no centre of its own.
+     * Whether the part cadences into [root]: a chord with a major third a fifth above it followed by a chord on it that
+     * is no dominant seventh, the part read as a loop, as `SongScaleGroups.rankedRoots` scores a cadence (a `G → C7` in
+     * a bridge on F leads on to the F, not home to C). A part that resolves home that way is heard at home however
+     * little it plays the root, so it is no centre of its own.
      */
     private fun PlayedPart.cadencesInto(root: Int) = chords.indices.any { index ->
         val chord = chords[index]
         val next = chords[(index + 1) % chords.size]
-        MAJOR_THIRD in chord.intervals && (chord.root - next.root).mod(12) == FIFTH && next.root == root
+        MAJOR_THIRD in chord.intervals && (chord.root - next.root).mod(12) == FIFTH && next.root == root && !next.isDominantSeventh
     }
 ```
+
+(`isDominantSeventh` is the package's, `ChordNotes.kt`.)
 
 with `private const val FIFTH = 7` beside `MAJOR_THIRD`, and extend the filter of `centreMomentsOf`:
 
@@ -178,7 +189,11 @@ In `SongScaleSuggestionsTest` (its `suggestions(vararg sections, key)` helper; t
   `song[1].rootName to song[1].scales.map { it.id } == "A" to listOf("major_pentatonic", "major")`; and the settled
   bridge on the IV, `"Verse" to "G D Em C G D Em C"`, `"Chorus" to "C D G Em C D G G"`,
   `"Bridge" to "C Am C Am C Am D D"`, `key = "G"` → `listOf(listOf("Verse", "Chorus"), listOf("Bridge"))`, the bridge
-  on `"C"` with `listOf("major_pentatonic", "major")`.
+  on `"C"` with `listOf("major_pentatonic", "major")`; and the bridge on the IV reached through its own V7,
+  `"Verse" to "C Am F G C Am F G"`, `"Chorus" to "C F G C C F G C"`,
+  `"Bridge" to "F F Dm Dm F F G C7 F F Dm Dm F F G C7"`, `"Chorus" to "C F G C C F G C"`, `key = "C"` →
+  `listOf(listOf("Verse", "Chorus", "Chorus"), listOf("Bridge"))`, the bridge on `"F"` with
+  `listOf("major_pentatonic", "major")` (the `G → C7` lands on a dominant seventh, no cadence home).
 - The existing `a bridge that hardly plays the home's root is a moment on its own centre, in the scale holding most of
   it`, `a part both in another key and on a centre of its own is one moment, on its centre`, and `chords one scale on
   one root serves are one moment, named by each` (its Hotel California chorus now joins the home row; it reads

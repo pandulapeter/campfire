@@ -10,6 +10,11 @@
 # The minor 6 pentatonic and the dominant pentatonic join the catalogue
 
 **Kind:** design  ·  **Severity:** low  ·  **Platforms:** all
+**Challenged:** amended — two claims corrected, the fix unchanged: a `Dm7` sheet gains nothing (the D minor 6
+pentatonic has B, not C; only `Dm6`, `G7`, `G9`, and a song of `Dm Dm6` or `G G7` gain one, probed with the entries
+added, in 12th place or later); and a missing `scaleNameResource` branch is caught by `ScaleNamesTest`'s `every scale
+of the catalogue has a name of its own`, not by the compiler. With the entries, strings, and branches applied, every
+chordpro and presentation test passes.
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/Scales.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/ScalesTest.kt`,
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/scales/ScaleNames.kt`,
@@ -93,7 +98,8 @@ row offers.
    (`private val pentatonics = scalesOf(MAJOR_PENTATONIC_ID, MINOR_PENTATONIC_ID)`), so a song's row keeps offering
    those two; the new scales still appear wherever a list is built from containment: a chord sheet's row
    (`PlayableScales.over(chord)` lists every scale of `Scales.all` holding the chord, the five-note ones after the
-   hexatonics: a `Dm6`, `Dm7`, `G9`, or `G7` gains one), and a song's row where the song's chords are all inside one
+   hexatonics: a `Dm6` gains the minor 6 pentatonic, a `G7` or `G9` the dominant pentatonic; a `Dm7` gains nothing,
+   its C being no note of D minor 6 pentatonic, since every list is on the chord's own root), and a song's row where the song's chords are all inside one
    (`Dm Dm6 Dm Dm6` has the minor 6 pentatonic among its holders; `G G7 G G7` the dominant pentatonic), after the
    hexatonics and so usually past the four chips. Recommended: leave it there, browse-only in effect, and see whether
    players ask.
@@ -122,7 +128,8 @@ what players call them:
   `Scales.parentRoot(Scales.fromId("dominant_pentatonic")!!, root = 7) == 2` (G dominant pentatonic is D minor 6
   pentatonic's notes).
 
-No presentation test: `scaleNameResource` is a lookup the strings' build checks (a missing key does not compile).
+No new presentation test: `ScaleNamesTest`'s `every scale of the catalogue has a name of its own` fails for an id
+`scaleNameResource` has no branch for, and a branch naming a missing string does not compile.
 
 `CLAUDE.md` (`chordpro/scales`): the first bullet's "**One entry per set of notes**: a second name is an alias, never a
 second scale (`ScalesTest`)" stays true; add to the `PlayableScales` bullet, after "the pentatonic sharing its third and

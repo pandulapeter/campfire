@@ -10,6 +10,12 @@
 # Chorded parts no scale row holds are named, not silently covered by the home
 
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all
+**Challenged:** amended — (1) a missing row with no named section is told by its first words whatever the number of
+headless groups: as first written, a chart of headless verse paragraphs and a `{start_of_chorus}` whose headless bridge
+no scale holds titled the home "Chorus and the parts without a heading" and the missing row "The rest of the song",
+the `song_details_scales_other` fallback, two rows claiming the same parts; (2) a third source of missing parts is
+named: a part in a key of its own too short to be a moment (under one chord in 16, `MIN_SECTION_SHARE`), e.g. a
+two-chord `Bb C` outro closing a 58-chord song in C, now dropped silently (probed), which the row will name too.
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/model/SongScaleGroups.kt`,
 `presentation/src/commonTest/kotlin/com/pandulapeter/campfire/presentation/ui/songView/model/SongScaleGroupsTest.kt`,
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/SongScalesSection.kt`,
@@ -77,7 +83,11 @@ In `songScaleGroupsOf`, after `val numbered …` and `val groups …`:
    `hasUnnamed`, and `opening` into a local function `rowOf(blocks: List<ChordProBlock>, rootName: String,
    scales: List<Scale>, exceptions: List<SongScaleException>)`, called for each group and once for `missing`;
    `headers`/`headless` then count the missing row as one more group (so two headless groups are told apart by their
-   first words as today).
+   first words as today). The missing row itself, where it has no named section, always takes `opening` from its first
+   block (`missing.first().opening()`), whatever `headless` is: with one headless group it would otherwise fall back to
+   `song_details_scales_other` ("The rest of the song"), which under a home titled "Chorus and the parts without a
+   heading" claims the parts that row covers. Only a missing row of headless sections that sing no words falls back to
+   it.
 
 3. The row's text. A row with no chips says why, with a new string in both locales, in the group commented
    `<!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->` of the Scales section:
@@ -91,8 +101,10 @@ In `songScaleGroupsOf`, after `val numbered …` and `val groups …`:
    <string name="song_details_scales_unheld">A fenti skálák egyike sem illik ezekhez az akkordokhoz</string>
    ```
 
-   "No scale above" is true both of a bridge nothing holds and of a fourth key that fell past the moment budget (whose
-   chords a scale does hold, just none that is shown).
+   "No scale above" is true of a bridge nothing holds, of a fourth key that fell past the moment budget, and of a part
+   in a key of its own too short to be a moment (`SongScaleSuggestions`' `MIN_SECTION_SHARE`: a two-chord `Bb C` outro
+   closing a 58-chord song in C is its own C Mixolydian group, dropped today; the row names it as "Outro"), whose chords
+   a scale does hold, just none that is shown.
 
 4. The viewer. `ScaleChipRows` draws nothing for a row with no chips: `greedyRowStarts` returns an empty array for no
    cells, `slotRows(0, …)` is empty, the title is not measured, and the height is 0. `RenderSection.Scales.rowStarts`
@@ -126,11 +138,14 @@ In `SongScaleGroupsTest` (presentation), with its `groups(text)` helper, `verse`
   the first verse stays "Verse"), and `{start_of_outro}` of `Ab Db Eb Ab` → five rows, `map { it.label } ==
   listOf("Verse", "Bridge", "Solo", "Middle", "Outro")`, `last().scales.isEmpty()`, and every other row's
   `scales.isNotEmpty()`.
+- `` `a missing part without a heading is told by its first words` ``:
+  `groups("{key: C}\n" + chorus + "[C]One [F]two [G]three\n\n[C]Far [F#]out [Bb]and [E]away [Ab]we [D]go\n\n" + chorus)`
+  → the last row has `label == null` and `opening == "Far out and away we go"`, and the first `hasUnnamed`.
 - The existing `a song one scale fits is one group named nothing` and `a song with a home names only its moments`
   (every chorded section held) stay and must pass.
 
 `CLAUDE.md` (`ui/songView`, "The Scales section"): after "The home names nothing, most of the song being played over
 it, and a moment names its sections." add "A chorded section no row holds (a bridge nothing fits, a fourth key past the
-three moments) ends the section as a row of its own, named by its headings, with no chips and
+three moments, a part in another key too short to be one) ends the section as a row of its own, named by its headings, with no chips and
 `song_details_scales_unheld` under the title; the home is then named by its sections too, since it no longer covers the
 song."

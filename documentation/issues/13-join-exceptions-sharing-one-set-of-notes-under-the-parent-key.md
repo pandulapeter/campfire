@@ -10,6 +10,10 @@
 # Exceptions sharing one set of notes are one moment, named by the parent key
 
 **Kind:** design  ·  **Severity:** medium  ·  **Platforms:** all
+**Challenged:** amended — (1) a joined set that is the home root's own major, natural minor, Dorian, or Mixolydian is
+named that on the home root before the parent-key rule: as first written the backdoor `Cmaj7 Am7 Fm7 Bb7` in C read
+"over Fm7 & Bb7 → E♭ major" while `C Ab Fm7 C` reads "over Ab & Fm7 → C natural minor", one set of notes named two ways
+(probed); (2) "play order" sorts by the group first, since `ChordMoment.first` is an index inside its own group.
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleSuggestions.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleSuggestionsTest.kt`,
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/CLAUDE.md`
@@ -67,14 +71,21 @@ In `chordMomentsOf(groups, totals)`:
    - an exception on the group's own root (`first.group.rootPitchClass`) names the moment, since the key's own scale
      (a major home's natural minor over its borrowed chords, a minor home's Phrygian) is what a player calls it: take
      that exception's `rootName` and `scales`;
+   - else, where the set is the major, natural minor, Dorian, or Mixolydian scale on the group's own root (the common
+     seven-note scales `ScaleExceptions` answers a borrowed chord with on the home root), that scale there:
+     `rootName = first.group.group.rootName`, `scales = listOf(thatScale)`. The backdoor `Cmaj7 Am7 Fm7 Bb7` in C
+     joins F Dorian and B♭ Mixolydian, which are C natural minor's notes, and must read "C natural minor" as
+     `C Ab Fm7 C` already does (its `Ab` is answered on C), not "E♭ major"; a ii–V of the V (`F#m7b5 D7` in C, G major
+     = C Lydian) and Blue Bossa's D♭ (C Locrian) are no common scale on the root and fall through to the parent key;
    - else the parent major key: for the first exception whose shown scale is a mode of the major scale
      (`shownScale.modeOf?.first == "major"`, Dorian, Phrygian, Lydian, Mixolydian, natural minor, Locrian),
      `rootName = ScaleSpelling.parentRootName(shownScale, exception.rootName)` and
      `scales = listOf(Scales.fromId("major")!!)`; a scale that already is the major scale is its own parent;
    - else the first exception's (the most played, as `ScaleExceptions.of` orders them).
 
-   List the chords in play order: `val played = same.sortedBy { it.first }` (`ChordMoment.first` is the index of the
-   chord's first play in its group; today's `same` is in `ScaleExceptions.of`'s order, the most played first, which the
+   List the chords in play order: `val played = same.sortedWith(compareBy({ groups.indexOf(it.group) }, { it.first }))`
+   (`ChordMoment.first` is the index of the chord's first play in its own group, so moments of two groups are ordered
+   by their groups first, `groups` being in play order; today's `same` is in `ScaleExceptions.of`'s order, the most played first, which the
    review's "over E♭m7, A♭7 & D♭maj7" asks to replace), and build the moment from `played.first()` as today, with
    `exception = ScaleException(chordName = played.first().exception.chordName, rootName = …, scales = …,
    otherChordNames = played.drop(1).map { it.exception.chordName })` and `first = played.first().first`. The "first
@@ -96,7 +107,14 @@ Expected after the fix:
       over F#7 & F# → B harmonic_minor, melodic_minor      (unchanged)
 ## 13 Autumn Leaves (Gm jazz)
       over Fm7 & Bb7 → G phrygian                           (unchanged)
+## 13 Backdoor (C: Cmaj7 Am7 Fm7 Bb7 ×2)
+      over Fm7 & Bb7 → C natural_minor                      (was two rows: F dorian, Bb mixolydian)
+## 13 Borrowed (C: C Ab Fm7 C C Am F G ×2)
+      over Ab & Fm7 → C natural_minor
 ```
+
+(Plan 12's table row for the backdoor, "Over B♭7 → B♭ Mixolydian", is what `ScaleExceptions` answers for the chord
+alone; once this plan joins it with the `Fm7`, the song shows the joined row above.)
 
 and Blue Bossa, once plan 01 lands, "over E♭m7, A♭7, and D♭maj7 → D♭ major" as one of its moments (the viewer's
 `song_details_scales_over_several` already says a list of three). Where the joined exceptions came from different
@@ -105,7 +123,8 @@ first's; unchanged.
 
 Update the KDoc of `chordMomentsOf(groups, totals)` ("those a viewer would offer one scale on one root over joined" →
 "those whose scales are one set of notes joined into one moment, named by the key's own scale where one of them is on
-the group's root, else by the parent major key, else by the first") and the class KDoc's sentence "together with the
+the group's root or the notes are a common seven-note scale there (a backdoor ii–V is the home's natural minor), else
+by the parent major key, else by the first") and the class KDoc's sentence "together with the
 chords a viewer would offer the same scale on the same root over (a V and its V7)" → "together with the chords whose
 scales are the same notes (a V and its V7; a ii–V of another key, named by that key)".
 
@@ -122,10 +141,13 @@ scales.first().id`):
 - `` `chords the key's own scale answers keep its name when joined` ``: Autumn Leaves,
   `"A" to "Cm7 F7 Bbmaj7 Ebmaj7 Am7b5 D7 Gm Gm"`,
   `"B" to "Am7b5 D7 Gm Gm Cm7 F7 Bbmaj7 Bbmaj7 Am7b5 D7 Gm7 C7 Fm7 Bb7 Am7b5 D7 Gm"`, `key = "Gm"` → the moment whose
-  `chordName == "Fm7"` has `rootName == "G"`, `scales.first().id == "phrygian"`, `otherChordNames == listOf("Bb7")`.
+  `chordName == "Fm7"` has `rootName == "G"`, `scales.first().id == "phrygian"`, `otherChordNames == listOf("Bb7")`;
+  and the backdoor, `suggestions("Verse" to "Cmaj7 Am7 Fm7 Bb7 Cmaj7 Am7 Fm7 Bb7", key = "C").single()` →
+  `moments == listOf(Triple("Fm7", "C", "natural_minor"))` with `otherChordNames == listOf("Bb7")`.
 - The existing `chords one scale on one root serves are one moment, named by each` (F♯7 and F♯ on B harmonic minor)
   stays and must pass.
 
 `CLAUDE.md` (`chordpro/scales`), the `SongScaleSuggestions` bullet: change "chords offered one scale on one root are one
 (a V and its V7)" to "chords whose scales are one set of notes are one (a V and its V7; a ii–V of another key, named by
-that key's major, or by the home's own scale where one of them is on the home root)".
+that key's major, or by the home's own scale where one of them is on the home root or the notes are the home root's
+major, natural minor, Dorian, or Mixolydian)".

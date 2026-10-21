@@ -9,6 +9,12 @@
 -->
 # An exotic seven-note scale never leads a part or makes it a fit
 
+**Challenged:** amended — the borrowed-iv example was wrong: `C F Fm G` holds the F chord's A, which harmonic major
+lacks, so HEAD already reads it `C: major` with `over Fm` (only bebop major, eight notes, holds it), and the planned
+`suggestionFor(0, [C, F, Fm, G])` "contains `harmonic_major`" would fail; the example and tests use `C Fm G C` instead
+(HEAD: `C: harmonic_major, bebop_major`). Noted a residual the family rule lets through (`C Cm` → Lydian ♯2) and a
+side effect (`C Eb` turns from Hungarian major into a riff).
+
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/PlayableScales.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/PlayableScalesTest.kt`,
@@ -16,7 +22,7 @@
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/CLAUDE.md`
 
 HEAD at the time of writing: `f70a58f89`. Lane G, plan 11 of 9 in the lane's numbering (last to run); assumes plans
-01–10 have landed, plan 10's `suggestionFor(root, chords, home)` in particular.
+01–10 have landed, plan 10's `suggestionFor(root, chords, given)` in particular.
 
 ## Problem
 
@@ -37,8 +43,9 @@ nobody plays, with no pentatonic, and no exception named. At HEAD:
 - Bossa vamp without a key, `Cmaj7 Cmaj7 Dbmaj7 Dbmaj7 ×2` → `[HOME] [A] C: double_harmonic`, one chip. With
   `{key: C}` the same chart reads `C: major, major_pentatonic, lydian, lydian_sharp_2 (+7)` with `over Dbmaj7 → Db major,
   …`, which is what the no-key chart should read too.
-- `C F Fm G ×2` without a key → `C: harmonic_major` (harmonic major holds the borrowed iv), where a player wants C major
-  with `Fm` as the moment, exactly what the keyed chart gets.
+- `C Fm G C ×2` without a key → `C: harmonic_major, bebop_major` (harmonic major, `1 2 3 4 5 b6 7`, is the one scale of
+  seven notes holding the borrowed iv beside the V), where a player wants C major with `Fm` as the moment. (`C F Fm G`
+  is no case: its `F` chord's A is outside harmonic major, so it already reads `C: major` with `over Fm`.)
 - The `Caug` and `E7#9` vamps the review noted (`C: ionian_sharp_5, phrygian_dominant, ultralocrian`; E Hungarian major
   first) are already answered by the landed one-chord rule (`SongScaleGroups.oneChordFitOf`, commit `6c1b13c24`): a
   lone `Caug` reads `C: whole_tone, augmented, lydian_augmented, ionian_sharp_5 (+14)` and a lone `E7#9` reads
@@ -48,6 +55,12 @@ nobody plays, with no pentatonic, and no exception named. At HEAD:
 What must keep working: `C Db C Db` → `C: phrygian_dominant, double_harmonic, flamenco`; `Dm E Dm E` →
 `D: dorian_sharp_4`; `Em F Em F` → `E: phrygian, minor_pentatonic, blues, …`; `C D C D` → `C: lydian, major_pentatonic`.
 These are modes of the major, harmonic minor, and melodic minor scales, which players name and play.
+
+Not covered, and left as the plan's line: a mode of harmonic or melodic minor still leads where it is the only holder
+of its notes, so `C Cm C Cm` (I–i) reads `C: lydian_sharp_2, major_blues, hungarian_major, augmented` at HEAD and after.
+Narrowing the leading modes to those a player names a song by (Phrygian, Lydian, Phrygian dominant, Dorian ♯4, Lydian
+dominant, Mixolydian ♭6, say) would make it C major with `Cm` the moment; that is a decision for the user, not part of
+this plan.
 
 ## Fix
 
@@ -85,8 +98,12 @@ and is unaffected in its first chips; its `isFit` is never read.
 - Bossa vamp without a key → `[HOME] [A] C: major, major_pentatonic, lydian, lydian_sharp_2 (+7)` with `over Dbmaj7 →
   Db major, lydian_sharp_2, double_harmonic, lydian, harmonic_major` (the keyed chart's row at HEAD: C major holds half,
   THIN, a guess kept alone).
-- `C F Fm G ×2` without a key → `[HOME] [Verse] C: major, …` with `over Fm → F melodic_minor, dorian, …` (as the keyed
-  chart reads at HEAD; lane S may change the answer over a borrowed iv).
+- `C Fm G C ×2` without a key → `[HOME] [Verse] C: major, …` with `over Fm → F melodic_minor, dorian, …` (C major
+  LOOSE, 6 of 8, a guess kept alone; Mixolydian ties at 6 through plan 01's leading `G` and loses the tie; the answer
+  over `Fm` is the one `C F Fm G` gets at HEAD; lane S may change the answer over a borrowed iv).
+- `C Eb C Eb` without a key → a rock riff on C (`minor_pentatonic, blues, mixolydian, …`; HEAD: `C: hungarian_major,
+  minor_pentatonic, blues, dominant_diminished`): Hungarian major no longer makes it a fit, and `looseFitOf` reads the
+  I–♭III as the riff it is.
 - `C Db C Db`, `Dm E Dm E`, `Em F Em F`, `C D C D`, `E F E F` → unchanged.
 - `Caug` and `E7#9` vamps → unchanged.
 - `{key: E}` `E7#9 E7#9 A7 E7#9 B7 A7 E7#9 E7#9` → unchanged, a dominant blues (plan 02's jazz shape: every I chord a
@@ -97,7 +114,7 @@ and is unaffected in its first chips; its `isFit` is never read.
 `PlayableScalesTest`:
 
 - `` `an exotic seven-note scale never leads a suggestion or makes a fit` ``: `PlayableScales.suggestionFor(0,
-  [Cmaj7, Dbmaj7])` has `isFit == false`; `suggestionFor(0, [C, F, Fm, G])` has `isFit == false` and its scales
+  [Cmaj7, Dbmaj7])` has `isFit == false`; `suggestionFor(0, [C, Fm, G])` has `isFit == false` and its scales
   contain `harmonic_major` after whatever precedes it; `suggestionFor(0, [C, Db])` has `isFit == true` and
   `scales.first().id == "phrygian_dominant"`; `suggestionFor(2, [Dm, E])` has `isFit == true` with `dorian_sharp_4`
   first; `suggestionFor(0, [C, Caug])` has `isFit == false` (the augmented scale is six notes, and harmonic major, the
@@ -110,7 +127,7 @@ and is unaffected in its first chips; its `isFit` is never read.
 
 - `` `a chart only an exotic scale holds whole is its key with the chord as the exception` ``:
   `song("Cmaj7 Cmaj7 Dbmaj7 Dbmaj7 Cmaj7 Cmaj7 Dbmaj7 Dbmaj7")` is `"C" to "major"` with exceptions `[Dbmaj7]`;
-  `song("C F Fm G C F Fm G")` is `"C" to "major"` with exceptions `[Fm]`; `song("C Db C Db C Db C Db")` is
+  `song("C Fm G C C Fm G C")` is `"C" to "major"` with exceptions `[Fm]`; `song("C Db C Db C Db C Db")` is
   `"C" to "phrygian_dominant"`; `song("Dm E Dm E")` is `"D" to "dorian_sharp_4"`; `song("Em F Em F")` is
   `"E" to "phrygian"`.
 - Keep `a vamp on one chord is answered as the chord's sheet is, unless a key says otherwise` and `an eight-note

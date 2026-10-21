@@ -9,6 +9,13 @@
 -->
 # A part sitting in another key, the song's tonic heard as its dominant, is read in that key, not as the key's mode
 
+**Challenged:** amended — the step also needs the part not to start on the key's root (as written, the Mixolydian rock
+loops `{key: E}` `E A D A` and `{key: G}` `G C F C` read A major and C major) and the key's tonic chord followed by
+the new root at least once inside the part, not only through the loop (as written, `G D Em C` under `{key: C}` read G
+major and broke the kept test `the key names the centre…`); the mode is tried before the minor family, as today (as
+written, `Dm G Dm G` under D minor read natural minor and broke `a minor key is read from its m`); `major` comes from
+plan 01.
+
 **Kind:** design  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroups.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroupsTest.kt`,
@@ -65,23 +72,38 @@ before its mode:
  */
 private fun otherKeyFitOf(harmony: Harmony, key: SongKey): Fit? {
     val centre = harmony.ranked.first().takeIf { it.pitchClass != key.root.pitchClass } ?: return null
+    // A part that starts on the key's root is the key's, its mode's loop I IV ♭VII IV included.
+    if (harmony.roots.first().pitchClass == key.root.pitchClass) return null
     val home = harmony.holding(centre, homeScaleIds) ?: return null
     val keyNotes = Scales.pitchClasses(if (key.isMinor) naturalMinor else major, key.root.pitchClass)
     val homeNotes = Scales.pitchClasses(if (home.id == MAJOR_ID) major else naturalMinor, centre.pitchClass)
     if (homeNotes == keyNotes) return null
-    val chords = harmony.parts.flatMap { part -> part.chords.indices.map { part.chords[it] to part.chords[(it + 1) % part.chords.size] } }
-    if (chords.any { (chord, next) -> chord.root == key.root.pitchClass && next.root != centre.pitchClass }) return null
+    // Each play of the key's tonic chord with the chord after it (the part read as a loop) and whether that is inside the part.
+    val onTonic = harmony.parts.flatMap { part ->
+        part.chords.indices.filter { part.chords[it].root == key.root.pitchClass }
+            .map { part.chords[(it + 1) % part.chords.size] to (it + 1 < part.chords.size) }
+    }
+    if (onTonic.any { (next, _) -> next.root != centre.pitchClass }) return null
+    // A tonic chord closing the part leads back to its start only through the loop, which is no dominant's move.
+    if (onTonic.isNotEmpty() && onTonic.none { (_, isInside) -> isInside }) return null
     return tonalFitOn(harmony, centre, home)?.let { saidAsNaturalMinor(harmony, it) }
 }
 ```
 
-(`Harmony` needs to keep its `parts` for the cyclic "next" per part, or expose a `nextOf(index)`; `major` is a new
-`private val major = Scales.fromId(MAJOR_ID)!!`.) The relative check uses natural minor's notes for a harmonic minor
+(`Harmony` keeps its `parts` for the "next" per part: `private class Harmony(val parts: List<SongPart>)`; `major` is
+plan 01's `private val major = Scales.fromId(MAJOR_ID)!!`.) The two extra conditions, each with the chart that needs
+it: `{key: E}` `E A D A` (and Paradise City's `G C F C` under G) ranks the IV first by its `I → IV` cadences, the IV's
+major holds it, and every I is followed by the IV, so without the start check the key's Mixolydian loop reads as the
+IV's major key; `G D Em C` under `{key: C}` (pinned in C by `the key names the centre…`) ranks G first, G major holds it,
+and its only C is the last chord, followed by G only through the loop. Here Comes the Sun's verse `D D G A7 D D G A7`
+keeps its D: its first `A7` is followed by `D` inside the part. The relative check uses natural minor's notes for a harmonic minor
 home, as `saidAsNaturalMinor` does, so `{key: C}` `Am Dm E7 Am` (A harmonic minor holds it) stays in C.
 
-`keyFitOf` then reads, in order: the key's own scale holding every chord (major; natural or harmonic minor), the minor
-family (`minorFamilyFitOn`), **`otherKeyFitOf`**, the key's mode holding every chord (Mixolydian; Dorian), the dominant
-blues, the loose home. Today's first line, which tries the scale and the mode in one `holding` call, is split into two.
+`keyFitOf` then reads, in order: the key's own scale holding every chord (major; natural or harmonic minor),
+**`otherKeyFitOf`**, the key's mode holding every chord (Mixolydian; Dorian), the minor family (`minorFamilyFitOn`), the
+dominant blues, the loose home. The mode stays ahead of the family, as today (HEAD tries `minorKeyScaleIds + DORIAN_ID`
+in one call before the family): with the family first, `Dm G Dm G` under D minor is held by D melodic minor and reads
+natural minor, and `a minor key is read from its m` fails. Today's first line, which tries the scale and the mode in one `holding` call, is split into two.
 Update `keyFitOf`'s KDoc accordingly (its sentence "a mode with exceptions and no tonic chord is no reading of a key,
 or capo shapes in C under `{key: D}` would read as D Mixolydian" stays).
 
@@ -127,7 +149,10 @@ key (`KEY_WEIGHT`, its own row with its full scale list).
 - `` `the relative minor stays in the key` ``: `song("Am Dm E7 Am Am Dm E7 Am", "C F G C C F G C", key = "C")` is a
   single group `"C" to "major"` with exceptions `[E7]`; `song("Am Dm E7 Am", "F G F G", key = "Am")` is a single group
   `"A" to "natural_minor"` (the bridge is held by A natural minor itself and joins the verse through the family).
-- Keep: `a chorus leaving the verse's scale gets the scales that fit it` (`C Bb F` in C stays Mixolydian),
+- `` `a Mixolydian loop on the key's root keeps the key's mode` ``: `song("E A D A E A D A", key = "E")` is
+  `"E" to "mixolydian"`; `song("G C F C G C F C", key = "G")` is `"G" to "mixolydian"`.
+- Keep: `the key names the centre…` (its first assertion, `G D Em C` in C as one group with `D` the exception), `a minor
+  key is read from its m` (`Dm G Dm G` under D minor stays Dorian), and `a chorus leaving the verse's scale gets the scales that fit it` (`C Bb F` in C stays Mixolydian),
   `a mode needs the part to start on its root or the key to name it` (`D A E E` under `{key: E}` stays E Mixolydian:
   E ranks first), `a minor key is read from its m` (`Dm G Dm G` under D minor stays Dorian: D ranks first),
   `a guess on three chords is left out beside a better answer, and kept alone`, `a section replaying another's chords
@@ -139,7 +164,8 @@ key (`KEY_WEIGHT`, its own row with its full scale list).
 In the `SongScaleGroups` bullet of the scales `CLAUDE.md`, the sentence "**Then the key decides the root**: the key in
 force (…), a scale of its third holding the part, a minor key's family, a dominant blues, then its own major or minor
 family as a home with exceptions, its mode too where its tonic chord is played": rewrite the list as "the key's own
-scale holding the part, a minor key's family, then another key on the part's best scored root holding it whole where
-the key's tonic chord is only ever followed by that root's (a chorus on the IV is the IV's major, never the key's
-Mixolydian; the relative key is the key's), its mode holding the part, a dominant blues, then its own major or minor
+scale holding the part, then another key on the part's best scored root holding it whole where
+the key's tonic chord is only ever followed by that root's, inside the part at least once, and the part does not start
+on the key's root (a chorus on the IV is the IV's major, never the key's Mixolydian; the relative key and the I IV ♭VII
+IV loop are the key's), its mode holding the part, a minor key's family, a dominant blues, then its own major or minor
 family as a home with exceptions, its mode too where its tonic chord is played and it holds two chords more".

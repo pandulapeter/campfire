@@ -10,6 +10,12 @@
 # A song's row keeps a non-common seven-note scale only as its first chip
 
 **Kind:** design  ·  **Severity:** low  ·  **Platforms:** all
+**Challenged:** amended — the first two chips stay whatever they are, not only the first: as first written the filter
+stripped a one-chord vamp's textbook pair (`SongScaleGroups.oneChordFitOf`, the chord sheet's `ChordScaleChoices`
+order, settled by `6c1b13c24`) to one chip: `Bm7b5` lost Locrian ♮2 (`locrian, blues`), `Cmaj7#5` Ionian ♯5
+(`lydian_augmented` alone), `Caug` the augmented scale (`whole_tone` alone). Every row the plan meant to trim is trimmed
+the same, its second chip being a pentatonic or the blues. The "today" lists of the vamps were re-probed (they had
+`locrian_natural_2` second, `lydian_augmented` first).
 **Files:** `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/model/SongScaleGroups.kt`,
 `presentation/src/commonTest/kotlin/com/pandulapeter/campfire/presentation/ui/songView/model/SongScaleGroupsTest.kt`,
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/songView/CLAUDE.md`
@@ -51,21 +57,26 @@ list belongs; the song's row is "what a player reaches for first" (the `songScal
 
 ## Fix
 
-After the first chip, keep only `Scales.common` scales and the two hexatonics; the first chip stays whatever it is
-(Phrygian over `Em F`, Lydian over `C D C D`, the flamenco scale over a Malagueña, since the home scale is the answer
-even when rare):
+After the first two chips, keep only `Scales.common` scales and the two hexatonics; the first two stay whatever they
+are: the first is the home scale, the answer even when rare (Phrygian over `Em F`, Lydian over `C D C D`, Phrygian
+dominant over a falseta), and the second is either the pentatonic or the blues inside it or, over a one-chord vamp,
+the second of the chord's textbook scales (Locrian ♮2 after Locrian over a `Bm7b5`, Ionian ♯5 after Lydian augmented
+over a `Cmaj7#5`), which the chord sheet's order put there on purpose:
 
 ```kotlin
 /**
  * The chips of a group's [scales]: the eight-note ones left out where a smaller scale fits, since bebop and the
- * diminished scales are a jazz player's passing tones rather than the answer to what a song is in; after the first,
- * the home scale whatever its rarity, only the common scales and the hexatonics, since a Lydian ♯2 beside the major
- * scale reads as a suggestion on a par with it; then the first [MAX_GROUP_SCALES]. A chord sheet keeps them all.
+ * diminished scales are a jazz player's passing tones rather than the answer to what a song is in; after the first
+ * two, the home scale whatever its rarity and the pentatonic inside it or a vamp's second textbook scale, only the
+ * common scales and the hexatonics, since a Lydian ♯2 beside the major scale reads as a suggestion on a par with it;
+ * then the first [MAX_GROUP_SCALES]. A chord sheet keeps them all.
  */
 private fun chipsOf(scales: List<Scale>): List<Scale> {
     val shown = if (scales.any { it.intervals.size <= HOME_SCALE_SIZE }) scales.filter { it.intervals.size <= HOME_SCALE_SIZE } else scales
-    return (shown.take(1) + shown.drop(1).filter { it in Scales.common || it.id in hexatonicIds }).take(MAX_GROUP_SCALES)
+    return (shown.take(KEPT_CHIPS) + shown.drop(KEPT_CHIPS).filter { it in Scales.common || it.id in hexatonicIds }).take(MAX_GROUP_SCALES)
 }
+
+private const val KEPT_CHIPS = 2
 
 private val hexatonicIds = setOf("major_hexatonic", "minor_hexatonic")
 ```
@@ -87,10 +98,10 @@ Expected chips at HEAD (ids):
 The hexatonic in the "after" column is the one `PlayableScales.suggestionFor` offers *inside* the home scale (as it
 offers the pentatonic), among the "(+n)" the probe does not print; where the engine's list after the merge has none,
 the row is three chips. Pin the probe's actual lists.
-| one-chord vamps `Bm7b5`, `Cmaj7#5` | locrian, blues, locrian_natural_6, dorian_sharp_4; ionian_sharp_5, lydian_augmented, harmonic_major, double_harmonic | locrian, blues; ionian_sharp_5 |
+| one-chord vamps `Bm7b5`, `Cmaj7#5`, `Caug` | locrian, locrian_natural_2, blues, locrian_natural_6; lydian_augmented, ionian_sharp_5, harmonic_major, double_harmonic; whole_tone, augmented, lydian_augmented, ionian_sharp_5 | locrian, locrian_natural_2, blues; lydian_augmented, ionian_sharp_5; whole_tone, augmented |
 
-The one-chord vamps lose their rarities on the song page; the chord's own sheet (`ScaleChipRow` on the Chords section)
-still lists every one, which is where a player looks for a Cmaj7♯5's scales.
+The one-chord vamps keep their textbook pair and lose the rarities after it on the song page; the chord's own sheet
+(`ScaleChipRow` on the Chords section) still lists every one.
 
 Lane G's plan 10 reorders what follows a minor home; this filter keeps whatever order it leaves and removes only what
 is neither common nor a hexatonic, so a scale plan 10 puts second to fourth survives if it is one of those. Lane U is
@@ -106,9 +117,14 @@ In `SongScaleGroupsTest` (presentation), with `groups(text)`:
   is `listOf("major", "major_pentatonic", "major_hexatonic")`; and
   `groups("{start_of_verse}\n[Em]x [F]x [Em]x [F]x [Em]x [F]x [Em]x [F]x\n{end_of_verse}").single().scales` has
   `first().id == "phrygian"` and `drop(1).all { it in Scales.common }`.
+- `` `a one-chord vamp keeps its chord's two textbook scales` ``:
+  `groups("{start_of_verse}\n[Bm7b5]x [Bm7b5]x [Bm7b5]x [Bm7b5]x\n{end_of_verse}").single().scales.map { it.id }` is
+  `listOf("locrian", "locrian_natural_2", "blues")`, and the same with `Cmaj7#5` is
+  `listOf("lydian_augmented", "ionian_sharp_5")` (re-probe both after lanes G and S and pin what the merged engine gives).
 - The existing `a group offers at most a handful of scales` and `a song's chips leave out the eight-note scales` stay
   and must pass.
 
 `CLAUDE.md` (`ui/songView`, "The Scales section"): "At most four chips a group, and one chip a chord" → "At most four
-chips a group, after the first only common scales and the hexatonics (a rare home scale leads, a rare fourth chip never
-follows; the chord sheet keeps the full list), and one chip a chord".
+chips a group, after the first two only common scales and the hexatonics (a rare home scale leads, and a vamp keeps its
+chord's two textbook scales, but a rare fourth chip never follows; the chord sheet keeps the full list), and one chip
+a chord".

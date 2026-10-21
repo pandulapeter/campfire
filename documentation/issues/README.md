@@ -18,16 +18,29 @@ Method: a probe over about 200 real charts
 `PROBE_CORPUS=<file> ./gradlew :chordpro:desktopTest --tests "*ProbeSongsTest*" --rerun`), two area reviewers (parts and roots; chips and exceptions), a
 regression read of the fixes, two plan writers.
 
-**Challenge:** not run. The user chose the lean finish (2026-10-20); the plans were verified against the probe by
-their writers but not challenged by a fresh agent. The orchestrator should read each plan's "Fix" against its
-neighbours in the same lane before starting it, and treat a failing new test as the plan's defect (section 2 of the
-`codebase-review` skill).
+**Challenge:** run 2026-10-21 by three fresh agents, each fix applied to a throwaway copy of `3f693bab8` (lane G stacked
+in order) and run against the full test suite and a probe corpus. All 15 plans **amended**, none dropped; each plan
+says what changed under its header. The main changes: 01 no leader on a minor home's own root, none in a rock riff,
+and none on the key's root where the part sits in the V's key (`Harmony.countsLeadersOn`); 02 the jazz shape needs the
+I most played and no maj7 on I/IV/V, the turnaround needs a dominant seventh, and a dominant blues held by the major
+puts the blues scales first; 03 the tonic-seventh rule takes the first chord if a seventh, else the most played, and
+the `guessedFitOf` sort counts held chords only; 04 a start check, an unwrapped follow, and HEAD's order of checks
+(the mode before the minor family, so Dorian under a minor key holds); 05 rule (ii) only for non-major homes, vamp
+joins only without an exception on the vamp's chords; 06 a dominant seventh on the root is no cadence; 07 Phrygian
+dominant counts no leaders (else `C F G C C F Db C` turns), `mixolydian` pinned by id, one shared gate helper; 08
+the shifted key only where the part's best root is it, and Here Comes the Sun's bridge stays the riff on A (the
+written key keeps its word); 09 a headless missing row is named by its opening words, and short own-key parts show
+there too; 10 `tonalFitOn` passes the home only where a chord has a third or the home is the key's root; 11 the
+example is `C Fm G C` (`C F Fm G` is already major); 12 a dim7 leads from any of its four notes, plus part (d), the
+Phrygian over a Phrygian-dominant home's ♭III that plan 07 asked lane S for; 13 a joined set that is the home root's
+major, natural minor, Dorian, or Mixolydian is named on the home root (the backdoor reads C natural minor), sorted by
+group then index; 14 the first two chips stay (one-chord vamps keep theirs); 15 claims corrected only.
 
 ## Headlines
 
 1. **A `{key}` chart can get no suggestion at all** (plan 01): the home may leave out two distinct chords or a third,
-   so Blue Bossa, a gospel turnaround, a country verse with A7/G7/Cm, All of Me, and Ipanema's bridge get nothing or a
-   silently dropped part, though the key holds half or more of the plays.
+   so Blue Bossa, a gospel turnaround, a country verse with A7/G7/Cm, All of Me, and Ipanema's bridge (still dropped after plan 01;
+   plan 09 names it) get nothing or a silently dropped part, though the key holds half or more of the plays.
 2. **A jazz blues reads on the wrong root** (plans 02, 03): the tonic I7 scores nothing in `rankedRoots`, the IV's
    cadence wins, and the minor family absorbs the secondary dominants — F blues → "G natural minor".
 3. **A part in the IV key reads as the key's Mixolydian** with minor pentatonic and blues chips (plan 04), and a
@@ -113,6 +126,11 @@ must add to `ScaleExceptions` for the falseta's G to read "E Phrygian" (until th
   short text ("No scale above holds these chords"), or only name the row. Recommended: the first.
 - **15** Add the minor 6 pentatonic and the dominant pentatonic to the catalogue, browse-only at first. Recommended:
   yes, browse-only.
+
+- **Challenge, 03** The rhythm-changes bridge `D7 D7 G7 G7 C7 C7 F7 F7` (nothing today) gets a passing row "D: minor
+  pentatonic, blues" after plan 03. Taken 2026-10-21: accepted.
+- **Challenge, 11** `C Cm` still reads Lydian ♯2 (a harmonic-minor mode) after plan 11. Taken 2026-10-21: left as is,
+  not barred.
 
 ## Checked and found solid
 

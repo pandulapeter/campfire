@@ -17,8 +17,8 @@ decisions. Load the `codebase-review` skill first: its section 4 is the procedur
 - `git status` is clean apart from this folder. The plans re-probe their charts with
   `chordpro/src/desktopTest/kotlin/com/pandulapeter/campfire/chordpro/scales/ProbeSongsTest.kt`
   (`PROBE_CORPUS=<file> ./gradlew :chordpro:desktopTest --tests "*ProbeSongsTest*" --rerun`).
-- The challenge was waived by the user (`README.md`, "Challenge"); each lane agent reads a plan's fix against its
-  lane's other plans before starting it.
+- The challenge ran on every plan (`README.md`, "Challenge"); every plan is amended, so read its `**Challenged:**`
+  line and follow the amended text. Plan 12 carries part (d), plan 07's request to lane S.
 - Every open decision in `README.md` has an answer recorded there.
 - `./gradlew :chordpro:desktopTest :presentation:desktopTest -q` passes.
 - Commit the plans if they are untracked: `Add the 41st review plans.` Then `START=$(git rev-parse HEAD)`.

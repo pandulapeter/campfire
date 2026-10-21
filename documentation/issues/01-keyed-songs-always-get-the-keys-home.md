@@ -9,6 +9,12 @@
 -->
 # A song with a `{key}` is always answered on the key's own scale, its chords leading into the key counted as the key's
 
+**Challenged:** amended — leaders never count on a minor home's own root or for a rock riff (the plan as written broke
+four existing tests: `E G A E` and the `{key: A}` rock verse read natural minor, `C7 F7 C7 Dm7 G7 C7` lost its group);
+leaders and the lifted cap stay off on the key's root where the part has left the key (a D-major bridge under
+`{key: G}` was swallowed into G with three exceptions); `guessedFitOf` keeps sorting its roots by held chords
+(`C F G E` read F major); Ipanema's bridge is still dropped (its own chords are 4 of 16), so that claim is removed.
+
 **Kind:** bug  ·  **Severity:** high  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroups.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroupsTest.kt`,
@@ -70,11 +76,12 @@ All in `SongScaleGroups`.
 is the key in force's root:
 
 ```kotlin
-val isKeyRoot = harmony.key?.root?.pitchClass == root.pitchClass
+val withLeaders = harmony.countsLeadersOn(root)
+val isKeyRoot = withLeaders && harmony.key?.root?.pitchClass == root.pitchClass
 if (!isKeyRoot && outside > MAX_LOOSE_EXCEPTIONS && outside * 3 > distinct.size) return@firstNotNullOfOrNull null
 ```
 
-The half floor (`if (counts[best] * 2 < total) return@firstNotNullOfOrNull null`) and the LOOSE/THIN levels stay as they
+(`countsLeadersOn` is defined under (b); where it is false, (a) and (b) leave the root exactly as today.) The half floor (`if (counts[best] * 2 < total) return@firstNotNullOfOrNull null`) and the LOOSE/THIN levels stay as they
 are. (`looseFitOf` is reached on the key's root from `keyFitOf` and, for a riff on it, from `powerRiffFitOf`; a guessed
 root never equals the key's, since `guessedFitOf` runs only when the key's floor has failed, and then fails again.)
 
@@ -88,6 +95,8 @@ root never equals the key's, since `guessedFitOf` runs only when the key's floor
  * its notes out.
  */
 private fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
+    // A major chord or a seventh on a minor home's own root is its parallel major, never a secondary dominant.
+    if (chord.root == root && MINOR_THIRD in home.intervals) return false
     val notes = Scales.pitchClasses(home, root)
     val intervals = chord.intervals.map { it.mod(12) }
     val isDominant = chord.isMajorOrDominant || chord.isDominantSeventh
@@ -97,15 +106,59 @@ private fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
 ```
 
 (`FOURTH = 5`, `FLAT_FIFTH = 6` are new constants of the object; `isMajorOrDominant` and `isDominantSeventh` are in
-`ChordNotes.kt`.) A minor chord right before a leader and a fourth below it is the ii of a secondary ii–V (`Gm7 C7`
+`ChordNotes.kt`.) The first line matters: without it the tonic `C7` of `C7 F7 C7 Dm7 G7 C7` "leads into" F for C
+natural minor and Dorian, the minor family wins the loose count at 6 of 6 while natural minor itself holds none of the
+chords, `minorHomeFitOn` returns null and the part loses its group (`ScaleExceptionsTest`'s `a jazz blues is Mixolydian
+with the IV and V named` fails with an empty list); and the E of an `E G A E` riff, the C of Smoke's chorus, and the A
+of the sus-intro riff lift natural minor over Mixolydian, so the riff rows change their third chip (`a rock riff is
+played over the minor pentatonic and the blues on its root…` and `a rock verse joins a riff of other chords…` fail).
+A chord on a major-third home's root still leads: `C7` in C major is the V7 of the IV.
+
+Leaders count only where `Harmony.countsLeadersOn(root)` says so, a small function on `Harmony` used by both
+`looseCountsOn` and `looseFitOf` (so neither signature changes):
+
+```kotlin
+/**
+ * Whether a home on [root] counts the chords leading into it: never for a rock riff, whose major chords are the
+ * riff's, not secondary dominants; and on the key's root only while the part is still in the key ([leavesKey]).
+ */
+fun countsLeadersOn(root: SpelledNote) = !PlayableScales.isRockRiff(root.pitchClass, chords) &&
+    (key?.root?.pitchClass != root.pitchClass || !leavesKey(key))
+
+/**
+ * Whether the part has left [key] for another: its best scored root is another, and the major or natural minor scale
+ * there, not sharing the key's notes, holds more of its chords than the key's own scale does. A bridge in the key of
+ * the V (`D A Bm F#m G D E A` under `{key: G}`) is then read as today, in D: its A and E lead into notes of G major
+ * too, and counted as the key's they would make it G with three exceptions.
+ */
+fun leavesKey(key: SongKey): Boolean {
+    val centre = ranked.first().takeIf { it.pitchClass != key.root.pitchClass } ?: return false
+    val keyScale = if (key.isMinor) naturalMinor else major
+    val keyNotes = Scales.pitchClasses(keyScale, key.root.pitchClass)
+    val held = chords.count { holdsChord(keyScale, key.root.pitchClass, it) }
+    return listOf(major, naturalMinor).any { scale ->
+        Scales.pitchClasses(scale, centre.pitchClass) != keyNotes && chords.count { holdsChord(scale, centre.pitchClass, it) } > held
+    }
+}
+```
+
+(`major` is a new `private val major = Scales.fromId(MAJOR_ID)!!` of the object; plan 04 uses the same one.) Its relative
+key is never "another" (All of Me's A section ranks A first before plan 03, but A natural minor has C major's notes).
+The F jazz blues under `{key: F}` does leave the key by this rule before plan 03 (G ranks first and G natural minor
+holds `F7` ×5, `Cm7`, `Gm7` ×2, more than F major's five), so it keeps HEAD's G reading until plans 02 and 03 land.
+
+A minor chord right before a leader and a fourth below it is the ii of a secondary ii–V (`Gm7 C7`
 into F in a song in C) and counts with the leader; this is what keeps the ii–V to the IV in the key under (c) below.
 Then `looseCountsOn` counts what a home *accounts for*, held, leading, or the ii of a leader, by index since the ii
 needs the chord after it:
 
 ```kotlin
+val withLeaders = harmony.countsLeadersOn(root)
+…
 if (!isAllowed(home)) -1 else harmony.chords.indices.count { index ->
     val chord = harmony.chords[index]
-    holders.any { holdsChord(it, root.pitchClass, chord) } || leadsInto(home, root.pitchClass, chord) || harmony.isTwoOfLeaderInto(home, root.pitchClass, index)
+    holders.any { holdsChord(it, root.pitchClass, chord) } ||
+        withLeaders && (leadsInto(home, root.pitchClass, chord) || harmony.isTwoOfLeaderInto(home, root.pitchClass, index))
 }
 ```
 
@@ -123,8 +176,27 @@ val own = harmony.chords.count { chord -> holdersOfBest.any { holdsChord(it, roo
 if (own * 2 < total) return@firstNotNullOfOrNull null
 val level = if (counts[best] * 3 < total * 2) Level.THIN else Level.LOOSE
 …
-val outside = distinct.count { chord -> holders.none { holdsChord(it, root.pitchClass, chord) } && !leadsInto(home, root.pitchClass, chord) }
+val outside = distinct.count { chord -> holders.none { holdsChord(it, root.pitchClass, chord) } && !(withLeaders && leadsInto(home, root.pitchClass, chord)) }
 ```
+
+**The roots a guess tries keep today's order.** `guessedFitOf` sorts its two candidate roots by `counts.max()` of
+`looseCountsOn`, which now counts leaders; sort them by what a home *holds* instead, the minor family as one home, as
+today, and pass the counts with leaders on to `looseFitOf`:
+
+```kotlin
+.map { it to looseCountsOn(harmony, it) }
+.sortedByDescending { (root, _) ->
+    looseHomes.maxOf { home ->
+        val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
+        harmony.chords.count { chord -> holders.any { holdsChord(it, root.pitchClass, chord) } }
+    }
+}
+```
+
+With leaders in the sort, `C F G E` without a key ties F major (C, F held; G leading into C, E into A) with C major
+(C, F, G held; E leading) at four, the tie goes to F, the scores' favourite, and the chart reads `F: major` with `G` as
+the exception (`ScaleExceptionsTest`'s `a diatonic song with one outside chord keeps its group` fails); the settled
+deceptive `C F G E → A harmonic minor` must stay. (Plan 03 changes this sort again, to the home scale alone.)
 
 The floor must stay the home's own chords: with leaders on the floor, `{key: C}` `E A B E` would be C major at 4 of 4
 (E leads to A, A to D, B to E), and the existing test
@@ -159,7 +231,8 @@ ii `Gm7` ×2) against Mixolydian 10 (nine held, `G7` leading), a tie, and the ke
 8 against 9; `C Caug C6 C7 F F C C` gives 7 against 7. The "Mixolydian with its V" chart keeps its mode at 11 against
 14, and `SongScaleSuggestionsTest`'s `a Mixolydian verse ending on the major V…` verse at 16 against 24.
 
-A rock riff keeps today's rule (any home; `looseFitOf` picks Mixolydian or natural minor for it). The TONAL readings
+A rock riff keeps today's rule (any home; `looseFitOf` picks Mixolydian or natural minor for it; it counts no leaders,
+see `countsLeadersOn`). The TONAL readings
 earlier in `keyFitOf` (`harmony.holding(root, majorKeyScaleIds + MIXOLYDIAN_ID)`) are not touched: a part the key's
 Mixolydian holds whole is still read as it (plan 04 narrows that separately). "Mixolydian with its V",
 `{key: A}` `A G D A A G D A A G D A E A`, keeps its mode: Mixolydian accounts for 13, major for 11.
@@ -180,18 +253,23 @@ Update the KDoc of `looseFitOf`, `looseCountsOn`, and `keyFitOf` to say so, in t
 - All of Me, 32 bars → one group, `[HOME] [A, B] C: major, …` with `over E7 → A harmonic_minor`, `over A7 →
   D harmonic_minor`, `over D7 → D mixolydian, …`; `Fm` is the fourth exception and gets no slot.
 - All of Me written once → `[HOME] [A] C: major, …`, the same three moments.
-- Girl from Ipanema → the A sections LOOSE on F major (`G7` now leads into C, so they rise from THIN), the bridge THIN
-  on F major (held: `Gm7` ×3, `Am7`, `D7`, `D7b9`, `C7b9` lead into G and F, 8 of 16 — exactly the floor). THIN never
-  joins, but `SongScaleSuggestions.sameAnswersJoined` shows the two as one `[HOME] [A, B, A2] F: major, …` row; the
-  moments are `over G7 → G mixolydian, …` (6 plays), `over Gb7 → B harmonic_minor` (5), and `over Gbmaj7 → Gb major,
-  …` (2, the first of the bridge's chords in play order). The bridge is a chain of ii–Vs in four keys, so a home with
-  moments is the honest reading; the point is that its chords now count and its sections are shown.
+- Girl from Ipanema → unchanged on the page: `[HOME] [A, A2] F: major, …` with the `G7` and `Gb7` moments, the bridge
+  still dropped. F major *holds* only `Gm7` ×3 and `Am7` of the bridge's sixteen (the leaders `D7`, `D7b9`, `C7b9`, `B7`
+  count for the level, never for the half floor), so the floor refuses it, and no guessed root clears it either. The
+  bridge is a chain of ii–Vs in four keys; plan 09 (lane U) names it on the page as a part no row holds. (The A
+  sections rise from THIN to LOOSE, `G7` now leading into C.)
 - `{key: C}` `C Gm7 C7 F C Gm7 C7 F G7 C` → `[HOME] [Verse] C: major, …` with `over Gm7 → G dorian, …` and
   `over C7 → C mixolydian, …`.
 - `{key: C}` `C F C F C F Ab Bb C C` → `C: major, …` with `over Ab → C natural_minor` and `over Bb → C mixolydian, …`.
 - `{key: C}` `C Caug C6 C7 F F C C` → `C: major, …` with `over Caug → C ionian_sharp_5, harmonic_major, …` and
   `over C7 → C mixolydian, …`.
 - `{key: C}` `C7 Bb F G7 C7 Bb F G7` → `C: mixolydian, …` with `over G7 → G mixolydian, …` (the tonic is a seventh).
+- `{key: Bb}` rhythm changes A section `Bb G7 Cm7 F7 Bb G7 Cm7 F7 Bb Bb7 Eb Edim Bb F7 Bb F7` (`(nothing)` at HEAD) →
+  `[HOME] [A] Bb: major, …` with `over G7 → C harmonic_minor`, `over Bb7 → Bb mixolydian, …`, `over Edim → …`.
+- Unchanged (the guards): `{key: G}` verse `G C D G Em C D G`, bridge `D A Bm F#m G D E A` → the verse `G: major` and
+  the bridge `D: major` with `over E`; Hey Joe, Smoke on the Water, the sus-intro riff, and every rock-riff row keep
+  their chips; `C F G E` without a key stays `C: major` with `over E → A harmonic_minor`; Fly Me to the Moon and All of
+  Me's first sixteen bars without a key stay `A: natural_minor` until plan 03.
 
 Re-run the whole corpus (`corpus-all.txt`) after the change and read the diff: the only intended changes are songs that
 were `(nothing)`, songs whose key root changed, and the three Mixolydian-by-one charts above.
@@ -214,11 +292,16 @@ In `SongScaleGroupsTest`, with its `song(…)` helper:
   key = "C")`, `song("C F C F C F Ab Bb C C", key = "C")`, and `song("C Caug C6 C7 F F C C", key = "C")` are each
   `"C" to "major"`; `song("A G D A A G D A A G D A E A", key = "A")` is `"A" to "mixolydian"`; and
   `song("C7 Bb F G7 C7 Bb F G7", key = "C")` is `"C" to "mixolydian"` (the tonic is mostly a seventh).
+- `` `a part in the key of the fifth is no part of the key, its chords leading into it or not` ``:
+  `song("G C D G Em C D G", "D A Bm F#m G D E A", key = "G")` is `listOf("G" to "major", "D" to "major")`.
 
 Existing tests to keep green, all in `SongScaleGroupsTest`: `the key names the centre wherever its own scale holds half
 the section, the chords deciding otherwise`, `a guess on three chords is left out beside a better answer, and kept
 alone`, `a verse with a secondary dominant joins its key's chorus`, `a chorus leaving the verse's scale gets the scales
-that fit it`. In `ScaleExceptionsTest` (lane S's file, not to be edited by this lane) `a home leaving out more than two
+that fit it`, `a rock riff is played over the minor pentatonic and the blues on its root, with no exceptions`, `a rock
+verse joins a riff of other chords on its root, and a chorus in another key stands apart`; in `ScaleExceptionsTest`,
+`a jazz blues is Mixolydian with the IV and V named` (still Mixolydian until plan 02) and `a diatonic song with one
+outside chord keeps its group`. All of these were run against the amended fix and pass. In `ScaleExceptionsTest` (lane S's file, not to be edited by this lane) `a home leaving out more than two
 chords and a third of them has no group` tests a chart without a key, so (a) leaves it true; check it before landing
 and, if it names a key, tell the lane S executor rather than editing the test.
 
@@ -230,8 +313,10 @@ In `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/CLA
   holding half its chords answers; it may leave out two distinct chords or a third of them, each a `ScaleException`":
   after "a third of them" add ", except on the key's root, where the author's word stands however many it leaves out; a
   chord leading into the home (a secondary dominant, a diminished chord a semitone under a home note, the ii before
-  such a dominant) is the home's for that cap and for the two-thirds level, never for the half floor, and is still
-  named as an exception".
+  such a dominant; never a chord on a minor home's own root) is the home's for that cap and for the two-thirds level,
+  never for the half floor, and is still named as an exception; a rock riff counts no leaders, and neither does the
+  key's root for a part that has left the key (its best scored root's major or minor scale holds more of it than the
+  key's does: a bridge in the key of the V stays in that key)".
 - In the `SongScaleGroups` bullet, the sentence "then its own major or minor family as a home with exceptions, its mode
   too where its tonic chord is played (capo shapes in C under `{key: D}` play no D, so they never read as D Mixolydian)":
   add "and holds two chords more than the key's scale, or the tonic is mostly a seventh" after "where its tonic chord is

@@ -9,6 +9,13 @@
 -->
 # A home's row is built on the home, so a minor home never offers the parallel major and its pentatonic
 
+**Challenged:** amended — `tonalFitOn`'s change is a fix of its own (`{key: Am}` `A5 D5 E5 A5` reads `natural_minor,
+major, major_pentatonic, dorian` at HEAD), but it must not filter a part of power chords read without a key, whose
+home is major only because `homeScaleIds` tries it first (`A5 D5 E5 A5` would go from `major, major_pentatonic,
+natural_minor, dorian` to `major, major_pentatonic, mixolydian, mixolydian_flat_6`); the "first four chips unchanged"
+claim is corrected (power-chord rows under a key, a Dorian row whose fourth chip was Mixolydian); the parameter is
+named `given` as the sketch uses it.
+
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/PlayableScales.kt`,
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroups.kt`,
@@ -71,7 +78,7 @@ Give `PlayableScales` an overload that takes the home the row is built for, and 
 internal fun over(root: Int, chords: List<Chord>, home: Scale): List<Scale> = suggestionFor(root, chords, home)?.scales.orEmpty()
 ```
 
-with `suggestionFor(root, chords, home: Scale? = null)` (the public `over(root, chords)` passes null, so its behaviour
+with `suggestionFor(root, chords, given: Scale? = null)` (the public `over(root, chords)` passes null, so its behaviour
 is unchanged; `suggestionFor` is `internal`, and a defaulted parameter on it is fine, this is no Koin definition):
 
 - `val home = given ?: holding.firstOrNull { it.intervals.size == HOME_SCALE_SIZE }` (plan 11 then restricts the
@@ -93,9 +100,16 @@ is unchanged; `suggestionFor` is `internal`, and a defaulted parameter on it is 
 - `isFit` is unchanged (the callers with a home never read it).
 
 In `SongScaleGroups`, `minorHomeFitOn`, the two sites in `looseFitOf`, and `tonalFitOn` (`listOf(home) + (it.scales - home)`,
-where `suggestionFor(root, chords)` picks the first holder as the seed; a TONAL fit's home holds every chord and is
-usually that first holder, but a Dorian key fit with a `Dm G` part is seeded by D Dorian either way; pass the home for
-consistency) call `PlayableScales.over(root.pitchClass, held, home)`. The riff branch keeps `rockRiffScales` first and
+where `suggestionFor(root, chords)` picks the first holder as the seed) call `PlayableScales.over(root.pitchClass, held,
+home)`. `tonalFitOn` has the same fault where the chords are power chords: `{key: Am}` `A5 D5 E5 A5` is held by A
+natural minor, but the first holder `suggestionFor` takes is major, so the row is `natural_minor, major,
+major_pentatonic, dorian` (probe at HEAD). With triads the first holder is the home anyway (both read major, natural
+minor, Dorian, Mixolydian in that order), so the change matters only for thirdless chords, and there only where the
+home's third was decided: `tonalFitOn` passes the home where a chord of the part has a third or the home is on the root
+of the key in force, and otherwise keeps `PlayableScales.over(root.pitchClass, chords)`. A part of power chords read
+without a key (`A5 D5 E5 A5`, TONAL A major only because `homeScaleIds` tries major first) is then unchanged, `major,
+major_pentatonic, natural_minor, dorian`; filtered it would lose every minor-third scale for
+`major, major_pentatonic, mixolydian, mixolydian_flat_6`, its home's third being nobody's choice. The riff branch keeps `rockRiffScales` first and
 passes the riff's home (Mixolydian or natural minor), so the Smoke riff's row stays `minor_pentatonic, blues,
 natural_minor, dorian, …` and loses nothing.
 
@@ -108,8 +122,14 @@ nothing it offers today.
   the same two moments; the count behind the fourth chip falls to the minor-third scales on G.
 - Blue Bossa (plan 01) → `C: natural_minor, minor_pentatonic, blues, …` unchanged in its first chips (the held `Cm7`,
   `Fm7`, `Dm7b5` already seed natural minor).
-- Every major, Mixolydian, Dorian, riff, and blues row in `corpus-all.txt` → unchanged in its first four chips; diff the
-  probe output before and after, and read any changed row.
+- `{key: Am}` `A5 D5 E5 A5` → `A: natural_minor, minor_pentatonic, blues, dorian` (HEAD: `natural_minor, major,
+  major_pentatonic, dorian`); `{key: A}` the same chords → `A: major, major_pentatonic, mixolydian, mixolydian_flat_6`
+  (HEAD: `major, major_pentatonic, natural_minor, dorian`: the key says major); without a key → unchanged.
+- A Dorian row of mostly power chords loses a fourth chip of the other third: `G5 F5 G5 G5 F5 G5 C G5 C G5` read as G
+  Dorian (HEAD: `dorian, minor_pentatonic, blues, mixolydian`) becomes `dorian, minor_pentatonic, blues,
+  dorian_flat_2`, which lane U's plan 14 then cuts to `minor_hexatonic`.
+- Every other major, Mixolydian, Dorian, riff, and blues row in `corpus-all.txt` → unchanged in its first four chips;
+  diff the probe output before and after, and read any changed row.
 
 ## Tests
 
@@ -125,13 +145,15 @@ nothing it offers today.
 
 `SongScaleGroupsTest`:
 
-- `` `a minor home of power chords never offers the parallel major` ``: `song("C Ab G5 G5 C Ab G5 G5", key = "Gm")` is a
-  single group whose `scales.take(4)` ids are `[natural_minor, minor_pentatonic, blues, dorian]` and whose scales contain
-  no `major` and no `major_pentatonic`.
+- `` `a minor home of power chords never offers the parallel major` ``: `song("C Ab G5 G5 C Ab G5 G5", key = "Gm")` and
+  `song("A5 D5 E5 A5", key = "Am")` are each a single group whose `scales.take(4)` ids are `[natural_minor,
+  minor_pentatonic, blues, dorian]` and whose scales contain no `major` and no `major_pentatonic`; `song("A5 D5 E5 A5")`
+  without a key keeps `natural_minor` among its scales (its home's third is nobody's choice).
 
 ## CLAUDE.md
 
 In the `PlayableScales` bullet of the scales `CLAUDE.md`, "**What is suggested is `PlayableScales`**, not bare
 containment: the seven-note home scale holding the chords, the pentatonic sharing its third and the blues": add after
 it "(a group's row is built on the group's home, every other holder of its third's opposite dropped, so a minor home
-over power chords never offers the parallel major)".
+over power chords never offers the parallel major; a part of power chords alone, read without a key, has no third to
+keep)".

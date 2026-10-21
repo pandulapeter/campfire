@@ -10,6 +10,13 @@
 # A secondary dominant targets only a note of the key, and a diminished chord is its target's harmonic minor or the diminished scale
 
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all
+**Challenged:** amended — (1) a diminished seventh leads a semitone above *any* of its four notes, since a chart names
+one by whichever note it likes: as first written `C Bbdim7 Dm7 G7` and `C Edim7 Dm7 G7` (the `C#dim7` of the table,
+spelled by another note) read "B♭ diminished" and "E diminished" while `C C#dim7 Dm7 G7` reads D harmonic minor, and
+`C F Ddim7 Am` read "D diminished" (probed with the fix applied; with the amendment all read the harmonic minor of the
+chord that follows); the target is spelled as the song spells that chord. (2) Part (d) carries the lane S change plan
+07 asks for (a Phrygian-dominant home answers its ♭III chord with the home root's Phrygian), which no lane S plan
+held. Everything else probed as the plan says, and every existing chordpro test passes with the fix applied.
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/ScaleExceptions.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/ScaleExceptionsTest.kt`,
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/CLAUDE.md`
@@ -130,19 +137,28 @@ with `FLAT_FIFTH = 6` and `diminishedSeventh = setOf(0, MINOR_THIRD, FLAT_FIFTH,
     private fun targetOf(chord: Chord, chords: List<Chord>): Int? {
         val target = when {
             chord.isMajorOrDominant || chord.isDominantSeventh -> (chord.root + FOURTH).mod(12)
-            chord.isDiminished -> (chord.root + 1).mod(12).takeIf { target ->
-                chords.indices.any { chords[it] == chord && chords[(it + 1) % chords.size].root == target }
-            }
+            chord.isDiminished -> chords.indices.filter { chords[it] == chord }
+                .map { chords[(it + 1) % chords.size].root }
+                .firstOrNull { next -> (next - 1).mod(12) in chord.leadingTones }
             else -> null
         } ?: return null
         return target.takeIf { holdsChord(harmonicMinor, it, chord) }
     }
+
+    /**
+     * The notes a diminished chord is the leading-tone chord from: its root for a triad, every note of a diminished
+     * seventh, which a chart names by whichever of them it likes (`C#dim7`, `Edim7`, `Gdim7`, and `Bbdim7` are one chord).
+     */
+    private val Chord.leadingTones get() = if (DIMINISHED_SEVENTH in intervals.map { it.mod(12) }) notes else setOf(root)
 ```
+
+(`DIMINISHED_SEVENTH = 9`; `notes` is `ChordNotes.kt`'s.)
 
 `chords` are the group's parts' chords concatenated, so the loop runs from the last part's last chord to the first
 part's first; say so in the KDoc. The target's spelling: a fourth up stays `ScaleSpelling.spell(chordRootName,
-letterStep = FOURTH_LETTER_STEP, pitchClass = it)`; a semitone up is `letterStep = 1` (`C#`→`D`, `D#`→`E`, `F#`→`G`,
-`Eb`→`E`: `spell("Eb", 1, 4)` gives `E`).
+letterStep = FOURTH_LETTER_STEP, pitchClass = it)`; a diminished chord's is the root name of the chord that follows it
+as the song spells it (`Dm7` after `Bbdim7` → `D`), so `of` passes `rootNames` into `answerOver` too and `targetOf`
+returns the index of that following chord (or the pair of its pitch class and `rootNames[index]`).
 
 The chord-root answer for a diminished chord: let the eight-note diminished scale through the size filter and put the
 chord's textbook scales first, in their own order:
@@ -162,10 +178,25 @@ or no chord on it follows), the diminished scale is the answer. `SongScaleSugges
 `exception.scales.filter { it in Scales.common }.ifEmpty { exception.scales }.take(1)` already fall back to the first
 scale, so an eight-note answer reaches the chip without a change there.
 
+**(d) A Phrygian-dominant home answers a chord it leaves out with its own root's Phrygian** (lane G's plan 07 makes
+Phrygian dominant a home where a major ♭II is played, and leaves this to lane S; until plan 07 lands no group has that
+home, so this is inert). In `answerOver`, beside the natural-minor branch:
+
+```kotlin
+        if (home.id == PHRYGIAN_DOMINANT_ID) {
+            phrygianDominantScales.filter { holdsChord(it, homeRoot.root, chord) }.takeIf { it.isNotEmpty() }?.let { return homeRoot.copy(scales = it) }
+        }
+```
+
+with `PHRYGIAN_DOMINANT_ID = "phrygian_dominant"` and `phrygianDominantScales = listOf("phrygian", "double_harmonic")`
+mapped through `Scales::fromId`. The falseta's `G` (the ♭III, whose G♮ is the cadence's minor third) is E Phrygian;
+so is an `Em` there. Without it, (a) sends the `G` to C harmonic minor's target test (C is a note of E Phrygian dominant)
+and loses on distance to G Mixolydian, which is what the probe prints today.
+
 Update the KDoc of `of` (the paragraph "Otherwise the closest to the home's notes …") to say: the harmonic minor a
 secondary dominant leads into, where that root is a note of the key (a tritone substitution's is not) and, on a tie
 with the chord's own root, where the part plays that minor chord; the harmonic minor a diminished chord leads into a
-semitone up, else its own diminished scale, the one answer of eight notes.
+semitone up (above any note of a diminished seventh), else its own diminished scale, the one answer of eight notes.
 
 Expected chips after the fix (`{key: C}` unless said):
 
@@ -183,6 +214,8 @@ Expected chips after the fix (`{key: C}` unless said):
 | `C F F#dim7 G7 C` ×2 | Over F♯dim7 → G harmonic minor |
 | `{key: Am}` `Am E Am Am Dm Am E Am Am E Am Am D#dim E Am Am` | Over E → A harmonic minor; Over D♯dim → E harmonic minor |
 | `C Ebdim Dm7 G7` ×2 | Over E♭dim → E♭ diminished |
+| `C Bbdim7 Dm7 G7` ×2, `C Edim7 Dm7 G7` ×2 | Over B♭dim7 / Edim7 → D harmonic minor (the `C#dim7`'s notes) |
+| `C F Ddim7 Am F G` ×2 | Over Ddim7 → A harmonic minor (its F is G♯'s, the leading tone of A) |
 | `Cmaj7 Am7 Fm7 Bb7` (backdoor) | Over B♭7 → B♭ Mixolydian (unchanged) |
 
 The probe prints the ids (`mixolydian`, `major`, `harmonic_minor`, `diminished`); verify each row with it.
@@ -204,6 +237,9 @@ In `ScaleExceptionsTest` (its `group(chords, key)` helper and the `first` triple
   `group("C C#dim7 Dm7 G7 C C#dim7 Dm7 G7", key = "C")` → `Triple("C#dim7", "D", "harmonic_minor")`;
   `group("C F F#dim7 G7 C C F F#dim7 G7 C", key = "C")` → `Triple("F#dim7", "G", "harmonic_minor")`;
   `group("Am E Am Am Dm Am E Am Am E Am Am D#dim E Am Am", key = "Am")` → the `D#dim` on `E` `harmonic_minor`.
+- `` `a diminished seventh leads a semitone above any of its notes` ``:
+  `group("C Bbdim7 Dm7 G7 C Bbdim7 Dm7 G7", key = "C")` → `Triple("Bbdim7", "D", "harmonic_minor")`;
+  `group("C F Ddim7 Am F G C F Ddim7 Am F G", key = "C")` → `Triple("Ddim7", "A", "harmonic_minor")`.
 - `` `a passing diminished chord that leads nowhere is its own diminished scale` ``:
   `group("C Ebdim Dm7 G7 C Ebdim Dm7 G7", key = "C")` → `Triple("Ebdim", "Eb", "diminished")`, and that exception's
   `scales.first().intervals.size == 8`.
@@ -212,6 +248,8 @@ In `ScaleExceptionsTest` (its `group(chords, key)` helper and the `first` triple
   passes); add `"C Ebdim Dm7 G7"` to the loop with the size assertion relaxed to
   `it.intervals.size == 7 || it.id == "diminished"`, and rename the test
   `` `an exception offers seven-note scales holding the chord, the common ones first, or a passing chord's diminished scale` ``.
+- `` `a flat third chord over a Phrygian dominant home is the home's Phrygian` `` (plan 07's test, runs once lane G
+  has merged): `group("E F E F E F G F E", key = "E")` → its `G` exception is `Triple("G", "E", "phrygian")`.
 - Everything else in the file stays and must pass, `a borrowed chord is played over the home's own mode where that is
   closest` (G in A → A Mixolydian: C is no note of A major, so no target) included.
 
@@ -220,4 +258,5 @@ target harmonic minor, the chord's root, and the home's root, never a harmonic o
 order" with "else the closest of a secondary dominant's target harmonic minor (the target a note of the key, and on a
 tie the minor chord played), a diminished chord's target a semitone up where a chord on it follows (else its own
 diminished scale, the one answer of eight notes), the chord's root, and the home's root, never a harmonic or melodic
-minor there, ties in that order".
+minor there, ties in that order" and, after the natural-minor home's answers, add "a Phrygian-dominant home's Phrygian
+for its ♭III".

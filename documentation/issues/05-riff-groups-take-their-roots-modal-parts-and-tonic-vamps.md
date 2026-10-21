@@ -9,6 +9,12 @@
 -->
 # A rock riff's group takes the parts in its root's modes and the key's guesses on it, and a vamp on one root joins whatever sits on that root
 
+**Challenged:** amended — (ii) takes a loose part only on a home other than major (as written, a riff `E5 G5 A5` took
+the major chorus `E B C#m A E B G#7 A` and played it over E minor pentatonic, against (i)'s own rule); a tonic vamp
+joins only where the combined fit names none of its chords as an exception (as written, an `A` intro before an
+`Am F C G` verse joined with `over A → D harmonic_minor`); the `E9 E9 E9 E9` / `E A B E A B` test was wrong (the song is
+one blues at HEAD already, read whole before any join).
+
 **Kind:** design  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroups.kt`,
 `chordpro/src/commonTest/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroupsTest.kt`,
@@ -68,7 +74,11 @@ val joined = candidates.firstNotNullOfOrNull { group ->
     when {
         group.fit.isRockRiff && group.fit.absorbs(own, part) -> group to group.fit
         group.isTonicVamp(own.root) || part.isTonicVamp(group.fit.root) ->
-            fitOf(group.parts + part)?.takeIf { it.level != Level.PASSING && it.root.pitchClass == group.fit.root.pitchClass }?.let { group to it }
+            fitOf(group.parts + part)?.takeIf { combined ->
+                val vampNames = if (part.isTonicVamp(group.fit.root)) part.names.toSet() else group.parts.flatMap { it.names }.toSet()
+                combined.level != Level.PASSING && combined.root.pitchClass == group.fit.root.pitchClass &&
+                    combined.exceptions.none { it.chordName in vampNames || it.otherChordNames.any { name -> name in vampNames } }
+            }?.let { group to it }
         else -> fitOf(group.parts + part)?.takeIf { canJoin(group.fit, own, it) }?.let { group to it }
     }
 }
@@ -81,7 +91,8 @@ a part on the riff's root that is
   TONAL G Mixolydian, or G Dorian under the key). Never major: a riff `E5 G5 A5` and a chorus `E A B E` in E major are
   two sounds, and the minor pentatonic's ♭3 against the chorus's G♯ is not the style;
 - (ii) LOOSE or THIN and no guess (`fit.exceptions.isNotEmpty() && distinct chords <= MAX_GUESSED_CHORDS` is the guess
-  rule of `Group.isGuess`; share it through a small helper on the chords), whatever its home;
+  rule of `Group.isGuess`; share it through a small helper on the chords), on any home but major, for (i)'s reason: a
+  riff `E5 G5 A5 E5 G5 A5` and a chorus `E B C#m A E B G#7 A` (E major, LOOSE, `G#7` the exception) are two sounds;
 - (iii) a guess, only where the key in force at the part (`songPart.key`) names the riff's root and every chord of the
   part sits on a riff step (`riffSteps` of `PlayableScales.isRockRiff`: I, ♭III, IV, V, ♭VI, ♭VII, and a thirdless
   ♭V) or on the ♭II (metal's Phrygian chord). The key's word is what makes three chords on the riff's steps the riff's
@@ -94,9 +105,12 @@ gains `internal fun isOnRiffSteps(root: Int, chord: Chord)`.
 **A tonic vamp** is a group or a part all of whose chords are on one root (`chords.all { it.root == root.pitchClass }`,
 on `Group`/`SongPart` through a small `isTonicVamp(root)` helper). It joins across the usual rules, taking the combined
 fit as long as it is on that root and not PASSING: `Asus4 A` before a riff `A5 A5 C5 D5` makes a riff on A of the pair
-(the combination is thirdless by more than half and on riff steps, so `powerRiffFitOf` answers); `E9 E9` before
-`E A B` makes E major with `E9` as the exception. The vamp defers to the other side; a vamp alone is still answered by
-the chord's sheet (`oneChordFitOf`).
+(the combination is thirdless by more than half and on riff steps, so `powerRiffFitOf` answers); (`E9 E9 E9 E9` before
+`E A B E A B` needs no join: the whole song is a dominant blues and is answered by `playedGroupsOf`'s first line.) The vamp defers to the other side only where
+that side's answer covers it: the combined fit must name none of the vamp's chords (its `ScaleException.chordName` or
+`otherChordNames`) as an exception. An `A A A A` intro before an `Am F C G` verse would otherwise join as A natural minor
+with `over A → D harmonic_minor`, the intro's major third called a dominant of the iv; it stays an A major row of its
+own, as today. A vamp alone is still answered by the chord's sheet (`oneChordFitOf`).
 
 Update the KDoc of `canJoin` ("a rock riff, led by the minor pentatonic rather than its home, joins only another" is
 no longer true) and the class KDoc's grouping paragraph.
@@ -126,8 +140,10 @@ no longer true) and the class KDoc's grouping paragraph.
 - `` `a riff never takes a part in its parallel major` ``: `song("E5 G5 A5 E5 G5 A5", "E A B E E A B E")` is two groups,
   `[E minor_pentatonic, E major]`.
 - `` `a vamp on the tonic joins the riff after it instead of naming a key` ``: the sus-intro chart is a single group,
-  labels `[Intro, Verse, Chorus]`, first scale `minor_pentatonic`; `song("E9 E9 E9 E9", "E A B E A B")` is a single
-  group `"E" to "major"` with exceptions `[E9]`.
+  labels `[Intro, Verse, Chorus]`, first scale `minor_pentatonic`; `song("A A A A", "Am F C G Am F C G")` is
+  `listOf("A" to "major", "A" to "natural_minor")` (the intro's A would be an exception: no join).
+- `` `a riff never takes a loose part on the major home` ``: `song("E5 G5 A5 E5 G5 A5", "E B C#m A E B G#7 A")` is two
+  groups whose first scales are `minor_pentatonic` and `major`.
 - Keep: `a rock verse joins a riff of other chords on its root, and a chorus in another key stands apart`,
   `a section replaying another's chords joins its group before one of its own kind`, `a rock riff is played over the
   minor pentatonic and the blues on its root, with no exceptions`, `a vamp on one chord is answered as the chord's
@@ -140,4 +156,5 @@ In the scales `CLAUDE.md`, the sentence "it leads with its minor pentatonic and 
 one root join whatever home their chords lean to" at the end of the rock-riff bullet: replace the last clause with
 "and a riff's group takes any part on its root in natural minor, Dorian, or Mixolydian, or on a home with exceptions,
 and, where the key names the root, a guess on the riff's steps or the ♭II; never a part in the parallel major. A vamp
-on one root (a sus intro) joins whatever the song puts on that root, taking its fit."
+on one root (a sus intro) joins whatever the song puts on that root, taking its fit, where that fit names none of the
+vamp's chords as an exception."

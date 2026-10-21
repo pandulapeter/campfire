@@ -9,6 +9,12 @@
 -->
 # A capo chart whose `{key}` is the sounding key is read in the key of its shapes (decision)
 
+**Challenged:** amended — the shifted key is tried only on a part whose best scored root is the shifted root (with
+capo 5 or 7 the shifted root is the shapes' V or IV, so `{key: C}{capo: 5}` `C Am D7 G`, C major with a II7, would read
+as G major: G holds it whole); the `powerRiffFitOf` clause is dropped (Here Comes the Sun's bridge has no thirdless
+chord, never reaches `powerRiffFitOf`, and A is a riff root of it anyway), so the bridge stays the riff on A as the
+decision says (neither key holds it whole), and the test no longer expects roots `[D, D]`.
+
 **Kind:** design  ·  **Severity:** low  ·  **Platforms:** all
 **Files:** `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongParts.kt`,
 `chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/scales/SongScaleGroups.kt`,
@@ -53,10 +59,15 @@ holds whole, and reaches for the shifted key only where it holds the part whole.
 
 - `SongParts.of`: read `song.metadata.capo` and give each `SongPart` a `capo: Int?` beside its `key` (a `{transpose}`
   renames the key; the capo stays the header's).
-- `SongScaleGroups.Harmony`: add `val capoKey: SongKey?`, the key shifted down by the capo, spelled by a chord of the
-  part on that pitch class: `roots.firstOrNull { it.pitchClass == (key.root.pitchClass - capo).mod(12) }` names the
-  root (a part that never plays the shifted key's tonic chord gives no evidence of the convention, so none is tried);
-  `isMinor` as the written key's. Null where there is no capo, the capo is 0, or no chord sits on the shifted root.
+- `SongScaleGroups.Harmony`: add `val capoKey: SongKey?`, the key shifted down by the capo, only where the part is
+  heard on it: `ranked.first().takeIf { it.pitchClass == (key.root.pitchClass - capo).mod(12) }` names the root,
+  spelled as the chart spells its chord; `isMinor` as the written key's. Null where there is no capo, the capo is 0, or
+  the part's best scored root ([rankedRoots]) is another. The shifted root of the common capos is a chord every song in
+  the written key plays (capo 5: the V, capo 7: the IV), so "a chord sits on it" is no evidence of the convention: with
+  it, `{key: C}{capo: 5}` `C Am D7 G` (C major, `D7` its V of V) would be held whole by G major and read in G, where
+  the same chart without a capo reads C major with the `D7` as the moment. Its best scored root is C (plan 03's
+  tie-break, the first chord), so it keeps the key; the charts of the first convention sit on the shapes' tonic (`D G A
+  Bm D G A D`: D 7, G 2).
 - `fitOf`: after the written key's `keyFitOf` and before `oneChordFitOf`, try the shifted key where the written key's
   answer is not TONAL:
 
@@ -71,19 +82,22 @@ holds whole, and reaches for the shifted key only where it holds the part whole.
   }
   ```
 
-  `powerRiffFitOf` stays first and on the written key's root today; with a capo it should also prefer the shifted key's
-  root where the written key's root is on no riff step of the chords (`harmony.capoKey?.root` when
-  `!PlayableScales.isRockRiff(writtenRoot, chords)` and the shifted root is a riff root), so a bridge of power chords in
-  the shapes' key reads on the shapes' root. Document both in the KDoc of `fitOf`.
+  `powerRiffFitOf` stays first and on the written key's root, unchanged: the riff steps are so many that a riff on the
+  shapes' root is nearly always one on the written root too, and a riff's fit is never TONAL, so the decision's rule
+  (the shifted key answers only where it holds the part whole) never moves one. Document the rule in the KDoc of
+  `fitOf`.
 
 ### Expected probe output after the fix
 
 - `{key: G}{capo: 5}` `D G A Bm D G A D` → `[HOME] [Verse] D: major, major_pentatonic, major_hexatonic, bebop_dominant (+1)`.
 - `{key: D}{capo: 5}` the same chart → unchanged, `D: major, …`.
 - Here Comes the Sun, `{key: A}{capo: 7}` → `[HOME] [Verse, Chorus] D: major, …` (as plan 04 already gives) and
-  `[Bridge] D: minor_pentatonic, blues, mixolydian, …` (a riff on D under the shifted key; its scales as a riff's:
-  `rockRiffScales + home + over(D, held)`); the bridge stays a row of its own, shown as another key of the home, since
-  a riff never joins a major group (plan 05 keeps that).
+  `[Bridge] A: minor_pentatonic, blues, …` unchanged: `F C G D A7` is held whole by neither A nor D, so the written key
+  keeps its word (the decision), and its answer is `keyFitOf`'s rock riff on A (no chord of it is thirdless, so
+  `powerRiffFitOf` never sees it), which the TONAL check leaves alone. Reading it on D would take a song-level notion of
+  the convention (the other parts already read in the shifted key), which the decision did not ask for; left as is.
+- `{key: C}{capo: 5}` `C Am D7 G C Am D7 G` → unchanged, `C: major, …` with `over D7 → D mixolydian, …` (C ranks first;
+  the shifted key G is never tried).
 - `{key: D}{capo: 2}` `C F G C Am F G C` (the corpus's "Capo shapes under the sounding key") → `C: major, …`, as today
   (the written key fails the floor and C is guessed; now also found as the shifted key, same answer).
 
@@ -93,12 +107,13 @@ holds whole, and reaches for the shifted key only where it holds the part whole.
 `{capo: N}` after `{key}`):
 
 - `` `a capo chart keyed by its sounding key is read in the key of its shapes` ``: `song("D G A Bm D G A D", key = "G",
-  capo = 5)` is `"D" to "major"`; `song("D D G A7 D D G A7", "F C G D A7 F C G D A7", key = "A", capo = 7)` has roots
-  `[D, D]`.
+  capo = 5)` is `"D" to "major"`.
 - `` `the written key keeps its word where it holds the part` ``: `song("D G A Bm D G A D", key = "D", capo = 5)` is
   `"D" to "major"`; `song("G C D G", key = "G", capo = 5)` is `"G" to "major"` (the shifted key D is never tried, the
-  written one holding the part); `song("C F G C", key = "D", capo = 2)` is `"C" to "major"`.
-- `` `a capo key is named only by a chord of the part on it` ``: `song("D G A Bm D G A D", key = "G", capo = 5)`'s
+  written one holding the part); `song("C F G C", key = "D", capo = 2)` is `"C" to "major"`; `song("C Am D7 G C Am D7 G",
+  key = "C", capo = 5)` is `"C" to "major"` with exceptions `[D7]` (the shifted key G holds it whole, but the part is
+  heard on C).
+- `` `a capo key is named only where the part is heard on it` ``: `song("D G A Bm D G A D", key = "G", capo = 5)`'s
   group has `rootName == "D"` spelled as the chart spells its chord (write the chart with `[D]`; the root is never a
   made-up spelling), and `song("Eb Ab Bb Eb", key = "Ab", capo = 5)` (Ab major holds no `Bb`; the shapes are Eb, five
   frets under Ab) reads `"Eb" to "major"` with the root spelled `Eb`, not `D#`.
@@ -107,6 +122,7 @@ holds whole, and reaches for the shifted key only where it holds the part whole.
 
 In the `SongScaleGroups` bullet of the scales `CLAUDE.md`, after "the key in force (`{key}`, or the key a `{transpose}`
 names)": add ", or, where `{capo}` is set and that key holds nothing of the part whole, the key a capo's shapes play
-(`{key: G}{capo: 5}` over D shapes is D), named only where a chord of the part sits on it". The clause "(capo shapes in
+(`{key: G}{capo: 5}` over D shapes is D), only where it holds the part whole and the part is heard on its root (capo 5's
+shifted root is the V, which a II7 in C would otherwise move the part to)". The clause "(capo shapes in
 C under `{key: D}` play no D, so they never read as D Mixolydian)" stays: it is still the reason the mode needs the
 tonic chord, and that chart now also finds C as the shifted key.
