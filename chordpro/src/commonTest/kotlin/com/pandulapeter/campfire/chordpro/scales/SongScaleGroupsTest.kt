@@ -489,6 +489,34 @@ class SongScaleGroupsTest {
         assertEquals(listOf("minor_pentatonic", "major"), groups(song("E5 G5 A5 E5 G5 A5", "E B C#m A E B G#7 A")).map { it.scales.first().id })
 
     @Test
+    fun `a flamenco part with a major flat second is Phrygian dominant on its root, its flat third chord the exception`() {
+        val flamenco = groups(song("E F E F E F G F E E F E", "Am G F E Am G F E Am G F E", key = "E")).single()
+        assertEquals("E" to "phrygian_dominant", flamenco.rootName to flamenco.scales.first().id)
+        assertEquals(listOf("G"), flamenco.exceptions.map { it.chordName })
+        assertEquals(listOf("E" to "phrygian_dominant"), rootAndFirst(song("E F E F E F G F E")))
+        assertEquals(listOf("E" to "phrygian_dominant"), rootAndFirst(song("E F E F E F E F")))
+    }
+
+    @Test
+    fun `Phrygian dominant needs a major chord on the flat second`() {
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Dbm C G C Dbm C G", key = "C")))
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Bb Am Bb Am Bb Am Bb", key = "Am")))
+    }
+
+    @Test
+    fun `a major song with a passing flat second stays major`() {
+        listOf(
+            song("C F G C C F Db C", key = "C") to ("C" to "Db"),
+            song("C F G C C F Db C") to ("C" to "Db"),
+            song("G C D G G C Ab G", key = "G") to ("G" to "Ab"),
+        ).forEach { (text, expected) ->
+            val group = groups(text).single()
+            assertEquals(expected.first to "major", group.rootName to group.scales.first().id)
+            assertEquals(listOf(expected.second), group.exceptions.map { it.chordName })
+        }
+    }
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })

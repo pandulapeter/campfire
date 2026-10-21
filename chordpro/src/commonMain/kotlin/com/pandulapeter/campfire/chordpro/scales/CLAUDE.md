@@ -38,8 +38,9 @@
   stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
   `{transpose}` inside a section starts a part. A chorus recall counts again only where its chords differ, and recalls
   of one set of chords once between them, so modulated last choruses never outweigh the song.
-- Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian) holding half its chords
-  answers; it may leave out two distinct chords or a third of them, except on the key's root, where the author's word
+- Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian, and Phrygian dominant
+  where a major ♭II chord is played: the Andalusian cadence, under a major key or guessed, counting only the chords it
+  holds) holding half its chords answers; it may leave out two distinct chords or a third of them, except on the key's root, where the author's word
   stands however many it leaves out; a chord leading into the home (a secondary dominant, a diminished chord a semitone
   under a home note, the ii before such a dominant; never a chord on a minor home's own root) is the home's for that
   cap and for the two-thirds level, never for the half floor, and is still named as an exception; a rock riff counts no

@@ -215,7 +215,8 @@ public object SongScaleGroups {
         val third = if (key.isMinor) MINOR_THIRD else MAJOR_THIRD
         val playsTonic = harmony.chords.any { it.root == root.pitchClass && third in it.intervals }
         val mode = if (key.isMinor) DORIAN_ID else MIXOLYDIAN_ID
-        val homes = setOfNotNull(if (key.isMinor) NATURAL_MINOR_ID else MAJOR_ID, mode.takeIf { playsTonic })
+        // A minor key's flat second is its Phrygian, which the exceptions name; a major key's is the Andalusian cadence.
+        val homes = setOfNotNull(if (key.isMinor) NATURAL_MINOR_ID else MAJOR_ID, mode.takeIf { playsTonic }, PHRYGIAN_DOMINANT_ID.takeIf { !key.isMinor })
         val counts = looseCountsOn(harmony, root) { isRockRiff || it.id in homes }
         val keyScale = looseHomes.indexOfFirst { it.id == (if (key.isMinor) NATURAL_MINOR_ID else MAJOR_ID) }
         val modeIndex = looseHomes.indexOfFirst { it.id == mode }
@@ -345,11 +346,21 @@ public object SongScaleGroups {
         return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
     }
 
-    /** How many chords of [harmony] [home] on [root] holds by itself, for [guessedFitOf] to weigh its roots by. */
-    private fun scaleCountOn(harmony: Harmony, root: SpelledNote, home: Scale) = harmony.chords.count { holdsChord(home, root.pitchClass, it) }
+    /**
+     * How many chords of [harmony] [home] on [root] holds by itself, for [guessedFitOf] to weigh its roots by, -1 where
+     * it is no home there ([isOffered]), so a root is never ranked by a home [looseFitOf] then refuses it.
+     */
+    private fun scaleCountOn(harmony: Harmony, root: SpelledNote, home: Scale) =
+        if (isOffered(harmony, root, home)) harmony.chords.count { holdsChord(home, root.pitchClass, it) } else -1
 
     /**
-     * How many chords of [harmony] each of [looseHomes] accounts for on [root], -1 for a home [isAllowed] rules out: the
+     * Whether [home] may be a home on [root] at all: Phrygian dominant only where a major chord sits on its flat second,
+     * the Andalusian cadence's mark, which no key or guess may leave out.
+     */
+    private fun isOffered(harmony: Harmony, root: SpelledNote, home: Scale) = home.id != PHRYGIAN_DOMINANT_ID || harmony.playsMajorFlatSecond(root)
+
+    /**
+     * How many chords of [harmony] each of [looseHomes] accounts for on [root], -1 for a home [isAllowed] or [isOffered] rules out: the
      * chords it holds and, where [Harmony.countsLeadersOn] says so, those leading into it ([leadsInto]) and the ii before
      * such a leader ([Harmony.isTwoOfLeaderInto]), the key's own harmony though the home leaves their notes out.
      */
@@ -357,7 +368,7 @@ public object SongScaleGroups {
         val withLeaders = harmony.countsLeadersOn(root)
         return looseHomes.map { home ->
             val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
-            if (!isAllowed(home)) {
+            if (!isAllowed(home) || !isOffered(harmony, root, home)) {
                 -1
             } else {
                 harmony.chords.indices.count { index ->
@@ -372,11 +383,11 @@ public object SongScaleGroups {
     /**
      * The home scale holding at least half of [harmony]'s chords with the rest as exceptions, on the first of [roots]
      * one does, each with what [looseCountsOn] counts on it: the first of major, natural minor (the minor family holding
-     * a chord counting), Dorian, or Mixolydian accounting for the most, leaving out at most two distinct chords or a
-     * third of them, except on the key's root, where the author's word stands however many it leaves out; the chords it
-     * leaves out are named with the scales to play over each. A chord leading into the home is the home's for that cap
-     * and for the two-thirds level, never for the half floor: a key holds half the chords by itself, or `E A B E` under
-     * `{key: C}` would be C major, each chord leading into a note of it.
+     * a chord counting), Dorian, Mixolydian, or Phrygian dominant accounting for the most, leaving out at most two
+     * distinct chords or a third of them, except on the key's root, where the author's word stands however many it
+     * leaves out; the chords it leaves out are named with the scales to play over each. A chord leading into the home is
+     * the home's for that cap and for the two-thirds level, never for the half floor: a key holds half the chords by
+     * itself, or `E A B E` under `{key: C}` would be C major, each chord leading into a note of it.
      */
     private fun looseFitOf(harmony: Harmony, roots: List<Pair<SpelledNote, List<Int>>>): Fit? {
         val total = harmony.chords.size
@@ -433,6 +444,7 @@ public object SongScaleGroups {
     private const val MAJOR_ID = "major"
     private const val DORIAN_ID = "dorian"
     private const val MIXOLYDIAN_ID = "mixolydian"
+    private const val PHRYGIAN_DOMINANT_ID = "phrygian_dominant"
     private val naturalMinor = Scales.fromId(NATURAL_MINOR_ID)!!
     private val major = Scales.fromId(MAJOR_ID)!!
     private val majorKeyScaleIds = listOf("major")
@@ -443,6 +455,6 @@ public object SongScaleGroups {
     private val riffModeIds = setOf(NATURAL_MINOR_ID, DORIAN_ID, MIXOLYDIAN_ID)
     private val minorFamilyIds = listOf(NATURAL_MINOR_ID, "harmonic_minor", "melodic_minor")
     private val minorFamily = minorFamilyIds.map(Scales::fromId).requireNoNulls()
-    private val looseHomes = listOf("major", NATURAL_MINOR_ID, "dorian", "mixolydian").map(Scales::fromId).requireNoNulls()
-    private val mixolydian = looseHomes.last()
+    private val looseHomes = listOf("major", NATURAL_MINOR_ID, "dorian", "mixolydian", PHRYGIAN_DOMINANT_ID).map(Scales::fromId).requireNoNulls()
+    private val mixolydian = looseHomes.first { it.id == MIXOLYDIAN_ID }
 }

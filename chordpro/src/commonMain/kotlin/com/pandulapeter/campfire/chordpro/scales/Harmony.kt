@@ -28,6 +28,9 @@ internal class Harmony(val parts: List<SongPart>) {
     /** The first of the scales [ids] names that holds every chord on [root]. */
     fun holding(root: SpelledNote, ids: List<String>) = ids.firstNotNullOfOrNull { id -> Scales.fromId(id)?.takeIf { holds(it, root) } }
 
+    /** Whether a major chord sits on the flat second of [root], the Andalusian cadence's ♭II. */
+    fun playsMajorFlatSecond(root: SpelledNote) = chords.any { (it.root - root.pitchClass).mod(12) == 1 && MAJOR_THIRD in it.intervals }
+
     /**
      * Whether a home on [root] counts the chords leading into it ([leadsInto]): never for a rock riff, whose major chords
      * are the riff's, not secondary dominants; and on the key's root only while the part is still in the key ([leavesKey]).
@@ -68,9 +71,11 @@ internal class Harmony(val parts: List<SongPart>) {
  * Whether [chord] leads into [home] on [root] as the home's own harmony would: a major triad or a dominant seventh
  * (altered or not) whose target, the root a fourth above it, is a note of the home (the E7 and A7 of a song in C), or a
  * diminished chord a semitone under one (its F#dim). Such a chord is the key's, not against it, though the home leaves
- * its notes out.
+ * its notes out. Nothing leads into Phrygian dominant: on its notes a major key's own IV and V would, and a major song
+ * with one ♭II would read as it.
  */
 internal fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
+    if (home.id == PHRYGIAN_DOMINANT_ID) return false
     // A major chord or a seventh on a minor home's own root is its parallel major, never a secondary dominant: read as
     // leading into the fourth, the tonic C7 of a jazz blues would lift the minor family over Mixolydian.
     if (chord.root == root && MINOR_THIRD in home.intervals) return false
@@ -137,5 +142,6 @@ private const val FOURTH = 5
 private const val FLAT_FIFTH = 6
 private const val FIFTH = 7
 private const val CADENCE_SCORE = 2
+private const val PHRYGIAN_DOMINANT_ID = "phrygian_dominant"
 private val major = Scales.fromId("major")!!
 private val naturalMinor = Scales.fromId("natural_minor")!!
