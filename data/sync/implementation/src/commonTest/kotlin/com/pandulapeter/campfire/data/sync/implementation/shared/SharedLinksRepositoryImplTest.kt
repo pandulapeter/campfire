@@ -21,22 +21,27 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkExceptio
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncScopeMissingException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
+import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -721,15 +726,92 @@ class SharedLinksRepositoryImplTest {
         )
     }
 
+    @Test
+    fun `stopping a share while a run's step is uploading its copy waits for the step`() = runTest {
+        val cloud = FakeSyncProvider()
+        val (step, repository) = stepAndRepository(cloud)
+        var stopping: Job? = null
+        var stopResult: SharingFailure? = SharingFailure.UNKNOWN
+        var copyDuringUpload: Pair<ByteArray, String>? = null
+        cloud.onUploadSharedFile = { id ->
+            if (id == SONG_ENTRY.shareId) {
+                stopping = this@runTest.launch { stopResult = repository.stopSharing(id) }
+                repeat(10) { yield() }
+                copyDuringUpload = cloud.sharedFiles[id]
+            }
+        }
+
+        synchronize(step, cloud)
+        assertNotNull(stopping).join()
+
+        assertNotNull(copyDuringUpload)
+        assertNull(stopResult)
+        assertTrue(SONG_ENTRY.shareId !in cloud.sharedFiles)
+        assertTrue(registry(cloud).links.none { it.shareId == SONG_ENTRY.shareId })
+    }
+
+    @Test
+    fun `stopping everything while a run's step is uploading a copy waits for the step`() = runTest {
+        val cloud = FakeSyncProvider()
+        val (step, repository) = stepAndRepository(cloud)
+        var stopping: Job? = null
+        var copyDuringUpload: Pair<ByteArray, String>? = null
+        cloud.onUploadSharedFile = { id ->
+            stopping = this@runTest.launch { assertNull(repository.stopSharingEverythingNow()) }
+            repeat(10) { yield() }
+            copyDuringUpload = cloud.sharedFiles[id]
+        }
+
+        synchronize(step, cloud)
+        assertNotNull(stopping).join()
+
+        assertNotNull(copyDuringUpload)
+        assertTrue(cloud.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(cloud).links)
+    }
+
+    /**
+     * A run's shared-copy step and the repository on one journal, and so on one application lock, with [SONG_ENTRY]
+     * shared in [cloud] and its song changed in the library since, so that the step uploads its copy again.
+     */
+    private fun TestScope.stepAndRepository(cloud: FakeSyncProvider): Pair<SharedCopySync, SharedLinksRepositoryImpl> {
+        val environment = testEnvironment()
+        val localSource = FakeSharedLinksLocalSource()
+        val mirror = SharedLinksMirror(localSource, environment)
+        val registry = SharedLinksRegistry(mirror, environment)
+        val journal = SharedLinksJournal(localSource, environment)
+        cloud.share(SONG_ENTRY)
+        val step = SharedCopySync(
+            libraryFileLocalSource = FakeLibraryFileLocalSource(mapOf(song("song") to "Song".encodeToByteArray())),
+            contents = FakeSharedCopyContents(),
+            registry = registry,
+            mirror = mirror,
+            journal = journal,
+            logger = Logger.Standard,
+            buildNumber = 1,
+        )
+        return step to repository(cloud, localSource = localSource, mirror = mirror, registry = registry, journal = journal)
+    }
+
+    private suspend fun synchronize(step: SharedCopySync, cloud: FakeSyncProvider) {
+        val listing = cloud.list()
+        step.synchronize(
+            folder = cloud,
+            index = emptyMap(),
+            sharedFiles = listing.sharedFiles,
+            registryRevision = listing.documentRevisions[SharedLinksFormat.NAME],
+        )
+    }
+
     private fun TestScope.repository(
         provider: FakeSyncProvider,
         stateHolder: SyncStateHolder = connectedStateHolder(),
         localSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
         mirror: SharedLinksMirror = SharedLinksMirror(localSource, testEnvironment()),
+        registry: SharedLinksRegistry = SharedLinksRegistry(mirror, testEnvironment()),
+        journal: SharedLinksJournal = SharedLinksJournal(localSource, testEnvironment()),
     ): SharedLinksRepositoryImpl {
         val environment = testEnvironment()
-        val registry = SharedLinksRegistry(mirror, environment)
-        val journal = SharedLinksJournal(localSource, environment)
         return SharedLinksRepositoryImpl(
             syncProviders = SyncProviders(listOf(provider)),
             stateHolder = stateHolder,
@@ -771,4 +853,8 @@ class SharedLinksRepositoryImplTest {
 
     private fun encode(vararg entries: SharedLinksEntry) =
         SharedLinksFormat.encode(SharedLinksDocument(links = entries.toList())).encodeToByteArray()
+
+    private companion object {
+        val SONG_ENTRY = sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = "song.cho")
+    }
 }

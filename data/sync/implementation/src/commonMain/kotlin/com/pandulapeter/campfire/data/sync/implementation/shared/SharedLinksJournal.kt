@@ -135,8 +135,10 @@ internal class SharedLinksJournal(
 
     /**
      * Runs [block], which loads entries, applies them, and removes them, while no other application does: two appliers
-     * taking the same entries would each remove one, and the second would remove a later rename equal to it. Separate
-     * from the file's lock, so that appending goes on meanwhile. Taken inside the run lock, never around it.
+     * taking the same entries would each remove one, and the second would remove a later rename equal to it. Stop
+     * sharing and Stop sharing everything hold it too, so that a run's shared-copy step never uploads a copy stopped
+     * after it read the list. Separate from the file's lock, so that appending goes on meanwhile. Taken inside the run
+     * lock, never around it.
      */
     suspend fun <T> whileApplying(block: suspend () -> T): T = applicationMutex.withLock { block() }
 

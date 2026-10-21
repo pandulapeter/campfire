@@ -59,7 +59,8 @@ interface SharedLinksRepository {
      * Deletes the shared copy [shareId], which ends its link for good, then removes it from the account's list. A copy
      * or an entry already gone counts as stopped. A list that cannot be edited once the copy is gone leaves the entry
      * to the next sync run, and the share is stopped (and no longer in [shares]) meanwhile. Null when it worked; a
-     * failure means the link still works, unless not even the entry's removal could be left to that run.
+     * failure means the link still works, unless not even the entry's removal could be left to that run. May wait for
+     * a sync run's shared-copy step.
      */
     suspend fun stopSharing(shareId: String): SharingFailure?
 
@@ -92,7 +93,8 @@ interface SharedLinksRepository {
      * [stopSharingEverything] does: deletes each shared copy in its folder, those no list names included (left
      * behind by a share that failed halfway), then removes the entries whose copies went. An entry is never removed
      * while its copy may still be served, so a failure halfway leaves only shares that still work listed; entries the
-     * list could not lose are left to the next sync run, as [stopSharing] leaves them. Null when it worked.
+     * list could not lose are left to the next sync run, as [stopSharing] leaves them. Null when it worked. May wait
+     * for a sync run's shared-copy step.
      */
     suspend fun stopSharingEverythingNow(): SharingFailure?
 }

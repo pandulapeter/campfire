@@ -190,15 +190,17 @@ internal class SharedLinksRepositoryImpl(
         is SharedLinksRegistry.Read.FromNewerVersion -> throw IllegalStateException("The shared links are of version ${read.version}.")
     }
 
-    override suspend fun stopSharing(shareId: String): SharingFailure? {
-        val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
+    override suspend fun stopSharing(shareId: String): SharingFailure? = journal.whileApplying {
+        // Under the step's lock: a run's shared-copy step that read this share before the stop would otherwise upload its
+        // copy again afterwards, against the revision of a file that is gone.
+        val folder = connectedFolder() ?: return@whileApplying SharingFailure.NOT_CONNECTED
         // The copy goes first: an entry removed with its copy left behind would leave a working link that no screen shows
         // any more.
         failureOf("stop sharing $shareId") {
             folder.deleteSharedCopy(shareId)
             null
-        }?.let { return it }
-        return removeStopped(folder, setOf(shareId))
+        }?.let { return@whileApplying it }
+        removeStopped(folder, setOf(shareId))
     }
 
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {
@@ -283,8 +285,9 @@ internal class SharedLinksRepositoryImpl(
         }
     }
 
-    override suspend fun stopSharingEverythingNow(): SharingFailure? {
-        val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
+    override suspend fun stopSharingEverythingNow(): SharingFailure? = journal.whileApplying {
+        // Under the step's lock, as in stopSharing: no step that read the list before the stop uploads a copy afterwards.
+        val folder = connectedFolder() ?: return@whileApplying SharingFailure.NOT_CONNECTED
         val stopped = mutableSetOf<String>()
         val failure = failureOf("stop sharing everything") {
             // The listing finds the copies no list names; the list finds those a listing taken a moment earlier missed.
@@ -299,11 +302,11 @@ internal class SharedLinksRepositoryImpl(
             }
             null
         }
-        if (stopped.isEmpty()) return failure
+        if (stopped.isEmpty()) return@whileApplying failure
         // Also after a failure, so that the shares whose copies did go are not listed as working; a share another
         // device made meanwhile was not among them and stays.
         val removal = removeStopped(folder, stopped)
-        return failure ?: removal
+        failure ?: removal
     }
 
     /**

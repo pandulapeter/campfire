@@ -56,7 +56,9 @@
   (`stopSharingEverythingNow`) deletes every copy the listing or the list names (leftovers of failed shares included),
   then removes the entries of those it deleted, after a failure too. Where that edit fails once the copies are gone,
   both note a `Stop` per share in the journal instead of failing, so the dead links show as stopped and the next run
-  (or share) removes their entries; only a journal that cannot be written answers the edit's failure.
+  (or share) removes their entries; only a journal that cannot be written answers the edit's failure. Both stops wait
+  for a run's shared-copy step (`SharedLinksJournal.whileApplying`), which would otherwise upload a copy it read
+  before the stop.
 
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 
