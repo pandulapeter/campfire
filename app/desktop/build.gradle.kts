@@ -8,9 +8,9 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import com.pandulapeter.campfire.buildLogic.tasks.AddLaunchAfterInstallToMsi
-import com.pandulapeter.campfire.buildLogic.tasks.AddStartupWmClassToDeb
 import com.pandulapeter.campfire.buildLogic.tasks.PackageMsix
 import com.pandulapeter.campfire.buildLogic.tasks.RecordClassDataArchive
+import com.pandulapeter.campfire.buildLogic.tasks.RewriteDebDesktopEntry
 import com.pandulapeter.campfire.buildLogic.tasks.msixPackageVersion
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -161,10 +161,11 @@ compose.desktop {
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
                 // every kind of file, and with no rank or content type. These are the iOS app's document types, and the
                 // answer to the export compliance question the iOS app's Info.plist gives; anything that adds encryption
-                // of its own has to change both. The fragments carry no comment, since every line of them lands in the
-                // bundle's Info.plist.
+                // of its own has to change both. The URL type is the `campfire://s/` scheme the landing page's Open in
+                // Campfire opens, which reaches the app as an Apple event (OpenedFiles.listenForSystemRequests). The
+                // fragments carry no comment, since every line of them lands in the bundle's Info.plist.
                 infoPlist {
-                    extraKeysRawXml = listOf("document-types.plist", "export-compliance.plist", "microphone.plist")
+                    extraKeysRawXml = listOf("document-types.plist", "export-compliance.plist", "microphone.plist", "url-types.plist")
                         .joinToString("\n") { project.file("macos/$it").readText().trim() }
                 }
                 if (isMacAppStoreBuild) {
@@ -312,27 +313,29 @@ tasks.matching { it.name == "packageReleaseDeb" || it.name == "packageReleaseMsi
 }
 
 /**
- * Adds StartupWMClass to the desktop entry jpackage writes, which is the key that ties the running window to the
- * installed launcher: without it GNOME and KDE show the window under its WM_CLASS and a pin creates a second,
- * iconless entry. jpackage would take a .desktop template through --resource-dir, but the Compose plugin fixes that
- * directory, clears it inside its own task action and passes the flag after any freeArgs, so there is no way to hand
- * it one - the key goes into the finished package instead. The value is what `setLinuxWindowClassName` in
- * `:app:desktop`'s entry point sets the toolkit's app class name to; the two have to agree.
+ * Rewrites the desktop entry jpackage writes. StartupWMClass is the key that ties the running window to the installed
+ * launcher: without it GNOME and KDE show the window under its WM_CLASS and a pin creates a second, iconless entry.
+ * The `campfire` scheme handler is what the landing page's Open in Campfire starts the app through, with the
+ * `campfire://s/` address as its argument. jpackage would take a .desktop template through --resource-dir, but the
+ * Compose plugin fixes that directory, clears it inside its own task action and passes the flag after any freeArgs, so
+ * there is no way to hand it one - the keys go into the finished package instead. The class name is what
+ * `setLinuxWindowClassName` in `:app:desktop`'s entry point sets the toolkit's app class name to; the two have to agree.
  */
-val addStartupWmClassToDeb = tasks.register<AddStartupWmClassToDeb>("addStartupWmClassToDeb") {
+val rewriteDebDesktopEntry = tasks.register<RewriteDebDesktopEntry>("rewriteDebDesktopEntry") {
     val linux = isLinuxHost
     onlyIf { linux }
     val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/deb/*.deb", "main-release/deb/*.deb") }
     this.packages.from(packages)
     windowClassName = "Campfire"
-    workingDirectory = layout.buildDirectory.dir("tmp/addStartupWmClassToDeb")
+    urlScheme = "campfire"
+    workingDirectory = layout.buildDirectory.dir("tmp/rewriteDebDesktopEntry")
     // The package is rewritten in place, so it is both what the task reads and what it leaves behind: an unchanged
     // package is not unpacked and built again on every run.
     inputs.files(packages)
     outputs.files(packages)
 }
 tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.configureEach {
-    finalizedBy(addStartupWmClassToDeb)
+    finalizedBy(rewriteDebDesktopEntry)
 }
 
 /**

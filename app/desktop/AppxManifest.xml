@@ -61,6 +61,13 @@
                         </uap:SupportedFileTypes>
                     </uap:FileTypeAssociation>
                 </uap:Extension>
+                <!--
+                 The campfire://s/ links the landing page's Open in Campfire opens. A full trust app is started with the
+                 address as its argument, which main() tells from a file by its scheme.
+                -->
+                <uap:Extension Category="windows.protocol">
+                    <uap:Protocol Name="campfire" />
+                </uap:Extension>
             </Extensions>
         </Application>
     </Applications>

@@ -22,12 +22,14 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 /**
- * Unpacks each .deb, adds the StartupWMClass key to its one desktop entry and builds it again. It fails rather than
- * doing nothing when there is no entry to add the key to, since a package without it is wrong in a way only an
- * installation shows. `fakeroot` keeps the repacked files owned by root, as they were; the entry's line in the
- * package's md5sums is brought up to date with it, so that a check of the installed files does not report it.
+ * Unpacks each .deb, rewrites its one desktop entry and builds it again: the entry gets the StartupWMClass key and
+ * claims the [urlScheme] (`withUrlScheme`), and the post-install script refreshes the desktop database, without which
+ * the scheme is only known after the next login. It fails rather than doing nothing when there is no entry to rewrite,
+ * since a package without it is wrong in a way only an installation shows. `fakeroot` keeps the repacked files owned
+ * by root, as they were; the entry's line in the package's md5sums is brought up to date with it, so that a check of
+ * the installed files does not report it.
  */
-abstract class AddStartupWmClassToDeb : DefaultTask() {
+abstract class RewriteDebDesktopEntry : DefaultTask() {
 
     @get:Inject
     abstract val execOperations: ExecOperations
@@ -38,13 +40,16 @@ abstract class AddStartupWmClassToDeb : DefaultTask() {
     @get:Input
     abstract val windowClassName: Property<String>
 
+    @get:Input
+    abstract val urlScheme: Property<String>
+
     @get:Internal
     abstract val workingDirectory: DirectoryProperty
 
     @TaskAction
-    fun addStartupWmClass() {
+    fun rewrite() {
         val debs = packages.files.filter { it.isFile }
-        if (debs.isEmpty()) throw GradleException("There is no .deb to add StartupWMClass to.")
+        if (debs.isEmpty()) throw GradleException("There is no .deb to rewrite the desktop entry of.")
         debs.forEach { deb ->
             val extracted = workingDirectory.get().asFile.resolve(deb.nameWithoutExtension)
             extracted.deleteRecursively()
@@ -56,7 +61,11 @@ abstract class AddStartupWmClassToDeb : DefaultTask() {
                 .toList()
             val entry = entries.singleOrNull()
                 ?: throw GradleException("Expected one desktop entry in ${deb.name}, found ${entries.size}.")
-            entry.writeText(withStartupWmClass(entry.readLines(), windowClassName.get()))
+            entry.writeText(withStartupWmClass(withUrlScheme(entry.readLines(), urlScheme.get()), windowClassName.get()))
+            // Not in md5sums, which lists the installed files only. jpackage always writes one; a package without it
+            // gets none, since a script of its own would also have to install the entry, which is jpackage's job.
+            val postinst = extracted.resolve("DEBIAN/postinst")
+            if (postinst.isFile) postinst.writeText(withDesktopDatabaseUpdate(postinst.readLines()))
             val md5sums = extracted.resolve("DEBIAN/md5sums")
             if (md5sums.isFile) {
                 val entryPath = entry.relativeTo(extracted).invariantSeparatorsPath

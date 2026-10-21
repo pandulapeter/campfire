@@ -75,6 +75,49 @@ class PackagingTextTest {
     }
 
     @Test
+    fun `a launcher without a field code is registered for the scheme`() {
+        assertEquals(
+            listOf("[Desktop Entry]", "Exec=/opt/campfire/bin/Campfire %u", "Name=Campfire", "MimeType=x-scheme-handler/campfire;"),
+            withUrlScheme(listOf("[Desktop Entry]", "Exec=/opt/campfire/bin/Campfire", "Name=Campfire"), "campfire"),
+        )
+    }
+
+    @Test
+    fun `a file field code gives way to the address one and existing MIME types are kept`() {
+        assertEquals(
+            listOf("Exec=\"/opt/campfire/bin/Campfire\" %u", "MimeType=text/plain;x-scheme-handler/campfire;"),
+            withUrlScheme(listOf("Exec=\"/opt/campfire/bin/Campfire\" %F", "MimeType=text/plain"), "campfire"),
+        )
+    }
+
+    @Test
+    fun `registering the scheme twice changes nothing`() {
+        val once = withUrlScheme(listOf("Exec=/opt/campfire/bin/Campfire", "MimeType=text/plain;"), "campfire")
+        assertEquals(once, withUrlScheme(once, "campfire"))
+    }
+
+    @Test
+    fun `a desktop entry without a launcher is refused`() {
+        assertFailsWith<GradleException> { withUrlScheme(listOf("[Desktop Entry]", "Name=Campfire"), "campfire") }
+    }
+
+    @Test
+    fun `the desktop database is refreshed before the script exits`() {
+        val script = withDesktopDatabaseUpdate(listOf("#!/bin/sh", "case \"$1\" in", "    configure)", "    ;;", "esac", "", "exit 0"))
+        val lines = script.lines()
+        val update = lines.indexOfFirst { "update-desktop-database -q" in it }
+        assertTrue(update > lines.indexOf("esac"))
+        assertTrue(update < lines.indexOf("exit 0"))
+        assertEquals(script, withDesktopDatabaseUpdate(script.lines().dropLast(1)))
+    }
+
+    @Test
+    fun `a script without an exit refreshes the desktop database at its end`() {
+        val lines = withDesktopDatabaseUpdate(listOf("#!/bin/sh", "xdg-desktop-menu install campfire.desktop")).trimEnd().lines()
+        assertTrue("update-desktop-database -q" in lines.last())
+    }
+
+    @Test
     fun `only the line of the entry gets the new hash`() {
         val lines = listOf("aaa  opt/campfire/bin/Campfire", "bbb  opt/campfire/lib/campfire-Campfire.desktop", "ccc  opt/campfire/lib/app.cfg")
         assertEquals(

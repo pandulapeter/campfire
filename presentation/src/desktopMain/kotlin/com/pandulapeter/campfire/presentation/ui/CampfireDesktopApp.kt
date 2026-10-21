@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +58,7 @@ import java.io.File
  * reorder mode, closes the search of the list screen on top, or pops the back stack, in that order; with nothing left
  * to go back from it asks whether to close the application (`AppExitController.confirmExit`).
  *
+ * @param shareLinks The `campfire://s/` links the app was started with or sent; see [CampfireApp].
  * @param onBackgroundColorChanged See [CampfireApp].
  */
 @OptIn(ExperimentalComposeUiApi::class)
@@ -64,6 +66,7 @@ import java.io.File
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = koinViewModel(),
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    shareLinks: Flow<SharedLink> = emptyFlow(),
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides DesktopFilePicker
@@ -120,6 +123,7 @@ fun CampfireDesktopApp(
             viewModel = viewModel,
             urlOpener = { url -> if (!openUrl(url)) viewModel.exportController.onLinkNotOpened(url) },
             filesToImport = filesToImport,
+            shareLinks = shareLinks,
             onBackgroundColorChanged = onBackgroundColorChanged,
         )
     }

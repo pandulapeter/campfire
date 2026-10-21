@@ -27,7 +27,7 @@ import java.security.SecureRandom
 import kotlin.concurrent.thread
 
 /**
- * Decides whether this process is the one that opens the library in [dataDirectory], and hands [paths] to the one
+ * Decides whether this process is the one that opens the library in [dataDirectory], and hands [arguments] to the one
  * that already has if it is not.
  *
  * Every repository reads its files once and writes them whole from what it remembers, which is right for one
@@ -39,8 +39,9 @@ import kotlin.concurrent.thread
  *
  * This has to run before Koin is started, since nothing of a second process may touch the library.
  *
- * @param paths Absolute paths: the two processes do not share a working directory.
- * @param onActivated Called on a background thread each time another process handed over, with the paths it was
+ * @param arguments This process's arguments, paths made absolute (the two processes do not share a working directory)
+ *   and `campfire://` links as they are; the running instance tells them apart again (`openLaunchArguments`).
+ * @param onActivated Called on a background thread each time another process handed over, with the arguments it was
  *   started with - none when it was started with none, which still means "come forward".
  * The lock is asked for again before every hand-over attempt, and the attempts go on for as long as one of two budgets
  * allows. The running instance may be one that started a moment ago - five files opened together are five processes,
@@ -59,8 +60,8 @@ import kotlin.concurrent.thread
  */
 internal fun claimSingleInstance(
     dataDirectory: File,
-    paths: List<String>,
-    onActivated: (paths: List<String>) -> Unit,
+    arguments: List<String>,
+    onActivated: (arguments: List<String>) -> Unit,
 ): Boolean {
     val start = System.nanoTime()
     var endpointSeenAt: Long? = null
@@ -82,7 +83,7 @@ internal fun claimSingleInstance(
             startListening(dataDirectory, onActivated)
             return true
         }
-        if (sendPaths(dataDirectory, paths)) return false
+        if (sendArguments(dataDirectory, arguments)) return false
         val now = System.nanoTime()
         val hasEndpoint = File(dataDirectory, ENDPOINT_FILE_NAME).exists()
         endpointSeenAt = if (hasEndpoint) endpointSeenAt ?: now else null
@@ -131,7 +132,7 @@ private var listeningSocket: ServerSocket? = null
 
 private var listeningEndpointFile: File? = null
 
-private fun startListening(dataDirectory: File, onActivated: (paths: List<String>) -> Unit) {
+private fun startListening(dataDirectory: File, onActivated: (arguments: List<String>) -> Unit) {
     val endpointFile = File(dataDirectory, ENDPOINT_FILE_NAME)
     try {
         // Whatever is there was written by a process that is gone, and a newcomer that read it would knock on a
@@ -174,7 +175,7 @@ private fun File.writeForOwnerOnly(text: String) {
     writeText(text)
 }
 
-private fun ServerSocket.serve(token: String, onActivated: (paths: List<String>) -> Unit) {
+private fun ServerSocket.serve(token: String, onActivated: (arguments: List<String>) -> Unit) {
     val expectedHeader = "$PROTOCOL_HEADER $token".toByteArray()
     while (!isClosed) {
         try {
@@ -191,21 +192,21 @@ private fun ServerSocket.serve(token: String, onActivated: (paths: List<String>)
         } catch (exception: IOException) {
             // A connection that never spoke or left early. The next one is no worse for it.
         } catch (exception: IllegalArgumentException) {
-            println("Another instance sent a path that could not be read: ${exception.message}")
+            println("Another instance sent an argument that could not be read: ${exception.message}")
         }
     }
 }
 
-/** Answers whether the running instance acknowledged [paths]; one attempt, see [claimSingleInstance] for the retries. */
-private fun sendPaths(dataDirectory: File, paths: List<String>): Boolean {
+/** Answers whether the running instance acknowledged [arguments]; one attempt, see [claimSingleInstance] for the retries. */
+private fun sendArguments(dataDirectory: File, arguments: List<String>): Boolean {
     // Encoded so that a path with a line break in it is still one line of the request.
-    val encodedPaths = paths.joinToString("\n") { URLEncoder.encode(it, Charsets.UTF_8) }
+    val encodedArguments = arguments.joinToString("\n") { URLEncoder.encode(it, Charsets.UTF_8) }
     return try {
         val (port, token) = File(dataDirectory, ENDPOINT_FILE_NAME).readLines()
         Socket().use { socket ->
             socket.connect(InetSocketAddress(InetAddress.getByName(LOOPBACK_ADDRESS), port.toInt()), CONNECTION_TIMEOUT_MILLIS)
             socket.soTimeout = CONNECTION_TIMEOUT_MILLIS
-            socket.getOutputStream().write("$PROTOCOL_HEADER $token\n$encodedPaths".toByteArray())
+            socket.getOutputStream().write("$PROTOCOL_HEADER $token\n$encodedArguments".toByteArray())
             socket.shutdownOutput()
             socket.getInputStream().bufferedReader().readLine() == ACKNOWLEDGEMENT
         }

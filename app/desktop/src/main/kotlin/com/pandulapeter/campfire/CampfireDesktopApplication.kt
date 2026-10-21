@@ -57,9 +57,9 @@ import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * @param args Paths handed over by the operating system, which is how "open with" reaches a desktop application on
- *   Windows and Linux: it launches the app with the file as an argument. macOS sends an event instead, see
- *   [OpenedFiles].
+ * @param args Paths and `campfire://` links handed over by the operating system, which is how "open with" and the
+ *   landing page's Open in Campfire reach a desktop application on Windows and Linux: it launches the app with the file
+ *   or the link as an argument. macOS sends an event instead, see [OpenedFiles].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 fun main(args: Array<String>) {
@@ -67,9 +67,9 @@ fun main(args: Array<String>) {
     val activations = Channel<Unit>(Channel.CONFLATED)
     val isFirstInstance = claimSingleInstance(
         dataDirectory = desktopDataDirectory(),
-        paths = args.map { File(it).absolutePath },
-        onActivated = { paths ->
-            OpenedFiles.open(paths)
+        arguments = args.toList().withAbsolutePaths(),
+        onActivated = { arguments ->
+            openLaunchArguments(arguments)
             activations.trySend(Unit)
         },
     )
@@ -87,7 +87,7 @@ fun main(args: Array<String>) {
         File(System.getProperty("skiko.library.path").orEmpty(), "libEGL.dll").isFile
     ) System.setProperty("skiko.rendering.angle.enabled", "true")
     OpenedFiles.listenForSystemRequests()
-    OpenedFiles.open(args.toList())
+    openLaunchArguments(args.toList())
     startCampfireDependencyGraph()
     application {
         val windowState = rememberWindowState(size = INITIAL_WINDOW_SIZE)
@@ -152,6 +152,7 @@ fun main(args: Array<String>) {
                     CampfireDesktopApp(
                         viewModel = currentViewModel,
                         filesToImport = OpenedFiles.files,
+                        shareLinks = SharedLinks.links,
                         onBackgroundColorChanged = { color -> window.setUndrawnAreaColor(Color(color.toArgb())) },
                     )
                 }
@@ -312,7 +313,7 @@ private fun ComposeWindow.bringForward() {
  * is created under, beside the one the package installed. There is no API for it - the field belongs to the X11
  * toolkit, which is why the packaged Linux launcher opens that package (see build.gradle.kts) - and no other
  * platform has the field at all, so a failure here is a cosmetic loss and never a reason not to start. The value has
- * to stay what `addStartupWmClassToDeb` writes into the installed desktop entry. Asking for the toolkit starts it, and on
+ * to stay what `rewriteDebDesktopEntry` writes into the installed desktop entry. Asking for the toolkit starts it, and on
  * Linux it reads the display scale when it starts, so this has to come after `configureSwingGlobalsForCompose`.
  */
 private fun setLinuxWindowClassName() {

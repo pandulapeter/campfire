@@ -1,0 +1,13 @@
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLName</key>
+        <string>com.pandulapeter.campfire.links</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>campfire</string>
+        </array>
+    </dict>
+</array>

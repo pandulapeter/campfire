@@ -25,7 +25,7 @@ belongs to the process); the view model is obtained outside `Window` so resizing
   `onCloseRequest`; caught with `Desktop.setQuitHandler`) all go through `CampfireViewModel.requestExit`, which waits for
   a pending save and asks the unsaved changes question before letting the process end.
 - The macOS quit keeps the `QuitResponse` and answers it later (`performQuit` / `cancelQuit`): cancelling up front aborts
-  a logout or shutdown, with macOS blaming Campfire.
+  a logout or shutdown.
 - All of them end in `leave`: hide the window, then `settleSynchronizationBeforeExit` — a writing import may finish (up
   to 30 s; songs are written before setlists), then the pending automatic sync run starts and may finish (up to 15 s),
   then it is stopped. The other-instance listener is closed first.
@@ -52,6 +52,10 @@ belongs to the process); the view model is obtained outside `Window` so resizing
 
 - Windows/Linux pass the file in `args`; macOS sends an Apple event to `Desktop.setOpenFileHandler`, registered after
   the single-instance check, before Koin, and never removed (the JDK drops events finding it removed).
+- `campfire://s/` links arrive the same ways (macOS: `Desktop.setOpenURIHandler`, beside the file handler).
+  `openLaunchArguments` sends arguments with a `campfire:`/`https:` scheme to `SharedLinks` via `ShareLinks.parse`,
+  never as paths: only a scheme marks a link, since a bare payload looks like `2.cho`. The hand-over makes only paths
+  absolute; the holder splits again. Try it: `run --args="campfire://s/<payload>"`.
 
 ## Single instance (`SingleInstance.kt`, `java.base` only)
 
@@ -78,10 +82,10 @@ belongs to the process); the view model is obtained outside `Window` so resizing
 
 ## Log (`DesktopLog`)
 
-- Output and uncaught exceptions are mirrored to `campfire.log` (installed builds have no console), rotated at 1 MB.
-  Installed after the single-instance check, so a hand-over process never rotates the owner's log.
-- It starts with the renderer and the app's start line; a later `Renderer info` (a Direct3D fallback) wins. It names
-  song files: review before attaching to a bug report.
+- Output and uncaught exceptions are mirrored to `campfire.log`, rotated at 1 MB. Installed after the single-instance
+  check, so a hand-over process never rotates the owner's log.
+- It starts with the renderer and the start line; a later `Renderer info` (a Direct3D fallback) wins. It names song
+  files.
 
 ## Data directory
 
@@ -132,6 +136,7 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 - Document types are raw plist (`macos/document-types.plist`): the DSL's `fileAssociation` writes OS type `****`
   (claims every file) and has no rank. `.cho` is `Default`, the rest `Alternate`. `macos/export-compliance.plist` says
   `ITSAppUsesNonExemptEncryption` `false`, as the iOS `Info.plist` does — change both if encryption is added.
+  `macos/url-types.plist` claims the `campfire` scheme (bundles only, not `run`).
 
 ### Windows
 
@@ -139,24 +144,24 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   next to existing installs.
 - File associations: only `.cho`, `.chopro`, `.chordpro` (an MSI can only claim an extension outright); the Store
   package claims the same. Never zip or `.txt`. Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
+- Only the `.msix` claims the `campfire` scheme (`windows.protocol`); the `.msi` is published by nothing.
 - **MSIX** (`packageReleaseMsix`): identity from `campfire.windows.*` (Partner Center's, verbatim), version
   `campfire.versionName` + `.0`. Unsigned: Partner Center signs. English only, since Partner Center wants a listing for
   every declared language.
-- MSIX writes to AppData are virtualized (invisible in Explorer) and the Store refuses `unvirtualizedResources`, so the
-  task adds `-Dcampfire.packageFamilyName=<name>_<publisher id>` to `Campfire.cfg`, and `desktopDataDirectory()` (in both
+- MSIX AppData writes are virtualized and the Store refuses `unvirtualizedResources`, so the task adds `-Dcampfire.packageFamilyName=<name>_<publisher id>` to `Campfire.cfg`, and `desktopDataDirectory()` (in both
   `:presentation` and `:data:source:local:implementation`) then uses `%LOCALAPPDATA%\Packages\<family>\LocalState`.
 
 ### Linux
 
-- The `.deb` asks for a `shortcut` (jpackage writes a `.desktop` entry only then). `addStartupWmClassToDeb` adds
+- The `.deb` asks for a `shortcut` (jpackage writes a `.desktop` entry only then). `rewriteDebDesktopEntry` adds
   `StartupWMClass`, which **must equal** `setLinuxWindowClassName`'s value (the Linux-only `--add-opens` is for that):
-  launchers match windows by `WM_CLASS`.
+  launchers match windows by `WM_CLASS`. It also claims `x-scheme-handler/campfire` (`Exec … %u`); `postinst` runs
+  `update-desktop-database`, else the scheme waits for the next login.
 - No file associations (they are keyed by MIME type, which would claim every text file).
 
 ### Icons
 
-- Only on Linux does the running window icon follow the theme color (`AppIcon.kt`). Windows' Store taskbar uses the
-  package logos regardless, and a Dock image set via `Taskbar` can't be drawn in macOS's tinted/dark icon styles, so
-  neither is set.
+- Only on Linux does the running window icon follow the theme color (`AppIcon.kt`): Windows' Store taskbar uses the
+  package logos, and a `Taskbar` Dock image misses macOS's tinted/dark styles.
 
 `packageRelease…` tasks run ProGuard.

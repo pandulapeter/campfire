@@ -44,6 +44,38 @@ internal fun withoutJavaOptionsStartingWith(lines: List<String>, prefix: String)
 internal fun withStartupWmClass(lines: List<String>, className: String) =
     (lines.filterNot { it.startsWith("StartupWMClass=") } + "StartupWMClass=$className").joinToString(separator = "\n", postfix = "\n")
 
+/**
+ * A desktop entry's lines with the launcher registered for [scheme]: its `Exec` ends in `%u`, the field code that
+ * passes one address (a file code would make the launcher download it and pass a temporary file instead), and its
+ * `MimeType` names `x-scheme-handler/<scheme>`, which is what a desktop looks the scheme's handler up by.
+ */
+internal fun withUrlScheme(lines: List<String>, scheme: String): List<String> {
+    if (lines.none { it.startsWith("Exec=") }) throw GradleException("The desktop entry has no Exec line to add %u to.")
+    val handler = "x-scheme-handler/$scheme"
+    val withExec = lines.map { line ->
+        if (!line.startsWith("Exec=")) return@map line
+        line.split(' ').filterNot { it in setOf("%f", "%F", "%u", "%U") }.joinToString(" ") + " %u"
+    }
+    if (withExec.none { it.startsWith("MimeType=") }) return withExec + "MimeType=$handler;"
+    return withExec.map { line ->
+        if (!line.startsWith("MimeType=")) return@map line
+        val types = line.removePrefix("MimeType=").split(';').filter(String::isNotEmpty)
+        "MimeType=" + (types + handler).distinct().joinToString(separator = ";", postfix = ";")
+    }
+}
+
+/**
+ * A package's post-install script that also refreshes the desktop database where the system has the command, after
+ * the script has installed the desktop entry: before its closing `exit 0`, or at its end if it has none.
+ */
+internal fun withDesktopDatabaseUpdate(lines: List<String>): String {
+    val command = "command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q || true"
+    if (command in lines) return lines.joinToString(separator = "\n", postfix = "\n")
+    val exit = lines.indexOfLast { it.trim() == "exit 0" }
+    val updated = if (exit < 0) lines + command else lines.take(exit) + command + lines.drop(exit)
+    return updated.joinToString(separator = "\n", postfix = "\n")
+}
+
 /** A package's md5sums text with the line of [path] given [hash], every other line as it was. */
 internal fun withUpdatedMd5(lines: List<String>, path: String, hash: String) = lines.joinToString(separator = "\n", postfix = "\n") { line ->
     if (line.substringAfter("  ") == path) "$hash  $path" else line
