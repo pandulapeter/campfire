@@ -141,7 +141,7 @@ internal class SharedLinksRepositoryImpl(
         return failureOf("stop sharing $shareId") {
             // The copy goes first: an entry removed with its copy left behind would leave a working link that no
             // screen shows any more.
-            folder.deleteSharedFile(shareId)
+            folder.deleteSharedCopy(shareId)
             val edit = registry.edit(folder) { document ->
                 SharedLinksRegistry.Change(
                     document = document.takeIf { it.links.any { entry -> entry.shareId == shareId } }
@@ -207,7 +207,7 @@ internal class SharedLinksRepositoryImpl(
                 is SharedLinksRegistry.Read.FromNewerVersion -> return@failureOf SharingFailure.NEWER_VERSION
             }
             (listed + registered).distinct().forEach { shareId ->
-                folder.deleteSharedFile(shareId)
+                folder.deleteSharedCopy(shareId)
                 stopped += shareId
             }
             null

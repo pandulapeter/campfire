@@ -74,6 +74,6 @@ internal class SharedLinksJournalApplier(
  * sharing does: an entry removed while its copy stays would leave a working link that no screen shows any more.
  */
 internal suspend fun SharedCopyChanges.takeFromJournal(entry: SharedLinksJournal.Entry, folder: SyncFolder) {
-    if (entry is SharedLinksJournal.Entry.Stop) folder.deleteSharedFile(entry.shareId)
+    if (entry is SharedLinksJournal.Entry.Stop) folder.deleteSharedCopy(entry.shareId)
     take(entry)
 }

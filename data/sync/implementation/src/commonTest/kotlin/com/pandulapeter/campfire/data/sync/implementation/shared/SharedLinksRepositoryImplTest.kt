@@ -207,6 +207,46 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `an entry whose id no copy can have is stopped without a copy to delete`() = runTest {
+        val provider = FakeSyncProvider()
+        val odd = sharedEntry(shareId = "abc.def", kind = SharedLinkKind.SONG, fileName = "odd.cho")
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(odd))
+        val repository = repository(provider)
+
+        assertNull(repository.stopSharing(odd.shareId))
+
+        assertEquals(emptyList(), registry(provider).links)
+    }
+
+    @Test
+    fun `stopping everything gets past an entry whose id no copy can have`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(sharedEntry(shareId = "abc.def", kind = SharedLinkKind.SONG, fileName = "odd.cho")))
+        val repository = repository(provider)
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy))
+
+        assertNull(repository.stopSharingEverythingNow())
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(provider).links)
+    }
+
+    @Test
+    fun `a deleted shared item whose id no copy can have leaves the list and the journal`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(sharedEntry(shareId = "abc.def", kind = SharedLinkKind.SONG, fileName = "odd.cho")))
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        assertNull(repository.refresh())
+
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "odd.cho")
+        runCurrent()
+
+        assertEquals(emptyList(), registry(provider).links)
+        assertNull(localSource.journal)
+    }
+
+    @Test
     fun `refreshing brings another device's shares into the mirror`() = runTest {
         val provider = FakeSyncProvider()
         val other = entry(shareId = "aaaaaaaaaaaaaaaa", fileName = "gig.setlist.json")

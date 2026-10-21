@@ -232,6 +232,7 @@ internal class FakeSyncProvider(
         bytes: ByteArray,
         expectedRevision: String?,
     ): RemoteWriteResult {
+        requireShareId(shareId)
         onUploadSharedFile(shareId)
         if (sharedFiles[shareId]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
@@ -239,14 +240,20 @@ internal class FakeSyncProvider(
         return RemoteWriteResult.Written(revision)
     }
 
-    override suspend fun createSharedLink(shareId: String) = onCreateSharedLink(shareId)
+    override suspend fun createSharedLink(shareId: String) = onCreateSharedLink(shareId.also(::requireShareId))
 
     /** Runs before a shared copy is deleted, which is where a test makes the service refuse it. */
     var onDeleteSharedFile: suspend (String) -> Unit = {}
 
     override suspend fun deleteSharedFile(shareId: String) {
+        requireShareId(shareId)
         onDeleteSharedFile(shareId)
         sharedFiles -= shareId
+    }
+
+    /** Refuses an id that is not a plain name before anything else, as the contract of the shared copies has it. */
+    private fun requireShareId(shareId: String) = require(shareId.isNotEmpty() && shareId.all { it.isLetterOrDigit() || it == '-' || it == '_' }) {
+        "Not a share id: $shareId"
     }
 
     /** Every file path and document name written or deleted, in order; a cursor is a position in it. */
