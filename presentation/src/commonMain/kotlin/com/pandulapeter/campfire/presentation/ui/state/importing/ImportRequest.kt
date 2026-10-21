@@ -18,11 +18,12 @@ import kotlinx.coroutines.CompletableDeferred
  *
  * @param source Emptied once a preparation has succeeded: the plan carries everything the rest of the import needs,
  *   while the request lives for as long as the review does. Kept while a preparation failed, for Try again, and an
- *   address that was downloaded becomes the file it downloaded, so a read that failed is not downloaded again.
+ *   address that was downloaded becomes the file it downloaded (a shared link keeps it beside the link), so a read that
+ *   failed is not downloaded again.
  * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
  *   the library the user is about to be shown, and a snackbar or a result counting the files of it would be the app
  *   reporting on something that, as far as anyone can tell, simply came with it.
- * @param shouldOpenSong True for files the system handed over and for an address, see [ImportController.importFiles].
+ * @param shouldOpenSong True for files the system handed over, for an address, and for a shared link, see [ImportController.importFiles].
  * @param shouldReview See [ImportController.enqueueImport].
  * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
  * @param isNewSongFromText The one file is a text pasted or dropped as a new song, see [ImportController.enqueueImport].

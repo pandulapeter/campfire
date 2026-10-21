@@ -20,6 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.import_failed_link_gone
+import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable
+import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable_untitled
 import com.pandulapeter.campfire.presentation.resources.import_failed_not_found
 import com.pandulapeter.campfire.presentation.resources.import_failed_too_large
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreachable
@@ -38,6 +41,9 @@ internal fun ImportFailedContent(
         ImportFailure.NOT_FOUND -> stringResource(Res.string.import_failed_not_found)
         ImportFailure.TOO_LARGE -> stringResource(Res.string.import_failed_too_large)
         ImportFailure.UNREADABLE -> stringResource(Res.string.import_failed_unreadable)
+        ImportFailure.LINK_GONE -> stringResource(Res.string.import_failed_link_gone)
+        ImportFailure.LINK_UNREACHABLE -> failure.sourceName?.let { textResource(Res.string.import_failed_link_unreachable, it) }
+            ?: stringResource(Res.string.import_failed_link_unreachable_untitled)
     },
     style = MaterialTheme.typography.bodyLarge,
     textAlign = TextAlign.Center,

@@ -531,6 +531,7 @@ class CampfireViewModel(
                 suggestion = suggestion,
             )
         },
+        importSharedLink = { importController.importSharedLink(it) },
     )
 
     internal val songFilesController: SongFilesController = SongFilesController(

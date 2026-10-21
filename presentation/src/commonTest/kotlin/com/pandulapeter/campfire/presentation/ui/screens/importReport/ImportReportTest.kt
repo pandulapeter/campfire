@@ -12,7 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.importReport
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.setlist.Setlist
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -32,4 +35,28 @@ class ImportReportTest {
         assertFalse(ImportReport.Finished(null).isUnfinished)
         assertFalse((null as ImportReport?).isUnfinished)
     }
+
+    @Test
+    fun `a shared link's review is named by the setlist or the one song it holds, not by its download`() {
+        val setlist = Setlist(
+            fileName = "night.setlist.json", title = "Campfire night", description = "", date = LocalDate(2026, 10, 21),
+            isArchived = false, entries = emptyList(), size = 0,
+        )
+        val songs = listOf(song("a.cho", "Riverlight"), song("b.cho", "Wonderwall"))
+        val withSetlist = ImportPlan(
+            songs = songs,
+            setlists = listOf(ImportPlan.SetlistEntry("night.setlist.json", setlist, ImportPlan.Status.NEW, "night.setlist.json")),
+            sourceNames = listOf("abcdefghijklmnop.zip"),
+        )
+        assertEquals("Campfire night", review(withSetlist, sharedLinkTitle = "Old title").subtitleName)
+        assertEquals("Riverlight", review(ImportPlan(songs = songs.take(1)), sharedLinkTitle = "Old title").subtitleName)
+        assertEquals("Old title", review(ImportPlan(songs = songs), sharedLinkTitle = "Old title").subtitleName)
+        assertEquals("abcdefghijklmnop.zip", review(withSetlist, sharedLinkTitle = null).subtitleName)
+    }
+
+    private fun review(plan: ImportPlan, sharedLinkTitle: String?) =
+        ImportReport.Review(plan = plan, choices = ImportChoices(), isDemoLibrary = false, sharedLinkTitle = sharedLinkTitle)
+
+    private fun song(fileName: String, title: String) =
+        ImportPlan.SongEntry(fileName = fileName, text = "", status = ImportPlan.Status.NEW, sourceFileName = fileName, title = title)
 }

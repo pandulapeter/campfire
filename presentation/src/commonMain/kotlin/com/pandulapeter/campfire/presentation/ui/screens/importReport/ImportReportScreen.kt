@@ -165,7 +165,7 @@ internal fun ImportReportScreen(
                         contentPadding = listPadding,
                         searchFieldIndex = REVIEW_HEADER_ITEM_COUNT.takeIf { reviewSections.isNotEmpty() },
                     ) { listState ->
-                        reviewHeader(plan = stage.plan, choices = choices, warning = warning)
+                        reviewHeader(plan = stage.plan, choices = choices, warning = warning, isSharedLink = stage.isSharedLink)
                         if (reviewSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = REVIEW_HEADER_ITEM_COUNT)
                         reviewSections(
                             sections = matchingReviewSections,
@@ -241,7 +241,7 @@ private val ImportReport.sourceName
     get() = when (this) {
         is ImportReport.Loading -> sourceName
         is ImportReport.Failed -> sourceName
-        is ImportReport.Review -> plan.sourceNames.takeIf { it.isNotEmpty() }?.joinToString(", ")
+        is ImportReport.Review -> subtitleName
         ImportReport.Importing, is ImportReport.Finished -> null
     }
 

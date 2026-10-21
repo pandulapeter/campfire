@@ -102,6 +102,9 @@
     <string name="import_failed_not_found">Ezen a címen nincs mit letölteni. Lehet, hogy a link lejárt, vagy törölték.</string>
     <string name="import_failed_too_large">Ez a fájl nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud.</string>
     <string name="import_failed_unreadable">A fájlokat nem sikerült beolvasni. Semmi sem lett importálva.</string>
+    <string name="import_failed_link_gone">Ez a link már nem működik. Lehet, hogy aki megosztotta, már nem osztja meg.</string>
+    <string name="import_failed_link_unreachable">Nem sikerült letölteni: „%1$s”. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
+    <string name="import_failed_link_unreachable_untitled">Nem sikerült letölteni, amit a link megoszt. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_retry">Újrapróbálás</string>
     <string name="import_review_title">Importálás áttekintése</string>
     <string name="import_review_title_empty">Nincs mit importálni</string>
@@ -109,6 +112,8 @@
     <string name="import_warning_songs_off">A dalok ki vannak kapcsolva a Beállításokban, így semmi, amit itt importálsz, nem jelenik meg, amíg vissza nem kapcsolod őket.</string>
     <string name="import_warning_setlists_off">A listák ki vannak kapcsolva a Beállításokban, így az itt importált listák nem jelennek meg, amíg vissza nem kapcsolod őket.</string>
     <string name="import_review_demo_library">Bemutató könyvtár</string>
+    <string name="import_review_shared_song_replaces">Ez a dal saját példányát a megosztott változatra cseréli. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</string>
+    <string name="import_review_shared_setlist_replaces">Ez a dalok és a lista saját példányait a megosztott változatra cseréli. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</string>
     <plurals name="import_review_confirm">
         <item quantity="one">%1$d fájl importálása</item>
         <item quantity="other">%1$d fájl importálása</item>
@@ -182,6 +187,7 @@
     <string name="paste_only_links">Egy link nem dal, és a Campfire nem nyit meg weboldalakat. Magukat az akkordokat és a dalszöveget másold ki.</string>
     <string name="paste_too_large">A szöveg hosszabb annál a 8 MB-nál, amennyit egy importálás feldolgoz.</string>
     <string name="shared_link_not_imported">A Campfire nem nyit meg weboldalakat. Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.</string>
+    <string name="shared_link_from_newer_version">Ezt a linket a Campfire egy újabb verziója készítette. Frissítsd a Campfire-t, hogy megnyithasd.</string>
     <string name="paste_refused_ios">A Campfire nem kapott engedélyt a beillesztésre. Ezt a Beállítások appban, a Campfire alatt a „Beillesztés más appokból” dönti el.</string>
     <string name="paste_refused_web">A böngésző nem engedte, hogy a Campfire olvassa a vágólapot. Helyette nyomd meg a Ctrl+V-t (Macen a ⌘V-t) a dallistán.</string>
     <string name="songs_new_song">Új dal</string>

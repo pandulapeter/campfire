@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import androidx.compose.runtime.mutableStateListOf
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.paste_refused_web
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -40,6 +41,7 @@ class PastedSongControllerTest {
     private val isPerformanceModeEnabled = MutableStateFlow(false)
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
     private val suggestions = mutableListOf<SharedTextTitle?>()
+    private val links = mutableListOf<SharedLink>()
     private val importSettled = CompletableDeferred<Unit>()
     private lateinit var messageSink: MessageSink
     private lateinit var dialogHost: DialogHost
@@ -57,6 +59,10 @@ class PastedSongControllerTest {
             enqueueImport = { files, isNewSongFromText, suggestion ->
                 queued += files to isNewSongFromText
                 suggestions += suggestion
+                importSettled
+            },
+            importSharedLink = {
+                links += it
                 importSettled
             },
         )
@@ -188,4 +194,27 @@ class PastedSongControllerTest {
         isPerformanceModeEnabled.value = true
         assertFalse(controller.isNewSongPasteAvailable)
     }
+
+    @Test
+    fun `a pasted or shared Campfire link is imported as the link, not as a song`() = runTest {
+        val controller = controller()
+        controller.newSongFromText(" $LINK\n")
+        controller.importSharedText(SharedTextPayload(texts = listOf(LINK), subject = "Riverlight"))
+        assertEquals(2, links.size)
+        assertTrue(links.all { it is SharedLink.Readable && it.title == "Riverlight" })
+        assertTrue(queued.isEmpty())
+        assertTrue(messages.isEmpty())
+    }
+
+    @Test
+    fun `a Campfire link beside other words is text, as any other address is`() = runTest {
+        val controller = controller()
+        controller.newSongFromText("Listen to this: $LINK")
+        controller.importSharedText(SharedTextPayload(texts = listOf("Riverlight\n$LINK"), subject = null))
+        assertTrue(links.isEmpty())
+        assertEquals(listOf(Message.SharedLinkNotImported), messages)
+        assertEquals(1, queued.size)
+    }
 }
+
+private const val LINK = "https://campfire-songbook.com/s/#1.song.abcdefghijklmnop.fileid.rlkey.Riverlight"

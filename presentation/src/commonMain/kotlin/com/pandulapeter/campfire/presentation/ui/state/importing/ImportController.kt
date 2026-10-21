@@ -12,11 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
@@ -171,6 +173,22 @@ internal class ImportController(
     }
 
     /**
+     * A song or setlist shared as a Campfire link, however it arrived: opened from the system, pasted, dropped, or shared
+     * as text. It is downloaded and always reviewed, with the names already taken defaulting to Replace, since opening a
+     * link again is how its recipient takes the sharer's changes; a link to one song opens it once imported. A link from a
+     * newer version of Campfire is answered with a sentence and queues nothing.
+     *
+     * @return Completed once the link has settled, see [enqueueImport].
+     */
+    fun importSharedLink(link: SharedLink): CompletableDeferred<Unit> = when (link) {
+        is SharedLink.Readable -> enqueueImport(ImportSource.SharedLink(link), shouldOpenSong = true)
+        is SharedLink.FromNewerVersion -> {
+            messageSink.sendMessage(Message.SharedLinkFromNewerVersion)
+            CompletableDeferred(Unit)
+        }
+    }
+
+    /**
      * Puts a batch at the end of [importQueue] and returns what completes once it is over: reviewed, the import the
      * review decided on written, and its result dismissed, or its new song open in the editor, whose draft holds it from
      * then on. An empty batch is not queued at all.
@@ -297,6 +315,7 @@ internal class ImportController(
                 // switch is asked again first, since the source is what tells a lone song file apart: one turned off while
                 // the batch was read must not open an editor on a screen the switch removes, and sends it to the review.
                 val isReviewedNow = request.isReviewed(areSongsEnabled = areSongsEnabled())
+                val sharedLink = (request.source as? ImportSource.SharedLink)?.link
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
                 val newSong = if (request.isNewSongFromText && !isReviewed && areSongsEnabled()) plan.newSongOf() else null
@@ -309,7 +328,14 @@ internal class ImportController(
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
-                    val review = ImportReport.Review(plan = plan, choices = ImportChoices(), isDemoLibrary = request.isDemoLibrary)
+                    val review = ImportReport.Review(
+                        plan = plan,
+                        // Opening a shared link again is how its recipient updates, and Keep both would leave a numbered
+                        // copy of every changed song each time; Replace is still confirmed before anything is written.
+                        choices = if (sharedLink == null) ImportChoices() else ImportChoices(conflictResolution = ImportConflictResolution.REPLACE),
+                        isDemoLibrary = request.isDemoLibrary,
+                        sharedLinkTitle = sharedLink?.title,
+                    )
                     if (isReviewed) reportState.report = review else reportState.show(review)
                     _isImporting.value = false
                 } else {
@@ -320,7 +346,7 @@ internal class ImportController(
         return null
     }
 
-    /** The download, where the batch is an address, and the reading and comparing, as one cancellable piece of work. */
+    /** The download, where the batch is an address or a shared link, and the reading and comparing, as one cancellable piece of work. */
     private suspend fun prepare(request: ImportRequest): Preparation {
         val files = when (val source = request.source) {
             is ImportSource.Files -> source.files
@@ -335,6 +361,18 @@ internal class ImportController(
                     ImportDownload.TooLarge -> return Preparation.Failed(ImportFailure.TOO_LARGE)
                     ImportDownload.Missing -> return Preparation.Failed(ImportFailure.NOT_FOUND)
                     ImportDownload.Unreachable -> return Preparation.Failed(ImportFailure.UNREACHABLE)
+                }
+            }
+
+            is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
+                _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
+                when (val download = downloadImportFile(source.link.downloadUrl).toSharedLinkDownload()) {
+                    is SharedLinkDownload.Zip -> listOf(download.file).also {
+                        // The title stays the screen's subtitle, and a read that fails after this reads the same bytes again.
+                        request.source = source.copy(file = download.file)
+                    }
+
+                    is SharedLinkDownload.Failed -> return Preparation.Failed(download.reason)
                 }
             }
         }

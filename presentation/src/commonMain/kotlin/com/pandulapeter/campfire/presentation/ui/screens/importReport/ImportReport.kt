@@ -31,9 +31,32 @@ sealed interface ImportReport {
      * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
      * `ImportController.confirmImport`. The choices live here rather than on the screen, so that a screen composed
      * again (an Android activity recreated under it) keeps every tick. [isDemoLibrary] is the app's own demo library,
-     * which the subtitle names as such rather than by the bundled files it is read from.
+     * which the subtitle names as such rather than by the bundled files it is read from. [sharedLinkTitle] is the title
+     * a shared link carried, set only for the import of one, which the subtitle falls back on (see [subtitleName]) and
+     * which explains why the names already taken default to Replace.
      */
-    data class Review(val plan: ImportPlan, val choices: ImportChoices, val isDemoLibrary: Boolean) : ImportReport
+    data class Review(
+        val plan: ImportPlan,
+        val choices: ImportChoices,
+        val isDemoLibrary: Boolean,
+        val sharedLinkTitle: String? = null,
+    ) : ImportReport {
+
+        val isSharedLink get() = sharedLinkTitle != null
+
+        /**
+         * What the review is of, for the subtitle. A shared link's download is named after a random id, so it is named by
+         * the setlist it holds, or its one song, as the zip says now, and only then by the title the link carried.
+         */
+        val subtitleName
+            get() = if (isSharedLink) {
+                plan.setlists.firstOrNull()?.setlist?.title?.takeIf { it.isNotBlank() }
+                    ?: plan.songs.singleOrNull()?.title?.takeIf { it.isNotBlank() }
+                    ?: sharedLinkTitle?.takeIf { it.isNotBlank() }
+            } else {
+                plan.sourceNames.takeIf { it.isNotEmpty() }?.joinToString(", ")
+            }
+    }
 
     /** The choices being carried out, with `ImportController.importProgress` saying how far. */
     data object Importing : ImportReport
@@ -61,6 +84,15 @@ enum class ImportFailure {
 
     /** The files were in hand, and could not be read. */
     UNREADABLE,
+
+    /**
+     * A shared link's download was refused (any 4xx: stopped, revoked, or deleted) or was not a zip (a page in its place),
+     * which asking again does not change.
+     */
+    LINK_GONE,
+
+    /** A shared link's download got no answer, or a server error; worth asking again a minute later. */
+    LINK_UNREACHABLE,
 }
 
 /**

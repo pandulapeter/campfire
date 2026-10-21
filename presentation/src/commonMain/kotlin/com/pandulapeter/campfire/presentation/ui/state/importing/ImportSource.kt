@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink.Readable as ReadableLink
 
 /** Where the files of one import come from. */
 internal sealed interface ImportSource {
@@ -35,5 +36,19 @@ internal sealed interface ImportSource {
             .substringAfterLast('@').takeIf { it.isNotBlank() } ?: url
 
         override val isEmpty get() = url.isBlank()
+    }
+
+    /**
+     * A song or setlist somebody shared as a Campfire link, downloaded from the address the app builds from the link's
+     * parts (never from one the link names) as the import starts.
+     *
+     * @param file What the download brought, once it has: a read that fails after it is tried again on the same bytes.
+     */
+    data class SharedLink(val link: ReadableLink, val file: ImportedFile? = null) : ImportSource {
+
+        /** The title the item had when it was shared, never the download's file name, which is a random id. */
+        override val name get() = link.title.takeIf { it.isNotBlank() }
+
+        override val isEmpty get() = false
     }
 }

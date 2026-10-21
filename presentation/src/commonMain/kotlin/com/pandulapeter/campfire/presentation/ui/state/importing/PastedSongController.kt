@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
  *
  * @param enqueueImport Queues the files, as a new song where that is true and as an ordinary import otherwise, with the
  *   title and artist the sender's subject suggests for a new song, and returns what completes once they have settled.
+ * @param importSharedLink Imports a text that is a Campfire link as the link it is, see [sharedLinkIn].
  */
 internal class PastedSongController(
     private val scope: CoroutineScope,
@@ -47,6 +49,7 @@ internal class PastedSongController(
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
     private val enqueueImport: (files: List<ImportedFile>, isNewSongFromText: Boolean, suggestion: SharedTextTitle?) -> Deferred<Unit>,
+    private val importSharedLink: (SharedLink) -> Deferred<Unit>,
 ) {
 
     /**
@@ -61,13 +64,19 @@ internal class PastedSongController(
     /**
      * The one way from a text to a new song, which opens the editor on it, read only mode included: a text shared there
      * is the user asking for a song, and the share is the one way in that mode leaves. One that arrives while the editor
-     * holds unsaved text waits in the import queue for that editor to be left.
+     * holds unsaved text waits in the import queue for that editor to be left. A text that is a Campfire link, and nothing
+     * else, is that link's import instead.
      *
      * @param subject What the text was called where it came from, which titles the new song, and names its artist where
      *   it says "<title> Chords by <artist>", for what the text does not declare.
      * @return Completed once the text has settled: at once where it is answered with a message alone.
      */
-    fun newSongFromText(text: String, subject: String? = null): Deferred<Unit> = when {
+    fun newSongFromText(text: String, subject: String? = null): Deferred<Unit> {
+        sharedLinkIn(text)?.let { return importSharedLink(it) }
+        return newSongFromOtherText(text, subject)
+    }
+
+    private fun newSongFromOtherText(text: String, subject: String?): Deferred<Unit> = when {
         text.isBlank() -> answered(Message.ClipboardEmpty)
         text.isOnlyLinks() || text.isLinkWithTitle() -> answered(Message.PastedOnlyLinks)
         !text.fitsImport() -> answered(Message.PastedTextTooLarge)
@@ -75,10 +84,11 @@ internal class PastedSongController(
     }
 
     /**
-     * Texts shared to Campfire from another app. One text is a song to make, as a paste is; several are an import, each
-     * a file of its own. A share of nothing but addresses - a web page shared by its link, alone or beside a one-line title - is
-     * answered with a sentence, since the page is never fetched. A share with nothing in it at all still goes to the
-     * import, which reports it as skipped: the user picked Campfire in a share sheet and is owed an answer.
+     * Texts shared to Campfire from another app. One text is a song to make, as a paste is, or the link's import where it
+     * is one Campfire link; several are an import, each a file of its own. A share of nothing but other addresses - a web
+     * page shared by its link, alone or beside a one-line title - is answered with a sentence, since the page is never
+     * fetched. A share with nothing in it at all still goes to the import, which reports it as skipped: the user picked
+     * Campfire in a share sheet and is owed an answer.
      *
      * @return Completed once the share has settled, which is when iOS lets go of it in the share extension's inbox.
      */
@@ -86,6 +96,7 @@ internal class PastedSongController(
         val texts = payload.texts.filter { it.isNotBlank() }
         return when {
             texts.isEmpty() -> enqueueImport(sharedTextsToImportedFiles(payload.texts, payload.subject), false, null)
+            texts.size == 1 && sharedLinkIn(texts.single()) != null -> newSongFromText(texts.single(), payload.subject)
             texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> answered(Message.SharedLinkNotImported)
             texts.size == 1 -> newSongFromText(texts.single(), payload.subject)
             else -> enqueueImport(sharedTextsToImportedFiles(texts, payload.subject), false, null)

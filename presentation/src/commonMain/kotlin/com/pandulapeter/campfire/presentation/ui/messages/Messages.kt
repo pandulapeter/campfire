@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
 import com.pandulapeter.campfire.presentation.resources.paste_only_links
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
+import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
 import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
@@ -149,6 +150,7 @@ internal fun Messages(
         Message.PastedOnlyLinks -> stringResource(Res.string.paste_only_links)
         Message.PastedTextTooLarge -> stringResource(Res.string.paste_too_large)
         Message.SharedLinkNotImported -> stringResource(Res.string.shared_link_not_imported)
+        Message.SharedLinkFromNewerVersion -> stringResource(Res.string.shared_link_from_newer_version)
         null -> null
     }
     val importFinished = head?.value as? Message.ImportFinished

@@ -71,6 +71,9 @@ sealed interface Message {
     /** A share from another app that was nothing but a web page's address (and its title), which is never fetched. */
     data object SharedLinkNotImported : Message
 
+    /** A Campfire link in a format a later version made, which this one cannot open; updating can. */
+    data object SharedLinkFromNewerVersion : Message
+
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message
 

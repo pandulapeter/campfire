@@ -37,6 +37,10 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 - A blank, links-only (a page's address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar
   before anything is prepared, except that a blank share goes to the import, reported as skipped; several shared texts
   are one import. Nothing is fetched.
+- A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import instead, a link beside other
+  words staying text. Links the system opens the app with arrive as `CampfireApp`'s `shareLinks`; every way ends in
+  `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is downloaded from the address
+  `SharedLink.Readable.downloadUrl` builds (never one the text names) and always reviewed.
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English
   and Hungarian). A single converted song gets a snackbar **Open** (`Navigator.openImportedSong`); converted
   imports never navigate on their own.

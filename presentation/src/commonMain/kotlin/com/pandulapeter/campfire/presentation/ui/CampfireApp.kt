@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
@@ -61,6 +62,9 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param urlOpener Opens the given URL in the platform's browser.
  * @param filesToImport Files the host handed over - opened with Campfire, shared to it, or dropped onto its window.
  * @param sharedTexts Texts shared to Campfire from another app, on Android; iOS's shell hands its shares over itself.
+ * @param shareLinks Campfire links the system opened the app with (an App Link, a Universal Link, the `campfire://s/`
+ *   scheme, a browser tab's address), each already read by `ShareLinks.parse`; texts that are links arrive through
+ *   [sharedTexts] and the paste instead.
  * @param onAppReady Called once the app itself is on screen - the same moment `LaunchScreen` is taken away - for the
  *   shells that open on a startup screen of their own and are able to hold it there: Android's system splash and the
  *   loading screen of the web build. Every one of those is otherwise taken away by the first frame the app draws,
@@ -76,11 +80,11 @@ fun CampfireApp(
     urlOpener: (String) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
+    shareLinks: Flow<SharedLink> = emptyFlow(),
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
-    LaunchedEffect(filesToImport) { filesToImport.collect(viewModel.importController::importFiles) }
-    LaunchedEffect(sharedTexts) { sharedTexts.collect(viewModel.pastedSongController::importSharedText) }
+    ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
     val showSyncNotification = rememberSyncNotifications(viewModel)
     MetronomeNotificationEffect(viewModel)
     MetronomeHapticsEffect(viewModel)
@@ -167,10 +171,7 @@ fun CampfireApp(
                         // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
                         // the user chose, and above the language preference, so that it is in the language they chose too.
                         AppUpdateGate(viewModel = viewModel) {
-                            CampfireContent(
-                                viewModel = viewModel,
-                                urlOpener = urlOpener,
-                            )
+                            CampfireContent(viewModel = viewModel, urlOpener = urlOpener)
                         }
                     }
                 }
@@ -189,4 +190,17 @@ fun CampfireApp(
             }
         }
     }
+}
+
+/** Hands what the platform shell passes in (see [CampfireApp]'s parameters of the same names) to the import. */
+@Composable
+private fun ImportHandOverEffects(
+    viewModel: CampfireViewModel,
+    filesToImport: Flow<List<ImportedFile>>,
+    sharedTexts: Flow<SharedTextPayload>,
+    shareLinks: Flow<SharedLink>,
+) {
+    LaunchedEffect(filesToImport) { filesToImport.collect(viewModel.importController::importFiles) }
+    LaunchedEffect(sharedTexts) { sharedTexts.collect(viewModel.pastedSongController::importSharedText) }
+    LaunchedEffect(shareLinks) { shareLinks.collect { viewModel.importController.importSharedLink(it) } }
 }

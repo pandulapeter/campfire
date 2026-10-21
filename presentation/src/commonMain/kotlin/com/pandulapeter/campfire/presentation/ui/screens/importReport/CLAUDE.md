@@ -25,11 +25,14 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 
 - **Loading**: `ImportProgressContent`, Cancel only while the phase only reads (`isCancellable`); Close does the same.
 - **Failed**: one sentence (`ImportFailure`) and **Try again** (`retryImport`: a failed download is downloaded again;
-  once downloaded, the same bytes are read again).
+  once downloaded, the same bytes are read again). A shared link has its own wording: a 4xx, or anything but a zip (a
+  page in its place), is "no longer works" (`toSharedLinkDownload`); only no answer or a 5xx is unreachable.
 - **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
   names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
   button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
-  (`DialogType.ConfirmImportReplace`). It steps aside while the keyboard is up. Choices live in the view model's report
+  (`DialogType.ConfirmImportReplace`). A shared link's review starts its taken names on **Replace** (opening a link
+  again is how its recipient updates) with a line under the counts saying so, and is subtitled by the setlist or the
+  one song the zip holds, never the download's random name (`Review.subtitleName`). It steps aside while the keyboard is up. Choices live in the view model's report
   (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
   summary only.
 - **Importing**: progress, nothing to press.

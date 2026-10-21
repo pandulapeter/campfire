@@ -102,6 +102,9 @@
     <string name="import_failed_not_found">There is nothing to download at that address. The link may have expired or been removed.</string>
     <string name="import_failed_too_large">This file is larger than the 24 MB Campfire can import at once.</string>
     <string name="import_failed_unreadable">The files could not be read. Nothing was imported.</string>
+    <string name="import_failed_link_gone">This link no longer works. The person who shared it may have stopped sharing it.</string>
+    <string name="import_failed_link_unreachable">Couldn\'t download \"%1$s\". Check the internet connection and try again.</string>
+    <string name="import_failed_link_unreachable_untitled">Couldn\'t download what the link shares. Check the internet connection and try again.</string>
     <string name="import_retry">Try again</string>
     <string name="import_review_title">Review the import</string>
     <string name="import_review_title_empty">Nothing to import</string>
@@ -109,6 +112,8 @@
     <string name="import_warning_songs_off">Songs are switched off in Settings, so nothing imported here will show until you switch them back on.</string>
     <string name="import_warning_setlists_off">Setlists are switched off in Settings, so the setlists imported here won\'t show until you switch them back on.</string>
     <string name="import_review_demo_library">Demo library</string>
+    <string name="import_review_shared_song_replaces">This replaces your copy of the song with the shared version. Choose Keep both to keep your own changes.</string>
+    <string name="import_review_shared_setlist_replaces">This replaces your copies of the songs and setlist with the shared version. Choose Keep both to keep your own changes.</string>
     <plurals name="import_review_confirm">
         <item quantity="one">Import %1$d file</item>
         <item quantity="other">Import %1$d files</item>
@@ -182,6 +187,7 @@
     <string name="paste_only_links">A link is not a song, and Campfire does not open pages. Copy the chords and the lyrics themselves.</string>
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
     <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>
+    <string name="shared_link_from_newer_version">This link was made by a newer version of Campfire. Update Campfire to open it.</string>
     <string name="paste_refused_ios">Campfire was not allowed to paste. Paste from Other Apps, under Campfire in the Settings app, decides this.</string>
     <string name="paste_refused_web">The browser did not let Campfire read the clipboard. Press Ctrl+V (⌘V on a Mac) on the song list instead.</string>
     <string name="songs_new_song">New song</string>
