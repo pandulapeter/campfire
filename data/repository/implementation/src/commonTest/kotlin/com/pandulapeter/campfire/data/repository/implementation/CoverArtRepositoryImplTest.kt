@@ -140,6 +140,31 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
+    fun `an address that is not a cover is not asked again after a restart`() = runTest {
+        val local = FakeCoverArtLocalSource()
+        val firstRemote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
+        val secondRemote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
+
+        assertEquals(CoverArtResult.Missing, repository(local = local, remote = firstRemote).getCoverArt(URL))
+        assertEquals(CoverArtResult.Missing, repository(local = local, remote = secondRemote).getCoverArt(URL))
+
+        assertEquals(1, firstRemote.requestCount)
+        assertEquals(0, secondRemote.requestCount)
+    }
+
+    @Test
+    fun `clearing the cache asks a missing address again`() = runTest {
+        val remote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
+        val repository = repository(remote = remote)
+
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+        repository.clearCoverArtCache()
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+
+        assertEquals(2, remote.requestCount)
+    }
+
+    @Test
     fun `an address that could not be reached is not asked again right away`() = runTest {
         val remote = FakeCoverArtRemoteSource { CoverArtDownload.Unreachable }
         val repository = repository(remote = remote)

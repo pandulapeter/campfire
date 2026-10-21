@@ -103,8 +103,8 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### The cover of a song is carried the same way too
 
-- `{meta: cover https://…}`, the first `http(s)` one, into `Song.coverArtUrl`. Any address is accepted; the search only
-  recommends. See Cover art in the root `CLAUDE.md`.
+- `{meta: cover https://…}`, the first `http(s)` one, into `Song.coverArtUrl`. Any address is kept; only public
+  `https` ones are fetched; the search only recommends. See Cover art in the root `CLAUDE.md`.
 
 ### Links about a song are carried the same way
 

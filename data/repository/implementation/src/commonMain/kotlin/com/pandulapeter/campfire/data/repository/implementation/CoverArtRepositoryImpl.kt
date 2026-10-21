@@ -45,7 +45,9 @@ import kotlin.time.Duration.Companion.minutes
 
 /**
  * The copies are named after the SHA-256 of their address, which is a name every storage can hold whatever the
- * address looks like, and the same on every platform.
+ * address looks like, and the same on every platform. An address that answered with no cover gets an empty copy, so it
+ * is not asked again on the next launch either: only the prune of addresses no song names, or the cache being cleared,
+ * gives it another chance.
  *
  * A download runs in the repository's own scope rather than in the caller's, so that the list scrolling a row out of
  * view — which cancels the request that row made — does not throw away a download another row, or the same row a
@@ -138,14 +140,15 @@ internal class CoverArtRepositoryImpl(
 
     private suspend fun load(url: String, download: Download): CoverArtResult = try {
         val key = keyOf(url)
-        coverArtLocalSource.loadCoverArt(key)?.let(CoverArtResult::Image) ?: downloadSlots.withPermit {
-            // An abandoned download records no failure, so that the next asker starts afresh; it leaves the map at
-            // once, under the same lock, so that nobody joins it in the moment before it answers.
-            val isAbandoned = mutex.withLock {
-                (download.waiters == 0).also { isAbandoned -> if (isAbandoned) downloads.remove(url) }
+        coverArtLocalSource.loadCoverArt(key)?.let { bytes -> if (bytes.isEmpty()) CoverArtResult.Missing else CoverArtResult.Image(bytes) }
+            ?: downloadSlots.withPermit {
+                // An abandoned download records no failure, so that the next asker starts afresh; it leaves the map at
+                // once, under the same lock, so that nobody joins it in the moment before it answers.
+                val isAbandoned = mutex.withLock {
+                    (download.waiters == 0).also { isAbandoned -> if (isAbandoned) downloads.remove(url) }
+                }
+                if (isAbandoned) CoverArtResult.Unreachable else fetch(url, key)
             }
-            if (isAbandoned) CoverArtResult.Unreachable else fetch(url, key)
-        }
     } finally {
         mutex.withLock { if (downloads[url] === download) downloads.remove(url) }
     }
@@ -155,7 +158,11 @@ internal class CoverArtRepositoryImpl(
             coverArtLocalSource.saveCoverArt(key, download.bytes)
             cacheChanges.update { changes -> changes + 1 }
         }
-        CoverArtDownload.Missing -> CoverArtResult.Missing.also { mutex.withLock { failures[url] = null } }
+        CoverArtDownload.Missing -> CoverArtResult.Missing.also {
+            mutex.withLock { failures[url] = null }
+            // Kept across launches, so an address that never yields a cover is asked once, not on every start.
+            coverArtLocalSource.saveCoverArt(key, ByteArray(0))
+        }
         CoverArtDownload.Unreachable -> CoverArtResult.Unreachable.also {
             mutex.withLock { failures[url] = environment.timeSource.markNow() + UNREACHABLE_RETRY_DELAY }
         }

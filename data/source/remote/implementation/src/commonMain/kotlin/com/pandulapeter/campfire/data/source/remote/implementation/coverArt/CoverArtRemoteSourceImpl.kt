@@ -12,7 +12,10 @@ package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.PublicHostsOnly
+import com.pandulapeter.campfire.data.source.remote.implementation.network.RefusedAddressException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.isCutShort
+import com.pandulapeter.campfire.data.source.remote.implementation.network.isPublicHttpsAddress
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
@@ -30,7 +33,8 @@ import kotlinx.io.readByteArray
 import org.koin.core.annotation.Single
 
 /**
- * Downloads cover images from wherever a song says they are. Any address a song names is asked, so what comes back is
+ * Downloads cover images from wherever a song says they are, as long as that is a public `https` host on every hop
+ * ([isPublicHttpsAddress]); any other address is [CoverArtDownload.Missing] without a request. What comes back is
  * trusted no further than its headers and its size: an answer that is not an image, or that is larger than
  * [MAXIMUM_SIZE_BYTES], is [CoverArtDownload.Missing] and never read to its end.
  */
@@ -40,9 +44,12 @@ internal class CoverArtRemoteSourceImpl(
 ) : CoverArtRemoteSource {
 
     override suspend fun downloadCoverArt(url: String): CoverArtDownload {
-        if (parseUrl(url) == null) return CoverArtDownload.Missing
+        val address = parseUrl(url)?.takeIf(::isPublicHttpsAddress) ?: return CoverArtDownload.Missing
         return try {
-            httpClientHolder.client().prepareGet(url) { timeout { requestTimeoutMillis = DOWNLOAD_TIMEOUT_MILLIS } }.execute { response ->
+            httpClientHolder.client().prepareGet(address) {
+                attributes.put(PublicHostsOnly, Unit)
+                timeout { requestTimeoutMillis = DOWNLOAD_TIMEOUT_MILLIS }
+            }.execute { response ->
                 when {
                     response.status.isTransient -> CoverArtDownload.Unreachable
                     !response.status.isSuccess() -> CoverArtDownload.Missing
@@ -60,6 +67,9 @@ internal class CoverArtRemoteSourceImpl(
                     }
                 }
             }
+        } catch (exception: RefusedAddressException) {
+            // A redirect into the local network is the address's answer, not the network failing.
+            CoverArtDownload.Missing
         } catch (exception: CancellationException) {
             // Only a cancellation of this coroutine is one; anything else that arrives as one is the transport failing.
             currentCoroutineContext().ensureActive()

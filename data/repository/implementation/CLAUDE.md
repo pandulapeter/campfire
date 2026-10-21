@@ -99,8 +99,10 @@ which is visible once a load has finished:
   names (search thumbnails included).
 - Downloads run in the repository's own scope (a row scrolled away must not cancel another row's wait); one download
   per address; at most `MAX_CONCURRENT_DOWNLOADS` (4) at once, and one with no callers left by its turn is skipped (a
-  fling would otherwise queue a request per row, the HTTP timeout counting the queue). A non-cover answer is not asked
-  again this session; an unreachable address not for a minute or until the next cover search starts.
+  fling would otherwise queue a request per row, the HTTP timeout counting the queue). A non-cover answer is kept as an
+  empty copy and not asked again until no song names it or the cache is cleared (the clear is offered only while
+  copies take space); an unreachable address not for a minute or until the next cover search starts. A download in
+  flight when the cache is cleared can still write its copy or marker after the clear.
 - `coverArtCacheSize` re-lists after writes and prunes off a conflated `StateFlow` counter.
 - Searches run every catalogue at once via `searchCatalogues` (`CatalogueSearch.kt`, a `channelFlow`), appending each
   one's results as it answers so the grid only grows at its end.

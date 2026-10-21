@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.source.local.api
 /**
  * The copies of the cover images the songs name, kept so that a cover that was seen once is there without a network.
  * Each copy is addressed by a key the caller derives from the image's address, and holds nothing but the image's
- * bytes. Outside the library: never exported, synced or backed up, since the address travels in the song file and
+ * bytes; an empty copy means the address answered with no cover. Outside the library: never exported, synced or backed up, since the address travels in the song file and
  * the image can always be downloaded again.
  */
 interface CoverArtLocalSource {

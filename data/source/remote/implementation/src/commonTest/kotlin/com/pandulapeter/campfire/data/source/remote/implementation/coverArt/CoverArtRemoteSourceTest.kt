@@ -11,12 +11,12 @@ package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.Headers
@@ -101,17 +101,42 @@ class CoverArtRemoteSourceTest {
         assertEquals(CoverArtDownload.Unreachable, source { _ -> throw IllegalStateException("No route to host") }.downloadCoverArt(URL))
     }
 
+    @Test
+    fun `an address on the local network is not asked`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val source = source { request ->
+            requests += request
+            respond(byteArrayOf(1), HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "image/jpeg"))
+        }
+
+        assertEquals(CoverArtDownload.Missing, source.downloadCoverArt("http://192.168.1.1/cover.jpg"))
+        assertEquals(CoverArtDownload.Missing, source.downloadCoverArt("https://127.0.0.1:8443/cover.jpg"))
+        assertTrue(requests.isEmpty())
+    }
+
+    @Test
+    fun `a redirect into the local network is not followed`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val download = source { request ->
+            requests += request
+            if (requests.size == 1) {
+                respond("", HttpStatusCode.Found, headersOf(HttpHeaders.Location, "https://192.168.1.1/cover.jpg"))
+            } else {
+                respond(byteArrayOf(1), HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "image/jpeg"))
+            }
+        }.downloadCoverArt(URL)
+
+        assertEquals(CoverArtDownload.Missing, download)
+        assertEquals(1, requests.size)
+    }
+
     /** Built on the test's scheduler, engine included, so that a request timeout is measured in virtual time. */
     private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = CoverArtRemoteSourceImpl(
         httpClientHolder = HttpClientHolder(dispatcher = StandardTestDispatcher(testScheduler)) {
             HttpClient(MockEngine.create {
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler(handler)
-            }) {
-                expectSuccess = false
-                // Production installs it in configureClient, and a request's own timeout needs it.
-                install(HttpTimeout)
-            }
+            }) { configureClient(sendsUserAgent = true, hasSocketTimeout = true) }
         },
     )
 

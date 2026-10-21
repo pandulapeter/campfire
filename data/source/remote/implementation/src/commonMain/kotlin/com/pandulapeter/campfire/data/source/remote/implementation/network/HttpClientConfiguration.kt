@@ -44,6 +44,7 @@ internal fun HttpClientConfig<*>.configureClient(sendsUserAgent: Boolean, hasSoc
         connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
         socketTimeoutMillis = SOCKET_TIMEOUT_MILLIS
     }
+    install(PublicHostsOnlyPlugin)
     if (!hasSocketTimeout) {
         install(BrowserCallTimeouts)
     }

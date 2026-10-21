@@ -25,7 +25,7 @@ Silent failures go to the injected `Logger`.
   the app and nothing about the user (MusicBrainz requires it). Not set in the browser: a script cannot, and an
   unexpected header would turn a plain GET into a CORS preflight.
 - What a platform refuses is just not shown: the web reaches only CORS-enabled hosts, and plain `http://` is refused on
-  Android, iOS, and the web.
+  Android and the web (iOS allows it to IP literals; covers ask `https` only).
 
 ## Configuration
 
@@ -138,7 +138,8 @@ Silent failures go to the injected `Logger`.
 
 ## Downloads
 
-- Cover (`coverArt/`): redirects followed. Not `image/*` or over 5 MB (read one byte
+- Cover (`coverArt/`): redirects followed; only public `https` hosts, checked on every redirect hop
+  (`isPublicHttpsAddress`, `PublicHostsOnly`); a refused hop is `Missing`. Not `image/*` or over 5 MB (read one byte
   past the limit when no length is declared) → `Missing`, never read to the end. 408, 429, 5xx, transport failure, or a
   body shorter than an unencoded declared length → `Unreachable`; any other refusal → `Missing`. At most a minute per
   download, so a stalled host cannot hold the repository's download slots.

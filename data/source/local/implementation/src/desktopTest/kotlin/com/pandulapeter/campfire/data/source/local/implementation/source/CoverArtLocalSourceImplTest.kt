@@ -59,6 +59,15 @@ class CoverArtLocalSourceImplTest {
     }
 
     @Test
+    fun `an empty copy, which marks an address with no cover, loads back empty and is pruned like any other`() = runBlocking {
+        localSource.saveCoverArt(KEY, ByteArray(0))
+
+        assertContentEquals(ByteArray(0), localSource.loadCoverArt(KEY))
+        localSource.keepOnlyCoverArt(emptySet())
+        assertNull(localSource.loadCoverArt(KEY))
+    }
+
+    @Test
     fun `every copy written is kept out of the device backup, however often it is written`() = runBlocking {
         val fileStorage = InMemoryFileStorage()
         val localSource = CoverArtLocalSourceImpl(fileStorage, Logger.Standard)
