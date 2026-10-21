@@ -320,7 +320,11 @@ public object SongScaleGroups {
     /** The fit of [home] holding every chord on [root], or of the blues where it is a major scale holding a blues. */
     private fun tonalFitOn(harmony: Harmony, root: SpelledNote, home: Scale): Fit? {
         if (home.id == MAJOR_ID && PlayableScales.isDominantBlues(root.pitchClass, harmony.chords)) return suggestedFitOn(harmony, root)
-        return PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.let { Fit(root, listOf(home) + (it.scales - home), Level.TONAL, home) }
+        // Power chords hold every scale, so the row is built on the home where its third was decided: by a chord's third,
+        // or by the key in force. Read without a key, a part of power chords is major only because major is tried first.
+        val hasThird = harmony.chords.any { chord -> chord.intervals.any { it.mod(12) == MINOR_THIRD || it.mod(12) == MAJOR_THIRD } }
+        val given = home.takeIf { hasThird || harmony.key?.root?.pitchClass == root.pitchClass }
+        return PlayableScales.suggestionFor(root.pitchClass, harmony.chords, given)?.let { Fit(root, listOf(home) + (it.scales - home), Level.TONAL, home) }
     }
 
     /**
@@ -351,7 +355,7 @@ public object SongScaleGroups {
         val home = naturalMinor
         val held = harmony.chords.filter { holdsChord(home, root.pitchClass, it) }
         if (held.isEmpty()) return null
-        return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
+        return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held, home) - home), level, home, harmony.exceptionsTo(home, root))
     }
 
     /**
@@ -427,11 +431,11 @@ public object SongScaleGroups {
             // the flat third against the chords' major one being the style, so they lead and nothing is an exception.
             // The home still decides what the part joins.
             if (isRockRiff) {
-                val scales = (PlayableScales.rockRiffScales + home + PlayableScales.over(root.pitchClass, held)).distinct()
+                val scales = (PlayableScales.rockRiffScales + home + PlayableScales.over(root.pitchClass, held, home)).distinct()
                 return@firstNotNullOfOrNull Fit(root, scales, level, home)
             }
             if (home.id == NATURAL_MINOR_ID) return@firstNotNullOfOrNull minorHomeFitOn(harmony, root, level)
-            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
+            Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held, home) - home), level, home, harmony.exceptionsTo(home, root))
         }
     }
 

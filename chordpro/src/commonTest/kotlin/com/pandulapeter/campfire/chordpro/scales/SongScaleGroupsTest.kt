@@ -540,6 +540,16 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a minor home of power chords never offers the parallel major`() {
+        listOf(song("C Ab G5 G5 C Ab G5 G5", key = "Gm"), song("A5 D5 E5 A5", key = "Am")).forEach { text ->
+            val scales = groups(text).single().scales.map { it.id }
+            assertEquals(listOf("natural_minor", "minor_pentatonic", "blues", "dorian"), scales.take(4))
+            assertTrue("major" !in scales && "major_pentatonic" !in scales)
+        }
+        assertTrue("natural_minor" in groups(song("A5 D5 E5 A5")).single().scales.map { it.id })
+    }
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })

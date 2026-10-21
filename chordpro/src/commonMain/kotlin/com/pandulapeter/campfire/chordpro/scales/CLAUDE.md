@@ -68,7 +68,9 @@
   and it must be one chord in 32 or come back in two plays; a key or an exception counts double. Nothing fills an
   unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
-  pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic
+  pentatonic sharing its third and the blues (a group's row is built on the group's home, every other holder of its
+  third's opposite dropped, so a minor home over power chords never offers the parallel major; a part of power chords
+  alone, read without a key, has no third to keep; natural minor's for a harmonic or melodic minor home; the minor pentatonic
   and blues also after a Mixolydian home's major one, over a dominant blues (every chord major on I, IV, V, or every
   chord on the I a seventh, the I the most played root, no major seventh on I, IV, V, and those steps more than half
   the plays; the I or the IV mostly a seventh, or a V–IV turnaround in a part half on its I with a seventh in it), a

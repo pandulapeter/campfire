@@ -176,6 +176,20 @@ class PlayableScalesTest {
     }
 
     @Test
+    fun `a home given leads the row and keeps only the scales of its third`() {
+        fun over(home: String, vararg names: String) =
+            PlayableScales.over(7, names.map { ChordProChords.parse(it)!! }, Scales.fromId(home)!!).map { it.id }
+        val minor = over("natural_minor", "G5", "G5")
+        assertEquals(listOf("natural_minor", "minor_pentatonic", "blues"), minor.take(3))
+        assertTrue("major" !in minor && "major_pentatonic" !in minor)
+        val mixolydian = over("mixolydian", "G5", "G5")
+        assertEquals(listOf("mixolydian", "major_pentatonic", "minor_pentatonic", "blues"), mixolydian.take(4))
+        assertTrue("natural_minor" !in mixolydian)
+        val major = over("major", "G5")
+        assertTrue("egyptian" in major && "dorian" !in major)
+    }
+
+    @Test
     fun `an altered dominant is not a blues`() {
         listOf("G7#5", "G7b9").forEach { assertFalse(isBlues(7, it), it) }
         listOf("C7b5", "C7b13").forEach { assertFalse(isBlues(0, it), it) }

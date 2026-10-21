@@ -48,16 +48,33 @@ public object PlayableScales {
     public fun over(root: Int, chords: List<Chord>): List<Scale> = suggestionFor(root, chords)?.scales.orEmpty()
 
     /**
-     * The scales on [root] for [chords], and whether they are a fit to group a song by ([Suggestion.isFit]): a scale of
-     * at most seven notes holds them, or they are a dominant blues. Null where nothing is suggested.
+     * [over] for a part whose [home] is already decided (a key's scale, a home with exceptions): the row leads with the
+     * home, the pentatonic and the blues inside it follow its third, and of the other scales holding [chords] only those
+     * sharing the home's third, or having none, are offered, since a scale of the other third contradicts the home
+     * whatever the chords allow (power chords allow everything).
      */
-    internal fun suggestionFor(root: Int, chords: List<Chord>): Suggestion? {
+    internal fun over(root: Int, chords: List<Chord>, home: Scale): List<Scale> = suggestionFor(root, chords, home)?.scales.orEmpty()
+
+    /**
+     * The scales on [root] for [chords], and whether they are a fit to group a song by ([Suggestion.isFit]): a scale of
+     * at most seven notes holds them, or they are a dominant blues. Null where nothing is suggested. The home is [given]
+     * where a caller has decided it, which then leads whether or not it holds every chord, else the first seven-note
+     * scale holding them.
+     */
+    internal fun suggestionFor(root: Int, chords: List<Chord>, given: Scale? = null): Suggestion? {
         val notes = chords.flatMapTo(mutableSetOf()) { chord -> chord.intervals.map { (chord.root + it).mod(12) } }
-        val holding = ScaleChords.scalesContaining(root, notes)
-        val home = holding.firstOrNull { it.intervals.size == HOME_SCALE_SIZE }
+        val holders = ScaleChords.scalesContaining(root, notes)
+        val home = given ?: holders.firstOrNull { it.intervals.size == HOME_SCALE_SIZE }
         val isDominantBlues = isDominantBlues(root, chords)
         val isRockRiff = isRockRiff(root, chords)
-        if (holding.isEmpty() && !isDominantBlues && !isRockRiff) return null
+        if (holders.isEmpty() && !isDominantBlues && !isRockRiff) return null
+        // A scale holding both thirds (the major blues, bebop Dorian) shares the home's and stays.
+        val third = home?.intervals?.firstOrNull { it == MINOR_THIRD || it == MAJOR_THIRD }
+        val holding = if (given == null || third == null) {
+            holders
+        } else {
+            holders.filter { scale -> third in scale.intervals || scale.intervals.none { it == MINOR_THIRD || it == MAJOR_THIRD } }
+        }
         val source = if (home?.id in raisedMinorIds) naturalMinor else home
         val inside = source?.let { scale -> pentatonics.filter { scale.intervals.containsAll(it.intervals) } }.orEmpty()
             .sortedBy { MAJOR_THIRD !in (source?.intervals.orEmpty()) == (it.id == MAJOR_PENTATONIC_ID) }
@@ -83,7 +100,7 @@ public object PlayableScales {
                 holding.filter { it.intervals.size < HOME_SCALE_SIZE } +
                 holding.filter { it.intervals.size > HOME_SCALE_SIZE }
             ).distinct()
-        return Suggestion(scales = scales, isFit = isDominantBlues || holding.any { it.intervals.size <= HOME_SCALE_SIZE })
+        return Suggestion(scales = scales, isFit = isDominantBlues || holders.any { it.intervals.size <= HOME_SCALE_SIZE })
     }
 
     /**
@@ -165,6 +182,7 @@ public object PlayableScales {
 
     private const val HOME_SCALE_SIZE = 7
     private const val MIN_MINOR_SHARE = 8
+    private const val MINOR_THIRD = 3
     private const val MAJOR_THIRD = 4
     private const val FOURTH = 5
     private const val FLAT_FIFTH = 6
