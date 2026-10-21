@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.scales
 
+import com.pandulapeter.campfire.chordpro.model.Chord
+
 /** The chords of a list of parts, read once for every fit tried on them. */
 internal class Harmony(parts: List<SongPart>) {
     val key = parts.first().key
@@ -25,6 +27,58 @@ internal class Harmony(parts: List<SongPart>) {
 
     /** The first of the scales [ids] names that holds every chord on [root]. */
     fun holding(root: SpelledNote, ids: List<String>) = ids.firstNotNullOfOrNull { id -> Scales.fromId(id)?.takeIf { holds(it, root) } }
+
+    /**
+     * Whether a home on [root] counts the chords leading into it ([leadsInto]): never for a rock riff, whose major chords
+     * are the riff's, not secondary dominants; and on the key's root only while the part is still in the key ([leavesKey]).
+     */
+    fun countsLeadersOn(root: SpelledNote) = !PlayableScales.isRockRiff(root.pitchClass, chords) &&
+        (key?.root?.pitchClass != root.pitchClass || !leavesKey(key))
+
+    /**
+     * Whether the part has left [key] for another: its best scored root is another, and the major or natural minor scale
+     * there, not sharing the key's notes, holds more of its chords than the key's own scale does. A bridge in the key of
+     * the V (`D A Bm F#m G D E A` under `{key: G}`) is then read in D: its A and E lead into notes of G major too, and
+     * counted as the key's they would make it G with three exceptions.
+     */
+    fun leavesKey(key: SongKey): Boolean {
+        val centre = ranked.first().takeIf { it.pitchClass != key.root.pitchClass } ?: return false
+        val keyScale = if (key.isMinor) naturalMinor else major
+        val keyNotes = Scales.pitchClasses(keyScale, key.root.pitchClass)
+        val held = chords.count { holdsChord(keyScale, key.root.pitchClass, it) }
+        return listOf(major, naturalMinor).any { scale ->
+            Scales.pitchClasses(scale, centre.pitchClass) != keyNotes && chords.count { holdsChord(scale, centre.pitchClass, it) } > held
+        }
+    }
+
+    /**
+     * Whether the chord at [index] is the ii of a secondary ii–V into [home] on [root] (`Gm7 C7` into F in a song in C): a
+     * minor chord followed by a chord leading into the home a fourth above it. A ii is never the last chord before its V,
+     * so the chords are not read as a loop here.
+     */
+    fun isTwoOfLeaderInto(home: Scale, root: Int, index: Int): Boolean {
+        val chord = chords[index]
+        val next = chords.getOrNull(index + 1) ?: return false
+        val intervals = chord.intervals.map { it.mod(12) }
+        return MINOR_THIRD in intervals && MAJOR_THIRD !in intervals && leadsInto(home, root, next) && (next.root - chord.root).mod(12) == FOURTH
+    }
+}
+
+/**
+ * Whether [chord] leads into [home] on [root] as the home's own harmony would: a major triad or a dominant seventh
+ * (altered or not) whose target, the root a fourth above it, is a note of the home (the E7 and A7 of a song in C), or a
+ * diminished chord a semitone under one (its F#dim). Such a chord is the key's, not against it, though the home leaves
+ * its notes out.
+ */
+internal fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
+    // A major chord or a seventh on a minor home's own root is its parallel major, never a secondary dominant: read as
+    // leading into the fourth, the tonic C7 of a jazz blues would lift the minor family over Mixolydian.
+    if (chord.root == root && MINOR_THIRD in home.intervals) return false
+    val notes = Scales.pitchClasses(home, root)
+    val intervals = chord.intervals.map { it.mod(12) }
+    val isDominant = chord.isMajorOrDominant || chord.isDominantSeventh
+    val isDiminished = MINOR_THIRD in intervals && FLAT_FIFTH in intervals && FIFTH !in intervals
+    return isDominant && (chord.root + FOURTH).mod(12) in notes || isDiminished && (chord.root + 1).mod(12) in notes
 }
 
 /**
@@ -62,6 +116,11 @@ internal fun rankedRoots(parts: List<SongPart>): List<SpelledNote> {
     )
 }
 
+private const val MINOR_THIRD = 3
 private const val MAJOR_THIRD = 4
+private const val FOURTH = 5
+private const val FLAT_FIFTH = 6
 private const val FIFTH = 7
 private const val CADENCE_SCORE = 2
+private val major = Scales.fromId("major")!!
+private val naturalMinor = Scales.fromId("natural_minor")!!

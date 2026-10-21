@@ -312,6 +312,54 @@ class SongScaleGroupsTest {
         assertEquals(1, groups(song("C A7 Dm G7", "F G C", key = "C")).size)
 
     @Test
+    fun `a key's home is kept however many chords it leaves out`() {
+        val blueBossa = groups(song("Cm7 Cm7 Fm7 Fm7 Dm7b5 G7 Cm7 Cm7 Ebm7 Ab7 Dbmaj7 Dbmaj7 Dm7b5 G7 Cm7 G7", key = "Cm")).single()
+        assertEquals("C" to "natural_minor", blueBossa.rootName to blueBossa.scales.first().id)
+        assertEquals(listOf("G7", "Dbmaj7", "Ebm7", "Ab7"), blueBossa.exceptions.map { it.chordName })
+        val allOfMe = groups(
+            song(
+                "Cmaj7 Cmaj7 E7 E7 A7 A7 Dm7 Dm7 E7 E7 Am7 Am7 D7 D7 Dm7 G7",
+                "Cmaj7 Cmaj7 E7 E7 A7 A7 Dm7 Dm7 F Fm Cmaj7 A7 Dm7 G7 C6 G7",
+                key = "C",
+            ),
+        ).single()
+        assertEquals("C" to "major", allOfMe.rootName to allOfMe.scales.first().id)
+        assertEquals(listOf("E7", "A7", "D7", "Fm"), allOfMe.exceptions.map { it.chordName })
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C E7 A7 Dm E7 Am D7 Dm G7 C E7 A7 Dm F Fm C A7 Dm G7 C", key = "C")))
+    }
+
+    @Test
+    fun `a secondary dominant and a leading-tone diminished chord are the key's, not against it`() {
+        listOf("C", null).forEach { key ->
+            val gospel = groups(song("C E7 Am C7 F F#dim C/G A7 D7 G7 C G7", key = key)).single()
+            assertEquals("C" to "major", gospel.rootName to gospel.scales.first().id)
+            assertEquals(listOf("E7", "C7", "F#dim", "A7", "D7"), gospel.exceptions.map { it.chordName })
+        }
+        val country = groups(song("G G C G G A7 D7 D7 G G7 C Cm G D7 G G", key = "G")).single()
+        assertEquals("G" to "major", country.rootName to country.scales.first().id)
+        assertEquals(listOf("A7", "G7", "Cm"), country.exceptions.map { it.chordName })
+    }
+
+    @Test
+    fun `a key must hold half the chords by itself`() {
+        assertEquals(listOf("E" to "major"), rootAndFirst(song("E A B E", key = "C")))
+        assertEquals(1, groups(song("D F G", key = "A")).size)
+    }
+
+    @Test
+    fun `the key's own scale beats its mode unless the mode holds two chords more`() {
+        listOf("C Gm7 C7 F C Gm7 C7 F G7 C", "C F C F C F Ab Bb C C", "C Caug C6 C7 F F C C").forEach { chords ->
+            assertEquals(listOf("C" to "major"), rootAndFirst(song(chords, key = "C")), chords)
+        }
+        assertEquals(listOf("A" to "mixolydian"), rootAndFirst(song("A G D A A G D A A G D A E A", key = "A")))
+        assertEquals(listOf("C" to "mixolydian"), rootAndFirst(song("C7 Bb F G7 C7 Bb F G7", key = "C")))
+    }
+
+    @Test
+    fun `a part in the key of the fifth is no part of the key, its chords leading into it or not`() =
+        assertEquals(listOf("G" to "major", "D" to "major"), rootAndFirst(song("G C D G Em C D G", "D A Bm F#m G D E A", key = "G")))
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })
