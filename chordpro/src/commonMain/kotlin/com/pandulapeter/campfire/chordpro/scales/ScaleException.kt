@@ -20,7 +20,8 @@ package com.pandulapeter.campfire.chordpro.scales
  *   is played, else the chord's root.
  * @property scales The scales to play over the chord, the first the best answer.
  * @property otherChordNames From [SongScaleSuggestions], the other chords the same scale on [rootName] is played over,
- *   as the song first writes them, in play order: a song's V and V7 (`F#`, `F#7`) are one change of scale, not two.
+ *   as the song first writes them, in play order: a song's V and V7 (`F#`, `F#7`) are one change of scale, not two, and
+ *   so is a ii–V of another key, said in that key (`F#m7b5` and `D7` in C are G major).
  */
 public data class ScaleException(
     val chordName: String,

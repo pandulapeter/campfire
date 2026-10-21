@@ -202,6 +202,30 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
+    fun `chords whose scales are one set of notes are one moment, named by the parent key`() {
+        val inC = suggestions("Verse" to "C F#m7b5 D7 G7 C F#m7b5 D7 G7", key = "C").single()
+        assertEquals(listOf(Triple("F#m7b5", "G", "major")), inC.moments)
+        assertEquals(listOf("D7"), inC.exceptions.single().otherChordNames)
+        val inF = suggestions("Verse" to "F Bm7b5 G7 C7 F Bm7b5 G7 C7", key = "F").single()
+        assertEquals(listOf(Triple("Bm7b5", "C", "major")), inF.moments)
+        assertEquals(listOf("G7"), inF.exceptions.single().otherChordNames)
+    }
+
+    @Test
+    fun `chords the key's own scale answers keep its name when joined`() {
+        val autumnLeaves = suggestions(
+            "A" to "Cm7 F7 Bbmaj7 Ebmaj7 Am7b5 D7 Gm Gm",
+            "B" to "Am7b5 D7 Gm Gm Cm7 F7 Bbmaj7 Bbmaj7 Am7b5 D7 Gm7 C7 Fm7 Bb7 Am7b5 D7 Gm",
+            key = "Gm",
+        ).single()
+        val overFm7 = autumnLeaves.exceptions.single { it.chordName == "Fm7" }
+        assertEquals(Triple("G", "phrygian", listOf("Bb7")), Triple(overFm7.rootName, overFm7.scales.first().id, overFm7.otherChordNames))
+        val backdoor = suggestions("Verse" to "Cmaj7 Am7 Fm7 Bb7 Cmaj7 Am7 Fm7 Bb7", key = "C").single()
+        assertEquals(listOf(Triple("Fm7", "C", "natural_minor")), backdoor.moments)
+        assertEquals(listOf("Bb7"), backdoor.exceptions.single().otherChordNames)
+    }
+
+    @Test
     fun `a riff of power chords with a chorus of triads is one home, groups with one answer joined`() {
         val riff = "A5 C5 A5 D5 A5 C5 A5 A5 C5 A5 D5 A5 C5 A5"
         val song = suggestions(

@@ -68,8 +68,9 @@
   root and never cadence into it (a bridge on the IV, offered as the scale on it holding most of its chords; a chorus
   whose V→I lands home is the home's), the exceptions, and dominants whose
   third the group's first scale lacks (a blues's IV7 and V7). A section is one moment, a centre before a key, and
-  chords offered one scale on one root are one (a V and its V7); a chord counts only where the row it is played under
-  leaves it out. A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
+  chords whose scales are one set of notes are one (a V and its V7; a ii–V of another key, named by that key's major,
+  or by the home's own scale where one of them is on the home root or the notes are the home root's major, natural
+  minor, Dorian, or Mixolydian); a chord counts only where the row it is played under leaves it out. A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
   and it must be one chord in 32 or come back in two plays; a key or an exception counts double. Nothing fills an
   unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the

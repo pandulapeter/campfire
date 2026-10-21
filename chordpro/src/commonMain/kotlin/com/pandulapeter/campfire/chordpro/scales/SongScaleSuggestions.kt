@@ -30,8 +30,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  *   speak, and the textbook scale of the chord (Mixolydian) is offered over it. The chord on the root is what the home
  *   scale was chosen for, so it is never one, and a rock riff's triads keep the minor pentatonic throughout by design.
  *
- * A section is one moment, and so is a chord wherever it is played, together with the chords a viewer would offer the
- * same scale on the same root over (a V and its V7). Moments are ranked by how much of the song they last ([Moment]),
+ * A section is one moment, and so is a chord wherever it is played, together with the chords whose scales are the same
+ * notes (a V and its V7; a ii–V of another key, named by that key). Moments are ranked by how much of the song they last ([Moment]),
  * a key or a chord outside the scales weighing double a centre or a dominant the scales hold, and nothing is suggested
  * to fill the budget.
  */
@@ -134,17 +134,27 @@ public object SongScaleSuggestions {
     }
 
     /**
-     * The chords of [groups] worth a scale of their own, see [SongScaleSuggestions], each once, and those a viewer would
-     * offer one scale on one root over joined into one moment, named by each in play order, as a player changes scale
-     * once for a V and its V7.
+     * The chords of [groups] worth a scale of their own, see [SongScaleSuggestions], each once, and those whose scales are
+     * one set of notes joined into one moment, named by each in play order, as a player changes scale once for a V and its
+     * V7 or a ii–V of another key. The moment is named by the key's own scale where one of them is on the group's root or
+     * the notes are a common seven-note scale there (a backdoor ii–V is the home's natural minor), else by the parent
+     * major key, else by the first.
      */
     private fun chordMomentsOf(groups: List<PlayedGroup>, totals: Totals): List<ChordMoment> = groups.flatMap(::chordMomentsOf)
         .distinctBy { it.exception.chordName }
-        .groupBy { ChordProChords.pitchClass(it.exception.rootName) to it.exception.shownScale.id }
-        .values
-        .map { same ->
-            val first = same.first()
-            val exception = first.exception.copy(otherChordNames = same.drop(1).map { it.exception.chordName })
+        .groupBy { Scales.pitchClasses(it.exception.shownScale, it.exception.root) }
+        .entries
+        .map { (notes, same) ->
+            // A moment's index is that of the chord's first play in its own group, and groups are in play order.
+            val played = same.sortedWith(compareBy({ groups.indexOf(it.group) }, { it.first }))
+            val first = played.first()
+            val (rootName, scales) = namedSet(played, notes)
+            val exception = ScaleException(
+                chordName = first.exception.chordName,
+                rootName = rootName,
+                scales = scales,
+                otherChordNames = played.drop(1).map { it.exception.chordName },
+            )
             first.copy(
                 weight = same.maxOf { it.weight },
                 count = same.sumOf { it.count },
@@ -153,6 +163,25 @@ public object SongScaleSuggestions {
                 notes = same.flatMapTo(mutableSetOf()) { it.notes },
             )
         }
+
+    /**
+     * The root name and scales to say [played] over, chords whose shown scales are all [notes], in the key of the first's
+     * group; see [chordMomentsOf]. A home's own borrowed or Phrygian scale is what a player calls it, and other modes of one major
+     * scale are that key.
+     */
+    private fun namedSet(played: List<ChordMoment>, notes: Set<Int>): Pair<String, List<Scale>> {
+        val first = played.first()
+        val group = first.group
+        if (played.all { it.exception.root == first.exception.root }) return first.exception.rootName to first.exception.scales
+        played.firstOrNull { it.exception.root == group.rootPitchClass }?.let { return it.exception.rootName to it.exception.scales }
+        centreHomes.firstOrNull { Scales.pitchClasses(it, group.rootPitchClass) == notes }?.let { return group.group.rootName to listOf(it) }
+        played.firstOrNull { it.exception.shownScale.let { scale -> scale == majorScale || scale.modeOf?.first == MAJOR_ID } }?.let { moment ->
+            val scale = moment.exception.shownScale
+            val parentName = if (scale == majorScale) moment.exception.rootName else ScaleSpelling.parentRootName(scale, moment.exception.rootName)
+            if (parentName != null) return parentName to listOf(majorScale)
+        }
+        return first.exception.rootName to first.exception.scales
+    }
 
     /** The chords of [group] worth a scale of their own: its exceptions, then its dominants, their plays yet uncounted. */
     private fun chordMomentsOf(group: PlayedGroup): List<ChordMoment> {
@@ -225,6 +254,9 @@ public object SongScaleSuggestions {
 
     /** The scale a viewer shows over this chord: the first common one, else the first. */
     private val ScaleException.shownScale get() = scales.firstOrNull { it in Scales.common } ?: scales.first()
+
+    /** The pitch class of the exception's root. */
+    private val ScaleException.root get() = ChordProChords.pitchClass(rootName) ?: 0
 
     /** The chords this exception is played over. */
     private val ScaleException.chordNames get() = listOf(chordName) + otherChordNames
@@ -306,8 +338,10 @@ public object SongScaleSuggestions {
     }
 
     private val centreHomes = listOf("major", "natural_minor", "dorian", "mixolydian").map(Scales::fromId).requireNoNulls()
+    private val majorScale = Scales.fromId(MAJOR_ID)!!
     private val majorPentatonic = Scales.fromId("major_pentatonic")!!
     private val minorPentatonic = Scales.fromId("minor_pentatonic")!!
+    private const val MAJOR_ID = "major"
     private const val MAX_MOMENTS = 3
     private const val MIN_PLAY_SHARE = 8
     private const val MIN_SECTION_SHARE = 16
