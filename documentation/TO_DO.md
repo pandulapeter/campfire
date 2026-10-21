@@ -9,10 +9,9 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
-- Update third party dependencies
 - Sharing landing page should display the artist of the shared song, if available
-- Review scale suggestions for Aerosmith - Pink
-- Android force update doesn't seem to work
+- Consider a surface background for the navigation rail
+- Improve the UX of sharing links + recommend it more than PDF or chordPro / zip export
 - Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device
 - Fast scrolling is glitchy, especially on Setlists
 - Rename master branch to main

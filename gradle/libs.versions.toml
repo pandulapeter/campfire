@@ -23,8 +23,8 @@ google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in
 google-playInstallReferrer = "2.2" # https://developer.android.com/google/play/installreferrer/library
 gradle = "9.4.1" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
-jbr-api = "1.10.1" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
-jetbrains-compose = "1.12.1" # https://github.com/JetBrains/compose-jb/releases
+jbr-api = "1.11.0" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
+jetbrains-compose = "1.12.2" # https://github.com/JetBrains/compose-jb/releases
 jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.compose.material3)
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
@@ -34,11 +34,11 @@ kotlin = "2.4.20" # https://kotlinlang.org/docs/releases.html#release-details
 kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
-kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
+kotlin-serialization = "1.12.0" # https://github.com/Kotlin/kotlinx.serialization/releases
 ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
 ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
 #noinspection NewerVersionAvailable
-skiko = "0.150.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
+skiko = "0.150.2" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 spotless = "8.10.4" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
 zxing = "3.5.4" # https://github.com/zxing/zxing/releases
 
