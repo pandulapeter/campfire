@@ -41,8 +41,9 @@
 - Runs in `SyncRunner` after the preferences, before the completed index is saved and the watch point set. Skipped when
   the listing has no shared copy and the journal is empty; the registry comes from the mirror when the listing names
   its revision and the journal is empty. The journal is applied first (a stop deletes the copy, then the entry; an id
-  no copy can have, hand-edited, has none to delete: `deleteSharedCopy`, as Stop sharing too), and every change of the step goes in as one `SharedCopyChanges` edit at the end, also after a failure; journal entries
-  are forgotten only once written.
+  no copy can have, hand-edited, has none to delete: `deleteSharedCopy`, as Stop sharing too), and every change of the
+  step goes in as one `SharedCopyChanges` edit at the end, also after a failure; journal entries are forgotten only
+  once written.
 - A copy is skipped unread when its `built` has the inputs fingerprint (`sharedCopyFingerprint`, from the run's index
   `localHash`es; a setlist is the one file read), a build no older than `CAMPFIRE_BUILD_NUMBER` (generated from
   `campfire.buildNumber`), and the listed hash (or none while `tooLarge`). Otherwise it is packed from the library's raw

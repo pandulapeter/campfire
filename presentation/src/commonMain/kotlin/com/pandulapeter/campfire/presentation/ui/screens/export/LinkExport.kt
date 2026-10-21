@@ -36,7 +36,8 @@ import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompl
 import kotlinx.coroutines.launch
 
 /**
- * The Link format of one song or setlist as the export screen draws it: its [state] and what each control does. [isStopAsked] is the Stop sharing question, which the screen puts up itself.
+ * The Link format of one song or setlist as the export screen draws it: its [state] and what each control does.
+ * [isStopAsked] is the Stop sharing question, which the screen puts up itself.
  */
 internal class LinkExport(
     val state: LinkExportState,
