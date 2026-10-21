@@ -143,12 +143,12 @@ internal class MetadataBuilder {
 
     /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
     private fun addTag(value: String) {
-        if (tagKeys.add(ChordProMetaItems.caseInsensitiveKey(value))) tags += value
+        if (tags.size < ChordProMetadata.MAX_TAGS && tagKeys.add(ChordProMetaItems.caseInsensitiveKey(value))) tags += value
     }
 
     /** The codes are normalized before they get here, so a repeated language is a repeated string. */
     private fun addLanguage(value: String) {
-        if (languageSet.add(value)) languages += value
+        if (languages.size < ChordProMetadata.MAX_LANGUAGES && languageSet.add(value)) languages += value
     }
 
     fun build(transpose: Int) = ChordProMetadata(

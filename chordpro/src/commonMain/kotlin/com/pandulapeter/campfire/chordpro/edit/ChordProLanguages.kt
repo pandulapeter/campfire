@@ -69,6 +69,13 @@ public object ChordProLanguages {
      */
     public fun code(value: String): String? = ChordProMetaItems.languageCode(value)
 
+    /**
+     * Every language a directive line of [text] declares, in file order and once each, normalized as [setLanguages]
+     * normalizes them. Unlike the parsed `ChordProMetadata.languages`, which stop at `ChordProMetadata.MAX_LANGUAGES`,
+     * this is the whole set, so an edit built on it never drops the languages past that.
+     */
+    public fun declaredIn(text: String): List<String> = ChordProLines.splitLines(text).mapNotNull { it.language() }.distinct()
+
     /** The language of a line that is a language directive, null for every other line. */
     private fun String.language() = ChordProDirectives.matchDirective(trim())?.let { ChordProMetaItems.language(it) }
 }

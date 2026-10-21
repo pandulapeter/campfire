@@ -87,6 +87,8 @@ The view model facade, the composition root, and the product rules every screen 
 - ChordPro `{tag}` directives, read into `Song.tags`, so a tag travels through export, import, and sync. The library's
   tags are whatever the songs carry. Sorting (most used / alphabetical) is `UserPreferences.tagSortingMode` and
   `languageSortingMode`, shared by the filters and the sheets.
+- A song shows its first `MAX_TAGS` tags and `MAX_LANGUAGES` languages; the file keeps the rest, and no edit drops them
+  (a language sheet takes off only the languages it offered).
 
 ### A tag's color is the library's, not the song's
 

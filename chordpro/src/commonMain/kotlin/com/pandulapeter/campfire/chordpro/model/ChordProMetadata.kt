@@ -36,13 +36,15 @@ public data class ChordProMetadata(
     /**
      * The labels the song was filed under, one per `{tag}` directive (or per `{meta: tag ...}`, which ChordPro
      * documents as the same thing). They are kept in the order the file lists them, without the duplicates a hand
-     * written file may hold: two spellings of the same word are the same tag, and the first one wins.
+     * written file may hold: two spellings of the same word are the same tag, and the first one wins. Only the first
+     * [MAX_TAGS] distinct ones are read; the file keeps the rest.
      */
     val tags: List<String> = emptyList(),
     /**
      * The languages the song is sung in, one per `{meta: language en}` directive, as ISO codes folded to lower case
      * and cut down to their primary subtag (see `ChordProMetaItems.languageCode`). Usually one, and empty for a file
-     * that says nothing about its language, which is most of them.
+     * that says nothing about its language, which is most of them. Only the first [MAX_LANGUAGES] distinct ones are
+     * read; the file keeps the rest.
      */
     val languages: List<String> = emptyList(),
     /**
@@ -57,7 +59,19 @@ public data class ChordProMetadata(
      */
     val definitions: List<ChordDefinition> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
-)
+) {
+    public companion object {
+
+        /**
+         * The most tags a song is read with. Every row, details sheet, and filter draws each of a song's tags, so a file
+         * declaring tens of thousands of them would freeze every screen showing it; a hundred is far beyond human use.
+         */
+        public const val MAX_TAGS: Int = 100
+
+        /** The most languages a song is read with, for the same reason as [MAX_TAGS]. */
+        public const val MAX_LANGUAGES: Int = 100
+    }
+}
 
 /**
  * The title as the app shows it, wherever a song is named: `{title}`, or [fallback] where the file declares none,

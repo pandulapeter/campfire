@@ -59,7 +59,7 @@ internal class SelectionEditing(
 
     /** Each song's own languages, less [removed] and with [added] after them. */
     fun setSelectionLanguages(fileNames: List<String>, added: Set<String>, removed: Set<String>) = edit(fileNames) { text ->
-        val codes = ChordProParser.parse(text).metadata.languages
+        val codes = ChordProLanguages.declaredIn(text)
         val edited = codes.filterNot { it in removed } + added.filterNot { it in codes }
         if (edited == codes) text else ChordProLanguages.setLanguages(text, edited)
     }

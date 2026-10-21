@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro.edit
 
-import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
@@ -36,8 +35,11 @@ public object ChordProTags {
     public fun addTag(text: String, tag: String, fold: (String) -> String = { it }): String {
         val trimmedTag = tag.asTag()
         val key = fold(trimmedTag)
-        if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { fold(it).equals(key, ignoreCase = true) }) return text
+        if (trimmedTag.isEmpty()) return text
         val lines = ChordProLines.splitLines(text).toMutableList()
+        // The lines rather than the parsed tags, which stop at ChordProMetadata.MAX_TAGS: a tag the file carries past
+        // them is carried all the same, and writing it again would only add a duplicate line.
+        if (lines.any { line -> line.tag()?.let(fold)?.equals(key, ignoreCase = true) == true }) return text
         lines.add(ChordProHeaderLayout.metadataInsertionIndex(lines, ChordProMetaItems.TAG_NAME), "{${ChordProMetaItems.TAG_NAME}: $trimmedTag}")
         return ChordProLines.joinLines(lines, text)
     }

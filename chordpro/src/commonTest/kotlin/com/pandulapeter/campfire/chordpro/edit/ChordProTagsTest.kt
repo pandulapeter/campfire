@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.edit
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSerializer
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -173,4 +174,11 @@ class ChordProTagsTest {
 
     /** A stand-in for the Unicode normalization the app passes, which this module does not have. */
     private val fold = { value: String -> value.replace("e\u0301", "\u00e9") }
+
+    @Test
+    fun `a tag the file carries past the cap is not written again`() {
+        val text = "{title: T}\n" + (0..ChordProMetadata.MAX_TAGS).joinToString("\n") { "{tag: t$it}" }
+
+        assertEquals(text, ChordProTags.addTag(text, "t${ChordProMetadata.MAX_TAGS}"))
+    }
 }

@@ -76,10 +76,14 @@ internal class SongMetadataEditing(
     /**
      * Declares the languages of a song, from the header of the screen that is playing it. The whole set arrives at
      * once rather than one language at a time, because the picker asks for all of them before it is closed and a
-     * file the user owns is better rewritten once than once per checkbox.
+     * file the user owns is better rewritten once than once per checkbox. As with [setSongTags], only the languages of
+     * [offeredCodes] left unticked are taken off: one synced in while the sheet was open, and one past
+     * `ChordProMetadata.MAX_LANGUAGES` that the sheet never showed, stay in the file.
      */
-    fun setSongLanguages(target: SongEditTarget, codes: List<String>) = editSong(target) { text ->
-        ChordProLanguages.setLanguages(text, codes)
+    fun setSongLanguages(target: SongEditTarget, codes: List<String>, offeredCodes: List<String>) = editSong(target) { text ->
+        val declared = ChordProLanguages.declaredIn(text)
+        val edited = declared.filterNot { it in offeredCodes && it !in codes } + codes.filterNot { it in declared }
+        if (edited == declared) text else ChordProLanguages.setLanguages(text, edited)
     }
 
     /** Opens the label pickers on the current draft when invoked from the editor. */

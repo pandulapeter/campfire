@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.state.songs
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
 import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
@@ -57,6 +59,17 @@ class SelectionEditingTest {
         advanceUntilIdle()
 
         assertEquals(List(3) { listOf("Rock") }, files.values.map { ChordProParser.parse(it).metadata.tags })
+    }
+
+    @Test
+    fun `a selection's language edit keeps the languages past the cap`() = runTest {
+        val declared = (0..ChordProMetadata.MAX_LANGUAGES).map { "q$it" }
+        files["a.cho"] = ChordProLanguages.setLanguages("{title: A}", declared)
+
+        editing(backgroundScope).setSelectionLanguages(listOf("a.cho"), added = setOf("hu"), removed = emptySet())
+        runCurrent()
+
+        assertEquals(declared + "hu", ChordProLanguages.declaredIn(files.getValue("a.cho")))
     }
 
     /** Edits [files], each file once [gate] lets it through, as the repository's lock would keep it waiting. */

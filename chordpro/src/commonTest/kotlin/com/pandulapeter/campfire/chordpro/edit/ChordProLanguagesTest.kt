@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.edit
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSerializer
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -169,5 +170,13 @@ class ChordProLanguagesTest {
         val text = "{title: T}\r\rThe first line\r"
 
         assertEquals("{title: T}\r{meta: language en}\r\rThe first line\r", ChordProLanguages.setLanguages(text, listOf("en")))
+    }
+
+    @Test
+    fun `declaredIn reads every language, past the cap too`() {
+        val codes = (0..ChordProMetadata.MAX_LANGUAGES).map { "q$it" }
+        val text = "{title: T}\n" + codes.joinToString("\n") { "{meta: language $it}" } + "\n{lang: Q0}"
+
+        assertEquals(codes, ChordProLanguages.declaredIn(text))
     }
 }

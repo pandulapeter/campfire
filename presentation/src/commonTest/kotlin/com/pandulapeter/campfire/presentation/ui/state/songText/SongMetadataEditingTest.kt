@@ -11,9 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.state.songText
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
 import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
@@ -103,6 +105,22 @@ class SongMetadataEditingTest {
         retainedField = null
         draft = SongContent(fileName = "other.cho", text = "another song's draft")
         assertNull(editing.songTextOf(draftTarget))
+    }
+
+    @Test
+    fun `a language past the cap stays when the sheet saves`() = runTest {
+        val declared = (0..ChordProMetadata.MAX_LANGUAGES).map { "q$it" }
+        val shown = declared.take(ChordProMetadata.MAX_LANGUAGES)
+        editing().setSongLanguages(draftTarget, codes = shown.drop(1), offeredCodes = shown)
+        val edited = ChordProLanguages.declaredIn(editedText(ChordProLanguages.setLanguages("{title: A}", declared)))
+        assertEquals(declared.drop(1), edited)
+    }
+
+    @Test
+    fun `a language the sheet never offered stays`() = runTest {
+        editing().setSongLanguages(draftTarget, codes = listOf("de"), offeredCodes = listOf("en"))
+        val text = "{title: A}\n{meta: language en}\n{meta: language hu}"
+        assertEquals(listOf("hu", "de"), ChordProParser.parse(editedText(text)).metadata.languages)
     }
 
     /** What the one edit handed to the editor makes of [text]. */

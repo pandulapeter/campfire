@@ -25,6 +25,9 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - **Text edits keep every other byte.** Tags, languages, links, cover, metadata fields, transposition, and notation
   conversion edit the text, not the model, since the result is written straight back to the user's file.
   `ChordProLines.joinLines` keeps the file's line separator and trailing line break.
+- **A song is read with its first `MAX_TAGS` tags and `MAX_LANGUAGES` languages** (`ChordProMetadata`, 100 each); the
+  file keeps the rest, and no edit drops them: `ChordProTags.addTag` scans the lines, and a language edit starts from
+  `ChordProLanguages.declaredIn`, never from the parsed list.
 - **A directive is added after the last of its kind, else into the header in `metadataOrder`**
   (`ChordProHeaderLayout`); adding a line never reorders the others, only Prettify reorders the header. A body
   `{key}`/`{tempo}`/`{time}` is a mid-song change, never the header's.

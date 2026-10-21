@@ -1005,12 +1005,12 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `a song with a hundred thousand distinct tags or languages is parsed in linear time`() {
+    fun `a song keeps only its first MAX_TAGS tags and MAX_LANGUAGES languages`() {
         val tags = (0 until 100_000).joinToString("\n") { "{tag: t$it}" }
         val languages = (0 until 100_000).joinToString("\n") { "{lang: q$it}" }
 
-        assertEquals(100_000, ChordProParser.summarize(tags).metadata.tags.size)
-        assertEquals(100_000, ChordProParser.summarize(languages).metadata.languages.size)
+        assertEquals((0 until ChordProMetadata.MAX_TAGS).map { "t$it" }, ChordProParser.summarize(tags).metadata.tags)
+        assertEquals((0 until ChordProMetadata.MAX_LANGUAGES).map { "q$it" }, ChordProParser.summarize(languages).metadata.languages)
     }
 
     @Test
