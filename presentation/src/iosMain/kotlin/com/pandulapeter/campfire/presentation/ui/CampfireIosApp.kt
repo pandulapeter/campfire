@@ -22,7 +22,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.IosClipboardLinkReader
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
@@ -42,6 +44,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filePicker The document picker. Handed in for the same reason as [urlOpener]: both are UIKit, which this
  *   module stays free of.
  * @param filesToImport Files opened with Campfire, which reach the app module through `onOpenURL`.
+ * @param shareLinks Campfire links the app was opened with (the Universal Link, `campfire://s/`), which reach the app
+ *   module through `onOpenURL` like files.
  * @param inboxShares Shares the share extension left in its inbox, one at a time: each is completed as taken once its
  *   import has settled. Completed from the import rather than awaited here, since the queue lives in the view model
  *   and carries on when this composition goes.
@@ -66,6 +70,7 @@ fun CampfireIosApp(
     urlOpener: (String) -> Unit,
     filePicker: FilePicker,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    shareLinks: Flow<SharedLink> = emptyFlow(),
     inboxShares: Flow<InboxShare> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
@@ -90,6 +95,8 @@ fun CampfireIosApp(
             }
         }
     }
+    // Asked as the app starts, without reading the pasteboard: the view model asks only once, and only on a first launch.
+    LaunchedEffect(viewModel) { viewModel.firstRunController.offerClipboardLink(IosClipboardLinkReader) }
     LaunchedEffect(inboxShares) {
         inboxShares.collect { share ->
             val settled = share.texts?.let(viewModel.pastedSongController::importSharedText)
@@ -102,6 +109,7 @@ fun CampfireIosApp(
             viewModel = viewModel,
             urlOpener = urlOpener,
             filesToImport = filesToImport,
+            shareLinks = shareLinks,
         )
     }
 }

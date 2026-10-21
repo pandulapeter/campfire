@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
 import com.pandulapeter.campfire.presentation.resources.paste_only_links
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
+import com.pandulapeter.campfire.presentation.resources.clipboard_not_campfire_link
 import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
 import com.pandulapeter.campfire.presentation.resources.share_link_copied
 import com.pandulapeter.campfire.presentation.resources.share_qr_code_saved
@@ -95,7 +96,43 @@ internal fun Messages(
     // since it was cut short.
     val queue by viewModel.messageSink.messageQueue.collectAsStateWithLifecycle()
     val head = queue.firstOrNull()
-    val text = when (val current = head?.value) {
+    val text = messageText(head?.value)
+    val importFinished = head?.value as? Message.ImportFinished
+    val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
+    val songToOpen = importFinished?.result?.convertedSongToOpen?.takeIf { areSongsEnabled }
+    val actionLabel = when {
+        songToOpen != null -> stringResource(Res.string.import_open)
+        importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
+        else -> null
+    }
+    LaunchedEffect(head?.index) {
+        if (head != null && text != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = text,
+                actionLabel = actionLabel,
+                duration = if (actionLabel != null || '\n' in text) SnackbarDuration.Long else SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                when {
+                    songToOpen != null -> viewModel.navigator.openImportedSong(songToOpen)
+                    importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
+                }
+            }
+            viewModel.messageSink.onMessageShown(head)
+        }
+    }
+    SnackbarHost(
+        modifier = modifier,
+        hostState = snackbarHostState,
+    ) { data ->
+        Snackbar(snackbarData = data)
+    }
+}
+
+/** What [current] says, or null for no message; built here because string resources can only be read in a composition. */
+@Composable
+private fun messageText(current: Message?): String? =
+    when (current) {
         is Message.ImportFinished -> listOfNotNull(
             if (current.result.isFailed) stringResource(Res.string.import_status_stopped) else null,
             stringResource(
@@ -166,39 +203,9 @@ internal fun Messages(
         is Message.StopSharingEverythingFailed -> stringResource(
             if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_all_failed_network else Res.string.share_stop_all_failed,
         )
+        Message.ClipboardNotCampfireLink -> stringResource(Res.string.clipboard_not_campfire_link)
         null -> null
     }
-    val importFinished = head?.value as? Message.ImportFinished
-    val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
-    val songToOpen = importFinished?.result?.convertedSongToOpen?.takeIf { areSongsEnabled }
-    val actionLabel = when {
-        songToOpen != null -> stringResource(Res.string.import_open)
-        importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
-        else -> null
-    }
-    LaunchedEffect(head?.index) {
-        if (head != null && text != null) {
-            val result = snackbarHostState.showSnackbar(
-                message = text,
-                actionLabel = actionLabel,
-                duration = if (actionLabel != null || '\n' in text) SnackbarDuration.Long else SnackbarDuration.Short,
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                when {
-                    songToOpen != null -> viewModel.navigator.openImportedSong(songToOpen)
-                    importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
-                }
-            }
-            viewModel.messageSink.onMessageShown(head)
-        }
-    }
-    SnackbarHost(
-        modifier = modifier,
-        hostState = snackbarHostState,
-    ) { data ->
-        Snackbar(snackbarData = data)
-    }
-}
 
 /** How many of the files an export left out its message names, the rest being counted rather than listed. */
 private const val MAXIMUM_NAMED_FILES = 3

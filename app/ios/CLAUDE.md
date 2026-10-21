@@ -34,6 +34,11 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - `IosFileImport.kt`'s `openUrl(url)` (from Swift's `.onOpenURL`): a sync redirect never arrives here
   (`ASWebAuthenticationSession` answers it) but is ignored anyway, so it isn't reported as a failed import. URLs are read
   in order, one at a time, off the main thread; an unreadable file is passed on empty (reported as skipped).
+- **Shared links** reach `openUrl` too: the Universal Link (`https://campfire-songbook.com/s/…`, which a SwiftUI app
+  gets in `.onOpenURL`; never add `.onContinueUserActivity` beside it, or a link imports twice) and `campfire://s/…`
+  (the `campfire` scheme is already declared). One `ShareLinks.parse` reads goes to `shareLinksToImport`; an address of
+  that form it doesn't read only brings the app forward. `iosApp.entitlements` names `applinks:campfire-songbook.com`,
+  so the App ID needs the Associated Domains capability, and its profiles regenerating, before a signed build.
 - Files from AirDrop, Mail, or Messages are copies in `Documents/Inbox` and deleted after reading — only there, since a
   file opened in place is the user's original. Originals are read through an `NSFileCoordinator` (`readImportedFile`),
   which downloads an iCloud file and waits for a writer.

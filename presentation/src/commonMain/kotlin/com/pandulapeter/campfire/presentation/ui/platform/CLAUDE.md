@@ -73,6 +73,8 @@ The `expect` declarations and the interfaces the platform shells provide.
   `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission.
 - Written through `Clipboard.setClipEntry` with `plainTextClipEntry` (`Clipboard.kt`), each platform building the entry
   its own way; only Android 13+ confirms a copy itself (`isCopyConfirmedBySystem`).
+- `ClipboardLinkReader.kt` is iOS's alone: it can say a web address seems to be there without reading it, which is
+  the one question asked without a tap (the first run's link offer).
 
 ### `CompactKeyboardEffect.kt`
 

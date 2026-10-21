@@ -188,6 +188,7 @@
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
     <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>
     <string name="shared_link_from_newer_version">This link was made by a newer version of Campfire. Update Campfire to open it.</string>
+    <string name="clipboard_not_campfire_link">That isn\'t a Campfire link.</string>
     <string name="paste_refused_ios">Campfire was not allowed to paste. Paste from Other Apps, under Campfire in the Settings app, decides this.</string>
     <string name="paste_refused_web">The browser did not let Campfire read the clipboard. Press Ctrl+V (⌘V on a Mac) on the song list instead.</string>
     <string name="songs_new_song">New song</string>
@@ -1079,6 +1080,8 @@
     <string name="onboarding_feature_scales_description">Every scale and mode drawn for your instrument, and the ones that fit each song</string>
     <string name="onboarding_sync_title">Your songs, everywhere</string>
     <string name="onboarding_sync_message">Connect Dropbox to keep the same library on all your devices. There is no server in between: your files go straight to your own storage.</string>
+    <string name="onboarding_clipboard_link_question">Did someone send you a song or setlist?</string>
+    <string name="onboarding_clipboard_link_open">Open it</string>
     <string name="welcome_get_started">Get started</string>
 
     <!-- In-app updates, which only the Play build ever has anything to show -->

@@ -127,6 +127,7 @@ internal fun OnboardingScreen(
         val sideMargin = onboardingSideMargin(maxWidth)
         val bottomMargin = onboardingBottomMargin(width = maxWidth, height = maxHeight)
         val isLast = nextOnboardingStep(currentStep, steps) == null
+        val lastPageFooter = rememberOnboardingClipboardLinkFooter(viewModel.firstRunController)
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -151,7 +152,8 @@ internal fun OnboardingScreen(
                 ) { page ->
                     steps.getOrNull(page)?.let { step ->
                         val pageOffset = remember(pagerState, page) { { (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction } }
-                        CompositionLocalProvider(LocalOnboardingPageOffset provides pageOffset) {
+                        val footer = if (step == steps.last()) lastPageFooter else NO_FOOTER
+                        CompositionLocalProvider(LocalOnboardingPageOffset provides pageOffset, LocalOnboardingPageFooter provides footer) {
                             OnboardingStepPage(
                                 viewModel = viewModel,
                                 step = step,
@@ -203,6 +205,8 @@ private suspend fun PagerState.followStep(page: Int, isGestureInProgress: Boolea
         animateScrollToPage(page)
     }
 }
+
+private val NO_FOOTER: @Composable () -> Unit = {}
 
 /** Whether the pager is on its way to the step rather than being moved by the user. Not a state: nothing draws it. */
 private class PagerFollowingStep(var isMoving: Boolean = false)

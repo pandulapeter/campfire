@@ -87,6 +87,9 @@ sealed interface Message {
     /** Some of the shares Stop sharing everything was asked to stop are still shared. */
     data class StopSharingEverythingFailed(val reason: SharingFailure) : Message
 
+    /** The onboarding's offer to open a copied link found something else on the clipboard when it was taken. */
+    data object ClipboardNotCampfireLink : Message
+
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message
 

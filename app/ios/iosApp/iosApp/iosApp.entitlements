@@ -13,6 +13,12 @@
 <dict>
 	<!-- The group whose container holds the share extension's inbox. It does not change the Keychain's default access
 	     group, so the sync credentials stay where they are. APP_GROUP_ID is in Config.xcconfig. -->
+	<!-- Universal Links: campfire-songbook.com/s/ opens a shared song or setlist in the app, as listed in the site's
+	     apple-app-site-association. The App ID needs the Associated Domains capability, and its profiles made again. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:campfire-songbook.com</string>
+	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>$(APP_GROUP_ID)</string>

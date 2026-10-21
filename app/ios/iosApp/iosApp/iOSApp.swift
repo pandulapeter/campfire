@@ -31,8 +31,10 @@ struct iOSApp: App {
         WindowGroup {
             ContentView()
                 // Everything iOS hands the app arrives here: a ChordPro file opened with Campfire, whether it was
-                // already running or was launched by the open itself, and the redirect back from the sync
-                // service's consent page. Which is which is decided on the Kotlin side.
+                // already running or was launched by the open itself, a shared song or setlist's link (the Universal
+                // Link too, which SwiftUI hands to this rather than to an onContinueUserActivity, never added beside
+                // it, since the link would then be imported twice), and the redirect back from the sync service's
+                // consent page. Which is which is decided on the Kotlin side.
                 .onOpenURL { url in IosFileImportKt.openUrl(url: url) }
         }
         // A file that arrives from AirDrop or Mail is a copy iOS leaves in Documents/Inbox, which the Files app

@@ -32,6 +32,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,11 +100,14 @@ internal fun OnboardingPage(
                 )
                 // The answers are a layer of their own, so that a turn moves them apart from the question; spaced as the
                 // page's column spaces them, which is what they were laid out by before they had one.
+                val footer = LocalOnboardingPageFooter.current
                 Column(
                     modifier = Modifier.fillMaxWidth().onboardingLayerMotion(::onboardingAnswersMotion),
                     verticalArrangement = Arrangement.spacedBy(gap),
-                    content = content,
-                )
+                ) {
+                    content()
+                    footer()
+                }
             }
             Spacer(modifier = Modifier.weight(3f))
         }
@@ -145,6 +149,12 @@ private fun OnboardingPageHeader(
         textAlign = TextAlign.Center,
     )
 }
+
+/**
+ * What a page shows under its answers, whichever step it is: the screen gives the last page the first run's offer to open
+ * a copied link ([OnboardingClipboardLinkCard]), which belongs to no question of its own, and every other page nothing.
+ */
+internal val LocalOnboardingPageFooter = compositionLocalOf<@Composable () -> Unit> { {} }
 
 private val GAP = 16.dp
 private val ROOMY_GAP = 24.dp

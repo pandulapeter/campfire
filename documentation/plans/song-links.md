@@ -143,6 +143,22 @@ deleted afterwards.
 9. **iOS pasteboard.** On iOS 16+, `UIPasteboard.general.detectPatterns(for: [.probableWebURL])` must not show the
    paste prompt. Reading `.url` or `.string` afterwards from a button tap shows "Allow Paste" once, which is
    acceptable.
+   Probed on 2026-10-21 on the simulator (iPhone 16 Pro, iOS 18.5), with step 14's build plus throwaway logging, a
+   share link put on the pasteboard with `xcrun simctl pbcopy`, and the app installed fresh:
+   - **`detectPatterns` shows nothing**: it answered `probableWebURL` (true) as the app started, and no prompt or
+     "pasted from" banner appeared in the eight seconds after; `isClipboardLinkOffered` was then true.
+   - **Reading `string` shows the system's "Allow Paste" alert** ("Campfire would like to paste from …", Don't Allow
+     Paste / Allow Paste) at once, even read without a tap, so the tap is what makes it expected, not what makes it
+     appear. The answers themselves could not be pressed (the simulator's window could not be driven while the user
+     worked in another app); `ClipboardTextReader`'s nil-means-refused reading is assumed, as for paste.
+   - **A second launch** (the first run's preferences written) still detects the link but offers nothing.
+   - **`campfire://s/<payload>` from `xcrun simctl openurl`** stops at the system's "Open in Campfire?" confirmation,
+     which `simctl` adds for a custom scheme; the routing past it (`IosFileImport.openUrl` → `shareLinksToImport`) is
+     the desktop's and Android's shape and was not driven through.
+   - **Not seen, left to a real iPhone (TestFlight)**: the Universal Link (the website, with its
+     `apple-app-site-association`, is not deployed: `/.well-known/apple-app-site-association` is 404, and only a
+     signed build carries the associated domain), whether it reaches `.onOpenURL`, the Allow Paste answers, and Copy
+     Link from Safari (a `URL` item rather than a string).
 
 ## 3. The link
 
@@ -701,7 +717,13 @@ A song that is only inside a shared setlist needs no extra line: the setlist's c
   4. Tapping it reads the pasteboard (one system "Allow Paste" prompt), and `ShareLinks.parse` decides. A match is
      imported; anything else says "That isn't a Campfire link" and nothing more.
   - **Never read the pasteboard without the tap.** The common `ClipboardText` rule (`ClipboardText.kt:31`) stays.
-  - Record the check as done (`UserPreferences`) whatever happens, so it never shows again.
+  - No `UserPreferences` flag was added (step 14), for the reason §9.1 gives for the referrer: the first run's
+    preferences write already makes every later launch not a first one. The offer lives in `FirstRunController`
+    (`offerClipboardLink`, `isClipboardLinkOffered`, `openClipboardLink`), is taken once, and is dropped when the
+    onboarding leaves, so the onboarding opened again from Settings never shows it. The card is under whichever page
+    is last (`LocalOnboardingPageFooter`), since the Sync page is missing from a build without a Dropbox key.
+  - A refused paste is left at that; an empty clipboard by the tap is "That isn't a Campfire link" too. The read asks
+    for `URL` when the pasteboard has one (Copy Link) and for `string` otherwise, never both, so one prompt at most.
 - **Smart App Banner** on the landing page (`apple-itunes-app`, `app-id=6815160850`, `app-argument=<link>`):
   - Safari shows it when the Universal Link did not open the app.
   - `app-argument` reaches `.onOpenURL` only for an installed app, so it is not the install path.

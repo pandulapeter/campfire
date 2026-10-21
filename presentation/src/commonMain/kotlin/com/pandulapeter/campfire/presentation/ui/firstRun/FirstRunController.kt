@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.firstRun
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
@@ -24,6 +25,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.ClipboardLinkReader
+import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
@@ -219,6 +222,54 @@ internal class FirstRunController(
         }
     }
 
+    /** Whether [offerClipboardLink] has been asked, which every composition of the shell asks again. */
+    private var isClipboardLinkAsked = false
+
+    /** What [offerClipboardLink] found, read once the offer is taken ([openClipboardLink]). */
+    private var clipboardLinkReader: ClipboardLinkReader? = null
+
+    private val _isClipboardLinkOffered = MutableStateFlow(false)
+
+    /** Whether the onboarding's last page offers to open the link the clipboard seems to hold, see [offerClipboardLink]. */
+    val isClipboardLinkOffered: StateFlow<Boolean> = _isClipboardLinkOffered.asStateFlow()
+
+    /**
+     * Offers the link the landing page copied before sending the user to the App Store, which has no install referrer: on
+     * a first launch only, and only where [reader] says, without reading it, that the clipboard seems to hold a web
+     * address. Reading it is left to the user's tap ([openClipboardLink]), since a read can prompt; a later launch never
+     * asks, for the same reason as [importInstallReferrerLink]. Asked as the app starts, so the answer is in long before
+     * the last page of the onboarding that shows it.
+     */
+    fun offerClipboardLink(reader: ClipboardLinkReader) {
+        if (isClipboardLinkAsked) return
+        isClipboardLinkAsked = true
+        scope.launch {
+            if (isFirstLaunch.await() && reader.hasProbableLink()) {
+                clipboardLinkReader = reader
+                _isClipboardLinkOffered.update { true }
+            }
+        }
+    }
+
+    /**
+     * Takes the offer of [offerClipboardLink], once: the clipboard is read, and a Campfire link joins the import queue,
+     * whose screen follows the onboarding. Anything else is said to be no Campfire link, and a read the user refused is
+     * left at that, since they have just said no.
+     */
+    fun openClipboardLink() {
+        val reader = clipboardLinkReader?.takeIf { _isClipboardLinkOffered.compareAndSet(expect = true, update = false) } ?: return
+        clipboardLinkReader = null
+        scope.launch {
+            when (val clipboard = reader.read()) {
+                is ClipboardText.Refused -> Unit
+                is ClipboardText.Text -> ShareLinks.parse(clipboard.value.trim())
+                    ?.let(importController::importSharedLink)
+                    ?: messageSink.sendMessage(Message.ClipboardNotCampfireLink)
+                ClipboardText.None -> messageSink.sendMessage(Message.ClipboardNotCampfireLink)
+            }
+        }
+    }
+
     /**
      * Puts the onboarding on the back stack of a start up that owes it, while the launch screen is still up, so that the app is
      * uncovered on its first page rather than on the songs with the page sliding in over them a moment later. A file the
@@ -240,6 +291,9 @@ internal class FirstRunController(
     fun onBackStackChanged(stack: List<CampfireDestination>) {
         val isOnboardingOpen = stack.any { it is CampfireDestination.Onboarding }
         if (wasOnboardingOpen && !isOnboardingOpen) {
+            // The offer belongs to the first run's onboarding, not to one opened again from Settings.
+            clipboardLinkReader = null
+            _isClipboardLinkOffered.update { false }
             scope.launch {
                 try {
                     withContext(NonCancellable) { updateUserPreferences { it.copy(isOnboardingPending = false) } }

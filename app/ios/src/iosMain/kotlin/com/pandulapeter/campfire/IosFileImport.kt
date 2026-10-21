@@ -11,6 +11,8 @@ package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
+import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +36,11 @@ internal val pendingImports = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
 internal val filesToImport = pendingImports.receiveAsFlow()
 
+/** Campfire links the app was opened with, kept beside the files for the same reason: they can arrive before the UI. */
+private val pendingShareLinks = Channel<SharedLink>(Channel.BUFFERED)
+
+internal val shareLinksToImport = pendingShareLinks.receiveAsFlow()
+
 /**
  * One thing at a time, in the order it was asked for. The reads are off the main thread because a file that is
  * large, or not on the device yet, would otherwise hold up the very launch it caused; they are not side by side
@@ -43,7 +50,11 @@ internal val filesToImport = pendingImports.receiveAsFlow()
 internal val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
 /**
- * Called from Swift for every URL iOS hands the app, which in practice means a file opened with Campfire.
+ * Called from Swift for every URL iOS hands the app: a file opened with Campfire, or a shared song or setlist's link,
+ * either the Universal Link (which a SwiftUI app is handed here too) or the landing page's `campfire://s/` button.
+ *
+ * An address in a link's form that does not read as one (the landing page without a payload, a link cut short by a
+ * messenger) only brings the app to the front: it is no file, and reading it as one would report an unreadable file.
  *
  * A sync redirect is answered by the `ASWebAuthenticationSession` itself and never reaches this, but one is
  * recognised and ignored anyway: read as a song it would fail, and the user would be told a file could not be
@@ -56,7 +67,12 @@ internal val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limite
 @Suppress("unused")
 @OptIn(ExperimentalForeignApi::class)
 fun openUrl(url: NSURL) {
-    if (isSyncRedirect(url.absoluteString.orEmpty())) return
+    val address = url.absoluteString.orEmpty()
+    if (isSyncRedirect(address)) return
+    if (url.isShareLinkAddress()) {
+        ShareLinks.parse(address)?.let { link -> inboxScope.launch { pendingShareLinks.send(link) } }
+        return
+    }
     inboxScope.launch {
         val file = url.readImportedFile(ImportBudget())
         pendingImports.send(listOf(file ?: ImportedFile.unread(url.lastPathComponent.orEmpty())))
@@ -64,6 +80,13 @@ fun openUrl(url: NSURL) {
             NSFileManager.defaultManager.removeItemAtURL(url, error = null)
         }
     }
+}
+
+/** Whether this is one of the addresses the associated domain and the `campfire` scheme claim, see `ShareLinks`. */
+private fun NSURL.isShareLinkAddress() = when (scheme) {
+    "https" -> host == "campfire-songbook.com" && path.orEmpty().startsWith("/s/")
+    "campfire" -> host == "s"
+    else -> false
 }
 
 /**
