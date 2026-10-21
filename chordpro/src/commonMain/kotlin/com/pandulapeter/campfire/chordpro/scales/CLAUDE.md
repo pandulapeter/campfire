@@ -20,7 +20,9 @@
 - **`SongScaleGroups`** splits a song only where it must: one group when a scale fits it whole, else sections join, in
   play order, the first group they still share a scale with (one with a section of the same chords, then their own
   kind's, then the last, then any), so a verse after a modulated solo goes back to the verses. Groups are decided on
-  scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus.
+  scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus,
+  and of seven only the common scales and the modes of the major, harmonic minor, and melodic minor scales: a double
+  harmonic or harmonic major scale holding a chart whole never names it, the odd chord is its key's exception.
   **A riff of power chords comes first**: where half the chords have no third, a riff on the key's root (else the
   scored one) is read before any mode holding it. **Then the key decides the root**: the key in force (`{key}`, or the
   key a `{transpose}` names, or, where `{capo}` is set and that key holds nothing of the part whole, the key a capo's
@@ -75,6 +77,8 @@
   chord on the I a seventh, the I the most played root, no major seventh on I, IV, V, and those steps more than half
   the plays; the I or the IV mostly a seventh, or a V–IV turnaround in a part half on its I with a seventh in it), a
   jazz blues's departures named against its Mixolydian, and ahead of the major scale where that holds the blues
-  (triads and a V7), and over a rock riff), then the other common holders, other seven-note ones, hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.
+  (triads and a V7), and over a rock riff), then the other common holders, other seven-note ones (the seven-note ones
+  outside those families never lead), hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones
+  where anything smaller fits.
 - A chord sheet puts its quality's textbook scales first (`ChordScaleChoices`), and an altered dominant (♭9, ♭5, ♯5) is
   never a blues.

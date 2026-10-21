@@ -550,6 +550,18 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a chart only an exotic scale holds whole is its key with the chord as the exception`() {
+        listOf("Cmaj7 Cmaj7 Dbmaj7 Dbmaj7 Cmaj7 Cmaj7 Dbmaj7 Dbmaj7" to "Dbmaj7", "C Fm G C C Fm G C" to "Fm").forEach { (chords, exception) ->
+            val group = groups(song(chords)).single()
+            assertEquals("C" to "major", group.rootName to group.scales.first().id, chords)
+            assertEquals(listOf(exception), group.exceptions.map { it.chordName }, chords)
+        }
+        assertEquals(listOf("C" to "phrygian_dominant"), rootAndFirst(song("C Db C Db C Db C Db")))
+        assertEquals(listOf("D" to "dorian_sharp_4"), rootAndFirst(song("Dm E Dm E")))
+        assertEquals(listOf("E" to "phrygian"), rootAndFirst(song("Em F Em F")))
+    }
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })

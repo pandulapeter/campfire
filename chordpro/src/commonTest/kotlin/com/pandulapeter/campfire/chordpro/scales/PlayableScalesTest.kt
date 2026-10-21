@@ -190,6 +190,21 @@ class PlayableScalesTest {
     }
 
     @Test
+    fun `an exotic seven-note scale never leads a suggestion or makes a fit`() {
+        fun suggestion(root: Int, vararg names: String) = PlayableScales.suggestionFor(root, names.map { ChordProChords.parse(it)!! })!!
+        assertFalse(suggestion(0, "Cmaj7", "Dbmaj7").isFit)
+        val borrowedFour = suggestion(0, "C", "Fm", "G")
+        assertFalse(borrowedFour.isFit)
+        assertTrue(borrowedFour.scales.any { it.id == "harmonic_major" })
+        val flatSecond = suggestion(0, "C", "Db")
+        assertTrue(flatSecond.isFit)
+        assertEquals("phrygian_dominant", flatSecond.scales.first().id)
+        val sharpFour = suggestion(2, "Dm", "E")
+        assertTrue(sharpFour.isFit)
+        assertEquals("dorian_sharp_4", sharpFour.scales.first().id)
+    }
+
+    @Test
     fun `an altered dominant is not a blues`() {
         listOf("G7#5", "G7b9").forEach { assertFalse(isBlues(7, it), it) }
         listOf("C7b5", "C7b13").forEach { assertFalse(isBlues(0, it), it) }

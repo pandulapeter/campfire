@@ -15,8 +15,8 @@ import com.pandulapeter.campfire.chordpro.model.Chord
  * The scales to suggest for playing over chords, on a root: the ones holding every note of them
  * ([ScaleChords.scalesContaining]), and the kinds a player reaches for first that hold fewer notes or other ones.
  *
- * - **The pentatonics inside the home scale**, the first seven-note scale holding the chords: the one sharing its third
- *   first, then the blues scale where the minor pentatonic is among them (its flat fifth is a passing tone). They leave
+ * - **The pentatonics inside the home scale**, the first seven-note scale holding the chords that may lead a part: the
+ *   one sharing its third first, then the blues scale where the minor pentatonic is among them (its flat fifth is a passing tone). They leave
  *   out its tense notes, so they are the safe choice, though five notes never hold a key's chords. A harmonic or melodic
  *   minor home offers natural minor's, the safe set over a minor song's i and iv.
  * - **The minor pentatonic and the blues over a major sound that has a flat third or seventh**: after a Mixolydian
@@ -57,14 +57,15 @@ public object PlayableScales {
 
     /**
      * The scales on [root] for [chords], and whether they are a fit to group a song by ([Suggestion.isFit]): a scale of
-     * at most seven notes holds them, or they are a dominant blues. Null where nothing is suggested. The home is [given]
-     * where a caller has decided it, which then leads whether or not it holds every chord, else the first seven-note
-     * scale holding them.
+     * seven notes that may lead ([canLead]) holds them, or they are a dominant blues. Null where nothing is suggested.
+     * The home is [given] where a caller has decided it, which then leads whether or not it holds every chord, else the
+     * first seven-note scale holding them that may lead. A part held only by a hexatonic or smaller is no fit either: a
+     * key is seven notes, and a chart only they hold falls to a loose home with the odd chord as its exception.
      */
     internal fun suggestionFor(root: Int, chords: List<Chord>, given: Scale? = null): Suggestion? {
         val notes = chords.flatMapTo(mutableSetOf()) { chord -> chord.intervals.map { (chord.root + it).mod(12) } }
         val holders = ScaleChords.scalesContaining(root, notes)
-        val home = given ?: holders.firstOrNull { it.intervals.size == HOME_SCALE_SIZE }
+        val home = given ?: holders.firstOrNull { it.intervals.size == HOME_SCALE_SIZE && it.canLead }
         val isDominantBlues = isDominantBlues(root, chords)
         val isRockRiff = isRockRiff(root, chords)
         if (holders.isEmpty() && !isDominantBlues && !isRockRiff) return null
@@ -100,7 +101,7 @@ public object PlayableScales {
                 holding.filter { it.intervals.size < HOME_SCALE_SIZE } +
                 holding.filter { it.intervals.size > HOME_SCALE_SIZE }
             ).distinct()
-        return Suggestion(scales = scales, isFit = isDominantBlues || holders.any { it.intervals.size <= HOME_SCALE_SIZE })
+        return Suggestion(scales = scales, isFit = isDominantBlues || holders.any { it.intervals.size == HOME_SCALE_SIZE && it.canLead })
     }
 
     /**
@@ -177,6 +178,14 @@ public object PlayableScales {
         return step in riffSteps || step == FLAT_FIFTH && chord.hasNoThird
     }
 
+    /**
+     * Whether a scale may lead a part: the common scales and the modes of the major, harmonic minor, and melodic minor
+     * scales, which a player names a song by. The other seven-note scales (double harmonic, harmonic major, the Hungarian
+     * and Neapolitan ones) hold the odd chart whole, a bossa's ♭II or a borrowed iv, but nobody plays a song in them: such
+     * a chart is its key with the chord as an exception, and the scale stays on offer further down.
+     */
+    private val Scale.canLead get() = this in Scales.common || family in leadingFamilies
+
     /** What [suggestionFor] answers. */
     internal class Suggestion(val scales: List<Scale>, val isFit: Boolean)
 
@@ -198,6 +207,7 @@ public object PlayableScales {
     private val riffSteps = setOf(0, 3, 5, 7, 8, 10)
     private val flatRiffSteps = setOf(3, 8, 10)
     private val minorRiffSteps = setOf(3, 8)
+    private val leadingFamilies = setOf(ScaleFamily.MAJOR_MODES, ScaleFamily.HARMONIC_MINOR_MODES, ScaleFamily.MELODIC_MINOR_MODES)
     private val raisedMinorIds = setOf("harmonic_minor", "melodic_minor")
     private val hexatonicIds = setOf("major_hexatonic", "minor_hexatonic")
     private val naturalMinor = scalesOf("natural_minor").single()
