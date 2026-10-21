@@ -39,9 +39,10 @@ internal fun QrCodeImage(
         .semantics { this.contentDescription = contentDescription },
 ) {
     val modules = code.size + 2 * QUIET_ZONE
-    // Whole pixels per module where the card allows, since a module drawn across a pixel's edge blurs into its neighbour.
+    // Whole pixels per module where the card allows, and a symbol starting on a whole pixel, since a module drawn across a
+    // pixel's edge blurs into its neighbour and two dark ones side by side show a hairline seam between them.
     val moduleSize = floor(size.minDimension / modules).coerceAtLeast(1f)
-    val origin = Offset((size.width - moduleSize * code.size) / 2, (size.height - moduleSize * code.size) / 2)
+    val origin = Offset(floor((size.width - moduleSize * code.size) / 2), floor((size.height - moduleSize * code.size) / 2))
     for (y in 0 until code.size) {
         for (x in 0 until code.size) {
             if (code.isDark(x, y)) {
