@@ -173,7 +173,7 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
             },
         )
     }
-    if (isStopEverythingAsked) {
+    if (isStopEverythingAsked && shares.isNotEmpty()) {
         ConfirmationDialog(
             title = stringResource(Res.string.settings_sharing_stop_all),
             text = pluralStringResource(Res.plurals.settings_sharing_stop_all_confirmation, shares.size, shares.size),

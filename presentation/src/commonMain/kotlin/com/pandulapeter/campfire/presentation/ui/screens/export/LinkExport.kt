@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +74,11 @@ internal fun rememberLinkExport(
     val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creation, stoppingShareIds = stoppingShareIds)
     val link = (state as? LinkExportState.Shared)?.share?.link?.landingUrl
     val isStopAsked = rememberSaveable(dialog) { mutableStateOf(false) }
+    // A question restored after process death over a share stopped meanwhile is dropped, so it does not come back over
+    // the next link made here.
+    LaunchedEffect(state) {
+        if (state == LinkExportState.NotShared) isStopAsked.value = false
+    }
     val filePicker = LocalFilePicker.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()

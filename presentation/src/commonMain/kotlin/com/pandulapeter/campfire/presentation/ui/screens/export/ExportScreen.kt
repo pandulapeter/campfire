@@ -440,7 +440,7 @@ internal fun ExportScreen(
             )
         }
     }
-    link?.takeIf { it.isStopAsked }?.let {
+    link?.takeIf { it.isStopAsked && it.shared != null }?.let {
         StopSharingConfirmation(
             title = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
             onDismiss = { it.isStopAsked = false },
