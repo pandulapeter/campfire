@@ -57,6 +57,7 @@ import com.pandulapeter.campfire.domain.api.sync.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
 import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
+import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingUseCase
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
@@ -220,6 +221,7 @@ class CampfireViewModel(
     getSharedLinks: GetSharedLinksUseCase,
     createShareLink: CreateShareLinkUseCase,
     stopSharing: StopSharingUseCase,
+    stopSharingEverything: StopSharingEverythingUseCase,
     loadSharedLinks: LoadSharedLinksUseCase,
     /** What the screens draw a song, a key and a search with, see [SongRenderer]. */
     internal val songRenderer: SongRenderer,
@@ -389,6 +391,7 @@ class CampfireViewModel(
         getSharedLinks = getSharedLinks,
         createShareLink = createShareLink,
         stopSharing = stopSharing,
+        stopSharingEverything = stopSharingEverything,
         loadSharedLinks = loadSharedLinks,
     )
 
@@ -858,7 +861,13 @@ class CampfireViewModel(
     // Sync
 
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
-        syncConsentOrigins.keep(syncConsentOriginOf(topDestination = navigator.backStack.lastOrNull(), visibleDialog = dialogHost.visibleDialog.value))
+        syncConsentOrigins.keep(
+            syncConsentOriginOf(
+                topDestination = navigator.backStack.lastOrNull(),
+                visibleDialog = dialogHost.visibleDialog.value,
+                settingsTab = navigator.settingsTab,
+            ),
+        )
         syncController.connectSyncProvider(providerId, completionPage)
     }
 

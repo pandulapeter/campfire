@@ -138,6 +138,7 @@ internal open class SharedLinksRepositoryStub : SharedLinksRepository {
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String): Unit = unexpected()
     override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String): Unit = unexpected()
     override suspend fun stopSharingEverything(): Unit = unexpected()
+    override suspend fun stopSharingEverythingNow(): SharingFailure? = unexpected()
 }
 
 /** Records the renames and deletions the use cases tell the shares about, in order, as text. */

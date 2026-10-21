@@ -24,21 +24,16 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
-import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.share_authorization
@@ -53,17 +48,14 @@ import com.pandulapeter.campfire.presentation.resources.share_not_shared_song
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
 import com.pandulapeter.campfire.presentation.resources.share_remote_full
 import com.pandulapeter.campfire.presentation.resources.share_scope_missing
-import com.pandulapeter.campfire.presentation.resources.share_shared_on
 import com.pandulapeter.campfire.presentation.resources.share_too_large
 import com.pandulapeter.campfire.presentation.resources.share_too_large_to_update
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
-import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.share.QrCode
 import com.pandulapeter.campfire.presentation.ui.share.QrCodeImage
+import com.pandulapeter.campfire.presentation.ui.share.sharedOnText
 import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 
 /**
  * The preview of the Link format: what sharing [kind] does and what it takes, or what went wrong, until it is shared,
@@ -125,7 +117,6 @@ private fun LinkMessage(text: String) = Text(
  * The QR code, the link under it in the monospace face, selectable since some will rather copy a part of it by hand,
  * and the day it was shared; scrolled where a short window has no room for all of it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SharedLink(
     state: LinkExportState.Shared,
@@ -151,13 +142,8 @@ private fun SharedLink(
         )
     }
     state.share.sharedAt?.let { day ->
-        // Counted in UTC midnights, as the formatter does, so that the day is the same one on either side of UTC.
-        val languageCode = currentLanguage.value.code
-        val locale = remember(languageCode) { calendarLocale(languageCode) }
-        val formatter = remember { DatePickerDefaults.dateFormatter() }
-        val date = formatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString()
         Text(
-            text = textResource(Res.string.share_shared_on, date),
+            text = sharedOnText(day),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

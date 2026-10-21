@@ -29,7 +29,6 @@ import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
-import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -39,12 +38,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_cloud_off
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_sync
-import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_remotely
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
@@ -81,8 +77,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
-import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
-import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.sync.stage
 import kotlin.time.ExperimentalTime
 import kotlin.reflect.KClass
@@ -120,45 +114,6 @@ internal fun ColumnScope.SyncSettings(
             }
         }
     }
-}
-
-@Composable
-private fun ColumnScope.DisconnectedSyncSettings(
-    viewModel: CampfireViewModel,
-    syncState: SyncState,
-) {
-    val completionPage = rememberAuthorizationCompletionPage()
-    ActionListItem(
-        title = stringResource(Res.string.settings_sync_connect_dropbox),
-        icon = painterResource(Res.drawable.ic_cloud),
-        isEnabled = viewModel.syncController.syncProviders.contains(SyncProviderId.DROPBOX),
-        onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
-    )
-    // Under the Connect row rather than above it, so that Connect is the first row of its stage with or without a
-    // reason: the first row of the connecting stage is text that takes no taps, where it would otherwise be the Cancel
-    // that the second click of a double click lands on.
-    AnimatedSettingsRow(value = (syncState as? SyncState.ConnectionFailed)?.reason) { reason ->
-        SettingsMessage(
-            text = stringResource(reason.connectionFailedMessage),
-            isAnnounced = true,
-        )
-    }
-}
-
-@Composable
-private fun ConnectingSyncSettings(viewModel: CampfireViewModel) {
-    ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
-    )
-    // The way out. Each platform does try to notice that the browser was closed, but a consent page is somewhere
-    // the app cannot see, so this state must never be one the user has to restart the app to leave.
-    ActionListItem(
-        title = stringResource(Res.string.cancel),
-        icon = painterResource(Res.drawable.ic_clear),
-        isEmphasized = false,
-        onClick = viewModel.syncController::cancelSyncConnection,
-    )
 }
 
 @Composable

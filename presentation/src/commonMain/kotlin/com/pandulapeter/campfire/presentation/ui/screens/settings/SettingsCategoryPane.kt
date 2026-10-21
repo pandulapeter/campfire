@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
 @Composable
 internal fun SettingsCategoryPane(
     modifier: Modifier = Modifier,
+    tabs: List<SettingsTab>,
     selectedTab: SettingsTab,
     badgedTab: SettingsTab?,
     label: @Composable (SettingsTab) -> String,
@@ -42,7 +43,7 @@ internal fun SettingsCategoryPane(
     modifier = modifier.width(SETTINGS_CATEGORY_PANE_WIDTH).padding(horizontal = 12.dp, vertical = PAGE_TOP_PADDING),
     verticalArrangement = Arrangement.spacedBy(4.dp),
 ) {
-    SettingsTab.entries.forEach { tab ->
+    tabs.forEach { tab ->
         NavigationDrawerItem(
             label = { Text(text = label(tab), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             selected = tab == selectedTab,

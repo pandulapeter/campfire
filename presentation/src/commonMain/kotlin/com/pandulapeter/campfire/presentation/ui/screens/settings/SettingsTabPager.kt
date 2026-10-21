@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 internal fun SettingsTabPager(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    tabs: List<SettingsTab>,
     badgedTab: SettingsTab?,
     isImporting: Boolean,
     startPadding: Dp,
@@ -61,19 +62,20 @@ internal fun SettingsTabPager(
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
-    val pagerState = rememberPagerState(initialPage = viewModel.navigator.settingsTab.ordinal) { SettingsTab.entries.size }
+    val pagerState = rememberPagerState(initialPage = tabs.indexOf(viewModel.navigator.settingsTab).coerceAtLeast(0)) { tabs.size }
     val coroutineScope = rememberCoroutineScope()
     // Every time the pages come to rest rather than once as the screen is left, because the web build's address names
     // the tab that is open. The settled page, so that a swipe is one change of address rather than two.
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { viewModel.navigator.settingsTab = SettingsTab.entries[it] }
+        snapshotFlow { pagerState.settledPage }.collect { viewModel.navigator.settingsTab = tabs[it] }
     }
     // The other direction: the wide layout's pane and the web build's address set the tab from outside, and the pager
     // has to follow it, which it only does for a value it did not settle on itself. Latest, so that a swipe interrupting
     // the animation ends that animation rather than the collector (see the settings screen's scroll to top requests).
     LaunchedEffect(pagerState) {
         snapshotFlow { viewModel.navigator.settingsTab }.collectLatest {
-            if (it.ordinal != pagerState.targetPage) pagerState.animateScrollToPage(it.ordinal)
+            val page = tabs.indexOf(it)
+            if (page >= 0 && page != pagerState.targetPage) pagerState.animateScrollToPage(page)
         }
     }
     // The gesture scrolls the pages inside one scroll that lasts as long as it does, rather than snapping them frame by
@@ -83,7 +85,7 @@ internal fun SettingsTabPager(
     // has just made the tab, or back to the tab the gesture started on when it was cancelled.
     LaunchedEffect(pagerState) {
         snapshotFlow { backProgress() != null }.collectLatest { isGestureInProgress ->
-            val tabPage = viewModel.navigator.settingsTab.ordinal
+            val tabPage = tabs.indexOf(viewModel.navigator.settingsTab).coerceAtLeast(0)
             if (isGestureInProgress) {
                 pagerState.scroll {
                     snapshotFlow { backProgress() }.filterNotNull().collect { progress ->
@@ -101,7 +103,8 @@ internal fun SettingsTabPager(
         // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
         // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
-            selectedTab = SettingsTab.entries[pagerState.targetPage],
+            tabs = tabs,
+            selectedTab = tabs[pagerState.targetPage],
             indicatorPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
             // The library is not synced until a run that stopped to ask whether its deletions are meant has been
             // answered, and the question is in the sync section, which may be a tab away.
@@ -110,7 +113,8 @@ internal fun SettingsTabPager(
             startPadding = startPadding,
             endPadding = endPadding,
             onTabSelected = {
-                if (it.ordinal == pagerState.targetPage) onSelectedTabPressed(it) else coroutineScope.launch { pagerState.animateScrollToPage(it.ordinal) }
+                val page = tabs.indexOf(it)
+                if (page == pagerState.targetPage) onSelectedTabPressed(it) else coroutineScope.launch { pagerState.animateScrollToPage(page) }
             },
         )
         ImportProgress(isImporting = isImporting)
@@ -123,8 +127,8 @@ internal fun SettingsTabPager(
                 .fillMaxWidth()
                 .fadingLeftEdge(alpha = { fadeAlpha.value }, backgroundColor = MaterialTheme.colorScheme.background),
             state = pagerState,
-            beyondViewportPageCount = SettingsTab.entries.size - 1,
-            key = { SettingsTab.entries[it] },
-        ) { page(SettingsTab.entries[it]) }
+            beyondViewportPageCount = tabs.size - 1,
+            key = { tabs[it] },
+        ) { page(tabs[it]) }
     }
 }

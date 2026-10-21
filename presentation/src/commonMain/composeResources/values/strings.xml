@@ -1172,4 +1172,23 @@
     <string name="share_qr_code_saved">QR code saved</string>
     <string name="share_stop_failed">Couldn't stop sharing. The link still works.</string>
     <string name="share_stop_failed_network">Stopping a share needs a connection to Dropbox. The link still works.</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">Sharing</string>
+    <string name="settings_group_shared_links">Shared links</string>
+    <string name="settings_group_all_links">All links</string>
+    <string name="settings_sharing_description">Share a song or setlist as a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices.</string>
+    <string name="settings_sharing_nothing_shared">Nothing shared yet. Choose Link when exporting a song or setlist to share it.</string>
+    <string name="settings_sharing_orphaned">No longer in your library</string>
+    <string name="settings_sharing_too_large">Too large to update</string>
+    <string name="settings_sharing_actions">Share actions</string>
+    <string name="settings_sharing_show_qr_code">Show QR code</string>
+    <string name="settings_sharing_stop_all">Stop sharing everything</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">Stop sharing %1$d item? Its link stops working for everyone, and so do links left behind by shares that failed. Copies people already imported stay theirs.</item>
+        <item quantity="other">Stop sharing all %1$d items? Their links stop working for everyone, and so do links left behind by shares that failed. Copies people already imported stay theirs.</item>
+    </plurals>
+    <string name="share_stop_all_failed">Couldn't stop sharing everything. The links still listed still work.</string>
+    <string name="share_stop_all_failed_network">Stopping shares needs a connection to Dropbox. The links still listed still work.</string>
+    <string name="settings_sync_disconnect_shared_links">Shared links keep working. Connect the same account again to manage them.</string>
 </resources>

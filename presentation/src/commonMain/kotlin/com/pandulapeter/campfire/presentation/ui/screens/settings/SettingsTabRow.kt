@@ -55,6 +55,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun SettingsTabRow(
     modifier: Modifier = Modifier,
+    tabs: List<SettingsTab>,
     selectedTab: SettingsTab,
     indicatorPosition: () -> Float,
     badgedTab: SettingsTab?,
@@ -71,7 +72,7 @@ internal fun SettingsTabRow(
             // Masked rather than painted, since the row is transparent over whatever the screen is drawn on.
             .fadingHorizontalEdges(scrollState),
         scrollState = scrollState,
-        selectedTabIndex = selectedTab.ordinal,
+        selectedTabIndex = tabs.indexOf(selectedTab).coerceAtLeast(0),
         containerColor = Color.Transparent,
         edgePadding = 0.dp,
         indicator = {
@@ -86,7 +87,7 @@ internal fun SettingsTabRow(
                     val placeable = measurable.measure(Constraints(minWidth = width, maxWidth = width, maxHeight = constraints.maxHeight))
                     // The row centers what this reports inside the selected tab on its own, so that centering is taken
                     // back off the span, which is measured from the start of the row.
-                    val rowOffset = tabPositions.getOrNull(selectedTab.ordinal)?.let { ((it.width - it.contentWidth) / 2).toPx() } ?: 0f
+                    val rowOffset = tabPositions.getOrNull(tabs.indexOf(selectedTab))?.let { ((it.width - it.contentWidth) / 2).toPx() } ?: 0f
                     layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(((span?.start ?: 0f) - rowOffset).roundToInt(), 0) }
                 },
                 width = Dp.Unspecified,
@@ -94,7 +95,7 @@ internal fun SettingsTabRow(
         },
         divider = {},
     ) {
-        SettingsTab.entries.forEach { tab ->
+        tabs.forEach { tab ->
             Tab(
                 selected = tab == selectedTab,
                 onClick = { onTabSelected(tab) },

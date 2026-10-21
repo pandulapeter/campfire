@@ -241,7 +241,11 @@ internal class FakeSyncProvider(
 
     override suspend fun createSharedLink(shareId: String) = onCreateSharedLink(shareId)
 
+    /** Runs before a shared copy is deleted, which is where a test makes the service refuse it. */
+    var onDeleteSharedFile: suspend (String) -> Unit = {}
+
     override suspend fun deleteSharedFile(shareId: String) {
+        onDeleteSharedFile(shareId)
         sharedFiles -= shareId
     }
 

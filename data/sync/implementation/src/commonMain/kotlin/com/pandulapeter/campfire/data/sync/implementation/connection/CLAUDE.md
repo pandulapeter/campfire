@@ -18,6 +18,9 @@
 - A previous installation's credentials that could not be forgotten are noted and retried by every `restore` first;
   until then it answers disconnected. A start-up carrying the answer to a waiting authorization forgets nothing, even if
   it looks like a first launch.
+- Backing out of `connect` (Cancel, a closed consent page) returns to the state it started from while that one's
+  credentials are still stored: a `ConnectionFailed` stays failed, and a `Connected` account (connected again for the
+  permission to make links) stays connected, its index kept (`ConnectionBeforeConnecting`).
 - `connect` never throws but cancellation; every exit not ending connected forgets the stored credentials, so an
   abandoned authorization is never restored next launch.
 - A run refused by the service (after renewal fails) sets `ConnectionFailed`, not a failed outcome: Disconnect would

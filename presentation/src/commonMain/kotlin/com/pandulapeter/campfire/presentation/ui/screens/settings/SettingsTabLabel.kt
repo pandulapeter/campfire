@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_features
 import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_preferences
+import com.pandulapeter.campfire.presentation.resources.settings_sharing
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
 /** What a tab of the settings screen is called. */
@@ -27,6 +28,7 @@ internal fun SettingsTab.label() = stringResource(
         SettingsTab.FEATURES -> Res.string.settings_features
         SettingsTab.PREFERENCES -> Res.string.settings_preferences
         SettingsTab.LIBRARY -> Res.string.settings_library
+        SettingsTab.SHARING -> Res.string.settings_sharing
         SettingsTab.ABOUT -> Res.string.settings_about
     }
 )

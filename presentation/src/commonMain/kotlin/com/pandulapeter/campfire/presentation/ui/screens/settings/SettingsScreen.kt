@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * The settings of the app as four [SettingsTab]s. Once the screen is wider than the tab row's maximum width they are the entries
+ * The settings of the app as its [SettingsTab]s. Once the screen is wider than the tab row's maximum width they are the entries
  * of a [SettingsCategoryPane] at the start of the screen with the selected page next to it, the way a list and its
  * detail sit side by side; anywhere narrower they are a row of tabs at the top with one page of a pager under each
  * (see [SettingsTabPager]), so that they stay in reach however far a page is scrolled. Either way there is no app bar
@@ -80,6 +80,14 @@ internal fun SettingsScreen(
     isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,
 ) {
+    // A build without sync leaves the Sharing tab out rather than offering a tab that cannot work, and an address that
+    // names it there opens General.
+    val tabs = remember(viewModel) {
+        SettingsTab.entries.filter { it != SettingsTab.SHARING || viewModel.syncController.syncProviders.isNotEmpty() }
+    }
+    LaunchedEffect(tabs) {
+        snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.GENERAL }
+    }
     val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.getValue(it)) }
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
@@ -149,6 +157,7 @@ internal fun SettingsScreen(
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     SettingsCategoryPane(
                         modifier = Modifier.padding(start = startPadding),
+                        tabs = tabs,
                         selectedTab = viewModel.navigator.settingsTab,
                         badgedTab = badgedTab,
                         label = { it.label() },
@@ -186,6 +195,7 @@ internal fun SettingsScreen(
         } else {
             SettingsTabPager(
                 viewModel = viewModel,
+                tabs = tabs,
                 badgedTab = badgedTab,
                 isImporting = isImporting,
                 startPadding = startPadding,

@@ -177,6 +177,36 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `stopping everything deletes every copy, unlisted ones included, and empties the list`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy))
+        provider.sharedFiles["bbbbbbbbbbbbbbbb"] = copy to "left-behind"
+
+        assertNull(repository.stopSharingEverythingNow())
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(provider).links)
+        assertEquals(emptyList(), repository.shares.first())
+    }
+
+    @Test
+    fun `stopping everything keeps listing the shares whose copies could not be deleted`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy)).share
+        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy)).share
+        provider.onDeleteSharedFile = { shareId -> if (shareId == second.shareId) throw SyncNetworkException("offline") }
+
+        assertEquals(SharingFailure.NETWORK, repository.stopSharingEverythingNow())
+
+        assertEquals(setOf(second.shareId), provider.sharedFiles.keys)
+        assertEquals(listOf(second.shareId), registry(provider).links.map { it.shareId })
+        assertTrue(first.shareId !in provider.sharedFiles)
+    }
+
+    @Test
     fun `refreshing brings another device's shares into the mirror`() = runTest {
         val provider = FakeSyncProvider()
         val other = entry(shareId = "aaaaaaaaaaaaaaaa", fileName = "gig.setlist.json")

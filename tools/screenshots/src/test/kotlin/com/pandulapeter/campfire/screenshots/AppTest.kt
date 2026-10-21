@@ -39,6 +39,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
+import org.koin.core.module.Module
 import java.io.File
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -75,6 +76,10 @@ internal data class TestAppearance(
  * covers are switched off unless [isCoverArtEnabled], and nothing else reaches outside unless a test opens a song
  * details lookup. The current version's What's new counts as seen.
  *
+ * [preferenceFiles] are written into the data directory's `preferences` folder by name, as a device that has run the
+ * app before would hold them (the shared links' mirror). With [isSyncConnected] false, sync shows no account instead of
+ * `Fakes.kt`'s.
+ *
  * With [isFirstRun] the data directory starts empty instead, as a fresh install's does: no preferences, so the
  * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to English.
  */
@@ -88,10 +93,15 @@ internal fun runAppTest(
     appearance: TestAppearance = TestAppearance(),
     isCoverArtEnabled: Boolean = false,
     isFirstRun: Boolean = false,
+    isSyncConnected: Boolean = true,
+    preferenceFiles: Map<String, String> = emptyMap(),
     test: suspend AppTestScope.() -> Unit,
 ) {
     if (isFirstRun) {
-        require(songs.isEmpty() && setlists.isEmpty() && !isCoverArtEnabled && fontScale == UserPreferences.DEFAULT_FONT_SCALE) {
+        require(
+            songs.isEmpty() && setlists.isEmpty() && preferenceFiles.isEmpty() && !isCoverArtEnabled &&
+                fontScale == UserPreferences.DEFAULT_FONT_SCALE,
+        ) {
             "A first run starts from an empty data directory, which has no songs, setlists, or preferences to set."
         }
     }
@@ -103,8 +113,10 @@ internal fun runAppTest(
             window = window,
             pickedFiles = pickedFiles,
             appearance = appearance,
+            fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
             writeData = { dataDirectory ->
                 if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled)
+                preferenceFiles.forEach { (name, text) -> File(dataDirectory, "preferences/" + name).writeText(text) }
             },
             test = test,
         )
@@ -118,6 +130,7 @@ private fun runApp(
     window: TestWindow,
     pickedFiles: List<ImportedFile>,
     appearance: TestAppearance,
+    fakes: List<Module>,
     writeData: (File) -> Unit,
     test: suspend AppTestScope.() -> Unit,
 ) = withCampfireApp(
@@ -126,7 +139,7 @@ private fun runApp(
     density = 1f,
     writeData = writeData,
 ) { host ->
-    host.koin.loadModules(listOf(testFakes), allowOverride = true)
+    host.koin.loadModules(fakes, allowOverride = true)
     val keyboardHeight = mutableStateOf(0.dp)
     // The scene is given the keyboard as well as the app's composition: a dialog, every bottom sheet among them, is a
     // layer of the scene with a root of its own, and Modifier.imePadding reads the insets of that root, which the

@@ -67,7 +67,8 @@ language, theme, and system text size.
   for, and the song text size is `runAppTest`'s `fontScale`. `isFirstRun` starts from an empty data directory instead,
   in English (the system's language, pinned for the test).
 - **What may be faked** is only what reaches outside or picks files: `Fakes.kt`, `TestFakes.kt` (the cover search finds
-  nothing, no cover downloads), and the test's file picker (`pickedFiles`). A new fake comes with the test that needs it.
+  nothing, no cover downloads; `isSyncConnected = false` shows no account), and the test's file picker (`pickedFiles`).
+  `preferenceFiles` seeds what an earlier run would have left in `preferences/` (the shared links' mirror). A new fake comes with the test that needs it.
 - **The keyboard** is the test's to raise (`keyboardHeight`): the desktop has none. It reaches the app twice, through
   `LocalPlatformWindowInsets` and through the scene's own insets, since a dialog (every bottom sheet) is a layer of the
   scene and `imePadding` reads its root's insets, not the composition's.

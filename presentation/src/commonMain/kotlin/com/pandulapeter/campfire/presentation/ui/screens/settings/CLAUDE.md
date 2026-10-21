@@ -10,9 +10,9 @@
 
 # :presentation — ui/screens/settings
 
-Five tabs (General, Preferences, Library, Features, About) in a `HorizontalPager` under a tab row (capped at 560dp)
-while that fits, else a `SettingsCategoryPane` beside the selected page; the layouts crossfade across the breakpoint,
-as do the wide layout's pages.
+Six tabs (General, Preferences, Library, Sharing, Features, About) in a `HorizontalPager` under a tab row (capped at
+560dp) while that fits, else a `SettingsCategoryPane` beside the selected page; the layouts crossfade across the
+breakpoint, as do the wide layout's pages. A build without sync leaves Sharing out.
 
 ## Tab contents (rules not obvious from the code)
 
@@ -24,6 +24,10 @@ as do the wide layout's pages.
   written in the picked notation, never in the language.
 - **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
   goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
+- **Sharing** (`SharingSections`): there while disconnected too. Stages (`sharingStageOf`) crossfade, except the list
+  arriving over "Nothing shared yet". Connect keeps `SyncConsentOrigin.Sharing`. Settling into view (not being composed
+  by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline. A stopped row shrinks
+  in place (`sharedLinkRowsOf`); Stop sharing everything is alone in the last section.
 - **Features**: Playing switches first, in the navigation's tab order (songs, setlists, metronome, tuner, chords, chord
   diagrams, scales, scale suggestions), then an Online group (song details lookup, cover art) so the two that make
   requests are found together. Rules in `ui/CLAUDE.md`.

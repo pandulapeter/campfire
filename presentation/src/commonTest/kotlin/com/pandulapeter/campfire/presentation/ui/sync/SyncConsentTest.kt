@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -28,23 +29,39 @@ class SyncConsentTest {
 
     private val exportOrigin = SyncConsentOrigin.Export(ShareTarget(SharedLinkKind.SETLIST, "set.setlist.json"))
 
-    private val origins = listOf(SyncConsentOrigin.Settings, SyncConsentOrigin.Onboarding, SyncConsentOrigin.OnboardingFromSettings, exportOrigin, null)
+    private val origins = listOf(
+        SyncConsentOrigin.Settings,
+        SyncConsentOrigin.Sharing,
+        SyncConsentOrigin.Onboarding,
+        SyncConsentOrigin.OnboardingFromSettings,
+        exportOrigin,
+        null,
+    )
 
     @Test
     fun `a connect tapped on the settings screen is answered there`() {
-        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null))
+        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null, settingsTab = SettingsTab.GENERAL))
+    }
+
+    @Test
+    fun `a connect tapped on the settings screen's sharing tab is answered on that tab`() {
+        assertEquals(
+            SyncConsentOrigin.Sharing,
+            syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null, settingsTab = SettingsTab.SHARING),
+        )
+        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null, settingsTab = SettingsTab.LIBRARY))
     }
 
     @Test
     fun `a connect tapped in a first run's onboarding is answered there`() {
-        assertEquals(SyncConsentOrigin.Onboarding, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false), visibleDialog = null))
+        assertEquals(SyncConsentOrigin.Onboarding, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false), visibleDialog = null, settingsTab = SettingsTab.GENERAL))
     }
 
     @Test
     fun `a connect tapped in an onboarding opened from the settings is answered there`() {
         assertEquals(
             SyncConsentOrigin.OnboardingFromSettings,
-            syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true), visibleDialog = null),
+            syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true), visibleDialog = null, settingsTab = SettingsTab.GENERAL),
         )
     }
 
@@ -52,9 +69,9 @@ class SyncConsentTest {
     fun `a connect tapped on the export screen is answered there, for the song or setlist it shares`() {
         assertEquals(
             SyncConsentOrigin.Export(ShareTarget(SharedLinkKind.SONG, "a.cho")),
-            syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(song = song("a.cho"))),
+            syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(song = song("a.cho")), SettingsTab.SHARING),
         )
-        assertEquals(exportOrigin, syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(setlist = setlist("set.setlist.json"))))
+        assertEquals(exportOrigin, syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(setlist = setlist("set.setlist.json")), SettingsTab.SHARING))
     }
 
     @Test
@@ -63,6 +80,7 @@ class SyncConsentTest {
             assertEquals(SyncConsentAnswer.ONBOARDING, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.Onboarding))
             assertEquals(SyncConsentAnswer.ONBOARDING_FROM_SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.OnboardingFromSettings))
             assertEquals(SyncConsentAnswer.SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.Settings))
+            assertEquals(SyncConsentAnswer.SHARING, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.Sharing))
             assertEquals(SyncConsentAnswer.SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, origin = null))
             assertEquals(SyncConsentAnswer.EXPORT, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, exportOrigin))
         }

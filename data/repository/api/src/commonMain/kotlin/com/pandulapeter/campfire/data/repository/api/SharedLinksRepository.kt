@@ -73,4 +73,13 @@ interface SharedLinksRepository {
 
     /** Stops sharing everything [shares] names, for a library deleted as a whole, the way [stopSharingDeleted] does. */
     suspend fun stopSharingEverything()
+
+    /**
+     * Stops every share of the account now, as Settings' Stop sharing everything asks, rather than noting it the way
+     * [stopSharingEverything] does: deletes each shared copy in its folder, those no list names included (left
+     * behind by a share that failed halfway), then removes the entries whose copies went. An entry is never removed
+     * while its copy may still be served, so a failure halfway leaves only shares that still work listed. Null when
+     * it worked.
+     */
+    suspend fun stopSharingEverythingNow(): SharingFailure?
 }

@@ -23,13 +23,21 @@ import kotlinx.serialization.Serializable
 
 /**
  * The screen a Connect was tapped on, which is where the answer to its consent page is shown: the onboarding's Dropbox
- * page, the sync section of Settings, or the export screen's Link format for the song or setlist it was sharing.
+ * page, the sync section of Settings, its Sharing tab, or the export screen's Link format for the song or setlist it was
+ * sharing.
  */
 @Serializable
 internal sealed interface SyncConsentOrigin {
 
     @Serializable
     data object Settings : SyncConsentOrigin
+
+    /**
+     * Settings on its Sharing tab, which the answer comes back to rather than to the sync section: the tab Settings was
+     * left on lasts only the session, which Android's process death and the web's round trip both end.
+     */
+    @Serializable
+    data object Sharing : SyncConsentOrigin
 
     @Serializable
     data object Onboarding : SyncConsentOrigin
@@ -42,13 +50,19 @@ internal sealed interface SyncConsentOrigin {
 }
 
 /**
- * Where a Connect tapped with [topDestination] on top of the back stack and [visibleDialog] over it was tapped: the
- * export screen where that is up, else Settings unless it is the onboarding.
+ * Where a Connect tapped with [topDestination] on top of the back stack, [visibleDialog] over it, and Settings on
+ * [settingsTab] was tapped: the export screen where that is up, else Settings (on its Sharing tab where that is the one
+ * open) unless it is the onboarding.
  */
-internal fun syncConsentOriginOf(topDestination: CampfireDestination?, visibleDialog: DialogType?): SyncConsentOrigin {
+internal fun syncConsentOriginOf(
+    topDestination: CampfireDestination?,
+    visibleDialog: DialogType?,
+    settingsTab: SettingsTab,
+): SyncConsentOrigin {
     val exportTarget = (visibleDialog as? DialogType.Export)?.let(::shareTargetOf)
     return when {
         exportTarget != null -> SyncConsentOrigin.Export(exportTarget)
+        topDestination == CampfireDestination.Settings && settingsTab == SettingsTab.SHARING -> SyncConsentOrigin.Sharing
         topDestination !is CampfireDestination.Onboarding -> SyncConsentOrigin.Settings
         topDestination.isOpenedFromSettings -> SyncConsentOrigin.OnboardingFromSettings
         else -> SyncConsentOrigin.Onboarding
@@ -61,6 +75,7 @@ internal enum class SyncConsentAnswer {
     ONBOARDING,
     ONBOARDING_FROM_SETTINGS,
     SETTINGS,
+    SHARING,
     ONBOARDING_ON_SYNC_PAGE,
     EXPORT,
 }
@@ -79,6 +94,7 @@ internal fun syncConsentAnswerOf(backStack: List<CampfireDestination>, onboardin
     backStack.size > 1 && backStack.drop(1) != listOf(CampfireDestination.Settings) -> SyncConsentAnswer.NOTHING
     origin == SyncConsentOrigin.Onboarding -> SyncConsentAnswer.ONBOARDING
     origin == SyncConsentOrigin.OnboardingFromSettings -> SyncConsentAnswer.ONBOARDING_FROM_SETTINGS
+    origin == SyncConsentOrigin.Sharing -> SyncConsentAnswer.SHARING
     else -> SyncConsentAnswer.SETTINGS
 }
 
@@ -109,7 +125,7 @@ internal class SyncConsentOrigins(
 /**
  * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
  * ([SyncConsentOrigins.take]): the onboarding's Dropbox page, over the settings screen's About tab where that was what
- * opened it, Settings, on the tab holding the sync section, or the export screen on the Link format ([openExport]). Only onto a stack nobody has built on since the app started - the
+ * opened it, Settings, on the tab holding the sync section or on the Sharing tab, or the export screen on the Link format ([openExport]). Only onto a stack nobody has built on since the app started - the
  * home screen the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
  * an owed onboarding still on its first page, which a start up that still owes it opens while the
  * code is being exchanged and which is moved on to its Dropbox page (see [syncConsentAnswerOf]); an onboarding
@@ -127,6 +143,7 @@ internal fun Navigator.showSyncConsentAnswer(origin: SyncConsentOrigin?, openExp
             openOnboarding(isOpenedFromSettings = true, step = OnboardingStep.SYNC)
         }
         SyncConsentAnswer.SETTINGS -> openSettingsOn(SettingsTab.LIBRARY)
+        SyncConsentAnswer.SHARING -> openSettingsOn(SettingsTab.SHARING)
         SyncConsentAnswer.ONBOARDING_ON_SYNC_PAGE -> showOnboardingStepIfOpen(OnboardingStep.SYNC)
         SyncConsentAnswer.EXPORT -> (origin as? SyncConsentOrigin.Export)?.let { openExport(it.target) }
     }

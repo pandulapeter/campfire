@@ -486,7 +486,7 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
 - **Connecting again for the scope** while already connected: `SyncConnectionManager.connect()` today remembers only a
   `ConnectionFailed` state to go back to (`stateBeforeConnecting`), so a Cancel would leave the user disconnected.
   - Remember `Connected` too for this purpose. When the account is the same, keep the index, as
-    `completePendingAuthorization` already does. (Not done in step 10, which stays out of `:data:sync`.)
+    `completePendingAuthorization` already does. Done in step 11, credentials checked again on the way out.
   - A different account resets the index (existing behaviour), and the mirror and journal are cleared with it.
 - **Clipboard and text sharing**:
   - `ui/platform/Clipboard.kt`: `expect fun plainTextClipEntry`, through `LocalClipboard.current.setClipEntry`. No

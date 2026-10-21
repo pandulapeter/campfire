@@ -503,6 +503,14 @@ class NavigatorTest {
     }
 
     @Test
+    fun `a consent asked from the sharing tab opens the settings on that tab`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.Sharing) {}
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
+        assertEquals(SettingsTab.SHARING, navigator.settingsTab)
+    }
+
+    @Test
     fun `a consent asked from an onboarding opened in the settings reopens it on its sync page over the about tab`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.showSyncConsentAnswer(SyncConsentOrigin.OnboardingFromSettings) {}

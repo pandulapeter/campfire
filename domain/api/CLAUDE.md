@@ -32,9 +32,10 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
   start, before anything is saved.
 - Network: only sync, `GetCoverArtUseCase` / `SearchCoverArtUseCase`, the song details lookup, and
   `DownloadImportFileUseCase` (unused yet; for shared links) reach it, all through `:data:source:remote`.
-- Sharing (`sharing/`) is sync's network too: `CreateShareLinkUseCase`, `StopSharingUseCase`, and
-  `LoadSharedLinksUseCase` ask the connected account's folder; `GetSharedLinksUseCase` only observes this device's
-  copy of its list. None waits for a run, and none throws but cancellation.
+- Sharing (`sharing/`) is sync's network too: `CreateShareLinkUseCase`, `StopSharingUseCase`,
+  `StopSharingEverythingUseCase`, and `LoadSharedLinksUseCase` ask the connected account's folder;
+  `GetSharedLinksUseCase` only observes this device's copy of its list. None waits for a run, and none throws but
+  cancellation.
 - The editor draft use cases keep a copy against process death, never a write of the song.
 - `ForgetSyncConnectionUseCase` tells the service nothing: a first launch runs it before restoring, since the iOS
   Keychain survives an uninstall. `ConnectSyncProviderUseCase` takes an `AuthorizationCompletionPage` because the

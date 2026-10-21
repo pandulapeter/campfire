@@ -34,7 +34,9 @@ The plan is `documentation/plans/song-links.md` (§4.2, §5, §6.3, §11).
 - A copy is named by a fresh `ShareIds` id, uploaded, linked, then added; a share of the same item found while adding
   (another device's, by `LibraryFiles.isSameLibraryName`) is answered instead, so an item never has two links.
 - Whatever fails after the upload deletes the copy again, best effort; **Stop sharing** deletes the copy before the
-  entry, so no entry ever goes while its link still works.
+  entry, so no entry ever goes while its link still works. Settings' **Stop sharing everything**
+  (`stopSharingEverythingNow`) deletes every copy the listing or the list names (leftovers of failed shares included),
+  then removes the entries of those it deleted, after a failure too.
 
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 

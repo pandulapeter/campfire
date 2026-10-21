@@ -56,6 +56,8 @@ import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_v
 import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
 import com.pandulapeter.campfire.presentation.resources.share_link_copied
 import com.pandulapeter.campfire.presentation.resources.share_qr_code_saved
+import com.pandulapeter.campfire.presentation.resources.share_stop_all_failed
+import com.pandulapeter.campfire.presentation.resources.share_stop_all_failed_network
 import com.pandulapeter.campfire.presentation.resources.share_stop_failed
 import com.pandulapeter.campfire.presentation.resources.share_stop_failed_network
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
@@ -160,6 +162,9 @@ internal fun Messages(
         Message.QrCodeSaved -> stringResource(Res.string.share_qr_code_saved)
         is Message.StopSharingFailed -> stringResource(
             if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_failed_network else Res.string.share_stop_failed,
+        )
+        is Message.StopSharingEverythingFailed -> stringResource(
+            if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_all_failed_network else Res.string.share_stop_all_failed,
         )
         null -> null
     }

@@ -11,7 +11,8 @@
 # :presentation — ui/sync
 
 - A consent's answer is shown only onto a stack nobody has built on since start (home, Settings, or an owed onboarding
-  still on page one, which is moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`). The export
+  still on page one, which is moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`; Settings'
+  Sharing tab is `Sharing`, since the tab Settings was left on lasts only the session). The export
   screen (`SyncConsentOrigin.Export`, carrying its `ShareTarget`) is reopened on Link over whatever stack the start up
   has, once the library holds the item (`SavedDialogRestorer.reopenExport`). `SyncConsentOrigins` keeps the origin in
   the web's session storage (`ui/platform`), where every consent ends in a fresh start, and in the saved state, where

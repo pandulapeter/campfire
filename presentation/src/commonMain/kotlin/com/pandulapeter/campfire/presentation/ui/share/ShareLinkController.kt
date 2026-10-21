@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
 import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
+import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -37,6 +38,7 @@ internal class ShareLinkController(
     getSharedLinks: GetSharedLinksUseCase,
     private val createShareLink: CreateShareLinkUseCase,
     private val stopSharing: StopSharingUseCase,
+    private val stopSharingEverything: StopSharingEverythingUseCase,
     private val loadSharedLinks: LoadSharedLinksUseCase,
 ) {
 
@@ -77,6 +79,25 @@ internal class ShareLinkController(
                 stopSharing(share.shareId)?.let { messageSink.sendMessage(Message.StopSharingFailed(it)) }
             } finally {
                 _stoppingShareIds.update { it - share.shareId }
+            }
+        }
+    }
+
+    private val _isStoppingEverything = MutableStateFlow(false)
+
+    /** Whether every share is being stopped, see [stopEverything]. */
+    val isStoppingEverything = _isStoppingEverything.asStateFlow()
+
+    /** Stops every share of the account, saying so where some could not be stopped; one request at a time. */
+    fun stopEverything() {
+        if (_isStoppingEverything.value) return
+        _isStoppingEverything.value = true
+        _creation.update { if (it?.result is CreateShareResult.Shared) null else it }
+        scope.launch {
+            try {
+                stopSharingEverything()?.let { messageSink.sendMessage(Message.StopSharingEverythingFailed(it)) }
+            } finally {
+                _isStoppingEverything.value = false
             }
         }
     }

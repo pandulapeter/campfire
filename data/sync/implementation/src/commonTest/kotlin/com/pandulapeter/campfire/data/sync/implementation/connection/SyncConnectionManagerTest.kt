@@ -246,6 +246,57 @@ class SyncConnectionManagerTest {
     }
 
     @Test
+    fun `cancelling the reconnect of a working connection keeps it connected`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
+        val repository = syncRepository(
+            provider = FakeSyncProvider(account = TEST_ACCOUNT),
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+            stateLocalSource = stateLocalSource,
+        )
+        repository.restore {}
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE) }
+        runCurrent()
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.value)
+        job.cancelAndJoin()
+        repository.cancelConnection()
+
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+        assertNotNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `closing the consent page of a working connection's reconnect keeps it connected`() = runTest {
+        val repository = syncRepository(
+            provider = FakeSyncProvider(account = TEST_ACCOUNT),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+        )
+        repository.restore {}
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+    }
+
+    @Test
+    fun `giving up the reconnect of a working connection after its tokens went ends disconnected`() = runTest {
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT)
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+        )
+        repository.restore {}
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE) }
+        runCurrent()
+        provider.connected = false
+        job.cancelAndJoin()
+        repository.cancelConnection()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
     fun `backing out of retrying a connection that never stored credentials ends disconnected`() = runTest {
         val store = FakePendingAuthorizationStore().apply { onWrite = { throw LibraryStorageException("Full") } }
         val provider = FakeSyncProvider()

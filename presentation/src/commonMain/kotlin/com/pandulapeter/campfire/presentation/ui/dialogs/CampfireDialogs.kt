@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_cover_a
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
+import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_shared_links
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
@@ -326,7 +327,13 @@ private fun CampfireDialog(
 
         is DialogType.DisconnectSync -> ConfirmationDialog(
             title = stringResource(Res.string.settings_sync_disconnect),
-            text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
+            // The shares stay in the cloud folder and keep serving their last copies, which nothing updates any more.
+            text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName) +
+                if (viewModel.shareLinkController.shares.collectAsStateWithLifecycle().value.isEmpty()) {
+                    ""
+                } else {
+                    " " + stringResource(Res.string.settings_sync_disconnect_shared_links)
+                },
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {

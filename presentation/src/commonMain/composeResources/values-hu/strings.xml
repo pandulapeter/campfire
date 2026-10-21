@@ -1171,4 +1171,23 @@
     <string name="share_qr_code_saved">QR-kód elmentve</string>
     <string name="share_stop_failed">Nem sikerült leállítani a megosztást. A link továbbra is működik.</string>
     <string name="share_stop_failed_network">A megosztás leállításához kapcsolat kell a Dropboxszal. A link továbbra is működik.</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">Megosztás</string>
+    <string name="settings_group_shared_links">Megosztott linkek</string>
+    <string name="settings_group_all_links">Összes link</string>
+    <string name="settings_sharing_description">Ossz meg egy dalt vagy listát linkként, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad vele minden eszközödön.</string>
+    <string name="settings_sharing_nothing_shared">Még nincs semmi megosztva. Egy dal vagy lista exportálásakor válaszd a Link lehetőséget a megosztásához.</string>
+    <string name="settings_sharing_orphaned">Már nincs a könyvtáradban</string>
+    <string name="settings_sharing_too_large">Túl nagy a frissítéshez</string>
+    <string name="settings_sharing_actions">Megosztás műveletei</string>
+    <string name="settings_sharing_show_qr_code">QR-kód megjelenítése</string>
+    <string name="settings_sharing_stop_all">Minden megosztás leállítása</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">Leállítod %1$d elem megosztását? A linkje senkinek sem fog működni, ahogy a sikertelen megosztások után maradt linkek sem. A már importált példányok azoké maradnak, akik importálták.</item>
+        <item quantity="other">Leállítod mind a(z) %1$d elem megosztását? A linkjeik senkinek sem fognak működni, ahogy a sikertelen megosztások után maradt linkek sem. A már importált példányok azoké maradnak, akik importálták.</item>
+    </plurals>
+    <string name="share_stop_all_failed">Nem sikerült minden megosztást leállítani. A még listázott linkek továbbra is működnek.</string>
+    <string name="share_stop_all_failed_network">A megosztások leállításához kapcsolat kell a Dropboxszal. A még listázott linkek továbbra is működnek.</string>
+    <string name="settings_sync_disconnect_shared_links">A megosztott linkek továbbra is működnek. Ugyanannak a fióknak az újbóli csatlakoztatásával kezelheted őket.</string>
 </resources>

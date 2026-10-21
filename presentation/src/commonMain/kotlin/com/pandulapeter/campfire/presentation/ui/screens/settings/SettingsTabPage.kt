@@ -73,6 +73,7 @@ internal fun SettingsTabPage(
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
                 )
             }
+            SettingsTab.SHARING -> SharingSections(viewModel = viewModel)
             SettingsTab.ABOUT -> AboutSections(
                 viewModel = viewModel,
                 urlOpener = urlOpener,

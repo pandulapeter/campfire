@@ -84,6 +84,9 @@ sealed interface Message {
     /** A share could not be stopped, for [reason]; its link still works. */
     data class StopSharingFailed(val reason: SharingFailure) : Message
 
+    /** Some of the shares Stop sharing everything was asked to stop are still shared. */
+    data class StopSharingEverythingFailed(val reason: SharingFailure) : Message
+
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message
 

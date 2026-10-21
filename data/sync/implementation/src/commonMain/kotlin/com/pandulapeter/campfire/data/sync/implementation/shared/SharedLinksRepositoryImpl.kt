@@ -196,6 +196,42 @@ internal class SharedLinksRepositoryImpl(
         return changes.applyTo(mirror.load().document)
     }
 
+    override suspend fun stopSharingEverythingNow(): SharingFailure? {
+        val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
+        val stopped = mutableSetOf<String>()
+        val failure = failureOf("stop sharing everything") {
+            // The listing finds the copies no list names; the list finds those a listing taken a moment earlier missed.
+            val listed = folder.list().sharedFiles.map { it.shareId }
+            val registered = when (val read = registry.read(folder)) {
+                is SharedLinksRegistry.Read.Readable -> read.document.links.map { it.shareId }
+                is SharedLinksRegistry.Read.FromNewerVersion -> return@failureOf SharingFailure.NEWER_VERSION
+            }
+            (listed + registered).distinct().forEach { shareId ->
+                folder.deleteSharedFile(shareId)
+                stopped += shareId
+            }
+            null
+        }
+        if (stopped.isEmpty()) return failure
+        // Also after a failure, so that the shares whose copies did go are not listed as working; a share another
+        // device made meanwhile was not among them and stays.
+        val removal = failureOf("remove the stopped shares from the list") {
+            val edit = registry.edit(folder) { document ->
+                SharedLinksRegistry.Change(
+                    document = document.takeIf { it.links.any { entry -> entry.shareId in stopped } }
+                        ?.let { it.copy(links = it.links.filterNot { entry -> entry.shareId in stopped }) },
+                    result = Unit,
+                )
+            }
+            when (edit) {
+                is SharedLinksRegistry.Edit.Done -> null
+                is SharedLinksRegistry.Edit.FromNewerVersion -> SharingFailure.NEWER_VERSION
+                SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
+            }
+        }
+        return failure ?: removal
+    }
+
     /** The folder of the account on screen; an action never connects, or acts for an account that is failing. */
     private fun connectedFolder(): SyncFolder? {
         val account = (stateHolder.value as? SyncState.Connected)?.account ?: return null
