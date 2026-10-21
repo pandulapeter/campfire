@@ -263,7 +263,8 @@ size checks, and compiles every platform (iOS on macOS) on every PR, on every pu
   off.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the license header and size
   checks (`.github/scripts/check_sizes.py`, limits in the `code-style` skill) so a commit never leaves them to CI, and
-  refuses a `CLAUDE.md` line naming a backticked class or path the code lacks (`check_doc_names.py`).
+  refuses a `CLAUDE.md` line naming a backticked class or path the code lacks (`check_doc_names.py`); with Kotlin
+  staged it also runs `spotlessCheck`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 
 Commands:
