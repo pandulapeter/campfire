@@ -1,6 +1,6 @@
 ---
 name: prepare-release
-description: Prepare a Campfire release by writing a paste-ready GitHub release-notes draft (with the stores' "what's new" blurb and Play's update priority embedded in it), updating the localized in-app update message, and regenerating Android baseline profiles. Invoke this skill WHENEVER the task involves Campfire release preparation or release notes — cutting a release, bumping `campfire.versionName`, or any request to draft, write, summarize or update release notes / a changelog / "what's new" / "what changed since the last version". This is the ONLY correct way to produce these notes; never summarize the changes by hand instead. Not triggered by ordinary code edits — only by release work.
+description: Prepare a Campfire release by writing a paste-ready GitHub release-notes draft (with the stores' "what's new" blurb and Play's update priority embedded in it), updating the localized in-app update message, keeping the store listings in documentation/store-listings current, and regenerating Android baseline profiles. Invoke this skill WHENEVER the task involves Campfire release preparation or release notes — cutting a release, bumping `campfire.versionName`, or any request to draft, write, summarize or update release notes / a changelog / "what's new" / "what changed since the last version". This is the ONLY correct way to produce these notes; never summarize the changes by hand instead. Not triggered by ordinary code edits — only by release work.
 ---
 
 # Campfire release preparation
@@ -11,8 +11,8 @@ that release is the entire release process, so the file has to be complete as it
 in, nothing to cut before pasting. Match the style of the existing notes at
 https://github.com/pandulapeter/campfire/releases.
 
-Also update the tracked in-app message resources and regenerate the tracked Android profiles before the release
-is tagged. These are part of preparing every release, including a small release with empty notes.
+Also update the tracked in-app message resources and the store listings where the release changed what they say, and
+regenerate the tracked Android profiles before the release is tagged. These are part of preparing every release, including a small release with empty notes.
 
 **Campfire is an app, not a library.** The notes are for the people who use it — musicians — not for
 developers reading the source. Nothing about modules, classes, Gradle, Koin or the build belongs in
@@ -109,7 +109,33 @@ them. If a change has no effect a user could notice, it is not in the notes.
    the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
    the version as handled. The first installed version is always skipped, whatever its message contains.
 
-8. **Always regenerate Android baseline profiles, and only once every other source change is in place** — the
+8. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
+   one file per store (`google-play.md`, `app-store.md`, `mac-app-store.md`, `microsoft-store.md`): the source of truth
+   for every field the user pastes into that store's console, one fenced block per field. Read each file whole,
+   rules note first, and check every claim against the feature clusters of step 3:
+   - **Edit only what the release made untrue or incomplete**: a new feature worth a line, a removed or renamed one, a
+     changed count (instruments, sounds, colors, languages), a new platform behavior. A release that changes nothing a
+     listing describes leaves the file untouched; never reword for its own sake.
+   - **Anything new that reaches the network** (root `CLAUDE.md`, "Privacy: what reaches the network") updates the
+     description's privacy paragraph in every file, the App Review notes' network paragraph, and the Mac file's
+     `network.client` justification. A new entitlement in `app/desktop/app-store.entitlements` gets its own App Sandbox
+     Information entry; a new permission or background mode gets a review-notes paragraph like the microphone's.
+   - **The App Review notes' "New in <version>" section** (`app-store.md`, `mac-app-store.md`) lists the release's new
+     features and where to find them. Rewrite it for a release with new features; remove it for one without. **Trace
+     every location in the code** (the label's string, the composable that shows it, how that screen or sheet opens),
+     never from a string's name, and use the platform's verbs (tap on iOS, click on the Mac).
+   - **The promotional text** (`app-store.md`, `mac-app-store.md`) names the newest release's headline features;
+     rewrite it when the release has new ones, leave it for a patch.
+   - **Each store's rules** (the note at the top of its file): its field limits, Apple's no links and no other
+     platforms, wording that belongs to that platform only. **Never name a competing app**, even where the code does
+     (an importer's name): "other songbook apps". Count every edited field with a real interpreter (Python's `len()`,
+     bytes for Apple's keywords) against the limit in its heading.
+
+   Keep the four descriptions saying the same thing in each platform's words. Apple's fields other than the
+   promotional text change only with a version submitted for review; the listings are pasted by hand, never by the
+   pipeline.
+
+9. **Always regenerate Android baseline profiles, and only once every other source change is in place** — the
    in-app message and any code or resource edit made while preparing the release (step 7 included), since the
    profile is recorded from the built app and a later change would leave it stale. If anything under `presentation`,
    `app` or the shared modules changes after a recording, record it again. Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
@@ -127,7 +153,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    move generation into publishing CI. If recording is blocked, finish the resources and draft, report the exact
    blocker and command still needed, and do not claim the release preparation is complete.
 
-9. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
+10. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
    gitignored, so these scratch files stay untracked). The file's contents are the release body and
    nothing else — no preamble, no headings above the bullets, no "generated by", no meta commentary —
    ending in the hidden store block described below. For empty notes omit the visible bullets and leave the
@@ -135,6 +161,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
    The tracked resources and generated profiles above are required changes, not extra drafts. Then tell the
    user, briefly:
    - whether the in-app message was updated or cleared, and whether both Android profiles were regenerated;
+   - which store listing files changed and what to paste where (each edited field, with its count), or that none
+     needed a change;
    - the path, and that the file is a throwaway to delete after pasting;
    - to paste **all of it** into the description of a new release tagged `<version>` on the commit
      that carries that `campfire.versionName` (`publish-all.yml` refuses a tag that disagrees with it), with
@@ -144,8 +172,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
      certification (each published as soon as it passes), and attaches the Linux packages to the release
      itself — so the notes never list or link downloads.
 
-10. **Do not create the tag, the release, or commit anything.** Leave the draft, resources and generated profiles
-    ready for review. Their commit must be included in the version's tag before publishing.
+11. **Do not create the tag, the release, or commit anything.** Leave the draft, resources, listings, and generated
+    profiles ready for review. Their commit must be included in the version's tag before publishing.
 
 ## Writing the changelog
 
