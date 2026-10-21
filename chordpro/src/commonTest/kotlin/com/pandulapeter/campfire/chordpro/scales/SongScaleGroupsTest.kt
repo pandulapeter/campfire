@@ -386,6 +386,32 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a blues is heard on its tonic seventh, not on the chord its V leads to`() {
+        assertEquals(listOf("F" to "minor_pentatonic"), rootAndFirst(song("F7 Bb7 F7 Cm7 F7 Bb7 Bdim7 F7 Am7 D7 Gm7 C7 F7 D7 Gm7 C7")))
+        assertEquals(listOf("E" to "minor_pentatonic"), rootAndFirst(song("E7 A7 E7 B7 A7 E7")))
+    }
+
+    @Test
+    fun `a tonic seventh needs its target unplayed or played as a seventh, and the first chord's seventh comes first`() {
+        assertEquals(listOf("G" to "major"), rootAndFirst(song("D7 G C D7")))
+        assertEquals(listOf("E" to "minor_pentatonic"), rootAndFirst(song("E7 A7 B7 A7")))
+    }
+
+    @Test
+    fun `a cadence into a secondary dominant is no cadence home`() {
+        val allOfMe = groups(song("Cmaj7 Cmaj7 E7 E7 A7 A7 Dm7 Dm7 E7 E7 Am7 Am7 D7 D7 Dm7 G7")).single()
+        assertEquals("C" to "major", allOfMe.rootName to allOfMe.scales.first().id)
+        assertEquals(listOf("E7", "A7", "D7"), allOfMe.exceptions.map { it.chordName })
+    }
+
+    @Test
+    fun `a guessed root is weighed by its home scale, not by the minor family`() {
+        val flyMe = groups(song("Am7 Dm7 G7 Cmaj7 Fmaj7 Bm7b5 E7 Am7 A7 Dm7 G7 Cmaj7 Am7 Dm7 G7 Cmaj7 Bm7b5 E7")).single()
+        assertEquals("C" to "major", flyMe.rootName to flyMe.scales.first().id)
+        assertEquals(listOf("E7", "A7"), flyMe.exceptions.map { it.chordName })
+    }
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })

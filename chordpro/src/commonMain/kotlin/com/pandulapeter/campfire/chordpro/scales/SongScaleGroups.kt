@@ -189,9 +189,10 @@ public object SongScaleGroups {
      * - **The minor family** ([Level.TONAL]): natural, harmonic, or melodic minor on the best scored root holds each
      *   chord, the home natural minor and the rest named as in a key.
      * - **A home with exceptions** ([Level.LOOSE], [Level.THIN] below two thirds): on the best scored root or the first
-     *   chord's, whichever a home holds more of (the scores' favourite on a tie, as half the chords is a floor it often
-     *   clears with a worse home than the first chord's: F major for C F G E). Only these roots, never further down the
-     *   scores, or `C A7 Dm G7` would read as D minor.
+     *   chord's, whichever a home scale holds more of by itself, the minor family and the chords leading into a home
+     *   left out (the scores' favourite on a tie, as half the chords is a floor it often clears with a worse home than
+     *   the first chord's: F major for C F G E). Only these roots, never further down the scores, or `C A7 Dm G7` would
+     *   read as D minor.
      * - **A passing tone** ([Level.PASSING]): an eight-note scale on the best scored root, which holds a passing tone
      *   no scale of seven does. It answers what scale a part is in no better than none, so it never joins a key.
      */
@@ -199,14 +200,10 @@ public object SongScaleGroups {
         val roots = listOfNotNull(harmony.ranked.first(), harmony.roots.first())
             .distinctBy { it.pitchClass }
             .map { it to looseCountsOn(harmony, it) }
-            // Sorted by what a home holds, not what it accounts for: with the leaders counted, `C F G E` would tie F major
-            // with C major, and the tie would go to F, the scores' favourite.
-            .sortedByDescending { (root, _) ->
-                looseHomes.maxOf { home ->
-                    val holders = if (home.id == NATURAL_MINOR_ID) minorFamily else listOf(home)
-                    harmony.chords.count { chord -> holders.any { holdsChord(it, root.pitchClass, chord) } }
-                }
-            }
+            // Sorted by what a home scale itself holds: with the leaders counted, `C F G E` would tie F major with C major
+            // and the tie would go to F, the scores' favourite, and with the minor family as one home, A's harmonic minor
+            // holding the E7 would put Fly Me to the Moon on A before C.
+            .sortedByDescending { (root, _) -> looseHomes.maxOf { home -> scaleCountOn(harmony, root, home) } }
         return tonalFitOf(harmony)?.let { saidAsNaturalMinor(harmony, it) }
             ?: minorFamilyFitOn(harmony, harmony.ranked.first())
             ?: looseFitOf(harmony, roots)
@@ -270,6 +267,9 @@ public object SongScaleGroups {
         if (held.isEmpty()) return null
         return Fit(root, listOf(home) + (PlayableScales.over(root.pitchClass, held) - home), level, home, harmony.exceptionsTo(home, root))
     }
+
+    /** How many chords of [harmony] [home] on [root] holds by itself, for [guessedFitOf] to weigh its roots by. */
+    private fun scaleCountOn(harmony: Harmony, root: SpelledNote, home: Scale) = harmony.chords.count { holdsChord(home, root.pitchClass, it) }
 
     /**
      * How many chords of [harmony] each of [looseHomes] accounts for on [root], -1 for a home [isAllowed] rules out: the

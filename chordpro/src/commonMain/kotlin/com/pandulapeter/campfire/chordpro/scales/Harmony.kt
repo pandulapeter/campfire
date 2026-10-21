@@ -85,8 +85,14 @@ internal fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
  * Every root [parts] play, the one they are most likely heard in first. A root scores one for each chord on it but a
  * dominant seventh (a chord that leaves, rarely a tonic), one for the first chord and one for the last, and two for
  * every cadence into it, a chord with a major third a fifth above it followed by a chord on it, each part read as a
- * loop too, since a section is repeated. Ties go to more chords that are not a dominant seventh, then the first
- * chord's root, then the last one's.
+ * loop too, since a section is repeated. A cadence into a dominant seventh is no cadence home (All of Me's `E7 A7`).
+ *
+ * A blues's I7 is the exception, a tonic seventh: a part's first chord where that is a dominant seventh, else its most
+ * played dominant sevenths, where nothing on the root a fourth above them is played but as a seventh, so the seventh
+ * leaves to nowhere or to the blues's IV7. It scores as any chord, and so does a cadence into it. Its first-chord rule
+ * keeps the shuffle `E7 A7 B7 A7` on E, and the target rule the pickup `D7 G C D7` on G.
+ *
+ * Ties go to the first chord's root, then to more chords that are not a dominant seventh, then to the last one's.
  */
 internal fun rankedRoots(parts: List<SongPart>): List<SpelledNote> {
     val played = parts.flatMap { it.roots }
@@ -95,13 +101,22 @@ internal fun rankedRoots(parts: List<SongPart>): List<SpelledNote> {
     val scores = mutableMapOf<Int, Int>()
     val counts = mutableMapOf<Int, Int>()
     parts.forEach { part ->
+        val plays = part.chords.groupingBy { it }.eachCount()
+        val candidates = if (part.chords.first().isDominantSeventh) {
+            setOf(part.chords.first())
+        } else {
+            plays.filter { (chord, count) -> chord.isDominantSeventh && count == plays.values.max() }.keys
+        }
+        val tonicSevenths = candidates.filter { seventh ->
+            part.chords.none { it.root == (seventh.root + FOURTH).mod(12) && !it.isDominantSeventh }
+        }.toSet()
         part.chords.forEachIndexed { index, chord ->
-            if (!chord.isDominantSeventh) {
+            if (!chord.isDominantSeventh || chord in tonicSevenths) {
                 scores[chord.root] = (scores[chord.root] ?: 0) + 1
                 counts[chord.root] = (counts[chord.root] ?: 0) + 1
             }
             val next = part.chords[(index + 1) % part.chords.size]
-            if (MAJOR_THIRD in chord.intervals && (chord.root - next.root).mod(12) == FIFTH) {
+            if (MAJOR_THIRD in chord.intervals && (chord.root - next.root).mod(12) == FIFTH && (!next.isDominantSeventh || next in tonicSevenths)) {
                 scores[next.root] = (scores[next.root] ?: 0) + CADENCE_SCORE
             }
         }
@@ -110,8 +125,8 @@ internal fun rankedRoots(parts: List<SongPart>): List<SpelledNote> {
     scores[last] = (scores[last] ?: 0) + 1
     return played.distinctBy { it.pitchClass }.sortedWith(
         compareByDescending<SpelledNote> { scores[it.pitchClass] ?: 0 }
-            .thenByDescending { counts[it.pitchClass] ?: 0 }
             .thenByDescending { it.pitchClass == first }
+            .thenByDescending { counts[it.pitchClass] ?: 0 }
             .thenByDescending { it.pitchClass == last },
     )
 }

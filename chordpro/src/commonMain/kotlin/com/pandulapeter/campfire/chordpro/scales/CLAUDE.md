@@ -27,7 +27,9 @@
   own major or minor family as a home with exceptions, its mode too where its tonic chord is played and holds two chords
   more than the key's scale, or the tonic is mostly a seventh (capo shapes in C under `{key: D}` play no D, so they
   never read as D Mixolydian). Only where none fits is the root scored (chords on
-  it, the first and last, cadences into it), a mode only where the part starts on it; a part of one chord is answered
+  it, a dominant seventh only as the first chord, else the most played, with its target unplayed or played only as a
+  seventh, the first and last, cadences into it, never into another dominant), a mode only where the part starts on it,
+  a guessed root weighed by the chords its home scale alone holds; a part of one chord is answered
   as the chord's sheet is (a `Dm7` vamp is Dorian). A tonic seventh passing once among plain tonics is no blues but the
   key's moment. **The song is read as it
   stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
