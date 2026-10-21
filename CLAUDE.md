@@ -26,12 +26,15 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - **Cover images**: downloaded once from the address a song file names, then kept on the device.
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
+- **Shared links**: sharing a song or setlist publishes a copy as a public link in the Dropbox the user connected for
+  Sync, kept current by sync runs; opening one downloads that zip from `dl.dropboxusercontent.com`, needing no account
+  and keeping nothing beyond the import.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
-  and `preferences.json` — never the sync credentials, the sync index, the editor draft, the iOS share inbox, or
-  `covers/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`,
-  and the share inbox's own exclusion). A launch with no preferences document forgets any credentials it finds, since
-  the iOS Keychain outlives an uninstall.
+  and `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
+  draft, the iOS share inbox, or `covers/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
+  `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with no preferences document
+  forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
 ## Architecture
 
@@ -46,10 +49,10 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
                                       platform shells in its platform source sets
   domain:api / :implementation        use cases (single-method interfaces)
     data:repository:api / :implementation
-    data:sync:implementation          the sync engine, planner, index, synced preferences
+    data:sync:implementation          the sync engine, planner, index, synced preferences, shared links
       data:source:local:api -> :implementation    files on Android/desktop/iOS, OPFS on web
         data:formats                  pure-Kotlin zip, PDF, and Word readers
-      data:source:remote:api -> :implementation   sync providers, covers, catalogue searches (all network calls)
+      data:source:remote:api -> :implementation   sync, covers, catalogue searches, shared links (every network call)
         data:model                    domain models
   metronome:api / :implementation     the click engine; depends on nothing of the app's
   tuner:api / :implementation         pitch detection, tones, mic input; depends on nothing of the app's
@@ -189,7 +192,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   existing files are skipped, collisions numbered or replaced after confirmation: `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
   included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
-  Save, which needs a title; never a link followed: `presentation`.
+  Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), never in read
   only mode: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
@@ -197,13 +200,17 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.
+- A song or setlist is shared as a link (with a QR code) from the export screen, made in the user's Dropbox, listed
+  in Settings → Sharing, and opened into the import review on every platform: `ui/screens/export`,
+  `data/sync/implementation/shared`.
 
 ### Feature invariants (detail in the named files)
 
 - **Sync** (`data/sync/implementation`, `data/source/remote/api`): no Campfire server; a run belongs to the app, not
   the screen; content decides what changed, never a clock; a run that would delete most of the library on either side
   stops and asks; a run starts on every return to the front, unless the last one was stopped or is waiting for an
-  answer about deletions, and another device's change starts one while in front.
+  answer about deletions, and another device's change starts one while in front; shared copies follow the library,
+  and a share stops only by an explicit action.
 - **Metronome** (`metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a timer; a
   click never outlives its screen; tempo overrides live where transpositions do.
 - **Tuner** (`tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers its

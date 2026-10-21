@@ -22,7 +22,7 @@ A built-in metronome, a tuner, and a library of scales and modes drawn on your i
 
 <img src="documentation/screenshots/04.webp" width="32%" /> <img src="documentation/screenshots/05.webp" width="32%" /> <img src="documentation/screenshots/06.webp" width="32%" />
 
-The app works offline (the web app after its first visit), requires no account, and doesn't rely on a central server. Syncing the library across devices is handled directly through your own Dropbox storage.
+The app works offline (the web app after its first visit), requires no account, and doesn't rely on a central server. Syncing the library across devices is handled directly through your own Dropbox storage, which can also share a song or setlist as a link and a QR code that anyone opens in Campfire, with no account needed.
 Campfire is free, open-source, and has no ads or tracking. Check out the [Privacy Policy](https://campfire-songbook.com/privacy/) for more information.
 
 ## Get Campfire
