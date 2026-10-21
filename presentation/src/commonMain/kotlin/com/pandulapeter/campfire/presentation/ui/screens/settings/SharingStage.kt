@@ -47,3 +47,12 @@ internal fun sharingStageOf(
         else -> SharingStage.SHARED
     }
 }
+
+/**
+ * Whether [refreshFailure] leaves the Sharing tab showing the list this device last saw, which it then says: a failure
+ * that asks to connect again shows no list, and a newer version's list has a line of its own.
+ */
+internal fun isStaleSharingList(refreshFailure: SharingFailure?) = when (refreshFailure) {
+    null, SharingFailure.NOT_CONNECTED, SharingFailure.SCOPE_MISSING, SharingFailure.AUTHORIZATION, SharingFailure.NEWER_VERSION -> false
+    SharingFailure.NOT_PUBLIC, SharingFailure.REFUSED, SharingFailure.REMOTE_STORAGE_FULL, SharingFailure.NETWORK, SharingFailure.UNKNOWN -> true
+}

@@ -1182,6 +1182,7 @@
     <string name="settings_group_all_links">All links</string>
     <string name="settings_sharing_description">Share a song or setlist as a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices.</string>
     <string name="settings_sharing_nothing_shared">Nothing shared yet. Choose Link when exporting a song or setlist to share it.</string>
+    <string name="settings_sharing_stale">Couldn't read the links from Dropbox. This list is what this device last saw.</string>
     <string name="settings_sharing_orphaned">No longer in your library</string>
     <string name="settings_sharing_too_large">Too large to update</string>
     <string name="settings_sharing_actions">Share actions</string>

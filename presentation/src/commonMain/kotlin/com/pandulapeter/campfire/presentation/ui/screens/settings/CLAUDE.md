@@ -26,7 +26,7 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
   goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
 - **Sharing** (`SharingSections`): there while disconnected too. Stages (`sharingStageOf`) crossfade, except the list
   arriving over "Nothing shared yet". Connect keeps `SyncConsentOrigin.Sharing`. Settling into view (not being composed
-  by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline. A stopped row shrinks
+  by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline, saying so once a read fails (`isStaleSharingList`). A stopped row shrinks
   in place (`sharedLinkRowsOf`); Stop sharing everything is alone in the last section.
 - **Features**: Playing switches first, in the navigation's tab order (songs, setlists, metronome, tuner, chords, chord
   diagrams, scales, scale suggestions), then an Online group (song details lookup, cover art) so the two that make

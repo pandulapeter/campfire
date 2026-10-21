@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_all_links
 import com.pandulapeter.campfire.presentation.resources.settings_group_shared_links
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_description
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_nothing_shared
+import com.pandulapeter.campfire.presentation.resources.settings_sharing_stale
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all_confirmation
 import com.pandulapeter.campfire.presentation.resources.share_authorization
@@ -141,6 +142,9 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
                 // A newer version's list is neither shown afresh nor changed; the one last read here still is.
                 AnimatedSettingsRow(isVisible = isConnected && refreshFailure == SharingFailure.NEWER_VERSION) {
                     SettingsMessage(text = stringResource(Res.string.share_newer_version))
+                }
+                AnimatedSettingsRow(isVisible = isConnected && isStaleSharingList(refreshFailure)) {
+                    SettingsMessage(text = stringResource(Res.string.settings_sharing_stale))
                 }
             }
             // Alone in its own section and last, as the Library tab keeps the rows that cannot be undone.

@@ -20,7 +20,9 @@ import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class SharingStageTest {
 
@@ -54,6 +56,16 @@ class SharingStageTest {
         assertEquals(SharingStage.SHARED, sharingStageOf(connected, SharingFailure.NETWORK, shares))
         assertEquals(SharingStage.NOTHING_SHARED, sharingStageOf(connected, SharingFailure.NETWORK, emptyList()))
         assertEquals(SharingStage.SHARED, sharingStageOf(connected, SharingFailure.NEWER_VERSION, shares))
+    }
+
+    @Test
+    fun `a list read afresh, replaced, or explained elsewhere is not called stale`() {
+        assertFalse(isStaleSharingList(null))
+        assertFalse(isStaleSharingList(SharingFailure.SCOPE_MISSING))
+        assertFalse(isStaleSharingList(SharingFailure.AUTHORIZATION))
+        assertFalse(isStaleSharingList(SharingFailure.NEWER_VERSION))
+        assertTrue(isStaleSharingList(SharingFailure.NETWORK))
+        assertTrue(isStaleSharingList(SharingFailure.UNKNOWN))
     }
 
     @Test
