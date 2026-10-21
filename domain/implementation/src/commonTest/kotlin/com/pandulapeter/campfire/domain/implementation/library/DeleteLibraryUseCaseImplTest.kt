@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.library
 
+import com.pandulapeter.campfire.domain.implementation.RecordingSharedLinksRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SyncRepositoryStub
@@ -32,7 +33,7 @@ class DeleteLibraryUseCaseImplTest {
     private var savedPreferences: UserPreferences? = null
 
     @Test
-    fun `stops the run going before deleting and starts one with the deletions allowed after`() = runTest {
+    fun `stops the run going before deleting, notes every share stopped, and starts one with the deletions allowed after`() = runTest {
         useCase().invoke()
 
         assertEquals(
@@ -41,6 +42,7 @@ class DeleteLibraryUseCaseImplTest {
                 "deleteAllSongs",
                 "deleteAllSetlists",
                 "updateUserPreferences",
+                "stopSharingEverything",
                 "synchronize(DELETE_REMOTELY)",
             ),
             events,
@@ -60,6 +62,7 @@ class DeleteLibraryUseCaseImplTest {
                 "cancelSynchronization",
                 "deleteAllSetlists",
                 "updateUserPreferences",
+                "stopSharingEverything",
                 "synchronize(DELETE_REMOTELY)",
             ),
             events,
@@ -104,6 +107,7 @@ class DeleteLibraryUseCaseImplTest {
                 events += "cancelSynchronization"
             }
         },
+        sharedLinksRepository = RecordingSharedLinksRepository(events),
         logger = Logger.Standard,
     )
 }

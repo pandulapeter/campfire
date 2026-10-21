@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
@@ -45,6 +46,8 @@ internal class SharedLinksRepositoryImpl(
     private val stateHolder: SyncStateHolder,
     private val mirror: SharedLinksMirror,
     private val registry: SharedLinksRegistry,
+    private val journal: SharedLinksJournal,
+    private val journalApplier: SharedLinksJournalApplier,
     private val environment: SyncEnvironment,
 ) : SharedLinksRepository {
 
@@ -152,6 +155,45 @@ internal class SharedLinksRepositoryImpl(
                 SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
             }
         }
+    }
+
+    override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {
+        if (sharedNow().entryFor(kind, fileName) == null) emptyList() else listOf(SharedLinksJournal.Entry.Rename(from = fileName, to = newFileName))
+    }
+
+    override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String) = note("note the deletion of $fileName") {
+        listOfNotNull(sharedNow().entryFor(kind, fileName)?.let { SharedLinksJournal.Entry.Stop(it.shareId) })
+    }
+
+    override suspend fun stopSharingEverything() = note("note the deletion of the library") {
+        sharedNow().links.map { SharedLinksJournal.Entry.Stop(it.shareId) }
+    }
+
+    /**
+     * Appends what [entries] answers to the journal, then tells the account's list, without waiting for it, where an
+     * account is connected. The journal comes first, so that whatever the request cannot write, offline or failing, is
+     * still there for the next run.
+     */
+    private suspend fun note(action: String, entries: suspend () -> List<SharedLinksJournal.Entry>) {
+        val isNoted = environment.logger.recovering(
+            describe = { "Could not $action for the shared links: ${it::class.simpleName}" },
+            fallback = { false },
+        ) {
+            val noted = entries()
+            if (noted.isNotEmpty()) journal.append(noted)
+            noted.isNotEmpty()
+        }
+        if (isNoted) connectedFolder()?.let(journalApplier::applySoon)
+    }
+
+    /**
+     * The shares as the list will have them once the journal is applied: an item renamed while the list could not be
+     * told is still shared under its new name, and its next rename must follow it too.
+     */
+    private suspend fun sharedNow(): SharedLinksDocument {
+        val changes = SharedCopyChanges()
+        journal.load().forEach(changes::take)
+        return changes.applyTo(mirror.load().document)
     }
 
     /** The folder of the account on screen; an action never connects, or acts for an account that is failing. */

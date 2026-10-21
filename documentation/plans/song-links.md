@@ -281,6 +281,10 @@ completed index is saved and the watch point set, so a run that the step ends ne
    5. Otherwise, upload with `update:<listing revision>`, and on success set `built` (and `ok`).
       - `Conflict` (another device uploaded in between) is dropped for this run, and `built` is left alone.
       - A missing file (deleted by hand in Dropbox, §11.3) makes the entry `orphaned`.
+      - **Decided in step 6**: a copy missing from the listing makes its entry `orphaned` only when the registry was
+        read at the listing's revision. A registry read after the listing may name a share created since (**Create
+        link** does not take the run lock), whose copy the listing could not have seen, so such an entry is left for
+        the next run.
    6. If the entry's `title` changed, update it in the registry (display only).
    7. The run's registry changes (`built`, `state`, `title`) go in as **one** operation (§4.2) at the end of the step,
       also when the step ends early on an error, keeping what was done up to then. A step that changed nothing writes
@@ -328,11 +332,17 @@ a share.
 
 - **Renames**: `RenameSongFileUseCaseImpl`, and a setlist title change (`EditSetlistUseCaseImpl` → `renameSetlist`).
   - If the old name is in the local mirror, append `rename(old, new)` to the journal.
+    - **Done in step 7**: "in the mirror" is the mirror with the pending journal applied, so a second rename made
+      before the first reached the registry follows it.
   - If connected and online, also apply it to the registry at once, best effort. The next run applies whatever is
     left.
+    - **Done in step 7**: `SharedLinksJournalApplier` applies the **whole** journal in order, never only the newest
+      entry, without the use case waiting for it. Both it and a run may apply an entry; each is idempotent.
   - The link survives because the Dropbox file is named by `shareId`, never by the item.
 - **Deletions in Campfire**: `DeleteSongUseCaseImpl`, `DeleteSetlistUseCaseImpl`, and **Delete library**.
   - If the name is in the mirror, append `stop(shareId)` to the journal.
+    - **Done in step 7**: **Delete library** notes a stop for every entry in the mirror before its run starts, so that
+      run applies them even when the registry could not be told at once.
   - It is applied the same way: delete the file, then remove the entry.
   - The delete confirmation says so (§7.3).
 - **Missing without an explicit action**: the item was deleted outside Campfire, renamed on a device without the
@@ -387,6 +397,9 @@ could differ from the one in Dropbox.
 - **No fingerprint, so no skip**, when any input has no `localHash` in the index (a file the run did not see, such as
   one written after its pass). The copy is built as without this section. Edits made after the pass change the next
   run's fingerprint, so they are never missed, only left to that run.
+  - **Decided in step 6**: a song a shared setlist names that is not in the run's index counts as `-` in the
+    fingerprint, as one missing from the library does, rather than withholding the fingerprint. A song written after
+    the pass changes the next run's fingerprint, so it is picked up by that run.
 - **The listing still has the last word**: a skip also needs the listing's `content_hash` to equal `built.hash`, so a
   copy replaced by hand in Dropbox, or uploaded by a run that died before its registry write, is rebuilt and checked
   as before. A file missing from the listing is never skipped: step 5 finds it gone and marks the entry `orphaned`.

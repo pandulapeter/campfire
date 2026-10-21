@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.songs.SongFileRename
@@ -25,6 +27,7 @@ internal class RenameSongFileUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val sharedLinksRepository: SharedLinksRepository,
     private val logger: Logger,
 ) : RenameSongFileUseCase {
 
@@ -44,6 +47,8 @@ internal class RenameSongFileUseCaseImpl(
     override suspend operator fun invoke(song: Song): SongFileRename? {
         val renamed = songRepository.renameSong(song)?.fileName ?: return null
         val haveReferencesFollowed = withContext(NonCancellable) {
+            // A link to the song follows it under its new name, which only this device can tell from a deletion.
+            if (renamed != song.fileName) sharedLinksRepository.followRename(SharedLinkKind.SONG, song.fileName, renamed)
             followSongReferences(setlistRepository, userPreferencesRepository, logger, fileName = song.fileName, newFileName = renamed)
         }
         return SongFileRename(fileName = renamed, haveReferencesFollowed = haveReferencesFollowed)

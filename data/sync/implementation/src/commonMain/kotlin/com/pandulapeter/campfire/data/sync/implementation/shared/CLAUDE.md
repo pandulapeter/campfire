@@ -23,6 +23,10 @@ The plan is `documentation/plans/song-links.md` (§4.2, §5, §6.3, §11).
   revision, so screens need no request. Replaced on every read and successful edit.
 - **Journal**: `preferences/shared-links-journal.json` (`SharedLinksJournal`), renames and deletions of shared items
   made here, applied by the next run before it looks items up. An unreadable one throws rather than being written over.
+  - The domain's use cases note an entry (`followRename`, `stopSharingDeleted`, `stopSharingEverything`) only for an
+    item shared by the mirror as the journal would leave it, so a second rename made offline follows the first.
+  - Noted first, then applied at once where connected (`SharedLinksJournalApplier`, without the caller waiting), the
+    whole journal in order, best effort; what it cannot write the run applies. Both applying an entry is harmless.
 - Mirror and journal are forgotten with the index (disconnect, `forgetStoredConnection`, another account connected).
 
 ## Sharing (`SharedLinksRepositoryImpl`)

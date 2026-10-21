@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
+import com.pandulapeter.campfire.domain.implementation.RecordingSharedLinksRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.TEST_PREFERENCES
@@ -42,6 +43,7 @@ class SongReferencesTest {
         ),
     )
     private val preferences = FakeUserPreferencesRepository(mapOf("a.cho" to 2, "b.cho" to 1))
+    private val sharedLinks = RecordingSharedLinksRepository()
 
     @Test
     fun `a rename moves every entry and the transposition`() = runTest {
@@ -108,34 +110,38 @@ class SongReferencesTest {
         setlists.unwritable = setOf("first.setlist.json")
         val songs = FakeSongRepository()
 
-        assertFalse(DeleteSongUseCaseImpl(songs, setlists, preferences, Logger.Standard).invoke("a.cho"))
+        assertFalse(DeleteSongUseCaseImpl(songs, setlists, preferences, sharedLinks, Logger.Standard).invoke("a.cho"))
         assertEquals(listOf("a.cho"), songs.deleted)
+        assertEquals(listOf("stopSharingDeleted(song, a.cho)"), sharedLinks.noted)
     }
 
     @Test
     fun `a song that could not be deleted is not walked`() = runTest {
         val songs = FakeSongRepository(isBroken = true)
 
-        assertFailsWith<IllegalStateException> { DeleteSongUseCaseImpl(songs, setlists, preferences, Logger.Standard).invoke("a.cho") }
+        assertFailsWith<IllegalStateException> { DeleteSongUseCaseImpl(songs, setlists, preferences, sharedLinks, Logger.Standard).invoke("a.cho") }
         assertEquals(listOf("a.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
         assertEquals(mapOf("a.cho" to 2, "b.cho" to 1), preferences.transpositions)
+        assertEquals(emptyList(), sharedLinks.noted)
     }
 
     @Test
     fun `a rename answers the name the file moved to and whether the references followed it`() = runTest {
-        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = "c.cho"), setlists, preferences, Logger.Standard).invoke(testSong("a.cho"))
+        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = "c.cho"), setlists, preferences, sharedLinks, Logger.Standard).invoke(testSong("a.cho"))
 
         assertEquals(SongFileRename(fileName = "c.cho", haveReferencesFollowed = true), rename)
         assertEquals(listOf("c.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
+        assertEquals(listOf("followRename(song, a.cho, c.cho)"), sharedLinks.noted)
     }
 
     @Test
     fun `a file that did not move leaves every reference where it was`() = runTest {
-        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = null), setlists, preferences, Logger.Standard).invoke(testSong("a.cho"))
+        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = null), setlists, preferences, sharedLinks, Logger.Standard).invoke(testSong("a.cho"))
 
         assertNull(rename)
         assertEquals(listOf("a.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
         assertEquals(mapOf("a.cho" to 2, "b.cho" to 1), preferences.transpositions)
+        assertEquals(emptyList(), sharedLinks.noted)
     }
 
     private suspend fun follow(newFileName: String?, fileName: String = "a.cho") = followSongReferences(

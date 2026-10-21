@@ -94,7 +94,7 @@ internal class Device(
     }
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
-    suspend fun journal(entry: SharedLinksJournal.Entry) = SharedLinksJournal(sharedLinks, environment).append(entry)
+    suspend fun journal(entry: SharedLinksJournal.Entry) = SharedLinksJournal(sharedLinks, environment).append(listOf(entry))
 
     /** A run whatever it comes to; only [sync] keeps what a completed one leaves. */
     suspend fun syncResult(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy) = synchronize(

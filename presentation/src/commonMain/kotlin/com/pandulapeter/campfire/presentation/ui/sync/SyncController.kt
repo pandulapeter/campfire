@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.sync.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
@@ -40,6 +41,7 @@ internal class SyncController(
     private val messageSink: MessageSink,
     getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
+    getSharedLinks: GetSharedLinksUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
@@ -59,6 +61,12 @@ internal class SyncController(
 
     /** True while a sync run is going. Acted on rather than drawn: a restart the app offers by itself waits for it. */
     val isSyncing = syncState.map { it is SyncState.Connected && it.isSyncing }.asState(scope, false)
+
+    /**
+     * What the connected account shares as links, as this device last saw it, so that a deletion's confirmation can
+     * say that a link stops working without asking the service. Empty while disconnected.
+     */
+    val shares = getSharedLinks().asState(scope, emptyList())
 
     /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
     val syncProviders: List<SyncProviderId> = getSyncProviders()

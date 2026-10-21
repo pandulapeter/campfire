@@ -135,6 +135,29 @@ internal open class SharedLinksRepositoryStub : SharedLinksRepository {
     override suspend fun refresh(): SharingFailure? = unexpected()
     override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray): CreateShareResult = unexpected()
     override suspend fun stopSharing(shareId: String): SharingFailure? = unexpected()
+    override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String): Unit = unexpected()
+    override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String): Unit = unexpected()
+    override suspend fun stopSharingEverything(): Unit = unexpected()
+}
+
+/** Records the renames and deletions the use cases tell the shares about, in order, as text. */
+internal class RecordingSharedLinksRepository(
+    private val events: MutableList<String> = mutableListOf(),
+) : SharedLinksRepositoryStub() {
+
+    val noted: List<String> get() = events
+
+    override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) {
+        events += "followRename(${kind.id}, $fileName, $newFileName)"
+    }
+
+    override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String) {
+        events += "stopSharingDeleted(${kind.id}, $fileName)"
+    }
+
+    override suspend fun stopSharingEverything() {
+        events += "stopSharingEverything"
+    }
 }
 
 /**

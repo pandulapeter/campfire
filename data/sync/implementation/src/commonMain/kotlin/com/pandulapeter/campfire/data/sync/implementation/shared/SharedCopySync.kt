@@ -68,15 +68,7 @@ internal class SharedCopySync(
         var isSettled = true
         val failure = try {
             pending.forEach { entry ->
-                when (entry) {
-                    is SharedLinksJournal.Entry.Rename -> changes.rename(from = entry.from, to = entry.to)
-                    is SharedLinksJournal.Entry.Stop -> {
-                        // The copy goes before the entry, as Stop sharing does it: an entry removed while its copy stays
-                        // would leave a working link that no screen shows any more.
-                        folder.deleteSharedFile(entry.shareId)
-                        changes.remove(entry.shareId)
-                    }
-                }
+                changes.takeFromJournal(entry, folder)
                 applied += entry
             }
             val pass = Pass(

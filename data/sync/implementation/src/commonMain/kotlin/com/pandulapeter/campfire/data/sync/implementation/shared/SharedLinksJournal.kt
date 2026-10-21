@@ -63,7 +63,7 @@ internal class SharedLinksJournal(
      */
     suspend fun load() = mutex.withLock { read() }
 
-    suspend fun append(entry: Entry) = mutex.withLock { write(read() + entry) }
+    suspend fun append(entries: List<Entry>) = mutex.withLock { write(read() + entries) }
 
     /** Removes [applied], each once, keeping whatever was appended while they were being applied. */
     suspend fun remove(applied: List<Entry>) = mutex.withLock {

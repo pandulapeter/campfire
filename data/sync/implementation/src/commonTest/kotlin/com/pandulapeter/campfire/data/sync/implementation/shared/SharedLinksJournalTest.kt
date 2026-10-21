@@ -26,8 +26,8 @@ class SharedLinksJournalTest {
     fun `entries are kept in order across instances`() = runTest {
         val localSource = FakeSharedLinksLocalSource()
         SharedLinksJournal(localSource, testEnvironment()).run {
-            append(rename)
-            append(stop)
+            append(listOf(rename))
+            append(listOf(stop))
         }
 
         assertEquals(listOf(rename, stop), SharedLinksJournal(localSource, testEnvironment()).load())
@@ -37,9 +37,9 @@ class SharedLinksJournalTest {
     fun `removing the applied entries keeps one appended meanwhile, and the last removal deletes the file`() = runTest {
         val localSource = FakeSharedLinksLocalSource()
         val journal = SharedLinksJournal(localSource, testEnvironment())
-        journal.append(rename)
+        journal.append(listOf(rename))
         val applied = journal.load()
-        journal.append(stop)
+        journal.append(listOf(stop))
 
         journal.remove(applied)
         assertEquals(listOf(stop), journal.load())
@@ -51,7 +51,7 @@ class SharedLinksJournalTest {
     fun `a journal that cannot be read is never written over`() = runTest {
         val localSource = FakeSharedLinksLocalSource(journal = "kept", onLoadJournal = { throw LibraryStorageException("busy") })
 
-        assertFailsWith<LibraryStorageException> { SharedLinksJournal(localSource, testEnvironment()).append(stop) }
+        assertFailsWith<LibraryStorageException> { SharedLinksJournal(localSource, testEnvironment()).append(listOf(stop)) }
         assertEquals("kept", localSource.journal)
     }
 }

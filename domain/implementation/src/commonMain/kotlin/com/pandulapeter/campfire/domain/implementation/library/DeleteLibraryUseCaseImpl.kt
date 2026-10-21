@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.domain.implementation.library
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -27,6 +28,7 @@ internal class DeleteLibraryUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val syncRepository: SyncRepository,
+    private val sharedLinksRepository: SharedLinksRepository,
     private val logger: Logger,
 ) : DeleteLibraryUseCase {
 
@@ -45,6 +47,8 @@ internal class DeleteLibraryUseCaseImpl(
         val songsFailure = runCatchingFailure { songRepository.deleteAllSongs() }
         val setlistsFailure = runCatchingFailure { setlistRepository.deleteAllSetlists() }
         userPreferencesRepository.updateUserPreferences { it.withoutSongOverrides() }
+        // Noted before the run starts, so that the run stops every share even when the list could not be told at once.
+        sharedLinksRepository.stopSharingEverything()
         if (!syncRepository.synchronize(SyncDeletionPolicy.DELETE_REMOTELY)) {
             logger.log("The deletion's sync run could not be started, a run was already going.")
         }

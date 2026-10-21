@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.songs.DeleteSongUseCase
@@ -23,6 +25,7 @@ internal class DeleteSongUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val sharedLinksRepository: SharedLinksRepository,
     private val logger: Logger,
 ) : DeleteSongUseCase {
 
@@ -31,10 +34,14 @@ internal class DeleteSongUseCaseImpl(
      * are cleaned up too, so that nothing refers to a file that is no longer there. Once the file is gone that walk is
      * not cancellable, so a screen going away half way through cannot leave the rest of it undone, and it is the
      * rename's walk (`followSongReferences`), so one reference that cannot be removed does not stop the others.
+     *
+     * A song shared as a link stops being shared: only here is the deletion known as one, since sync sees a rename the
+     * same way.
      */
     override suspend operator fun invoke(fileName: String): Boolean {
         songRepository.deleteSong(fileName)
         return withContext(NonCancellable) {
+            sharedLinksRepository.stopSharingDeleted(SharedLinkKind.SONG, fileName)
             followSongReferences(setlistRepository, userPreferencesRepository, logger, fileName = fileName, newFileName = null)
         }
     }

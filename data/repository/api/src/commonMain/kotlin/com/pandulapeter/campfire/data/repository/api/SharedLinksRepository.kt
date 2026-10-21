@@ -55,4 +55,22 @@ interface SharedLinksRepository {
      * or an entry already gone counts as stopped. Null when it worked.
      */
     suspend fun stopSharing(shareId: String): SharingFailure?
+
+    /**
+     * Tells the shares that the library file [fileName] of [kind] is now [newFileName], so that a share of it follows
+     * and its link keeps working. Only this device can tell a rename from a deletion followed by a new file, so it is
+     * noted here before the service is asked: the next sync run carries whatever the service has not been told yet.
+     * Nothing is noted for an item [shares] does not name. Never throws but cancellation, and never waits for the
+     * service.
+     */
+    suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String)
+
+    /**
+     * Stops sharing the library file [fileName] of [kind], which was deleted in Campfire, the way [followRename] notes
+     * a rename. Never throws but cancellation, and never waits for the service.
+     */
+    suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String)
+
+    /** Stops sharing everything [shares] names, for a library deleted as a whole, the way [stopSharingDeleted] does. */
+    suspend fun stopSharingEverything()
 }

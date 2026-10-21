@@ -10,16 +10,30 @@
 package com.pandulapeter.campfire.domain.implementation.setlists
 
 import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Factory
 
 @Factory
 internal class EditSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
+    private val sharedLinksRepository: SharedLinksRepository,
 ) : EditSetlistUseCase {
 
-    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? =
-        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date, isCountdownShown = isCountdownShown)
+    /**
+     * A new title renames the file, and a link to the setlist follows it, which only this device can tell from a
+     * deletion. Not cancellable once written, so that a screen going away cannot leave the link on the old name.
+     */
+    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? {
+        val setlist = setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date, isCountdownShown = isCountdownShown)
+        if (setlist != null && setlist.fileName != fileName) {
+            withContext(NonCancellable) { sharedLinksRepository.followRename(SharedLinkKind.SETLIST, fileName, setlist.fileName) }
+        }
+        return setlist
+    }
 }

@@ -205,6 +205,7 @@
     <string name="songs_delete_song">Dal törlése</string>
     <string name="songs_export_song">Dal exportálása</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
+    <string name="songs_delete_song_confirmation_shared">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából, a megosztott linkje pedig többé nem működik.</string>
     <string name="songs_select_multiple">Több dal kijelölése</string>
     <string name="songs_selection_actions">Műveletek a kijelöléssel</string>
     <string name="songs_export_songs">Dalok exportálása</string>
@@ -299,6 +300,7 @@
     <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
     <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak. A megosztott linkje többé nem működik.</string>
     <string name="setlists_search">Keresés a listákban</string>
     <string name="setlists_no_search_results">Nincs találat</string>
     <string name="setlists_no_search_results_hint">Egyetlen lista sem felel meg a keresésnek, sem a neve, sem a rajta lévő dalok alapján.</string>
@@ -325,6 +327,7 @@
     <string name="settings_library_cover_art_cache_clear_action">Törlés</string>
     <string name="settings_library_delete">Könyvtár törlése</string>
     <string name="settings_library_delete_confirmation">Az eszközön lévő összes dal és lista törlődik. Ez nem vonható vissza.</string>
+    <string name="settings_library_delete_confirmation_shared">Egyik megosztott link sem működik többé.</string>
     <string name="settings_library_delete_confirmation_sync">A Dropbox-szinkronizálás a törlés után azonnal elindul, és a Dropbox-mappádból, valamint minden vele szinkronizált eszközről is törli őket.</string>
     <string name="settings_library_delete_prompt">A megerősítéshez írd be: %1$s</string>
     <string name="settings_library_storage">Tárhely</string>

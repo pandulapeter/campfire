@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -204,6 +205,90 @@ class SharedLinksRepositoryImplTest {
         assertNull(localSource.journal)
     }
 
+    @Test
+    fun `a rename of a shared item is noted and reaches the list at once, and its link stays`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy)).share
+
+        repository.followRename(SharedLinkKind.SETLIST, "gig.setlist.json", "summer_gig.setlist.json")
+        runCurrent()
+
+        assertEquals(listOf("summer_gig.setlist.json"), registry(provider).links.map { it.fileName })
+        assertEquals(listOf(share.link), repository.shares.first().map { it.link })
+        assertNull(localSource.journal)
+    }
+
+    @Test
+    fun `renames made while the list cannot be told are kept, and a second one follows the first`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+
+        repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+        repository.followRename(SharedLinkKind.SONG, "b.cho", "c.cho")
+        runCurrent()
+
+        assertEquals(listOf("a.cho"), registry(provider).links.map { it.fileName })
+        assertEquals(
+            listOf(SharedLinksJournal.Entry.Rename("a.cho", "b.cho"), SharedLinksJournal.Entry.Rename("b.cho", "c.cho")),
+            SharedLinksJournal(localSource, testEnvironment()).load(),
+        )
+    }
+
+    @Test
+    fun `an item that is not shared notes nothing`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+
+        repository.followRename(SharedLinkKind.SONG, "other.cho", "renamed.cho")
+        repository.followRename(SharedLinkKind.SETLIST, "a.cho", "renamed.cho")
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "other.cho")
+        runCurrent()
+
+        assertNull(localSource.journal)
+        assertEquals(listOf("a.cho"), registry(provider).links.map { it.fileName })
+    }
+
+    @Test
+    fun `a deleted shared item stops being shared, its copy before its entry`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy)).share
+        repository.share(SharedLinkKind.SONG, "deleted.cho", "Deleted", copy)
+
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "deleted.cho")
+        runCurrent()
+
+        assertEquals(setOf(kept.shareId), provider.sharedFiles.keys)
+        assertEquals(listOf(kept.shareId), registry(provider).links.map { it.shareId })
+        assertNull(localSource.journal)
+    }
+
+    @Test
+    fun `a deleted library stops every share, and while disconnected leaves the stops to the next run`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val shared = listOf("a.cho", "b.cho").map { fileName ->
+            assertIs<CreateShareResult.Shared>(repository(provider, localSource = localSource).share(SharedLinkKind.SONG, fileName, fileName, copy)).share
+        }
+
+        repository(provider, stateHolder = SyncStateHolder(Logger.Standard), localSource = localSource).stopSharingEverything()
+        runCurrent()
+
+        assertEquals(2, provider.sharedFiles.size)
+        assertEquals(
+            shared.map { SharedLinksJournal.Entry.Stop(it.shareId) }.toSet(),
+            SharedLinksJournal(localSource, testEnvironment()).load().toSet(),
+        )
+    }
+
     private fun TestScope.repository(
         provider: FakeSyncProvider,
         stateHolder: SyncStateHolder = connectedStateHolder(),
@@ -211,11 +296,15 @@ class SharedLinksRepositoryImplTest {
     ): SharedLinksRepositoryImpl {
         val environment = testEnvironment()
         val mirror = SharedLinksMirror(localSource, environment)
+        val registry = SharedLinksRegistry(mirror, environment)
+        val journal = SharedLinksJournal(localSource, environment)
         return SharedLinksRepositoryImpl(
             syncProviders = SyncProviders(listOf(provider)),
             stateHolder = stateHolder,
             mirror = mirror,
-            registry = SharedLinksRegistry(mirror, environment),
+            registry = registry,
+            journal = journal,
+            journalApplier = SharedLinksJournalApplier(journal, registry, environment),
             environment = environment,
         )
     }

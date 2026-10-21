@@ -31,6 +31,12 @@ internal class SharedCopyChanges {
         removals += shareId
     }
 
+    /** What [entry] of this device's journal changes in the registry; deleting a stopped share's copy is the caller's. */
+    fun take(entry: SharedLinksJournal.Entry) = when (entry) {
+        is SharedLinksJournal.Entry.Rename -> rename(from = entry.from, to = entry.to)
+        is SharedLinksJournal.Entry.Stop -> remove(entry.shareId)
+    }
+
     /** Changes the entry [shareId] by [change], after whatever was asked of it before. */
     fun update(shareId: String, change: (SharedLinksEntry) -> SharedLinksEntry) {
         val previous = updates[shareId]

@@ -205,6 +205,7 @@
     <string name="songs_delete_song">Delete song</string>
     <string name="songs_export_song">Export song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
+    <string name="songs_delete_song_confirmation_shared">Delete \"%1$s\"? The file is removed from the library and from every setlist, and its shared link stops working.</string>
     <string name="songs_select_multiple">Select multiple</string>
     <string name="songs_selection_actions">Selection actions</string>
     <string name="songs_export_songs">Export songs</string>
@@ -299,6 +300,7 @@
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
     <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">Delete the \"%1$s\" setlist? The songs stay in your library. Its shared link stops working.</string>
     <string name="setlists_search">Search in setlists</string>
     <string name="setlists_no_search_results">No matching setlists</string>
     <string name="setlists_no_search_results_hint">No setlist matches this search, either by what it is called or by the songs in it.</string>
@@ -325,6 +327,7 @@
     <string name="settings_library_cover_art_cache_clear_action">Clear</string>
     <string name="settings_library_delete">Delete library</string>
     <string name="settings_library_delete_confirmation">Every song and setlist on this device will be deleted. This cannot be undone.</string>
+    <string name="settings_library_delete_confirmation_shared">Every shared link stops working.</string>
     <string name="settings_library_delete_confirmation_sync">Dropbox sync starts as soon as they are deleted, and deletes them from your Dropbox folder and from every device synced with it as well.</string>
     <string name="settings_library_delete_prompt">Type %1$s to confirm</string>
     <string name="settings_library_storage">Storage</string>

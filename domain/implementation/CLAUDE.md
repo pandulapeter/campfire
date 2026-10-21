@@ -39,6 +39,9 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
   song's does not: its name may title it, setlists point at it, and the user may have chosen it. **Update file name**
   is offered where name and metadata drift apart beyond case or Unicode form (`Song.canUpdateFileName`). Old names
   stay until one of those happens.
+- **Only the use case that renamed or deleted a file can tell the two apart** (sync sees a deletion plus a new file), so
+  it tells `SharedLinksRepository` once the file has moved or gone, not cancellably: a song's rename, a setlist's new
+  title, either deletion, and Delete library (before its run starts). A shared item's link then follows it or stops.
 
 ## Others with logic
 

@@ -47,6 +47,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation_shared
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation_sync
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_prompt
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -63,13 +64,15 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
  *
  * The sync sentence is there only while an account is connected, and in the error color: the deletion starts a run
  * that carries it to the cloud folder without asking again (`DeleteLibraryUseCase`), so every other device loses the
- * library too, and that is the part of the dialog somebody who means "this phone" must not skim past.
+ * library too, and that is the part of the dialog somebody who means "this phone" must not skim past. So is the one
+ * about shared links, there while anything is shared: every link stops working, for people far from any device.
  */
 @Composable
 internal fun DeleteLibraryDialog(
     viewModel: CampfireViewModel,
 ) {
     val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+    val shares by viewModel.syncController.shares.collectAsStateWithLifecycle()
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
@@ -101,6 +104,12 @@ internal fun DeleteLibraryDialog(
                 if (syncState is SyncState.Connected) {
                     Text(
                         text = stringResource(Res.string.settings_library_delete_confirmation_sync),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                if (shares.isNotEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.settings_library_delete_confirmation_shared),
                         color = MaterialTheme.colorScheme.error,
                     )
                 }

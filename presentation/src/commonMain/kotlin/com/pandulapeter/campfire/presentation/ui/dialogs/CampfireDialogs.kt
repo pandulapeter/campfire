@@ -53,15 +53,12 @@ import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.confirm_exit_message
 import com.pandulapeter.campfire.presentation.resources.confirm_exit_title
 import com.pandulapeter.campfire.presentation.resources.create
-import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_replace_message
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.save
-import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song_confirmation
-import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
@@ -74,8 +71,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
-import com.pandulapeter.campfire.presentation.resources.songs_delete_song
-import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -260,15 +255,9 @@ private fun CampfireDialog(
             dialog = dialog,
         )
 
-        is DialogType.DeleteSong -> ConfirmationDialog(
-            title = stringResource(Res.string.songs_delete_song),
-            text = textResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
-            confirmLabel = stringResource(Res.string.delete),
-            onDismiss = viewModel.dialogHost::dismissDialog,
-            onConfirm = {
-                viewModel.songFilesController.deleteSong(dialog.song.fileName)
-                viewModel.dialogHost.dismissDialog()
-            },
+        is DialogType.DeleteSong -> DeleteSongConfirmation(
+            viewModel = viewModel,
+            dialog = dialog,
         )
 
         is DialogType.SongTags -> SongTagsDialog(
@@ -330,15 +319,9 @@ private fun CampfireDialog(
             },
         )
 
-        is DialogType.DeleteSetlist -> ConfirmationDialog(
-            title = stringResource(Res.string.setlists_delete_setlist),
-            text = textResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
-            confirmLabel = stringResource(Res.string.delete),
-            onDismiss = viewModel.dialogHost::dismissDialog,
-            onConfirm = {
-                viewModel.setlistsController.deleteSetlist(dialog.setlist.fileName)
-                viewModel.dialogHost.dismissDialog()
-            },
+        is DialogType.DeleteSetlist -> DeleteSetlistConfirmation(
+            viewModel = viewModel,
+            dialog = dialog,
         )
 
         is DialogType.DisconnectSync -> ConfirmationDialog(

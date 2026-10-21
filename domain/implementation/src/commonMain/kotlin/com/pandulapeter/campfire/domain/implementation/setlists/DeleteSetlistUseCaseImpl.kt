@@ -9,14 +9,23 @@
  */
 package com.pandulapeter.campfire.domain.implementation.setlists
 
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
 internal class DeleteSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
+    private val sharedLinksRepository: SharedLinksRepository,
 ) : DeleteSetlistUseCase {
 
-    override suspend operator fun invoke(fileName: String) = setlistRepository.deleteSetlist(fileName)
+    /** A setlist shared as a link stops being shared, once the file is gone, whatever happens to the screen meanwhile. */
+    override suspend operator fun invoke(fileName: String) {
+        setlistRepository.deleteSetlist(fileName)
+        withContext(NonCancellable) { sharedLinksRepository.stopSharingDeleted(SharedLinkKind.SETLIST, fileName) }
+    }
 }
