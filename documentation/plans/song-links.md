@@ -775,7 +775,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 ## 10. The website (`../CampfireWebsite`, GitHub Pages, `.nojekyll` already there)
 
 - **`.well-known/assetlinks.json`**: `delegate_permission/common.handle_all_urls` for `com.pandulapeter.campfire`,
-  with the SHA-256 of Play's app signing certificate (Play Console → App signing).
+  with the SHA-256 of the certificate Play installs it with. Play gets APKs signed with the release keystore
+  (`publish-android.yml`), so that is the release key's (`BF:4E:…:06:79`, read from the keystore and a release APK). If
+  Play Console → App signing ever shows a different app signing key, add its SHA-256 beside it.
 - **`.well-known/apple-app-site-association`** (no extension):
   `{"applinks": {"details": [{"appIDs": ["N45A6ZHDGY.com.pandulapeter.campfire"], "components": [{"/": "/s/*"}]}]}}`.
 - **`s/index.html`, the landing page**:
@@ -793,7 +795,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 
   - Under **Open in Campfire**: "Nothing happened? Campfire isn't installed here." No timers, no automatic redirects,
     and no attempts to detect the app.
-  - **Download the file** is §3's download address, labelled only as the file.
+  - **Download the file** is §3's download address, labelled only as the file, with a line on importing it by hand.
+  - A link of a newer format version says "made by a newer version of Campfire" and keeps the buttons that pass the
+    payload on (the app, the web app), without **Download the file**.
   - English and Hungarian, by `navigator.language`.
   - An unreadable or missing fragment shows "This link is incomplete. Ask for it again." with the normal downloads.
 - **The privacy policy**:
@@ -803,7 +807,9 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
   - the landing page reads the link in the browser and sends nothing;
   - on Android, Play hands the link to the app after an install.
 - **The support page**: "How do I send a setlist to my band?"
-- **The website's README**: its file list.
+- **The website's README**: its file list, and a Shared links section.
+- Built (step 12) as above: the page's own styles are inline, so `assets/site.css` is untouched, and `stamp.py` and the
+  pre-commit hook stamp `s/index.html` too.
 
 ## 11. Corner cases — read these first
 
