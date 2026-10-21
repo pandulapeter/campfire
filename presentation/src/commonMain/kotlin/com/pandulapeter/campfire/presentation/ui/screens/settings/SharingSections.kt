@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,8 +96,9 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
     LaunchedEffect(isShown, isConnected) {
         if (!isConnected) refreshFailure = null else if (isShown) refreshFailure = controller.refresh()
     }
-    var shareAskedToStop by remember { mutableStateOf<Share?>(null) }
-    var isStopEverythingAsked by remember { mutableStateOf(false) }
+    // Saved, so that a confirmation outlives the process being stopped behind it; by id, since a share is no saveable value.
+    var shareIdAskedToStop by rememberSaveable { mutableStateOf<String?>(null) }
+    var isStopEverythingAsked by rememberSaveable { mutableStateOf(false) }
     val completionPage = rememberAuthorizationCompletionPage()
     AnimatedContent(
         targetState = stage,
@@ -136,7 +138,7 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
                         viewModel = viewModel,
                         shares = shares,
                         busyShareIds = if (isStoppingEverything) shares.mapTo(mutableSetOf()) { it.shareId } else stoppingShareIds,
-                        onStop = { shareAskedToStop = it },
+                        onStop = { shareIdAskedToStop = it.shareId },
                     )
                 }
                 // A newer version's list is neither shown afresh nor changed; the one last read here still is.
@@ -161,12 +163,12 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
             }
         }
     }
-    shareAskedToStop?.let { share ->
+    shares.firstOrNull { it.shareId == shareIdAskedToStop }?.let { share ->
         StopSharingConfirmation(
             title = share.title,
-            onDismiss = { shareAskedToStop = null },
+            onDismiss = { shareIdAskedToStop = null },
             onConfirm = {
-                shareAskedToStop = null
+                shareIdAskedToStop = null
                 controller.stop(share)
             },
         )

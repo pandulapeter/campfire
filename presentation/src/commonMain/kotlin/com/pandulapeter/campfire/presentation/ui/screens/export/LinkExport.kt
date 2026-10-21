@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,7 +72,7 @@ internal fun rememberLinkExport(
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
     val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creation, stoppingShareIds = stoppingShareIds)
     val link = (state as? LinkExportState.Shared)?.share?.link?.landingUrl
-    val isStopAsked = remember(dialog) { mutableStateOf(false) }
+    val isStopAsked = rememberSaveable(dialog) { mutableStateOf(false) }
     val filePicker = LocalFilePicker.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
