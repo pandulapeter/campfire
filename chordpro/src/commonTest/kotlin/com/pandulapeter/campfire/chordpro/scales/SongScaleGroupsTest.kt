@@ -425,6 +425,14 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a chorus on the IV that only closes on the key's tonic is still read in the IV's key, a chorus on the V is not`() {
+        assertEquals(listOf("G" to "major", "C" to "major"), rootAndFirst(song("G D Em C", "C Am F G", key = "G")))
+        assertEquals(listOf("A" to "major", "D" to "major"), rootAndFirst(song("A E F#m D", "D G Bm Em A", key = "A")))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", "G D Em C", key = "C")))
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", "F C G C", key = "C")))
+    }
+
+    @Test
     fun `a part that starts on the key's root or returns to it keeps the key's mode or home`() {
         assertEquals(listOf("C" to "major", "C" to "mixolydian"), rootAndFirst(song("C F G C", "C Bb F C", key = "C")))
         val returning = groups(song("C F G C", "F Bb C G", key = "C")).single()

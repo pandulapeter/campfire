@@ -243,10 +243,10 @@ public object SongScaleGroups {
      * The fit of a part that has left the key for another, read in that key ([Level.TONAL]): a major or minor key on the
      * part's best scored root holds every chord, that key is not the relative one (its notes are the key's, and such a
      * part stays in the key with its V as the exception), and the key's tonic chord, where the part plays it at all, is
-     * every time followed by the new root's chord, which is a dominant's place, not a tonic's. A chorus on the IV is the
-     * usual case: the key's Mixolydian holds it too, but a player wants the IV's major scale, and only such a part reads
-     * that way; one that starts on the key's root (`C Bb F`, the I IV ♭VII IV loop), or returns to it, keeps the key's
-     * mode or home.
+     * every time followed by the new root's chord, which is a dominant's place, not a tonic's, inside the part at least
+     * once unless the new key is the IV's major. A chorus on the IV is the usual case: the key's Mixolydian holds it too,
+     * but a player wants the IV's major scale, even where the key's tonic only closes it (`C Am F G` under G); one that
+     * starts on the key's root (`C Bb F`, the I IV ♭VII IV loop), or returns to it, keeps the key's mode or home.
      */
     private fun otherKeyFitOf(harmony: Harmony, key: SongKey): Fit? {
         val centre = harmony.ranked.first().takeIf { it.pitchClass != key.root.pitchClass } ?: return null
@@ -262,8 +262,11 @@ public object SongScaleGroups {
                 .map { part.chords[(it + 1) % part.chords.size] to (it + 1 < part.chords.size) }
         }
         if (onTonic.any { (next, _) -> next.root != centre.pitchClass }) return null
-        // A tonic chord closing the part leads to the new root only through the loop, which is no dominant's move (`G D Em C`).
-        if (onTonic.isNotEmpty() && onTonic.none { (_, isInside) -> isInside }) return null
+        // A tonic chord closing the part leads to the new root only through the loop, which is no dominant's move (`G D Em C`
+        // under C), unless the key's Mixolydian holds the part too: its notes are then the new major's, and the only
+        // question left is which root to name, so `C Am F G` under G is a chorus on the IV, not G Mixolydian.
+        val isKeysMixolydian = !key.isMinor && home.id == MAJOR_ID && homeNotes == Scales.pitchClasses(mixolydian, key.root.pitchClass)
+        if (onTonic.isNotEmpty() && onTonic.none { (_, isInside) -> isInside } && !isKeysMixolydian) return null
         return tonalFitOn(harmony, centre, home)?.let { saidAsNaturalMinor(harmony, it) }
     }
 
