@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.chordpro.scales
 import com.pandulapeter.campfire.chordpro.model.Chord
 
 /** The chords of a list of parts, read once for every fit tried on them. */
-internal class Harmony(parts: List<SongPart>) {
+internal class Harmony(val parts: List<SongPart>) {
     val key = parts.first().key
     val names = parts.flatMap { it.names }
     val chords = parts.flatMap { it.chords }

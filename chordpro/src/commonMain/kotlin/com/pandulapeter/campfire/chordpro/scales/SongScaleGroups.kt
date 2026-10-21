@@ -144,20 +144,25 @@ public object SongScaleGroups {
         (if (fit.home.id in raisedMinorIds) minorHomeFitOn(harmony, fit.root, Level.TONAL) else null) ?: fit
 
     /**
-     * The fit on the root of [key], the first of: a scale of [key]'s third holding every chord ([Level.TONAL]: major
-     * or Mixolydian for a major key; natural minor, harmonic minor, or Dorian for a minor one), the minor family
-     * holding each chord of a minor key, a dominant blues, and a home with exceptions ([looseFitOf]): the key's own
-     * scale, major or the minor family, or its mode (Mixolydian, Dorian) where the key's tonic chord is played and the
-     * mode accounts for [MIN_MODE_LEAD] chords more than the key's scale, or the tonic is mostly a dominant seventh (any
-     * home for a rock riff, whose third is the style's, not the key's): given a key of C and a chart of mostly C, F, and
-     * G, a player wants C major, a passing `C7` or a ♭VI–♭VII cadence being a moment, not a change of mode. A part in the relative minor of a
-     * major key is then said in the key, its V named as an exception, since its notes are the key's but that one; a mode
-     * with exceptions and no tonic chord is no reading of a key, or capo shapes in C under `{key: D}` would read as D
-     * Mixolydian.
+     * The fit on the root of [key], the first of: the key's own scale holding every chord ([Level.TONAL]: major for a
+     * major key; natural or harmonic minor for a minor one), another key the part has moved to ([otherKeyFitOf]), the
+     * key's mode holding every chord (Mixolydian; Dorian), the minor family holding each chord of a minor key, a dominant
+     * blues, and a home with exceptions ([looseFitOf]): the key's own scale, major or the minor family, or its mode
+     * where the key's tonic chord is played and the mode accounts for [MIN_MODE_LEAD] chords more than the key's scale,
+     * or the tonic is mostly a dominant seventh (any home for a rock riff, whose third is the style's, not the key's):
+     * given a key of C and a chart of mostly C, F, and G, a player wants C major, a passing `C7` or a ♭VI–♭VII cadence
+     * being a moment, not a change of mode. The mode comes before the family, or `Dm G Dm G` under D minor would be held
+     * by D melodic minor and read as natural minor. A part in the relative minor of a major key is said in the key, its
+     * V named as an exception, since its notes are the key's but that one; a mode with exceptions and no tonic chord is
+     * no reading of a key, or capo shapes in C under `{key: D}` would read as D Mixolydian.
      */
     private fun keyFitOf(harmony: Harmony, key: SongKey): Fit? {
         val root = key.root
-        harmony.holding(root, if (key.isMinor) minorKeyScaleIds + DORIAN_ID else majorKeyScaleIds + MIXOLYDIAN_ID)?.let { home ->
+        harmony.holding(root, if (key.isMinor) minorKeyScaleIds else majorKeyScaleIds)?.let { home ->
+            return tonalFitOn(harmony, root, home)?.let { saidAsNaturalMinor(harmony, it) }
+        }
+        otherKeyFitOf(harmony, key)?.let { return it }
+        harmony.holding(root, listOf(if (key.isMinor) DORIAN_ID else MIXOLYDIAN_ID))?.let { home ->
             return tonalFitOn(harmony, root, home)?.let { saidAsNaturalMinor(harmony, it) }
         }
         if (key.isMinor) minorFamilyFitOn(harmony, root)?.let { return it }
@@ -178,6 +183,34 @@ public object SongScaleGroups {
             counts.mapIndexed { index, count -> if (index == modeIndex) -1 else count }
         }
         return looseFitOf(harmony, listOf(root to preferred))
+    }
+
+    /**
+     * The fit of a part that has left the key for another, read in that key ([Level.TONAL]): a major or minor key on the
+     * part's best scored root holds every chord, that key is not the relative one (its notes are the key's, and such a
+     * part stays in the key with its V as the exception), and the key's tonic chord, where the part plays it at all, is
+     * every time followed by the new root's chord, which is a dominant's place, not a tonic's. A chorus on the IV is the
+     * usual case: the key's Mixolydian holds it too, but a player wants the IV's major scale, and only such a part reads
+     * that way; one that starts on the key's root (`C Bb F`, the I IV ♭VII IV loop), or returns to it, keeps the key's
+     * mode or home.
+     */
+    private fun otherKeyFitOf(harmony: Harmony, key: SongKey): Fit? {
+        val centre = harmony.ranked.first().takeIf { it.pitchClass != key.root.pitchClass } ?: return null
+        if (harmony.roots.first().pitchClass == key.root.pitchClass) return null
+        val home = harmony.holding(centre, homeScaleIds) ?: return null
+        // A harmonic minor home is weighed by its natural minor's notes, as it is said, so the relative minor stays in the key.
+        val keyNotes = Scales.pitchClasses(if (key.isMinor) naturalMinor else major, key.root.pitchClass)
+        val homeNotes = Scales.pitchClasses(if (home.id == MAJOR_ID) major else naturalMinor, centre.pitchClass)
+        if (homeNotes == keyNotes) return null
+        // Each play of the key's tonic chord, with the chord after it (the part read as a loop) and whether that is inside it.
+        val onTonic = harmony.parts.flatMap { part ->
+            part.chords.indices.filter { part.chords[it].root == key.root.pitchClass }
+                .map { part.chords[(it + 1) % part.chords.size] to (it + 1 < part.chords.size) }
+        }
+        if (onTonic.any { (next, _) -> next.root != centre.pitchClass }) return null
+        // A tonic chord closing the part leads to the new root only through the loop, which is no dominant's move (`G D Em C`).
+        if (onTonic.isNotEmpty() && onTonic.none { (_, isInside) -> isInside }) return null
+        return tonalFitOn(harmony, centre, home)?.let { saidAsNaturalMinor(harmony, it) }
     }
 
     /**
@@ -392,6 +425,7 @@ public object SongScaleGroups {
     private const val DORIAN_ID = "dorian"
     private const val MIXOLYDIAN_ID = "mixolydian"
     private val naturalMinor = Scales.fromId(NATURAL_MINOR_ID)!!
+    private val major = Scales.fromId(MAJOR_ID)!!
     private val majorKeyScaleIds = listOf("major")
     private val minorKeyScaleIds = listOf(NATURAL_MINOR_ID, "harmonic_minor")
     private val homeScaleIds = listOf("major", NATURAL_MINOR_ID, "harmonic_minor")

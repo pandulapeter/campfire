@@ -190,7 +190,7 @@ class SongScaleGroupsTest {
     fun `the key names the centre wherever its own scale holds half the section, the chords deciding otherwise`() {
         val inKey = groups(song("C F G C", "G D Em C", key = "C")).single()
         assertEquals("C" to listOf("D"), inKey.rootName to inKey.exceptions.map { it.chordName })
-        assertEquals(listOf("C" to "major", "C" to "mixolydian"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
+        assertEquals(listOf("C" to "major", "F" to "major"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
         assertEquals(listOf("C" to "major", "E" to "major"), rootAndFirst(song("C F G C", "E A B E", key = "C")))
         assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", key = "D")))
         assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm Em", key = "Am")))
@@ -409,6 +409,38 @@ class SongScaleGroupsTest {
         val flyMe = groups(song("Am7 Dm7 G7 Cmaj7 Fmaj7 Bm7b5 E7 Am7 A7 Dm7 G7 Cmaj7 Am7 Dm7 G7 Cmaj7 Bm7b5 E7")).single()
         assertEquals("C" to "major", flyMe.rootName to flyMe.scales.first().id)
         assertEquals(listOf("E7", "A7"), flyMe.exceptions.map { it.chordName })
+    }
+
+    @Test
+    fun `a part on the key's IV, the key's tonic heard as its dominant, is read in the IV's key`() {
+        assertEquals(
+            listOf("G" to "major", "C" to "major"),
+            rootAndFirst(song("G C D G G C D G Em C D G", "C F G C C F G C Am F G C", key = "G")),
+        )
+        assertEquals(listOf("D" to "major"), rootAndFirst(song("D D G A7 D D G A7", "D G A7 D D G A7 D", key = "A")))
+        assertEquals(listOf("C" to "major", "Eb" to "major"), rootAndFirst(song("C Am F G C Am F G", "Eb Ab Bb Eb Eb Ab Bb Eb", key = "C")))
+    }
+
+    @Test
+    fun `a part that starts on the key's root or returns to it keeps the key's mode or home`() {
+        assertEquals(listOf("C" to "major", "C" to "mixolydian"), rootAndFirst(song("C F G C", "C Bb F C", key = "C")))
+        val returning = groups(song("C F G C", "F Bb C G", key = "C")).single()
+        assertEquals("C" to "major", returning.rootName to returning.scales.first().id)
+        assertEquals(listOf("Bb"), returning.exceptions.map { it.chordName })
+    }
+
+    @Test
+    fun `the relative minor stays in the key`() {
+        val inMajor = groups(song("Am Dm E7 Am Am Dm E7 Am", "C F G C C F G C", key = "C")).single()
+        assertEquals("C" to "major", inMajor.rootName to inMajor.scales.first().id)
+        assertEquals(listOf("E7"), inMajor.exceptions.map { it.chordName })
+        assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Dm E7 Am", "F G F G", key = "Am")))
+    }
+
+    @Test
+    fun `a Mixolydian loop on the key's root keeps the key's mode`() {
+        assertEquals(listOf("E" to "mixolydian"), rootAndFirst(song("E A D A E A D A", key = "E")))
+        assertEquals(listOf("G" to "mixolydian"), rootAndFirst(song("G C F C G C F C", key = "G")))
     }
 
     @Test
