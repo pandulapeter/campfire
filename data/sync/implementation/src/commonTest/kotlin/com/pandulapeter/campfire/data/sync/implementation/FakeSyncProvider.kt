@@ -224,11 +224,15 @@ internal class FakeSyncProvider(
     /** What [createSharedLink] answers for a share id. */
     var onCreateSharedLink: suspend (String) -> SharedLinkResult = { shareId -> SharedLinkResult.Created(fileId = "id-$shareId", rlkey = "key") }
 
+    /** Runs before a shared copy's upload answers, which is where a test lets another device upload it first. */
+    var onUploadSharedFile: suspend (String) -> Unit = {}
+
     override suspend fun uploadSharedFile(
         shareId: String,
         bytes: ByteArray,
         expectedRevision: String?,
     ): RemoteWriteResult {
+        onUploadSharedFile(shareId)
         if (sharedFiles[shareId]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         sharedFiles[shareId] = bytes to revision

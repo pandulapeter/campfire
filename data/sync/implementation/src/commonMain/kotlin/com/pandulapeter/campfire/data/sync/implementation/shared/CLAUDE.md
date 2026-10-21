@@ -31,3 +31,21 @@ The plan is `documentation/plans/song-links.md` (§4.2, §5, §6.3, §11).
   (another device's, by `LibraryFiles.isSameLibraryName`) is answered instead, so an item never has two links.
 - Whatever fails after the upload deletes the copy again, best effort; **Stop sharing** deletes the copy before the
   entry, so no entry ever goes while its link still works.
+
+## Keeping copies current (`SharedCopySync`, the run's last step)
+
+- Runs in `SyncRunner` after the preferences, before the completed index is saved and the watch point set. Skipped when
+  the listing has no shared copy and the journal is empty; the registry comes from the mirror when the listing names
+  its revision and the journal is empty. The journal is applied first (a stop deletes the copy, then the entry), and
+  every change of the step goes in as one `SharedCopyChanges` edit at the end, also after a failure; journal entries
+  are forgotten only once written.
+- A copy is skipped unread when its `built` has the inputs fingerprint (`sharedCopyFingerprint`, from the run's index
+  `localHash`es; a setlist is the one file read), a build no older than `CAMPFIRE_BUILD_NUMBER` (generated from
+  `campfire.buildNumber`), and the listed hash (or none while `tooLarge`). Otherwise it is packed from the library's raw
+  files as the export packs them (`SharedCopyContents`, undated) and uploaded only when its hash differs; a `Conflict`
+  is dropped.
+- Never stopped by inference: an item missing from the library, or a copy missing from a listing as new as the
+  registry read, makes the entry `orphaned`; an item back under its name makes it `ok`.
+- Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is
+  `SyncSummary.haveSharedCopiesFailed`, which never makes a run incomplete.
+- The feed ignores `shared-links.json` (`SyncWatchPoint`): a share made or stopped anywhere starts no run.

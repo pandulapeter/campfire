@@ -9,16 +9,28 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferences
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksEntry
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
+import com.pandulapeter.campfire.data.sync.implementation.shared.copyOf
+import com.pandulapeter.campfire.data.sync.implementation.shared.entryOf
+import com.pandulapeter.campfire.data.sync.implementation.shared.mirrorOf
+import com.pandulapeter.campfire.data.sync.implementation.shared.registry
+import com.pandulapeter.campfire.data.sync.implementation.shared.setlistDocument
+import com.pandulapeter.campfire.data.sync.implementation.shared.share
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedEntry
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Two devices taking turns against one cloud folder, each run seeing what the other device's did, through the real
@@ -278,6 +290,109 @@ class TwoDeviceSyncTest {
 
     private fun sharedContents() = shared().entries.associate { (key, bytes) -> key.name to bytes.decodeToString() }
 
+    @Test
+    fun `a shared setlist's copy follows a song edited on the other device`() = runTest {
+        val (a, b) = devicesInStep(mapOf(GIG to setlistDocument("Gig", "song_1.cho", "song_2.cho")))
+        cloud.share(SHARED_SETLIST)
+        a.sync(cloud)
+        b.sync(cloud)
+
+        b.library.files[song(1)] = "Edited on B".encodeToByteArray()
+        b.sync(cloud)
+        val packs = a.sharedContents.packCount
+        a.sync(cloud)
+
+        assertTrue("Edited on B" in cloud.copyOf(SHARED_SETLIST.shareId))
+        assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SHARED_SETLIST.shareId).state)
+        // What one device built, the other skips: its files are the same once synced.
+        assertEquals(packs, a.sharedContents.packCount)
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `a shared song renamed on one device keeps its link, under the new name on the other`() = runTest {
+        val (a, b) = devicesInStep()
+        cloud.share(SHARED_SONG)
+        a.sync(cloud)
+        b.sync(cloud)
+
+        a.library.files[song("song_one")] = a.library.files.remove(song(1))!!
+        a.journal(SharedLinksJournal.Entry.Rename(from = "song_1.cho", to = "song_one.cho"))
+        a.sync(cloud)
+        b.sync(cloud)
+
+        val entry = cloud.entryOf(SHARED_SONG.shareId)
+        assertEquals("song_one.cho", entry.fileName)
+        assertEquals(SharedLinksEntry.STATE_OK, entry.state)
+        assertEquals(listOf("song_one.cho"), mirrorOf(b.sharedLinks).links.map { it.fileName })
+        assertTrue("[song_one.cho]" in cloud.copyOf(SHARED_SONG.shareId))
+        assertNull(a.sharedLinks.journal)
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `a shared setlist deleted in the app stops its share on every device`() = runTest {
+        val (a, b) = devicesInStep(mapOf(GIG to setlistDocument("Gig", "song_1.cho")))
+        cloud.share(SHARED_SETLIST)
+        a.sync(cloud)
+        b.sync(cloud)
+
+        a.library.files -= GIG
+        a.journal(SharedLinksJournal.Entry.Stop(SHARED_SETLIST.shareId))
+        a.sync(cloud)
+        b.sync(cloud)
+
+        assertTrue(cloud.sharedFiles.isEmpty())
+        assertTrue(cloud.registry().links.isEmpty())
+        assertEquals(sharedContents(), b.contents)
+        assertNull(a.sharedLinks.journal)
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `a shared song deleted outside the app is orphaned, and shared again once it is back`() = runTest {
+        val (a, b) = devicesInStep()
+        cloud.share(SHARED_SONG)
+        a.sync(cloud)
+        b.sync(cloud)
+        val copy = cloud.copyOf(SHARED_SONG.shareId)
+
+        val bytes = b.library.files.remove(song(1))!!
+        b.sync(cloud)
+        a.sync(cloud)
+        assertEquals(SharedLinksEntry.STATE_ORPHANED, cloud.entryOf(SHARED_SONG.shareId).state)
+        assertEquals(copy, cloud.copyOf(SHARED_SONG.shareId))
+
+        a.library.files[song(1)] = bytes
+        a.sync(cloud)
+        b.sync(cloud)
+        assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SHARED_SONG.shareId).state)
+        assertEquals(copy, cloud.copyOf(SHARED_SONG.shareId))
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `two devices rebuilding one copy at once leave it built once`() = runTest {
+        val (a, b) = devicesInStep(mapOf(GIG to setlistDocument("Gig", "song_1.cho")))
+        cloud.share(SHARED_SETLIST)
+        a.sync(cloud)
+        b.sync(cloud)
+
+        a.library.files[song(1)] = "Edited on both".encodeToByteArray()
+        b.library.files[song(1)] = "Edited on both".encodeToByteArray()
+        // B's whole run lands between A building its copy and uploading it, so A's upload meets B's.
+        cloud.onUploadSharedFile = {
+            cloud.onUploadSharedFile = {}
+            b.sync(cloud)
+        }
+        a.sync(cloud)
+
+        assertTrue(a.areSharedCopiesSettled)
+        assertTrue("Edited on both" in cloud.copyOf(SHARED_SETLIST.shareId))
+        assertEquals(sharedContents() + ("song_1.cho" to "Edited on both") + (GIG.name to "Gig\nsong_1.cho"), a.contents)
+        assertConverges(a, b)
+    }
+
     private suspend fun devicesInStep(extra: Map<SyncKey, ByteArray> = emptyMap()): Pair<Device, Device> {
         val a = Device(shared() + extra)
         val b = Device()
@@ -316,9 +431,15 @@ class TwoDeviceSyncTest {
         documents.mapValues { it.value.first.decodeToString() },
         files.entries.associate { (key, file) -> key.name to file.second },
         documents.mapValues { it.value.second },
+        sharedFiles.mapValues { (_, file) -> file.first.decodeToString() to file.second },
     )
 
     private fun Device.state() = contents to preferences?.current?.let(SyncedPreferences::of)
 
     private val FakeSyncProvider.contents get() = files.entries.associate { (key, file) -> key.name to file.first.decodeToString() }
+
+    private companion object {
+        val SHARED_SETLIST = sharedEntry(shareId = "setlistshare0001", kind = SharedLinkKind.SETLIST, fileName = GIG.name, title = "Gig")
+        val SHARED_SONG = sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = "song_1.cho", title = "Song 1")
+    }
 }

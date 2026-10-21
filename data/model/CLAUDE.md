@@ -47,4 +47,4 @@ transient; no original file is stored with a song.
   regex): it reads every form a platform hands over, tells a newer format version (`SharedLink.FromNewerVersion`) from
   text that is no link, and builds the download address itself from the validated parts, never from the link.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. A run with
-  `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`.
+  `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`; `haveSharedCopiesFailed` never makes it so.

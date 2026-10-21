@@ -152,6 +152,8 @@ enum class SyncDeletionPolicy {
  * the files that could not be moved: one of those does not end a run, but a run that has any is not one that left
  * the two sides in step, and must not be reported as if it were. [havePreferencesFailed] says the same of the
  * preferences every device shares, which are not a library file and are named as what they are rather than as one.
+ * [haveSharedCopiesFailed] says that a shared link's copy could not be brought up to date: the library is still in step,
+ * so it never makes a run incomplete, and the next run tries again.
  */
 data class SyncSummary(
     val downloaded: Int = 0,
@@ -161,6 +163,7 @@ data class SyncSummary(
     val conflicts: List<String> = emptyList(),
     val failed: List<String> = emptyList(),
     val havePreferencesFailed: Boolean = false,
+    val haveSharedCopiesFailed: Boolean = false,
 ) {
 
     /** Whether the run left the two sides in step, which is what moves the time of the last successful one. */

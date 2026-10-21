@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
@@ -54,6 +56,7 @@ internal class SyncRunner(
     syncProviders: SyncProviders,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
+    private val sharedCopySync: SharedCopySync,
     private val indexStore: SyncIndexStore,
     private val libraryRefresher: SyncLibraryRefresher,
     private val stateHolder: SyncStateHolder,
@@ -175,7 +178,12 @@ internal class SyncRunner(
                         val settled = synchronizePreferences(provider, result, unchanged) { base ->
                             latestIndex = { result.index.copy(syncedPreferences = base) }
                         }
-                        val summary = result.summary.copy(havePreferencesFailed = settled == null)
+                        // Before the index is saved and the watch point set, so that a run this step ends hands the feed no point.
+                        val areSharedCopiesSettled = synchronizeSharedCopies(provider, result)
+                        val summary = result.summary.copy(
+                            havePreferencesFailed = settled == null,
+                            haveSharedCopiesFailed = !areSharedCopiesSettled,
+                        )
                         // Only a run that moved everything it set out to move is one the two sides were in step after.
                         // One with failures keeps the time of the last run that was, which is also what "Last synced
                         // successfully" goes on saying while the next run is going.
@@ -276,6 +284,28 @@ internal class SyncRunner(
     } catch (exception: Exception) {
         environment.logger.log("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
         null
+    }
+
+    /**
+     * Brings the shared links' copies up to date with the library the run left, see [SharedCopySync], and answers whether
+     * every one was. A failure that ends a run ends this one with its reason, so that one cut short by the network is
+     * retried like any other; anything else, a connection made before sharing was asked for included, is reported as
+     * [com.pandulapeter.campfire.data.model.sync.SyncSummary.haveSharedCopiesFailed] and never fails the run.
+     */
+    private suspend fun synchronizeSharedCopies(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {
+        sharedCopySync.synchronize(
+            folder = provider,
+            index = result.index.toIndex(),
+            sharedFiles = result.sharedFiles,
+            registryRevision = result.documentRevisions[SharedLinksFormat.NAME],
+        )
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: SyncRunEndingException) {
+        throw exception
+    } catch (exception: Exception) {
+        environment.logger.log("Could not update the shared copies: ${exception::class.simpleName}")
+        false
     }
 
     /**

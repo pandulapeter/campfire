@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.NETWORK_RETRY_DELAYS
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
@@ -371,6 +372,7 @@ class SyncRunSchedulerTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
+            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment),
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(index = index, onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(RecordingSongRepository(), RecordingSetlistRepository(), environment),
             stateHolder = stateHolder,

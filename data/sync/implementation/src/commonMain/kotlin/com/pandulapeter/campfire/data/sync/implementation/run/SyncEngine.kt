@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -115,6 +116,7 @@ internal class SyncEngine(
         var unresolved = emptySet<SyncKey>()
         var cursor: String? = null
         var documentRevisions = emptyMap<String, String>()
+        var sharedFiles = emptyList<RemoteSharedFile>()
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -123,6 +125,7 @@ internal class SyncEngine(
             val listed = listing.files
             cursor = listing.cursor
             documentRevisions = listing.documentRevisions
+            sharedFiles = listing.sharedFiles
             index = withoutForeignEntries(index = index, listed = listed)
             val localListing = readLocalStates()
             val tooLarge = localListing.tooLarge
@@ -187,6 +190,7 @@ internal class SyncEngine(
             summary = summary,
             cursor = cursor,
             documentRevisions = documentRevisions,
+            sharedFiles = sharedFiles,
             index = SyncIndexDocument.of(
                 providerId = provider.id.id,
                 accountId = accountId,
@@ -566,11 +570,13 @@ internal class SyncEngine(
          * @param cursor The cursor of the last listing, see `RemoteListing.cursor`: every change made after it is either
          *   this run's, and so in [index], or one the run did not see.
          * @param documentRevisions The folder-level documents' revisions, as the run's last listing named them.
+         * @param sharedFiles The shared copies, as the run's last listing named them, for the shared-copy step.
          */
         data class Completed(
             val summary: SyncSummary,
             val cursor: String?,
             val documentRevisions: Map<String, String>,
+            val sharedFiles: List<RemoteSharedFile>,
             val index: SyncIndexDocument,
         ) : Result
 

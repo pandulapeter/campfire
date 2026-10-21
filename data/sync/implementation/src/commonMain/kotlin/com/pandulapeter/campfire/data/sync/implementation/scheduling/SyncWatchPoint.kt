@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -38,16 +39,18 @@ internal data class SyncWatchPoint(
 }
 
 /**
- * Whether [changes] hold a library file that is not as the run left it, or a document other than the preferences, which
- * nothing here can judge: a revision the index does not hold is another device's write, and a deletion of a file the
- * index still holds is another device's deletion. Revisions are only ever compared for equality, as the planner does.
+ * Whether [changes] hold a library file that is not as the run left it, or a document other than the preferences and the
+ * shared links, which nothing here can judge. Nothing a run settles depends on the shared links, and a share created or
+ * stopped anywhere, a run's own edits of them included, would otherwise start a run on every device in front. A
+ * revision the index does not hold is another device's write, and a deletion of a file the index still holds is another
+ * device's deletion. Revisions are only ever compared for equality, as the planner does.
  * Names are matched as the run files them, ignoring case and Unicode form where the index has no entry under the exact
  * one, so a service that holds two spellings apart keeps its exact matches.
  */
 internal fun SyncWatchPoint.hasOtherChangesThanPreferences(changes: RemoteChanges) =
     changes.files.any { !isOwnRevision(SyncKey(kind = it.kind, name = it.name), it.revision) } ||
         changes.deletedFiles.any { isIndexed(SyncKey(kind = it.kind, name = it.name)) } ||
-        changes.documents.any { it != SyncedPreferencesDocument.FILE_NAME }
+        changes.documents.any { it != SyncedPreferencesDocument.FILE_NAME && it != SharedLinksFormat.NAME }
 
 private fun SyncWatchPoint.isOwnRevision(key: SyncKey, revision: String) = index[key]?.let { it.remoteRevision == revision }
     ?: indexByFolded[key.folded()].orEmpty().any { it.remoteRevision == revision }

@@ -16,9 +16,12 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibrary
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRemoteWatcher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
+import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
@@ -65,6 +68,8 @@ internal fun TestScope.syncRepository(
     val stateHolder = SyncStateHolder(logger)
     val indexStore = SyncIndexStore(stateLocalSource, environment)
     val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)
+    val sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment)
+    val sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment)
     val runner = SyncRunner(
         syncProviders = syncProviders,
         engine = DataSyncModule.syncEngine(
@@ -75,6 +80,15 @@ internal fun TestScope.syncRepository(
             logger = logger,
         ),
         syncedPreferencesSync = syncedPreferencesSync,
+        sharedCopySync = SharedCopySync(
+            libraryFileLocalSource = libraryFileLocalSource,
+            contents = FakeSharedCopyContents(),
+            registry = SharedLinksRegistry(sharedLinksMirror, environment),
+            mirror = sharedLinksMirror,
+            journal = sharedLinksJournal,
+            logger = logger,
+            buildNumber = 1,
+        ),
         indexStore = indexStore,
         libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
         stateHolder = stateHolder,
@@ -100,8 +114,8 @@ internal fun TestScope.syncRepository(
             indexStore = indexStore,
             runner = runner,
             scheduler = scheduler,
-            sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment),
-            sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment),
+            sharedLinksMirror = sharedLinksMirror,
+            sharedLinksJournal = sharedLinksJournal,
             environment = environment,
         ),
         scheduler = scheduler,

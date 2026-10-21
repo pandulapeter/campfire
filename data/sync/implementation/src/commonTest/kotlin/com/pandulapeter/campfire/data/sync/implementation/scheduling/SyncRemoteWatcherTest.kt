@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
@@ -33,6 +34,10 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
+import com.pandulapeter.campfire.data.sync.implementation.shared.registry
+import com.pandulapeter.campfire.data.sync.implementation.shared.share
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedEntry
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import kotlinx.coroutines.CompletableDeferred
@@ -48,6 +53,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -160,6 +166,22 @@ class SyncRemoteWatcherTest {
 
         // Tried at once, then after 30 s, 1, 2, and every 5 minutes: nine times in half an hour, not sixty.
         assertEquals(9, downloads)
+    }
+
+    @Test
+    fun `the shared links' registry, written by the run's own step or a share elsewhere, brings no run`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        // A copy the run's step builds again and records after its listing, which the feed then reports.
+        world.provider.share(sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = song(1).name))
+        world.synchronizeAndWatch()
+        assertNotNull(world.provider.registry().links.single().built)
+        advanceTimeBy(1.hours)
+        assertEquals(1, world.runs.count)
+
+        world.provider.share(sharedEntry(shareId = "songshare0000002", kind = SharedLinkKind.SONG, fileName = song(1).name))
+        advanceTimeBy(1.hours)
+
+        assertEquals(1, world.runs.count)
     }
 
     @Test
@@ -392,6 +414,7 @@ class SyncRemoteWatcherTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
+            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment),
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(RecordingSongRepository(), RecordingSetlistRepository(), environment),
             stateHolder = stateHolder,

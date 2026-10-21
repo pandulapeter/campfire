@@ -11,7 +11,7 @@
 
 Implements `SyncRepository`, `SharedLinksRepository` (`shared/`, its own `CLAUDE.md`), and `DemoLibraryRepository`.
 Everything is `internal`. `SyncEngine` is built by a `DataSyncModule` function, since its demo lookup is a lambda over
-`UserPreferencesRepository` that Koin cannot inject.
+`UserPreferencesRepository` that Koin cannot inject, and so is `SharedCopySync`, for its build number.
 `DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks
 them up by.
 

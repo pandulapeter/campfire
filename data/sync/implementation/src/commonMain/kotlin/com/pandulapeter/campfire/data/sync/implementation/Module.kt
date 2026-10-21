@@ -10,6 +10,11 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyContents
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -60,5 +65,27 @@ object DataSyncModule {
         setlistComparison = setlistComparison,
         plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
         logger = logger,
+    )
+
+    /**
+     * Built here rather than declared on the class, since the build number it compares copies by is a constant of this
+     * build that Koin cannot inject, and one its tests choose.
+     */
+    @Single
+    internal fun sharedCopySync(
+        libraryFileLocalSource: LibraryFileLocalSource,
+        contents: SharedCopyContents,
+        registry: SharedLinksRegistry,
+        mirror: SharedLinksMirror,
+        journal: SharedLinksJournal,
+        logger: Logger,
+    ): SharedCopySync = SharedCopySync(
+        libraryFileLocalSource = libraryFileLocalSource,
+        contents = contents,
+        registry = registry,
+        mirror = mirror,
+        journal = journal,
+        logger = logger,
+        buildNumber = CAMPFIRE_BUILD_NUMBER,
     )
 }
