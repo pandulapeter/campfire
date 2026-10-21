@@ -72,10 +72,12 @@ class LinkExportStateTest {
 
     @Test
     fun `a share being made or stopped is work in progress with nothing to press`() {
-        assertEquals(LinkExportState.Working, stateOf(connected, creation = ShareCreation(target, result = null)))
+        assertEquals(LinkExportState.Creating, stateOf(connected, creation = ShareCreation(target, result = null)))
         val share = share()
-        assertEquals(LinkExportState.Working, stateOf(connected, listOf(share), stoppingShareIds = setOf(share.shareId)))
-        assertNull(linkActionOf(LinkExportState.Working))
+        assertEquals(LinkExportState.Stopping, stateOf(connected, listOf(share), stoppingShareIds = setOf(share.shareId)))
+        assertEquals(LinkExportState.Stopping, stateOf(connected, creation = ShareCreation(target, CreateShareResult.Shared(share)), stoppingShareIds = setOf(share.shareId)))
+        assertNull(linkActionOf(LinkExportState.Creating))
+        assertNull(linkActionOf(LinkExportState.Stopping))
     }
 
     @Test

@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.share_authorization
+import com.pandulapeter.campfire.presentation.resources.share_creating
 import com.pandulapeter.campfire.presentation.resources.share_failed
 import com.pandulapeter.campfire.presentation.resources.share_missing
 import com.pandulapeter.campfire.presentation.resources.share_network
@@ -49,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.share_not_shared_song
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
 import com.pandulapeter.campfire.presentation.resources.share_remote_full
 import com.pandulapeter.campfire.presentation.resources.share_scope_missing
+import com.pandulapeter.campfire.presentation.resources.share_stopping
 import com.pandulapeter.campfire.presentation.resources.share_too_large
 import com.pandulapeter.campfire.presentation.resources.share_too_large_to_update
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
@@ -77,7 +79,8 @@ internal fun LinkPreview(
 ) { shown ->
     Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
         when (shown) {
-            LinkExportState.Working -> DelayedLoadingIndicator()
+            LinkExportState.Creating -> DelayedLoadingIndicator(label = stringResource(Res.string.share_creating))
+            LinkExportState.Stopping -> DelayedLoadingIndicator(label = stringResource(Res.string.share_stopping))
             is LinkExportState.Shared -> SharedLink(state = shown)
             else -> LinkMessage(linkMessageOf(shown, kind))
         }
@@ -101,7 +104,7 @@ private fun linkMessageOf(state: LinkExportState, kind: SharedLinkKind) = when (
         LinkProblem.MISSING -> stringResource(Res.string.share_missing)
         LinkProblem.OTHER -> stringResource(Res.string.share_failed)
     }
-    LinkExportState.Working, is LinkExportState.Shared -> ""
+    LinkExportState.Creating, LinkExportState.Stopping, is LinkExportState.Shared -> ""
 }
 
 @Composable

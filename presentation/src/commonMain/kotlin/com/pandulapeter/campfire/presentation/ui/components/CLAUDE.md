@@ -30,7 +30,8 @@ everything-off note in Settings → Features, and the import screen's warning ab
 ### `DelayedLoadingIndicator.kt`
 
 Song details, the editor, and the export screen and its preview: fades in after 300ms, since one local file is nearly
-always read before then. Lists keep the plain indicator (the launch screen covers their first read).
+always read before then. Lists keep the plain indicator (the launch screen covers their first read). A `label` under
+it (the Link format's "Creating link…") comes and goes with it.
 
 ### Edge fades (`EdgeFade.kt`)
 

@@ -33,8 +33,11 @@ internal sealed interface LinkExportState {
     /** Connected, and the item is not shared yet. */
     data object NotShared : LinkExportState
 
-    /** The share is being made, or stopped. */
-    data object Working : LinkExportState
+    /** The share is being made. */
+    data object Creating : LinkExportState
+
+    /** The share is being stopped. */
+    data object Stopping : LinkExportState
 
     /** The item is shared as [share], whose copy may have stopped following it for its size ([isTooLarge]). */
     data class Shared(val share: Share) : LinkExportState {
@@ -99,14 +102,14 @@ internal fun linkExportStateOf(
     val ownCreation = creation?.takeIf { it.target == target }
     val share = shareOf(shares, target)
     return when {
-        share != null && share.shareId in stoppingShareIds -> LinkExportState.Working
+        share != null && share.shareId in stoppingShareIds -> LinkExportState.Stopping
         share != null -> LinkExportState.Shared(share)
         ownCreation == null -> LinkExportState.NotShared
         else -> when (val result = ownCreation.result) {
-            null -> LinkExportState.Working
+            null -> LinkExportState.Creating
             // The account's list is updated as the share is made, but the two arrive separately: this is the moment
             // between, and stopping the share forgets it.
-            is CreateShareResult.Shared -> if (result.share.shareId in stoppingShareIds) LinkExportState.Working else LinkExportState.Shared(result.share)
+            is CreateShareResult.Shared -> if (result.share.shareId in stoppingShareIds) LinkExportState.Stopping else LinkExportState.Shared(result.share)
             CreateShareResult.TooLarge -> LinkExportState.Failed(LinkProblem.TOO_LARGE)
             CreateShareResult.Missing -> LinkExportState.Failed(LinkProblem.MISSING)
             is CreateShareResult.Failed -> LinkExportState.Failed(result.reason.toLinkProblem())
@@ -135,7 +138,7 @@ internal fun linkActionOf(state: LinkExportState) = when (state) {
     LinkExportState.Connecting -> LinkAction.CANCEL
     is LinkExportState.ConnectionFailed -> LinkAction.CONNECT_AGAIN
     LinkExportState.NotShared -> LinkAction.CREATE
-    LinkExportState.Working -> null
+    LinkExportState.Creating, LinkExportState.Stopping -> null
     is LinkExportState.Shared -> LinkAction.COPY
     is LinkExportState.Failed -> when (state.problem) {
         LinkProblem.SCOPE_MISSING, LinkProblem.AUTHORIZATION -> LinkAction.CONNECT_AGAIN

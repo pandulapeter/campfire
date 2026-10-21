@@ -1176,6 +1176,10 @@
     <string name="share_stop_failed">Couldn't stop sharing. The link still works.</string>
     <string name="share_stop_failed_network">Stopping a share needs a connection to Dropbox. The link still works.</string>
 
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">Creating link…</string>
+    <string name="share_stopping">Stopping sharing…</string>
+
     <!-- Settings: sharing -->
     <string name="settings_sharing">Sharing</string>
     <string name="settings_group_shared_links">Shared links</string>

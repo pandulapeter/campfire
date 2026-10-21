@@ -1175,6 +1175,10 @@
     <string name="share_stop_failed">Nem sikerült leállítani a megosztást. A link továbbra is működik.</string>
     <string name="share_stop_failed_network">A megosztás leállításához kapcsolat kell a Dropboxszal. A link továbbra is működik.</string>
 
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">Link létrehozása…</string>
+    <string name="share_stopping">Megosztás leállítása…</string>
+
     <!-- Settings: sharing -->
     <string name="settings_sharing">Megosztás</string>
     <string name="settings_group_shared_links">Megosztott linkek</string>
