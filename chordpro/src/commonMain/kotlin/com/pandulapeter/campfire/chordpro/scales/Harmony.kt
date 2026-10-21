@@ -84,13 +84,15 @@ internal class Harmony(val parts: List<SongPart>) {
  * (altered or not) whose target, the root a fourth above it, is a note of the home (the E7 and A7 of a song in C), or a
  * diminished chord a semitone under one (its F#dim). Such a chord is the key's, not against it, though the home leaves
  * its notes out. Nothing leads into Phrygian dominant: on its notes a major key's own IV and V would, and a major song
- * with one ♭II would read as it.
+ * with one ♭II would read as it. Nor does a dominant on Mixolydian's fifth lead into its root: its third is the major
+ * seventh the mode leaves out, so `C Am Bb F G` would read as C Mixolydian, not C major with a borrowed ♭VII.
  */
 internal fun leadsInto(home: Scale, root: Int, chord: Chord): Boolean {
     if (home.id == PHRYGIAN_DOMINANT_ID) return false
     // A major chord or a seventh on a minor home's own root is its parallel major, never a secondary dominant: read as
     // leading into the fourth, the tonic C7 of a jazz blues would lift the minor family over Mixolydian.
     if (chord.root == root && MINOR_THIRD in home.intervals) return false
+    if (home.id == MIXOLYDIAN_ID && (chord.root - root).mod(12) == FIFTH) return false
     val notes = Scales.pitchClasses(home, root)
     val intervals = chord.intervals.map { it.mod(12) }
     val isDominant = chord.isMajorOrDominant || chord.isDominantSeventh
@@ -155,5 +157,6 @@ private const val FLAT_FIFTH = 6
 private const val FIFTH = 7
 private const val CADENCE_SCORE = 2
 private const val PHRYGIAN_DOMINANT_ID = "phrygian_dominant"
+private const val MIXOLYDIAN_ID = "mixolydian"
 private val major = Scales.fromId("major")!!
 private val naturalMinor = Scales.fromId("natural_minor")!!

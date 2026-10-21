@@ -446,6 +446,10 @@ class SongScaleGroupsTest {
         assertEquals(listOf("G" to "mixolydian"), rootAndFirst(song("G C F C G C F C", key = "G")))
     }
 
+    @Test
+    fun `a major V never leads into Mixolydian, so a borrowed flat seven stays the major key's`() =
+        assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am Bb F G")))
+
     private fun smokeOnTheWater(key: String?) = (listOfNotNull(key?.let { "{key: $it}" }) + listOf(
         "{start_of_verse: Riff}\n[G5]x [Bb5]x [C5]x [G5]x [Bb5]x [Db5]x [C5]x\n{end_of_verse}",
         "{start_of_verse: Verse}\n[G5]x [F5]x [G5]x [G5]x [F5]x [G5]x [C]x [G5]x [C]x [G5]x\n{end_of_verse}",

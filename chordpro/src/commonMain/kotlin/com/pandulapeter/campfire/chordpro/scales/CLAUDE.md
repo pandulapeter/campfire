@@ -46,7 +46,8 @@
   where a major ♭II chord is played: the Andalusian cadence, under a major key or guessed, counting only the chords it
   holds) holding half its chords answers; it may leave out two distinct chords or a third of them, except on the key's root, where the author's word
   stands however many it leaves out; a chord leading into the home (a secondary dominant, a diminished chord a semitone
-  under a home note, the ii before such a dominant; never a chord on a minor home's own root) is the home's for that
+  under a home note, the ii before such a dominant; never a chord on a minor home's own root,
+  nor one on Mixolydian's fifth) is the home's for that
   cap and for the two-thirds level, never for the half floor, and is still named as an exception; a rock riff counts no
   leaders, and neither does the key's root for a part that has left the key (its best scored root's major or minor
   scale holds more of it than the key's does: a bridge in the key of the V stays in that key). Each chord left out is a

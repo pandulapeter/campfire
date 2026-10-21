@@ -230,10 +230,11 @@ public object SongScaleGroups {
         val modeIndex = looseHomes.indexOfFirst { it.id == mode }
         val onTonic = harmony.chords.filter { it.root == root.pitchClass }
         val tonicIsSeventh = onTonic.count { it.isDominantSeventh } > onTonic.count { !it.isDominantSeventh }
-        val preferred = if (isRockRiff || tonicIsSeventh || counts[modeIndex] >= counts[keyScale] + MIN_MODE_LEAD) {
-            counts
-        } else {
-            counts.mapIndexed { index, count -> if (index == modeIndex) -1 else count }
+        // A tonic that is mostly a seventh is the mode's own sound, so the mode wins a tie with the key's scale.
+        val preferred = when {
+            tonicIsSeventh && !isRockRiff && counts[modeIndex] >= counts[keyScale] -> counts.mapIndexed { index, count -> if (index == keyScale) -1 else count }
+            isRockRiff || tonicIsSeventh || counts[modeIndex] >= counts[keyScale] + MIN_MODE_LEAD -> counts
+            else -> counts.mapIndexed { index, count -> if (index == modeIndex) -1 else count }
         }
         return looseFitOf(harmony, listOf(root to preferred))
     }
