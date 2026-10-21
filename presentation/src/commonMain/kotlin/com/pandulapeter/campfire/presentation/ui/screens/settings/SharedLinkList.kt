@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -88,7 +94,7 @@ private fun SharedLinkRow(
     onShowQrCode: () -> Unit,
     onStop: () -> Unit,
 ) = ListItem(
-    modifier = Modifier.alpha(if (isBusy) 0.5f else 1f),
+    modifier = Modifier.alpha(animateFloatAsState(if (isBusy) 0.5f else 1f).value),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     leadingContent = {
         Icon(
@@ -106,8 +112,13 @@ private fun SharedLinkRow(
         }
     },
     trailingContent = {
-        // Nothing to do with a share already on its way out; the row leaves as soon as the list lets it go.
-        if (!isBusy) {
+        // Nothing to do with a share already on its way out; the row leaves as soon as the list lets it go. The button
+        // shrinks away rather than vanishing, so that the title it leaves room for widens instead of jumping.
+        AnimatedVisibility(
+            visible = !isBusy,
+            enter = fadeIn() + expandHorizontally(),
+            exit = fadeOut() + shrinkHorizontally(),
+        ) {
             ActionsMenu(contentDescription = stringResource(Res.string.settings_sharing_actions)) {
                 val isInLibrary = share.state != ShareState.ORPHANED
                 listOfNotNull(
