@@ -29,7 +29,9 @@ internal object SongParts {
      * its own under the new key, since the transposer has moved its chords. A chorus recall that plays the chords of the
      * chorus before it joins that chorus's part without counting them again; one whose chords differ, a recall after
      * a `{transpose}`, which the transposer has moved, joins the earlier recall playing the same chords, else is a part
-     * of its own, of the chorus's kind, so the modulated last choruses of a song weigh as the chorus does before them.
+     * of its own, of the chorus's kind, so the modulated last choruses of a song weigh as the chorus does before them. A
+     * key change the chart writes out instead of directing is read as the `{transpose}` it stands for
+     * ([WrittenModulations]).
      */
     fun of(song: ChordProSong): List<SongPart> {
         var key = song.metadata.key?.let(::keyOf)
@@ -37,7 +39,7 @@ internal object SongParts {
         val parts = mutableListOf<SongPart>()
         var chorus: SongPart? = null
         var isModulated = false
-        song.blocks.forEach { block ->
+        WrittenModulations.of(song.blocks, key).forEach { block ->
             when (block) {
                 is ChordProBlock.Transpose -> {
                     key = block.key?.let(::keyOf) ?: key

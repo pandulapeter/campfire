@@ -40,7 +40,10 @@
   as the chord's sheet is (a `Dm7` vamp is Dorian). A tonic seventh passing once among plain tonics is no blues but the
   key's moment. **The song is read as it
   stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
-  `{transpose}` inside a section starts a part. A chorus recall counts again only where its chords differ, and recalls
+  `{transpose}` inside a section starts a part. A key change the chart writes out (`WrittenModulations`) is read as
+  the `{transpose}` it stands for: a section replaying an earlier one of its kind at one shift (four chords or more, the
+  copy at most as long, never a fourth or fifth, where the same loop is the neighbouring key's far more often), the
+  shift holding until another copy moves it; a chart that directs its key changes is read as directed. A chorus recall counts again only where its chords differ, and recalls
   of one set of chords once between them, so modulated last choruses never outweigh the song.
 - Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian, and Phrygian dominant
   where a major ♭II chord is played: the Andalusian cadence, under a major key or guessed, counting only the chords it
