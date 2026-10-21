@@ -81,7 +81,6 @@ class ShareLinksTest {
             "夜に駆ける",
             "Песня о друге",
             "مرحبا",
-            "tab\there",
             "",
         ).forEach { title ->
             val created = assertNotNull(ShareLinks.create(SharedLinkKind.SONG, "k3jq7abcdz2m5x6y", "f", "r", title))
@@ -98,6 +97,17 @@ class ShareLinksTest {
         val emoji = "a" + "🔥".repeat(40)
         val cut = assertNotNull(ShareLinks.create(SharedLinkKind.SETLIST, "k3jq7abcdz2m5x6y", "f", "r", emoji))
         assertEquals("a" + "🔥".repeat(29), cut.title)
+    }
+
+    @Test
+    fun `control characters in a title become spaces, and format characters other than the joiners go`() {
+        fun titleOf(encoded: String) = (ShareLinks.parse("1.song.k3jq7abcdz2m5x6y.f.r.$encoded") as SharedLink.Readable).title
+        assertEquals("one two", titleOf("one%0Atwo"))
+        assertEquals("tab here", titleOf("tab%09here"))
+        assertEquals("evil", titleOf("%E2%80%AEevil"))
+        assertEquals("a b", titleOf("a%E2%80%8B%20b"))
+        assertEquals("👨\u200D👩\u200D👧", titleOf("%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7"))
+        assertEquals("tab here", assertNotNull(ShareLinks.create(SharedLinkKind.SONG, "k3jq7abcdz2m5x6y", "f", "r", "tab\there")).title)
     }
 
     @Test

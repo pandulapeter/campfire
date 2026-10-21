@@ -138,9 +138,25 @@ object ShareLinks {
         }
         if (bytes.size > MAX_TITLE_BYTES) return null
         return try {
-            bytes.toByteArray().decodeToString(throwOnInvalidSequence = true)
+            bytes.toByteArray().decodeToString(throwOnInvalidSequence = true).withoutInvisibleControls()
         } catch (_: CharacterCodingException) {
             null
+        }
+    }
+
+    /**
+     * The title as a screen may show it: anyone can write a link, and a line break or a right-to-left override in its
+     * title would break the line it is shown on or turn the text after it around. A control character becomes a space,
+     * so that the words it parted stay apart; a format character goes, except the joiners that emoji sequences and some
+     * scripts are written with.
+     */
+    private fun String.withoutInvisibleControls() = buildString {
+        for (char in this@withoutInvisibleControls) {
+            when {
+                char.category == CharCategory.CONTROL -> append(' ')
+                char.category == CharCategory.FORMAT && char != ZERO_WIDTH_NON_JOINER && char != ZERO_WIDTH_JOINER -> Unit
+                else -> append(char)
+            }
         }
     }
 
@@ -148,4 +164,6 @@ object ShareLinks {
         this in 'A'..'Z' || this in 'a'..'z' || this in '0'..'9' || this == '-' || this == '_' || this == '~'
 
     private const val HEX_DIGITS = "0123456789ABCDEF"
+    private const val ZERO_WIDTH_NON_JOINER = '\u200C'
+    private const val ZERO_WIDTH_JOINER = '\u200D'
 }
