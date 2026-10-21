@@ -21,8 +21,17 @@
 - Backing out of `connect` (Cancel, a closed consent page) returns to the state it started from while that one's
   credentials are still stored: a `ConnectionFailed` stays failed, and a `Connected` account (connected again for the
   permission to make links) stays connected, its index kept (`ConnectionBeforeConnecting`).
-- `connect` never throws but cancellation; every exit not ending connected forgets the stored credentials, so an
-  abandoned authorization is never restored next launch.
+- `connect` from a stored connection (`Connected` or `ConnectionFailed`) first stops the running run, a waiting one,
+  and the account refresh (after remembering the state, so backing out shows what the user saw); backing out asks for
+  a run again. A reconnect whose token exchange fails (network or authorization) backs out too, keeping the working
+  tokens, since a provider stores nothing before the exchange. A reconnect finished at a later start up (web, Android
+  after process death) remembers nothing, so it forgets them as a first connection does.
+- `connect` never throws but cancellation; every exit not ending connected forgets the credentials the authorization
+  stored, so an abandoned authorization is never restored next launch.
+- An authorization that ends with another account resets the index and the shared links under the run lock, as
+  `disconnect` does, and shows the new account inside it. Not covered: the journal applier and sharing actions never
+  take that lock, so one started for the old account a moment before the new tokens were stored could write into the
+  new account's list.
 - A run refused by the service (after renewal fails) sets `ConnectionFailed`, not a failed outcome: Disconnect would
   delete the index, Connect keeps it.
 - Disconnecting cancels and awaits a running run, then deletes the index under the run lock and shows Disconnected,

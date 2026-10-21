@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
@@ -88,7 +90,7 @@ internal class SyncConnectionManager(
 
     private val accountRefresh = SyncAccountRefresh(scope = scope, stateHolder = stateHolder, logger = environment.logger)
 
-    private val connectionBefore = ConnectionBeforeConnecting()
+    private val connectionBefore = ConnectionBeforeConnecting(stateHolder, scheduler)
 
     /** A consent page's answer [forgetStoredConnection] took up and left for [restoreConnection] to finish. */
     private var redirectKeptForRestore: String? = null
@@ -228,6 +230,14 @@ internal class SyncConnectionManager(
         val provider = providers.firstOrNull { it.id == providerId } ?: return false
         // Asked before the pending authorization is written, so that the answer is about the credentials it started from.
         connectionBefore.remember(stateHolder.value, provider)
+        // Connecting again from a stored connection (Connect again, for the permission to make links) must not leave a
+        // run going: it holds the account it started with, and the consent page may end with another account's tokens
+        // stored under it. Stopped after the state was remembered, so that backing out shows what the user saw rather
+        // than the stopped run's Interrupted, and resumed on backing out.
+        if (stateHolder.value.let { it is SyncState.Connected || it is SyncState.ConnectionFailed }) {
+            accountRefresh.cancel()
+            scheduler.stopForConnectionChange()
+        }
         stateHolder.update { SyncState.Connecting(providerId) }
         return try {
             revocations.cancelAll()
@@ -245,13 +255,12 @@ internal class SyncConnectionManager(
                     discardPendingAuthorization()
                     // A message is the authenticator saying something went wrong on the way; without one, the user
                     // simply closed the page, which needs no explaining.
-                    val after = if (outcome.message == null) {
-                        connectionBefore.stateAfterBackingOut()
+                    if (outcome.message == null) {
+                        connectionBefore.backOut()
                     } else {
-                        SyncState.ConnectionFailed(providerId, SyncFailureReason.UNKNOWN)
+                        stateHolder.update { SyncState.ConnectionFailed(providerId, SyncFailureReason.UNKNOWN) }
+                        connectionBefore.forget()
                     }
-                    stateHolder.update { after }
-                    connectionBefore.forget()
                     false
                 }
             }
@@ -260,10 +269,8 @@ internal class SyncConnectionManager(
             // happen, so it runs outside the cancellation before the exception carries on unswallowed.
             withContext(NonCancellable) {
                 discardPendingAuthorization()
-                val after = connectionBefore.stateAfterBackingOut()
-                stateHolder.update { after }
+                connectionBefore.backOut()
             }
-            connectionBefore.forget()
             throw exception
         } catch (exception: Exception) {
             environment.logger.log("Could not connect to $providerId: ${exception.message}")
@@ -278,9 +285,7 @@ internal class SyncConnectionManager(
         // An exchange cancelled before it started never cleared the pending authorization, which the line below does.
         restoreExchange?.cancelAndJoin()
         discardPendingAuthorization()
-        val after = connectionBefore.stateAfterBackingOut()
-        stateHolder.update { if (it is SyncState.Connecting) after else it }
-        connectionBefore.forget()
+        connectionBefore.backOut()
     }
 
     /**
@@ -295,7 +300,7 @@ internal class SyncConnectionManager(
         accountRefresh.cancel()
         // A run that is still going would carry on against an account that is gone, fail, and report that failure
         // onto an account the user just disconnected.
-        scheduler.stopForDisconnect()
+        scheduler.stopForConnectionChange()
         withContext(NonCancellable) {
             val pendingRevocations = providers.mapNotNull { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
@@ -435,15 +440,19 @@ internal class SyncConnectionManager(
                 }
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale. One that cannot be read is left for the run to find:
-                // replaced here, it could be the good index of this very account.
-                val document = indexStore.loadOrNull()?.adoptedBy(account)
-                if (document != null && document.accountId != account.indexKey()) {
-                    indexStore.save(SyncIndexDocument())
-                    forgetSharedLinks()
-                }
-                connectionBefore.forget()
-                stateHolder.update {
-                    SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
+                // replaced here, it could be the good index of this very account. Under the run lock, as in disconnect:
+                // a run started for the account before can still be writing its index on its way out, and none may
+                // start between the reset and the new account's state.
+                runner.withRunLock {
+                    val document = indexStore.loadOrNull()?.adoptedBy(account)
+                    if (document != null && document.accountId != account.indexKey()) {
+                        indexStore.save(SyncIndexDocument())
+                        forgetSharedLinks()
+                    }
+                    connectionBefore.forget()
+                    stateHolder.update {
+                        SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
+                    }
                 }
                 true
             } catch (exception: CancellationException) {
@@ -454,6 +463,13 @@ internal class SyncConnectionManager(
                 withContext(NonCancellable) { forgetCredentialsOf(provider) }
                 throw exception
             } catch (exception: Exception) {
+                // A network or authorization failure comes from the exchange, before anything was stored (see
+                // completeAuthorization), so a reconnect of a stored connection still has its working tokens.
+                if ((exception is SyncNetworkException || exception is SyncAuthorizationException) && connectionBefore.hasStoredConnection) {
+                    environment.logger.log("The reconnect could not be completed, the connection stays: ${exception.message}")
+                    connectionBefore.backOut()
+                    return false
+                }
                 withContext(NonCancellable) { forgetCredentialsOf(provider) }
                 stateHolder.fail(
                     providerId = pending.providerId,

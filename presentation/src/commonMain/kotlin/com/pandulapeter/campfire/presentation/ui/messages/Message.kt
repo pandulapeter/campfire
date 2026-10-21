@@ -87,6 +87,12 @@ sealed interface Message {
     /** Some of the shares Stop sharing everything was asked to stop are still shared. */
     data class StopSharingEverythingFailed(val reason: SharingFailure) : Message
 
+    /**
+     * A reconnect of a working connection failed before the new permission was stored; the connection the user had
+     * still works.
+     */
+    data object ReconnectFailed : Message
+
     /** The onboarding's offer to open a copied link found something else on the clipboard when it was taken. */
     data object ClipboardNotCampfireLink : Message
 

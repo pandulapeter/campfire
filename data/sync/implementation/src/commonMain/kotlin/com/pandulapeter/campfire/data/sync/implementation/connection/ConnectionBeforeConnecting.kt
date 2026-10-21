@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.data.sync.implementation.connection
 
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -22,11 +24,20 @@ import kotlinx.coroutines.CancellationException
  *
  * Anything else, a failure with no credentials stored included (a first connection that never got that far), backs out
  * to disconnected.
+ *
+ * @param scheduler Stopped by `SyncConnectionManager.connect` for an authorization started from a stored connection,
+ *   and asked for a run again on backing out, so that the stopped run's work goes on.
  */
-internal class ConnectionBeforeConnecting {
+internal class ConnectionBeforeConnecting(
+    private val stateHolder: SyncStateHolder,
+    private val scheduler: SyncRunScheduler,
+) {
 
     private var state: SyncState? = null
     private var provider: SyncProvider? = null
+
+    /** Whether the authorization started from a stored connection, which backing out returns to. */
+    val hasStoredConnection get() = state != null
 
     /** Remembers [current] as the connection [provider]'s authorization starts from. */
     suspend fun remember(current: SyncState, provider: SyncProvider) {
@@ -44,10 +55,17 @@ internal class ConnectionBeforeConnecting {
     }
 
     /**
-     * What backing out returns to. The credentials are asked about again here, because a token exchange given up
-     * halfway forgets whatever the provider holds, the old tokens with it.
+     * Puts back what the authorization started from, if it is still showing Connecting. The credentials are asked about
+     * again here, because a token exchange given up after it stored new tokens forgets whatever the provider holds, the
+     * old tokens with it; one that failed before storing anything leaves the old ones alone. The scheduler schedules
+     * nothing for a state that is not Connected.
      */
-    suspend fun stateAfterBackingOut(): SyncState = state?.takeIf { provider?.hasStoredCredentials() == true } ?: SyncState.Disconnected
+    suspend fun backOut() {
+        val after = state?.takeIf { provider?.hasStoredCredentials() == true } ?: SyncState.Disconnected
+        stateHolder.update { if (it is SyncState.Connecting) after else it }
+        forget()
+        scheduler.schedule()
+    }
 }
 
 /** Whether the provider still holds credentials, which is what the next launch restores a connection from. */

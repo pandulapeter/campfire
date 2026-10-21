@@ -205,7 +205,7 @@ class SyncRunSchedulerTest {
         disconnected.scheduler.synchronize(SyncDeletionPolicy.ASK)
         runCurrent()
         stopped.scheduler.cancel()
-        disconnected.scheduler.stopForDisconnect()
+        disconnected.scheduler.stopForConnectionChange()
         advanceTimeBy(NETWORK_RETRY_DELAYS.last() + MARGIN)
 
         assertEquals(1, stopped.runs.count)

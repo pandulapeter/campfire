@@ -221,8 +221,11 @@ internal class SyncRunScheduler(
         scheduledRun.compareAndSet(null, ScheduledRun(dueAt = retryAt, isRetry = true))
     }
 
-    /** Drops the waiting run and stops the one that is going, waiting for it to let go: what a disconnect needs. */
-    suspend fun stopForDisconnect() {
+    /**
+     * Drops the waiting run and stops the one that is going, waiting for it to let go: what a disconnect needs, and an
+     * authorization asked again for a connected account, which may end with another account behind the stored tokens.
+     */
+    suspend fun stopForConnectionChange() {
         scheduledRun.value = null
         runner.forgetWatchPoint()
         networkFailureCount.store(0)

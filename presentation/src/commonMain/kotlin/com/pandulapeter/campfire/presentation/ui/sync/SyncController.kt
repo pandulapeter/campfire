@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeOnReturnUseCase
 import com.pandulapeter.campfire.domain.api.sync.WatchRemoteChangesUseCase
+import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
@@ -31,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -38,7 +40,7 @@ import kotlinx.coroutines.launch
 internal class SyncController(
     private val scope: CoroutineScope,
     private val messageSink: MessageSink,
-    getSyncState: GetSyncStateUseCase,
+    private val getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
@@ -70,15 +72,27 @@ internal class SyncController(
      */
     private var syncConnectionJob: Job? = null
 
+    /** Whether the user gave up on the latest attempt, which a failed reconnect is told apart from. */
+    private var isConnectionCancelled = false
+
     /**
      * @param completionPage The words the desktop's redirect page shows, resolved by the screen because that is
      *   where the translations and the language the user picked are, see `AuthorizationCompletionPage`.
      */
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
         if (syncConnectionJob?.isActive == true) return
+        isConnectionCancelled = false
         // Connecting writes the credentials, and a storage that refuses them is reported by the repository as a
         // failed connection. This is for the exception that one day is not: it must cost a message, not the app.
-        syncConnectionJob = messageSink.launchLibraryChange { connectSyncProvider.invoke(providerId, completionPage) }
+        syncConnectionJob = messageSink.launchLibraryChange {
+            val stateBefore = getSyncState().first()
+            val isConnected = connectSyncProvider.invoke(providerId, completionPage)
+            // The answer is false for a Cancel too, and a reconnect that failed must not look like one: the screen
+            // would simply show the account again, as if nothing had been tried.
+            if (isFailedReconnect(stateBefore, isConnected, getSyncState().first(), isConnectionCancelled)) {
+                messageSink.sendMessage(Message.ReconnectFailed)
+            }
+        }
     }
 
     /**
@@ -89,6 +103,7 @@ internal class SyncController(
      */
     fun cancelSyncConnection() {
         val connection = syncConnectionJob
+        isConnectionCancelled = true
         syncConnectionJob = scope.launch {
             // Joined first, so that the clean up of an attempt that is being given up on cannot land on the next
             // one: until it is over this job is the active one, and connectSyncProvider() refuses to start another.
@@ -148,3 +163,11 @@ internal class SyncController(
         }
     }
 }
+
+/**
+ * Whether a connection that answered not connected was a reconnect of a working connection that did not go through:
+ * it started from [SyncState.Connected], is back there, and the user did not cancel it. A closed consent page reads the
+ * same, and it too means the reconnect did not go through.
+ */
+internal fun isFailedReconnect(stateBefore: SyncState, isConnected: Boolean, stateAfter: SyncState, isCancelled: Boolean) =
+    !isConnected && !isCancelled && stateBefore is SyncState.Connected && stateAfter is SyncState.Connected

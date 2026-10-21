@@ -75,6 +75,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
 import com.pandulapeter.campfire.presentation.resources.songs_selection_updated
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
+import com.pandulapeter.campfire.presentation.resources.settings_sync_reconnect_failed
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -218,6 +219,7 @@ private fun messageText(current: Message?): String? =
             },
         )
         Message.ClipboardNotCampfireLink -> stringResource(Res.string.clipboard_not_campfire_link)
+        Message.ReconnectFailed -> stringResource(Res.string.settings_sync_reconnect_failed)
         null -> null
     }
 

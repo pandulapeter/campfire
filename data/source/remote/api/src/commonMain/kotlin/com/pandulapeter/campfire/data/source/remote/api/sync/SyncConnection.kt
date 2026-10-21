@@ -34,6 +34,10 @@ interface SyncConnection {
     /**
      * Exchanges the code for tokens and stores them, then returns who the user turned out to be.
      *
+     * Nothing is stored until the code has been exchanged: a [SyncNetworkException] or [SyncAuthorizationException]
+     * thrown here comes from the exchange, before anything was stored, so credentials stored by an earlier connection
+     * are still there and still work. Reconnecting a working connection relies on that to keep it.
+     *
      * @param verifier The PKCE verifier from the matching [RemoteAuthorizationRequest], which may have been read
      *   back from storage after a page reload.
      */

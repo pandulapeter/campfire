@@ -34,6 +34,8 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
@@ -42,6 +44,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -53,6 +56,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Who is connected: restoring the connection at start up, connecting, cancelling, disconnecting and forgetting what a
@@ -294,6 +298,121 @@ class SyncConnectionManagerTest {
         repository.cancelConnection()
 
         assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `reconnecting a working connection stops the run that is going`() = runTest {
+        var isRunStopped = false
+        var wasRunStoppedBeforeAuthorizing = false
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = TEST_ACCOUNT).apply {
+            onList = {
+                try {
+                    awaitCancellation()
+                } finally {
+                    isRunStopped = true
+                }
+            }
+        }
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(
+                onAuthorize = {
+                    wasRunStoppedBeforeAuthorizing = isRunStopped
+                    awaitCancellation()
+                },
+            ),
+        )
+        repository.restore {}
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+        assertTrue(assertIs<SyncState.Connected>(repository.syncState.value).isSyncing)
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE) }
+        runCurrent()
+
+        assertTrue(wasRunStoppedBeforeAuthorizing)
+        job.cancelAndJoin()
+    }
+
+    @Test
+    fun `backing out of reconnecting a working connection schedules a run`() = runTest {
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT)
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+        )
+        repository.restore {}
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+        assertEquals(0, provider.listCount)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(1, provider.listCount)
+    }
+
+    @Test
+    fun `another account at the consent page resets the index under the run lock`() = runTest {
+        val document = indexWithOneSong(accountId = TEST_ACCOUNT.indexKey())
+        val stateLocalSource = FakeSyncIndexLocalSource(index = document.encoded())
+        val consent = CompletableDeferred<Unit>()
+        val runGate = CompletableDeferred<Unit>()
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT).apply { onCompleteAuthorization = { OTHER_ACCOUNT } }
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(
+                outcome = SyncAuthenticator.AuthorizationOutcome.Received(TEST_REDIRECT),
+                onAuthorize = { consent.await() },
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+        repository.restore {}
+        val connecting = async { repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE) }
+        runCurrent()
+        // A run that holds the run lock while it asks for the credentials, as one started a moment earlier would.
+        provider.onIsConnected = { runGate.await() }
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+
+        consent.complete(Unit)
+        runCurrent()
+
+        assertEquals(document, stateLocalSource.document)
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.value)
+        provider.onIsConnected = {}
+        runGate.complete(Unit)
+        assertTrue(connecting.await())
+        assertEquals(SyncIndexDocument(), stateLocalSource.document)
+        assertEquals(OTHER_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+    }
+
+    @Test
+    fun `a reconnect whose token exchange cannot reach the service keeps the working connection`() = runTest {
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT).apply {
+            onCompleteAuthorization = { throw SyncNetworkException("offline") }
+        }
+        val repository = syncRepository(provider = provider, authenticator = RECONNECTING)
+        repository.restore {}
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+        assertFalse(provider.hasForgottenCredentials)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        assertEquals(1, provider.listCount)
+    }
+
+    @Test
+    fun `a first connection whose token exchange cannot reach the service still forgets what it stored`() = runTest {
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = { throw SyncNetworkException("offline") }
+        }
+        val repository = syncRepository(provider = provider, authenticator = RECONNECTING)
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, TEST_COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.NETWORK), repository.syncState.value)
+        assertTrue(provider.hasForgottenCredentials)
     }
 
     @Test
@@ -736,5 +855,11 @@ class SyncConnectionManagerTest {
 
         /** A consent page that answers yes at once, for connecting again after a disconnect. */
         val RECONNECTING = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(TEST_REDIRECT))
+
+        /** Somebody else's account, chosen at the consent page of a reconnect. */
+        val OTHER_ACCOUNT = TEST_ACCOUNT.copy(id = "dbid:2", displayName = "Someone else")
+
+        /** How far past a deadline the clock is moved, so that the work due then has run. */
+        val MARGIN = 100.milliseconds
     }
 }

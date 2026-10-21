@@ -1201,4 +1201,6 @@
     <string name="share_stop_all_failed">Couldn't stop sharing everything. The links still listed still work.</string>
     <string name="share_stop_all_failed_network">Stopping shares needs a connection to Dropbox. The links still listed still work.</string>
     <string name="settings_sync_disconnect_shared_links">Shared links keep working. Connect the same account again to manage them.</string>
+    <!-- Settings screen: sync, a reconnect that did not go through -->
+    <string name="settings_sync_reconnect_failed">Couldn't connect Dropbox again. The connection you had still works.</string>
 </resources>
