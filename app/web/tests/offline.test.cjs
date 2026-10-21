@@ -9,8 +9,9 @@
  */
 
 // The pure half of keeping the web build in the browser, run with `node --test app/web/tests/offline.test.cjs`: what
-// service-worker.js does with a request, and the decisions index.html takes about what to download, what to start and
-// what to delete. Both are run as they are shipped - the worker file whole, and the page's own campfire-launch script.
+// service-worker.js does with a request, the decisions index.html takes about what to download, what to start and what
+// to delete, and how it reads and keeps the shared links the address carries. Both are run as they are shipped - the
+// worker file whole, and the page's own campfire-launch script.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
@@ -190,4 +191,45 @@ test('a page restored from the back/forward cache starts again only when another
     assert.equal(launch.isClaimedElsewhere('a', 'b'), true);
     assert.equal(launch.isClaimedElsewhere('a', null), true);
     assert.equal(launch.isClaimedElsewhere(null, 'a'), true);
+});
+
+const PAYLOAD = '1.setlist.abcdefghijklmnop.abc123def456ghi789jkl.0a1b2c3d4e5f6g7h8i9j0k1l2.Sunday%20Set';
+
+test('a shared link\'s payload is taken from the fragment, whatever version it is', () => {
+    assert.equal(launch.sharedLinkPayload(`#${PAYLOAD}`), PAYLOAD);
+    assert.equal(launch.sharedLinkPayload('#2.album.whatever.comes.next'), '2.album.whatever.comes.next');
+    assert.equal(launch.sharedLinkPayload('#1.song.abcdefghijklmnop.a.b.%C3%A9~_-'), '1.song.abcdefghijklmnop.a.b.%C3%A9~_-');
+});
+
+test('any other fragment is left alone', () => {
+    assert.equal(launch.sharedLinkPayload(''), null);
+    assert.equal(launch.sharedLinkPayload('#'), null);
+    assert.equal(launch.sharedLinkPayload(PAYLOAD), null);
+    assert.equal(launch.sharedLinkPayload('#0.setlist.x'), null);
+    assert.equal(launch.sharedLinkPayload('#1'), null);
+    assert.equal(launch.sharedLinkPayload('#1.'), null);
+    assert.equal(launch.sharedLinkPayload('#section'), null);
+    assert.equal(launch.sharedLinkPayload(`#${PAYLOAD} and more`), null);
+    assert.equal(launch.sharedLinkPayload('#1.song.<script>'), null);
+    assert.equal(launch.sharedLinkPayload(`#1.${'a'.repeat(4096)}`), null);
+    assert.equal(launch.sharedLinkPayload(null), null);
+});
+
+test('the stored links are read back, and anything unreadable holds none', () => {
+    assert.deepEqual(plain(launch.readSharedLinks(JSON.stringify([PAYLOAD, '2.next']))), [PAYLOAD, '2.next']);
+    assert.deepEqual(plain(launch.readSharedLinks(null)), []);
+    assert.deepEqual(plain(launch.readSharedLinks('not json')), []);
+    assert.deepEqual(plain(launch.readSharedLinks('{"a":1}')), []);
+    assert.deepEqual(plain(launch.readSharedLinks(JSON.stringify([PAYLOAD, 3, 'section', null]))), [PAYLOAD]);
+});
+
+test('a link is kept once, after the ones already waiting, and only a link is kept', () => {
+    assert.deepEqual(plain(launch.withSharedLinks([], [PAYLOAD])), [PAYLOAD]);
+    assert.deepEqual(plain(launch.withSharedLinks(['2.first'], [PAYLOAD, '2.first', PAYLOAD])), ['2.first', PAYLOAD]);
+    assert.deepEqual(plain(launch.withSharedLinks([PAYLOAD], ['section', 7, null])), [PAYLOAD]);
+});
+
+test('a link handed on leaves the list, and the others stay in order', () => {
+    assert.deepEqual(plain(launch.withoutSharedLink(['2.a', PAYLOAD, '2.b'], PAYLOAD)), ['2.a', '2.b']);
+    assert.deepEqual(plain(launch.withoutSharedLink(['2.a'], PAYLOAD)), ['2.a']);
 });

@@ -26,6 +26,9 @@ The web shell, called by `:app:web` (page-side quirks are in `app/web/CLAUDE.md`
   unreadable file arrives empty and is reported as skipped. A drop with no file is text (`droppedTexts`), a pasted song
   where `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`, a page flag) the listeners still
   prevent the browser's default, which would navigate to the file, but set `dropEffect` to `none` and drop nothing.
+- Shared song and setlist links (`sharedLinks`, `ShareLinks.wasmJs.kt`) come from the list index.html keeps of the
+  address's fragment and of what other tabs hand over (`app/web/CLAUDE.md`), one entry at a time, removed only after
+  it reached `CampfireApp`'s `shareLinks`.
 
 ### Keys
 

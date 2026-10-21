@@ -40,15 +40,19 @@
             }
         }(window.location));
     </script>
-    <!-- The decisions behind keeping the app in the browser (see the end of the page), apart from everything that
-         acts on them so that app/web/tests/offline.test.cjs can run them as they are. Plain functions of what the build
-         says, what the cache holds and what the deployment answered. -->
+    <!-- The decisions behind keeping the app in the browser and handing it shared links (see the end of the page),
+         apart from everything that acts on them so that app/web/tests/offline.test.cjs can run them as they are. Plain
+         functions of what the build says, what the cache holds, what the deployment answered, and what the address and
+         session storage carry. -->
     <script id="campfire-launch" type="application/javascript">
         window.campfireLaunch = (function () {
             'use strict';
 
             var ANSWER_TIMEOUT = 3000;
             var ANSWER_TIMEOUT_WHEN_KEPT = 800;
+            // Any version's payload, as ShareLinks.kt's laterVersionPayload has it, and no longer than an address it reads.
+            var SHARED_LINK = /^#([1-9][0-9]{0,5}\.[A-Za-z0-9._~%-]+)$/;
+            var MAX_SHARED_LINK_LENGTH = 4096;
 
             /** The address a file of a build is asked for and kept under: its path, versioned by its own content. */
             function addressOf(path, entry, folder) {
@@ -130,6 +134,56 @@
                 return !own || own !== latest;
             }
 
+            /**
+             * The payload of a shared song or setlist link that the fragment [hash] carries (`#1.setlist.…`, which the
+             * landing page leads to as /app/#…), or null for any other fragment. Only its shape is checked here, a
+             * version first, so that a link of a later format still reaches the app and is told apart there:
+             * ShareLinks.kt in :data:model reads it strictly, and builds the download address itself.
+             */
+            function sharedLinkPayload(hash) {
+                if (typeof hash !== 'string' || hash.length > MAX_SHARED_LINK_LENGTH) {
+                    return null;
+                }
+                var match = SHARED_LINK.exec(hash);
+                return match ? match[1] : null;
+            }
+
+            /** The payloads the stored list [text] holds; anything unreadable holds none. */
+            function readSharedLinks(text) {
+                var value = null;
+                try {
+                    value = JSON.parse(text);
+                } catch (error) {
+                    return [];
+                }
+                return Array.isArray(value) ? value.filter(isSharedLinkPayload) : [];
+            }
+
+            /**
+             * [stored] with those of [payloads] that are links and not among it yet after it. A link that is still
+             * waiting is not taken twice: a tab that offered it to this one and heard back too late offers it again.
+             */
+            function withSharedLinks(stored, payloads) {
+                var result = stored.slice();
+                payloads.forEach(function (payload) {
+                    if (isSharedLinkPayload(payload) && result.indexOf(payload) === -1) {
+                        result.push(payload);
+                    }
+                });
+                return result;
+            }
+
+            /** [stored] without [payload]. */
+            function withoutSharedLink(stored, payload) {
+                return stored.filter(function (each) {
+                    return each !== payload;
+                });
+            }
+
+            function isSharedLinkPayload(value) {
+                return typeof value === 'string' && sharedLinkPayload('#' + value) === value;
+            }
+
             return {
                 ANSWER_TIMEOUT: ANSWER_TIMEOUT,
                 addressOf: addressOf,
@@ -140,7 +194,11 @@
                 nextStep: nextStep,
                 isComplete: isComplete,
                 answerWindow: answerWindow,
-                isClaimedElsewhere: isClaimedElsewhere
+                isClaimedElsewhere: isClaimedElsewhere,
+                sharedLinkPayload: sharedLinkPayload,
+                readSharedLinks: readSharedLinks,
+                withSharedLinks: withSharedLinks,
+                withoutSharedLink: withoutSharedLink
             };
         })();
     </script>
@@ -416,6 +474,7 @@
                 loadFailedFirstVisit: 'Campfire could not be loaded. It needs a connection the first time it is opened in this browser, so check the connection and try again.',
                 unsupported: 'This browser cannot run Campfire. It needs Chrome or Edge 119, Firefox 120, Safari 18.2 (iOS 18.2), or a later version.',
                 alreadyOpen: 'Campfire is already open in another tab. Close that tab first, or carry on there.',
+                sentToOtherTab: 'Sent to Campfire in your other tab.',
                 retry: 'Try again'
             },
             hu: {
@@ -423,6 +482,7 @@
                 loadFailedFirstVisit: 'A Campfire betöltése nem sikerült. Az első megnyitáshoz ebben a böngészőben internetkapcsolat kell, ezért ellenőrizd a kapcsolatot, és próbáld újra.',
                 unsupported: 'Ez a böngésző nem tudja futtatni a Campfire-t. Chrome vagy Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) vagy ezeknél újabb verzió kell hozzá.',
                 alreadyOpen: 'A Campfire már meg van nyitva egy másik lapon. Előbb zárd be azt a lapot, vagy folytasd ott.',
+                sentToOtherTab: 'Átküldve a másik lapon megnyitott Campfire-nek.',
                 retry: 'Újra'
             }
         };
@@ -691,9 +751,11 @@
         }
 
         function showAlreadyOpen() {
+            isTurnedAway = true;
             track.hidden = true;
             message.textContent = text.alreadyOpen;
             message.hidden = false;
+            offerSharedLinks();
             // Asks again in place rather than reloading: a tab that came back from a consent page still has the
             // answer in its address bar, and the app has to be the one that takes it out.
             retry.onclick = function () {
@@ -741,6 +803,8 @@
             if (hasStarted) {
                 return;
             }
+            isTurnedAway = false;
+            answerSharedLinks();
             noteClaim();
             if (!BUILD || !window.caches || !window.crypto || !window.crypto.subtle) {
                 startApp();
@@ -1130,6 +1194,168 @@
                 });
             }
         });
+
+        // A shared song or setlist link reaches the app in the fragment of its address (/app/#1.setlist.…, which the
+        // landing page leads to), and has to be taken out before anything else writes the address: the app replaces
+        // it with a screen's address on its first history write, and the return from a sync authorization drops it.
+        // It is kept in a list in session storage until the app has it (ShareLinks.wasmJs.kt takes one entry at a
+        // time, as it hands it to the import), so a reload neither imports it twice nor loses it, and a page whose
+        // session storage refuses keeps the list in a variable instead. The address loses the fragment at once, which
+        // is also what keeps it from being imported again by a Back to that entry.
+        //
+        // The library belongs to one tab, so a link opened in a second one is offered to the tab holding it, over a
+        // broadcast channel: that tab adds it to its own list and answers, and only then does this one forget it and
+        // say so. Without an answer within two seconds - the other tab is still being turned away itself, or the
+        // browser has no BroadcastChannel - the link stays here, for Retry to start the app with once the other tab
+        // is closed. A fragment changed under a page that is already running (typed into its address bar, which
+        // reloads nothing) is taken the same way, before the app's own history listener sees the entry it made.
+        var SHARED_LINKS = 'campfire-shared-links';
+        var SHARED_LINK_ANSWER_TIMEOUT = 2000;
+        var heldSharedLinks = [];
+        var isSessionStorageRefused = false;
+        var sharedLinkWaiter = null;
+        var sharedLinksChannel = null;
+        var isTurnedAway = false;
+        var isAnsweringSharedLinks = false;
+
+        function storedSharedLinks() {
+            if (isSessionStorageRefused) {
+                return heldSharedLinks;
+            }
+            try {
+                return window.campfireLaunch.readSharedLinks(window.sessionStorage.getItem(SHARED_LINKS));
+            } catch (error) {
+                isSessionStorageRefused = true;
+                return heldSharedLinks;
+            }
+        }
+
+        function storeSharedLinks(payloads) {
+            heldSharedLinks = payloads;
+            if (isSessionStorageRefused) {
+                return;
+            }
+            try {
+                if (payloads.length > 0) {
+                    window.sessionStorage.setItem(SHARED_LINKS, JSON.stringify(payloads));
+                } else {
+                    window.sessionStorage.removeItem(SHARED_LINKS);
+                }
+            } catch (error) {
+                isSessionStorageRefused = true;
+            }
+        }
+
+        function addSharedLinks(payloads) {
+            storeSharedLinks(window.campfireLaunch.withSharedLinks(storedSharedLinks(), payloads));
+            if (sharedLinkWaiter && storedSharedLinks().length > 0) {
+                var waiter = sharedLinkWaiter;
+                sharedLinkWaiter = null;
+                waiter();
+            }
+        }
+
+        /** Takes the link the address carries, if it carries one, and answers whether it did. */
+        function takeSharedLinkFromAddress() {
+            var payload = window.campfireLaunch.sharedLinkPayload(location.hash);
+            if (!payload) {
+                return false;
+            }
+            addSharedLinks([payload]);
+            try {
+                history.replaceState(history.state, '', location.pathname + location.search);
+            } catch (error) {
+            }
+            return true;
+        }
+
+        function openSharedLinksChannel() {
+            if (!sharedLinksChannel && window.BroadcastChannel) {
+                sharedLinksChannel = new BroadcastChannel(SHARED_LINKS);
+            }
+            return sharedLinksChannel;
+        }
+
+        /** Offers the links this page holds to the tab that holds the library, from a page turned away from it. */
+        function offerSharedLinks() {
+            var payloads = storedSharedLinks();
+            var channel = payloads.length > 0 ? openSharedLinksChannel() : null;
+            if (!channel) {
+                return;
+            }
+            var request = Date.now().toString(36) + Math.random().toString(36).slice(2);
+            var timer = setTimeout(stopListening, SHARED_LINK_ANSWER_TIMEOUT);
+
+            function stopListening() {
+                channel.removeEventListener('message', onAnswer);
+            }
+
+            function onAnswer(event) {
+                var data = event.data;
+                if (!data || data.type !== 'received' || data.request !== request) {
+                    return;
+                }
+                clearTimeout(timer);
+                stopListening();
+                var left = storedSharedLinks();
+                payloads.forEach(function (payload) {
+                    left = window.campfireLaunch.withoutSharedLink(left, payload);
+                });
+                storeSharedLinks(left);
+                if (isTurnedAway) {
+                    message.textContent = text.sentToOtherTab;
+                }
+            }
+
+            channel.addEventListener('message', onAnswer);
+            channel.postMessage({ type: 'open', request: request, payloads: payloads });
+        }
+
+        /** Takes the links other tabs offer, from the moment this page holds the library. */
+        function answerSharedLinks() {
+            var channel = isAnsweringSharedLinks ? null : openSharedLinksChannel();
+            if (!channel) {
+                return;
+            }
+            isAnsweringSharedLinks = true;
+            channel.addEventListener('message', function (event) {
+                var data = event.data;
+                if (isTurnedAway || !data || data.type !== 'open' || !Array.isArray(data.payloads)) {
+                    return;
+                }
+                addSharedLinks(data.payloads);
+                channel.postMessage({ type: 'received', request: data.request });
+            });
+        }
+
+        function onAddressChanged() {
+            if (takeSharedLinkFromAddress() && isTurnedAway) {
+                offerSharedLinks();
+            }
+        }
+
+        // What ShareLinks.wasmJs.kt reads the links through: next() is the first one waiting, as soon as there is
+        // one, and take() removes it once the app has it.
+        window.campfireSharedLinks = {
+            next: function () {
+                return new Promise(function (resolve) {
+                    (function check() {
+                        var stored = storedSharedLinks();
+                        if (stored.length > 0) {
+                            resolve(stored[0]);
+                        } else {
+                            sharedLinkWaiter = check;
+                        }
+                    })();
+                });
+            },
+            take: function (payload) {
+                storeSharedLinks(window.campfireLaunch.withoutSharedLink(storedSharedLinks(), payload));
+            }
+        };
+        takeSharedLinkFromAddress();
+        window.addEventListener('popstate', onAddressChanged);
+        window.addEventListener('hashchange', onAddressChanged);
 
         // Asked before the library is claimed and before anything of the app is fetched: a browser that cannot run
         // it would otherwise download sixteen megabytes to find that out, and be told to check its connection.

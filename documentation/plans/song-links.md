@@ -732,6 +732,8 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
   - Before `claimLibrary`, append the payload to a JSON list in session storage (`campfire-shared-links`), and remove
     it from the address with `history.replaceState`. A reload then never imports twice and never loses a link.
   - Where session storage throws, keep the payload in a variable for this page.
+  - A fragment changed under a page already running (typed into its address bar, which reloads nothing) is taken the
+    same way, from `popstate` and `hashchange` listeners the page adds before the app's own.
 - **`ui/platform/ShareLinks.wasmJs.kt`**: `sharedLinks(): Flow<SharedLink>`, taking one entry off the stored list as
   it is handed to the view model. `CampfireWebApp` passes it as `shareLinks`.
 - **A second tab**: `showAlreadyOpen` posts the stored payloads on a `BroadcastChannel("campfire-shared-links")`.

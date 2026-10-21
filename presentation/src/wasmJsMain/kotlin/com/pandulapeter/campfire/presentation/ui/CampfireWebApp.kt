@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.platform.droppedTexts
 import com.pandulapeter.campfire.presentation.ui.platform.refuseDrops
+import com.pandulapeter.campfire.presentation.ui.platform.sharedLinks
 import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.filter
@@ -36,8 +37,9 @@ import kotlin.js.ExperimentalWasmJsInterop
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, text dropped or
- * pasted (Ctrl / Cmd + V, [PasteShortcutEffect]) on the song list is a new song, and the browser asks before the page is
+ * Web shell of the shared UI. Links open in a new browser tab, a shared song or setlist link the page was opened with
+ * (or another tab handed over, see index.html) is imported ([sharedLinks]), files dropped on the page are imported,
+ * text dropped or pasted (Ctrl / Cmd + V, [PasteShortcutEffect]) on the song list is a new song, and the browser asks before the page is
  * left with unsaved text in the editor. Escape reaches Compose from a focused text field too ([startForwardingEscapeKey]),
  * Ctrl / Cmd + S is kept from the browser's own "Save page as" ([startSuppressingBrowserSave]), and Ctrl / Cmd + F opens
  * the search of a list screen in place of the browser's find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
@@ -103,6 +105,7 @@ fun CampfireWebApp(
             viewModel = viewModel,
             urlOpener = ::openInNewTab,
             filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.isDropAvailable } },
+            shareLinks = remember { sharedLinks() },
             onAppReady = ::dismissLoadingScreen,
         )
     }

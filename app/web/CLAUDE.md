@@ -143,3 +143,20 @@ the pure, golden-tested `webBuildManifest`):
 
 No file associations or "open with" (browsers only offer them to installed apps). Files come through a hidden
 `<input type="file">` or a drop (files, or a folder read to the bottom).
+
+## Shared links in
+
+The landing page leads to `/app/#<payload>` (`ShareLinks` in `:data:model`); no scheme is registered (only `web+`
+schemes can be).
+- **The fragment is taken before anything rewrites the address** (the app's first history write, the sync return):
+  `sharedLinkPayload` (pure, in `campfire-launch`, tested in `offline.test.cjs`) checks only its shape, any version, then
+  the payload joins the `campfire-shared-links` list in session storage (a variable where that throws) and the fragment
+  leaves the address by `replaceState`. A fragment changed under a running page (`popstate`, `hashchange`) is taken the
+  same way, before the app's own `popstate` listener stamps the entry.
+- The app reads the list through `window.campfireSharedLinks` (`ShareLinks.wasmJs.kt`); an entry leaves it only once
+  handed to the import, so a reload neither loses nor repeats one.
+- **A second tab** offers its links on the `campfire-shared-links` `BroadcastChannel` from the "already open" page. The
+  page holding the library (from the moment it is granted the lock) adds them to its own list and answers; only then
+  does the second tab drop them and say "Sent to Campfire in your other tab." With no answer in 2 s they stay for Retry.
+- The download is the app's own, from `dl.dropboxusercontent.com`, which answers CORS (plan step 0); nothing here
+  fetches.
