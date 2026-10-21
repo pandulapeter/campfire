@@ -63,7 +63,8 @@
 - **`SongScaleSuggestions`** is what a song shows, groups offering one first scale on one root joined (never two rows
   saying the same): the home (`ScaleGroup.isHome`, the group playing half the chords), then at most three moments,
   the other keys (not a relative one, whose notes are the home's), parts on a centre of their own that hardly play the
-  root (a bridge on the IV, offered as the scale on it holding most of its chords), the exceptions, and dominants whose
+  root and never cadence into it (a bridge on the IV, offered as the scale on it holding most of its chords; a chorus
+  whose V→I lands home is the home's), the exceptions, and dominants whose
   third the group's first scale lacks (a blues's IV7 and V7). A section is one moment, a centre before a key, and
   chords offered one scale on one root are one (a V and its V7); a chord counts only where the row it is played under
   leaves it out. A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),

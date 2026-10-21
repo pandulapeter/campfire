@@ -113,6 +113,56 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
+    fun `a part that cadences into the home's root is no centre of its own`() {
+        val hotelCalifornia = suggestions(
+            "Intro" to "Bm F#7 A E G D Em F#",
+            "Verse" to "Bm F#7 A E G D Em F#",
+            "Chorus" to "G D F# Bm G D Em F#",
+            "Verse" to "Bm F#7 A E G D Em F#",
+            key = "Bm",
+        )
+        assertEquals(listOf(listOf("Intro", "Verse", "Chorus", "Verse")), hotelCalifornia.map { it.labels })
+        assertTrue(hotelCalifornia.single().isHome)
+        val song = suggestions(
+            "Verse" to "A D E A A D E A A D E A",
+            "Chorus" to "A E F#m D A E F#m D A E D A",
+            "Bridge" to "D E F#m D E F#m D E A",
+            "Chorus" to "A E F#m D A E F#m D A E D A",
+            key = "A",
+        ).single()
+        assertEquals(listOf("Verse", "Chorus", "Bridge", "Chorus"), song.labels)
+        assertEquals("A" to "major", song.rootName to song.scales.first().id)
+    }
+
+    @Test
+    fun `a vamp on the IV that never resolves home stays a centre of its own`() {
+        val inE = suggestions(
+            "Verse" to "E B C#m A E B C#m A E B A B",
+            "Chorus" to "A B E E A B E E",
+            "Bridge" to "A A C#m C#m A A B B A A C#m C#m A A B B",
+            "Chorus" to "A B E E A B E E",
+            key = "E",
+        )
+        assertEquals(listOf(listOf("Verse", "Chorus", "Chorus"), listOf("Bridge")), inE.map { it.labels })
+        assertEquals("A" to listOf("major_pentatonic", "major"), inE[1].rootName to inE[1].scales.map { it.id })
+        val inG = suggestions("Verse" to "G D Em C G D Em C", "Chorus" to "C D G Em C D G G", "Bridge" to "C Am C Am C Am D D", key = "G")
+        assertEquals(listOf(listOf("Verse", "Chorus"), listOf("Bridge")), inG.map { it.labels })
+        assertEquals("C" to listOf("major_pentatonic", "major"), inG[1].rootName to inG[1].scales.map { it.id })
+        val throughItsOwnDominant = suggestions(
+            "Verse" to "C Am F G C Am F G",
+            "Chorus" to "C F G C C F G C",
+            "Bridge" to "F F Dm Dm F F G C7 F F Dm Dm F F G C7",
+            "Chorus" to "C F G C C F G C",
+            key = "C",
+        )
+        assertEquals(listOf(listOf("Verse", "Chorus", "Chorus"), listOf("Bridge")), throughItsOwnDominant.map { it.labels })
+        assertEquals(
+            "F" to listOf("major_pentatonic", "major"),
+            throughItsOwnDominant[1].rootName to throughItsOwnDominant[1].scales.map { it.id },
+        )
+    }
+
+    @Test
     fun `the key the song names is the home's root where its scale holds the part`() {
         val song = suggestions("Verse" to "C E7 Am F G C E7 Am", "Chorus" to "F G C Am F G C", key = "C").single()
         assertEquals("C" to listOf(Triple("E7", "A", "harmonic_minor")), song.rootName to song.moments)

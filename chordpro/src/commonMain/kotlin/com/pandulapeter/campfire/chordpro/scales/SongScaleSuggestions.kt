@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  *
  * - **Another key**: any other group whose first scale plays other notes than the home's, a modulated solo or a bridge
  *   in another key, shown as a group of its own; a chorus in the relative minor needs no change of scale.
- * - **Another centre**: a part of a group that hardly plays the group's root (at most one chord in [MAX_ROOT_SHARE])
- *   and leans on a root of its own, a bridge on the IV or a chorus on the vi, offered as the scale on that centre
+ * - **Another centre**: a part of a group that hardly plays the group's root (at most one chord in [MAX_ROOT_SHARE]),
+ *   never cadences into it, and leans on a root of its own, a bridge on the IV or a chorus on the vi, offered as the scale on that centre
  *   holding most of its chords, the pentatonic first.
  * - **A chord outside its group's scales**: an exception of the group, a secondary dominant or a borrowed ♭VII.
  * - **A dominant seventh whose third the group's first scale lacks**, off the group's root: the V7 of a blues over the
@@ -96,12 +96,14 @@ public object SongScaleSuggestions {
     /**
      * The parts of [group] heard on a centre of their own, see [SongScaleSuggestions], one moment each centre, offered
      * as the scale on it holding most of their chords (major, natural minor, Dorian, or Mixolydian: a bridge of A7 and A6
-     * is A Mixolydian), the pentatonic inside it first.
+     * is A Mixolydian), the pentatonic inside it first. A part whose V→I lands on the group's root is heard at home,
+     * however little it plays the root (a chorus resolving F♯→Bm in B minor), so it is none.
      */
     private fun centreMomentsOf(group: PlayedGroup, weight: Int): List<SectionMoment> = group.parts
         .filter { part ->
             part.centre != group.rootPitchClass && part.chords.size >= MIN_CENTRE_CHORDS &&
-                part.chords.count { it.root == group.rootPitchClass } * MAX_ROOT_SHARE <= part.chords.size
+                part.chords.count { it.root == group.rootPitchClass } * MAX_ROOT_SHARE <= part.chords.size &&
+                !part.cadencesInto(group.rootPitchClass)
         }
         .groupBy { it.centre }
         .map { (centre, centred) ->
@@ -118,6 +120,18 @@ public object SongScaleSuggestions {
                 notes = notes,
             )
         }
+
+    /**
+     * Whether the part cadences into [root]: a chord with a major third a fifth above it followed by a chord on it that
+     * is no dominant seventh, the part read as a loop, as `SongScaleGroups.rankedRoots` scores a cadence (a `G → C7` in
+     * a bridge on F leads on to the F, not home to C). A part that resolves home that way is heard at home however
+     * little it plays the root, so it is no centre of its own.
+     */
+    private fun PlayedPart.cadencesInto(root: Int) = chords.indices.any { index ->
+        val chord = chords[index]
+        val next = chords[(index + 1) % chords.size]
+        MAJOR_THIRD in chord.intervals && (chord.root - next.root).mod(12) == FIFTH && next.root == root && !next.isDominantSeventh
+    }
 
     /**
      * The chords of [groups] worth a scale of their own, see [SongScaleSuggestions], each once, and those a viewer would
@@ -307,4 +321,5 @@ public object SongScaleSuggestions {
     private const val DOMINANT_WEIGHT = 1
     private const val HOME_SCALE_SIZE = 7
     private const val MAJOR_THIRD = 4
+    private const val FIFTH = 7
 }
