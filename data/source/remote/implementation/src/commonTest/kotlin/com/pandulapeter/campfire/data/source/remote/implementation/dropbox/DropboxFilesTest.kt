@@ -10,15 +10,20 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLargeException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
+import io.ktor.utils.io.ByteChannel
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.cancel
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -191,9 +196,66 @@ class DropboxFilesTest {
         assertEquals(JsonPrimitive("/preferences.json"), argument?.field("path"))
     }
 
+    @Test
+    fun `a document Dropbox describes as larger than the limit is refused with its revision without reading its body`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider {
+            requests++
+            respond(
+                content = unreadableBody(),
+                status = HttpStatusCode.OK,
+                headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE + 1}}"""),
+            )
+        }
+
+        val refusal = assertFailsWith<SyncDocumentTooLargeException> { provider.downloadDocument("preferences.json") }
+
+        assertEquals("r1", refusal.revision)
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `a document whose body runs past the limit without a declared size is refused with its revision`() = runTest {
+        var requests = 0
+        val provider = dropboxProvider {
+            requests++
+            respond(content = oversizedBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}"""))
+        }
+
+        val refusal = assertFailsWith<SyncDocumentTooLargeException> { provider.downloadDocument("preferences.json") }
+
+        assertEquals("r1", refusal.revision)
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `a library file larger than the limit is one file's failure, asked once`() = runTest {
+        val declared = """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE + 1}}"""
+        val answers = listOf<MockRequestHandleScope.() -> HttpResponseData>(
+            { respond(content = unreadableBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", declared)) },
+            { respond(content = oversizedBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}""")) },
+        )
+        for (answer in answers) {
+            var requests = 0
+            val provider = dropboxProvider {
+                requests++
+                answer()
+            }
+
+            assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+            assertEquals(1, requests)
+        }
+    }
+
     private fun JsonElement.field(name: String) = (this as JsonObject)[name]
 
     /** A download of the body `song`, described by [metadata] as Dropbox's `Dropbox-API-Result` header. */
     private fun MockRequestHandleScope.downloadAnswer(metadata: String) =
         respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", metadata))
+
+    /** A body one byte past the limit. */
+    private fun oversizedBody() = ByteArray(DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE.toInt() + 1)
+
+    /** A body that fails the moment anything reads it, so a refusal that reads it is retried and ends as a network failure. */
+    private fun unreadableBody(): ByteReadChannel = ByteChannel().apply { cancel(IllegalStateException("The body was read.")) }
 }

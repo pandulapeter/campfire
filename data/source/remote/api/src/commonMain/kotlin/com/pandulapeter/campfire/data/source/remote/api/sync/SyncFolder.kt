@@ -72,7 +72,8 @@ interface SyncFolder {
      * The file as it is now, with the revision of what was fetched rather than the one [list] named: another device may
      * have written the file again in between, and the engine records the revision of the content it actually holds.
      * The bytes are the whole file as the service holds it: a transfer that cannot be shown to be whole is a failure
-     * of this download, thrown, never a shorter file.
+     * of this download, thrown, never a shorter file. A file over the provider's download limit, whatever [list] said
+     * of its size, is that file's failure too, refused before its body is read.
      */
     suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument
 
@@ -121,7 +122,8 @@ interface SyncFolder {
     /**
      * A document of the folder's own, outside the two library folders and so never in [list], or null where there is
      * none. Unlike a library file it is asked for by name alone and comes back with its revision, since it is read
-     * once per run rather than listed and compared.
+     * once per run rather than listed and compared. Throws [SyncDocumentTooLargeException] with the document's revision
+     * for one over the provider's download limit, refused before its body is read.
      */
     suspend fun downloadDocument(name: String): RemoteDocument?
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
+import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.foldRemoteNamesOntoLocal
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import com.pandulapeter.campfire.data.sync.implementation.run.plus
@@ -118,7 +119,7 @@ internal class SyncedPreferencesSync(
         val baseSongNames = SyncedPreferencesDocument.songNamesOf(base).mapTo(hashSetOf()) { it.folded() }
         var previous = base
         repeat(MAXIMUM_ATTEMPTS) { attempt ->
-            val remote = unchanged.takeIf { attempt == 0 } ?: provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
+            val remote = unchanged.takeIf { attempt == 0 } ?: provider.downloadFolderDocument(SyncedPreferencesDocument.FILE_NAME)
             val remoteDocument = remote?.bytes?.let(SyncedPreferencesDocument::decode)
             if (remoteDocument != null && SyncedPreferencesDocument.isNewerFormat(remoteDocument)) {
                 // The version that bumped the format is the one that has to keep this one's values, so the document is

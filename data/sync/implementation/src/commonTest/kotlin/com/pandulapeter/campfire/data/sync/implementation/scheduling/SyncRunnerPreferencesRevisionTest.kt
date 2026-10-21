@@ -25,9 +25,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 /**
@@ -72,6 +75,33 @@ class SyncRunnerPreferencesRevisionTest {
 
         assertEquals(downloads + 1, provider.documentDownloadCount)
         assertEquals(mapOf("song_1.cho" to 5), preferences.current.capos)
+    }
+
+    @Test
+    fun `an oversized preferences document is written over with this device's values, and the next run leaves it alone`() = runTest {
+        val provider = FakeSyncProvider(files = mapOf(song(1) to ONE), account = TEST_ACCOUNT)
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = "not read".encodeToByteArray() to "r1"
+        provider.oversizedDocuments += SyncedPreferencesDocument.FILE_NAME
+        val repository = syncRepository(
+            provider = provider,
+            stateLocalSource = FakeSyncIndexLocalSource(),
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to ONE)),
+            userPreferencesRepository = FakeUserPreferencesRepository(defaultUserPreferences(transpositions = mapOf("song_1.cho" to 2))),
+        )
+        repository.restore {}
+
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        assertFalse(assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome).summary.havePreferencesFailed)
+        val (bytes, revision) = provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME)
+        assertNotEquals("r1", revision)
+        val songs = assertNotNull(SyncedPreferencesDocument.decode(bytes))["songs"]?.jsonObject
+        assertEquals(JsonPrimitive(2), songs?.get("song_1.cho")?.jsonObject?.get("transposition"))
+        val downloads = provider.documentDownloadCount
+
+        repository.synchronize(SyncDeletionPolicy.ASK)
+
+        assertFalse(assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome).summary.havePreferencesFailed)
+        assertEquals(downloads, provider.documentDownloadCount)
     }
 
     /** A document holding [songs] and nothing else, as this version writes one. */

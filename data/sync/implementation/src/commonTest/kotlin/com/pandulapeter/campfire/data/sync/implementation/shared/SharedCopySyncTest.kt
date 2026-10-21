@@ -258,6 +258,17 @@ class SharedCopySyncTest {
         assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SETLIST.shareId).state)
     }
 
+    @Test
+    fun `an oversized list fails no run`() = runTest {
+        val device = sharedDevice()
+        cloud.writeDocumentElsewhere(SharedLinksFormat.NAME, "not read".encodeToByteArray())
+        cloud.oversizedDocuments += SharedLinksFormat.NAME
+
+        device.sync(cloud)
+
+        assertTrue(device.areSharedCopiesSettled)
+    }
+
     /** A device with [library] whose setlist is shared, after the run that built its first copy. */
     private suspend fun sharedDevice() = Device(library()).also {
         cloud.share(SETLIST)

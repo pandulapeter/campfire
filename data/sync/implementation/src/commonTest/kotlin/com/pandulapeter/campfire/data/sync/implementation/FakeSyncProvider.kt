@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLargeException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
@@ -205,10 +206,14 @@ internal class FakeSyncProvider(
     /** How many times [downloadDocument] was asked. */
     var documentDownloadCount = 0
 
+    /** Documents too large to download, refused with their revision until a write replaces them. */
+    val oversizedDocuments = mutableSetOf<String>()
+
     override suspend fun downloadDocument(name: String): RemoteDocument? {
         documentDownloadCount++
         val document = documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
         onDownloadDocument()
+        if (document != null && name in oversizedDocuments) throw SyncDocumentTooLargeException(revision = document.revision)
         return document
     }
 
@@ -221,6 +226,7 @@ internal class FakeSyncProvider(
         if (documents[name]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         documents[name] = bytes to revision
+        oversizedDocuments -= name
         feed.value += name
         onDocumentWritten(name)
         return RemoteWriteResult.Written(revision)

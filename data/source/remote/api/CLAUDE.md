@@ -27,8 +27,9 @@ KDoc of `SyncFolder` and `SyncConnection`.
 - `contentHashOf` hashes in the service's own format, keeping service hashes out of the engine.
 - `disconnect` forgets the credentials at once and answers the revocation for the caller to run in the background;
   `forgetStoredCredentials` only drops local storage (no request).
-- `downloadDocument` / `uploadDocument`: folder-level documents by name (only `preferences.json`), never among `list`'s
-  files; `RemoteListing.documentRevisions` names their revisions; same conflict rule as `upload`.
+- `downloadDocument` / `uploadDocument`: folder-level documents by name (`preferences.json` and `shared-links.json`),
+  never among `list`'s files; `RemoteListing.documentRevisions` names their revisions; same conflict rule as `upload`;
+  one too large to download throws `SyncDocumentTooLargeException` with its revision.
 - `SyncAuthorizationException`, `SyncNetworkException`, and `SyncRemoteStorageFullException` (subclasses of sealed
   `SyncRunEndingException`, each carrying its `SyncFailureReason`) are the only failures that end a run; storage full
   comes only from the uploads. Anything else is one file's problem.

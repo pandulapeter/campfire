@@ -22,7 +22,8 @@ written only once non-empty, so older documents keep their bytes.
   (`syncedPreferencesRevision`, written only beside the document a settle left in the folder); a retry after a
   conflict always downloads.
 - A folder document that is missing or unreadable (one nested past 64 levels or over the token budget is unreadable,
-  checked before parsing) is merged as the base, never as a removal of everything; one with a newer `version` is
+  checked before parsing; too large to download counts as unreadable, and is written over with this device's values)
+  is merged as the base, never as a removal of everything; one with a newer `version` is
   neither applied nor overwritten.
 - A song no longer in the library loses its entry, except a file the run failed on or one the folder gained since the
   last sync. Chord and tag entries are never dropped with a song. Entries match songs ignoring case and Unicode form.

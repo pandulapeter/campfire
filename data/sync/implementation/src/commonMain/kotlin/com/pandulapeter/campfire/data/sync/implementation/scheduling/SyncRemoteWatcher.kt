@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.scheduling
 import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
@@ -63,7 +64,7 @@ internal class SyncRemoteWatcher(
                 val changes = point.folder.changesSince(cursor)
                 val isOtherDevices = point.hasOtherChangesThanPreferences(changes) ||
                     SyncedPreferencesDocument.FILE_NAME in changes.documents &&
-                    point.isOtherPreferences(point.folder.downloadDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
+                    point.isOtherPreferences(point.folder.downloadFolderDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
                 // Moved on, and the waits started over, only once the changes are judged: a preferences download that
                 // failed asks again about the same changes, after waits that keep growing while it fails.
                 cursor = changes.cursor

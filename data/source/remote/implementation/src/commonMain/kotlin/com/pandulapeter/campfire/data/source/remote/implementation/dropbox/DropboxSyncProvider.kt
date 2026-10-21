@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
-import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
@@ -36,9 +35,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEn
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -82,6 +79,8 @@ internal class DropboxSyncProvider(
     private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests)
 
     private val sharing = DropboxSharing(requests = requests, logger = logger)
+
+    private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests)
 
     override suspend fun isConnected() = credentialsStore.load()?.takeIf { it.providerId == id.id }?.refreshToken?.isNotEmpty() == true
 
@@ -259,55 +258,9 @@ internal class DropboxSyncProvider(
 
     override suspend fun changesSince(cursor: String) = changeFeed.changesSince(cursor)
 
-    override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
-        val response = downloadResponse(remotePath(kind, name))
-        response.ensureSuccessful()
-        return downloadedDocument(response)
-    }
+    override suspend fun download(kind: LibraryFileKind, name: String) = downloads.download(remotePath(kind, name))
 
-    override suspend fun downloadDocument(name: String): RemoteDocument? {
-        val response = downloadResponse(documentPath(name))
-        if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
-        response.ensureSuccessful()
-        return downloadedDocument(response)
-    }
-
-    /**
-     * The body of a successful download, checked against the size and content hash Dropbox sent with it. A body cut
-     * short without a declared length - an HTTP/1.0 proxy, a connection closed at a chunk boundary - is otherwise
-     * written as the song and indexed as in step, and the next edit uploads it over the full one. A mismatch fails only
-     * this file: nothing is written, and the next run downloads it again, while a run ended by one file that keeps
-     * failing would never finish the rest of the library. Both are compared against the decoded bytes, so a transfer
-     * the engine decompressed is compared correctly.
-     */
-    private suspend fun downloadedDocument(response: HttpResponse): RemoteDocument {
-        val metadata = downloadMetadataOf(response)
-        val bytes = transport { response.readRawBytes() }
-        if (metadata.size != null && bytes.size.toLong() != metadata.size ||
-            metadata.contentHash != null && dropboxContentHash(bytes) != metadata.contentHash
-        ) {
-            throw DropboxApiException(response.status.value, "the download arrived incomplete (${bytes.size} of ${metadata.size} bytes)")
-        }
-        return RemoteDocument(bytes = bytes, revision = metadata.rev)
-    }
-
-    /**
-     * A download answers with the file itself, so its metadata - the revision the next upload has to name, its size and
-     * its hash - comes in a header instead, which Dropbox also exposes to a page's script.
-     */
-    private fun downloadMetadataOf(response: HttpResponse) = try {
-        response.headers[DOWNLOAD_RESULT_HEADER]?.let { json.decodeFromString<DropboxFileMetadata>(it) }
-    } catch (exception: SerializationException) {
-        null
-    }?.takeIf { it.rev.isNotEmpty() } ?: throw DropboxApiException(response.status.value, "the download named no revision")
-
-    private suspend fun downloadResponse(path: String) = requests.request { accessToken ->
-        httpClientHolder.client().post(DOWNLOAD_URL) {
-            attributes.put(BrowserCallTimeout, DropboxTransport.DOWNLOAD_BROWSER_TIMEOUT_MILLIS)
-            header("Authorization", "Bearer $accessToken")
-            header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
-        }
-    }
+    override suspend fun downloadDocument(name: String) = downloads.downloadDocument(documentPath(name))
 
     override fun contentHashOf(bytes: ByteArray) = dropboxContentHash(bytes)
 

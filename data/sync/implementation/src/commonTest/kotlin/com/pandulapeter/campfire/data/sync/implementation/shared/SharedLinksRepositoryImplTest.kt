@@ -206,6 +206,20 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a list too large to download counts as empty and is written over by a share`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, "not read".encodeToByteArray())
+        provider.oversizedDocuments += SharedLinksFormat.NAME
+        val repository = repository(provider)
+
+        assertNull(repository.refresh())
+        assertEquals(emptyList(), repository.shares.first())
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+
+        assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
+    }
+
+    @Test
     fun `nothing is shared while no account is connected`() = runTest {
         val provider = FakeSyncProvider()
 

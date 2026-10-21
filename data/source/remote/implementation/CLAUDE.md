@@ -50,8 +50,11 @@ Silent failures go to the injected `Logger`.
   clobber (`path/conflict` → `Conflict`); `autorename` is off. Deletes carry `parent_rev`; "already gone" is success,
   and a file changed since is left for the next run to bring back.
   A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure), and its `size` and
-  `content_hash`, which the bytes must match, or that file fails (not the run). An answer that cannot be decoded is
-  `SyncNetworkException`: a 200 HTML page comes from something in between, not from Dropbox.
+  `content_hash`, which the bytes must match, or that file fails (not the run). A download is streamed
+  (`DropboxDownloads`) and refused before its body is read once its declared size, or the body itself, passes 8 MiB:
+  a library file then fails as one file, a folder document is `SyncDocumentTooLargeException` with its revision;
+  neither is retried or a network failure. An answer that cannot be decoded is `SyncNetworkException`: a 200 HTML page
+  comes from something in between, not from Dropbox.
 - Watching (`DropboxChangeFeed`): `list_folder/longpoll` on `notify.dropboxapi.com` takes the cursor of a listing's
   last page and no token, held 240 s (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's
   documented 90 s (104 s measured), with the call's own bounds raised past that; its `backoff` is waited before

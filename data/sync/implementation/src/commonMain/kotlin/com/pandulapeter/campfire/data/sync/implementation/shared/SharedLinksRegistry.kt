@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.shared
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
 import org.koin.core.annotation.Single
 
 /**
@@ -64,7 +65,7 @@ internal class SharedLinksRegistry(
      */
     suspend fun read(folder: SyncFolder): Read {
         val since = mirror.generation()
-        val remote = folder.downloadDocument(SharedLinksFormat.NAME)
+        val remote = folder.downloadFolderDocument(SharedLinksFormat.NAME)
             ?: return Read.Readable(revision = null, document = SharedLinksDocument()).also { mirror.saveRead(since, null, it.document) }
         val document = when (val decoded = SharedLinksFormat.decode(remote.bytes.decodeToString())) {
             is SharedLinksFormat.Decoded.Readable -> decoded.document

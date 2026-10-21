@@ -54,6 +54,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -146,6 +147,20 @@ class SyncRemoteWatcherTest {
         advanceTimeBy(1.minutes)
 
         assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `a feed change to an oversized preferences document schedules a run and keeps watching`() = runTest {
+        val lines = mutableListOf<String>()
+        val world = world(localFiles = mapOf(song(1) to ONE), logger = { lines += it })
+        world.synchronizeAndWatch()
+
+        world.provider.writeDocumentElsewhere(name = SyncedPreferencesDocument.FILE_NAME, bytes = "not read".encodeToByteArray())
+        world.provider.oversizedDocuments += SyncedPreferencesDocument.FILE_NAME
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+
+        assertEquals(2, world.runs.count)
+        assertTrue(lines.none { it.startsWith("Stopped watching") }, lines.toString())
     }
 
     @Test
@@ -392,8 +407,9 @@ class SyncRemoteWatcherTest {
         localFiles: Map<SyncKey, ByteArray>,
         remoteFiles: Map<SyncKey, ByteArray> = emptyMap(),
         ignoresCase: Boolean = false,
+        logger: Logger = Logger.Standard,
     ): World {
-        val environment = testEnvironment()
+        val environment = testEnvironment(logger = logger)
         val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
         val provider = FakeSyncProvider(files = remoteFiles, account = TEST_ACCOUNT, ignoresCase = ignoresCase)
