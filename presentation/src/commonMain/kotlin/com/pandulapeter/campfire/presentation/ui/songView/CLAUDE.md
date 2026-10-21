@@ -46,8 +46,11 @@ builds what it draws, `grid/` places it.
   ("Verse"), split kinds by number ("Verse 3"), headless parts as the rest of the song. A kind is said once only where
   the group holds every chorded section of it; a heading another group (or none) also has is numbered by occurrence
   ("Verse (3)"), several headless groups are named by their first words, and a named group with headless parts says
-  so. At most four chips a group, and one chip a chord (a common scale where one holds the chord), titled "Over E7"
-  ("Over F♯7 and F♯" where one scale serves several) in every song; the Scales tab and the chord's sheet have the rest.
+  so.
+- At most four chips a group, after the first two only common scales and the hexatonics (a rare home scale leads, and
+  a vamp keeps its chord's two textbook scales, but a rare fourth chip never follows; the chord sheet keeps the full
+  list), and one chip a chord (a common scale where one holds the chord), titled "Over E7" ("Over F♯7 and F♯" where
+  one scale serves several) in every song; the Scales tab and the chord's sheet have the rest.
 - **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
   sheet.
 

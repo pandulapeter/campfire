@@ -102,6 +102,22 @@ class SongScaleGroupsTest {
         assertTrue(groups("[C]One [F]two [G]three").single().scales.none { it.intervals.size == 8 })
 
     @Test
+    fun `a song's chips keep a rarity only as the home scale`() {
+        val vamp = groups("{key: C}\n{start_of_verse}\n[Cmaj7]x [Cmaj7]x [Cmaj7]x [Cmaj7]x\n{end_of_verse}").single()
+        assertEquals(listOf("major", "major_pentatonic", "major_hexatonic"), vamp.scales.map { it.id })
+        val phrygian = groups("{start_of_verse}\n[Em]x [F]x [Em]x [F]x [Em]x [F]x [Em]x [F]x\n{end_of_verse}").single().scales
+        assertEquals("phrygian", phrygian.first().id)
+        assertTrue(phrygian.drop(1).all { it in Scales.common })
+    }
+
+    @Test
+    fun `a one-chord vamp keeps its chord's two textbook scales`() {
+        fun vamp(chord: String) = groups("{start_of_verse}\n[$chord]x [$chord]x [$chord]x [$chord]x\n{end_of_verse}").single().scales.map { it.id }
+        assertEquals(listOf("locrian", "locrian_natural_2", "blues"), vamp("Bm7b5"))
+        assertEquals(listOf("lydian_augmented", "ionian_sharp_5"), vamp("Cmaj7#5"))
+    }
+
+    @Test
     fun `a chord worth its own scale is named in the reader's notation, with its scales capped`() {
         val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Am]two [Bb]three [F]four [G]five\n{end_of_verse}"), labels, ChordNotation.GERMAN)
         assertEquals(listOf("B"), german.single().exceptions.map { it.chordNames.single() })

@@ -167,11 +167,19 @@ private const val OPENING_LENGTH = 32
 
 /**
  * The chips of a group's [scales]: the eight-note ones left out where a smaller scale fits, since bebop and the
- * diminished scales are a jazz player's passing tones rather than the answer to what a song is in, then the first
- * [MAX_GROUP_SCALES]. A chord sheet keeps them.
+ * diminished scales are a jazz player's passing tones rather than the answer to what a song is in; after the first
+ * two, the home scale whatever its rarity and the pentatonic inside it or a vamp's second textbook scale, only the
+ * common scales and the hexatonics, since a Lydian ♯2 beside the major scale reads as a suggestion on a par with it;
+ * then the first [MAX_GROUP_SCALES]. A chord sheet keeps them all.
  */
-private fun chipsOf(scales: List<Scale>) =
-    (if (scales.any { it.intervals.size <= HOME_SCALE_SIZE }) scales.filter { it.intervals.size <= HOME_SCALE_SIZE } else scales).take(MAX_GROUP_SCALES)
+private fun chipsOf(scales: List<Scale>): List<Scale> {
+    val shown = if (scales.any { it.intervals.size <= HOME_SCALE_SIZE }) scales.filter { it.intervals.size <= HOME_SCALE_SIZE } else scales
+    return (shown.take(KEPT_CHIPS) + shown.drop(KEPT_CHIPS).filter { it in Scales.common || it.id in hexatonicIds }).take(MAX_GROUP_SCALES)
+}
+
+private const val KEPT_CHIPS = 2
+
+private val hexatonicIds = setOf("major_hexatonic", "minor_hexatonic")
 
 private const val HOME_SCALE_SIZE = 7
 
