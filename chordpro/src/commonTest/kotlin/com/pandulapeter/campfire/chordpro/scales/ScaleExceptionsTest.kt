@@ -131,19 +131,65 @@ class ScaleExceptionsTest {
     }
 
     @Test
-    fun `an exception offers only seven-note scales holding the chord, the common ones first`() {
+    fun `an exception offers seven-note scales holding the chord, the common ones first, or a passing chord's diminished scale`() {
         val exception = group("C A7 Dm G7").exceptions.single()
         assertTrue(exception.scales.none { it.id == "minor_pentatonic" || it.id == "blues" })
         val borrowed = group("C Am F Fm C").exceptions.single().scales
         assertTrue(borrowed.first() in Scales.common && "dorian" in borrowed.map { it.id })
-        listOf("C A7 Dm G7", "C C#dim Dm G7", "Am Dm Bb E7", "C Ab Bb C", "Am C D F Am C E", "C E7 Am F G", "C Bb F G").forEach { chords ->
+        listOf("C A7 Dm G7", "C C#dim Dm G7", "Am Dm Bb E7", "C Ab Bb C", "Am C D F Am C E", "C E7 Am F G", "C Bb F G", "C Ebdim Dm7 G7").forEach { chords ->
             group(chords).exceptions.forEach { exception ->
                 val chord = ChordProChords.parse(exception.chordName)!!
                 val root = ChordProChords.pitchClass(exception.rootName)!!
                 val notes = chord.intervals.map { (chord.root + it).mod(12) }
-                assertTrue(exception.scales.all { it.intervals.size == 7 && Scales.pitchClasses(it, root).containsAll(notes) }, chords)
+                assertTrue(exception.scales.all { (it.intervals.size == 7 || it.id == "diminished") && Scales.pitchClasses(it, root).containsAll(notes) }, chords)
             }
         }
+    }
+
+    @Test
+    fun `a secondary dominant targets only a note of the key`() {
+        assertEquals(listOf(Triple("Db7", "Db", "mixolydian")), group("Dm7 G7 Cmaj7 Cmaj7 Dm7 Db7 Cmaj7 Cmaj7", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("Db", "Db", "major")), group("C F Db G C C F Db G C", key = "C").exceptions.map { it.first })
+        assertEquals(
+            listOf(Triple("Eb7", "Eb", "mixolydian"), Triple("Ab7", "Ab", "mixolydian")),
+            group("Cmaj7 Eb7 Ab7 G7 Cmaj7 Eb7 Ab7 G7", key = "C").exceptions.map { it.first },
+        )
+    }
+
+    @Test
+    fun `a dominant that ties with its target leads there only where the part plays that minor chord`() {
+        assertEquals(
+            listOf(Triple("A7", "A", "mixolydian"), Triple("D7", "D", "mixolydian")),
+            group("C A7 D7 G7 C C A7 D7 G7 C", key = "C").exceptions.map { it.first },
+        )
+        assertEquals(listOf(Triple("A7", "D", "harmonic_minor")), group("C A7 Dm G7").exceptions.map { it.first })
+    }
+
+    @Test
+    fun `a diminished chord leading a semitone up is played as the harmonic minor there`() {
+        assertEquals(
+            listOf(Triple("C#dim", "D", "harmonic_minor"), Triple("D#dim", "E", "harmonic_minor")),
+            group("C C#dim Dm D#dim Em F G C C C#dim Dm D#dim Em F G C", key = "C").exceptions.map { it.first },
+        )
+        assertEquals(listOf(Triple("C#dim7", "D", "harmonic_minor")), group("C C#dim7 Dm7 G7 C C#dim7 Dm7 G7", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("F#dim7", "G", "harmonic_minor")), group("C F F#dim7 G7 C C F F#dim7 G7 C", key = "C").exceptions.map { it.first })
+        assertEquals(
+            Triple("D#dim", "E", "harmonic_minor"),
+            group("Am E Am Am Dm Am E Am Am E Am Am D#dim E Am Am", key = "Am").exceptions.single { it.chordName == "D#dim" }.first,
+        )
+    }
+
+    @Test
+    fun `a diminished seventh leads a semitone above any of its notes`() {
+        assertEquals(listOf(Triple("Bbdim7", "D", "harmonic_minor")), group("C Bbdim7 Dm7 G7 C Bbdim7 Dm7 G7", key = "C").exceptions.map { it.first })
+        assertEquals(listOf(Triple("Ddim7", "A", "harmonic_minor")), group("C F Ddim7 Am F G C F Ddim7 Am F G", key = "C").exceptions.map { it.first })
+    }
+
+    @Test
+    fun `a passing diminished chord that leads nowhere is its own diminished scale`() {
+        val exception = group("C Ebdim Dm7 G7 C Ebdim Dm7 G7", key = "C").exceptions.single()
+        assertEquals(Triple("Ebdim", "Eb", "diminished"), exception.first)
+        assertEquals(8, exception.scales.first().intervals.size)
     }
 
     @Test

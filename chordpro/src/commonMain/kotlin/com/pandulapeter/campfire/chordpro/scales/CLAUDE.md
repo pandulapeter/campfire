@@ -51,8 +51,10 @@
   leaders, and neither does the key's root for a part that has left the key (its best scored root's major or minor
   scale holds more of it than the key's does: a bridge in the key of the V stays in that key). Each chord left out is a
   `ScaleException` (`ScaleExceptions`: a minor
-  home's own minor scales, Phrygian for its ♭II, else the closest of a secondary dominant's target harmonic minor, the
-  chord's root, and the home's root, never a harmonic or melodic minor there, ties in that order). Below two thirds a
+  home's own minor scales, Phrygian for its ♭II, a Phrygian-dominant home's Phrygian for its ♭III, else the closest of a
+  secondary dominant's target harmonic minor (the target a note of the key, and on a tie the minor chord played), a
+  diminished chord's target a semitone up where a chord on it follows (else its own diminished scale, the one answer of
+  eight notes), the chord's root, and the home's root, never a harmonic or melodic minor there, ties in that order). Below two thirds a
   part stands alone but never joins another; a home of two of three chords is a guess dropped beside any other group.
   A **rock riff** is power, suspended, or major chords on I, ♭III, IV, V, ♭VI, ♭VII (a thirdless one on ♭V too, the
   blues note) with a ♭III or ♭VI one chord in eight (♭VII alone is Mixolydian's), or any ♭III, ♭VI, or ♭VII with no
