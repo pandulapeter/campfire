@@ -53,7 +53,7 @@ it (the Link format's "Creating link…") comes and goes with it.
   `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ContentOverscroll.kt`),
   offering drags to parents first so a fitting sheet still drags down. Installed whether or not the content fits (only
   a measure knows, so a decision while composing would compose every list and label row twice); the connection asks at
-  each drag, and the clip is set in a layer only while it fits, since a scrolling container must not clip its cross
-  axis. The vertical form draws its own top fade while
+  each drag, and the clip is drawn only while it fits, since a scrolling container must not clip its cross axis. Never
+  a layer's clip: on Android it can keep the layer's first size while the content grows. The vertical form draws its own top fade while
   pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
   `OverscrollPull` instead.

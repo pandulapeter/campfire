@@ -32,7 +32,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -78,8 +79,13 @@ internal fun Modifier.bounceScrollableContent(
     }
     // Content that fits is clipped to keep its stretch inside the container. Content that scrolls is clipped along its
     // main axis by its own container and not across it, where the chips' ripples and focus rings and a sheet's sideways
-    // overflow are drawn past the bounds, so it is left unclipped; asked while drawing, as whether it fits changes.
-    return graphicsLayer { clip = !(state.canScrollForward || state.canScrollBackward) }
+    // overflow are drawn past the bounds, so it is left unclipped; asked while drawing, as whether it fits changes. The
+    // clip is drawn rather than set on a layer: on Android a layer's clip can keep the size the layer had when it was
+    // first drawn while the content grows under it, cutting a panel that fills in as the library arrives down to its
+    // first few letters, and its controls with it, until the screen is composed again.
+    return drawWithContent {
+        if (state.canScrollForward || state.canScrollBackward) drawContent() else clipRect { this@drawWithContent.drawContent() }
+    }
         .then(if (orientation == Orientation.Vertical && pull == null) Modifier.fadingTopEdge { ownPull.towardsStart.toInt() } else Modifier)
         .overscroll(effect)
         .nestedScroll(connection, dispatcher)
