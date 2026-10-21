@@ -110,7 +110,14 @@ internal fun ExportScreen(
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return
     val formats = exportFormatsOf(dialog, isSyncAvailable = viewModel.syncController.syncProviders.isNotEmpty())
-    val state = rememberExportState(dialog) { (viewModel.exportController.pendingPrintSettings.value ?: initialSettings).withFormatIn(formats) }
+    val state = rememberExportState(dialog) { pickedFormat ->
+        openingSettingsOf(
+            stored = viewModel.exportController.pendingPrintSettings.value ?: initialSettings,
+            dialog = dialog,
+            pickedFormat = pickedFormat,
+            formats = formats,
+        )
+    }
     val exportProgress by viewModel.exportController.pdfExportProgress.collectAsStateWithLifecycle()
     val isFileTransferActive by viewModel.exportController.isFileTransferActive.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
@@ -177,6 +184,7 @@ internal fun ExportScreen(
         if (!isOpen) return@update
         val normalized = it.normalized()
         if (normalized != state.settings) {
+            if (normalized.format != state.settings.format) state.pickedFormat = normalized.format
             state.settings = normalized
             viewModel.exportController.setPrintSettings(normalized)
         }

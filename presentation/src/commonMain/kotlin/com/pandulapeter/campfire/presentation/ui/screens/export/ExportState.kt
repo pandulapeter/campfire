@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
  */
 internal class ExportState(
     settings: MutableState<PrintSettings>,
+    pickedFormat: MutableState<PrintSettings.Format?>,
     source: MutableState<PrintSource?>,
     failed: MutableState<Boolean>,
     attempt: MutableIntState,
@@ -43,6 +44,12 @@ internal class ExportState(
 ) {
     /** The options the preview is laid out with, ahead of the saved preferences until those catch up. */
     var settings by settings
+
+    /**
+     * The format picked on this screen, null until one is: saved, since an opening on a format of its own
+     * ([DialogType.Export.format]) would otherwise put a rotated screen back on that one, see [openingSettingsOf].
+     */
+    var pickedFormat by pickedFormat
 
     /** The snapshot the PDF is made of, null until it has been read. */
     var source by source
@@ -69,18 +76,22 @@ internal class ExportState(
 @Composable
 internal fun rememberExportState(
     dialog: DialogType.Export,
-    initialSettings: () -> PrintSettings,
-) = ExportState(
-    settings = remember(dialog) { mutableStateOf(initialSettings()) },
-    source = remember(dialog) { mutableStateOf<PrintSource?>(null) },
-    failed = remember(dialog) { mutableStateOf(false) },
-    attempt = remember(dialog) { mutableIntStateOf(0) },
-    // Saved, or a rotation would put back every song somebody had unticked; null until the source has been read.
-    selected = rememberSaveable(dialog, stateSaver = SELECTION_SAVER) { mutableStateOf<Set<Int>?>(null) },
-    page = rememberSaveable(dialog) { mutableIntStateOf(0) },
-    pageView = rememberSaveable(dialog, stateSaver = PAGE_VIEW_SAVER) { mutableStateOf(PageView()) },
-    layoutFailed = remember { mutableStateOf(false) },
-)
+    initialSettings: (pickedFormat: PrintSettings.Format?) -> PrintSettings,
+): ExportState {
+    val pickedFormat = rememberSaveable(dialog, stateSaver = FORMAT_SAVER) { mutableStateOf<PrintSettings.Format?>(null) }
+    return ExportState(
+        settings = remember(dialog) { mutableStateOf(initialSettings(pickedFormat.value)) },
+        pickedFormat = pickedFormat,
+        source = remember(dialog) { mutableStateOf<PrintSource?>(null) },
+        failed = remember(dialog) { mutableStateOf(false) },
+        attempt = remember(dialog) { mutableIntStateOf(0) },
+        // Saved, or a rotation would put back every song somebody had unticked; null until the source has been read.
+        selected = rememberSaveable(dialog, stateSaver = SELECTION_SAVER) { mutableStateOf<Set<Int>?>(null) },
+        page = rememberSaveable(dialog) { mutableIntStateOf(0) },
+        pageView = rememberSaveable(dialog, stateSaver = PAGE_VIEW_SAVER) { mutableStateOf(PageView()) },
+        layoutFailed = remember { mutableStateOf(false) },
+    )
+}
 
 /**
  * A laid out document together with what it was laid out from, which is what tells a document that stands in for the
@@ -94,6 +105,9 @@ internal class LaidOutDocument(
     val labels: PrintLabels,
     val generation: Int,
 )
+
+/** The format picked on the screen by its name, with null (none picked yet) saved as nothing at all. */
+private val FORMAT_SAVER = Saver<PrintSettings.Format?, String>(save = { it?.name }, restore = { PrintSettings.Format.valueOf(it) })
 
 /** The selected songs by their place in the source, with null (nothing read yet) saved as nothing at all. */
 private val SELECTION_SAVER = Saver<Set<Int>?, List<Int>>(save = { it?.toList() }, restore = { it.toSet() })

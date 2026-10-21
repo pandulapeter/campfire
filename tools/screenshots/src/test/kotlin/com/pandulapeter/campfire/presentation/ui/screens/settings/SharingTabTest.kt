@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.print_paper
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_sharing
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
@@ -29,11 +30,14 @@ import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_al
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
+import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
@@ -84,6 +88,24 @@ internal class SharingTabTest {
         tap(hasText(string(Res.string.settings_sharing_show_qr_code)) and hasClickAction())
 
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `the qr code opens the export on the link for that opening only, the song's own export keeping the pdf`() = runAppTest(
+        window = WIDE_WINDOW,
+        preferenceFiles = mapOf("shared-links.json" to MIRROR),
+    ) {
+        openQrCode()
+        pressBack()
+        assertSharingTabUncovered()
+
+        tap(hasText(string(Res.string.songs)) and hasClickAction())
+        openSong()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        tap(hasText(string(Res.string.songs_export_song)) and hasClickAction())
+
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_paper))).fetchSemanticsNodes().isNotEmpty() }
+        onNode(hasContentDescription(string(Res.string.share_qr_code))).assertDoesNotExist()
     }
 
     @Test

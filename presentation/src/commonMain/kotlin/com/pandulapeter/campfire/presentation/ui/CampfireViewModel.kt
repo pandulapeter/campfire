@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
-import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -734,9 +733,7 @@ class CampfireViewModel(
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
         // The origin is taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
         syncController.startRestoring(isFirstLaunch = isFirstLaunch) {
-            navigator.showSyncConsentAnswer(syncConsentOrigins.take()) { target ->
-                savedDialogRestorer.reopenExport(target) { exportController.choosePrintFormat(PrintSettings.Format.LINK) }
-            }
+            navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)
         }
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)

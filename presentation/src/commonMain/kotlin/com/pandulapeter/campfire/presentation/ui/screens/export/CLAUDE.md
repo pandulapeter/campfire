@@ -17,6 +17,9 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 - Opened as `DialogType.Export` from a song's "Export song" (with the setlist it was reached through, whose key it then
   prints in), a setlist's "Export setlist", or the selection mode's "Export songs" (`DialogType.Export.songs`, in the
   songs screen's sort order; one ticked song is that row's own Export).
+- Settings' Show QR code and the answer to a consent asked from the Link format open it on Link for that opening only
+  (`DialogType.Export.format`, `openingSettingsOf`), the stored format untouched; a format picked on the screen is
+  stored as ever, and saved with the screen so a rotation keeps it over the opening's own.
 - The screen asks the source two things: `hasRunningOrder` (setlist: content choice, overview, zip manifest) and
   `hasSeveralSongs` (song ticks, Select all, new page per song, Zip). Several songs are unnumbered, in library keys,
   zipped by `ExportSongsUseCase` as `campfire_songs.zip` (even if one is left) and saved as `campfire_songs.pdf`.

@@ -210,24 +210,20 @@ private fun ColumnScope.SharedLinks(
                 if (!isCopyConfirmedBySystem) viewModel.messageSink.sendMessage(Message.LinkCopied)
             }
         },
-        onShowQrCode = { share ->
-            exportDialogOf(viewModel, share)?.let { dialog ->
-                scope.launch {
-                    viewModel.exportController.choosePrintFormat(PrintSettings.Format.LINK)
-                    viewModel.dialogHost.showDialog(dialog)
-                }
-            }
-        },
+        onShowQrCode = { share -> exportDialogOf(viewModel, share)?.let(viewModel.dialogHost::showDialog) },
         onStop = onStop,
     )
 }
 
-/** The export screen of [share]'s item, which shows its QR code on the Link format, or null where the library lacks it. */
+/**
+ * The export screen of [share]'s item, opened on the Link format to show its QR code, for this opening only, the format
+ * the user exports in kept, or null where the library lacks it.
+ */
 private fun exportDialogOf(viewModel: CampfireViewModel, share: Share) = when (share.kind) {
     SharedLinkKind.SONG -> viewModel.libraryState.songsByFileName.value.let { songs ->
         songs[share.fileName] ?: songs.entries.firstOrNull { LibraryFiles.isSameLibraryName(it.key, share.fileName) }?.value
-    }?.let { DialogType.Export(song = it) }
+    }?.let { DialogType.Export(song = it, format = PrintSettings.Format.LINK) }
     SharedLinkKind.SETLIST -> viewModel.libraryState.setlists.value
         .firstOrNull { LibraryFiles.isSameLibraryName(it.fileName, share.fileName) }
-        ?.let { DialogType.Export(setlist = it) }
+        ?.let { DialogType.Export(setlist = it, format = PrintSettings.Format.LINK) }
 }

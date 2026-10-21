@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
@@ -25,13 +26,15 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 sealed interface DialogType {
     /**
      * The export screen over one [song], a [setlist], or [songs] ticked in the selection mode, which are several songs in
-     * no running order of anyone's making.
+     * no running order of anyone's making. [format] is the format it opens on for this opening only, the user's own kept
+     * for the next one; null for that one.
      */
     data class Export(
         val song: Song? = null,
         val setlist: Setlist? = null,
         val songSetlistFileName: String? = null,
         val songs: List<Song> = emptyList(),
+        val format: PrintSettings.Format? = null,
     ) : DialogType
     data object NewSetlist : DialogType
     data object NewSong : DialogType

@@ -55,8 +55,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -203,12 +201,6 @@ internal class ExportController(
     }
 
     fun setPrintSettings(value: PrintSettings) = printSettingsPreference.set(value.normalized())
-
-    /** Has the next export screen open on [format], once the preferences it is kept with have been read. */
-    suspend fun choosePrintFormat(format: PrintSettings.Format) {
-        val current = pendingPrintSettings.value ?: userPreferencesState.mapNotNull { it.data }.first().printSettings
-        setPrintSettings(current.copy(format = format))
-    }
 
     /**
      * [create] draws the pages and reports each one drawn to the callback it is given. Whatever it throws, an

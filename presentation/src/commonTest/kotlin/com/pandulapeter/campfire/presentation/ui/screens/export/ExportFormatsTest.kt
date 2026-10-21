@@ -48,6 +48,35 @@ class ExportFormatsTest {
     }
 
     @Test
+    fun `an export opened on a format of its own takes it over the stored one, which it leaves as it is`() {
+        val stored = PrintSettings(format = PrintSettings.Format.PDF, fontSize = 14)
+        val formats = exportFormatsOf(songExport, isSyncAvailable = true)
+        assertEquals(stored.copy(format = PrintSettings.Format.LINK), openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = null, formats))
+    }
+
+    @Test
+    fun `an export opened on no format of its own opens on the stored one`() {
+        val stored = PrintSettings(format = PrintSettings.Format.FILES, fontSize = 14)
+        assertEquals(stored, openingSettingsOf(stored, songExport, pickedFormat = null, exportFormatsOf(songExport, isSyncAvailable = true)))
+    }
+
+    @Test
+    fun `a format the export does not offer opens it on the pdf, whoever named it`() {
+        val stored = PrintSettings(format = PrintSettings.Format.FILES, fontSize = 14)
+        val formats = exportFormatsOf(songExport, isSyncAvailable = false)
+        assertEquals(stored.copy(format = PrintSettings.Format.PDF), openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = null, formats))
+    }
+
+    @Test
+    fun `a format picked on the screen outlives it being composed again over the one it opened on`() {
+        val stored = PrintSettings(format = PrintSettings.Format.LINK, fontSize = 14)
+        assertEquals(
+            stored.copy(format = PrintSettings.Format.PDF),
+            openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = PrintSettings.Format.PDF, exportFormatsOf(songExport, isSyncAvailable = true)),
+        )
+    }
+
+    @Test
     fun `a link shares the song or the setlist by its file, the song reached through a setlist included`() {
         assertEquals(ShareTarget(SharedLinkKind.SONG, "a.cho"), shareTargetOf(songExport.copy(songSetlistFileName = "set.setlist.json")))
         assertEquals(ShareTarget(SharedLinkKind.SETLIST, "set.setlist.json"), shareTargetOf(setlistExport))

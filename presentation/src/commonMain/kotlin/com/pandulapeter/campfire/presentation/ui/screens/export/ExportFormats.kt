@@ -35,3 +35,15 @@ internal fun exportFormatsOf(dialog: DialogType.Export, isSyncAvailable: Boolean
 
 /** These settings in a format among [formats]: one left for an export that does not offer it is a PDF there. */
 internal fun PrintSettings.withFormatIn(formats: List<PrintSettings.Format>) = if (format in formats) this else copy(format = PrintSettings.Format.PDF)
+
+/**
+ * The settings an export screen opens with: the user's [stored] ones, in the format they picked on this very screen
+ * before it was composed again ([pickedFormat]), else in the one this opening asks for ([DialogType.Export.format]),
+ * else in their own, and in any case in one of [formats].
+ */
+internal fun openingSettingsOf(
+    stored: PrintSettings,
+    dialog: DialogType.Export,
+    pickedFormat: PrintSettings.Format?,
+    formats: List<PrintSettings.Format>,
+) = ((pickedFormat ?: dialog.format)?.let { stored.copy(format = it) } ?: stored).withFormatIn(formats)
