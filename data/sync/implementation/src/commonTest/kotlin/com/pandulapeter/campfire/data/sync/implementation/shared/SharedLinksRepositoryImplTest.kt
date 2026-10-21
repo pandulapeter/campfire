@@ -188,6 +188,24 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a list nested past the bound counts as empty rather than overflowing the stack`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.writeDocumentElsewhere(SharedLinksFormat.NAME, ("""{"version":1,"links":[],"x":""" + deepBrackets + "}").encodeToByteArray())
+        val repository = repository(provider)
+
+        repository.refresh()
+
+        assertEquals(emptyList(), repository.shares.first())
+    }
+
+    @Test
+    fun `a stored mirror nested past the bound loads as no mirror rather than overflowing the stack`() = runTest {
+        val localSource = FakeSharedLinksLocalSource(mirror = """{"revision":"1","registry":{"version":1,"links":[],"x":""" + deepBrackets + "}}")
+
+        assertEquals(emptyList(), repository(FakeSyncProvider(), localSource = localSource).shares.first())
+    }
+
+    @Test
     fun `nothing is shared while no account is connected`() = runTest {
         val provider = FakeSyncProvider()
 
@@ -712,6 +730,9 @@ class SharedLinksRepositoryImplTest {
     private fun connectedStateHolder() = SyncStateHolder(Logger.Standard).apply {
         update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
     }
+
+    /** Brackets nested far deeper than the parser's stack holds, as a hand edit of the folder's document could. */
+    private val deepBrackets = "[".repeat(100_000) + "]".repeat(100_000)
 
     private fun registry(provider: FakeSyncProvider) = assertIs<SharedLinksFormat.Decoded.Readable>(
         SharedLinksFormat.decode(provider.documents.getValue(SharedLinksFormat.NAME).first.decodeToString()),

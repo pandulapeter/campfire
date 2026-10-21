@@ -16,7 +16,8 @@
   - Edited only as operations (`SharedLinksRegistry.edit`): read, change, write against the revision read, and on a
     conflict all of it again, up to 3 times. No lock (not even the run's), no merge, no base in the index.
   - Members a version does not know are kept through its edits; a higher `version` is neither shown nor edited. One
-    that does not decode counts as empty, and only a sharing action writes over it.
+    that does not decode, or is nested or sized past the bound checked before parsing, counts as empty, and only a
+    sharing action writes over it.
 - **Mirror**: `preferences/shared-links.json` (`SharedLinksMirror`), the registry as last read or written, with that
   revision, so screens need no request. Replaced by a successful edit unless cleared since it began, and by a read
   unless the mirror changed while it was under way (a generation, since revisions are opaque; of two reads under one

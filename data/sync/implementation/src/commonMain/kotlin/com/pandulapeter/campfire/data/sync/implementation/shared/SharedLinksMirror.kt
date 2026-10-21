@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.JsonBounds
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.SharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
@@ -133,6 +134,10 @@ internal class SharedLinksMirror(
     ) { localSource.loadSharedLinksMirror()?.let(::decode) } ?: Mirrored(revision = null, document = SharedLinksDocument())
 
     private fun decode(text: String): Mirrored? {
+        // A mirror saved from a registry read before the registry was bounded may hold anything the folder did. It wraps
+        // the registry in an object with its revision, a few tokens more, so a registry just inside the budget keeps a
+        // readable mirror; the registry inside is then checked again by its own format.
+        if (!JsonBounds.isWithin(text, maxTokens = JsonBounds.MAX_TOKENS + 16)) return null
         val root = try {
             json.parseToJsonElement(text) as? JsonObject
         } catch (_: SerializationException) {

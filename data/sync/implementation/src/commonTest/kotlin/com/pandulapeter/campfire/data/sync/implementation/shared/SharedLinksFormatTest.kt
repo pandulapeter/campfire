@@ -128,5 +128,17 @@ class SharedLinksFormatTest {
         assertEquals(LocalDate(2026, 10, 2), shares.first().sharedAt)
     }
 
+    @Test
+    fun `a registry nested past the bound is unreadable rather than overflowing the stack`() = assertEquals(
+        SharedLinksFormat.Decoded.Unreadable,
+        SharedLinksFormat.decode("""{"version":1,"links":[],"x":""" + "[".repeat(100_000) + "]".repeat(100_000) + "}"),
+    )
+
+    @Test
+    fun `a registry past the token budget is unreadable rather than parsed`() = assertEquals(
+        SharedLinksFormat.Decoded.Unreadable,
+        SharedLinksFormat.decode("""{"version":1,"links":[],"x":[""" + List(600_001) { "0" }.joinToString(",") + "]}"),
+    )
+
     private fun readable(text: String) = assertIs<SharedLinksFormat.Decoded.Readable>(SharedLinksFormat.decode(text)).document
 }

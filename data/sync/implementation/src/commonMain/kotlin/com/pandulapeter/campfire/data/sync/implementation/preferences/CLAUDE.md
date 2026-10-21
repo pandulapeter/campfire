@@ -21,8 +21,9 @@ written only once non-empty, so older documents keep their bytes.
 - The folder's document is not downloaded when the run's listing shows the revision the index pairs with the base
   (`syncedPreferencesRevision`, written only beside the document a settle left in the folder); a retry after a
   conflict always downloads.
-- A folder document that is missing or unreadable is merged as the base, never as a removal of everything; one with a
-  newer `version` is neither applied nor overwritten.
+- A folder document that is missing or unreadable (one nested past 64 levels or over the token budget is unreadable,
+  checked before parsing) is merged as the base, never as a removal of everything; one with a newer `version` is
+  neither applied nor overwritten.
 - A song no longer in the library loses its entry, except a file the run failed on or one the folder gained since the
   last sync. Chord and tag entries are never dropped with a song. Entries match songs ignoring case and Unicode form.
 - A value changed here during the merge is kept. A failure that ends a run (`SyncRunEndingException`) ends this one with

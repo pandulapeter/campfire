@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
+import com.pandulapeter.campfire.data.model.JsonBounds
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
 import kotlinx.serialization.json.Json
@@ -77,13 +78,23 @@ internal object SyncedPreferencesDocument {
     private val json = Json { prettyPrint = true }
 
     /**
-     * Null for a document that is not a JSON object, which the run then replaces, keeping this device's values, as if the
-     * folder had not changed it. Any other object is returned whatever its shape, so that [isNewerFormat] sees it.
+     * Null for a document that is not a JSON object, or is past [JsonBounds], which the run then replaces, keeping this
+     * device's values, as if the folder had not changed it. Any other object is returned whatever its shape, so that
+     * [isNewerFormat] sees it.
      */
-    fun decode(bytes: ByteArray): JsonObject? = try {
-        json.parseToJsonElement(bytes.decodeToString()) as? JsonObject
-    } catch (exception: IllegalArgumentException) {
-        null
+    fun decode(bytes: ByteArray): JsonObject? {
+        val text = bytes.decodeToString()
+        // The document comes from a folder anyone can edit by hand, and the parser would overflow the stack or the heap
+        // with an `Error` past these bounds. The budget is the shared one, not lower: a refused document is replaced
+        // with this device's values, so a real one refused for its size would overwrite every other device's settings.
+        // A song with transposition, tempo, capo, and one 16-beat signature's levels is about 30 tokens, so the budget
+        // holds about 20,000 configured songs; the 4 levels the document nests are far within the depth.
+        if (!JsonBounds.isWithin(text, maxTokens = JsonBounds.MAX_TOKENS)) return null
+        return try {
+            json.parseToJsonElement(text) as? JsonObject
+        } catch (exception: IllegalArgumentException) {
+            null
+        }
     }
 
     /**

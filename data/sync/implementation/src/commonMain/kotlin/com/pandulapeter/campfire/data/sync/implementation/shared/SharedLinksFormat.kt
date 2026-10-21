@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.JsonBounds
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -43,6 +44,10 @@ internal object SharedLinksFormat {
     }
 
     fun decode(text: String): Decoded {
+        // The registry comes from a folder anyone can edit by hand, and the parser would overflow the stack or the heap
+        // with an `Error` past these bounds. An entry is about 22 tokens, so the shared budget holds far more links than
+        // anyone makes, and the 3 levels the document nests are far within the depth.
+        if (!JsonBounds.isWithin(text, maxTokens = JsonBounds.MAX_TOKENS)) return Decoded.Unreadable
         val root = try {
             json.parseToJsonElement(text) as? JsonObject
         } catch (_: SerializationException) {

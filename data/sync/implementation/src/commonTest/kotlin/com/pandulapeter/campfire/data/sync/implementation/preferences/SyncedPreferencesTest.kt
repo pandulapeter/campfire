@@ -204,6 +204,20 @@ class SyncedPreferencesTest {
     fun `a document that is not one is read as none`() = assertNull(SyncedPreferencesDocument.decode("[1, 2".encodeToByteArray()))
 
     @Test
+    fun `a folder document nested past the bound reads as unreadable`() {
+        val text = "{\"songs\":{},\"x\":" + "[".repeat(100_000) + "]".repeat(100_000) + "}"
+
+        assertNull(SyncedPreferencesDocument.decode(text.encodeToByteArray()))
+    }
+
+    @Test
+    fun `a folder document past the token budget reads as unreadable`() {
+        val text = "{\"songs\":{},\"x\":[" + List(600_001) { "0" }.joinToString(",") + "]}"
+
+        assertNull(SyncedPreferencesDocument.decode(text.encodeToByteArray()))
+    }
+
+    @Test
     fun `a value changed here during the merge is kept`() {
         val preferences = defaultUserPreferences(transpositions = mapOf("a.cho" to 5, "b.cho" to 1))
         val applied = SyncedPreferences(transpositions = mapOf("a.cho" to 2, "b.cho" to 3)).applyTo(
