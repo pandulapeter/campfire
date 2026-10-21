@@ -40,7 +40,7 @@ struct ShareInboxWriter {
     func write(_ items: [NSExtensionItem]) async -> ShareOutcome {
         let attachments = items.flatMap { $0.attachments ?? [] }.compactMap(Attachment.init)
         let files = attachments.compactMap { if case let .file(provider, type) = $0 { return (provider, type) } else { return nil } }
-        let hasLink = attachments.contains { if case .link = $0 { return true } else { return false } }
+        let links = attachments.compactMap { if case let .link(provider) = $0 { return provider } else { return nil } }
         var texts: [String] = []
         // A text next to a file is its caption - the file's name, a "sent from" line - as it is on Android.
         if files.isEmpty {
@@ -52,11 +52,18 @@ struct ShareInboxWriter {
                 }
             }
             texts = texts.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            if texts.isEmpty { return hasLink ? .link : .unsupported }
-            // A page shared by its address is never fetched. Some apps send its title as a text beside the address,
-            // which is one line, where a chord sheet is many.
-            if texts.allSatisfy(Self.isOnlyLinks) || hasLink && texts.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).contains(where: \.isNewline) }) {
-                return .link
+            // Some apps send a page's title as a text beside its address, which is one line, where a chord sheet is many.
+            let isOneLine = { (text: String) in !text.trimmingCharacters(in: .whitespacesAndNewlines).contains(where: \.isNewline) }
+            // A Campfire share link goes to the app, which tells a real one from the rest and opens it. Only the first
+            // is kept: the app opens one link per text, and would take a second one as a file of its own.
+            if let link = texts.first(where: Self.isCampfireLink), texts.allSatisfy(isOneLine) {
+                texts = [link.trimmingCharacters(in: .whitespacesAndNewlines)]
+            } else if texts.allSatisfy(isOneLine), let link = await firstCampfireLink(links) {
+                texts = [link]
+            } else {
+                if texts.isEmpty { return links.isEmpty ? .unsupported : .link }
+                // Any other page shared by its address is never fetched.
+                if texts.allSatisfy(Self.isOnlyLinks) || !links.isEmpty && texts.allSatisfy(isOneLine) { return .link }
             }
         }
         guard let containerURL else { return .failed }
@@ -188,12 +195,33 @@ struct ShareInboxWriter {
         }
     }
 
+    /// The first address a URL attachment carries that `isCampfireLink` takes, read and never fetched. An app hands it
+    /// over as a URL, its text, or its data representation.
+    private func firstCampfireLink(_ providers: [NSItemProvider]) async -> String? {
+        for provider in providers {
+            let address: String? = await withCheckedContinuation { continuation in
+                provider.loadItem(forTypeIdentifier: UTType.url.identifier) { item, _ in
+                    switch item {
+                    case let url as URL where !url.isFileURL: continuation.resume(returning: url.absoluteString)
+                    case let string as String: continuation.resume(returning: string)
+                    case let data as Data:
+                        let url = URL(dataRepresentation: data, relativeTo: nil)
+                        continuation.resume(returning: url?.isFileURL == false ? url?.absoluteString : nil)
+                    default: continuation.resume(returning: nil)
+                    }
+                }
+            }
+            if let address, Self.isCampfireLink(address) { return address.trimmingCharacters(in: .whitespacesAndNewlines) }
+        }
+        return nil
+    }
+
     /// What one attachment is to the import. A text whose provider names it as a file the import reads - a `.txt` in
     /// Files - is that file, so that it keeps its name.
     private enum Attachment {
         case file(NSItemProvider, typeIdentifier: String)
         case text(NSItemProvider)
-        case link
+        case link(NSItemProvider)
 
         init?(_ provider: NSItemProvider) {
             let types = provider.registeredTypeIdentifiers
@@ -202,7 +230,7 @@ struct ShareInboxWriter {
             } else if let type = types.first(where: { Self.conforms($0, to: UTType.plainText.identifier) }) {
                 self = provider.suggestedName.map(ShareLimits.isImportable) == true ? .file(provider, typeIdentifier: type) : .text(provider)
             } else if types.contains(where: { Self.conforms($0, to: UTType.url.identifier) && !Self.conforms($0, to: UTType.fileURL.identifier) }) {
-                self = .link
+                self = .link(provider)
             } else {
                 return nil
             }
@@ -267,6 +295,14 @@ struct ShareInboxWriter {
     static func isOnlyLinks(_ text: String) -> Bool {
         let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         return !lines.isEmpty && lines.allSatisfy { $0.range(of: #"^https?://\S+$"#, options: [.regularExpression, .caseInsensitive]) != nil }
+    }
+
+    /// `ShareLinks`' address regex in `:data:model`, copied by hand as the landing page's is (keep the three in step),
+    /// without its bare payload, which is no address and so passes on as any text does. The fragment is required: the
+    /// web app's own address without one is a page like any other. The payload's grammar is the app's to check; this
+    /// only tells a link that may be Campfire's from another page's.
+    static func isCampfireLink(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).range(of: #"^(?:https://campfire-songbook\.com/(?:s|app)/(?:\?[^#\s]*)?#|campfire://s/)\S+$"#, options: .regularExpression) != nil
     }
 
     private static let inboxName = "ShareInbox"

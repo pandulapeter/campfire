@@ -207,6 +207,14 @@ class PastedSongControllerTest {
     }
 
     @Test
+    fun `a shared Campfire link is imported under its own title, whatever page title the share carries`() = runTest {
+        controller().importSharedText(SharedTextPayload(texts = listOf(LINK), subject = "Some page title"))
+        assertTrue(links.single().let { it is SharedLink.Readable && it.title == "Riverlight" })
+        assertTrue(queued.isEmpty())
+        assertTrue(messages.isEmpty())
+    }
+
+    @Test
     fun `a Campfire link beside other words is text, as any other address is`() = runTest {
         val controller = controller()
         controller.newSongFromText("Listen to this: $LINK")

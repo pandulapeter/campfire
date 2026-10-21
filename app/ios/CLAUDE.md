@@ -64,7 +64,9 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - `ShareInboxWriter.fileName` cannot call `LibraryFiles.normalizedName`, so the copy it writes is only lowercase,
   underscored, free of separators, control, invisible, and bidirectional characters and leading dots, and at most 200
   bytes.
-- Files beat text in one share; a page's address (alone, or beside a one-line title) is refused with a sentence. The
+- Files beat text in one share. A Campfire share link (its address form, by `isCampfireLink`, a hand copy of
+  `ShareLinks`' regex), as a text or a URL attachment beside one-line texts, is written as the share's one text, the app
+  deciding whether it is one; any other page's address (alone, or beside a one-line title) is refused with a sentence. The
   extension mirrors `ImportLimits` before copying (8/16/24 MB, a share at most 24 MB) and bounds the inbox at 20 shares
   and 64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values, so its own
   `PrivacyInfo.xcprivacy` declares no required-reason API.
