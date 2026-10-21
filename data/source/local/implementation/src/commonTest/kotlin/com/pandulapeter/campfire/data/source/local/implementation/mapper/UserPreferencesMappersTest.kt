@@ -49,6 +49,20 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `the remembered shared link imports survive saving and reloading, in their order`() {
+        val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
+        assertEquals(emptyMap(), legacy.sharedLinkImports)
+        val imports = mapOf("second" to listOf("songs/b.cho"), "first" to listOf("songs/a.cho", "setlists/gig.setlist.json"))
+        val saved = legacy.copy(sharedLinkImports = imports).toDocument()
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(saved)).document.toModel()
+        assertEquals(imports.toList(), reloaded.sharedLinkImports.toList())
+        assertEquals(
+            mapOf("link" to listOf("songs/a.cho")),
+            UserPreferencesDocument(sharedLinkImports = mapOf("link" to listOf("songs/a.cho", " "), " " to listOf("songs/b.cho"), "empty" to listOf(""))).toModel().sharedLinkImports,
+        )
+    }
+
+    @Test
     fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,

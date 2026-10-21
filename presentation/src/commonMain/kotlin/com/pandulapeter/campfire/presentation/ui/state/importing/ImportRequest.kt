@@ -28,6 +28,8 @@ import kotlinx.coroutines.CompletableDeferred
  * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
  * @param isNewSongFromText The one file is a text pasted or dropped as a new song, see [ImportController.enqueueImport].
  * @param suggestion What the new song is titled for what its text does not declare, see [ImportController.enqueueImport].
+ * @param sharedLinkFileId The file id of the shared link the batch is, kept past [source] being emptied: what the import
+ *   writes under its own names is remembered for it, see [sharedLinkChoices].
  */
 internal class ImportRequest(
     var source: ImportSource,
@@ -37,5 +39,6 @@ internal class ImportRequest(
     val isDemoLibrary: Boolean = false,
     val isNewSongFromText: Boolean = false,
     val suggestion: SharedTextTitle? = null,
+    val sharedLinkFileId: String? = null,
     val settled: CompletableDeferred<Unit> = CompletableDeferred(),
 )

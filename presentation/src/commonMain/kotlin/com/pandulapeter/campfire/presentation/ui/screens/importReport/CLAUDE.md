@@ -30,8 +30,11 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 - **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
   names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
   button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
-  (`DialogType.ConfirmImportReplace`). A shared link's review starts its taken names on **Replace** (opening a link
-  again is how its recipient updates) with a line under the counts saying so, and is subtitled by the setlist or the
+  (`DialogType.ConfirmImportReplace`). A shared link's review starts on **Replace** only the taken names that an
+  earlier import of the same link (by its Dropbox file id, which another link cannot borrow) wrote under its own names
+  on this device, with a line under the counts saying so (`sharedLinkChoices`); every other taken name starts on Keep
+  both, since it may be the recipient's own song. The record is `UserPreferences.sharedLinkImports`, never synced or
+  exported, and bounded (100 links, 1,000 names each). The review is subtitled by the setlist or the
   one song the zip holds, never the download's random name (`Review.subtitleName`). It steps aside while the keyboard is up. Choices live in the view model's report
   (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
   summary only.

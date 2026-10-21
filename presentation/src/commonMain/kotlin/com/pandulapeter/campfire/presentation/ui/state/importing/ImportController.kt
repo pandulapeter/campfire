@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
-import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
@@ -23,7 +22,9 @@ import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
+import com.pandulapeter.campfire.domain.api.library.RememberSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
@@ -89,6 +90,8 @@ internal class ImportController(
     private val prepareImport: PrepareImportUseCase,
     private val importFiles: ImportFilesUseCase,
     private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
+    private val getSharedLinkImport: GetSharedLinkImportUseCase,
+    private val rememberSharedLinkImport: RememberSharedLinkImportUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
 
@@ -174,14 +177,14 @@ internal class ImportController(
 
     /**
      * A song or setlist shared as a Campfire link, however it arrived: opened from the system, pasted, dropped, or shared
-     * as text. It is downloaded and always reviewed, with the names already taken defaulting to Replace, since opening a
-     * link again is how its recipient takes the sharer's changes; a link to one song opens it once imported. A link from a
-     * newer version of Campfire is answered with a sentence and queues nothing.
+     * as text. It is downloaded and always reviewed, with the names an earlier import of the same link wrote here
+     * defaulting to Replace (see [sharedLinkChoices]); a link to one song opens it once imported. A link from a newer
+     * version of Campfire is answered with a sentence and queues nothing.
      *
      * @return Completed once the link has settled, see [enqueueImport].
      */
     fun importSharedLink(link: SharedLink): CompletableDeferred<Unit> = when (link) {
-        is SharedLink.Readable -> enqueueImport(ImportSource.SharedLink(link), shouldOpenSong = true)
+        is SharedLink.Readable -> enqueueImport(ImportSource.SharedLink(link), shouldOpenSong = true, sharedLinkFileId = link.fileId)
         is SharedLink.FromNewerVersion -> {
             messageSink.sendMessage(Message.SharedLinkFromNewerVersion)
             CompletableDeferred(Unit)
@@ -200,6 +203,7 @@ internal class ImportController(
      *   library holds is opened; anything else - a songbook pasted whole - is the import it would be as a file.
      * @param suggestion The title and artist a shared text's subject suggests, which the editor opened on it fills in for
      *   what the text does not declare.
+     * @param sharedLinkFileId See [ImportRequest.sharedLinkFileId].
      */
     fun enqueueImport(
         source: ImportSource,
@@ -209,6 +213,7 @@ internal class ImportController(
         isDemoLibrary: Boolean = false,
         isNewSongFromText: Boolean = false,
         suggestion: SharedTextTitle? = null,
+        sharedLinkFileId: String? = null,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
             source = source,
@@ -218,6 +223,7 @@ internal class ImportController(
             isDemoLibrary = isDemoLibrary,
             isNewSongFromText = isNewSongFromText,
             suggestion = suggestion,
+            sharedLinkFileId = sharedLinkFileId,
         )
         if (source.isEmpty) {
             request.settled.complete(Unit)
@@ -328,13 +334,16 @@ internal class ImportController(
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
+                    // Opening a shared link again is how its recipient updates, and Keep both would leave a numbered copy of
+                    // every changed song each time. Only the names this link wrote here before are its to update, though: any
+                    // other taken name may be the recipient's own song, which a stranger's link must not start on Replace.
+                    val choices = request.sharedLinkFileId?.let { sharedLinkChoices(plan, getSharedLinkImport(it)) } ?: ImportChoices()
                     val review = ImportReport.Review(
                         plan = plan,
-                        // Opening a shared link again is how its recipient updates, and Keep both would leave a numbered
-                        // copy of every changed song each time; Replace is still confirmed before anything is written.
-                        choices = if (sharedLink == null) ImportChoices() else ImportChoices(conflictResolution = ImportConflictResolution.REPLACE),
+                        choices = choices,
                         isDemoLibrary = request.isDemoLibrary,
                         sharedLinkTitle = sharedLink?.title,
+                        sharedLinkUpdateCount = choices.conflictResolutions.size,
                     )
                     if (isReviewed) reportState.report = review else reportState.show(review)
                     _isImporting.value = false
@@ -466,6 +475,13 @@ internal class ImportController(
                             rememberDemoLibraryFiles(
                                 songFileNames = DemoLibrary.songFileNamesWrittenBy(result),
                                 setlistFileNames = DemoLibrary.setlistFileNamesWrittenBy(result),
+                            )
+                        }
+                        request.sharedLinkFileId?.let { linkFileId ->
+                            rememberSharedLinkImport(
+                                linkFileId = linkFileId,
+                                songFileNames = sharedLinkSongFileNamesWrittenBy(plan, result),
+                                setlistFileNames = sharedLinkSetlistFileNamesWrittenBy(plan, result),
                             )
                         }
                     }

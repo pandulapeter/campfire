@@ -112,8 +112,10 @@
     <string name="import_warning_songs_off">Songs are switched off in Settings, so nothing imported here will show until you switch them back on.</string>
     <string name="import_warning_setlists_off">Setlists are switched off in Settings, so the setlists imported here won\'t show until you switch them back on.</string>
     <string name="import_review_demo_library">Demo library</string>
-    <string name="import_review_shared_song_replaces">This replaces your copy of the song with the shared version. Choose Keep both to keep your own changes.</string>
-    <string name="import_review_shared_setlist_replaces">This replaces your copies of the songs and setlist with the shared version. Choose Keep both to keep your own changes.</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">One file you imported from this link before is updated to the shared version. Choose Keep both to keep your own changes.</item>
+        <item quantity="other">%1$d files you imported from this link before are updated to the shared version. Choose Keep both to keep your own changes.</item>
+    </plurals>
     <plurals name="import_review_confirm">
         <item quantity="one">Import %1$d file</item>
         <item quantity="other">Import %1$d files</item>

@@ -80,6 +80,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     seenWhatsNewVersions = seenWhatsNewVersions,
     isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes.filterValues { it.isNotBlank() },
+    sharedLinkImports = sharedLinkImports.filterKeys { it.isNotBlank() }.mapValues { (_, paths) -> paths.filter { it.isNotBlank() } }.filterValues { it.isNotEmpty() },
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -133,6 +134,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     seenWhatsNewVersions = seenWhatsNewVersions,
     isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes,
+    sharedLinkImports = sharedLinkImports,
 )
 
 internal fun PrintSettingsDocument.toModel() = PrintSettings(

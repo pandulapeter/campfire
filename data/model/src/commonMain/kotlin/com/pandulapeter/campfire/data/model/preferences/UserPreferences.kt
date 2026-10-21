@@ -224,6 +224,13 @@ data class UserPreferences(
      * exported or synced.
      */
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
+    /**
+     * The library files the imports of each shared link on this device wrote under the names it asked for, by the
+     * link's file id, as library paths (`songs/<file name>`, `setlists/<file name>`). A later import of the same link
+     * starts those names on Replace. Keyed by the file id rather than the share id, since every part of a link is text
+     * the link carries and only the file id decides which bytes it serves. Never exported or synced.
+     */
+    val sharedLinkImports: Map<String, List<String>> = emptyMap(),
 ) {
 
     /**

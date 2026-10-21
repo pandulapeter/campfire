@@ -112,8 +112,10 @@
     <string name="import_warning_songs_off">A dalok ki vannak kapcsolva a Beállításokban, így semmi, amit itt importálsz, nem jelenik meg, amíg vissza nem kapcsolod őket.</string>
     <string name="import_warning_setlists_off">A listák ki vannak kapcsolva a Beállításokban, így az itt importált listák nem jelennek meg, amíg vissza nem kapcsolod őket.</string>
     <string name="import_review_demo_library">Bemutató könyvtár</string>
-    <string name="import_review_shared_song_replaces">Ez a dal saját példányát a megosztott változatra cseréli. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</string>
-    <string name="import_review_shared_setlist_replaces">Ez a dalok és a lista saját példányait a megosztott változatra cseréli. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">Egy fájl, amelyet korábban ebből a linkből importáltál, a megosztott változatra frissül. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</item>
+        <item quantity="other">%1$d fájl, amelyet korábban ebből a linkből importáltál, a megosztott változatra frissül. Ha a saját módosításaidat is megtartanád, válaszd a „Maradjon mindkettő” lehetőséget.</item>
+    </plurals>
     <plurals name="import_review_confirm">
         <item quantity="one">%1$d fájl importálása</item>
         <item quantity="other">%1$d fájl importálása</item>

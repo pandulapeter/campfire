@@ -32,14 +32,16 @@ sealed interface ImportReport {
      * `ImportController.confirmImport`. The choices live here rather than on the screen, so that a screen composed
      * again (an Android activity recreated under it) keeps every tick. [isDemoLibrary] is the app's own demo library,
      * which the subtitle names as such rather than by the bundled files it is read from. [sharedLinkTitle] is the title
-     * a shared link carried, set only for the import of one, which the subtitle falls back on (see [subtitleName]) and
-     * which explains why the names already taken default to Replace.
+     * a shared link carried, set only for the import of one, which the subtitle falls back on (see [subtitleName]).
+     * [sharedLinkUpdateCount] is how many of its names already taken started on Replace, being files an earlier import
+     * of the same link wrote on this device (see `sharedLinkChoices`), which a line under the counts explains.
      */
     data class Review(
         val plan: ImportPlan,
         val choices: ImportChoices,
         val isDemoLibrary: Boolean,
         val sharedLinkTitle: String? = null,
+        val sharedLinkUpdateCount: Int = 0,
     ) : ImportReport {
 
         val isSharedLink get() = sharedLinkTitle != null

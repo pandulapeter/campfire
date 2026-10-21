@@ -165,7 +165,7 @@ internal fun ImportReportScreen(
                         contentPadding = listPadding,
                         searchFieldIndex = REVIEW_HEADER_ITEM_COUNT.takeIf { reviewSections.isNotEmpty() },
                     ) { listState ->
-                        reviewHeader(plan = stage.plan, choices = choices, warning = warning, isSharedLink = stage.isSharedLink)
+                        reviewHeader(plan = stage.plan, choices = choices, warning = warning, sharedLinkUpdateCount = stage.sharedLinkUpdateCount)
                         if (reviewSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = REVIEW_HEADER_ITEM_COUNT)
                         reviewSections(
                             sections = matchingReviewSections,

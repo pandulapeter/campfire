@@ -32,13 +32,13 @@ import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_files_empty
 import com.pandulapeter.campfire.presentation.resources.import_review_conflicts
 import com.pandulapeter.campfire.presentation.resources.import_review_setlists
-import com.pandulapeter.campfire.presentation.resources.import_review_shared_setlist_replaces
-import com.pandulapeter.campfire.presentation.resources.import_review_shared_song_replaces
+import com.pandulapeter.campfire.presentation.resources.import_review_shared_updates
 import com.pandulapeter.campfire.presentation.resources.import_review_songs
 import com.pandulapeter.campfire.presentation.resources.import_status_duplicates
 import com.pandulapeter.campfire.presentation.resources.import_status_oversized
@@ -50,14 +50,15 @@ import org.jetbrains.compose.resources.StringResource
  * What Import would do, above everything the files hold, so that the counts are read before the list and change in
  * sight as the boxes are ticked. Reads the choices through a derived state, so that a tick recomposes the card alone.
  *
- * @param isSharedLink The files came from a shared link, whose names already taken start on Replace rather than Keep
- *   both: a line under the counts, above the names it is about, says so and what Keep both is for.
+ * @param sharedLinkUpdateCount How many names already taken a shared link's review started on Replace rather than Keep
+ *   both, being files the same link wrote here before: a line under the counts, above the names it is about, says so and
+ *   what Keep both is for.
  */
 internal fun LazyListScope.reviewHeader(
     plan: ImportPlan,
     choices: () -> ImportChoices,
     warning: ImportFeatureWarning?,
-    isSharedLink: Boolean,
+    sharedLinkUpdateCount: Int,
 ) = item(key = "summary", contentType = "summary") {
     val summary by remember(plan) { derivedStateOf { importReviewSummary(plan, choices()) } }
     Column(
@@ -66,12 +67,8 @@ internal fun LazyListScope.reviewHeader(
     ) {
         warning?.let { WarningCard(text = it.text()) }
         ImportReviewSummaryCard(modifier = Modifier.fillMaxWidth(), summary = summary)
-        if (isSharedLink && plan.hasConflicts) {
-            ReportNote(
-                text = stringResource(
-                    if (plan.setlists.isEmpty()) Res.string.import_review_shared_song_replaces else Res.string.import_review_shared_setlist_replaces,
-                ),
-            )
+        if (sharedLinkUpdateCount > 0) {
+            ReportNote(text = pluralStringResource(Res.plurals.import_review_shared_updates, sharedLinkUpdateCount, sharedLinkUpdateCount))
         }
     }
 }

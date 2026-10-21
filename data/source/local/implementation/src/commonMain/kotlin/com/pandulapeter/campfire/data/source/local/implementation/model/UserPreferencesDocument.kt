@@ -85,6 +85,7 @@ internal data class UserPreferencesDocument(
     val seenWhatsNewVersions: Set<String> = emptySet(),
     val isOnboardingPending: Boolean = false,
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
+    val sharedLinkImports: Map<String, List<String>> = emptyMap(),
 )
 
 @Serializable
