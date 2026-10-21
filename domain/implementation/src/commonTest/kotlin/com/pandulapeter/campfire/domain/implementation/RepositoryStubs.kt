@@ -139,7 +139,7 @@ internal class FakeArchiveRepository(
 
     override suspend fun songsIn(file: ImportedFile) = songsIn.invoke(file)
 
-    override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
+    override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray {
         packed = files
         return ByteArray(0)
     }

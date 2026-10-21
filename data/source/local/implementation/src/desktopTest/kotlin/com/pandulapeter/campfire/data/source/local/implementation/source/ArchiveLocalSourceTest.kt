@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.runBlocking
+import java.util.TimeZone
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -347,5 +348,25 @@ class ArchiveLocalSourceTest {
 
         assertEquals(listOf("a.cho", "more.zip"), files.map { it.name })
         assertEquals(ImportedFile.unread("more.zip"), files.last())
+    }
+
+    @Test
+    fun `undated packs of the same files are identical whenever and wherever they are made`() = runBlocking {
+        val files = mapOf(
+            "songs/a.cho" to "{title: A}".encodeToByteArray(),
+            "setlists/s.setlist.json" to "{}".encodeToByteArray(),
+        )
+        val defaultTimeZone = TimeZone.getDefault()
+        val packs = try {
+            listOf("Pacific/Kiritimati", "America/Adak").map { zone ->
+                TimeZone.setDefault(TimeZone.getTimeZone(zone))
+                archiveLocalSource.pack(files = files, isDated = false)
+            }
+        } finally {
+            TimeZone.setDefault(defaultTimeZone)
+        }
+
+        assertContentEquals(packs[0], packs[1])
+        assertEquals(listOf("a.cho", "s.setlist.json"), archiveLocalSource.unpack(archive = packs[0], maxSize = ImportLimits.MAX_IMPORT_SIZE).map { it.name })
     }
 }

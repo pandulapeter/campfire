@@ -37,7 +37,8 @@ platform types. One multiplatform implementation, with platform differences in `
   everything inside a hidden folder, unreported; every other unread entry (not importable, too large, unreadable) comes
   back as `ImportedFile.unread`, and one bad entry never fails the archive.
   Another app's document that is no archive (a JSON export of songs) comes back as its songs, inside an archive and
-  loose through `songsIn` (null where the file is not one).
+  loose through `songsIn` (null where the file is not one). `pack` dates entries only when asked (`isDated`, what the
+  user saves); undated, the same files always pack to the same bytes, for copies compared by their bytes.
 - `DocumentLocalSource`: local, bounded PDF/Word text extraction on `Dispatchers.Default`; null means unsupported or
   unreadable, cancellation propagates. Nothing stored, no network.
 - `LibraryFileLocalSource`: the library as bytes for sync. Never looks inside files, so unparseable songs still travel;

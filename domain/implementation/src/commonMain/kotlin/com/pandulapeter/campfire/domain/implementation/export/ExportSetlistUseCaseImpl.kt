@@ -47,7 +47,7 @@ internal class ExportSetlistUseCaseImpl(
             // is numbered where two setlists share one.
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
             mimeType = ExportedFile.ZIP_MIME_TYPE,
-            bytes = archiveRepository.pack(files),
+            bytes = archiveRepository.pack(files = files, isDated = true),
         )
     }
 }

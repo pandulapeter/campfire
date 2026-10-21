@@ -86,7 +86,7 @@ internal class ExportLibraryUseCaseImpl(
         }
         if (files.isEmpty()) return@withContext null
         ExportLibraryUseCase.Result(
-            file = ExportedFile(name = ARCHIVE_NAME, mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = archiveRepository.pack(files)),
+            file = ExportedFile(name = ARCHIVE_NAME, mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = archiveRepository.pack(files = files, isDated = true)),
             skippedFileNames = skipped,
         )
     }

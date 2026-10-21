@@ -43,7 +43,7 @@ internal class ExportSongsUseCaseImpl(
             else -> ExportedFile(
                 name = ARCHIVE_NAME,
                 mimeType = ExportedFile.ZIP_MIME_TYPE,
-                bytes = archiveRepository.pack(contents.associate { it.fileName to it.text.encodeToByteArray() }),
+                bytes = archiveRepository.pack(files = contents.associate { it.fileName to it.text.encodeToByteArray() }, isDated = true),
             )
         }
     }

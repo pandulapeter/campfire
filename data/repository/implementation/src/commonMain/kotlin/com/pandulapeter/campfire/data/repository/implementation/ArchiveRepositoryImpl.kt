@@ -23,5 +23,5 @@ internal class ArchiveRepositoryImpl(
 
     override suspend fun songsIn(file: ImportedFile) = archiveLocalSource.songsIn(file)
 
-    override suspend fun pack(files: Map<String, ByteArray>) = archiveLocalSource.pack(files)
+    override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean) = archiveLocalSource.pack(files = files, isDated = isDated)
 }

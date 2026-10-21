@@ -50,11 +50,15 @@ internal class ArchiveLocalSourceImpl(
 
     override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { foreignSongs(file) }
 
-    override suspend fun pack(files: Map<String, ByteArray>): ByteArray = withContext(Dispatchers.Default) {
+    override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray = withContext(Dispatchers.Default) {
         ZipWriter.write(
             entries = files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) },
-            modifiedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).let { dateTime ->
-                DosTimestamp.of(dateTime.year, dateTime.month.number, dateTime.day, dateTime.hour, dateTime.minute, dateTime.second)
+            modifiedAt = if (isDated) {
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).let { dateTime ->
+                    DosTimestamp.of(dateTime.year, dateTime.month.number, dateTime.day, dateTime.hour, dateTime.minute, dateTime.second)
+                }
+            } else {
+                DosTimestamp.EARLIEST
             },
         )
     }

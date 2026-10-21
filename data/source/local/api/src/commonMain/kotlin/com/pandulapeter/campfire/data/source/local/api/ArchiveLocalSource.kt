@@ -39,6 +39,14 @@ interface ArchiveLocalSource {
      */
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?
 
-    /** Packs the given entries (name to content, the names may contain directories) into a zip archive. */
-    suspend fun pack(files: Map<String, ByteArray>): ByteArray
+    /**
+     * Packs the given entries (name to content, the names may contain directories) into a zip archive, in the map's
+     * order.
+     *
+     * With [isDated], every entry is stamped with the current local time, as an archive the user saves expects. Without
+     * it, every entry carries the earliest moment a zip can hold, so the same files always pack to the same bytes,
+     * whenever and in whichever time zone: a copy kept current by several devices is compared by its bytes, and a
+     * date in it would have each device replace the others' copy on every run.
+     */
+    suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray
 }

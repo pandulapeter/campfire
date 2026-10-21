@@ -24,5 +24,5 @@ interface ArchiveRepository {
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?
 
     /** See `ArchiveLocalSource.pack`. */
-    suspend fun pack(files: Map<String, ByteArray>): ByteArray
+    suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray
 }
