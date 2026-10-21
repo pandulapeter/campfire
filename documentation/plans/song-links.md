@@ -62,26 +62,64 @@ other's copies (§4.2, §5.1, §5.6, §11.2, and §14).
 Each of these changes code if it comes out differently. Use a real Dropbox account and the development app
 ("Campfire Sync") with `sharing.write` and `sharing.read` ticked in the App Console (§13).
 
+Items 1–7 were measured on 2026-10-21 against the user's own account (a **Basic** account, no team) with a token from
+a fresh PKCE grant, which carried `sharing.read` and `sharing.write`. Probe files lived in `/step0-probe/` and were
+deleted afterwards.
+
 1. **`sharing/create_shared_link_with_settings` on an app folder file**, with `{"requested_visibility": "public",
-   "audience": "public", "access": "viewer"}`. Record:
-   - the returned `url` shape (expected `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<key>&st=<x>&dl=0`);
-   - what a Basic account, a Plus account, and a team account whose admin forbids public links answer;
-   - `link_permissions.resolved_visibility`;
-   - the `shared_link_already_exists` error, and whether its `metadata` carries the existing link.
-2. **Which parts of that address an unauthenticated download needs.** Try `fileId` + `rlkey` without the name and
-   without `st`, and `dl=1` in place of `dl=0`. Record the redirect chain, the final host, and `Content-Disposition`.
-   The payload (§3) carries only what is needed.
-3. **Overwriting keeps the link.** Upload over the file with `update:<rev>`; the same link must serve the new bytes.
-   Record how soon (CDN caching).
-4. **Deleting the file kills the link.** Record what a download then answers: status, body, and whether it is an
-   HTML page with 200.
-5. **CORS.** From a page on `https://campfire-songbook.com` (or a local page with that origin through a tunnel),
-   `fetch` the `dl=1` address. Does every hop of the redirect chain send `Access-Control-Allow-Origin`? If not, the
-   web takes the fallback of §9.4.
-6. **What a refused or banned link answers** (a link over its traffic limit, a suspended account): status and body.
-   Whatever it is, §8.3's zip check must turn it into "This link no longer works".
-7. **`missing_scope`.** With a token granted before the new scopes were ticked, call the sharing endpoint. Record the
-   status (expected 401) and `error_summary` (expected `missing_scope/…`).
+   "audience": "public", "access": "viewer"}`:
+   - **The `url`** is `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<rlkey>&dl=0`, with **no `st`**.
+     `fileId` was 21 characters and `rlkey` 25, both `[a-z0-9]`.
+   - **`fileId` belongs to the file, `rlkey` to the link.** A link revoked and created again for the same file keeps
+     its `fileId` and gets a new `rlkey`; the old address stays dead.
+   - **Basic account**: 200, `link_permissions.resolved_visibility` and `effective_audience` are `public`; a
+     password and an expiry are refused (`can_set_password: false`). Plus and a team account whose admin forbids
+     public links are **unverified** (no such account to hand); `NotPublic` is still read from
+     `resolved_visibility`, so either answer is handled.
+   - **`shared_link_already_exists` carries no `metadata` when `settings` are sent**: the 409's error is just
+     `{".tag": "shared_link_already_exists"}`, with any of the settings above, alone or together. Only a call
+     **without** `settings` gets `shared_link_already_exists/metadata/file/…` with the link. So the existing link is
+     read with `sharing/list_shared_links` (`path`, `direct_only: true`), which answered it (§4.1).
+   - No cap on the number of links was met; none was probed at scale.
+2. **What an unauthenticated download needs.** Only `fileId` and `rlkey`, and `dl=1`:
+   - `www.dropbox.com/scl/fi/<fileId>?rlkey=<rlkey>&dl=1`, `…/<fileId>/?…`, and `…/<fileId>/<any name>?…` all
+     answer 302 to `https://<hash>.dl.dropboxusercontent.com/cd/0/get/…/file?dl=1`, then 200 with the bytes,
+     `Content-Type: application/binary`, and
+     `Content-Disposition: attachment; filename="<real name>"; filename*=UTF-8''<real name>`. The name in the
+     address is ignored.
+   - `dl=0` is a 200 HTML page; `raw=1` is two redirects to an `inline` 200 `application/zip`.
+   - **Without `rlkey`, with a wrong `rlkey`, or with a wrong `fileId`, `www` answers 200 with an HTML page** (a login
+     page, or "Invalid Link"), never an error status.
+   - **`https://dl.dropboxusercontent.com/scl/fi/<fileId>/<name>?rlkey=<rlkey>&dl=1` serves the bytes directly**:
+     200, `application/zip`, the same `Content-Disposition`, no redirect. It needs **a** name segment (without one it
+     is 404) but accepts any name. It answers real errors: a wrong or missing `rlkey` is 403, a deleted file 404, both
+     small HTML pages. This host is what §3 builds; it is not documented by Dropbox, which is why the payload keeps
+     the real name.
+   - Campfire's `User-Agent` changes nothing.
+3. **Overwriting keeps the link.** An `update:<rev>` upload left the link (same `url`) in place, and the first
+   download after the upload returned, about a second later, already served the new bytes, on both hosts, every
+   time (four overwrites, repeated downloads). There is no CDN delay to design for. An upload with a stale `<rev>`
+   is 409 `path/conflict/file…`, the existing `Conflict`.
+4. **Deleting the file kills the link, for good.** `www` then answers **200 with an HTML page** ("File Deleted"),
+   `dl.dropboxusercontent.com` 404 with HTML. A new file uploaded to the same path does **not** revive it (no link
+   is listed for the new file, and the old address stays dead), so a share whose file was deleted needs a new link.
+5. **CORS, from `https://campfire-songbook.com` in Chrome**:
+   - `fetch` of the `www.dropbox.com` address fails (`TypeError`), with `redirect: "manual"` too: its 302 sends **no**
+     `Access-Control-Allow-Origin`. (Sent an `Origin` header, it also redirects to `cd/0/inline/…` instead of `get`.)
+     The `dl.dropboxusercontent.com` hops after it do send `Access-Control-Allow-Origin: *`.
+   - **`fetch` of the `dl.dropboxusercontent.com` address works**: 200, a zip, not redirected, with
+     `Access-Control-Allow-Origin: *` and `Content-Disposition` exposed; its 403 is readable too. So the web downloads
+     a link like every other platform, and §9.4's fallback is only a contingency.
+6. **A refused or banned link**: a link over its traffic limit and a suspended account could not be produced, so
+   those answers are **unverified**. A link revoked (`sharing/revoke_shared_link`) while its file stays answers like a
+   wrong `rlkey`: `www` 200 HTML ("Error"), `dl.dropboxusercontent.com` 403 HTML. Every refusal seen is HTML, with
+   200 or a 4xx, so §8.3's zip check (with 4xx read as "no longer works") covers them.
+7. **`missing_scope`.** No token granted before the scopes were ticked was available (an older grant's refresh token
+   lives only in the user's real installations). A token without them was made instead by refreshing with a
+   `scope` that leaves them out: `create_shared_link_with_settings` answered **401**
+   `{"error": {".tag": "missing_scope", "required_scope": "sharing.write"}, "error_summary": "missing_scope/"}`, and
+   `list_shared_links` the same with `sharing.read`. File calls on that token still worked. An old grant should
+   answer the same, but that is inferred, not seen.
 8. **Android `intent://`** with a path payload and an `S.browser_fallback_url` to Play carrying a `referrer`:
    - From Chrome, with and without the app installed: does it open the app, or Play?
    - Does the referrer arrive through `InstallReferrerClient` after an install from Play's internal testing track?
@@ -101,14 +139,18 @@ campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons'
 - **Kind**: `song` or `setlist`. It only chooses wording; the content decides what is imported.
 - **`shareId`**: 16 random characters `[a-z2-7]`. It is the shared file's name in Dropbox (`/shared/<shareId>.zip`),
   fixed for the life of the share.
-- **`fileId`, `rlkey`**: from the Dropbox link, each `[A-Za-z0-9_-]+`, at most 64 characters. Step 0 may drop
-  `shareId` from the payload if the download does not need the name.
+- **`fileId`, `rlkey`**: from the Dropbox link, each `[A-Za-z0-9_-]+`, at most 64 characters (step 0 saw 21 and 25,
+  lowercase). `shareId` stays in the payload: the download address needs a name segment, and though Dropbox accepted
+  any, sending the real one does not rely on that (§2.2).
 - **`title`**: the song's or setlist's title when shared, percent-encoded UTF-8, at most 120 bytes before encoding.
   It is for display only (landing page, import screen) and never trusted for anything else.
 - **The grammar is strict**: one regex in `ShareLinks`, and anything else is unreadable.
 - **The app never downloads from an address taken from the payload.** It builds
-  `https://www.dropbox.com/scl/fi/<fileId>/<shareId>.zip?rlkey=<rlkey>&dl=1` itself, so a crafted link cannot point
-  Campfire at another host.
+  `https://dl.dropboxusercontent.com/scl/fi/<fileId>/<shareId>.zip?rlkey=<rlkey>&dl=1` itself, so a crafted link
+  cannot point Campfire at another host. That host serves the bytes with no redirect, answers 403 / 404 for a dead
+  link instead of `www.dropbox.com`'s 200 HTML, and is the only one a web page can `fetch` (§2.2, §2.5). Every
+  platform uses it.
+- **The landing page's "Download the file"** links to the same address (a plain navigation, so it needs no CORS).
 - **Why a fragment, and why a path in the scheme**: a browser never sends the part after `#`, so the ids stay out of
   every server log. The scheme form uses a path instead because Android's `intent://` syntax claims the `#` (§9.1),
   and a custom scheme reaches no server anyway.
@@ -123,8 +165,10 @@ campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons'
 - `uploadSharedFile(shareId, bytes, expectedRevision: String?): RemoteWriteResult`: writes `/shared/<shareId>.zip`
   with `add` or `update:<rev>`, `autorename: false`, and `mute: true`, as `upload()` does.
 - `createSharedLink(shareId): SharedLinkResult`, one of `Created(fileId, rlkey)`, `NotPublic`, or `Refused`:
-  - calls `create_shared_link_with_settings`;
-  - reads `shared_link_already_exists`' metadata as success;
+  - calls `create_shared_link_with_settings` with the settings of §2.1;
+  - on `shared_link_already_exists`, whose error carries **no** `metadata` when settings are sent (§2.1), reads the
+    existing link with `sharing/list_shared_links` (`path`, `direct_only: true`) and treats it as created, checking
+    its visibility the same way;
   - parses the URL into its parts (pure, tested);
   - a link whose resolved visibility is not public is `NotPublic`.
 - `deleteSharedFile(shareId)`: "already gone" is success, as library deletes are.
@@ -139,7 +183,8 @@ and `/setlists` (`toRemoteFiles` in `DropboxEntries.kt`, which the change feed's
 
 **`missing_scope`**: today `DropboxTransport.request` answers a 401 with one renewal of the refused token, and a second
 401 throws `SyncAuthorizationException`, which a run turns into `ConnectionFailed(AUTHORIZATION)`.
-- **A 401 whose `error_summary` starts with `missing_scope` must not do that.** Detect it before the renewal and throw
+- **A 401 whose `error_summary` starts with `missing_scope` must not do that** (measured: `missing_scope/`, with
+  `error.required_scope` naming the scope, §2.7). Detect it before the renewal and throw
   a new `SyncScopeMissingException`. It is **not** a `SyncRunEndingException`, or a run would end on it (§5.1).
 - Sharing calls catch it and report "connect again to allow links" (§6.2).
 - A run that meets it in its shared-copy step (§5) skips the step and leaves the connection alone.
@@ -544,6 +589,8 @@ A song that is only inside a shared setlist needs no extra line: the setlist's c
 - **A zip** (`LibraryFiles.isZipArchive` on the bytes) whose contents the import reads.
 - **Anything else is "This link no longer works"**: Dropbox's HTML for a banned link, a login page for a team-only
   link, or an empty file. It is never an "unreadable file" row named `<shareId>.zip`.
+- **A 4xx answer is "no longer works" too**, not a network failure: the download host answers a stopped, revoked, or
+  deleted link with 403 or 404 and a small HTML page (§2.2, §2.4, §2.6). Only no answer, or a 5xx, is Unreachable.
 - **The archive is untrusted input**, like any dropped file. It goes through `ArchiveLocalSource.unpack` with every
   limit it already has: depth 3, the shared inflated budget, and hidden entries dropped.
 
@@ -668,12 +715,14 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
   - The tab holding the library adds them to its own list, answers, and imports them.
   - The second tab then says "Sent to Campfire in your other tab." and drops them.
   - With no answer within 2 seconds, the payload stays for Retry.
-- **CORS (step 0, item 5)**: if the redirect chain is not readable from a page, the web app cannot download a link.
-  Then:
-  - the web app reports "This link can't be opened in the browser version. Open it in the Campfire app, or download
-    the file and import it." with the file's direct download;
-  - the landing page leads with the download on the web, and does not offer the web app as the way in;
-  - do not route downloads through the user's own Dropbox token: a recipient usually has none.
+- **CORS (step 0, item 5)**: the `dl.dropboxusercontent.com` address of §3 answers `Access-Control-Allow-Origin: *`
+  with no redirect, and a `fetch` from `https://campfire-songbook.com` read it (§2.5), so the web app downloads a link
+  as the other platforms do and the landing page offers the web app as usual. (`www.dropbox.com`'s redirect is not
+  readable from a page, which is one reason §3 does not use it.)
+  - Contingency only, if that host ever stops answering CORS (a `fetch` that throws while the device is online):
+    the web app reports "This link can't be opened in the browser version. Open it in the Campfire app, or download
+    the file and import it." with the file's direct download. Not built now.
+  - Never route downloads through the user's own Dropbox token: a recipient usually has none.
 - **No new route**: the payload rides on `/app/` and is removed before the first history write. `service-worker.js`
   and `404.html` already keep the hash.
 - **Offline**: the app starts from the kept build, and the download fails with the Unreachable wording. The payload
@@ -701,7 +750,7 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 
   - Under **Open in Campfire**: "Nothing happened? Campfire isn't installed here." No timers, no automatic redirects,
     and no attempts to detect the app.
-  - **Download the file** is the Dropbox `dl=1` address, labelled only as the file.
+  - **Download the file** is §3's download address, labelled only as the file.
   - English and Hungarian, by `navigator.language`.
   - An unreadable or missing fragment shows "This link is incomplete. Ask for it again." with the normal downloads.
 - **The privacy policy**:
@@ -769,7 +818,8 @@ The `https` link always opens the browser, and the landing page's **Open in Camp
 | A rename made offline and synced later | The journal survives until a run applies it, before items are looked up (§5.4). |
 | An item deleted outside Campfire (a file manager, Dropbox on the web, another app) | `orphaned`: the link keeps serving the last version, and Settings offers **Stop sharing**. **Never stopped automatically.** |
 | The item reappears under its name | Back to `ok` on the next run. |
-| `/shared/<id>.zip` deleted by hand in Dropbox | The link is dead. The run finds no file and marks the entry `orphaned`; **Stop sharing** in Settings removes the entry. |
+| `/shared/<id>.zip` deleted by hand in Dropbox | The link is dead. The run finds no file and marks the entry `orphaned`; **Stop sharing** in Settings removes the entry. A file uploaded again at that path would not revive the link (§2.4), so the run never tries. |
+| The link deleted on dropbox.com, the file kept | The link is dead (§2.6), and nothing in Campfire can see it: no run lists links. Stop sharing, then share again, makes a new link (same `fileId`, new `rlkey`). |
 | `/shared/` files edited by hand | The next run's hash differs, so the library's version overwrites them. |
 | App data cleared, or the app reinstalled | The mirror and journal are gone. On reconnecting, the registry is read again. Pending renames are lost, so those entries may become orphaned (Settings shows them). |
 
