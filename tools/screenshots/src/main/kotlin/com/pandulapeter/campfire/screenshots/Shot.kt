@@ -261,10 +261,11 @@ internal val shots = listOf(
                 // picking pattern across two columns instead of keeping it whole in the first, as the iPad does. A
                 // phone's first page ends after the first verse whatever the text size, the room it leaves spread
                 // between its sections, so the phones take the largest text that still keeps the whole verse on it
-                // (at 112.5% the chord diagrams take two rows and push the verse off), which leaves the least room.
+                // (one step more and the chord diagrams take two rows and push the verse off), which leaves the least
+                // room: 110% on the iPhone, 100% on the narrower Android phone.
                 when (device) {
-                    Device.ANDROID_PHONE, Device.IPHONE -> put("fontScale", JsonPrimitive(1.1f))
-                    Device.CHROMEBOOK -> put("fontScale", JsonPrimitive(1f))
+                    Device.IPHONE -> put("fontScale", JsonPrimitive(1.1f))
+                    Device.ANDROID_PHONE, Device.CHROMEBOOK -> put("fontScale", JsonPrimitive(1f))
                     else -> Unit
                 }
                 if (device.isPhone) put("foldedSections", buildJsonObject { putJsonArray(HOUSE_OF_THE_RISING_SUN) { add("Picking pattern#1") } })

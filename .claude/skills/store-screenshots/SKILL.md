@@ -132,7 +132,7 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 | # | Headline | Shot |
 |---|---|---|
 | 1 | Your songbook, synced to every screen | Songs, English only, by artist, from the top (the library's copy of Gimme! Gimme! Gimme! has no subtitle) |
-| 2 | Laid out for the way you play | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the phones at 110% text, the largest that keeps the whole first verse on the first page (the least room left spread between its sections), the Chromebook at 100% |
+| 2 | Laid out for the way you play | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the phones at the largest text that keeps the whole first verse on the first page (the least room left spread between its sections): the iPhone at 110%, the Android phone and the Chromebook at 100% |
 | 3 | A metronome and tuner in every song | Home on the Range on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat |
 | 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
 | 5 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
@@ -146,7 +146,7 @@ preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2
 results image the iPad's 2 and the iPhone's 3, all dark.
 
 The website's tablet songs are set at the text size where page one ends exactly where a section ends, never inside one:
-Still Alive 100% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Bridge 1), under the
+Still Alive 110% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the
 tuner sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets. A song
 longer than a page is cut wherever a column ends, so these were found by rendering every size from 80% to 130% and
 reading where page one ends; if a song, a device or the layout changes, try again the same way. The laptop's text size
