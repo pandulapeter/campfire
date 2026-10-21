@@ -165,6 +165,19 @@ class SharedCopySyncTest {
     }
 
     @Test
+    fun `an item deleted by name after a rename is found under its new name and stopped`() = runTest {
+        val device = sharedDevice()
+
+        device.journal(SharedLinksJournal.Entry.Rename(from = GIG.name, to = "summer.setlist.json"))
+        device.journal(SharedLinksJournal.Entry.StopItem(kind = SharedLinkKind.SETLIST.id, fileName = "summer.setlist.json"))
+        device.sync(cloud)
+
+        assertFalse(SETLIST.shareId in cloud.sharedFiles)
+        assertEquals(emptyList(), cloud.registry().links)
+        assertEquals(emptyList(), SharedLinksJournal(device.sharedLinks, testEnvironment()).load())
+    }
+
+    @Test
     fun `copies deleted by hand mark their shares as dead`() = runTest {
         val device = sharedDevice()
 

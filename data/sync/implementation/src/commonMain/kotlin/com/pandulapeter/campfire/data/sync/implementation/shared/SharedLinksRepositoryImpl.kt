@@ -204,15 +204,38 @@ internal class SharedLinksRepositoryImpl(
     }
 
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {
-        if (sharedNow().entryFor(kind, fileName) == null) emptyList() else listOf(SharedLinksJournal.Entry.Rename(from = fileName, to = newFileName))
+        if (isAccountStored() || sharedNow().entryFor(kind, fileName) != null) {
+            listOf(SharedLinksJournal.Entry.Rename(from = fileName, to = newFileName))
+        } else {
+            emptyList()
+        }
     }
 
     override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String) = note("note the deletion of $fileName") {
-        listOfNotNull(sharedNow().entryFor(kind, fileName)?.let { SharedLinksJournal.Entry.Stop(it.shareId) })
+        sharedNow().entryFor(kind, fileName)?.let { listOf(SharedLinksJournal.Entry.Stop(it.shareId)) }
+            ?: if (isAccountStored()) listOf(SharedLinksJournal.Entry.StopItem(kind = kind.id, fileName = fileName)) else emptyList()
     }
 
     override suspend fun stopSharingEverything() = note("note the deletion of the library") {
-        sharedNow().links.map { SharedLinksJournal.Entry.Stop(it.shareId) }
+        sharedNow().links.map { SharedLinksJournal.Entry.Stop(it.shareId) } +
+            if (isAccountStored()) listOf(SharedLinksJournal.Entry.StopAll) else emptyList()
+    }
+
+    /**
+     * Whether renames and deletions are noted whatever the mirror names: another device may have shared an item since
+     * this one last read the list, so they are resolved against the list when applied. Only while this device holds an
+     * account's credentials, which the journal is forgotten with: connected, or failing with credentials still stored.
+     * A first connection that failed stores none, and what it noted would wait for the next account and stop its shares.
+     * A failure to ask counts as none.
+     */
+    private suspend fun isAccountStored() = when (val state = stateHolder.value) {
+        is SyncState.Connected -> true
+        is SyncState.ConnectionFailed -> environment.logger.recovering(
+            describe = { "Could not tell whether credentials are stored: ${it::class.simpleName}" },
+            fallback = { false },
+        ) { providers.firstOrNull { it.id == state.providerId }?.isConnected() == true }
+
+        else -> false
     }
 
     /**
@@ -238,8 +261,9 @@ internal class SharedLinksRepositoryImpl(
      */
     private suspend fun sharedNow(): SharedLinksDocument {
         val changes = SharedCopyChanges()
-        journal.load().forEach(changes::take)
-        return changes.applyTo(mirror.load().document)
+        val mirrored = mirror.load().document
+        journal.load().forEach { changes.take(it, mirrored) }
+        return changes.applyTo(mirrored)
     }
 
     override suspend fun stopSharingEverythingNow(): SharingFailure? {

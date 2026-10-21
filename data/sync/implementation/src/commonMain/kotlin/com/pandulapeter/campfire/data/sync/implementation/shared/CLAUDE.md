@@ -21,8 +21,16 @@
   revision, so screens need no request. Replaced on every read and successful edit.
 - **Journal**: `preferences/shared-links-journal.json` (`SharedLinksJournal`), renames and deletions of shared items
   made here, applied by the next run before it looks items up. An unreadable one throws rather than being written over.
-  - The domain's use cases note an entry (`followRename`, `stopSharingDeleted`, `stopSharingEverything`) only for an
-    item shared by the mirror as the journal would leave it, so a second rename made offline follows the first.
+  - The domain's use cases note an entry (`followRename`, `stopSharingDeleted`, `stopSharingEverything`) for every
+    rename and deletion while an account's credentials are stored (connected, or `ConnectionFailed` with credentials;
+    a failed first connection stores none, and nothing would forget what it noted), since another device may have
+    shared the item since the mirror was read. A deletion the mirror (as the journal would leave it) does not name is a
+    `StopItem` by name, a deleted library adds a `StopAll`; both are resolved against the list when applied, which the
+    applier then reads first. Without credentials, only what the mirror names is noted.
+  - Accepted edges: a `StopAll` applied late also stops a share another device made after the deletion; a `Rename` of
+    an item the mirror did not name matches by name when applied, so one applied late also moves another device's new
+    share of a new item under the old name.
+  - Older builds read a journal with `stopItem` or `stopAll` as empty: downgrades are not supported.
   - Noted first, then applied at once where connected (`SharedLinksJournalApplier`, without the caller waiting), the
     whole journal in order, best effort; what it cannot write the run applies. Both applying an entry is harmless.
 - Mirror and journal are forgotten with the index (disconnect, `forgetStoredConnection`, another account connected).

@@ -63,18 +63,24 @@ interface SharedLinksRepository {
      * Tells the shares that the library file [fileName] of [kind] is now [newFileName], so that a share of it follows
      * and its link keeps working. Only this device can tell a rename from a deletion followed by a new file, so it is
      * noted here before the service is asked: the next sync run carries whatever the service has not been told yet.
-     * Nothing is noted for an item [shares] does not name. Never throws but cancellation, and never waits for the
-     * service.
+     * While an account is connected it is noted whether or not [shares] names the item, since another device may have
+     * shared it since the last read, and resolved against the account's list when applied: a rename of an item nobody
+     * shares changes nothing there. Otherwise nothing is noted for an item [shares] does not name. Never throws but
+     * cancellation, and never waits for the service.
      */
     suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String)
 
     /**
      * Stops sharing the library file [fileName] of [kind], which was deleted in Campfire, the way [followRename] notes
-     * a rename. Never throws but cancellation, and never waits for the service.
+     * a rename: whatever share of it the account's list names when applied. Never throws but cancellation, and never
+     * waits for the service.
      */
     suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String)
 
-    /** Stops sharing everything [shares] names, for a library deleted as a whole, the way [stopSharingDeleted] does. */
+    /**
+     * Stops sharing everything, for a library deleted as a whole, the way [stopSharingDeleted] does: while an account
+     * is connected, every share the account's list names when applied, else everything [shares] names.
+     */
     suspend fun stopSharingEverything()
 
     /**

@@ -34,6 +34,24 @@ class SharedLinksJournalTest {
     }
 
     @Test
+    fun `stops by name and of everything are kept across instances`() = runTest {
+        val localSource = FakeSharedLinksLocalSource()
+        val entries = listOf(SharedLinksJournal.Entry.StopItem(kind = "song", fileName = "a.cho"), SharedLinksJournal.Entry.StopAll)
+        SharedLinksJournal(localSource, testEnvironment()).append(entries)
+
+        assertEquals(entries, SharedLinksJournal(localSource, testEnvironment()).load())
+    }
+
+    @Test
+    fun `a journal written before stops by name still reads`() = runTest {
+        val localSource = FakeSharedLinksLocalSource(
+            journal = """{"entries": [{"type": "rename", "from": "a.cho", "to": "b.cho"}, {"type": "stop", "shareId": "aaaaaaaaaaaaaaaa"}]}""",
+        )
+
+        assertEquals(listOf(rename, stop), SharedLinksJournal(localSource, testEnvironment()).load())
+    }
+
+    @Test
     fun `removing the applied entries keeps one appended meanwhile, and the last removal deletes the file`() = runTest {
         val localSource = FakeSharedLinksLocalSource()
         val journal = SharedLinksJournal(localSource, testEnvironment())

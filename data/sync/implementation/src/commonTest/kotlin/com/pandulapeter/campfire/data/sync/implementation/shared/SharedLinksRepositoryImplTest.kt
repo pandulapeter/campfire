@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
+import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
@@ -370,19 +371,92 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `an item that is not shared notes nothing`() = runTest {
+    fun `an item that is not shared changes nothing in the list and leaves the journal empty`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
         repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
 
         repository.followRename(SharedLinkKind.SONG, "other.cho", "renamed.cho")
-        repository.followRename(SharedLinkKind.SETLIST, "a.cho", "renamed.cho")
+        repository.followRename(SharedLinkKind.SETLIST, "a.setlist.json", "renamed.setlist.json")
         repository.stopSharingDeleted(SharedLinkKind.SONG, "other.cho")
+        repository.stopSharingDeleted(SharedLinkKind.SETLIST, "a.cho")
         runCurrent()
 
         assertNull(localSource.journal)
         assertEquals(listOf("a.cho"), registry(provider).links.map { it.fileName })
+        assertEquals(1, provider.sharedFiles.size)
+    }
+
+    @Test
+    fun `without stored credentials an item the mirror does not name notes nothing`() = runTest {
+        val provider = FakeSyncProvider().apply { connected = false }
+        val localSource = FakeSharedLinksLocalSource()
+        val failed = SyncStateHolder(Logger.Standard).apply { update { SyncState.ConnectionFailed(provider.id, SyncFailureReason.NETWORK) } }
+
+        listOf(SyncStateHolder(Logger.Standard), failed).forEach { stateHolder ->
+            repository(provider, stateHolder = stateHolder, localSource = localSource).run {
+                followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+                stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
+                stopSharingEverything()
+            }
+        }
+
+        assertNull(localSource.journal)
+    }
+
+    @Test
+    fun `a failing connection with stored credentials notes what the mirror does not name`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val failed = SyncStateHolder(Logger.Standard).apply { update { SyncState.ConnectionFailed(provider.id, SyncFailureReason.NETWORK) } }
+
+        repository(provider, stateHolder = failed, localSource = localSource).stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
+
+        assertEquals(
+            listOf(SharedLinksJournal.Entry.StopItem(kind = SharedLinkKind.SONG.id, fileName = "a.cho")),
+            SharedLinksJournal(localSource, testEnvironment()).load(),
+        )
+    }
+
+    @Test
+    fun `a rename of an item another device shared since the last read is followed`() = runTest {
+        val provider = FakeSyncProvider()
+        val elsewhere = shareElsewhere(provider, "a.cho")
+        val repository = repository(provider)
+
+        repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+        runCurrent()
+
+        assertEquals(listOf(elsewhere.shareId to "b.cho"), registry(provider).links.map { it.shareId to it.fileName })
+    }
+
+    @Test
+    fun `a deletion of an item another device shared since the last read stops it`() = runTest {
+        val provider = FakeSyncProvider()
+        shareElsewhere(provider, "a.cho")
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
+        runCurrent()
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(provider).links)
+        assertNull(localSource.journal)
+    }
+
+    @Test
+    fun `a deleted library stops shares the mirror never saw`() = runTest {
+        val provider = FakeSyncProvider()
+        shareElsewhere(provider, "a.cho")
+        val repository = repository(provider)
+
+        repository.stopSharingEverything()
+        runCurrent()
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(provider).links)
     }
 
     @Test
@@ -456,6 +530,13 @@ class SharedLinksRepositoryImplTest {
         rlkey = "key",
         sharedAt = "2026-10-16",
     ).also { assertIs<SharedLink.Readable>(it.toShare()?.link) }
+
+    /** Shares the song [fileName] as another device would, with this one's mirror left as it was. */
+    private fun shareElsewhere(provider: FakeSyncProvider, fileName: String) =
+        sharedEntry(shareId = "eeeeeeeeeeeeeeee", kind = SharedLinkKind.SONG, fileName = fileName).also {
+            provider.sharedFiles[it.shareId] = copy to "s-elsewhere"
+            provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(it))
+        }
 
     private fun encode(vararg entries: SharedLinksEntry) =
         SharedLinksFormat.encode(SharedLinksDocument(links = entries.toList())).encodeToByteArray()

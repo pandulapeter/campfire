@@ -72,7 +72,7 @@ internal class SharedCopySync(
         var isSettled = true
         val failure = try {
             pending.forEach { entry ->
-                changes.takeFromJournal(entry, folder)
+                changes.takeFromJournal(entry, folder, document)
                 applied += entry
             }
             val pass = Pass(

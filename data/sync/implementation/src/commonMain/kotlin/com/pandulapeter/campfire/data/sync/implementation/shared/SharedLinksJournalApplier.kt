@@ -50,8 +50,19 @@ internal class SharedLinksJournalApplier(
             describe = { "Could not apply the shared links journal: ${it::class.simpleName}" },
             fallback = {},
         ) {
-            journal.load().forEach { entry ->
-                changes.takeFromJournal(entry, folder)
+            val pending = journal.load()
+            // Only a stop by name or of everything needs the list to say which shares it stops; the final edit reads it
+            // again, and removes by id, so a list that changes in between is still edited right.
+            val document = if (pending.any { it is SharedLinksJournal.Entry.StopItem || it == SharedLinksJournal.Entry.StopAll }) {
+                when (val read = registry.read(folder)) {
+                    is SharedLinksRegistry.Read.Readable -> read.document
+                    is SharedLinksRegistry.Read.FromNewerVersion -> return@withLock
+                }
+            } else {
+                SharedLinksDocument()
+            }
+            pending.forEach { entry ->
+                changes.takeFromJournal(entry, folder, document)
                 applied += entry
             }
         }
@@ -70,10 +81,11 @@ internal class SharedLinksJournalApplier(
 }
 
 /**
- * Takes [entry] of this device's journal into these changes. A stop deletes the copy before its entry goes, as Stop
- * sharing does: an entry removed while its copy stays would leave a working link that no screen shows any more.
+ * Takes [entry] of this device's journal into these changes, resolved against [document], the list as read. A stop
+ * deletes each copy it stops before its entry goes, as Stop sharing does: an entry removed while its copy stays would
+ * leave a working link that no screen shows any more. A stop that finds nothing to stop has nothing to do.
  */
-internal suspend fun SharedCopyChanges.takeFromJournal(entry: SharedLinksJournal.Entry, folder: SyncFolder) {
-    if (entry is SharedLinksJournal.Entry.Stop) folder.deleteSharedCopy(entry.shareId)
-    take(entry)
+internal suspend fun SharedCopyChanges.takeFromJournal(entry: SharedLinksJournal.Entry, folder: SyncFolder, document: SharedLinksDocument) {
+    stoppedBy(entry, document).forEach { shareId -> folder.deleteSharedCopy(shareId) }
+    take(entry, document)
 }

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 
 /**
  * What one run of [SharedCopySync] changes in the registry, kept as operations rather than as the document it read: the
@@ -31,10 +32,27 @@ internal class SharedCopyChanges {
         removals += shareId
     }
 
-    /** What [entry] of this device's journal changes in the registry; deleting a stopped share's copy is the caller's. */
-    fun take(entry: SharedLinksJournal.Entry) = when (entry) {
+    /**
+     * What [entry] of this device's journal changes in the registry, resolved against [document] as the entries taken
+     * before it leave it; deleting a stopped share's copy is the caller's.
+     */
+    fun take(entry: SharedLinksJournal.Entry, document: SharedLinksDocument) = when (entry) {
         is SharedLinksJournal.Entry.Rename -> rename(from = entry.from, to = entry.to)
-        is SharedLinksJournal.Entry.Stop -> remove(entry.shareId)
+        else -> stoppedBy(entry, document).forEach(::remove)
+    }
+
+    /**
+     * The shares the stop [entry] of this device's journal stops in [document], as the entries taken before it leave
+     * it: so an item deleted after a rename is found under the name it had when deleted. None for a rename, and none
+     * where the list names no such share, which leaves nothing to do.
+     */
+    fun stoppedBy(entry: SharedLinksJournal.Entry, document: SharedLinksDocument) = when (entry) {
+        is SharedLinksJournal.Entry.Rename -> emptyList()
+        is SharedLinksJournal.Entry.Stop -> listOf(entry.shareId)
+        is SharedLinksJournal.Entry.StopItem -> listOfNotNull(
+            SharedLinkKind.fromId(entry.kind)?.let { kind -> applyTo(document).entryFor(kind, entry.fileName)?.shareId },
+        )
+        SharedLinksJournal.Entry.StopAll -> applyTo(document).links.map { it.shareId }
     }
 
     /** Changes the entry [shareId] by [change], after whatever was asked of it before. */

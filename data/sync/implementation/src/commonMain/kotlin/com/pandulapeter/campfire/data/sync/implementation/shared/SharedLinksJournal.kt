@@ -24,6 +24,9 @@ import org.koin.core.annotation.Single
  * the account's list has not been told yet. After the fact a rename looks like a deletion plus a new file, so only the
  * device that made one can say which it was; the next run applies what is here before it looks items up, and removes
  * what it applied. Deleted with the sync index when the account goes.
+ *
+ * A build older than the [Entry.StopItem] and [Entry.StopAll] entries reads a journal holding one as empty, and forgets
+ * what it held: downgrades are not supported.
  */
 @Single
 internal class SharedLinksJournal(
@@ -48,6 +51,23 @@ internal class SharedLinksJournal(
         data class Stop(
             val shareId: String,
         ) : Entry
+
+        /**
+         * The library file [fileName] of [kind] (a `SharedLinkKind` id, as the list stores it) was deleted in Campfire;
+         * whatever share of it the list names when this is applied stops. Noted where the mirror did not name one, since
+         * another device may have shared the item since this one last read the list.
+         */
+        @Serializable
+        @SerialName("stopItem")
+        data class StopItem(
+            val kind: String,
+            val fileName: String,
+        ) : Entry
+
+        /** The whole library was deleted in Campfire; every share the list names when this is applied stops. */
+        @Serializable
+        @SerialName("stopAll")
+        data object StopAll : Entry
     }
 
     @Serializable

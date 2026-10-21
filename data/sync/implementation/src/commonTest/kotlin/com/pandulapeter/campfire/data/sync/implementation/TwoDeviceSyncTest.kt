@@ -310,6 +310,25 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a song shared on one device and renamed on another that had not seen the share keeps its link`() = runTest {
+        val (a, b) = devicesInStep()
+        cloud.share(SHARED_SONG)
+        a.sync(cloud)
+
+        b.library.files[song("song_one")] = b.library.files.remove(song(1))!!
+        b.journal(SharedLinksJournal.Entry.Rename(from = "song_1.cho", to = "song_one.cho"))
+        b.sync(cloud)
+        a.sync(cloud)
+
+        val entry = cloud.entryOf(SHARED_SONG.shareId)
+        assertEquals("song_one.cho", entry.fileName)
+        assertEquals(SharedLinksEntry.STATE_OK, entry.state)
+        assertEquals(listOf("song_one.cho"), mirrorOf(a.sharedLinks).links.map { it.fileName })
+        assertEquals(listOf("song_one.cho"), mirrorOf(b.sharedLinks).links.map { it.fileName })
+        assertConverges(a, b)
+    }
+
+    @Test
     fun `a shared song renamed on one device keeps its link, under the new name on the other`() = runTest {
         val (a, b) = devicesInStep()
         cloud.share(SHARED_SONG)
