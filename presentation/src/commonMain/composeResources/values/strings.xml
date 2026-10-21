@@ -698,6 +698,8 @@
     <string name="scale_neapolitan_minor">Neapolitan minor</string>
     <string name="scale_major_pentatonic">major pentatonic</string>
     <string name="scale_minor_pentatonic">minor pentatonic</string>
+    <string name="scale_minor_6_pentatonic">minor 6 pentatonic</string>
+    <string name="scale_dominant_pentatonic">dominant pentatonic</string>
     <string name="scale_egyptian">Egyptian</string>
     <string name="scale_man_gong">Man Gong</string>
     <string name="scale_ritusen">Ritusen</string>
@@ -749,6 +751,8 @@
     <string name="scale_aliases_hungarian_minor">Gypsy minor, Double harmonic minor</string>
     <string name="scale_aliases_egyptian">Suspended pentatonic</string>
     <string name="scale_aliases_man_gong">Blues minor pentatonic</string>
+    <string name="scale_aliases_minor_6_pentatonic">Minor sixth pentatonic, Dorian pentatonic</string>
+    <string name="scale_aliases_dominant_pentatonic">Mixolydian pentatonic, Dominant seventh pentatonic</string>
     <string name="scale_aliases_ritusen">Yo, Blues major pentatonic</string>
     <string name="scale_aliases_in">Sakura</string>
     <string name="scale_aliases_blues">Minor blues</string>

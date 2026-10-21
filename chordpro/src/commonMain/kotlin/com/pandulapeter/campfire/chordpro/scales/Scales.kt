@@ -90,6 +90,14 @@ public object Scales {
         scale("egyptian", ScaleFamily.PENTATONIC, "0 2 5 7 10", "1 2 4 5 b7", "major_pentatonic" to 2, listOf("Suspended pentatonic")),
         scale("man_gong", ScaleFamily.PENTATONIC, "0 3 5 8 10", "1 b3 4 b6 b7", "major_pentatonic" to 3, listOf("Blues minor pentatonic")),
         scale("ritusen", ScaleFamily.PENTATONIC, "0 2 5 7 9", "1 2 4 5 6", "major_pentatonic" to 4, listOf("Yo", "Blues major pentatonic")),
+        scale(
+            "minor_6_pentatonic", ScaleFamily.PENTATONIC, "0 3 5 7 9", "1 b3 4 5 6",
+            aliases = listOf("Minor sixth pentatonic", "Dorian pentatonic"),
+        ),
+        scale(
+            "dominant_pentatonic", ScaleFamily.PENTATONIC, "0 2 4 7 10", "1 2 3 5 b7", "minor_6_pentatonic" to 3,
+            aliases = listOf("Mixolydian pentatonic", "Dominant seventh pentatonic"),
+        ),
         scale("hirajoshi", ScaleFamily.PENTATONIC, "0 2 3 7 8", "1 2 b3 5 b6"),
         scale("in", ScaleFamily.PENTATONIC, "0 1 5 7 8", "1 b2 4 5 b6", aliases = listOf("Sakura")),
         scale("insen", ScaleFamily.PENTATONIC, "0 1 5 7 10", "1 b2 4 5 b7"),

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.scale_aliases_augmented
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_blues
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_diminished
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_dorian_flat_2
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_dominant_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_dorian_sharp_4
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_double_harmonic
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_egyptian
@@ -28,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.scale_aliases_lydian_dom
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_major
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_man_gong
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_melodic_minor
+import com.pandulapeter.campfire.presentation.resources.scale_aliases_minor_6_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_mixolydian
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_mixolydian_flat_6
 import com.pandulapeter.campfire.presentation.resources.scale_aliases_natural_minor
@@ -47,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.scale_chinese
 import com.pandulapeter.campfire.presentation.resources.scale_chromatic
 import com.pandulapeter.campfire.presentation.resources.scale_diminished
 import com.pandulapeter.campfire.presentation.resources.scale_dominant_diminished
+import com.pandulapeter.campfire.presentation.resources.scale_dominant_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_dorian
 import com.pandulapeter.campfire.presentation.resources.scale_dorian_flat_2
 import com.pandulapeter.campfire.presentation.resources.scale_dorian_sharp_4
@@ -89,6 +92,7 @@ import com.pandulapeter.campfire.presentation.resources.scale_major_locrian
 import com.pandulapeter.campfire.presentation.resources.scale_major_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_man_gong
 import com.pandulapeter.campfire.presentation.resources.scale_melodic_minor
+import com.pandulapeter.campfire.presentation.resources.scale_minor_6_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_minor_hexatonic
 import com.pandulapeter.campfire.presentation.resources.scale_minor_pentatonic
 import com.pandulapeter.campfire.presentation.resources.scale_mixolydian
@@ -142,6 +146,8 @@ internal fun scaleNameResource(id: String): StringResource? = when (id) {
     "neapolitan_minor" -> Res.string.scale_neapolitan_minor
     "major_pentatonic" -> Res.string.scale_major_pentatonic
     "minor_pentatonic" -> Res.string.scale_minor_pentatonic
+    "minor_6_pentatonic" -> Res.string.scale_minor_6_pentatonic
+    "dominant_pentatonic" -> Res.string.scale_dominant_pentatonic
     "egyptian" -> Res.string.scale_egyptian
     "man_gong" -> Res.string.scale_man_gong
     "ritusen" -> Res.string.scale_ritusen
@@ -201,6 +207,8 @@ internal fun scaleAliasesResource(id: String): StringResource? = when (id) {
     "hungarian_minor" -> Res.string.scale_aliases_hungarian_minor
     "egyptian" -> Res.string.scale_aliases_egyptian
     "man_gong" -> Res.string.scale_aliases_man_gong
+    "minor_6_pentatonic" -> Res.string.scale_aliases_minor_6_pentatonic
+    "dominant_pentatonic" -> Res.string.scale_aliases_dominant_pentatonic
     "ritusen" -> Res.string.scale_aliases_ritusen
     "in" -> Res.string.scale_aliases_in
     "blues" -> Res.string.scale_aliases_blues

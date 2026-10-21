@@ -88,4 +88,12 @@ class ScalesTest {
     @Test
     fun `the pitch classes of a scale are counted from its root`() =
         assertEquals(setOf(2, 4, 5, 7, 9, 11, 0), Scales.pitchClasses(Scales.fromId("dorian")!!, root = 2))
+
+    @Test
+    fun `the minor 6 pentatonic is the minor pentatonic with a sixth, and the dominant pentatonic its mode`() {
+        assertEquals(listOf(0, 3, 5, 7, 9), Scales.fromId("minor_6_pentatonic")!!.intervals)
+        val dominant = Scales.fromId("dominant_pentatonic")!!
+        assertEquals(listOf(0, 2, 4, 7, 10), dominant.intervals)
+        assertEquals(2, Scales.parentRoot(dominant, root = 7))
+    }
 }

@@ -697,6 +697,8 @@
     <string name="scale_neapolitan_minor">nápolyi moll</string>
     <string name="scale_major_pentatonic">dúr pentaton</string>
     <string name="scale_minor_pentatonic">moll pentaton</string>
+    <string name="scale_minor_6_pentatonic">moll 6 pentaton</string>
+    <string name="scale_dominant_pentatonic">domináns pentaton</string>
     <string name="scale_egyptian">egyiptomi</string>
     <string name="scale_man_gong">Man Gong</string>
     <string name="scale_ritusen">Ritusen</string>
@@ -748,6 +750,8 @@
     <string name="scale_aliases_hungarian_minor">Cigány moll, Kettős összhangzatos moll</string>
     <string name="scale_aliases_egyptian">Szuszpendált pentaton</string>
     <string name="scale_aliases_man_gong">Blues moll pentaton</string>
+    <string name="scale_aliases_minor_6_pentatonic">Moll szext pentaton, Dór pentaton</string>
+    <string name="scale_aliases_dominant_pentatonic">Mixolíd pentaton, Domináns szeptim pentaton</string>
     <string name="scale_aliases_ritusen">Yo, Blues dúr pentaton</string>
     <string name="scale_aliases_in">Sakura</string>
     <string name="scale_aliases_blues">Moll blues</string>
