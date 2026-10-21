@@ -68,7 +68,9 @@ import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
+import com.pandulapeter.campfire.presentation.resources.print_share
 import com.pandulapeter.campfire.presentation.resources.retry
+import com.pandulapeter.campfire.presentation.resources.share_send
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
@@ -93,7 +95,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 
 /**
- * The Export screen of a song or a setlist: the options on one side, the preview of what they make on the other, and Save
+ * The Share screen of a song or a setlist: the options on one side, the preview of what they make on the other, and Save
  * as its floating action button (Share, where the platform has it, in the app bar). The first option is the format: a
  * PDF, whose preview and file are drawn from one layout by one [PrintRenderer], so what is saved is the preview at print
  * resolution, or the library's own files - a song's ChordPro file, or a setlist's zip of its manifest and its songs as
@@ -320,6 +322,8 @@ internal fun ExportScreen(
                 PrintTopAppBar(
                     title = stringResource(exportTitleOf(dialog)),
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
+                    // The screen itself is called Share, so the Link format's button says what it sends.
+                    shareLabel = stringResource(if (isLink) Res.string.share_send else Res.string.print_share),
                     canShare = filePicker.canShare && exportProgress == null && canSaveNow,
                     onShare = { requestExport(ExportRequest.SHARE) },
                     onClose = close,

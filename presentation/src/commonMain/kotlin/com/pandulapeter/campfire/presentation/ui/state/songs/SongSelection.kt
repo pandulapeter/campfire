@@ -92,7 +92,7 @@ internal class SongSelection(
     }
 
     /**
-     * The export screen over what is ticked: one song is exactly the row's own Export, several are a third kind of
+     * The export screen over what is ticked: one song is exactly the row's own Share song, several are a third kind of
      * source next to a song and a setlist, printed in the order the screen sorts by and in the keys the library plays
      * them in.
      */

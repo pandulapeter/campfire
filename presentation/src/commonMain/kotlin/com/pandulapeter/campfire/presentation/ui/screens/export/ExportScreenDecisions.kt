@@ -15,9 +15,9 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.setlists_export
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
-import com.pandulapeter.campfire.presentation.resources.songs_export_songs
+import com.pandulapeter.campfire.presentation.resources.setlists_share
+import com.pandulapeter.campfire.presentation.resources.songs_share_song
+import com.pandulapeter.campfire.presentation.resources.songs_share_songs
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 
@@ -93,7 +93,7 @@ internal fun qrCodeSizeFor(paneWidth: Dp, paneHeight: Dp) = minOf(QR_CODE_WIDTH,
 
 /** The title of the screen, by what is exported. */
 internal fun exportTitleOf(dialog: DialogType.Export) = when {
-    dialog.setlist != null -> Res.string.setlists_export
-    dialog.songs.isNotEmpty() -> Res.string.songs_export_songs
-    else -> Res.string.songs_export_song
+    dialog.setlist != null -> Res.string.setlists_share
+    dialog.songs.isNotEmpty() -> Res.string.songs_share_songs
+    else -> Res.string.songs_share_song
 }

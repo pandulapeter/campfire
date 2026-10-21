@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.setlists_export
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.setlists_share
+import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -121,9 +121,9 @@ class ExportScreenDecisionsTest {
 
     @Test
     fun `the title says what is exported`() {
-        assertEquals(Res.string.songs_export_song, exportTitleOf(DialogType.Export()))
+        assertEquals(Res.string.songs_share_song, exportTitleOf(DialogType.Export()))
         assertEquals(
-            Res.string.setlists_export,
+            Res.string.setlists_share,
             exportTitleOf(
                 DialogType.Export(
                     setlist = Setlist(fileName = "set.setlist.json", title = "Set", description = "", date = LocalDate(2026, 1, 1), isArchived = false, entries = emptyList(), size = 0),

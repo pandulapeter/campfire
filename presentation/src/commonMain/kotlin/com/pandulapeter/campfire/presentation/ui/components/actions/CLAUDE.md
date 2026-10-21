@@ -12,7 +12,7 @@
 The actions of a song and a setlist, shared by their rows, menus, and details screens.
 
 - `SongActions`: edit, Update file name (only where `Song.canUpdateFileName`), Duplicate song (songs screen cards only,
-  `isDuplicable`), Export song, delete — **delete never from a setlist row or a details screen opened from a setlist**
+  `isDuplicable`), Share song, delete — **delete never from a setlist row or a details screen opened from a setlist**
   (`isDeletable`). Its entries, `leadingItems`, and `fileEditItems` are builders run only while the menu is open, since
   every card in a list composes one; a caller passes a lambda, never a list built while composing the card.
 - Choose setlists is `SetlistAssignmentsButton` in front of the overflow on song rows and the details bar (moved into

@@ -63,4 +63,4 @@ The songs screen.
   (`areClosedSearchActionsKeptInSearch`). Actions are disabled while nothing is ticked or a write runs
   (`isEditingSongs`, which also shows the import progress bar).
 - Actions run on the selection in the screen's sort order (`inListOrder`): the sheets are in `ui/dialogs`; one
-  song exports as the row's Export, several through the export screen. **There is no bulk delete.**
+  song is shared as the row's Share song, several through the export screen. **There is no bulk delete.**

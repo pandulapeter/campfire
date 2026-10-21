@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.select_all
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
-import com.pandulapeter.campfire.presentation.resources.songs_export_songs
+import com.pandulapeter.campfire.presentation.resources.songs_share_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_actions
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
@@ -95,7 +95,7 @@ internal fun SongSelectionMenu(
             onClick = onManageLanguages,
         ),
         ActionsMenuItem(
-            title = stringResource(Res.string.songs_export_songs),
+            title = stringResource(Res.string.songs_share_songs),
             icon = painterResource(Res.drawable.ic_export),
             isEnabled = areActionsEnabled,
             onClick = onExport,

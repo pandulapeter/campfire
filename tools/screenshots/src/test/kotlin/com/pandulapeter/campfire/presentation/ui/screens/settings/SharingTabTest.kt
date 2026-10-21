@@ -32,7 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_actions
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
@@ -102,7 +102,7 @@ internal class SharingTabTest {
         tap(hasText(string(Res.string.songs)) and hasClickAction())
         openSong()
         tap(hasContentDescription(string(Res.string.songs_actions)))
-        tap(hasText(string(Res.string.songs_export_song)) and hasClickAction())
+        tap(hasText(string(Res.string.songs_share_song)) and hasClickAction())
 
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_paper))).fetchSemanticsNodes().isNotEmpty() }
         onNode(hasContentDescription(string(Res.string.share_qr_code))).assertDoesNotExist()
@@ -122,7 +122,7 @@ internal class SharingTabTest {
         assertTrue(code.size.width > 0)
         assertEquals(code.size.width.toFloat(), shown.width, absoluteTolerance = 1f)
         assertEquals(code.size.height.toFloat(), shown.height, absoluteTolerance = 1f)
-        val title = onNodeWithText(string(Res.string.songs_export_song)).fetchSemanticsNode().boundsInRoot
+        val title = onNodeWithText(string(Res.string.songs_share_song)).fetchSemanticsNode().boundsInRoot
         assertTrue(shown.top >= title.bottom)
         val copyLink = onNode(hasContentDescription(string(Res.string.share_copy))).fetchSemanticsNode().boundsInRoot
         assertFalse(shown.overlaps(copyLink))

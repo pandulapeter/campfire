@@ -72,11 +72,11 @@
     </plurals>
     <string name="import_failed">Import failed</string>
     <string name="import_interrupted">The import was interrupted. Open the files again to import them.</string>
-    <string name="export_failed">Export failed</string>
+    <string name="export_failed">Couldn\'t save or share it</string>
     <string name="export_pdf_saved">PDF saved</string>
-    <string name="export_song_saved">Song exported</string>
-    <string name="export_setlist_saved">Setlist exported</string>
-    <string name="export_songs_saved">Songs exported</string>
+    <string name="export_song_saved">Song saved</string>
+    <string name="export_setlist_saved">Setlist saved</string>
+    <string name="export_songs_saved">Songs saved</string>
     <string name="export_library_saved">Library exported</string>
     <string name="export_too_large_to_import">This archive is larger than the 24 MB Campfire can import at once. It is a complete copy of your library; to bring it back, unzip it and import the songs a few thousand at a time.</string>
     <plurals name="export_skipped_files">
@@ -204,12 +204,12 @@
     <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song_partly">The song was deleted, but a setlist or the saved transposition still names it</string>
     <string name="songs_delete_song">Delete song</string>
-    <string name="songs_export_song">Export song</string>
+    <string name="songs_share_song">Share song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
     <string name="songs_delete_song_confirmation_shared">Delete \"%1$s\"? The file is removed from the library and from every setlist, and its shared link stops working.</string>
     <string name="songs_select_multiple">Select multiple</string>
     <string name="songs_selection_actions">Selection actions</string>
-    <string name="songs_export_songs">Export songs</string>
+    <string name="songs_share_songs">Share songs</string>
     <plurals name="songs_selection_done">
         <item quantity="one">Done, %1$d song selected</item>
         <item quantity="other">Done, %1$d songs selected</item>
@@ -297,7 +297,7 @@
     <string name="setlists_archive">Archive setlist</string>
     <string name="setlists_unarchive">Unarchive setlist</string>
     <string name="setlists_archived">Archived</string>
-    <string name="setlists_export">Export setlist</string>
+    <string name="setlists_share">Share setlist</string>
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
     <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
@@ -1135,10 +1135,10 @@
     <string name="print_running_order">Running order</string>
     <string name="print_overview">Include running order</string>
     <string name="print_new_page">Start each song on a new page</string>
-    <string name="print_songs">Songs to export</string>
+    <string name="print_songs">Songs to share</string>
     <string name="print_missing">Song file missing or unreadable</string>
     <string name="print_load_failed">Could not prepare the PDF.</string>
-    <string name="print_no_songs">Select at least one song to export.</string>
+    <string name="print_no_songs">Select at least one song to share.</string>
     <string name="print_setlist_empty">This setlist has no songs yet.</string>
     <string name="print_page">Page %1$d of %2$d</string>
     <string name="print_previous">Previous</string>
@@ -1149,11 +1149,12 @@
     <string name="print_format_link">Link</string>
     <string name="print_format_link_song_description">Ideal for anyone: a link that opens the song in Campfire and keeps up with your changes.</string>
     <string name="print_format_link_setlist_description">Ideal for anyone: a link that opens the setlist and its songs in Campfire and keeps up with your changes.</string>
-    <string name="share_not_connected">Share a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices.</string>
+    <string name="share_not_connected">Share a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync on all your devices.</string>
     <string name="share_connect_again">Connect again</string>
     <string name="share_create">Create link</string>
     <string name="share_try_again">Try again</string>
     <string name="share_copy">Copy link</string>
+    <string name="share_send">Send link</string>
     <string name="share_not_shared_song">Anyone with the link can open this song in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update.</string>
     <string name="share_not_shared_setlist">Anyone with the link can open this setlist and its songs in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update.</string>
     <string name="share_shared_on">Shared on %1$s</string>
@@ -1186,7 +1187,7 @@
     <string name="settings_group_shared_links">Shared links</string>
     <string name="settings_group_all_links">All links</string>
     <string name="settings_sharing_description">Share a song or setlist as a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices.</string>
-    <string name="settings_sharing_nothing_shared">Nothing shared yet. Choose Link when exporting a song or setlist to share it.</string>
+    <string name="settings_sharing_nothing_shared">Nothing shared yet. Choose Link when sharing a song or setlist.</string>
     <string name="settings_sharing_stale">Couldn't read the links from Dropbox. This list is what this device last saw.</string>
     <string name="settings_sharing_orphaned">No longer in your library</string>
     <string name="settings_sharing_copy_missing">Link no longer works</string>

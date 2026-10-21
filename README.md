@@ -18,7 +18,7 @@ It runs natively on Android, iOS, macOS, Windows, Linux, and the web.
 The interface is built for real use: organizing a song library, building setlists, and playing on stage.
 Chord sheets can be pasted, shared from other apps, or imported from PDF, Word, and other songbook apps' backups, and are converted to ChordPro on the device.
 Songs adapt to the screen with multi-column layouts, transpose on the fly, have a lyrics-only view for singers, and show chord diagrams for guitar, ukulele, mandolin, banjo, and keyboard, in alternate tunings too.
-A built-in metronome, a tuner, and a library of scales and modes drawn on your instrument are always at hand, setlists keep each song's own key, capo, and tempo, and songs and setlists export to printable PDFs.
+A built-in metronome, a tuner, and a library of scales and modes drawn on your instrument are always at hand, setlists keep each song's own key, capo, and tempo, and songs and setlists are shared as printable PDFs, ChordPro files, or links.
 
 <img src="documentation/screenshots/04.webp" width="32%" /> <img src="documentation/screenshots/05.webp" width="32%" /> <img src="documentation/screenshots/06.webp" width="32%" />
 

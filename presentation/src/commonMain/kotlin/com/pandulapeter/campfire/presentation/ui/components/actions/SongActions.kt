@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
@@ -109,7 +109,7 @@ internal fun SongActions(
             null
         },
         ActionsMenuItem(
-            title = stringResource(Res.string.songs_export_song),
+            title = stringResource(Res.string.songs_share_song),
             icon = painterResource(Res.drawable.ic_export),
             isAlwaysInMenu = true,
             onClick = { actions.export(song, setlistFileName) },

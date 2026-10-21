@@ -72,11 +72,11 @@
     </plurals>
     <string name="import_failed">Az importálás nem sikerült</string>
     <string name="import_interrupted">Az importálás megszakadt. Nyisd meg újra a fájlokat az importáláshoz.</string>
-    <string name="export_failed">Az exportálás nem sikerült</string>
+    <string name="export_failed">A mentés vagy a megosztás nem sikerült</string>
     <string name="export_pdf_saved">PDF elmentve</string>
-    <string name="export_song_saved">Dal exportálva</string>
-    <string name="export_setlist_saved">Lista exportálva</string>
-    <string name="export_songs_saved">Dalok exportálva</string>
+    <string name="export_song_saved">Dal elmentve</string>
+    <string name="export_setlist_saved">Lista elmentve</string>
+    <string name="export_songs_saved">Dalok elmentve</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
     <string name="export_too_large_to_import">Ez az archívum nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importáld a dalokat néhány ezres adagokban.</string>
     <plurals name="export_skipped_files">
@@ -204,12 +204,12 @@
     <string name="songs_update_file_name_partly">A fájl új nevet kapott, de egy lista vagy a mentett transzponálás még a régi névre hivatkozik</string>
     <string name="songs_delete_song_partly">A dal törlődött, de egy lista vagy a mentett transzponálás még hivatkozik rá</string>
     <string name="songs_delete_song">Dal törlése</string>
-    <string name="songs_export_song">Dal exportálása</string>
+    <string name="songs_share_song">Dal megosztása</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
     <string name="songs_delete_song_confirmation_shared">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából, a megosztott linkje pedig többé nem működik.</string>
     <string name="songs_select_multiple">Több dal kijelölése</string>
     <string name="songs_selection_actions">Műveletek a kijelöléssel</string>
-    <string name="songs_export_songs">Dalok exportálása</string>
+    <string name="songs_share_songs">Dalok megosztása</string>
     <plurals name="songs_selection_done">
         <item quantity="one">Kész, %1$d dal kijelölve</item>
         <item quantity="other">Kész, %1$d dal kijelölve</item>
@@ -297,7 +297,7 @@
     <string name="setlists_archive">Lista archiválása</string>
     <string name="setlists_unarchive">Lista kivétele az archívumból</string>
     <string name="setlists_archived">Archivált</string>
-    <string name="setlists_export">Lista exportálása</string>
+    <string name="setlists_share">Lista megosztása</string>
     <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
     <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
@@ -1134,10 +1134,10 @@
     <string name="print_running_order">Dalsorrend</string>
     <string name="print_overview">Dalsorrend hozzáadása</string>
     <string name="print_new_page">Minden dal új oldalon kezdődjön</string>
-    <string name="print_songs">Exportálandó dalok</string>
+    <string name="print_songs">Megosztandó dalok</string>
     <string name="print_missing">A dal fájlja hiányzik vagy nem olvasható</string>
     <string name="print_load_failed">Nem sikerült elkészíteni a PDF-et.</string>
-    <string name="print_no_songs">Jelölj ki legalább egy dalt az exportáláshoz.</string>
+    <string name="print_no_songs">Jelölj ki legalább egy dalt a megosztáshoz.</string>
     <string name="print_setlist_empty">Ebben a listában még nincsenek dalok.</string>
     <string name="print_page">%1$d. oldal / %2$d</string>
     <string name="print_previous">Előző</string>
@@ -1148,11 +1148,12 @@
     <string name="print_format_link">Link</string>
     <string name="print_format_link_song_description">Bárkinek ideális: egy link, amely megnyitja a dalt a Campfire-ben, és követi a változtatásaidat.</string>
     <string name="print_format_link_setlist_description">Bárkinek ideális: egy link, amely megnyitja a listát és a dalait a Campfire-ben, és követi a változtatásaidat.</string>
-    <string name="share_not_connected">Ossz meg egy linket, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad vele minden eszközödön.</string>
+    <string name="share_not_connected">Ossz meg egy linket, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad minden eszközödön.</string>
     <string name="share_connect_again">Újracsatlakozás</string>
     <string name="share_create">Link létrehozása</string>
     <string name="share_try_again">Újrapróbálás</string>
     <string name="share_copy">Link másolása</string>
+    <string name="share_send">Link küldése</string>
     <string name="share_not_shared_song">A linkkel bárki megnyithatja ezt a dalt a Campfire-ben. A link követi a változtatásaidat; a már importált példányok nem változnak, de a link újbóli megnyitásával frissíthetők.</string>
     <string name="share_not_shared_setlist">A linkkel bárki megnyithatja ezt a listát és a dalait a Campfire-ben. A link követi a változtatásaidat; a már importált példányok nem változnak, de a link újbóli megnyitásával frissíthetők.</string>
     <string name="share_shared_on">Megosztva: %1$s</string>
@@ -1185,7 +1186,7 @@
     <string name="settings_group_shared_links">Megosztott linkek</string>
     <string name="settings_group_all_links">Összes link</string>
     <string name="settings_sharing_description">Ossz meg egy dalt vagy listát linkként, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad vele minden eszközödön.</string>
-    <string name="settings_sharing_nothing_shared">Még nincs semmi megosztva. Egy dal vagy lista exportálásakor válaszd a Link lehetőséget a megosztásához.</string>
+    <string name="settings_sharing_nothing_shared">Még nincs semmi megosztva. Egy dal vagy lista megosztásakor válaszd a Link lehetőséget.</string>
     <string name="settings_sharing_stale">Nem sikerült beolvasni a linkeket a Dropboxból. Ez a lista az, amit ez az eszköz legutóbb látott.</string>
     <string name="settings_sharing_orphaned">Már nincs a könyvtáradban</string>
     <string name="settings_sharing_copy_missing">A link már nem működik</string>

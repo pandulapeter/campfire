@@ -10,12 +10,14 @@
 
 # :presentation — ui/screens/export
 
-The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
+The export screen, called **Share** in the UI: one song, a setlist, or a selection is shared, while the whole library
+is exported (Settings' Export library as zip, a backup that pairs with Import). The code keeps the export names. The PDF
+pipeline is in `ui/print/CLAUDE.md`.
 
 ## Entry and sources
 
-- Opened as `DialogType.Export` from a song's "Export song" (with the setlist it was reached through, whose key it then
-  prints in), a setlist's "Export setlist", or the selection mode's "Export songs" (`DialogType.Export.songs`, in the
+- Opened as `DialogType.Export` from a song's "Share song" (with the setlist it was reached through, whose key it then
+  prints in), a setlist's "Share setlist", or the selection mode's "Share songs" (`DialogType.Export.songs`, in the
   songs screen's sort order; one ticked song is that row's own Export).
 - Settings' Show QR code and the answer to a consent asked from the Link format open it on Link for that opening only
   (`DialogType.Export.format`, `openingSettingsOf`), the stored format untouched; a format picked on the screen is
@@ -26,8 +28,8 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 
 ## Formats and options
 
-- One export entry per song and setlist (and selection mode's "Export songs") opens the export screen; no separate
-  share or file export entry. Formats: **PDF** (for printing), the library's own files (for Campfire users):
+- One Share entry per song and setlist (and selection mode's "Share songs") opens the export screen; no separate
+  file export entry. Formats: **PDF** (for printing), the library's own files (for Campfire users):
   **ChordPro** for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or
   for several selected songs (no manifest), and **Link** (below) for one song or setlist where the build has sync
   (`exportFormatsOf`). A stored format an export does not offer opens it on PDF (`withFormatIn`), the preference kept.
@@ -55,8 +57,8 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 - A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
   Create link), and is forgotten when the screen goes; a share just made shows before the list catches up. Song ticks are hidden: a link shares the whole setlist. Offered in read only mode.
 - Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
-  too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Share
-  in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,
+  too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Send
+  link in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,
   also Ctrl / Cmd + S) and Stop sharing are options. Stop sharing asks with `StopSharingConfirmation`, composed by the
   screen, not the dialog stack, under which the export would slide away.
 - Connect from here keeps `SyncConsentOrigin.Export` (`ui/sync/CLAUDE.md`), so a start up answering the consent page

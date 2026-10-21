@@ -26,15 +26,15 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_share
-import com.pandulapeter.campfire.presentation.resources.print_share
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import org.jetbrains.compose.resources.painterResource
 
-/** Close, the title and what is exported under it, and Share where the platform has one. */
+/** Close, the title and what is shared under it, and [shareLabel]'s button where the platform has a share sheet. */
 @Composable
 internal fun PrintTopAppBar(
     title: String,
     subtitle: String,
+    shareLabel: String,
     canShare: Boolean,
     onShare: () -> Unit,
     onClose: () -> Unit,
@@ -62,7 +62,7 @@ internal fun PrintTopAppBar(
         // One Cancel, on the save button, stands for both while the pages are drawn, whichever of the two started it.
         AnimatedVisibility(canShare, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
             IconButton(onClick = onShare) {
-                Icon(painter = painterResource(Res.drawable.ic_share), contentDescription = stringResource(Res.string.print_share))
+                Icon(painter = painterResource(Res.drawable.ic_share), contentDescription = shareLabel)
             }
         }
     },
