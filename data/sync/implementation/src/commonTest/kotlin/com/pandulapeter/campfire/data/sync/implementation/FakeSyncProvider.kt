@@ -196,7 +196,10 @@ internal class FakeSyncProvider(
     /** Runs once a document upload has written, before it answers, which is where a test loses the answer. */
     var onDocumentWritten: suspend (String) -> Unit = {}
 
-    /** Runs before [downloadDocument] answers, which is where a test makes it fail. */
+    /**
+     * Runs before [downloadDocument] answers, which is where a test makes it fail or holds it up. The document is taken
+     * before it runs, so a held-up download answers what was there when it was asked, as a slow request does.
+     */
     var onDownloadDocument: suspend () -> Unit = {}
 
     /** How many times [downloadDocument] was asked. */
@@ -204,8 +207,9 @@ internal class FakeSyncProvider(
 
     override suspend fun downloadDocument(name: String): RemoteDocument? {
         documentDownloadCount++
+        val document = documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
         onDownloadDocument()
-        return documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
+        return document
     }
 
     override suspend fun uploadDocument(

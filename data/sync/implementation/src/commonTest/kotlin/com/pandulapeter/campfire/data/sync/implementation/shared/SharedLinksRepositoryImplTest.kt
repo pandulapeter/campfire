@@ -27,7 +27,9 @@ import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -374,6 +376,67 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a read that answers after a share keeps the share in the list`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        val release = CompletableDeferred<Unit>()
+        var isFirst = true
+        provider.onDownloadDocument = {
+            if (isFirst) {
+                isFirst = false
+                release.await()
+            }
+        }
+
+        val refreshing = launch { repository.refresh() }
+        runCurrent()
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy))
+        release.complete(Unit)
+        refreshing.join()
+
+        assertEquals(listOf("a.cho"), repository.shares.first().map { it.fileName })
+    }
+
+    @Test
+    fun `a read that answers after a disconnect leaves the mirror empty`() = runTest {
+        val provider = FakeSyncProvider()
+        shareElsewhere(provider, "a.cho")
+        val localSource = FakeSharedLinksLocalSource()
+        val mirror = SharedLinksMirror(localSource, testEnvironment())
+        val repository = repository(provider, localSource = localSource, mirror = mirror)
+        val release = CompletableDeferred<Unit>()
+        provider.onDownloadDocument = { release.await() }
+
+        val refreshing = launch { repository.refresh() }
+        runCurrent()
+        mirror.clear()
+        release.complete(Unit)
+        refreshing.join()
+
+        assertEquals(emptyList(), repository.shares.first())
+        assertNull(localSource.mirror)
+    }
+
+    @Test
+    fun `an edit that answers after a disconnect leaves the mirror empty`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val mirror = SharedLinksMirror(localSource, testEnvironment())
+        val repository = repository(provider, localSource = localSource, mirror = mirror)
+        val release = CompletableDeferred<Unit>()
+        provider.onUploadDocument = { release.await() }
+
+        val sharing = launch { repository.share(SharedLinkKind.SONG, "a.cho", "A", copy) }
+        runCurrent()
+        mirror.clear()
+        release.complete(Unit)
+        sharing.join()
+
+        assertEquals(emptyList(), repository.shares.first())
+        assertNull(localSource.mirror)
+    }
+
+    @Test
     fun `a pending rename moves the share in the list before the list is told`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
@@ -577,9 +640,9 @@ class SharedLinksRepositoryImplTest {
         provider: FakeSyncProvider,
         stateHolder: SyncStateHolder = connectedStateHolder(),
         localSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
+        mirror: SharedLinksMirror = SharedLinksMirror(localSource, testEnvironment()),
     ): SharedLinksRepositoryImpl {
         val environment = testEnvironment()
-        val mirror = SharedLinksMirror(localSource, environment)
         val registry = SharedLinksRegistry(mirror, environment)
         val journal = SharedLinksJournal(localSource, environment)
         return SharedLinksRepositoryImpl(

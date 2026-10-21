@@ -48,8 +48,17 @@ internal class SharedLinksMirror(
     /** Null until read from the disk. */
     private val state = MutableStateFlow<Mirrored?>(null)
 
-    /** Keeps a read from the disk from replacing a fresher list saved while it was under way. */
+    /**
+     * Keeps a read from the disk from replacing a fresher list saved while it was under way, and guards [generation] and
+     * [clears], which nothing touches outside it.
+     */
     private val mutex = Mutex()
+
+    /** Bumped by every save and clear, so that a read can tell whether the mirror changed while it was under way. */
+    private var generation = 0L
+
+    /** Bumped by every clear, so that an edit can tell whether the account was forgotten while it was under way. */
+    private var clears = 0L
 
     /** The mirror, read from the disk the first time, then every list saved. */
     val mirrored = flow {
@@ -62,7 +71,33 @@ internal class SharedLinksMirror(
         state.value ?: read().also { state.value = it }
     }
 
-    suspend fun save(revision: String?, document: SharedLinksDocument) = mutex.withLock {
+    /**
+     * Where the mirror stands, taken before a read's request and given to [saveRead]. Revisions are opaque, so which of
+     * two lists is newer cannot be told from them; whether anything was saved or cleared meanwhile can.
+     */
+    suspend fun generation() = mutex.withLock { generation }
+
+    /** How many times the mirror was cleared, taken before an edit begins and given to [saveWritten]. */
+    suspend fun clears() = mutex.withLock { clears }
+
+    /**
+     * Saves what a read found, unless anything was saved or cleared since [since]: a list saved meanwhile is at least as
+     * fresh, and a list cleared meanwhile belonged to an account that is gone.
+     */
+    suspend fun saveRead(since: Long, revision: String?, document: SharedLinksDocument) = mutex.withLock {
+        if (generation == since) saveLocked(revision, document)
+    }
+
+    /**
+     * Saves the list an edit wrote, the newest there is, over whatever was saved meanwhile, unless the mirror was
+     * cleared since [sinceClear]: the account it was written for is gone, or another one took its place.
+     */
+    suspend fun saveWritten(sinceClear: Long, revision: String?, document: SharedLinksDocument) = mutex.withLock {
+        if (clears == sinceClear) saveLocked(revision, document)
+    }
+
+    private suspend fun saveLocked(revision: String?, document: SharedLinksDocument) {
+        generation++
         val mirrored = Mirrored(revision = revision, document = document)
         state.value = mirrored
         environment.logger.recovering(
@@ -86,6 +121,8 @@ internal class SharedLinksMirror(
 
     /** Throws where the file cannot be deleted, for the caller to decide what that is worth. */
     suspend fun clear() = mutex.withLock {
+        generation++
+        clears++
         state.value = Mirrored(revision = null, document = SharedLinksDocument())
         localSource.saveSharedLinksMirror(null)
     }

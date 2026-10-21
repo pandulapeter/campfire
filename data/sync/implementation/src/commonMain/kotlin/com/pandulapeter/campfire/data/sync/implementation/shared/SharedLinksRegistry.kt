@@ -16,7 +16,7 @@ import org.koin.core.annotation.Single
 
 /**
  * The account's list of shared links in its cloud folder ([SharedLinksFormat.NAME]), read and edited through
- * [SharedLinksMirror], which every read and successful edit replaces.
+ * [SharedLinksMirror], which a successful edit replaces, and a read unless the mirror changed while it was under way.
  *
  * Edited only as operations: read, change, and write back against the revision that was read, and on a conflict
  * (another device, or a run, wrote in between) all of it again with what that wrote, up to [MAX_ATTEMPTS] times. That
@@ -57,9 +57,15 @@ internal class SharedLinksRegistry(
         data object Contended : Edit<Nothing>
     }
 
+    /**
+     * Reads the list, and saves it into the mirror unless the mirror changed while the request was under way: what was
+     * saved meanwhile is at least as fresh, and what was cleared belonged to an account that is gone. The caller gets
+     * what was read either way.
+     */
     suspend fun read(folder: SyncFolder): Read {
+        val since = mirror.generation()
         val remote = folder.downloadDocument(SharedLinksFormat.NAME)
-            ?: return Read.Readable(revision = null, document = SharedLinksDocument()).also { mirror.save(null, it.document) }
+            ?: return Read.Readable(revision = null, document = SharedLinksDocument()).also { mirror.saveRead(since, null, it.document) }
         val document = when (val decoded = SharedLinksFormat.decode(remote.bytes.decodeToString())) {
             is SharedLinksFormat.Decoded.Readable -> decoded.document
             is SharedLinksFormat.Decoded.FromNewerVersion -> return Read.FromNewerVersion(decoded.version)
@@ -68,11 +74,13 @@ internal class SharedLinksRegistry(
                 SharedLinksDocument()
             }
         }
-        mirror.save(remote.revision, document)
+        mirror.saveRead(since, remote.revision, document)
         return Read.Readable(revision = remote.revision, document = document)
     }
 
     suspend fun <T> edit(folder: SyncFolder, change: (SharedLinksDocument) -> Change<T>): Edit<T> {
+        // A write is the newest list there is, but not for this device once the account it was made for is forgotten.
+        val sinceClear = mirror.clears()
         repeat(MAX_ATTEMPTS) {
             val read = when (val read = read(folder)) {
                 is Read.Readable -> read
@@ -82,7 +90,7 @@ internal class SharedLinksRegistry(
             if (document == null) return Edit.Done(result)
             when (val written = folder.uploadDocument(SharedLinksFormat.NAME, SharedLinksFormat.encode(document).encodeToByteArray(), read.revision)) {
                 is RemoteWriteResult.Written -> {
-                    mirror.save(written.revision, document)
+                    mirror.saveWritten(sinceClear, written.revision, document)
                     return Edit.Done(result)
                 }
 

@@ -18,7 +18,9 @@
   - Members a version does not know are kept through its edits; a higher `version` is neither shown nor edited. One
     that does not decode counts as empty, and only a sharing action writes over it.
 - **Mirror**: `preferences/shared-links.json` (`SharedLinksMirror`), the registry as last read or written, with that
-  revision, so screens need no request. Replaced on every read and successful edit. The repository's `shares` are the
+  revision, so screens need no request. Replaced by a successful edit unless cleared since it began, and by a read
+  unless the mirror changed while it was under way (a generation, since revisions are opaque; of two reads under one
+  generation the later answer is dropped, one read behind at worst). The repository's `shares` are the
   mirror with the journal applied as it will be (the journal's entries kept in memory too), so a renamed or stopped
   item shows as it will be before the list is told.
 - **Journal**: `preferences/shared-links-journal.json` (`SharedLinksJournal`), renames and deletions of shared items
