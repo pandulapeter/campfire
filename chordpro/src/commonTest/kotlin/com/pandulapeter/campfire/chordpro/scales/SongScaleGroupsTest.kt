@@ -480,6 +480,28 @@ class SongScaleGroupsTest {
         assertEquals(listOf("E" to "minor_pentatonic", "E" to "major"), rootAndFirst(song("E5 G5 A5 E5 G5 A5", "E A B E E A B E")))
 
     @Test
+    fun `an intro of the chorus's chords joins it, however long it holds the flat seventh`() {
+        val loop = "[G]x [F]x [C]x [D]x [G]x [F]x [C]x [D]x [G]x [F]x [C]x [D]x"
+        val pink = groups(
+            """
+            {key: G}
+            {start_of_verse: Intro}
+            $loop [Em]x [Em]x [A]x [A]x [F]x [F]x [F]x [F]x
+            {end_of_verse}
+            {start_of_verse: Verse}
+            $loop [G]x [F]x [C]x [D]x
+            {end_of_verse}
+            {start_of_chorus: Chorus}
+            $loop [Em]x [A]x [F]x [G]x
+            {end_of_chorus}
+            """,
+        ).single()
+        assertEquals(listOf("Intro", "Verse", "Chorus"), pink.labels)
+        assertEquals("G" to "major", pink.rootName to pink.scales.first().id)
+        assertEquals(listOf("F", "A"), pink.exceptions.map { it.chordName })
+    }
+
+    @Test
     fun `a vamp on the tonic joins the riff after it instead of naming a key`() {
         val susIntro = groups(
             """

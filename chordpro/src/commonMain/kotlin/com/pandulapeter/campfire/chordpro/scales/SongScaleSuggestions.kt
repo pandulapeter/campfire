@@ -216,18 +216,25 @@ public object SongScaleSuggestions {
      * The best of [candidates], ranked, at most [MAX_MOMENTS] of them, a section never twice (a part both in another
      * key and on a centre of its own is said once). A chord is played over the scales of the row each part playing it is
      * shown in, a key's or a centre's, else [home]'s, so it is a moment only where one of those leaves it out; the slot
-     * one that is not held goes to the next candidate that is. With no home, every group is shown, so that holds of all.
+     * one that is not held goes to the next candidate that is, a section included (a modulated solo's own exceptions
+     * outrank it by their plays across the song, which the home holds). With no home, every group is shown, so that holds
+     * of all.
      */
     private fun chosenOf(candidates: List<Moment>, home: PlayedGroup?, parts: List<PlayedPart>): List<Moment> {
         val chosen = mutableListOf<Moment>()
         fun take(isAllowed: (Moment) -> Boolean) = candidates.forEach { if (chosen.size < MAX_MOMENTS && it !in chosen && isAllowed(it)) chosen += it }
-        take { moment -> moment !is SectionMoment || chosen.none { it is SectionMoment && it.overlaps(moment) } }
+        fun Moment.isSeparate() = this !is SectionMoment || chosen.none { it is SectionMoment && it.overlaps(this) }
+        take { it.isSeparate() }
         if (home == null) return chosen
-        val sections = chosen.filterIsInstance<SectionMoment>()
-        fun PlayedPart.shownNotes() = sections.firstOrNull { it.shows(this) }?.notes ?: home.leadNotes
+        fun PlayedPart.shownNotes() = chosen.filterIsInstance<SectionMoment>().firstOrNull { it.shows(this) }?.notes ?: home.leadNotes
         fun Moment.isPlayable() = this !is ChordMoment || parts.any { part -> part.names.any { it in exception.chordNames } && !part.shownNotes().containsAll(notes) }
-        chosen.retainAll { it.isPlayable() }
-        take { it is ChordMoment && it.isPlayable() }
+        // A section taken into a freed slot shows its parts under its own scales, which may leave out a chord the home
+        // held, so the choice is made again until it stands; sections are only ever added, so it soon does.
+        do {
+            val before = chosen.toList()
+            chosen.retainAll { it.isPlayable() }
+            take { it.isSeparate() && it.isPlayable() }
+        } while (chosen != before)
         return chosen
     }
 

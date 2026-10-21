@@ -53,6 +53,24 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
+    fun `a modulated solo is shown though its own exceptions, held at home, outrank it`() {
+        val verse = "G F C D G F C D G F C D G F C D"
+        val chorus = "G F C D G F C D G F C D Em A F G"
+        val song = suggestions(
+            "Verse" to verse,
+            "Chorus" to chorus,
+            "Verse" to verse,
+            "Chorus" to chorus,
+            "Solo" to "F C C D# G# D# D# C A# F F D D D D",
+            "Verse" to verse,
+            "Chorus" to chorus,
+            key = "G",
+        )
+        assertEquals(listOf("G" to "major", "F" to "natural_minor"), song.map { it.rootName to it.scales.first().id })
+        assertEquals(listOf("Solo"), song.last().labels)
+    }
+
+    @Test
     fun `a song gets at most three moments, however many keys it visits`() {
         val song = suggestions(
             "Verse" to "C F G C C F G C C F G C C F G C",

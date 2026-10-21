@@ -19,8 +19,10 @@
   a slash chord's bass, and never offers the chromatic scale, which holds every chord.
 - **`SongScaleGroups`** splits a song only where it must: one group when a scale fits it whole, else sections join, in
   play order, the first group they still share a scale with (one with a section of the same chords, then their own
-  kind's, then the last, then any), so a verse after a modulated solo goes back to the verses. Groups are decided on
-  scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus,
+  kind's, then the last, then any), so a verse after a modulated solo goes back to the verses. Then groups on one root
+  holding a part of the same chords, every chord of one the other's, are one, the larger's fit answering both: an
+  intro holding its ♭VII four bars reads as Mixolydian by its plays, but its chords are the chorus's (Aerosmith's
+  Pink). Groups are decided on scales of at most seven notes, or an eight-note scale's passing tone would join a major verse and a Mixolydian chorus,
   and of seven only the common scales and the modes of the major, harmonic minor, and melodic minor scales: a double
   harmonic or harmonic major scale holding a chart whole never names it, the odd chord is its key's exception.
   **A riff of power chords comes first**: where half the chords have no third, a riff on the key's root (else the
@@ -76,7 +78,9 @@
   third the group's first scale lacks (a blues's IV7 and V7). A section is one moment, a centre before a key, and
   chords whose scales are one set of notes are one (a V and its V7; a ii–V of another key, named by that key's major,
   or by the home's own scale where one of them is on the home root or the notes are the home root's major, natural
-  minor, Dorian, or Mixolydian); a chord counts only where the row it is played under leaves it out. A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
+  minor, Dorian, or Mixolydian); a chord counts only where the row it is played under leaves it out, its slot going to
+  the next candidate, a section too (a modulated solo's own exceptions, played all song, outrank it but are held at
+  home). A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
   and it must be one chord in 32 or come back in two plays; a key or an exception counts double. Nothing fills an
   unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the

@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro.scales
 
-import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 
@@ -51,7 +50,7 @@ public object SongScaleGroups {
         val parts = SongParts.of(song)
         if (parts.isEmpty() || parts.sumOf { it.chords.size } > MAX_PLAYED_CHORDS) return emptyList()
         fitOf(parts)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.playedGroupOf(parts)) }
-        val groups = mutableListOf<Group>()
+        val groups = mutableListOf<PartGroup>()
         parts.forEach { part ->
             val own = fitOf(listOf(part)) ?: return@forEach
             val chords = part.chords.toSet()
@@ -80,10 +79,10 @@ public object SongScaleGroups {
                 joined.first.parts += part
                 joined.first.fit = joined.second
             } else {
-                groups += Group(mutableListOf(part), own)
+                groups += PartGroup(mutableListOf(part), own)
             }
         }
-        val answers = groups.filter { !it.isGuess }
+        val answers = groups.sameChordsJoined(parts).filter { !it.isGuess }
         return (answers.ifEmpty { groups }).map { it.fit.playedGroupOf(it.parts) }
     }
 
@@ -141,13 +140,6 @@ public object SongScaleGroups {
             else -> false
         }
     }
-
-    /** Whether every chord of the part is on [root], a vamp that says nothing of the mode. */
-    private fun SongPart.isTonicVamp(root: SpelledNote) = chords.all { it.root == root.pitchClass }
-
-    /** Whether a part playing [chords] fit as [fit] is a guess, see [Group.isGuess]. */
-    private fun isGuessOf(fit: Fit, chords: List<Chord>) =
-        (fit.level == Level.LOOSE || fit.level == Level.THIN) && fit.exceptions.isNotEmpty() && chords.distinct().size <= MAX_GUESSED_CHORDS
 
     /** What a home scale is of, for [canJoin]: the minor family is one home, every other scale its own. */
     private fun familyOf(scale: Scale) = if (scale.id in minorFamilyIds) NATURAL_MINOR_ID else scale.id
@@ -447,13 +439,6 @@ public object SongScaleGroups {
         }
     }
 
-    private class Group(val parts: MutableList<SongPart>, var fit: Fit) {
-        /** A home leaving out one of at most three chords, see [of]; a rock riff, which has no exceptions, is no guess. */
-        val isGuess get() = isGuessOf(fit, parts.flatMap { it.chords })
-
-        fun isTonicVamp(root: SpelledNote) = parts.all { it.isTonicVamp(root) }
-    }
-
     /**
      * The most chords a song may play for its scales to be worked out: grouping fits every part against every group, so
      * the work grows with the sections times the chords, and past this a song details page would freeze opening. Several
@@ -465,7 +450,6 @@ public object SongScaleGroups {
     private const val MINOR_THIRD = 3
     private const val MAJOR_THIRD = 4
     private const val MAX_LOOSE_EXCEPTIONS = 2
-    private const val MAX_GUESSED_CHORDS = 3
     private const val MIN_MODE_LEAD = 2
     private const val NATURAL_MINOR_ID = "natural_minor"
     private const val MAJOR_ID = "major"
