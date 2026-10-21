@@ -43,5 +43,8 @@ transient; no original file is stored with a song.
   repositories sees the remote contracts to connect an account.
 - Cover search and song details lookup types (`CoverArtQuery`, `SongDetailsQuery`, …): only addresses are ever stored,
   never images, and nothing of a lookup is kept.
+- `share/ShareLinks` is the one grammar of shared song and setlist links (the website's landing page copies its
+  regex): it reads every form a platform hands over, tells a newer format version (`SharedLink.FromNewerVersion`) from
+  text that is no link, and builds the download address itself from the validated parts, never from the link.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. A run with
   `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`.
