@@ -234,14 +234,27 @@ public object SongScaleGroups {
         return ranked.firstNotNullOfOrNull { root -> suggestedFitOn(harmony, root) }
     }
 
-    private fun tonalFitOn(harmony: Harmony, root: SpelledNote, home: Scale) =
-        PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.let { Fit(root, listOf(home) + (it.scales - home), Level.TONAL, home) }
+    /** The fit of [home] holding every chord on [root], or of the blues where it is a major scale holding a blues. */
+    private fun tonalFitOn(harmony: Harmony, root: SpelledNote, home: Scale): Fit? {
+        if (home.id == MAJOR_ID && PlayableScales.isDominantBlues(root.pitchClass, harmony.chords)) return suggestedFitOn(harmony, root)
+        return PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.let { Fit(root, listOf(home) + (it.scales - home), Level.TONAL, home) }
+    }
 
-    /** What [PlayableScales] suggests on [root] where it is a fit, a dominant blues being one no scale holds. */
+    /**
+     * What [PlayableScales] suggests on [root] where it is a fit, a dominant blues being one no scale need hold. A blues's
+     * home is the first scale it suggests, its minor pentatonic, so it never reads as a rock riff where a major scale
+     * holds it; a jazz blues names what its Mixolydian leaves out, the IV7 and V7 too, so they keep their moments ahead
+     * of a passing diminished chord, while a plain one has no exceptions, its IV7 and V7 being the shape itself.
+     */
     private fun suggestedFitOn(harmony: Harmony, root: SpelledNote) = PlayableScales.suggestionFor(root.pitchClass, harmony.chords)?.takeIf { it.isFit }?.let { suggestion ->
-        // A dominant blues is a fit no scale holds; its home is then the first it suggests.
-        val home = suggestion.scales.firstOrNull { it.intervals.size <= HOME_SCALE_SIZE && harmony.holds(it, root) } ?: suggestion.scales.first()
-        Fit(root, suggestion.scales, Level.TONAL, home)
+        val isBlues = PlayableScales.isDominantBlues(root.pitchClass, harmony.chords)
+        val home = if (isBlues) {
+            suggestion.scales.first()
+        } else {
+            suggestion.scales.firstOrNull { it.intervals.size <= HOME_SCALE_SIZE && harmony.holds(it, root) } ?: suggestion.scales.first()
+        }
+        val isJazzBlues = isBlues && !PlayableScales.isPlainBlues(root.pitchClass, harmony.chords)
+        Fit(root, suggestion.scales, Level.TONAL, home, if (isJazzBlues) harmony.exceptionsTo(mixolydian, root) else emptyList())
     }
 
     /** The minor family's fit on [root], where each chord is held by one of it. */

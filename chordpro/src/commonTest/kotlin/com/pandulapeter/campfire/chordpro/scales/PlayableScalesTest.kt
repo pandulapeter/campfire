@@ -146,6 +146,36 @@ class PlayableScalesTest {
     }
 
     @Test
+    fun `a jazz blues is a blues on its tonic seventh, its other chords departures`() {
+        assertTrue(isBlues(5, "F7", "Bb7", "F7", "Cm7", "F7", "Bb7", "Bdim7", "F7", "Am7", "D7", "Gm7", "C7", "F7", "D7", "Gm7", "C7"))
+        assertTrue(isBlues(10, "Bb7", "Eb7", "Bb7", "Bb7", "Eb7", "Edim7", "Bb7", "G7", "Cm7", "F7", "Bb7", "F7"))
+        assertFalse(isBlues(0, "C7", "Dm", "G7", "Am"))
+    }
+
+    @Test
+    fun `a jazz shape needs its I the most played root and no major seventh`() {
+        assertFalse(isBlues(7, "C", "E7", "Am", "C7", "F", "F#dim", "C", "A7", "D7", "G7", "C", "G7"))
+        assertFalse(isBlues(0, "C7", "Bb", "F", "G7", "C7", "Bb", "F", "G7"))
+        assertFalse(isBlues(0, "C7", "Fmaj7", "C7", "Fmaj7", "C7", "G7"))
+    }
+
+    @Test
+    fun `a twelve-bar of triads with a V to IV turnaround is a blues, a I IV V IV loop is not`() {
+        assertTrue(isBlues(4, "E", "E", "E", "E", "A", "A", "E", "E", "B7", "A", "E", "B7"))
+        assertTrue(isBlues(9, "A", "A", "A", "A7", "D", "D", "A", "A", "E", "D", "A", "E"))
+        assertFalse(isBlues(9, "A", "D", "E", "D"))
+        assertFalse(isBlues(4, "E", "A", "B", "A"))
+        assertFalse(isBlues(2, "D", "A", "G", "D", "D", "A", "G", "D", "D", "A", "G", "D"))
+    }
+
+    @Test
+    fun `a tonic played plain more often than as a seventh is no blues`() {
+        assertFalse(isBlues(7, "G", "G", "G7", "C", "C", "G", "G", "D7", "G", "G"))
+        assertFalse(isBlues(0, "C", "F", "G", "C7", "F", "G", "C", "C"))
+        assertTrue(isBlues(0, "C7", "F", "G", "C7", "F", "G", "C7", "C7"))
+    }
+
+    @Test
     fun `an altered dominant is not a blues`() {
         listOf("G7#5", "G7b9").forEach { assertFalse(isBlues(7, it), it) }
         listOf("C7b5", "C7b13").forEach { assertFalse(isBlues(0, it), it) }

@@ -90,7 +90,7 @@ class ScaleExceptionsTest {
     @Test
     fun `a jazz blues is Mixolydian with the IV and V named`() {
         val group = group("C7 F7 C7 Dm7 G7 C7")
-        assertEquals("C" to "mixolydian", group.home)
+        assertEquals("C" to "minor_pentatonic", group.home)
         assertEquals(listOf("F7" to "F", "G7" to "G"), group.exceptions.map { it.chordName to it.rootName })
     }
 

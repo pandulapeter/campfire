@@ -20,8 +20,9 @@ import com.pandulapeter.campfire.chordpro.model.Chord
  *   out its tense notes, so they are the safe choice, though five notes never hold a key's chords. A harmonic or melodic
  *   minor home offers natural minor's, the safe set over a minor song's i and iv.
  * - **The minor pentatonic and the blues over a major sound that has a flat third or seventh**: after a Mixolydian
- *   home's major pentatonic; over a dominant blues, every chord a major one on the first, fourth, or fifth step, the
- *   first or the fourth a dominant seventh (C7 F G, C F7 G, but not the plain cadence C F G7); and over a rock riff, every
+ *   home's major pentatonic; over a dominant blues ([isDominantBlues]: C7 F G, C F7 G, a jazz blues with its ii–Vs, a
+ *   twelve-bar of triads turning around from its V7 to the IV, but not the plain cadence C F G7), first of all where
+ *   the major scale holds it; and over a rock riff, every
  *   chord a power chord, major triad, or dominant seventh on I, ♭III, IV, V, ♭VI, or ♭VII, or a thirdless one on ♭V, the
  *   flat ones a quarter of them at least (E G A, C B♭ F, A5 C5 D5, G5 B♭5 D♭5).
  *   The flat third against the chords' major third is the sound of the style, which no scale holding the notes plays, so
@@ -70,8 +71,11 @@ public object PlayableScales {
         }
         val hexatonics = (source?.let { scale -> insideHexatonics.filter { scale.intervals.containsAll(it.intervals) } }.orEmpty() + holding)
             .filter { it.id in hexatonicIds }
+        // A blues the major scale holds (triads and a V7 turning around to the IV) is still played as a blues.
+        val lead = if (isDominantBlues && home?.id == MAJOR_ID) dominantBluesScales else emptyList()
         val scales = (
-            listOfNotNull(home) +
+            lead +
+                listOfNotNull(home) +
                 bluesSound +
                 holding.filter { it in Scales.common && it.intervals.size <= HOME_SCALE_SIZE } +
                 holding.filter { it.intervals.size == HOME_SCALE_SIZE } +
@@ -83,22 +87,50 @@ public object PlayableScales {
     }
 
     /**
-     * Whether [chords] are a dominant blues on [root]: each a chord with a major third and no major seventh on its
-     * first, fourth or fifth step, and the first or the fourth step's a dominant seventh, its third and flat seventh
-     * both there. A seventh on the fifth alone is the plain cadence of every hymn and folk song, no blues, and a major
-     * seventh on the tonic (a Cmaj7 beside an F7) is a bossa's, which the blues scales' flat seventh clashes with. A
-     * first step with a flat ninth, a flat fifth, or a sharp fifth is an altered dominant, whose alteration the blues
+     * Whether [chords] are a dominant blues on [root], of one of two shapes:
+     *
+     * - **Plain**: each a chord with a major third and no major seventh on the first, fourth, or fifth step.
+     * - **Jazz**: every chord on the first step a dominant seventh, that step played more often than any other, no major
+     *   seventh on the first, fourth, or fifth step, and the major chords there more than half the plays; the rest (a
+     *   ii–V, a passing diminished chord, a VI7) are departures the home names as exceptions. Without the first two, a
+     *   gospel chart or Here Comes the Sun would read as a blues on a lesser root.
+     *
+     * Either needs a blues mark: the first or the fourth step played as a dominant seventh at least as often as plain, or
+     * the turnaround, a chord on the fifth step followed by one on the fourth (read as a loop, a section repeating), in
+     * a part half on its first step that plays a dominant seventh somewhere. The share tells a twelve-bar from rock and
+     * roll's I IV V IV loops, the seventh from Bad Moon Rising's triads, and a seventh on the fifth alone is the plain
+     * cadence of every hymn and folk song, as a tonic seventh passing once among plain tonics is a folk verse's colour.
+     * A major seventh on the tonic (a Cmaj7 beside an F7) is a bossa's, which the blues scales' flat seventh clashes with.
+     * A first step with a flat ninth, a flat fifth, or a sharp fifth is an altered dominant, whose alteration the blues
      * scales' natural fifth and ninth clash with; an altered turnaround elsewhere leaves the other bars a blues. A sharp
      * ninth is the blues third, so it stays.
      */
-    internal fun isDominantBlues(root: Int, chords: List<Chord>): Boolean {
-        if (chords.isEmpty()) return false
-        val isMajorOnBluesStep = chords.all { chord ->
-            (chord.root - root).mod(12) in bluesSteps && chord.intervals.map { it.mod(12) }.let { MAJOR_THIRD in it && MAJOR_SEVENTH !in it }
+    internal fun isDominantBlues(root: Int, chords: List<Chord>) = bluesShapeOf(root, chords) != null
+
+    /** Whether [chords] are a dominant blues on [root] of the plain shape ([isDominantBlues]), every chord on I, IV, or V. */
+    internal fun isPlainBlues(root: Int, chords: List<Chord>) = bluesShapeOf(root, chords) == BluesShape.PLAIN
+
+    private fun bluesShapeOf(root: Int, chords: List<Chord>): BluesShape? {
+        if (chords.isEmpty()) return null
+        fun step(chord: Chord) = (chord.root - root).mod(12)
+        fun intervalsOf(chord: Chord) = chord.intervals.map { it.mod(12) }
+        val onBluesSteps = chords.filter { step(it) in bluesSteps && intervalsOf(it).let { intervals -> MAJOR_THIRD in intervals && MAJOR_SEVENTH !in intervals } }
+        val onTonic = chords.filter { step(it) == 0 }
+        val isTonicMostPlayed = chords.groupingBy { step(it) }.eachCount().all { (other, plays) -> other == 0 || plays < onTonic.size }
+        val hasMajorSeventh = chords.any { step(it) in bluesSteps && MAJOR_SEVENTH in intervalsOf(it) }
+        val shape = when {
+            onBluesSteps.size == chords.size -> BluesShape.PLAIN
+            onTonic.isNotEmpty() && onTonic.all { it.isDominantSeventh } && isTonicMostPlayed && !hasMajorSeventh && onBluesSteps.size * 2 > chords.size -> BluesShape.JAZZ
+            else -> return null
         }
-        val isAltered = chords.any { chord -> (chord.root - root).mod(12) == 0 && chord.intervals.any { it.mod(12) in alterations } }
-        return isMajorOnBluesStep && !isAltered && chords.any { (it.root - root).mod(12) in seventhSteps && MINOR_SEVENTH in it.intervals }
+        if (onTonic.any { chord -> intervalsOf(chord).any { it in alterations } }) return null
+        fun isMostlySeventh(step: Int) = chords.filter { step(it) == step }.let { on -> on.isNotEmpty() && on.count { MINOR_SEVENTH in it.intervals } * 2 >= on.size }
+        val hasTurnaround = onTonic.size * 2 >= chords.size && chords.any { it.isDominantSeventh } &&
+            chords.indices.any { step(chords[it]) == FIFTH && step(chords[(it + 1) % chords.size]) == FOURTH }
+        return shape.takeIf { isMostlySeventh(0) || isMostlySeventh(FOURTH) || hasTurnaround }
     }
+
+    private enum class BluesShape { PLAIN, JAZZ }
 
     /**
      * Whether [chords] are a rock riff on [root]: each a chord with no third (a power or a suspended chord), a major
@@ -128,15 +160,17 @@ public object PlayableScales {
     private const val HOME_SCALE_SIZE = 7
     private const val MIN_MINOR_SHARE = 8
     private const val MAJOR_THIRD = 4
+    private const val FOURTH = 5
     private const val FLAT_FIFTH = 6
+    private const val FIFTH = 7
     private const val MINOR_SEVENTH = 10
     private const val MAJOR_SEVENTH = 11
     private const val MAJOR_PENTATONIC_ID = "major_pentatonic"
     private const val MINOR_PENTATONIC_ID = "minor_pentatonic"
     private const val MIXOLYDIAN_ID = "mixolydian"
+    private const val MAJOR_ID = "major"
     private val bluesSteps = setOf(0, 5, 7)
     private val alterations = setOf(1, 6, 8)
-    private val seventhSteps = setOf(0, 5)
     private val riffSteps = setOf(0, 3, 5, 7, 8, 10)
     private val flatRiffSteps = setOf(3, 8, 10)
     private val minorRiffSteps = setOf(3, 8)

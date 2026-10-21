@@ -360,6 +360,32 @@ class SongScaleGroupsTest {
         assertEquals(listOf("G" to "major", "D" to "major"), rootAndFirst(song("G C D G Em C D G", "D A Bm F#m G D E A", key = "G")))
 
     @Test
+    fun `a jazz blues is one group on its tonic, led by the blues scales, its departures the exceptions`() {
+        listOf("F", null).forEach { key ->
+            val blues = groups(song("F7 Bb7 F7 Cm7 F7 Bb7 Bdim7 F7 Am7 D7 Gm7 C7 F7 D7 Gm7 C7", key = key)).single()
+            assertEquals("F" to "minor_pentatonic", blues.rootName to blues.scales.first().id, key)
+            assertEquals(listOf("Bb7", "D7", "C7", "Bdim7", "Am7"), blues.exceptions.map { it.chordName }, key)
+        }
+        listOf("E", null).forEach { key ->
+            val twelveBar = groups(song("E E E E A A E E B7 A E B7", key = key)).single()
+            assertEquals("E" to "minor_pentatonic", twelveBar.rootName to twelveBar.scales.first().id, key)
+            assertTrue(twelveBar.exceptions.isEmpty(), key)
+        }
+        assertEquals(listOf("D" to "major"), rootAndFirst(song("D A G D D A G D", key = "D")))
+    }
+
+    @Test
+    fun `a passing tonic seventh is a moment of the key, not a blues`() {
+        val folk = groups(song("G G G7 C C G G D7 G G", key = "G")).single()
+        assertEquals("G" to "major", folk.rootName to folk.scales.first().id)
+        assertEquals(listOf("G7"), folk.exceptions.map { it.chordName })
+        val gospel = groups(song("C F G C7 F G C C", key = "C")).single()
+        assertEquals("C" to "major", gospel.rootName to gospel.scales.first().id)
+        assertEquals(listOf("C7"), gospel.exceptions.map { it.chordName })
+        assertEquals(listOf("A" to "minor_pentatonic"), rootAndFirst(song("A A A A7 D D A A E D A E", key = "A")))
+    }
+
+    @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
         assertEquals(listOf("C", "D"), groups.map { it.rootName })

@@ -28,7 +28,8 @@
   more than the key's scale, or the tonic is mostly a seventh (capo shapes in C under `{key: D}` play no D, so they
   never read as D Mixolydian). Only where none fits is the root scored (chords on
   it, the first and last, cadences into it), a mode only where the part starts on it; a part of one chord is answered
-  as the chord's sheet is (a `Dm7` vamp is Dorian). **The song is read as it
+  as the chord's sheet is (a `Dm7` vamp is Dorian). A tonic seventh passing once among plain tonics is no blues but the
+  key's moment. **The song is read as it
   stands**: the transposer has already moved the chords after a `{transpose}`, so it is never applied here, and a
   `{transpose}` inside a section starts a part. A chorus recall counts again only where its chords differ, and recalls
   of one set of chords once between them, so modulated last choruses never outweigh the song.
@@ -58,7 +59,10 @@
   unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
   pentatonic sharing its third and the blues (natural minor's for a harmonic or melodic minor home; the minor pentatonic
-  and blues also after a Mixolydian home's major one, over a dominant blues with the I or IV a seventh, and over a rock
-  riff), then the other common holders, other seven-note ones, hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.
+  and blues also after a Mixolydian home's major one, over a dominant blues (every chord major on I, IV, V, or every
+  chord on the I a seventh, the I the most played root, no major seventh on I, IV, V, and those steps more than half
+  the plays; the I or the IV mostly a seventh, or a V–IV turnaround in a part half on its I with a seventh in it), a
+  jazz blues's departures named against its Mixolydian, and ahead of the major scale where that holds the blues
+  (triads and a V7), and over a rock riff), then the other common holders, other seven-note ones, hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones where anything smaller fits.
 - A chord sheet puts its quality's textbook scales first (`ChordScaleChoices`), and an altered dominant (♭9, ♭5, ♯5) is
   never a blues.
