@@ -34,7 +34,9 @@ import com.pandulapeter.campfire.presentation.resources.tuner_notice_no_micropho
 import com.pandulapeter.campfire.presentation.resources.tuner_notice_not_asked
 import com.pandulapeter.campfire.presentation.resources.tuner_notice_not_supported
 import com.pandulapeter.campfire.presentation.resources.tuner_notice_refused
+import com.pandulapeter.campfire.presentation.resources.tuner_notice_refused_no_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_notice_refused_web
+import com.pandulapeter.campfire.presentation.resources.tuner_notice_refused_web_no_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_open_settings
 import com.pandulapeter.campfire.presentation.resources.tuner_try_again
 import com.pandulapeter.campfire.presentation.resources.tuner_use_microphone
@@ -46,6 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.MicrophonePermission
  * refusal offers the system's settings where the platform has a page to open, and asking again where the system would
  * still show its question.
  *
+ * @param hasStrings Whether the page offers the instrument's strings as tones, which a refusal points to as what is left.
  * @param onListen Opens the microphone, which on the desktop and the web is also what asks.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -54,6 +57,7 @@ internal fun TunerNoticeCard(
     modifier: Modifier = Modifier,
     notice: TunerNotice,
     permission: MicrophonePermission,
+    hasStrings: Boolean,
     onListen: () -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
     Text(
@@ -63,7 +67,12 @@ internal fun TunerNoticeCard(
         text = stringResource(
             when (notice) {
                 TunerNotice.NOT_ASKED -> Res.string.tuner_notice_not_asked
-                TunerNotice.REFUSED -> if (permission.isAllowedInBrowser) Res.string.tuner_notice_refused_web else Res.string.tuner_notice_refused
+                TunerNotice.REFUSED -> when {
+                    permission.isAllowedInBrowser && hasStrings -> Res.string.tuner_notice_refused_web
+                    permission.isAllowedInBrowser -> Res.string.tuner_notice_refused_web_no_strings
+                    hasStrings -> Res.string.tuner_notice_refused
+                    else -> Res.string.tuner_notice_refused_no_strings
+                }
                 TunerNotice.NO_MICROPHONE -> Res.string.tuner_notice_no_microphone
                 TunerNotice.BUSY -> Res.string.tuner_notice_busy
                 TunerNotice.NOT_SUPPORTED -> Res.string.tuner_notice_not_supported

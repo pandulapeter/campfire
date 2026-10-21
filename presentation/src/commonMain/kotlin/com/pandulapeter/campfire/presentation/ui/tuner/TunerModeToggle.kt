@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.tuner
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +18,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -30,38 +33,59 @@ import com.pandulapeter.campfire.presentation.resources.tuner_strings
  * reference pitch's play circle and in the sheet over a song in its header, small enough not to read as part of what is heard. Left
  * out by both for an instrument with no strings to tune (the keyboard, Other), which is read note by note either way.
  * Its segments carry no check mark, whose room is most of what a label has at this size; the fill marks the choice.
+ *
+ * @param isEnabled False while Campfire may not use the microphone ([TunerNotice.isMissingPermission]): the mode is only
+ * how the microphone is read, so a choice made then would change nothing the player sees.
  */
 @Composable
 internal fun TunerModeToggle(
     modifier: Modifier = Modifier,
     mode: TunerSettings.Mode,
+    isEnabled: Boolean,
     onModeSelected: (TunerSettings.Mode) -> Unit,
-) = SingleChoiceSegmentedButtonRow(modifier = modifier) {
-    val options = listOf(
-        TunerSettings.Mode.STRINGS to stringResource(Res.string.tuner_strings),
-        TunerSettings.Mode.CHROMATIC to stringResource(Res.string.tuner_mode_chromatic),
-    )
-    options.forEachIndexed { index, (value, label) ->
-        SegmentedButton(
-            // Set below Material's 40dp minimum, which a modifier's own height takes precedence over.
-            modifier = Modifier.height(TUNER_MODE_TOGGLE_HEIGHT),
-            selected = value == mode,
-            onClick = { onModeSelected(value) },
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-            icon = {},
-            contentPadding = TUNER_MODE_TOGGLE_PADDING,
-            label = {
-                Text(
-                    text = label,
-                    // Named rather than inherited: the sheet's header sets its actions' labels at the title's size.
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                )
-            },
+) {
+    // Dimmed by a fading alpha over the enabled colors rather than by Material's disabled ones, which would swap at once.
+    val alpha by animateFloatAsState(if (isEnabled) 1f else DISABLED_ALPHA)
+    val colors = SegmentedButtonDefaults.colors().let { colors ->
+        colors.copy(
+            disabledActiveContainerColor = colors.activeContainerColor,
+            disabledActiveContentColor = colors.activeContentColor,
+            disabledActiveBorderColor = colors.activeBorderColor,
+            disabledInactiveContainerColor = colors.inactiveContainerColor,
+            disabledInactiveContentColor = colors.inactiveContentColor,
+            disabledInactiveBorderColor = colors.inactiveBorderColor,
         )
+    }
+    SingleChoiceSegmentedButtonRow(modifier = modifier.alpha(alpha)) {
+        val options = listOf(
+            TunerSettings.Mode.STRINGS to stringResource(Res.string.tuner_strings),
+            TunerSettings.Mode.CHROMATIC to stringResource(Res.string.tuner_mode_chromatic),
+        )
+        options.forEachIndexed { index, (value, label) ->
+            SegmentedButton(
+                // Set below Material's 40dp minimum, which a modifier's own height takes precedence over.
+                modifier = Modifier.height(TUNER_MODE_TOGGLE_HEIGHT),
+                selected = value == mode,
+                onClick = { onModeSelected(value) },
+                enabled = isEnabled,
+                colors = colors,
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                icon = {},
+                contentPadding = TUNER_MODE_TOGGLE_PADDING,
+                label = {
+                    Text(
+                        text = label,
+                        // Named rather than inherited: the sheet's header sets its actions' labels at the title's size.
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                    )
+                },
+            )
+        }
     }
 }
 
 /** Also the room the Tuner tab keeps for the toggle where it is hidden, so that the display under it stays put. */
 internal val TUNER_MODE_TOGGLE_HEIGHT = 32.dp
+private const val DISABLED_ALPHA = 0.38f
 private val TUNER_MODE_TOGGLE_PADDING = PaddingValues(horizontal = 12.dp)

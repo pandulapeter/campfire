@@ -21,6 +21,10 @@ internal enum class TunerNotice {
     BUSY,
     NOT_SUPPORTED,
     FAILED,
+    ;
+
+    /** Whether the microphone is not allowed yet or any more, rather than allowed but out of reach. */
+    val isMissingPermission get() = this == NOT_ASKED || this == REFUSED
 }
 
 /**

@@ -111,6 +111,7 @@ internal fun TunerSheet(
                     // As far from the edge as the close button's icon is from the other one.
                     modifier = Modifier.padding(end = 12.dp),
                     mode = mode,
+                    isEnabled = notice?.isMissingPermission != true,
                     onModeSelected = { value -> viewModel.tunerController.updateTunerSettings { copy(mode = value) } },
                 )
             }
@@ -143,6 +144,7 @@ internal fun TunerSheet(
                 TunerNoticeCard(
                     notice = shownNotice,
                     permission = permission,
+                    hasStrings = config.tuning != null,
                     onListen = viewModel.tunerController::requestMicrophone,
                 )
             }

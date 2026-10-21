@@ -138,6 +138,7 @@ internal fun TunerScreen(
                 preferences = preferences,
                 notation = notation,
                 mode = mode,
+                isModeEnabled = notice?.isMissingPermission != true,
                 referencePitch = config.referencePitch,
                 isReferenceTonePlaying = tone == REFERENCE_NOTE,
                 onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
@@ -150,6 +151,7 @@ internal fun TunerScreen(
             modifier = Modifier.padding(contentPadding.only(start = true, end = true)),
             mode = mode,
             isShown = userPreferences?.instrumentTuning != null,
+            isEnabled = notice?.isMissingPermission != true,
             onModeSelected = { value -> viewModel.tunerController.updateTunerSettings { copy(mode = value) } },
         )
         AnimatedVisibility(
@@ -185,6 +187,7 @@ internal fun TunerScreen(
                     TunerNoticeCard(
                         notice = shownNotice,
                         permission = permission,
+                        hasStrings = config.tuning != null,
                         onListen = viewModel.tunerController::requestMicrophone,
                     )
                 }
@@ -210,6 +213,7 @@ private fun TunerInstrumentRow(
     preferences: UserPreferences,
     notation: ChordNotation,
     mode: TunerSettings.Mode,
+    isModeEnabled: Boolean,
     referencePitch: Int,
     isReferenceTonePlaying: Boolean,
     onInstrumentClicked: () -> Unit,
@@ -222,8 +226,9 @@ private fun TunerInstrumentRow(
     tuning = preferences.instrumentTuning,
     notation = notation,
     // Chromatic reads every note whatever is picked here, so a pick would change nothing the tab shows. An instrument
-    // without strings hides the choice, so it never leaves the pill dimmed with no way back.
-    isEnabled = mode == TunerSettings.Mode.STRINGS || preferences.instrumentTuning == null,
+    // without strings hides the choice, and a microphone not allowed disables it, so it never leaves the pill dimmed with
+    // no way back.
+    isEnabled = mode == TunerSettings.Mode.STRINGS || preferences.instrumentTuning == null || !isModeEnabled,
     onInstrumentClicked = onInstrumentClicked,
     onTuningClicked = onTuningClicked,
 ) {
@@ -245,6 +250,7 @@ private fun TunerModeLine(
     modifier: Modifier,
     mode: TunerSettings.Mode,
     isShown: Boolean,
+    isEnabled: Boolean,
     onModeSelected: (TunerSettings.Mode) -> Unit,
 ) = Box(
     modifier = modifier
@@ -261,6 +267,7 @@ private fun TunerModeLine(
     ) {
         TunerModeToggle(
             mode = mode,
+            isEnabled = isEnabled,
             onModeSelected = onModeSelected,
         )
     }

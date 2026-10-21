@@ -69,7 +69,9 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
   switch's, and ignored), extra small: in the sheet's header, and on the tab under the play circle, its end at the
   circle's. Chromatic reads every note and dims the pill without changing the instrument, which the chord diagrams and
   scales share. The toggle is hidden for the keyboard and Other, whose pill is never dimmed; on the tab it only fades,
-  keeping its line, so the display never moves.
+  keeping its line, so the display never moves. While the microphone is not allowed (`TunerNotice.isMissingPermission`)
+  it fades to disabled, and the pill is not dimmed, since the mode only changes what is heard. The refusal notice
+  points to the strings' tones only where there are strings.
 - **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
   note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
   spoken form for screen readers (`spokenNoteName`).
