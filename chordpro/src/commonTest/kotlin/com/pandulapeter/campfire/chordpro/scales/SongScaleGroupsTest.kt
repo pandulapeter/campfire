@@ -628,4 +628,15 @@ class SongScaleGroupsTest {
         val silent = ChordProParser.parse("{start_of_chorus}\nWords\n{end_of_chorus}\n{chorus}").blocks.last()
         assertTrue(silent is ChordProBlock.ChorusRecall && !SongScaleGroups.playsChords(silent))
     }
+
+    @Test
+    fun `a song playing more chords than the budget gets no groups`() {
+        fun groupsOf(chordCount: Int) = groups(
+            "{key: G}\n{start_of_verse: Verse}\n" +
+                (0 until chordCount).joinToString(" ") { "[${listOf("G", "C", "D")[it % 3]}]la" } +
+                "\n{end_of_verse}",
+        )
+        assertEquals(1, groupsOf(SongScaleGroups.MAX_PLAYED_CHORDS).size)
+        assertTrue(groupsOf(SongScaleGroups.MAX_PLAYED_CHORDS + 1).isEmpty())
+    }
 }

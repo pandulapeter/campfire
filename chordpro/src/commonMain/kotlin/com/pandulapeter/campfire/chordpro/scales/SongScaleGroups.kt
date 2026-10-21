@@ -39,13 +39,17 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  */
 public object SongScaleGroups {
 
-    /** The groups of [song], which is in the standard notation, in the order their first sections are played. */
+    /**
+     * The groups of [song], which is in the standard notation, in the order their first sections are played; none for a
+     * song playing more than [MAX_PLAYED_CHORDS] chords. The work still grows with the sections times the groups under
+     * that budget, so a caller on the main thread bounds the sections itself.
+     */
     public fun of(song: ChordProSong): List<ScaleGroup> = playedGroupsOf(song).map { it.group }
 
     /** [of] with the chords each group plays, for [SongScaleSuggestions] to weigh them by. */
     internal fun playedGroupsOf(song: ChordProSong): List<PlayedGroup> {
         val parts = SongParts.of(song)
-        if (parts.isEmpty()) return emptyList()
+        if (parts.isEmpty() || parts.sumOf { it.chords.size } > MAX_PLAYED_CHORDS) return emptyList()
         fitOf(parts)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.playedGroupOf(parts)) }
         val groups = mutableListOf<Group>()
         parts.forEach { part ->
@@ -449,6 +453,13 @@ public object SongScaleGroups {
 
         fun isTonicVamp(root: SpelledNote) = parts.all { it.isTonicVamp(root) }
     }
+
+    /**
+     * The most chords a song may play for its scales to be worked out: grouping fits every part against every group, so
+     * the work grows with the sections times the chords, and past this a song details page would freeze opening. Several
+     * times the longest real song (House of the Rising Sun plays 112).
+     */
+    internal const val MAX_PLAYED_CHORDS = 1_000
 
     private const val HOME_SCALE_SIZE = 7
     private const val MINOR_THIRD = 3

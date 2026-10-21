@@ -92,7 +92,8 @@ internal class SongLyricsModel(
  * model built on the main thread.
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
  * section: a walk over every chord, so done here, with the chords on only, and never for a songbook (over
- * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections), where it grows past what the main thread can spare.
+ * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections) or a song playing over `SongScaleGroups.MAX_PLAYED_CHORDS` chords (the
+ * `:chordpro` side's gate), where it grows past what the main thread can spare.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,

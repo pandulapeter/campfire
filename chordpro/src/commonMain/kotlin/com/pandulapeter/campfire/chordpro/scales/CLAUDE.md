@@ -44,7 +44,9 @@
   the `{transpose}` it stands for: a section replaying an earlier one of its kind at one shift (four chords or more, the
   copy at most as long, never a fourth or fifth, where the same loop is the neighbouring key's far more often), the
   shift holding until another copy moves it; a chart that directs its key changes is read as directed. A chorus recall counts again only where its chords differ, and recalls
-  of one set of chords once between them, so modulated last choruses never outweigh the song.
+  of one set of chords once between them, so modulated last choruses never outweigh the song. Nothing is worked out for
+  a song playing more than `MAX_PLAYED_CHORDS` chords (a recall of the same chords counted once): grouping grows with
+  sections times chords.
 - Where no scale holds a part, a **home** (major, the minor family as one, Dorian, Mixolydian, and Phrygian dominant
   where a major ♭II chord is played: the Andalusian cadence, under a major key or guessed, counting only the chords it
   holds) holding half its chords answers; it may leave out two distinct chords or a third of them, except on the key's root, where the author's word
