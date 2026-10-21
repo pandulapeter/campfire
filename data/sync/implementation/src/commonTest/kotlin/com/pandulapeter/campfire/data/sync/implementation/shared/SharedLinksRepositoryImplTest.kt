@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncScopeMissingException
@@ -167,6 +168,27 @@ class SharedLinksRepositoryImplTest {
         assertEquals(setOf(kept.shareId), provider.sharedFiles.keys)
         assertEquals(listOf(kept.shareId), registry(provider).links.map { it.shareId })
         assertEquals(listOf(kept.shareId), repository.shares.first().map { it.shareId })
+    }
+
+    @Test
+    fun `a share whose copy cannot be deleted says why and stays listed and working`() = runTest {
+        val failures = listOf(
+            SyncNetworkException("offline") to SharingFailure.NETWORK,
+            SyncScopeMissingException("missing_scope", requiredScope = "sharing.write") to SharingFailure.SCOPE_MISSING,
+            SyncAuthorizationException("expired") to SharingFailure.AUTHORIZATION,
+            IllegalStateException("unforeseen") to SharingFailure.UNKNOWN,
+        )
+        failures.forEach { (exception, failure) ->
+            val provider = FakeSyncProvider()
+            val repository = repository(provider)
+            val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+            provider.onDeleteSharedFile = { throw exception }
+
+            assertEquals(failure, repository.stopSharing(share.shareId))
+
+            assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
+            assertEquals(listOf(share.shareId), repository.shares.first().map { it.shareId })
+        }
     }
 
     @Test

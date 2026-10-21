@@ -9,13 +9,16 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -24,9 +27,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -43,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sharing_show_qr
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_too_large
 import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_stop
+import com.pandulapeter.campfire.presentation.resources.share_stopping
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
@@ -54,7 +62,8 @@ import org.jetbrains.compose.resources.painterResource
  * shrinks away in its own place ([sharedLinkRowsOf]); one that arrives with a fresher read of the list is simply there,
  * since that is data arriving rather than anything the user did.
  *
- * @param busyShareIds The shares being stopped, drawn faded and without their menu until the list lets them go.
+ * @param busyShareIds The shares being stopped, drawn faded and with a progress indicator in place of their menu until
+ *   the list lets them go, or until the stop fails and gives the menu back.
  * @param canShowQrCode Whether the library holds the item, which the export screen that shows the QR code is opened on.
  */
 @Composable
@@ -112,37 +121,66 @@ private fun SharedLinkRow(
         }
     },
     trailingContent = {
-        // Nothing to do with a share already on its way out; the row leaves as soon as the list lets it go. The button
-        // shrinks away rather than vanishing, so that the title it leaves room for widens instead of jumping.
-        AnimatedVisibility(
-            visible = !isBusy,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            ActionsMenu(contentDescription = stringResource(Res.string.settings_sharing_actions)) {
-                val isInLibrary = share.state != ShareState.ORPHANED
-                listOfNotNull(
-                    ActionsMenuItem(
-                        title = stringResource(Res.string.share_copy),
-                        icon = painterResource(Res.drawable.ic_duplicate),
-                        onClick = onCopy,
-                    ).takeIf { isInLibrary },
-                    ActionsMenuItem(
-                        title = stringResource(Res.string.settings_sharing_show_qr_code),
-                        icon = painterResource(Res.drawable.ic_share),
-                        onClick = onShowQrCode,
-                    ).takeIf { isInLibrary && canShowQrCode },
-                    ActionsMenuItem(
-                        title = stringResource(Res.string.share_stop),
-                        icon = painterResource(Res.drawable.ic_delete),
-                        isAlwaysInMenu = true,
-                        onClick = onStop,
-                    ),
-                )
+        // Nothing to do with a share already on its way out but to see that it is: the menu gives way to a progress
+        // indicator until the row leaves, or comes back where the stop failed. The two swap sizes smoothly, so that the
+        // title they leave room for never jumps.
+        AnimatedContent(
+            targetState = isBusy,
+            contentAlignment = Alignment.Center,
+            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+        ) { isStopping ->
+            if (isStopping) {
+                StoppingIndicator()
+            } else {
+                SharedLinkActions(share = share, canShowQrCode = canShowQrCode, onCopy = onCopy, onShowQrCode = onShowQrCode, onStop = onStop)
             }
         }
     },
 )
+
+@Composable
+private fun SharedLinkActions(
+    share: Share,
+    canShowQrCode: Boolean,
+    onCopy: () -> Unit,
+    onShowQrCode: () -> Unit,
+    onStop: () -> Unit,
+) = ActionsMenu(contentDescription = stringResource(Res.string.settings_sharing_actions)) {
+    val isInLibrary = share.state != ShareState.ORPHANED
+    listOfNotNull(
+        ActionsMenuItem(
+            title = stringResource(Res.string.share_copy),
+            icon = painterResource(Res.drawable.ic_duplicate),
+            onClick = onCopy,
+        ).takeIf { isInLibrary },
+        ActionsMenuItem(
+            title = stringResource(Res.string.settings_sharing_show_qr_code),
+            icon = painterResource(Res.drawable.ic_share),
+            onClick = onShowQrCode,
+        ).takeIf { isInLibrary && canShowQrCode },
+        ActionsMenuItem(
+            title = stringResource(Res.string.share_stop),
+            icon = painterResource(Res.drawable.ic_delete),
+            isAlwaysInMenu = true,
+            onClick = onStop,
+        ),
+    )
+}
+
+/**
+ * In the room of the menu's button, so that the row keeps its height, and named for screen readers as the export screen
+ * names the same moment.
+ */
+@Composable
+private fun StoppingIndicator() {
+    val description = stringResource(Res.string.share_stopping)
+    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(24.dp).semantics { contentDescription = description },
+            strokeWidth = 3.dp,
+        )
+    }
+}
 
 /** The line under a share's title: what keeps it from following its item, else the day it was shared. */
 @Composable

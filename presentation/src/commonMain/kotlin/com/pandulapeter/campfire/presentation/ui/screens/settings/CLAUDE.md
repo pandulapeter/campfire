@@ -27,8 +27,9 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 - **Sharing** (`SharingSections`): there while disconnected too. Stages (`sharingStageOf`) crossfade, except the list
   arriving over "Nothing shared yet". Connect keeps `SyncConsentOrigin.Sharing`. Settling into view (not being composed
   by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline, saying so once a read
-  fails (`isStaleSharingList`). A stopped row shrinks in place (`sharedLinkRowsOf`); Stop sharing everything is alone in
-  the last section.
+  fails (`isStaleSharingList`). A row being stopped (every row, for Stop sharing everything) fades, its menu crossfading
+  into a progress indicator until it shrinks in place (`sharedLinkRowsOf`), or, where the stop fails, back with a
+  snackbar saying why. Stop sharing everything is alone in the last section.
 - **Features**: Playing switches first, in the navigation's tab order (songs, setlists, metronome, tuner, chords, chord
   diagrams, scales, scale suggestions), then an Online group (song details lookup, cover art) so the two that make
   requests are found together. Rules in `ui/CLAUDE.md`.

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -44,7 +45,7 @@ internal fun ActionListItem(
 ) = ListItem(
     modifier = modifier
         .clickable(enabled = isEnabled, onClick = onClick)
-        .alpha(if (isEnabled) 1f else 0.5f)
+        .alpha(animateFloatAsState(if (isEnabled) 1f else 0.5f).value)
         .padding(horizontal = horizontalInset),
     colors = if (isEmphasized) {
         ListItemDefaults.colors(
