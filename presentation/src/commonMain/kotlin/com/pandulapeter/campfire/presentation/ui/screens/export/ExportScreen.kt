@@ -369,7 +369,6 @@ internal fun ExportScreen(
                                                 LinkPreview(
                                                     modifier = Modifier.fillMaxSize(),
                                                     state = link.state,
-                                                    qrCode = link.qrCode,
                                                     kind = shareTargetOf(dialog)!!.kind,
                                                     // Beside the options the button floats over the end of this pane.
                                                     contentPadding = PaddingValues(bottom = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 0.dp),

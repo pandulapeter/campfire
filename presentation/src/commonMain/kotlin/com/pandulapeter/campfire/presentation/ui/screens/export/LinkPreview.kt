@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -66,7 +67,6 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 internal fun LinkPreview(
     modifier: Modifier,
     state: LinkExportState,
-    qrCode: QrCode?,
     kind: SharedLinkKind,
     contentPadding: PaddingValues,
 ) = AnimatedContent(
@@ -78,7 +78,7 @@ internal fun LinkPreview(
     Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
         when (shown) {
             LinkExportState.Working -> DelayedLoadingIndicator()
-            is LinkExportState.Shared -> SharedLink(state = shown, qrCode = qrCode)
+            is LinkExportState.Shared -> SharedLink(state = shown)
             else -> LinkMessage(linkMessageOf(shown, kind))
         }
     }
@@ -115,17 +115,18 @@ private fun LinkMessage(text: String) = Text(
 
 /**
  * The QR code, the link under it in the monospace face, selectable since some will rather copy a part of it by hand,
- * and the day it was shared; scrolled where a short window has no room for all of it.
+ * and the day it was shared; scrolled where a short window has no room for all of it. The code is made from the state
+ * this is drawn for, not the screen's current one, so that a link fading out once Stop sharing is pressed keeps it.
  */
 @Composable
 private fun SharedLink(
     state: LinkExportState.Shared,
-    qrCode: QrCode?,
 ) = Column(
     modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(12.dp),
 ) {
+    val qrCode = remember(state.share.link.landingUrl) { QrCode.encode(state.share.link.landingUrl) }
     if (qrCode != null) {
         QrCodeImage(
             modifier = Modifier.widthIn(max = QR_CODE_WIDTH).fillMaxWidth(),

@@ -35,12 +35,10 @@ import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompl
 import kotlinx.coroutines.launch
 
 /**
- * The Link format of one song or setlist as the export screen draws it: its [state], the QR code of a shared link, and
- * what each control does. [isStopAsked] is the Stop sharing question, which the screen puts up itself.
+ * The Link format of one song or setlist as the export screen draws it: its [state] and what each control does. [isStopAsked] is the Stop sharing question, which the screen puts up itself.
  */
 internal class LinkExport(
     val state: LinkExportState,
-    val qrCode: QrCode?,
     isStopAsked: MutableState<Boolean>,
     val onAction: (LinkAction) -> Unit,
     val onShare: () -> Unit,
@@ -74,7 +72,6 @@ internal fun rememberLinkExport(
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
     val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creation, stoppingShareIds = stoppingShareIds)
     val link = (state as? LinkExportState.Shared)?.share?.link?.landingUrl
-    val qrCode = remember(link) { link?.let { QrCode.encode(it) } }
     val isStopAsked = remember(dialog) { mutableStateOf(false) }
     val filePicker = LocalFilePicker.current
     val clipboard = LocalClipboard.current
@@ -83,7 +80,6 @@ internal fun rememberLinkExport(
     val isOpenNow by rememberUpdatedState(isOpen)
     return LinkExport(
         state = state,
-        qrCode = qrCode,
         isStopAsked = isStopAsked,
         onAction = { action ->
             if (isOpenNow) when (action) {
@@ -105,6 +101,7 @@ internal fun rememberLinkExport(
         },
         onShare = { if (isOpenNow && link != null) viewModel.exportController.shareLink(filePicker, dialog, link = link, subject = title) },
         onSaveQrCode = {
+            val qrCode = link?.let { QrCode.encode(it) }
             if (isOpenNow && qrCode != null && source != null) {
                 viewModel.exportController.exportQrCode(filePicker, dialog, fileName = qrCodeFileName(source)) { qrCodePng(qrCode) }
             }
