@@ -158,5 +158,5 @@ schemes can be).
 - **A second tab** offers its links on the `campfire-shared-links` `BroadcastChannel` from the "already open" page. The
   page holding the library (from the moment it is granted the lock) adds them to its own list and answers; only then
   does the second tab drop them and say "Sent to Campfire in your other tab." With no answer in 2 s they stay for Retry.
-- The download is the app's own, from `dl.dropboxusercontent.com`, which answers CORS (plan step 0); nothing here
+- The download is the app's own, from `dl.dropboxusercontent.com`, which answers CORS (`data/source/remote/implementation`); nothing here
   fetches.

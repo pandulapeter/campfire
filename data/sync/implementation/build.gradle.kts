@@ -15,7 +15,7 @@ plugins {
 
 /**
  * The build number stands for the code that packs a shared copy: a copy an older build made is built again once, and
- * one a newer build made is left alone (documentation/plans/song-links.md, §5.6). Taken from the one property every
+ * one a newer build made is left alone (`shared/CLAUDE.md`). Taken from the one property every
  * platform's version code comes from, so that it is never typed by hand.
  */
 val generateSyncConfiguration = tasks.register("generateSyncConfiguration") {

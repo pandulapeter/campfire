@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import kotlinx.coroutines.CancellationException
 
 /**
- * A run's shared-copy step (documentation/plans/song-links.md, §5): brings every shared copy in the cloud folder up to
+ * A run's shared-copy step: brings every shared copy in the cloud folder up to
  * date with the library a completed run left, applies this device's journal of renames and stops, and writes what
  * changed into the registry as one edit at the end, also when it ends early, keeping what was done up to then.
  *

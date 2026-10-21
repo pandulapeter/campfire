@@ -84,6 +84,10 @@ Silent failures go to the injected `Logger`.
   - The address `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<rlkey>&dl=0` is cut into `fileId` and `rlkey`
     (each `[A-Za-z0-9_-]{1,64}`); any other form (an old `/s/` link) is `Refused`, since no download could be built.
   - Deleted with `files/delete_v2`; `path_lookup/not_found` is success. A deleted file's link never comes back.
+  - Opening a link (`SharedLink.Readable.downloadUrl`) needs only `fileId`, `rlkey`, and some name, from
+    `dl.dropboxusercontent.com` (measured, undocumented): it serves the zip without a redirect, with
+    `Access-Control-Allow-Origin: *`, so the web downloads like the rest, and answers a dead link 403/404. The
+    `www.dropbox.com` address answers every dead link 200 with HTML, and its redirect has no CORS header.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a
   decision rests on (listing entries, cursor, `has_more`; revisions; the access token; the delete job's tag) are

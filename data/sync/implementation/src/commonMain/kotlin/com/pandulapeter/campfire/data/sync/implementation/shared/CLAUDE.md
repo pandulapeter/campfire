@@ -9,8 +9,6 @@
 -->
 # shared/ (song links)
 
-The plan is `documentation/plans/song-links.md` (§4.2, §5, §6.3, §11).
-
 ## The registry, mirror, and journal
 
 - **Registry**: `shared-links.json` at the cloud folder's root (`SharedLinksFormat`), the account's one list of shares,

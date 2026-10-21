@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The shared-copy step after a real engine's run (documentation/plans/song-links.md, §5.6): a copy is built only when
+ * The shared-copy step after a real engine's run: a copy is built only when
  * its inputs or the build changed, and uploaded only when its bytes did.
  */
 class SharedCopySyncTest {
