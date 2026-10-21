@@ -54,6 +54,10 @@ import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.songs.DuplicateSongUseCase
 import com.pandulapeter.campfire.domain.api.sync.DisconnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
+import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
+import com.pandulapeter.campfire.domain.api.sharing.LoadSharedLinksUseCase
+import com.pandulapeter.campfire.domain.api.sharing.StopSharingUseCase
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
@@ -113,9 +117,11 @@ import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
-import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.screens.export.shareTargetOf
+import com.pandulapeter.campfire.presentation.ui.share.ShareLinkController
+import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigins
 import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
+import com.pandulapeter.campfire.presentation.ui.sync.syncConsentOriginOf
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
@@ -211,6 +217,10 @@ class CampfireViewModel(
     private val clearCoverArtCache: ClearCoverArtCacheUseCase,
     private val searchSongDetails: SearchSongDetailsUseCase,
     private val loadSongCredits: LoadSongCreditsUseCase,
+    getSharedLinks: GetSharedLinksUseCase,
+    createShareLink: CreateShareLinkUseCase,
+    stopSharing: StopSharingUseCase,
+    loadSharedLinks: LoadSharedLinksUseCase,
     /** What the screens draw a song, a key and a search with, see [SongRenderer]. */
     internal val songRenderer: SongRenderer,
     private val metronome: Metronome,
@@ -263,6 +273,8 @@ class CampfireViewModel(
             // nothing once it is no longer the dialog on screen.
             if (previousDialog is DialogType.Export && dialogType != previousDialog) {
                 exportController.flushPrintSettings()
+                // How sharing it last went is for this screen only: opened again, it offers to share afresh.
+                shareTargetOf(previousDialog)?.let(shareLinkController::forgetCreation)
                 // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
                 exportController.cancelPdfExport()
             }
@@ -370,6 +382,17 @@ class CampfireViewModel(
 
     /** See [PreferencesController.userPreferences]. */
     val userPreferences: StateFlow<UserPreferences?> get() = preferencesController.userPreferences
+
+    internal val shareLinkController: ShareLinkController = ShareLinkController(
+        scope = viewModelScope,
+        messageSink = messageSink,
+        getSharedLinks = getSharedLinks,
+        createShareLink = createShareLink,
+        stopSharing = stopSharing,
+        loadSharedLinks = loadSharedLinks,
+    )
+
+    private val syncConsentOrigins: SyncConsentOrigins = SyncConsentOrigins(savedStateStore)
 
     internal val syncController: SyncController = SyncController(
         scope = viewModelScope,
@@ -707,7 +730,11 @@ class CampfireViewModel(
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
         // The origin is taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
-        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = { navigator.showSyncConsentAnswer(takeSyncConsentOrigin()) })
+        syncController.startRestoring(isFirstLaunch = isFirstLaunch) {
+            navigator.showSyncConsentAnswer(syncConsentOrigins.take()) { target ->
+                savedDialogRestorer.reopenExport(target) { exportController.choosePrintFormat(PrintSettings.Format.LINK) }
+            }
+        }
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
@@ -831,7 +858,7 @@ class CampfireViewModel(
     // Sync
 
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
-        navigator.rememberSyncConsentOrigin()
+        syncConsentOrigins.keep(syncConsentOriginOf(topDestination = navigator.backStack.lastOrNull(), visibleDialog = dialogHost.visibleDialog.value))
         syncController.connectSyncProvider(providerId, completionPage)
     }
 

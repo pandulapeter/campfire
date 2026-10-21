@@ -38,10 +38,14 @@ data class PrintSettings(
 ) {
     fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, MAX_COLUMNS))
 
-    /** [FILES] is what the library holds: a song's ChordPro file, or a setlist's zip of its manifest and its songs. */
+    /**
+     * [FILES] is what the library holds: a song's ChordPro file, or a setlist's zip of its manifest and its songs. [LINK]
+     * shares a song or a setlist as a link from the connected sync account; a version that does not know it reads [PDF].
+     */
     enum class Format(val id: String) {
         PDF("pdf"),
         FILES("files"),
+        LINK("link"),
     }
 
     enum class Paper(val id: String, val width: Float, val height: Float) {

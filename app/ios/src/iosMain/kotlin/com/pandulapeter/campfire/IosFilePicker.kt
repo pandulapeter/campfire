@@ -109,7 +109,6 @@ internal class IosFilePicker(
 
     override val canShare = true
 
-    @OptIn(ExperimentalForeignApi::class)
     override suspend fun shareFile(file: ExportedFile): Boolean {
         val url = file.writeToTemporaryFile() ?: return false
         return withContext(Dispatchers.Main) {
@@ -122,25 +121,11 @@ internal class IosFilePicker(
                     url.deleteTemporaryFile()
                     continuation.resume(false)
                 } else {
-                    val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
-                    // Campfire's own share extension takes every file an export makes, and would only queue it for
-                    // re-import as a batch of songs that are all already there.
-                    NSBundle.mainBundle.bundleIdentifier?.let { controller.excludedActivityTypes = listOf("$it$SHARE_EXTENSION_SUFFIX") }
-                    // An iPad presents this as a popover, which needs something to point at. The menu the share was chosen
-                    // from is Compose's and out of reach from here, so the popover stands in the middle of the view with no
-                    // arrow rather than pointing at the view's corner, which is where a source rectangle left at zero is.
-                    controller.popoverPresentationController?.let { popover ->
-                        val bounds = host.view.bounds
-                        popover.sourceView = host.view
-                        popover.sourceRect = bounds.useContents { CGRectMake(origin.x + size.width / 2, origin.y + size.height / 2, 0.0, 0.0) }
-                        popover.permittedArrowDirections = 0uL
-                    }
                     // The sheet hands out copies and never takes the file away, so this is the only moment it is
                     // certainly finished with: an activity that is still reading it has not returned yet. A handler
                     // that never runs costs one file that iOS purges on its own, which is why the caller is still
                     // answered from the presentation rather than from here.
-                    controller.completionWithItemsHandler = { _, _, _, _ -> url.deleteTemporaryFile() }
-                    host.presentViewController(controller, animated = true, completion = null)
+                    host.presentShareSheet(item = url) { url.deleteTemporaryFile() }
                     // Resumed as the sheet is shown rather than from its completionWithItemsHandler: nothing acts on
                     // whether a share was completed, and a handler UIKit never calls - it promises nothing for a
                     // controller torn down underneath it - would leave the caller suspended, holding the one file
@@ -149,6 +134,15 @@ internal class IosFilePicker(
                 }
             }
         }
+    }
+
+    /** An address goes out as an `NSURL`, which the targets that take one (Messages, Mail, AirDrop) show as a link. */
+    override suspend fun shareText(text: String, subject: String): Boolean = withContext(Dispatchers.Main) {
+        val host = viewController()
+        // Refused with nothing but a log line while another sheet is up, as a file's share is.
+        if (host.presentedViewController != null) return@withContext false
+        host.presentShareSheet(item = NSURL.URLWithString(text) ?: text) {}
+        true
     }
 
     private fun present(controller: UIDocumentPickerViewController, onFinished: (List<NSURL>) -> Unit) {
@@ -281,6 +275,29 @@ private class DocumentPickerDelegate(
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = finish(emptyList())
 
     override fun presentationControllerDidDismiss(presentationController: UIPresentationController) = finish(emptyList())
+}
+
+/**
+ * Presents the system's share sheet for [item], calling [onFinished] once it is done with it, or never where UIKit
+ * tears it down without a word.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun UIViewController.presentShareSheet(item: Any, onFinished: () -> Unit) {
+    val controller = UIActivityViewController(activityItems = listOf(item), applicationActivities = null)
+    // Campfire's own share extension takes every file an export makes, and would only queue it for re-import as a batch
+    // of songs that are all already there, or a link to be imported back into the library it came from.
+    NSBundle.mainBundle.bundleIdentifier?.let { controller.excludedActivityTypes = listOf("$it$SHARE_EXTENSION_SUFFIX") }
+    // An iPad presents this as a popover, which needs something to point at. The menu the share was chosen from is
+    // Compose's and out of reach from here, so the popover stands in the middle of the view with no arrow rather than
+    // pointing at the view's corner, which is where a source rectangle left at zero is.
+    controller.popoverPresentationController?.let { popover ->
+        val bounds = view.bounds
+        popover.sourceView = view
+        popover.sourceRect = bounds.useContents { CGRectMake(origin.x + size.width / 2, origin.y + size.height / 2, 0.0, 0.0) }
+        popover.permittedArrowDirections = 0uL
+    }
+    controller.completionWithItemsHandler = { _, _, _, _ -> onFinished() }
+    presentViewController(controller, animated = true, completion = null)
 }
 
 @OptIn(ExperimentalForeignApi::class)

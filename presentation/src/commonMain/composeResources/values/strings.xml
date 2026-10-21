@@ -1138,4 +1138,35 @@
     <string name="print_previous">Previous</string>
     <string name="print_next">Next</string>
     <string name="print_time">Time</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">Link</string>
+    <string name="print_format_link_song_description">Ideal for anyone: a link that opens the song in Campfire and keeps up with your changes.</string>
+    <string name="print_format_link_setlist_description">Ideal for anyone: a link that opens the setlist and its songs in Campfire and keeps up with your changes.</string>
+    <string name="share_not_connected">Share a link anyone can open, made from your Dropbox. Connecting Dropbox also keeps your whole library in sync with it on all your devices.</string>
+    <string name="share_connect_again">Connect again</string>
+    <string name="share_create">Create link</string>
+    <string name="share_try_again">Try again</string>
+    <string name="share_copy">Copy link</string>
+    <string name="share_not_shared_song">Anyone with the link can open this song in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update.</string>
+    <string name="share_not_shared_setlist">Anyone with the link can open this setlist and its songs in Campfire. It stays up to date as you change it; copies people already imported don't change, and they can open the link again to update.</string>
+    <string name="share_shared_on">Shared on %1$s</string>
+    <string name="share_too_large_to_update">The latest version is too large to share; the link gives the last one that fit.</string>
+    <string name="share_scope_missing">Connect Dropbox again to allow Campfire to make links.</string>
+    <string name="share_authorization">Dropbox no longer accepts the connection. Connect again to make links.</string>
+    <string name="share_too_large">Too large to share as a link (over %1$d MB).</string>
+    <string name="share_not_public">Your Dropbox account doesn't allow public links.</string>
+    <string name="share_network">Couldn't reach Dropbox. Check the connection and try again.</string>
+    <string name="share_remote_full">Your Dropbox is full.</string>
+    <string name="share_newer_version">A newer version of Campfire last changed the links of this Dropbox account. Update Campfire to share from here.</string>
+    <string name="share_missing">This is no longer in your library.</string>
+    <string name="share_failed">Couldn't make the link. Try again in a moment.</string>
+    <string name="share_qr_code">QR code of the link</string>
+    <string name="share_save_qr_code">Save QR code</string>
+    <string name="share_stop">Stop sharing</string>
+    <string name="share_stop_confirmation">Stop sharing "%1$s"? The link stops working for everyone. Copies people already imported stay theirs.</string>
+    <string name="share_link_copied">Link copied</string>
+    <string name="share_qr_code_saved">QR code saved</string>
+    <string name="share_stop_failed">Couldn't stop sharing. The link still works.</string>
+    <string name="share_stop_failed_network">Stopping a share needs a connection to Dropbox. The link still works.</string>
 </resources>

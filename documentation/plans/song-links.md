@@ -433,7 +433,8 @@ could differ from the one in Dropbox.
 - **Share** in the app bar shares the link as text on Android and iOS (`FilePicker.shareText`, §6.4).
 - Ctrl / Cmd + S saves the QR code where there is one.
 - **Stop sharing** asks first: "Stop sharing "%1$s"? The link stops working for everyone. Copies people already
-  imported stay theirs."
+  imported stay theirs." (`StopSharingConfirmation`, `ui/share/`, composed by the screen asking: on the dialog stack
+  the export screen would slide away under it.)
 
 ### 6.3 Creating a share (`CreateShareLinkUseCase`)
 
@@ -453,9 +454,11 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
   the same screen, since the export dialog stays open.
 - **Android after process death**: `consumePendingRedirect` restores the connection, but the export dialog is not
   restored (dialogs are not in the back stack), so the user would land on the songs list, connected.
-  - Add a `SyncConsentOrigin.EXPORT` that carries the dialog's target (`Song(fileName)` / `Setlist(fileName)`),
-    stored with the pending authorization's origin.
-  - `showSyncConsentAnswer` then reopens the export dialog on Link.
+  - Done in step 10: `SyncConsentOrigin` is a serializable sealed type, and `SyncConsentOrigin.Export(ShareTarget)`
+    is kept by `SyncConsentOrigins` in the saved state (where Android restores the back stack from) as well as the
+    web's session storage, rather than with the pending authorization, which `:presentation` cannot see.
+  - `showSyncConsentAnswer` then reopens the export dialog on Link (`SavedDialogRestorer.reopenExport`), over whatever
+    stack the start up has.
 - **Web**: the page leaves for Dropbox and comes back to bare `/app/`.
   - `SyncConsentOrigin` already lives in session storage (`SyncConsentOrigin.wasmJs.kt`). Give it the same `EXPORT`
     value with the target.
@@ -463,13 +466,14 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
     "the stack is still the start" condition it uses for Settings.
 - **Connecting from Settings → Sharing** (§7.1) comes back to that tab, not to General: `Navigator.settingsTab` lasts
   only the session, so after Android's process death or the web's round trip it would be lost. Add a
-  `SyncConsentOrigin.SHARING`, which `showSyncConsentAnswer` treats as `SETTINGS` and then selects the Sharing tab.
+  `SyncConsentOrigin.Sharing` (a `data object` beside `Settings`), which `showSyncConsentAnswer` treats as `Settings`
+  and then selects the Sharing tab.
 - **The first sync starts right away** (`ConnectSyncProviderUseCaseImpl` calls `synchronizeLibrary`). **Create link**
   does not wait for it.
 - **Connecting again for the scope** while already connected: `SyncConnectionManager.connect()` today remembers only a
   `ConnectionFailed` state to go back to (`stateBeforeConnecting`), so a Cancel would leave the user disconnected.
   - Remember `Connected` too for this purpose. When the account is the same, keep the index, as
-    `completePendingAuthorization` already does.
+    `completePendingAuthorization` already does. (Not done in step 10, which stays out of `:data:sync`.)
   - A different account resets the index (existing behaviour), and the mirror and journal are cleared with it.
 - **Clipboard and text sharing**:
   - `ui/platform/Clipboard.kt`: `expect fun plainTextClipEntry`, through `LocalClipboard.current.setClipEntry`. No
@@ -493,8 +497,9 @@ A failure after step 3 deletes the uploaded file, best effort. A file left behin
   - read the PNG back with `javax.imageio` and decode it again.
 - **Save QR code**: an `ExportedFile` (`image/png`, `ExportedFile.PNG_MIME_TYPE`) through `save()`, named by
   `qrCodeFileName(source)` beside `pdfFileName`.
-  - iOS `Info.plist` gains `NSPhotoLibraryAddUsageDescription`: without it, the share sheet's **Save Image** ends the
-    process.
+  - Not needed as built: the QR code is saved through the document picker (`saveFile`), and the share sheet is only
+    ever handed the link, so it offers no **Save Image**. A share of the picture would need
+    `NSPhotoLibraryAddUsageDescription` in the iOS `Info.plist`, without which **Save Image** ends the process.
 
 ## 7. Settings and the rest of the app
 

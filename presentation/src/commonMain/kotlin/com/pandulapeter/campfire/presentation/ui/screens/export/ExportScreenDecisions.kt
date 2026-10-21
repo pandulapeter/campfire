@@ -22,8 +22,8 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 internal enum class PrintScreenContent { FAILED, LOADING, LOADED }
 
 /** What the screen shows: a failure (a layout failing only for the PDF), the source still being read, or the source. */
-internal fun exportContentOf(isFailed: Boolean, isLayoutFailed: Boolean, isFiles: Boolean, hasSource: Boolean) = when {
-    isFailed || isLayoutFailed && !isFiles -> PrintScreenContent.FAILED
+internal fun exportContentOf(isFailed: Boolean, isLayoutFailed: Boolean, isPdf: Boolean, hasSource: Boolean) = when {
+    isFailed || isLayoutFailed && isPdf -> PrintScreenContent.FAILED
     !hasSource -> PrintScreenContent.LOADING
     else -> PrintScreenContent.LOADED
 }

@@ -1137,4 +1137,35 @@
     <string name="print_previous">Előző</string>
     <string name="print_next">Következő</string>
     <string name="print_time">Ütemmutató</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">Link</string>
+    <string name="print_format_link_song_description">Bárkinek ideális: egy link, amely megnyitja a dalt a Campfire-ben, és követi a változtatásaidat.</string>
+    <string name="print_format_link_setlist_description">Bárkinek ideális: egy link, amely megnyitja a listát és a dalait a Campfire-ben, és követi a változtatásaidat.</string>
+    <string name="share_not_connected">Ossz meg egy linket, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad vele minden eszközödön.</string>
+    <string name="share_connect_again">Újracsatlakozás</string>
+    <string name="share_create">Link létrehozása</string>
+    <string name="share_try_again">Újrapróbálás</string>
+    <string name="share_copy">Link másolása</string>
+    <string name="share_not_shared_song">A linkkel bárki megnyithatja ezt a dalt a Campfire-ben. A link követi a változtatásaidat; a már importált példányok nem változnak, de a link újbóli megnyitásával frissíthetők.</string>
+    <string name="share_not_shared_setlist">A linkkel bárki megnyithatja ezt a listát és a dalait a Campfire-ben. A link követi a változtatásaidat; a már importált példányok nem változnak, de a link újbóli megnyitásával frissíthetők.</string>
+    <string name="share_shared_on">Megosztva: %1$s</string>
+    <string name="share_too_large_to_update">A legújabb változat túl nagy a megosztáshoz; a link a legutóbbi, még beleférő változatot adja.</string>
+    <string name="share_scope_missing">Csatlakoztasd újra a Dropboxot, hogy a Campfire linkeket készíthessen.</string>
+    <string name="share_authorization">A Dropbox már nem fogadja el a kapcsolatot. Csatlakoztasd újra a linkek készítéséhez.</string>
+    <string name="share_too_large">Túl nagy ahhoz, hogy linkként oszd meg (több mint %1$d MB).</string>
+    <string name="share_not_public">A Dropbox-fiókod nem engedélyezi a nyilvános linkeket.</string>
+    <string name="share_network">Nem sikerült elérni a Dropboxot. Ellenőrizd a kapcsolatot, és próbáld újra.</string>
+    <string name="share_remote_full">Megtelt a Dropboxod.</string>
+    <string name="share_newer_version">Ennek a Dropbox-fióknak a linkjeit legutóbb a Campfire egy újabb verziója módosította. Frissítsd a Campfire-t, hogy innen is megoszthass.</string>
+    <string name="share_missing">Ez már nincs a könyvtáradban.</string>
+    <string name="share_failed">Nem sikerült elkészíteni a linket. Próbáld újra egy kicsit később.</string>
+    <string name="share_qr_code">A link QR-kódja</string>
+    <string name="share_save_qr_code">QR-kód mentése</string>
+    <string name="share_stop">Megosztás leállítása</string>
+    <string name="share_stop_confirmation">Leállítod a(z) „%1$s” megosztását? A link senkinek sem fog működni. A már importált példányok azoké maradnak, akik importálták.</string>
+    <string name="share_link_copied">Link kimásolva</string>
+    <string name="share_qr_code_saved">QR-kód elmentve</string>
+    <string name="share_stop_failed">Nem sikerült leállítani a megosztást. A link továbbra is működik.</string>
+    <string name="share_stop_failed_network">A megosztás leállításához kapcsolat kell a Dropboxszal. A link továbbra is működik.</string>
 </resources>

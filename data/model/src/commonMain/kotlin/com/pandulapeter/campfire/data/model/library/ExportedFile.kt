@@ -28,5 +28,6 @@ data class ExportedFile(
     companion object {
         const val TEXT_MIME_TYPE = "text/plain"
         const val ZIP_MIME_TYPE = "application/zip"
+        const val PNG_MIME_TYPE = "image/png"
     }
 }

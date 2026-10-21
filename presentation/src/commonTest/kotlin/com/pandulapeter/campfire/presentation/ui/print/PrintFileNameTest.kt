@@ -34,6 +34,18 @@ internal class PrintFileNameTest {
     )
 
     @Test
+    fun `a link's qr code is named after the song beside its pdf`() = assertEquals(
+        "tukorfurogep-arviz-qr_code.png",
+        qrCodeFileName(songSource(fileName = "Foo Bar (2).cho", title = "Árvíz", artist = "Tükörfúrógép")),
+    )
+
+    @Test
+    fun `a setlist's qr code is named after the setlist whatever the pdf's content`() = assertEquals(
+        "summer_set_2026-qr_code.png",
+        qrCodeFileName(setlistSource()),
+    )
+
+    @Test
     fun `setlist running order is told apart from its song sheets`() = assertEquals(
         "summer_set_2026-running_order.pdf",
         pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)),

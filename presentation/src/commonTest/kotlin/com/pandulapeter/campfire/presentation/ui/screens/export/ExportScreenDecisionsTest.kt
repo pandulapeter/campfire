@@ -31,10 +31,10 @@ class ExportScreenDecisionsTest {
 
     @Test
     fun `a failure shows over everything, a layout failure only for the PDF`() {
-        assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = true, isLayoutFailed = false, isFiles = true, hasSource = true))
-        assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = false, isLayoutFailed = true, isFiles = false, hasSource = true))
-        assertEquals(PrintScreenContent.LOADED, exportContentOf(isFailed = false, isLayoutFailed = true, isFiles = true, hasSource = true))
-        assertEquals(PrintScreenContent.LOADING, exportContentOf(isFailed = false, isLayoutFailed = false, isFiles = false, hasSource = false))
+        assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = true, isLayoutFailed = false, isPdf = false, hasSource = true))
+        assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = false, isLayoutFailed = true, isPdf = true, hasSource = true))
+        assertEquals(PrintScreenContent.LOADED, exportContentOf(isFailed = false, isLayoutFailed = true, isPdf = false, hasSource = true))
+        assertEquals(PrintScreenContent.LOADING, exportContentOf(isFailed = false, isLayoutFailed = false, isPdf = true, hasSource = false))
     }
 
     @Test

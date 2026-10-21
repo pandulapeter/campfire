@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.export_song_saved
 import com.pandulapeter.campfire.presentation.resources.export_songs_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_disconnected
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_failed
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_interrupted
@@ -53,6 +54,10 @@ import com.pandulapeter.campfire.presentation.resources.paste_only_links
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
 import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
+import com.pandulapeter.campfire.presentation.resources.share_link_copied
+import com.pandulapeter.campfire.presentation.resources.share_qr_code_saved
+import com.pandulapeter.campfire.presentation.resources.share_stop_failed
+import com.pandulapeter.campfire.presentation.resources.share_stop_failed_network
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
@@ -151,6 +156,11 @@ internal fun Messages(
         Message.PastedTextTooLarge -> stringResource(Res.string.paste_too_large)
         Message.SharedLinkNotImported -> stringResource(Res.string.shared_link_not_imported)
         Message.SharedLinkFromNewerVersion -> stringResource(Res.string.shared_link_from_newer_version)
+        Message.LinkCopied -> stringResource(Res.string.share_link_copied)
+        Message.QrCodeSaved -> stringResource(Res.string.share_qr_code_saved)
+        is Message.StopSharingFailed -> stringResource(
+            if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_failed_network else Res.string.share_stop_failed,
+        )
         null -> null
     }
     val importFinished = head?.value as? Message.ImportFinished

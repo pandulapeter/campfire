@@ -31,7 +31,14 @@ internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
     return base + PDF_EXTENSION
 }
 
+/**
+ * The name a link's QR code is offered under: the song's or the setlist's own, as [pdfFileName] gives it, with a suffix
+ * telling the picture from the PDF beside it.
+ */
+internal fun qrCodeFileName(source: PrintSource) = pdfFileName(source, PrintSettings()).removeSuffix(PDF_EXTENSION) + QR_CODE_SUFFIX
+
 private const val RUNNING_ORDER_SUFFIX = "-running_order"
+private const val QR_CODE_SUFFIX = "-qr_code.png"
 
 /** What several songs exported together are called, as `ExportSongsUseCase` calls their zip. */
 private const val SONGS_FILE_NAME = "campfire_songs"

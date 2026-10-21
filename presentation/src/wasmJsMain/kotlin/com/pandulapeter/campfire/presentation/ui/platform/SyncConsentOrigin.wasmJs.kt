@@ -12,6 +12,8 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import kotlin.js.ExperimentalWasmJsInterop
 
 /**
@@ -19,10 +21,16 @@ import kotlin.js.ExperimentalWasmJsInterop
  * app does: the answer lands on the folder's address with a back stack of its own, and the onboarding is never part of
  * an address to begin with. Storage that cannot be written - blocked for the site - shows the answer in Settings.
  */
-internal actual fun keepSyncConsentOrigin(origin: SyncConsentOrigin) = writeSessionValue(origin.name)
+internal actual fun keepSyncConsentOrigin(origin: SyncConsentOrigin) = writeSessionValue(Json.encodeToString(origin))
 
-internal actual fun takeSyncConsentOrigin(): SyncConsentOrigin? =
-    takeSessionValue()?.let { name -> SyncConsentOrigin.entries.firstOrNull { it.name == name } }
+/** Null for nothing kept, and for what a build that wrote it differently kept. */
+internal actual fun takeSyncConsentOrigin(): SyncConsentOrigin? = takeSessionValue()?.let { json ->
+    try {
+        Json.decodeFromString<SyncConsentOrigin>(json)
+    } catch (exception: SerializationException) {
+        null
+    }
+}
 
 private fun writeSessionValue(value: String) {
     js(

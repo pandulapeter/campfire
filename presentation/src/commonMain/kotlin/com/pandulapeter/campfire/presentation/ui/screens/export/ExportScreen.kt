@@ -18,6 +18,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -82,6 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
+import com.pandulapeter.campfire.presentation.ui.share.StopSharingConfirmation
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlinx.coroutines.CancellationException
@@ -107,7 +109,8 @@ internal fun ExportScreen(
 ) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return
-    val state = rememberExportState(dialog) { viewModel.exportController.pendingPrintSettings.value ?: initialSettings }
+    val formats = exportFormatsOf(dialog, isSyncAvailable = viewModel.syncController.syncProviders.isNotEmpty())
+    val state = rememberExportState(dialog) { (viewModel.exportController.pendingPrintSettings.value ?: initialSettings).withFormatIn(formats) }
     val exportProgress by viewModel.exportController.pdfExportProgress.collectAsStateWithLifecycle()
     val isFileTransferActive by viewModel.exportController.isFileTransferActive.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
@@ -179,6 +182,18 @@ internal fun ExportScreen(
         }
     }
     val isFiles = state.settings.format == PrintSettings.Format.FILES
+    val isLink = state.settings.format == PrintSettings.Format.LINK
+    val isPdf = state.settings.format == PrintSettings.Format.PDF
+    val link = shareTargetOf(dialog)?.let { target ->
+        rememberLinkExport(
+            viewModel = viewModel,
+            dialog = dialog,
+            target = target,
+            title = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
+            source = state.source,
+            isOpen = isOpen,
+        )
+    }
     val chosenSongFileNames = chosenSongFileNames(source = state.source, selected = state.selected.orEmpty())
     val canExportFiles = canExportFiles(source = state.source, selected = state.selected.orEmpty())
     val hasPages = laidOut?.document?.pages?.isNotEmpty() == true
@@ -219,7 +234,7 @@ internal fun ExportScreen(
     LaunchedEffect(requestedExport, canSave, hasPages, isFiles) {
         val request = requestedExport ?: return@LaunchedEffect
         // A PDF asked for before the format was switched away is not one to come up once it is switched back.
-        if (!hasPages || isFiles) {
+        if (!hasPages || !isPdf) {
             requestedExport = null
         } else if (canSave) {
             requestedExport = null
@@ -240,12 +255,21 @@ internal fun ExportScreen(
     // Any import or export running would make the view model ignore the tap, so it is not even asked.
     val requestExport = { request: ExportRequest ->
         if (isOpen && !isFileTransferActive) {
-            if (isFiles) viewModel.exportController.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE) else requestedExport = request
+            when {
+                isLink -> if (request == ExportRequest.SHARE) link?.onShare?.invoke() else link?.onSaveQrCode?.invoke()
+                isFiles -> viewModel.exportController.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE)
+                else -> requestedExport = request
+            }
         }
     }
     val close = { viewModel.dialogHost.dismissSheet(dialog) }
-    val content = exportContentOf(isFailed = state.failed, isLayoutFailed = state.layoutFailed, isFiles = isFiles, hasSource = state.source != null)
-    val canSaveNow = content == PrintScreenContent.LOADED && if (isFiles) canExportFiles else hasPages
+    val content = exportContentOf(isFailed = state.failed, isLayoutFailed = state.layoutFailed, isPdf = isPdf, hasSource = state.source != null)
+    val canSaveNow = content == PrintScreenContent.LOADED && when {
+        // The QR code is what a link saves, by Ctrl / Cmd + S, and Share in the app bar shares the link.
+        isLink -> link?.shared != null
+        isFiles -> canExportFiles
+        else -> hasPages
+    }
     // Drawn in the same window as the screen under it, so it does not take the focus by being there, and a key would
     // otherwise go on reaching that screen - a pedal stepping the song being exported. A bare focus target draws no
     // indication and does not hand the focus on to the first button, so it is taken on every platform, whatever the
@@ -286,8 +310,7 @@ internal fun ExportScreen(
                 PrintTopAppBar(
                     title = stringResource(exportTitleOf(dialog)),
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
-                    canShare = filePicker.canShare && content == PrintScreenContent.LOADED && exportProgress == null &&
-                        if (isFiles) canExportFiles else hasPages,
+                    canShare = filePicker.canShare && exportProgress == null && canSaveNow,
                     onShare = { requestExport(ExportRequest.SHARE) },
                     onClose = close,
                 )
@@ -324,7 +347,7 @@ internal fun ExportScreen(
                                     ExportPreviewPane(
                                         modifier = modifier,
                                         state = state,
-                                        isFiles = isFiles,
+                                        format = state.settings.format,
                                         setlistFileName = dialog.setlist?.fileName,
                                         isSideBySide = isSideBySide,
                                         bottomInset = bottomInset,
@@ -341,6 +364,18 @@ internal fun ExportScreen(
                                         },
                                         hasPages = hasPages,
                                         onTurn = turnPage,
+                                        linkPreview = {
+                                            if (link != null) {
+                                                LinkPreview(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    state = link.state,
+                                                    qrCode = link.qrCode,
+                                                    kind = shareTargetOf(dialog)!!.kind,
+                                                    // Beside the options the button floats over the end of this pane.
+                                                    contentPadding = PaddingValues(bottom = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 0.dp),
+                                                )
+                                            }
+                                        },
                                     )
                                 }
                                 val options: @Composable (Modifier) -> Unit = { modifier ->
@@ -348,6 +383,7 @@ internal fun ExportScreen(
                                         modifier = modifier,
                                         source = state.source!!,
                                         settings = state.settings,
+                                        formats = formats,
                                         areChordsEnabled = areChordsEnabled,
                                         isMetronomeEnabled = isMetronomeEnabled,
                                         selected = state.selected.orEmpty(),
@@ -356,6 +392,13 @@ internal fun ExportScreen(
                                         header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(STACKED_PREVIEW_HEIGHT)) } },
                                         onSelected = { if (isOpen) state.selected = it },
                                         onSettings = update,
+                                        linkOptions = {
+                                            LinkOptions(
+                                                isShared = link?.shared != null,
+                                                onSaveQrCode = { link?.onSaveQrCode?.invoke() },
+                                                onStopSharing = { link?.isStopAsked = true },
+                                            )
+                                        },
                                     )
                                 }
                                 PrintPanes(
@@ -370,7 +413,7 @@ internal fun ExportScreen(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(PAGE_MARGIN),
-                        isVisible = isSideBySide && content == PrintScreenContent.LOADED && !isFiles && hasPages,
+                        isVisible = isSideBySide && content == PrintScreenContent.LOADED && isPdf && hasPages,
                         page = pagerState.currentPage,
                         pageCount = pageCount,
                         onTurn = turnPage,
@@ -383,12 +426,27 @@ internal fun ExportScreen(
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(PAGE_MARGIN)
                     .onSizeChanged { saveButtonWidth = with(density) { it.width.toDp() } },
-                isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow,
+                isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow && !isLink,
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
                 onCancel = viewModel.exportController::cancelPdfExport,
             )
+            LinkButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
+                    .padding(PAGE_MARGIN),
+                action = link?.action?.takeIf { isLink && content == PrintScreenContent.LOADED },
+                onClick = { link?.onAction?.invoke(it) },
+            )
         }
+    }
+    link?.takeIf { it.isStopAsked }?.let {
+        StopSharingConfirmation(
+            title = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
+            onDismiss = { it.isStopAsked = false },
+            onConfirm = it.onStopSharing,
+        )
     }
 }
 

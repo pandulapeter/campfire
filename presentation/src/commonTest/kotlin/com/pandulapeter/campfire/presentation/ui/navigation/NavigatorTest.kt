@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.navigation
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryStat
 import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
@@ -483,7 +485,7 @@ class NavigatorTest {
     @Test
     fun `a consent answered on the songs opens the settings on the library tab`() = runTest {
         val navigator = navigator(backgroundScope)
-        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.Settings) {}
         assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
         assertEquals(SettingsTab.LIBRARY, navigator.settingsTab)
     }
@@ -494,7 +496,7 @@ class NavigatorTest {
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         val scrollToTopRequests = mutableListOf<ScrollToTopRequest>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(scrollToTopRequests) }
-        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.Settings) {}
         assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
         assertEquals(SettingsTab.LIBRARY, navigator.settingsTab)
         assertEquals(emptyList(), scrollToTopRequests)
@@ -503,7 +505,7 @@ class NavigatorTest {
     @Test
     fun `a consent asked from an onboarding opened in the settings reopens it on its sync page over the about tab`() = runTest {
         val navigator = navigator(backgroundScope)
-        navigator.showSyncConsentAnswer(SyncConsentOrigin.ONBOARDING_FROM_SETTINGS)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.OnboardingFromSettings) {}
         assertEquals(
             listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
             navigator.backStack.toList(),
@@ -517,8 +519,20 @@ class NavigatorTest {
         val navigator = navigator(backgroundScope)
         navigator.openSong(song("a.cho"))
         val stack = navigator.backStack.toList()
-        navigator.showSyncConsentAnswer(SyncConsentOrigin.SETTINGS)
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.Settings) {}
         assertEquals(stack, navigator.backStack.toList())
+    }
+
+    @Test
+    fun `a consent asked from the export screen reopens it over the stack the start up brings back`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.openSong(song("a.cho"))
+        val stack = navigator.backStack.toList()
+        val reopened = mutableListOf<ShareTarget>()
+        val target = ShareTarget(SharedLinkKind.SONG, "a.cho")
+        navigator.showSyncConsentAnswer(SyncConsentOrigin.Export(target)) { reopened += it }
+        assertEquals(stack, navigator.backStack.toList())
+        assertEquals(listOf(target), reopened)
     }
 
     private fun song(fileName: String) = Song(

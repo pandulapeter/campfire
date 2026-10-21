@@ -54,6 +54,9 @@ import com.pandulapeter.campfire.presentation.resources.print_font_size
 import com.pandulapeter.campfire.presentation.resources.print_format
 import com.pandulapeter.campfire.presentation.resources.print_format_chordpro
 import com.pandulapeter.campfire.presentation.resources.print_format_chordpro_song_description
+import com.pandulapeter.campfire.presentation.resources.print_format_link
+import com.pandulapeter.campfire.presentation.resources.print_format_link_setlist_description
+import com.pandulapeter.campfire.presentation.resources.print_format_link_song_description
 import com.pandulapeter.campfire.presentation.resources.print_format_pdf
 import com.pandulapeter.campfire.presentation.resources.print_format_pdf_description
 import com.pandulapeter.campfire.presentation.resources.print_format_zip
@@ -98,15 +101,17 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The options, in one list that scrolls on its own: the format and what it is good for, then for a PDF the paper, the
- * text and what is printed, and for a setlist what it exports, then for a setlist in either format which of its songs.
- * The library's own files are the songs as the library holds them, so the PDF's options fold away under the format while
- * it is chosen. [onSettings] takes every change, normalized and saved by the screen.
+ * text and what is printed, and for a setlist what it exports, then for a setlist in either file format which of its
+ * songs. The library's own files are the songs as the library holds them, so the PDF's options fold away under the format
+ * while it is chosen; a link shares the whole item, so it takes no song ticks either, and offers [linkOptions] instead.
+ * [onSettings] takes every change, normalized and saved by the screen.
  */
 @Composable
 internal fun PrintOptions(
     modifier: Modifier,
     source: PrintSource,
     settings: PrintSettings,
+    formats: List<PrintSettings.Format>,
     areChordsEnabled: Boolean,
     isMetronomeEnabled: Boolean,
     selected: Set<Int>,
@@ -114,11 +119,13 @@ internal fun PrintOptions(
     header: (@Composable () -> Unit)? = null,
     onSelected: (Set<Int>) -> Unit,
     onSettings: (PrintSettings) -> Unit,
+    linkOptions: @Composable () -> Unit,
 ) {
     val state = rememberLazyListState()
     // Every row here is moved only by the options above it folding out or away, which it follows as they fold, so its
     // animation is the fade alone.
     val isPdf = settings.format == PrintSettings.Format.PDF
+    val isLink = settings.format == PrintSettings.Format.LINK
     LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state, MaterialTheme.colorScheme.background), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         if (header != null) {
             item(key = "preview") { header() }
@@ -127,9 +134,13 @@ internal fun PrintOptions(
             FormatChoice(
                 modifier = listItemAnimation(state, placementSpec = null),
                 format = settings.format,
+                formats = formats,
                 kind = source.kind,
                 onSelected = { onSettings(settings.copy(format = it)) },
             )
+        }
+        if (isLink) {
+            item(key = "link") { Column(listItemAnimation(state, placementSpec = null)) { linkOptions() } }
         }
         item(key = "pdf") {
             PdfOption(modifier = listItemAnimation(state, placementSpec = null), isPdf = isPdf) {
@@ -264,7 +275,7 @@ internal fun PrintOptions(
             }
             // Which songs go out is a question for either format, and one answer to both: the same ticks narrow the PDF and
             // the zip, so switching between the two does not quietly put back the songs that were left out.
-            if (source.songs.isNotEmpty()) {
+            if (source.songs.isNotEmpty() && !isLink) {
                 item(key = "selectAll") {
                     SelectAllListItem(
                         modifier = listItemAnimation(state, placementSpec = null),
@@ -277,7 +288,7 @@ internal fun PrintOptions(
                     )
                 }
             }
-            itemsIndexed(source.songs, key = { index, _ -> index }) { index, entry ->
+            itemsIndexed(if (isLink) emptyList() else source.songs, key = { index, _ -> index }) { index, entry ->
                 CheckboxListItem(
                     modifier = listItemAnimation(state, placementSpec = null),
                     // Several songs that are not a setlist are in no order of anyone's making, so they are not numbered.
@@ -300,14 +311,16 @@ internal fun PrintOptions(
 }
 
 /**
- * The first of the options, PDF or the library's own files - ChordPro for a song, a zip for a setlist or for several
- * songs - and a line under it saying what the chosen one is for and, for the zip, what is in it, since the two are told
- * apart by what the person receiving the file can do with it rather than by anything the names say.
+ * The first of the options, PDF, the library's own files - ChordPro for a song, a zip for a setlist or for several
+ * songs - or a link, where [formats] offers one, and a line under it saying what the chosen one is for and, for the zip,
+ * what is in it, since they are told apart by what the person receiving it can do with it rather than by anything the
+ * names say.
  */
 @Composable
 private fun FormatChoice(
     modifier: Modifier,
     format: PrintSettings.Format,
+    formats: List<PrintSettings.Format>,
     kind: PrintSource.Kind,
     onSelected: (PrintSettings.Format) -> Unit,
 ) = Column(modifier) {
@@ -316,10 +329,11 @@ private fun FormatChoice(
         contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 8.dp),
     )
     SegmentedChoice(
-        options = PrintSettings.Format.entries.map { option ->
+        options = formats.map { option ->
             option to stringResource(
                 when {
                     option == PrintSettings.Format.PDF -> Res.string.print_format_pdf
+                    option == PrintSettings.Format.LINK -> Res.string.print_format_link
                     kind != PrintSource.Kind.SONG -> Res.string.print_format_zip
                     else -> Res.string.print_format_chordpro
                 },
@@ -330,6 +344,8 @@ private fun FormatChoice(
     )
     val description = when {
         format == PrintSettings.Format.PDF -> stringResource(Res.string.print_format_pdf_description)
+        format == PrintSettings.Format.LINK && kind == PrintSource.Kind.SETLIST -> stringResource(Res.string.print_format_link_setlist_description)
+        format == PrintSettings.Format.LINK -> stringResource(Res.string.print_format_link_song_description)
         kind == PrintSource.Kind.SETLIST -> stringResource(Res.string.print_format_zip_description)
         kind == PrintSource.Kind.SONGS -> stringResource(Res.string.print_format_zip_songs_description)
         else -> stringResource(Res.string.print_format_chordpro_song_description)

@@ -39,7 +39,13 @@ interface FilePicker {
      */
     suspend fun shareFile(file: ExportedFile): Boolean = saveFile(file)
 
-    /** Whether [shareFile] does something other than [saveFile]. */
+    /**
+     * Hands [text], an address, to whatever the platform offers to send it with, [subject] being what a message it goes
+     * out in is titled where the target takes one. Only asked where [canShare]; false where nothing was shown.
+     */
+    suspend fun shareText(text: String, subject: String): Boolean = false
+
+    /** Whether [shareFile] does something other than [saveFile], and [shareText] something at all. */
     val canShare: Boolean get() = false
 }
 

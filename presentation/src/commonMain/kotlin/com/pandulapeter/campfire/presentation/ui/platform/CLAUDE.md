@@ -54,11 +54,13 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 ### `SyncConsentOrigin.kt`
 
-- The `expect`s keep where Connect was tapped across a consent page, see `ui/sync/CLAUDE.md`.
+- The `expect`s keep where Connect was tapped across the web's page load (JSON, since the export's origin carries
+  its item), see `ui/sync/CLAUDE.md`.
 
 ### `FilePicker.kt`
 
 - `saveFile` returns false for a dismissed dialog and throws for a failed write (the view model reports it).
+- `shareText` (a shared link) exists only where `canShare`: Android's `ACTION_SEND`, iOS's share sheet with an `NSURL`.
 - A `CreateDocument` that cannot be filled is deleted (it is created empty). Unreadable handed-over documents
   (`toImportedFiles`, desktop `readAsImportedFiles`) are passed on empty so the import reports them as skipped.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):
@@ -69,6 +71,8 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 - Read only on a tap, never to decide whether to show the entry (the web's read prompts). A refusal is
   `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission.
+- Written through `Clipboard.setClipEntry` with `plainTextClipEntry` (`Clipboard.kt`), each platform building the entry
+  its own way; only Android 13+ confirms a copy itself (`isCopyConfirmedBySystem`).
 
 ### `CompactKeyboardEffect.kt`
 

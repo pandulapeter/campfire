@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.messages
 
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -73,6 +74,15 @@ sealed interface Message {
 
     /** A Campfire link in a format a later version made, which this one cannot open; updating can. */
     data object SharedLinkFromNewerVersion : Message
+
+    /** A link was put on the clipboard, which only some platforms say by themselves. */
+    data object LinkCopied : Message
+
+    /** A link's QR code was saved as a picture. */
+    data object QrCodeSaved : Message
+
+    /** A share could not be stopped, for [reason]; its link still works. */
+    data class StopSharingFailed(val reason: SharingFailure) : Message
 
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message

@@ -55,6 +55,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -202,6 +204,12 @@ internal class ExportController(
 
     fun setPrintSettings(value: PrintSettings) = printSettingsPreference.set(value.normalized())
 
+    /** Has the next export screen open on [format], once the preferences it is kept with have been read. */
+    suspend fun choosePrintFormat(format: PrintSettings.Format) {
+        val current = pendingPrintSettings.value ?: userPreferencesState.mapNotNull { it.data }.first().printSettings
+        setPrintSettings(current.copy(format = format))
+    }
+
     /**
      * [create] draws the pages and reports each one drawn to the callback it is given. Whatever it throws, an
      * `OutOfMemoryError` included, is the export failing rather than the app: a large setlist on a phone with a small
@@ -291,6 +299,34 @@ internal class ExportController(
                     )
                     else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true)
                 }
+            }
+        }
+    }
+
+    /**
+     * A link's QR code, saved as a picture, which leaves the screen open: the link may still be copied or shared. [png]
+     * draws it off the main thread, where a large symbol's picture is a moment's work.
+     */
+    fun exportQrCode(filePicker: FilePicker, dialog: DialogType.Export, fileName: String, png: suspend () -> ByteArray) {
+        if (dialogHost.visibleDialog.value != dialog) return
+        launchFileTransfer {
+            save(filePicker = filePicker, savedMessage = Message.QrCodeSaved) {
+                ExportedFile(fileName, ExportedFile.PNG_MIME_TYPE, withContext(Dispatchers.Default) { png() })
+            }
+        }
+    }
+
+    /** Hands a link to the platform's share sheet, as one transfer, since the sheet cannot be up twice either. */
+    fun shareLink(filePicker: FilePicker, dialog: DialogType.Export, link: String, subject: String) {
+        if (dialogHost.visibleDialog.value != dialog) return
+        launchFileTransfer {
+            try {
+                filePicker.shareText(text = link, subject = subject)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not share the link: ${exception.message}")
+                messageSink.sendMessage(Message.ExportFailed)
             }
         }
     }

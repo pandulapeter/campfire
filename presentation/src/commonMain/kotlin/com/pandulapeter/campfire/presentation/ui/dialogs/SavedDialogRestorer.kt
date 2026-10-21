@@ -13,9 +13,11 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlinx.coroutines.CoroutineScope
@@ -64,6 +66,33 @@ internal class SavedDialogRestorer(
             ).first()
             if (!isReopened) savedStateStore.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, null)
         }
+    }
+
+    /**
+     * Reopens the export screen of [target], which the start up that answers a consent page asked from it does not
+     * bring back, once the library holds the item, [beforeShowing] readying it first. Given up on as a saved sheet is:
+     * over another dialog, and once the screen on top is another one.
+     */
+    fun reopenExport(target: ShareTarget, beforeShowing: suspend () -> Unit) {
+        val top = backStack.lastOrNull()
+        scope.launch {
+            merge(
+                flow { emit(showExport(target, beforeShowing)) },
+                snapshotFlow { backStack.lastOrNull() }.filter { it != top }.map { false },
+            ).first()
+        }
+    }
+
+    private suspend fun showExport(target: ShareTarget, beforeShowing: suspend () -> Unit): Boolean {
+        val lookup = songLookup.first { it.isLibraryRead }
+        val dialog = when (target.kind) {
+            SharedLinkKind.SONG -> lookup.songsByFileName[target.fileName]?.let { DialogType.Export(song = it) }
+            SharedLinkKind.SETLIST -> setlists.value.firstOrNull { it.fileName == target.fileName }?.let { DialogType.Export(setlist = it) }
+        } ?: return false
+        if (dialogHost.visibleDialog.value != null) return false
+        beforeShowing()
+        dialogHost.showDialog(dialog)
+        return true
     }
 
     /** Called with the dialogs that are open after every change, bottom first. */

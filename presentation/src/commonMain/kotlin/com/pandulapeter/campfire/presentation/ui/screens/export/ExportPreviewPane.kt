@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_no_songs
@@ -30,14 +31,14 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
- * The preview of an export: what the library's own files are written as, or the PDF's pages, with the pill turning them
- * drawn inside the preview where it is stacked above the options.
+ * The preview of an export: what the library's own files are written as, the PDF's pages, with the pill turning them
+ * drawn inside the preview where it is stacked above the options, or the link ([linkPreview]).
  */
 @Composable
 internal fun ExportPreviewPane(
     modifier: Modifier,
     state: ExportState,
-    isFiles: Boolean,
+    format: PrintSettings.Format,
     setlistFileName: String?,
     isSideBySide: Boolean,
     bottomInset: Dp,
@@ -50,8 +51,11 @@ internal fun ExportPreviewPane(
     onPageViewChanged: (PageView) -> Unit,
     hasPages: Boolean,
     onTurn: (Int) -> Unit,
-) = AnimatedContent(isFiles, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { showsFiles ->
-    if (showsFiles) {
+    linkPreview: @Composable () -> Unit,
+) = AnimatedContent(format, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shownFormat ->
+    if (shownFormat == PrintSettings.Format.LINK) {
+        linkPreview()
+    } else if (shownFormat == PrintSettings.Format.FILES) {
         FilesPreview(
             modifier = Modifier.fillMaxSize(),
             source = state.source!!,

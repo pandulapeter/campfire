@@ -9,42 +9,69 @@
  */
 package com.pandulapeter.campfire.presentation.ui.sync
 
+import androidx.lifecycle.SavedStateHandle
+import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
+import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class SyncConsentTest {
 
+    private val exportOrigin = SyncConsentOrigin.Export(ShareTarget(SharedLinkKind.SETLIST, "set.setlist.json"))
+
+    private val origins = listOf(SyncConsentOrigin.Settings, SyncConsentOrigin.Onboarding, SyncConsentOrigin.OnboardingFromSettings, exportOrigin, null)
+
     @Test
     fun `a connect tapped on the settings screen is answered there`() {
-        assertEquals(SyncConsentOrigin.SETTINGS, syncConsentOriginOf(CampfireDestination.Settings))
+        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null))
     }
 
     @Test
     fun `a connect tapped in a first run's onboarding is answered there`() {
-        assertEquals(SyncConsentOrigin.ONBOARDING, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false)))
+        assertEquals(SyncConsentOrigin.Onboarding, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false), visibleDialog = null))
     }
 
     @Test
     fun `a connect tapped in an onboarding opened from the settings is answered there`() {
-        assertEquals(SyncConsentOrigin.ONBOARDING_FROM_SETTINGS, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true)))
+        assertEquals(
+            SyncConsentOrigin.OnboardingFromSettings,
+            syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true), visibleDialog = null),
+        )
+    }
+
+    @Test
+    fun `a connect tapped on the export screen is answered there, for the song or setlist it shares`() {
+        assertEquals(
+            SyncConsentOrigin.Export(ShareTarget(SharedLinkKind.SONG, "a.cho")),
+            syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(song = song("a.cho"))),
+        )
+        assertEquals(exportOrigin, syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(setlist = setlist("set.setlist.json"))))
     }
 
     @Test
     fun `an answer on the songs or on the settings screen goes where the connect was tapped`() {
         listOf(listOf(CampfireDestination.Songs), listOf(CampfireDestination.Songs, CampfireDestination.Settings)).forEach { backStack ->
-            assertEquals(SyncConsentAnswer.ONBOARDING, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.ONBOARDING))
-            assertEquals(SyncConsentAnswer.ONBOARDING_FROM_SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.ONBOARDING_FROM_SETTINGS))
-            assertEquals(SyncConsentAnswer.SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.SETTINGS))
+            assertEquals(SyncConsentAnswer.ONBOARDING, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.Onboarding))
+            assertEquals(SyncConsentAnswer.ONBOARDING_FROM_SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.OnboardingFromSettings))
+            assertEquals(SyncConsentAnswer.SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, SyncConsentOrigin.Settings))
             assertEquals(SyncConsentAnswer.SETTINGS, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, origin = null))
+            assertEquals(SyncConsentAnswer.EXPORT, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, exportOrigin))
         }
     }
 
     @Test
     fun `a first run's onboarding still on its first page is moved on to the dropbox page`() {
         val backStack = listOf(CampfireDestination.Songs, CampfireDestination.Onboarding(isOpenedFromSettings = false))
-        (SyncConsentOrigin.entries + null).forEach { origin ->
+        origins.forEach { origin ->
             assertEquals(SyncConsentAnswer.ONBOARDING_ON_SYNC_PAGE, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, origin))
             OnboardingStep.entries.drop(1).forEach { step -> assertEquals(SyncConsentAnswer.NOTHING, syncConsentAnswerOf(backStack, step, origin)) }
         }
@@ -56,8 +83,38 @@ class SyncConsentTest {
         listOf(CampfireDestination.Songs, CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)),
         listOf(CampfireDestination.Songs, CampfireDestination.Setlists),
     ).forEach { backStack ->
-        (SyncConsentOrigin.entries + null).forEach { origin ->
+        (origins - exportOrigin).forEach { origin ->
             assertEquals(SyncConsentAnswer.NOTHING, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, origin))
         }
     }
+
+    @Test
+    fun `the export screen is put back over the screen android restores under it`() {
+        val backStack = listOf(CampfireDestination.Songs, CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0))
+        assertEquals(SyncConsentAnswer.EXPORT, syncConsentAnswerOf(backStack, OnboardingStep.WELCOME, exportOrigin))
+    }
+
+    @Test
+    fun `an origin kept in the saved state is taken once`() = runTest {
+        val handle = SavedStateHandle()
+        SyncConsentOrigins(SavedStateStore(handle, backgroundScope)).keep(exportOrigin)
+        val restored = SyncConsentOrigins(SavedStateStore(handle, backgroundScope))
+        assertEquals(exportOrigin, restored.take())
+        assertNull(restored.take())
+    }
+
+    private fun song(fileName: String) = Song(
+        fileName = fileName, title = fileName, artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
+        coverArtUrl = null, hasChords = true, canUpdateFileName = false, lastModified = 0, size = 0,
+    )
+
+    private fun setlist(fileName: String) = Setlist(
+        fileName = fileName,
+        title = fileName,
+        description = "",
+        date = LocalDate(2026, 1, 1),
+        isArchived = false,
+        entries = emptyList(),
+        size = 0,
+    )
 }

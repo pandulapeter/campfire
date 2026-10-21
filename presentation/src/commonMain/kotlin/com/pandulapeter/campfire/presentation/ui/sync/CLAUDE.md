@@ -11,9 +11,11 @@
 # :presentation — ui/sync
 
 - A consent's answer is shown only onto a stack nobody has built on since start (home, Settings, or an owed onboarding
-  still on page one, which is moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`). Only the web
-  keeps the origin across the page load (session storage, `ui/platform`), since only there does every consent end in a
-  fresh start; Android restores its back stack. The answer's screen is shown when the redirect is found, not when the
+  still on page one, which is moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`). The export
+  screen (`SyncConsentOrigin.Export`, carrying its `ShareTarget`) is reopened on Link over whatever stack the start up
+  has, once the library holds the item (`SavedDialogRestorer.reopenExport`). `SyncConsentOrigins` keeps the origin in
+  the web's session storage (`ui/platform`), where every consent ends in a fresh start, and in the saved state, where
+  Android restores the back stack but not the export screen, a dialog. The answer's screen is shown when the redirect is found, not when the
   exchange ends, and shows `Connecting` until it does.
 - `rememberSyncNotifications` only reports "nothing to show" after showing something; otherwise opening the app onto a
   background run would stop the Android service.

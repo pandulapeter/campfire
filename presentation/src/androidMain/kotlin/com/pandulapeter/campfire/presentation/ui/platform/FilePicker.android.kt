@@ -188,6 +188,16 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         return true
     }
 
+    override suspend fun shareText(text: String, subject: String): Boolean {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = ExportedFile.TEXT_MIME_TYPE
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+        }
+        context.startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
+    }
+
     fun onFilesPicked(uris: List<Uri>) {
         val continuation = pickContinuation?.takeIf { it.isActive }
         pickContinuation = null

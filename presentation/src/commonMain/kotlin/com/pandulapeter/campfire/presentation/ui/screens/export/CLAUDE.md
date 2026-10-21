@@ -24,9 +24,10 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 ## Formats and options
 
 - One export entry per song and setlist (and selection mode's "Export songs") opens the export screen; no separate
-  share or file export entry. Formats: **PDF** (for printing) or the library's own files (for Campfire users):
+  share or file export entry. Formats: **PDF** (for printing), the library's own files (for Campfire users):
   **ChordPro** for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or
-  for several selected songs (no manifest).
+  for several selected songs (no manifest), and **Link** (below) for one song or setlist where the build has sync
+  (`exportFormatsOf`). A stored format an export does not offer opens it on PDF (`withFormatIn`), the preference kept.
 - A setlist's song ticks apply to both formats. A partial zip's manifest names only the ticked songs
   (`ExportSetlistUseCase`'s `songFileNames`, rest of the document kept), so the archive never names a song the user left
   out; a ticked song missing from the library is still named. All ticked → the stored manifest unchanged.
@@ -39,6 +40,23 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
   entry's key. Missing or unreadable songs keep a visibly marked slot.
 - **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
   excluded metadata. No platform print service: the file is saved or shared.
+
+## Link
+
+- States (`linkExportStateOf`, pure and tested): the connection first (Connect Dropbox, which says the whole library
+  syncs; Connecting with Cancel; a failure in Settings' words), then a share the account lists (`ShareLinkController`,
+  `ui/share/`), then how the last Create link went. Each failure is shown by what can be done: Connect again (missing
+  scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB (`LinkButton`, in
+  `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
+- A creation runs in the view model's scope and is forgotten when the screen goes; a share just made shows before the
+  list catches up. Song ticks are hidden: a link shares the whole setlist. Offered in read only mode.
+- Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
+  too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Share
+  in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,
+  also Ctrl / Cmd + S) and Stop sharing are options. Stop sharing asks with `StopSharingConfirmation`, composed by the
+  screen, not the dialog stack, under which the export would slide away.
+- Connect from here keeps `SyncConsentOrigin.Export` (`ui/sync/CLAUDE.md`), so a start up answering the consent page
+  reopens the screen on Link.
 
 ## A dialog to the view model, a screen to the user
 
