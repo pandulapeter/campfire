@@ -53,7 +53,8 @@ kept). Diagrams use the screen's `drawChordDiagram` in black (root mid gray), th
 
 - `PrintPdfWriter`: each page a 4-bit gray image (16 levels print like 256), compressed by
   `PrintDeflater` (pure-Kotlin fixed-Huffman zlib; no platform offers common code a compressor). Carries `/Title` and a
-  binary header line.
+  binary header line. `PrintDeflater` also compresses the share link's QR code PNG (`qrCodePng`), whose chunks take
+  `crc32` from `Checksums.kt`.
 - Invisible text (`3 Tr`) at the shaped rectangles, with tiny glyphless Type 3 fonts and ToUnicode maps, so exports are
   searchable, copyable, and reimportable without OCR. Runs on one baseline, font,
   and size share one `TJ` with explicit advances, or PDFium reads dense columns as vertical text. Fonts keep bold and

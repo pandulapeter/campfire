@@ -39,6 +39,7 @@ ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
 #noinspection NewerVersionAvailable
 skiko = "0.150.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 spotless = "8.10.4" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
+zxing = "3.5.4" # https://github.com/zxing/zxing/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -88,6 +89,7 @@ ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 skiko-angle-windows-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-angle-windows-x64", version.ref = "skiko" }
 spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradle" }

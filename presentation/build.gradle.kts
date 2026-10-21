@@ -79,6 +79,8 @@ kotlin {
         desktopTest.dependencies {
             // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.
             implementation(compose.desktop.currentOs)
+            // Reads back the QR codes ui/share draws, as a decoder written by somebody else; nothing ships it.
+            implementation(libs.zxing.core)
         }
         androidMain.dependencies {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.

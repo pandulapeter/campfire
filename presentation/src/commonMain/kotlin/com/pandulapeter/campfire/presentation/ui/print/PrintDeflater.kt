@@ -192,21 +192,5 @@ internal class PrintDeflater {
             for (bit in 0 until length) result = result or ((code ushr bit and 1) shl (length - 1 - bit))
             return result
         }
-
-        fun adler32(data: ByteArray): Int {
-            var a = 1L
-            var b = 0L
-            var index = 0
-            while (index < data.size) {
-                val end = minOf(index + 5552, data.size)
-                while (index < end) {
-                    a += data[index++].toInt() and 255
-                    b += a
-                }
-                a %= 65521
-                b %= 65521
-            }
-            return ((b shl 16) or a).toInt()
-        }
     }
 }
