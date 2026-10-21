@@ -475,7 +475,6 @@ private const val REORDER_END_FRAME = 59
 /** The import's paste, a few frames in so that the Songs screen is seen before the editor takes it over. */
 private const val PASTE_FRAME = 4
 
-
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
 private const val COUNTRY_ROADS = "john_denver-take_me_home_country_roads.cho"
 private const val FRIDAY_NIGHT_BY_THE_LAKE = "friday_night_by_the_lake.setlist.json"
