@@ -31,7 +31,19 @@ KDoc of `SyncFolder` and `SyncConnection`.
   files; `RemoteListing.documentRevisions` names their revisions; same conflict rule as `upload`.
 - `SyncAuthorizationException`, `SyncNetworkException`, and `SyncRemoteStorageFullException` (subclasses of sealed
   `SyncRunEndingException`, each carrying its `SyncFailureReason`) are the only failures that end a run; storage full
-  comes only from `upload` / `uploadDocument`. Anything else is one file's problem.
+  comes only from the uploads. Anything else is one file's problem.
+- `SyncScopeMissingException`: a connection made before a permission was asked for. Deliberately not run-ending and not
+  an authorization failure, since the files still sync; only connecting again fixes it.
+
+## Shared copies (song links)
+
+- `uploadSharedFile` / `createSharedLink` / `deleteSharedFile`, by a share id that must be a plain name (letters,
+  digits, `-`, `_`; anything else is an `IllegalArgumentException` before a request).
+- `list` reports them only in `RemoteListing.sharedFiles`, never in `files`, and `changesSince` never reports them, so
+  the planner, the deletion guard, and the change feed never see them.
+- `createSharedLink` answers the link a copy already has, so a copy keeps one link; `SharedLinkResult.Created` carries
+  only `fileId` and `rlkey`, from which the app builds every download address itself.
+- Deleting a copy ends its link for good; "already gone" is success.
 
 ## Authorization
 

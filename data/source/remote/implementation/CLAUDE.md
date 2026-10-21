@@ -33,10 +33,9 @@ Silent failures go to the injected `Logger`.
   in the build is left out entirely**, so Settings says sync is not configured instead of offering a dead button.
 - The key is `campfire.dropbox.appKey` → `DROPBOX_APP_KEY` in the generated `RemoteConfiguration.kt` (with
   `CAMPFIRE_VERSION` for the `User-Agent`).
-- Dropbox app setup: a *scoped access* app with the **App folder** permission; scopes `files.content.read`,
-  `files.content.write`, `account_info.read`, plus `sharing.read` and `sharing.write` for the planned song links
-  (`documentation/plans/song-links.md`; the authorization URL names no scopes, so a token granted before a scope was
-  ticked lacks it); redirect URIs
+- Dropbox app setup: a *scoped access* app with the **App folder** permission; scopes files.content.read,
+  files.content.write, account_info.read, sharing.read, and sharing.write (song links). The authorization URL
+  names no scopes, so a token granted before a scope was ticked lacks it (`missing_scope`, below); redirect URIs
   `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682` (desktop), and the exact page URL per web deployment.
   Dropbox matches them character for character, hence the fixed desktop port.
 - `MusicBrainzRemoteSource` and `ITunesRemoteSource` are each built once in `DataRemoteSourceModule` and handed to both
@@ -75,6 +74,16 @@ Silent failures go to the injected `Logger`.
   longpoll alone is sent once, and the watcher decides what its failure means. A first sync *will* be rate limited; it
   must not fail for it.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
+- Shared copies (`DropboxSharing`, `DropboxSharedLinkAddress.kt`): `/shared/<shareId>.zip`, uploaded like library
+  files. `toSharedFiles` is called by `list` only, never through `toRemoteFiles`, which the change feed shares.
+  - The link is `create_shared_link_with_settings` (public, viewer). Its `shared_link_already_exists` carries **no**
+    metadata when settings are sent (measured), so the existing link is read with `list_shared_links`
+    (`direct_only`).
+  - Visibility is `resolved_visibility`, else `effective_audience`; anything but `public` is `NotPublic`. Any other
+    409 is `Refused`.
+  - The address `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<rlkey>&dl=0` is cut into `fileId` and `rlkey`
+    (each `[A-Za-z0-9_-]{1,64}`); any other form (an old `/s/` link) is `Refused`, since no download could be built.
+  - Deleted with `files/delete_v2`; `path_lookup/not_found` is success. A deleted file's link never comes back.
 - `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
 - `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a
   decision rests on (listing entries, cursor, `has_more`; revisions; the access token; the delete job's tag) are
@@ -96,6 +105,9 @@ Silent failures go to the injected `Logger`.
   is the network.
 - A 401 gets one forced refresh (of the refused token only, so simultaneous refusals share it) and a resend before it
   is reported as a refusal; the device clock may be wrong.
+- A 401 whose `error_summary` starts with `missing_scope` (`error.required_scope` names it) is thrown at once as
+  `SyncScopeMissingException`, without a refresh: a renewed token has the same scopes, and reporting it as a refusal
+  would end the run and show the working connection as failed (`DropboxTransportTest`).
 - Each platform must notice the user backing out as well as the redirect, or the UI waits for the browser forever.
   `Cancelled` with no message means the user backed out.
   - **iOS**: `ASWebAuthenticationSession`, the only API that reports dismissal (`CanceledLogin` → `Cancelled`; other

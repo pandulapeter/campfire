@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationEx
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncScopeMissingException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
@@ -88,7 +89,10 @@ internal class DropboxTransport(
      * out from the device's clock, and a clock that was wrong when the token was issued keeps saying "fresh" long after
      * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] is
      * handed the token it sends, so that the one refused is known and only that one is renewed: the transfers of a run
-     * refused together share one renewal. A second 401 is the real refusal.
+     * refused together share one renewal. A second 401 is the real refusal. A 401 for a permission the connection was
+     * never granted (`missing_scope`) is neither: a renewed token carries the same permissions, and the credentials are
+     * good for everything else, so it is thrown as [SyncScopeMissingException] at once, never as a refusal that would end
+     * a run and show the connection as failed.
      *
      * A failure without an answer - a timeout, a reset, a stream that ended early, or a fetch that failed - is retried
      * with the same doubling wait, a timeout up to [MAXIMUM_RETRIES] times and anything else up to
@@ -132,9 +136,12 @@ internal class DropboxTransport(
                 failures++
                 continue
             }
-            if (response.status == HttpStatusCode.Unauthorized && refusedToken == null) {
-                refusedToken = token
-                continue
+            if (response.status == HttpStatusCode.Unauthorized) {
+                response.scopeMissing()?.let { throw it }
+                if (refusedToken == null) {
+                    refusedToken = token
+                    continue
+                }
             }
             val retryAfterMillis = response.retryAfterMillis(waits)
             if (retryAfterMillis == null || waits >= MAXIMUM_RETRIES) return response
@@ -162,6 +169,16 @@ internal class DropboxTransport(
         }
 
         else -> null
+    }
+
+    private suspend fun HttpResponse.scopeMissing() = try {
+        json.decodeFromString<DropboxScopeErrorResponse>(bodyAsText())
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        null
+    }?.takeIf { it.errorSummary.startsWith("missing_scope") }?.let { answer ->
+        SyncScopeMissingException("Dropbox needs a permission the connection lacks: ${answer.error.requiredScope}", answer.error.requiredScope)
     }
 
     private suspend fun HttpResponse.retryAfterSecondsInBody() = try {

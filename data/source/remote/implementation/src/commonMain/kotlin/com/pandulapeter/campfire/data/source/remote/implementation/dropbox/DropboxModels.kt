@@ -92,6 +92,48 @@ internal data class DropboxErrorResponse(
 )
 
 /**
+ * A 401 for a permission the token was never granted: `{"error": {".tag": "missing_scope", "required_scope":
+ * "sharing.write"}, "error_summary": "missing_scope/"}`.
+ */
+@Serializable
+internal data class DropboxScopeErrorResponse(
+    @SerialName("error_summary") val errorSummary: String = "",
+    val error: DropboxScopeError = DropboxScopeError(),
+)
+
+@Serializable
+internal data class DropboxScopeError(
+    @SerialName("required_scope") val requiredScope: String? = null,
+)
+
+/**
+ * A shared link, as `sharing/create_shared_link_with_settings` answers it and `sharing/list_shared_links` lists it.
+ * Who may open it is read from `resolved_visibility`, which Dropbox documents as deprecated in favour of
+ * `effective_audience`, so that one stands in when the first is gone.
+ */
+@Serializable
+internal data class DropboxSharedLinkMetadata(
+    val url: String,
+    @SerialName("link_permissions") val linkPermissions: DropboxLinkPermissions = DropboxLinkPermissions(),
+)
+
+@Serializable
+internal data class DropboxLinkPermissions(
+    @SerialName("resolved_visibility") val resolvedVisibility: DropboxTag? = null,
+    @SerialName("effective_audience") val effectiveAudience: DropboxTag? = null,
+)
+
+@Serializable
+internal data class DropboxTag(
+    @SerialName(".tag") val tag: String = "",
+)
+
+@Serializable
+internal data class DropboxListSharedLinksResponse(
+    val links: List<DropboxSharedLinkMetadata>,
+)
+
+/**
  * What `delete_batch` and each `delete_batch/check` answer: a job still running (`async_job_id`, `in_progress`), its
  * outcome (`complete`, with one entry per file in the order they were sent), or the job refused as a whole (`failed`).
  */

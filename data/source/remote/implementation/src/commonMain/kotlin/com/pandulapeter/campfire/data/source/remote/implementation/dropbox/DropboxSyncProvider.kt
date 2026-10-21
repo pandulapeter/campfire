@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletio
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsDocument
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
@@ -79,6 +80,8 @@ internal class DropboxSyncProvider(
     private val requests = DropboxTransport(httpClientHolder = httpClientHolder, tokens = tokens)
 
     private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests)
+
+    private val sharing = DropboxSharing(requests = requests, logger = logger)
 
     override suspend fun isConnected() = credentialsStore.load()?.takeIf { it.providerId == id.id }?.refreshToken?.isNotEmpty() == true
 
@@ -221,6 +224,7 @@ internal class DropboxSyncProvider(
     override suspend fun list(): RemoteListing {
         val files = mutableListOf<RemoteFile>()
         val documents = mutableMapOf<String, String>()
+        val sharedFiles = mutableListOf<RemoteSharedFile>()
         var response = requests.rpc(
             url = LIST_FOLDER_URL,
             body = """{"path":"","recursive":true,"include_deleted":false}""",
@@ -229,6 +233,7 @@ internal class DropboxSyncProvider(
         )
         files += response.entries.toRemoteFiles()
         documents += response.entries.toDocumentRevisions()
+        sharedFiles += response.entries.toSharedFiles()
         while (response.hasMore) {
             // Without a cursor the next page would be asked for as page "", which Dropbox would not have sent.
             if (response.cursor.isEmpty()) throw SyncNetworkException("Dropbox's listing named no next page.")
@@ -240,8 +245,14 @@ internal class DropboxSyncProvider(
             )
             files += response.entries.toRemoteFiles()
             documents += response.entries.toDocumentRevisions()
+            sharedFiles += response.entries.toSharedFiles()
         }
-        return RemoteListing(files = files, cursor = response.cursor.ifEmpty { null }, documentRevisions = documents)
+        return RemoteListing(
+            files = files,
+            cursor = response.cursor.ifEmpty { null },
+            documentRevisions = documents,
+            sharedFiles = sharedFiles,
+        )
     }
 
     override suspend fun awaitChanges(cursor: String) = changeFeed.awaitChanges(cursor)
@@ -312,6 +323,16 @@ internal class DropboxSyncProvider(
         bytes: ByteArray,
         expectedRevision: String?,
     ) = upload(path = documentPath(name), bytes = bytes, expectedRevision = expectedRevision)
+
+    override suspend fun uploadSharedFile(
+        shareId: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ) = upload(path = sharedFilePath(shareId), bytes = bytes, expectedRevision = expectedRevision)
+
+    override suspend fun createSharedLink(shareId: String) = sharing.createLink(sharedFilePath(shareId))
+
+    override suspend fun deleteSharedFile(shareId: String) = sharing.delete(sharedFilePath(shareId))
 
     private suspend fun upload(
         path: String,

@@ -21,9 +21,12 @@ package com.pandulapeter.campfire.data.source.remote.api.sync.model
  * @param documentRevisions The revision of each folder-level document (see
  *   [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.downloadDocument]) by name, as listed. A provider
  *   that does not say leaves it empty, which costs the run a download, never a wrong answer.
+ * @param sharedFiles The shared copies (see [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.uploadSharedFile]),
+ *   kept apart from [files] so that nothing which plans the library's pass or guards its deletions ever sees them.
  */
 data class RemoteListing(
     val files: List<RemoteFile>,
     val cursor: String? = null,
     val documentRevisions: Map<String, String> = emptyMap(),
+    val sharedFiles: List<RemoteSharedFile> = emptyList(),
 )

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 
 internal fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
     if (entry.tag != "file") return@mapNotNull null
@@ -38,3 +39,33 @@ internal fun DropboxEntry.libraryKind() = LibraryFileKind.entries
 
 /** How many folders deep the entry is: 1 for one at the top of the app folder. */
 internal val DropboxEntry.depth get() = pathLower.count { it == '/' }
+
+/**
+ * The shared copies, `/shared/<shareId>.zip`, one level deep like the library files. Picked out by `list` alone and never
+ * by [toRemoteFiles], which the change feed shares: a run's rebuilt copy must not read as another device's change.
+ */
+internal fun List<DropboxEntry>.toSharedFiles() = mapNotNull { entry ->
+    if (entry.tag != "file" || entry.depth != 2 || !entry.pathLower.startsWith("/$SHARED_FOLDER/")) return@mapNotNull null
+    val shareId = entry.name.removeSuffix(SHARED_FILE_EXTENSION)
+    if (shareId == entry.name || !shareId.isShareId()) return@mapNotNull null
+    RemoteSharedFile(
+        shareId = shareId,
+        revision = entry.rev,
+        contentHash = entry.contentHash,
+        size = entry.size,
+    )
+}
+
+/**
+ * Where the shared copy [shareId] lives. An id that is not a plain name is refused rather than built into a path: it
+ * comes from a registry anyone can edit by hand, and `../songs/x` must not reach the library.
+ */
+internal fun sharedFilePath(shareId: String): String {
+    require(shareId.isShareId()) { "Not a share id: $shareId" }
+    return "/$SHARED_FOLDER/$shareId$SHARED_FILE_EXTENSION"
+}
+
+private fun String.isShareId() = isNotEmpty() && all { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '-' || it == '_' }
+
+private const val SHARED_FOLDER = "shared"
+private const val SHARED_FILE_EXTENSION = ".zip"

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletio
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 
 /**
  * The files half of a [SyncProvider]: one cloud folder, flat, addressed by (kind, name) - exactly the shape the library
@@ -28,7 +29,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
  * - [delete] may be a move to a trash rather than a destruction, and the engine does not care which.
  * - Nothing here throws for an expired token: refreshing is the provider's own business, and only an authorization
  *   that cannot be repaired surfaces, as [SyncAuthorizationException].
- * - An account that is out of space says so with [SyncRemoteStorageFullException], from [upload] only. It ends the
+ * - An account that is out of space says so with [SyncRemoteStorageFullException], from the uploads only. It ends the
  *   run; any other refusal is one file's problem.
  */
 interface SyncFolder {
@@ -133,4 +134,33 @@ interface SyncFolder {
         bytes: ByteArray,
         expectedRevision: String?,
     ): RemoteWriteResult
+
+    // Shared copies
+
+    /**
+     * Writes the shared copy named [shareId], a zip anyone with its link can download, with the same rules as
+     * [upload]. Shared copies live apart from the library and the documents: [list] reports them only in
+     * [RemoteListing.sharedFiles], and [changesSince] never reports them, so that rebuilding one never starts a run
+     * anywhere. [shareId] is a plain name, letters, digits, `-`, and `_` only, and anything else is refused with an
+     * [IllegalArgumentException] before a request.
+     */
+    suspend fun uploadSharedFile(
+        shareId: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ): RemoteWriteResult
+
+    /**
+     * A public link to the shared copy [shareId], made now or, where the copy already has one, the one it has: a copy
+     * has one link for as long as it is shared, and overwriting it with [uploadSharedFile] keeps that link. Throws
+     * [SyncScopeMissingException] where the connection was made before sharing was asked for, and what the other calls
+     * throw for a service that cannot be reached or refuses the credentials.
+     */
+    suspend fun createSharedLink(shareId: String): SharedLinkResult
+
+    /**
+     * Deletes the shared copy [shareId], which ends its link for good: a copy uploaded again under the same id is not
+     * served by the old link. A copy that is already gone counts as deleted.
+     */
+    suspend fun deleteSharedFile(shareId: String)
 }

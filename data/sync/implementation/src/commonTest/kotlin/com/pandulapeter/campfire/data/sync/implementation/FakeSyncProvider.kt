@@ -23,7 +23,9 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletio
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 
@@ -128,6 +130,9 @@ internal class FakeSyncProvider(
     private fun listing() = RemoteListing(
         cursor = feed.value.size.toString(),
         documentRevisions = documents.mapValues { it.value.second },
+        sharedFiles = sharedFiles.map { (shareId, file) ->
+            RemoteSharedFile(shareId = shareId, revision = file.second, contentHash = contentHashOf(file.first), size = file.first.size.toLong())
+        },
         files = files.also { listCount++ }.map { (key, file) ->
             remoteFile(key, file.first, file.second)
         },
@@ -211,6 +216,29 @@ internal class FakeSyncProvider(
         documents[name] = bytes to revision
         feed.value += name
         return RemoteWriteResult.Written(revision)
+    }
+
+    /** The shared copies by share id, with their revisions. Never in the feed of changes, as the contract says. */
+    val sharedFiles = mutableMapOf<String, Pair<ByteArray, String>>()
+
+    /** What [createSharedLink] answers for a share id. */
+    var onCreateSharedLink: suspend (String) -> SharedLinkResult = { shareId -> SharedLinkResult.Created(fileId = "id-$shareId", rlkey = "key") }
+
+    override suspend fun uploadSharedFile(
+        shareId: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ): RemoteWriteResult {
+        if (sharedFiles[shareId]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        val revision = "r${nextRevision++}"
+        sharedFiles[shareId] = bytes to revision
+        return RemoteWriteResult.Written(revision)
+    }
+
+    override suspend fun createSharedLink(shareId: String) = onCreateSharedLink(shareId)
+
+    override suspend fun deleteSharedFile(shareId: String) {
+        sharedFiles -= shareId
     }
 
     /** Every file path and document name written or deleted, in order; a cursor is a position in it. */
