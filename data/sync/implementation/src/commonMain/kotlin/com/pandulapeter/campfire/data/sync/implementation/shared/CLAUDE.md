@@ -53,7 +53,9 @@
   copy nothing could tell about is kept (a leftover at worst). **Stop sharing** deletes the copy before the
   entry, so no entry ever goes while its link still works. Settings' **Stop sharing everything**
   (`stopSharingEverythingNow`) deletes every copy the listing or the list names (leftovers of failed shares included),
-  then removes the entries of those it deleted, after a failure too.
+  then removes the entries of those it deleted, after a failure too. Where that edit fails once the copies are gone,
+  both note a `Stop` per share in the journal instead of failing, so the dead links show as stopped and the next run
+  (or share) removes their entries; only a journal that cannot be written answers the edit's failure.
 
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 

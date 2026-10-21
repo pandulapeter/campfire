@@ -240,6 +240,59 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a stop whose list cannot be edited after its copy went is stopped, and the next share removes its entry`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy)).share
+        val stopped = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "stopped.cho", "Stopped", copy)).share
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+
+        assertNull(repository.stopSharing(stopped.shareId))
+
+        assertEquals(setOf(kept.shareId), provider.sharedFiles.keys)
+        assertEquals(listOf(kept.shareId), repository.shares.first().map { it.shareId })
+        assertEquals(listOf(SharedLinksJournal.Entry.Stop(stopped.shareId)), SharedLinksJournal(localSource, testEnvironment()).load())
+
+        provider.onUploadDocument = {}
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "new.cho", "New", copy))
+
+        assertTrue(stopped.shareId !in registry(provider).links.map { it.shareId })
+        assertEquals(emptyList(), SharedLinksJournal(localSource, testEnvironment()).load())
+    }
+
+    @Test
+    fun `a stop whose list cannot be edited nor its journal written says why`() = runTest {
+        val provider = FakeSyncProvider()
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+        val unreadable = FakeSharedLinksLocalSource(onLoadJournal = { throw IllegalStateException("unreadable") })
+
+        assertEquals(SharingFailure.NETWORK, repository(provider, localSource = unreadable).stopSharing(share.shareId))
+
+        assertTrue(provider.sharedFiles.isEmpty())
+    }
+
+    @Test
+    fun `stopping everything whose list cannot be edited after the copies went stops every share`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy)).share
+        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy)).share
+        provider.onUploadDocument = { throw SyncAuthorizationException("expired") }
+
+        assertNull(repository.stopSharingEverythingNow())
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), repository.shares.first())
+        assertEquals(
+            setOf(SharedLinksJournal.Entry.Stop(first.shareId), SharedLinksJournal.Entry.Stop(second.shareId)),
+            SharedLinksJournal(localSource, testEnvironment()).load().toSet(),
+        )
+    }
+
+    @Test
     fun `stopping everything deletes every copy, unlisted ones included, and empties the list`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)

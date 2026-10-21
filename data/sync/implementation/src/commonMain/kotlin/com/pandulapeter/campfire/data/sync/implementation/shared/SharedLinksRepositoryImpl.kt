@@ -192,23 +192,13 @@ internal class SharedLinksRepositoryImpl(
 
     override suspend fun stopSharing(shareId: String): SharingFailure? {
         val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
-        return failureOf("stop sharing $shareId") {
-            // The copy goes first: an entry removed with its copy left behind would leave a working link that no
-            // screen shows any more.
+        // The copy goes first: an entry removed with its copy left behind would leave a working link that no screen shows
+        // any more.
+        failureOf("stop sharing $shareId") {
             folder.deleteSharedCopy(shareId)
-            val edit = registry.edit(folder) { document ->
-                SharedLinksRegistry.Change(
-                    document = document.takeIf { it.links.any { entry -> entry.shareId == shareId } }
-                        ?.let { it.copy(links = it.links.filterNot { entry -> entry.shareId == shareId }) },
-                    result = Unit,
-                )
-            }
-            when (edit) {
-                is SharedLinksRegistry.Edit.Done -> null
-                is SharedLinksRegistry.Edit.FromNewerVersion -> SharingFailure.NEWER_VERSION
-                SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
-            }
-        }
+            null
+        }?.let { return it }
+        return removeStopped(folder, setOf(shareId))
     }
 
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {
@@ -312,7 +302,18 @@ internal class SharedLinksRepositoryImpl(
         if (stopped.isEmpty()) return failure
         // Also after a failure, so that the shares whose copies did go are not listed as working; a share another
         // device made meanwhile was not among them and stays.
-        val removal = failureOf("remove the stopped shares from the list") {
+        val removal = removeStopped(folder, stopped)
+        return failure ?: removal
+    }
+
+    /**
+     * Removes the entries of [stopped], shares whose copies are already deleted, from the list. Their links work no
+     * more whatever happens here, so a list that cannot be edited leaves their stops to the journal, which the next run
+     * (or the next share, first) finishes, and they show as stopped meanwhile: only where even the journal cannot be
+     * written is the list's failure answered, and stopping again finds the copies gone and edits the list.
+     */
+    private suspend fun removeStopped(folder: SyncFolder, stopped: Set<String>): SharingFailure? {
+        val failure = failureOf("remove the stopped shares from the list") {
             val edit = registry.edit(folder) { document ->
                 SharedLinksRegistry.Change(
                     document = document.takeIf { it.links.any { entry -> entry.shareId in stopped } }
@@ -325,8 +326,16 @@ internal class SharedLinksRepositoryImpl(
                 is SharedLinksRegistry.Edit.FromNewerVersion -> SharingFailure.NEWER_VERSION
                 SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
             }
+        } ?: return null
+        return failure.takeUnless {
+            environment.logger.recovering(
+                describe = { "Could not note the stopped shares for the next run: ${it::class.simpleName}" },
+                fallback = { false },
+            ) {
+                journal.append(stopped.map(SharedLinksJournal.Entry::Stop))
+                true
+            }
         }
-        return failure ?: removal
     }
 
     /** The folder of the account on screen; an action never connects, or acts for an account that is failing. */
