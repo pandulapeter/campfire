@@ -154,6 +154,12 @@ public object PlayableScales {
         return isOnRiffStep && (minorRoots * MIN_MINOR_SHARE >= chords.size || isThirdless)
     }
 
+    /** Whether [chord] sits on a step of a rock riff on [root] ([isRockRiff]), whatever its quality. */
+    internal fun isOnRiffStep(root: Int, chord: Chord): Boolean {
+        val step = (chord.root - root).mod(12)
+        return step in riffSteps || step == FLAT_FIFTH && chord.hasNoThird
+    }
+
     /** What [suggestionFor] answers. */
     internal class Suggestion(val scales: List<Scale>, val isFit: Boolean)
 

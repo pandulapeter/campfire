@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.scales
 
+import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 
@@ -23,7 +24,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  * section with the same chords (a bridge that replays the intro goes with the intro), then one holding a section of its
  * own kind (a second verse goes with the first), then the group the section before it is in, then any other, so that a
  * verse after the solo goes back to the verses rather than starting a group of its own. A section that fits no group
- * starts one, and one no home scale holds two thirds of is left out. A group only a home with exceptions fits, of at
+ * starts one, and one no home scale holds two thirds of is left out. A rock riff's group keeps its own fit, taking the
+ * parts on its root its minor pentatonic is played over ([absorbs]), and a vamp on one root joins whatever the song puts
+ * on that root. A group only a home with exceptions fits, of at
  * most three distinct chords, is a guess (two of three chords on a home), left out where the song has another group; a
  * rock riff is not one, its minor pentatonic being the answer. The root of a group is
  * the key in force at its first section (the song's `{key}`, or the key the last `{transpose}` before it names) where
@@ -57,7 +60,17 @@ public object SongScaleGroups {
                 }
             }
             val joined = candidates.firstNotNullOfOrNull { group ->
-                fitOf(group.parts + part)?.takeIf { canJoin(group.fit, own, it) }?.let { group to it }
+                when {
+                    group.fit.isRockRiff && group.fit.absorbs(own, part) -> group to group.fit
+                    group.isTonicVamp(own.root) || part.isTonicVamp(group.fit.root) -> fitOf(group.parts + part)?.takeIf { combined ->
+                        // A vamp takes the other side's answer only where that covers it: an A intro before an Am F C G verse
+                        // would otherwise be named a dominant of the iv.
+                        val vampNames = (if (part.isTonicVamp(group.fit.root)) part.names else group.parts.flatMap { it.names }).toSet()
+                        combined.level != Level.PASSING && combined.root.pitchClass == group.fit.root.pitchClass &&
+                            combined.exceptions.none { exception -> exception.chordName in vampNames || exception.otherChordNames.any { it in vampNames } }
+                    }?.let { group to it }
+                    else -> fitOf(group.parts + part)?.takeIf { canJoin(group.fit, own, it) }?.let { group to it }
+                }
             }
             if (joined != null) {
                 joined.first.parts += part
@@ -85,8 +98,9 @@ public object SongScaleGroups {
      * of their own stay apart unless one key holds both, so that a major verse and a Mixolydian chorus are two answers,
      * though a home scale would hold most of both. A part only a home scale with exceptions fits joins one the same
      * home on the same root fits, so a verse with a secondary dominant joins its key's chorus and a bridge in another
-     * key does not, and a rock riff, led by the minor pentatonic rather than its home, joins only another. The eight-note
-     * answers are kept among themselves, since their passing tone would join anything.
+     * key does not, and a rock riff, led by the minor pentatonic rather than its home, joins here only another (what else
+     * a riff's group takes is [absorbs]'s). The eight-note answers are kept among themselves, since their passing tone
+     * would join anything.
      */
     private fun canJoin(group: Fit, part: Fit, combined: Fit) = when {
         group.level == Level.TONAL && part.level == Level.TONAL -> combined.level == Level.TONAL
@@ -100,6 +114,36 @@ public object SongScaleGroups {
             it.root.pitchClass == combined.root.pitchClass && familyOf(it.home) == familyOf(combined.home) && it.isRockRiff == combined.isRockRiff
         }
     }
+
+    /**
+     * Whether a rock riff fit as this takes a part fit as [part] while keeping its own fit, the riff's scales leading: a
+     * part on the riff's root held whole by natural minor, Dorian, or Mixolydian, the minor pentatonic's own modes (Smoke
+     * on the Water's verse), or by a home with exceptions that is no guess, or a guess where the key in force names the
+     * root and every chord sits on a riff step or on the ♭II, metal's Phrygian chord: the key's word makes three chords on
+     * the riff's steps the riff's own rather than a chorus in another key. Never a part on the major home: the minor
+     * pentatonic's flat third against a major chorus's third is two sounds, not the style.
+     */
+    private fun Fit.absorbs(part: Fit, songPart: SongPart): Boolean {
+        if (part.root.pitchClass != root.pitchClass) return false
+        val isGuess = isGuessOf(part, songPart.chords)
+        return when {
+            part.level == Level.TONAL -> part.home.id in riffModeIds
+            part.level == Level.LOOSE || part.level == Level.THIN -> if (isGuess) {
+                songPart.key?.root?.pitchClass == root.pitchClass &&
+                    songPart.chords.all { PlayableScales.isOnRiffStep(root.pitchClass, it) || (it.root - root.pitchClass).mod(12) == 1 }
+            } else {
+                part.home.id != MAJOR_ID
+            }
+            else -> false
+        }
+    }
+
+    /** Whether every chord of the part is on [root], a vamp that says nothing of the mode. */
+    private fun SongPart.isTonicVamp(root: SpelledNote) = chords.all { it.root == root.pitchClass }
+
+    /** Whether a part playing [chords] fit as [fit] is a guess, see [Group.isGuess]. */
+    private fun isGuessOf(fit: Fit, chords: List<Chord>) =
+        (fit.level == Level.LOOSE || fit.level == Level.THIN) && fit.exceptions.isNotEmpty() && chords.distinct().size <= MAX_GUESSED_CHORDS
 
     /** What a home scale is of, for [canJoin]: the minor family is one home, every other scale its own. */
     private fun familyOf(scale: Scale) = if (scale.id in minorFamilyIds) NATURAL_MINOR_ID else scale.id
@@ -374,7 +418,9 @@ public object SongScaleGroups {
 
     private class Group(val parts: MutableList<SongPart>, var fit: Fit) {
         /** A home leaving out one of at most three chords, see [of]; a rock riff, which has no exceptions, is no guess. */
-        val isGuess get() = (fit.level == Level.LOOSE || fit.level == Level.THIN) && fit.exceptions.isNotEmpty() && parts.flatMap { it.chords }.distinct().size <= MAX_GUESSED_CHORDS
+        val isGuess get() = isGuessOf(fit, parts.flatMap { it.chords })
+
+        fun isTonicVamp(root: SpelledNote) = parts.all { it.isTonicVamp(root) }
     }
 
     /**
@@ -431,6 +477,7 @@ public object SongScaleGroups {
     private val homeScaleIds = listOf("major", NATURAL_MINOR_ID, "harmonic_minor")
     private val modeScaleIds = listOf("mixolydian", "dorian")
     private val raisedMinorIds = setOf("harmonic_minor", "melodic_minor")
+    private val riffModeIds = setOf(NATURAL_MINOR_ID, DORIAN_ID, MIXOLYDIAN_ID)
     private val minorFamilyIds = listOf(NATURAL_MINOR_ID, "harmonic_minor", "melodic_minor")
     private val minorFamily = minorFamilyIds.map(Scales::fromId).requireNoNulls()
     private val looseHomes = listOf("major", NATURAL_MINOR_ID, "dorian", "mixolydian").map(Scales::fromId).requireNoNulls()

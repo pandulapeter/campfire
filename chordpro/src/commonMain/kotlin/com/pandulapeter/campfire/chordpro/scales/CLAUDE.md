@@ -51,8 +51,10 @@
   part stands alone but never joins another; a home of two of three chords is a guess dropped beside any other group.
   A **rock riff** is power, suspended, or major chords on I, ♭III, IV, V, ♭VI, ♭VII (a thirdless one on ♭V too, the
   blues note) with a ♭III or ♭VI one chord in eight (♭VII alone is Mixolydian's), or any ♭III, ♭VI, or ♭VII with no
-  third anywhere; it leads with its minor pentatonic and blues, has no exceptions, and riffs on one root join whatever
-  home their chords lean to.
+  third anywhere; it leads with its minor pentatonic and blues, has no exceptions, and a riff's group takes any part on
+  its root in natural minor, Dorian, or Mixolydian, or on a home with exceptions, and, where the key names the root, a
+  guess on the riff's steps or the ♭II; never a part in the parallel major. A vamp on one root (a sus intro) joins
+  whatever the song puts on that root, taking its fit, where that fit names none of the vamp's chords as an exception.
 - **`SongScaleSuggestions`** is what a song shows, groups offering one first scale on one root joined (never two rows
   saying the same): the home (`ScaleGroup.isHome`, the group playing half the chords), then at most three moments,
   the other keys (not a relative one, whose notes are the home's), parts on a centre of their own that hardly play the

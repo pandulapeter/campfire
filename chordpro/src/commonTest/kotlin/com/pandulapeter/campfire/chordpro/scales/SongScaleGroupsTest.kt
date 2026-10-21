@@ -443,6 +443,51 @@ class SongScaleGroupsTest {
         assertEquals(listOf("G" to "mixolydian"), rootAndFirst(song("G C F C G C F C", key = "G")))
     }
 
+    private fun smokeOnTheWater(key: String?) = (listOfNotNull(key?.let { "{key: $it}" }) + listOf(
+        "{start_of_verse: Riff}\n[G5]x [Bb5]x [C5]x [G5]x [Bb5]x [Db5]x [C5]x\n{end_of_verse}",
+        "{start_of_verse: Verse}\n[G5]x [F5]x [G5]x [G5]x [F5]x [G5]x [C]x [G5]x [C]x [G5]x\n{end_of_verse}",
+        "{start_of_chorus: Chorus}\n[C]x [Ab]x [G5]x [C]x [Ab]x [G5]x\n{end_of_chorus}",
+    )).joinToString("\n")
+
+    @Test
+    fun `a riff takes the verse in its root's mode and, where the key names its root, the chorus on its steps`() {
+        val withKey = groups(smokeOnTheWater("Gm")).single()
+        assertEquals(listOf("Riff", "Verse", "Chorus"), withKey.labels)
+        assertEquals(listOf("minor_pentatonic", "blues"), withKey.scales.take(2).map { it.id })
+        assertTrue(withKey.exceptions.isEmpty())
+        val withoutKey = groups(smokeOnTheWater(null))
+        assertEquals(listOf(listOf("Riff", "Verse"), listOf("Chorus")), withoutKey.map { it.labels })
+        assertEquals(listOf("G", "C"), withoutKey.map { it.rootName })
+    }
+
+    @Test
+    fun `a riff never takes a part in its parallel major`() =
+        assertEquals(listOf("E" to "minor_pentatonic", "E" to "major"), rootAndFirst(song("E5 G5 A5 E5 G5 A5", "E A B E E A B E")))
+
+    @Test
+    fun `a vamp on the tonic joins the riff after it instead of naming a key`() {
+        val susIntro = groups(
+            """
+            {start_of_verse: Intro}
+            [Asus4]x [A]x [Asus4]x [A]x
+            {end_of_verse}
+            {start_of_verse: Verse}
+            [A5]x [A5]x [C5]x [D5]x [A5]x [A5]x [C5]x [D5]x
+            {end_of_verse}
+            {start_of_chorus: Chorus}
+            [F]x [G]x [A]x [A]x [F]x [G]x [A]x [A]x
+            {end_of_chorus}
+            """,
+        ).single()
+        assertEquals(listOf("Intro", "Verse", "Chorus"), susIntro.labels)
+        assertEquals("minor_pentatonic", susIntro.scales.first().id)
+        assertEquals(listOf("A" to "major", "A" to "natural_minor"), rootAndFirst(song("A A A A", "Am F C G Am F C G")))
+    }
+
+    @Test
+    fun `a riff never takes a loose part on the major home`() =
+        assertEquals(listOf("minor_pentatonic", "major"), groups(song("E5 G5 A5 E5 G5 A5", "E B C#m A E B G#7 A")).map { it.scales.first().id })
+
     @Test
     fun `a chorus recalled after a transpose is a part in the new key`() {
         val groups = transposed("$modulatedChorus\n{transpose: 2}\n{chorus}")
