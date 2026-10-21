@@ -66,16 +66,19 @@ internal fun ExportHost(
     // slides on away from wherever the finger left it rather than starting back towards the open position first.
     var closedByGesture by remember { mutableStateOf<DialogType.Export?>(null) }
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-    // Composed after the app, so that the dispatcher reaches this handler before the back stack's, and registered
-    // whether or not the screen is up, since a handler that comes and goes changes the order the dispatcher picks in.
-    NavigationBackHandler(
-        state = backGesture,
-        isBackEnabled = target != null,
-        onBackCompleted = {
-            closedByGesture = target
-            target?.let(viewModel.dialogHost::dismissSheet)
-        },
-    )
+    // Registered as the screen opens rather than with the app, the way a sheet's handler is: the dispatcher asks the
+    // handler registered last first, and a screen composed after the app has one of its own that would otherwise take
+    // the back meant for this one (a settings tab going back to General, an open search closing under it). The menus
+    // and the question composed with the export screen register after this, so they still go first.
+    if (target != null) {
+        NavigationBackHandler(
+            state = backGesture,
+            onBackCompleted = {
+                closedByGesture = target
+                viewModel.dialogHost.dismissSheet(target)
+            },
+        )
+    }
     val spec = MaterialTheme.motionScheme.slideFractionSpec()
     LaunchedEffect(transition) {
         snapshotFlow {

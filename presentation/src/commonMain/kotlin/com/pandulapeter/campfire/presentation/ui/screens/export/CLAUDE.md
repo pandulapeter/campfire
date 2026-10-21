@@ -63,7 +63,8 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
 - `ExportHost` (composed by `CampfireScreens` after the `NavDisplay`, before dialogs and snackbars) slides it in and out
   exactly like a pushed destination, following predictive back.
 - An opaque `Surface` under the host's `NavigationBackHandler`, so Escape, browser Back, and the gesture close it; a
-  failed export's snackbar still shows over it.
+  failed export's snackbar still shows over it. The handler registers as the screen opens, as a sheet's does: the
+  dispatcher asks the newest first, and a screen's own (a settings tab's, an open search's) would take the back.
 - A focus group that cancels every exit while it is the dialog shown, so Tab never reaches the screen beneath
   (`clearAndSetSemantics` only hides that from screen readers).
 

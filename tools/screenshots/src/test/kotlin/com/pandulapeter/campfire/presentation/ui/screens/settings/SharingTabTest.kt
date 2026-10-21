@@ -82,6 +82,43 @@ internal class SharingTabTest {
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test
+    fun `a back over the qr code closes the export screen and leaves the sharing tab as it was`() = runAppTest(
+        window = WIDE_WINDOW,
+        preferenceFiles = mapOf("shared-links.json" to MIRROR),
+    ) {
+        openQrCode()
+
+        pressBack()
+
+        assertSharingTabUncovered()
+    }
+
+    @Test
+    fun `a back gesture over the qr code closes the export screen and leaves the sharing tab as it was`() = runAppTest(
+        window = WIDE_WINDOW,
+        preferenceFiles = mapOf("shared-links.json" to MIRROR),
+    ) {
+        openQrCode()
+
+        swipeBack()
+
+        assertSharingTabUncovered()
+    }
+
+    private fun AppTestScope.openQrCode() {
+        openSharingTab()
+        onAllNodes(hasContentDescription(string(Res.string.settings_sharing_actions)))[0].performTouchInput { click() }
+        waitForIdle()
+        tap(hasText(string(Res.string.settings_sharing_show_qr_code)) and hasClickAction())
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    private fun AppTestScope.assertSharingTabUncovered() {
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isEmpty() }
+        onNode(hasText(string(Res.string.settings_sharing_stop_all)) and hasClickAction()).assertExists()
+    }
+
     private fun AppTestScope.openSharingTab() {
         tap(hasText(string(Res.string.settings)) and hasClickAction())
         tap(hasText(string(Res.string.settings_sharing)) and hasClickAction())

@@ -72,6 +72,8 @@ language, theme, and system text size.
 - **The keyboard** is the test's to raise (`keyboardHeight`): the desktop has none. It reaches the app twice, through
   `LocalPlatformWindowInsets` and through the scene's own insets, since a dialog (every bottom sheet) is a layer of the
   scene and `imePadding` reads its root's insets, not the composition's.
+- **Back** is the test's to send too (`pressBack`, `swipeBack`, through the scene's navigation event dispatcher): only
+  the desktop app's window turns Escape into a back event, so a pressed Escape reaches no back handler here.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait for them with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or
   deleted the same day, never retried.

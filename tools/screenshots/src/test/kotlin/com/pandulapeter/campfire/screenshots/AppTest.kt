@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.screenshots
 
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -24,6 +25,9 @@ import androidx.compose.ui.test.SkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigationevent.DirectNavigationEventInput
+import androidx.navigationevent.NavigationEvent
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -153,7 +157,13 @@ private fun runApp(
         useStandardTestDispatcherForComposition = false,
     ).runTest {
         var isAppReady by mutableStateOf(false)
+        val backInput = DirectNavigationEventInput()
         setContent {
+            val dispatcher = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
+            DisposableEffect(dispatcher) {
+                dispatcher?.addInput(backInput)
+                onDispose { dispatcher?.removeInput(backInput) }
+            }
             host.Content(
                 filePicker = TestFilePicker(pickedFiles),
                 isPrepared = true,
@@ -169,6 +179,7 @@ private fun runApp(
             library = File(host.dataDirectory, "library"),
             locale = AppLocale.findByCode(appearance.language.id),
             keyboardHeight = keyboardHeight,
+            backInput = backInput,
         ).test()
     }
 }
@@ -182,7 +193,8 @@ private class KeyboardInsets(private val keyboardHeight: State<Dp>) : PlatformWi
 /**
  * What a test drives the app with: the UI test's finders and actions, the library folder the app writes to, and the
  * on-screen keyboard, which is up while [keyboardHeight] is more than zero. The keyboard is the test's to raise: the
- * desktop has none, so focusing a text field opens nothing.
+ * desktop has none, so focusing a text field opens nothing. Back is the test's to send too ([pressBack], [swipeBack]):
+ * the scene has no window to turn Escape into one, which the desktop app's window does.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class AppTestScope(
@@ -190,9 +202,26 @@ internal class AppTestScope(
     val library: File,
     private val locale: AppLocale,
     keyboardHeight: MutableState<Dp>,
+    private val backInput: DirectNavigationEventInput,
 ) : ComposeUiTest by test {
 
     var keyboardHeight by keyboardHeight
+
+    /** A back as the desktop's Escape, Android's back button, and the browser's Back send it, at once and whole. */
+    fun pressBack() {
+        backInput.backCompleted()
+        waitForIdle()
+    }
+
+    /** A predictive back gesture from the start edge, dragged halfway across and let go of. */
+    fun swipeBack() {
+        backInput.backStarted(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT))
+        waitForIdle()
+        backInput.backProgressed(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT, progress = 0.5f))
+        waitForIdle()
+        backInput.backCompleted()
+        waitForIdle()
+    }
 
     /** The whole window as it is drawn, dialogs and popups included, which a node's capture leaves out. */
     fun captureWindow() = test.captureToImage()

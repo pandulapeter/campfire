@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.kotlin.coroutines.swing)
     implementation(libs.kotlin.serialization.json)
     testImplementation(kotlin("test"))
+    testImplementation(libs.androidx.navigation3.ui)
     testImplementation(libs.compose.ui.test)
     testRuntimeOnly(libs.junit.platformLauncher)
 }
