@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.share
 
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import kotlinx.serialization.Serializable
@@ -23,5 +24,9 @@ internal data class ShareTarget(
     val fileName: String,
 )
 
-/** The share of [target] among [shares], if it is shared. */
-internal fun shareOf(shares: List<Share>, target: ShareTarget) = shares.firstOrNull { it.kind == target.kind && it.fileName == target.fileName }
+/**
+ * The share of [target] among [shares], if it is shared, under any case or Unicode form of its name, as the account's
+ * list matches it.
+ */
+internal fun shareOf(shares: List<Share>, target: ShareTarget) =
+    shares.firstOrNull { it.kind == target.kind && LibraryFiles.isSameLibraryName(it.fileName, target.fileName) }

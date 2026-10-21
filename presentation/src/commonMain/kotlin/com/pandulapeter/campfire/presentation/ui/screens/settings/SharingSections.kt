@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -217,6 +218,10 @@ private fun ColumnScope.SharedLinks(
 
 /** The export screen of [share]'s item, which shows its QR code on the Link format, or null where the library lacks it. */
 private fun exportDialogOf(viewModel: CampfireViewModel, share: Share) = when (share.kind) {
-    SharedLinkKind.SONG -> viewModel.libraryState.songsByFileName.value[share.fileName]?.let { DialogType.Export(song = it) }
-    SharedLinkKind.SETLIST -> viewModel.libraryState.setlists.value.firstOrNull { it.fileName == share.fileName }?.let { DialogType.Export(setlist = it) }
+    SharedLinkKind.SONG -> viewModel.libraryState.songsByFileName.value.let { songs ->
+        songs[share.fileName] ?: songs.entries.firstOrNull { LibraryFiles.isSameLibraryName(it.key, share.fileName) }?.value
+    }?.let { DialogType.Export(song = it) }
+    SharedLinkKind.SETLIST -> viewModel.libraryState.setlists.value
+        .firstOrNull { LibraryFiles.isSameLibraryName(it.fileName, share.fileName) }
+        ?.let { DialogType.Export(setlist = it) }
 }
