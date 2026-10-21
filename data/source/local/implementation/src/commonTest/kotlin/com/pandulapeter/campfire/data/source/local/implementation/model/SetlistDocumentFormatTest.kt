@@ -20,6 +20,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -113,6 +114,27 @@ internal class SetlistDocumentFormatTest {
 
         assertEquals(JsonPrimitive(96), song["tempo"])
         assertEquals(JsonPrimitive(2), song["capo"])
+    }
+
+    @Test
+    fun `a setlist past the token budget is refused before parsing`() {
+        assertFailsWith<IllegalArgumentException> {
+            SetlistDocumentFormat.decode("""{"title":"x","songs":[""" + List(40_000) { """{"file":"a.cho"}""" }.joinToString(",") + "]}")
+        }
+    }
+
+    @Test
+    fun `a setlist nested past the parser's stack is refused rather than overflowing it`() {
+        assertFailsWith<IllegalArgumentException> {
+            SetlistDocumentFormat.decode("""{"title":"x","songs":[{"file":"a.cho","z":""" + "[".repeat(100_000) + "]".repeat(100_000) + "}]}")
+        }
+    }
+
+    @Test
+    fun `an ordinary setlist of a few hundred songs still decodes`() {
+        val songs = List(500) { """{"file":"song_$it.cho","transposition":2,"tempo":96,"capo":1}""" }
+
+        assertEquals(500, SetlistDocumentFormat.decode("""{"title":"x","songs":[${songs.joinToString(",")}]}""").songs.size)
     }
 
     private companion object {

@@ -108,7 +108,8 @@ No document type leaves this module.
   costs only the date. Unknown members are kept in
   `unknownFields` and written back after known ones; the old `priority` is declared so it is read and dropped. A
   setlist naming a song twice keeps the first mention, also in what a save returns (screens key rows by file name).
-  A setlist that does not decode is skipped and left alone.
+  A setlist that does not decode is skipped and left alone. `decode` refuses a document past the same 64 levels or a
+  100,000-token budget before parsing, at launch as on import.
 - An undated setlist gets today in memory (`ParsedSetlist.isDated`, no write); the repository then saves it via
   `loadSetlist` / `SetlistLocalSourceImpl.toDatedModel`, a write that announces nothing, so the next sync carries it.
   `SetlistComparisonImpl` serves sync (see `:data:source:local:api`).
@@ -132,8 +133,9 @@ archive holding one is looked inside; none is registered as an Open with type, a
 `backup/JsonSongs`, `OpenSongSong`, and `OnSongFile` turn another app's document (a `.json` that is no setlist or a
 sniffed text starting with `{` or `[`; an OpenSong XML song, `.xml` or a sniffed text starting with `<`; an `.onsong`)
 into `.cho` songs, inside an archive after the SongbookPro check and loose through `songsIn`; their input shapes are in
-their KDoc. JSON is bounded to the text limit, 64 levels of brackets before parsing (`ShallowJson`; deeper overflows
-the parser's stack), and 32 levels and 200,000 nodes when walked; none of them writes setlists; all write headers and
+their KDoc. JSON is bounded to the text limit, 64 levels of brackets and a budget of tokens before parsing
+(`ShallowJson` through `JsonBounds`; deeper overflows the parser's stack, more builds a tree past the heap), and 32
+levels and 200,000 nodes when walked; none of them writes setlists; all write headers and
 batch names through `ForeignSongHeader`. What their KDoc does not say:
 
 - OpenSong: a `.cho` of the name it came under; section tags become environments or comments, `.` chord rows are set

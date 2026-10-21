@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
+import com.pandulapeter.campfire.data.model.JsonBounds
 import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -38,8 +39,19 @@ internal object SetlistDocumentFormat {
     private val SONG_KEYS = SetlistSongDocument.serializer().descriptor.elementNames.toSet()
     private const val SONGS_KEY = "songs"
 
-    /** Throws on a text that is not a setlist document, as the serializer does. */
+    /**
+     * A song entry the app writes is at most about 9 tokens, so this holds over 10,000 songs, more than any library the
+     * import's size budget admits, while the tree stays under about 15 MB.
+     */
+    private const val MAX_SETLIST_TOKENS = 100_000
+
+    /**
+     * Throws [IllegalArgumentException] on a text that is not a setlist document, as the serializer does, and on one past
+     * [JsonBounds]' depth or [MAX_SETLIST_TOKENS] before it is parsed: the launch-time loaders read every setlist in the
+     * library through here, not only an imported one.
+     */
     fun decode(text: String): SetlistDocument {
+        require(JsonBounds.isWithin(text, maxTokens = MAX_SETLIST_TOKENS)) { "The setlist is too large or too deeply nested to read." }
         val element = json.parseToJsonElement(text)
         val document = json.decodeFromJsonElement<SetlistDocument>(element)
         // The songs decode one for one from the array, so the index is what pairs each with its own leftovers.

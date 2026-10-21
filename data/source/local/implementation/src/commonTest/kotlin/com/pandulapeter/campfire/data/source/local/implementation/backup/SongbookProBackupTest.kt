@@ -160,6 +160,13 @@ internal class SongbookProBackupTest {
     }
 
     @Test
+    fun `a data file past the token budget is unreadable rather than parsed`() {
+        val text = "1.0\n{\"songs\": [" + List(600_001) { "0" }.joinToString(",") + "]}"
+
+        assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile(text))))
+    }
+
+    @Test
     fun `a document named in another case or starting with a blank line is still the library`() {
         val library = ImportedFile(name = "DataFile.txt", bytes = "\n1.0\n{\"songs\": [{\"Id\": 1, \"name\": \"A\", \"content\": \"La\"}]}".encodeToByteArray())
 

@@ -47,5 +47,7 @@ transient; no original file is stored with a song.
   regex): it reads every form a platform hands over, tells a newer format version (`SharedLink.FromNewerVersion`) from
   text that is no link, and builds the download address itself from the validated parts, never from the link. A
   title's control characters are read as spaces and its format characters, the joiners aside, are dropped.
+- `JsonBounds` is the one check of a JSON text from outside the app (depth, and tokens outside strings) made before it
+  is parsed.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. A run with
   `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`; `haveSharedCopiesFailed` never makes it so.
