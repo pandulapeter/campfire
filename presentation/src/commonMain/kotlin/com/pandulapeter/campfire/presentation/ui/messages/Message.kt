@@ -93,6 +93,12 @@ sealed interface Message {
      */
     data object ReconnectFailed : Message
 
+    /**
+     * The first run's onboarding was left before its last page, which offers to open the link the clipboard seems to hold:
+     * the offer, made once more, with an action that takes it.
+     */
+    data object ClipboardLinkOffered : Message
+
     /** The onboarding's offer to open a copied link found something else on the clipboard when it was taken. */
     data object ClipboardNotCampfireLink : Message
 

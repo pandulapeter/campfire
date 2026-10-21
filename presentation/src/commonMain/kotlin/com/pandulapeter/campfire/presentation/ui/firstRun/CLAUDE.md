@@ -42,8 +42,10 @@
   onboarding.
 - On iOS the first launch asks instead whether the clipboard seems to hold a web address (`offerClipboardLink`, see
   `src/iosMain/CLAUDE.md`), without reading it. If so, the onboarding's last page offers to open it
-  (`isClipboardLinkOffered`), until taken or until the onboarding leaves; the tap reads it, a Campfire link joins the
-  queue, anything else is `Message.ClipboardNotCampfireLink`, and a refused read is left at that.
+  (`isClipboardLinkOffered`), until taken or until the onboarding leaves; skipped before its last page
+  (`Navigator.isOnboardingOnLastStep`), a snackbar offers it once (`Message.ClipboardLinkOffered`, dropped if let go).
+  Only the tap reads it, a Campfire link joins the queue, anything else is `Message.ClipboardNotCampfireLink`, and a
+  refused read is left at that.
 
 ### The onboarding on a first run
 

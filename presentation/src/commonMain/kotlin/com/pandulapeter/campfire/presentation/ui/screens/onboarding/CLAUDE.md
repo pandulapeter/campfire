@@ -26,7 +26,8 @@ Welcome carries the one note that everything can be changed in Settings; no late
 - **Sync**: only where the build can connect Dropbox.
 - Song card details are not asked; their defaults follow the features.
 - Whichever page is last carries the first run's iOS clipboard link card (`OnboardingClipboardLinkCard`, see
-  `ui/firstRun/CLAUDE.md`) under its answers, given to it through `LocalOnboardingPageFooter`.
+  `ui/firstRun/CLAUDE.md`) under its answers, given to it through `LocalOnboardingPageFooter`; an onboarding skipped
+  before that page offers the link in a snackbar instead.
 - Pages are about equally long, each fitting the desktop's default window (split or use columns).
 
 ## Every answer is written as it is given

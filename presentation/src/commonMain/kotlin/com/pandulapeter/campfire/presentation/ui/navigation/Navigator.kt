@@ -138,6 +138,9 @@ internal class Navigator(
     val isOnboardingBackToPreviousStep
         get() = backStack.lastOrNull() is CampfireDestination.Onboarding && previousOnboardingStep(onboardingStep, onboardingSteps()) != null
 
+    /** Whether the onboarding is on its last page, or was left from it: closing it leaves [onboardingStep] as it was. */
+    val isOnboardingOnLastStep get() = nextOnboardingStep(onboardingStep, onboardingSteps()) == null
+
     /**
      * Whether a way back out of the settings screen goes to its General tab rather than leaving it: the tabs are the
      * first thing on the screen, and General is the one it opens on, so a Back from any other one is taken as a step back

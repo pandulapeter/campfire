@@ -71,6 +71,7 @@ internal class FirstRunController(
     private val getScreenData: GetScreenDataUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val openOnboarding: () -> Unit,
+    private val isOnboardingOnLastStep: () -> Boolean,
     private val awaitAppOnScreen: suspend () -> Unit,
 ) {
 
@@ -225,7 +226,10 @@ internal class FirstRunController(
     /** Whether [offerClipboardLink] has been asked, which every composition of the shell asks again. */
     private var isClipboardLinkAsked = false
 
-    /** What [offerClipboardLink] found, read once the offer is taken ([openClipboardLink]). */
+    /**
+     * What [offerClipboardLink] found, read once the offer is taken ([openClipboardLink]) from the onboarding's last page or
+     * from the snackbar that offers it once more where the onboarding was left before that page ([onBackStackChanged]).
+     */
     private var clipboardLinkReader: ClipboardLinkReader? = null
 
     private val _isClipboardLinkOffered = MutableStateFlow(false)
@@ -252,13 +256,14 @@ internal class FirstRunController(
     }
 
     /**
-     * Takes the offer of [offerClipboardLink], once: the clipboard is read, and a Campfire link joins the import queue,
-     * whose screen follows the onboarding. Anything else is said to be no Campfire link, and a read the user refused is
-     * left at that, since they have just said no.
+     * Takes the offer of [offerClipboardLink], once, whichever asked, the card or the snackbar: the clipboard is read, and
+     * a Campfire link joins the import queue, whose screen follows the onboarding. Anything else is said to be no Campfire
+     * link, and a read the user refused is left at that, since they have just said no.
      */
     fun openClipboardLink() {
-        val reader = clipboardLinkReader?.takeIf { _isClipboardLinkOffered.compareAndSet(expect = true, update = false) } ?: return
+        val reader = clipboardLinkReader ?: return
         clipboardLinkReader = null
+        _isClipboardLinkOffered.update { false }
         scope.launch {
             when (val clipboard = reader.read()) {
                 is ClipboardText.Refused -> Unit
@@ -268,6 +273,11 @@ internal class FirstRunController(
                 ClipboardText.None -> messageSink.sendMessage(Message.ClipboardNotCampfireLink)
             }
         }
+    }
+
+    /** Drops the offer of [offerClipboardLink] that its snackbar made once more and the user let go, so nothing reads it. */
+    fun dropClipboardLinkOffer() {
+        clipboardLinkReader = null
     }
 
     /**
@@ -291,8 +301,14 @@ internal class FirstRunController(
     fun onBackStackChanged(stack: List<CampfireDestination>) {
         val isOnboardingOpen = stack.any { it is CampfireDestination.Onboarding }
         if (wasOnboardingOpen && !isOnboardingOpen) {
-            // The offer belongs to the first run's onboarding, not to one opened again from Settings.
-            clipboardLinkReader = null
+            // The card belongs to the first run's onboarding, not to one opened again from Settings. Its last page, where
+            // the card is, is the one Skip and a back from the first page never reach, so an onboarding left before it
+            // offers the link once more in a snackbar instead, the reader kept for its action alone.
+            if (isClipboardLinkOfferedAgain(isOffered = _isClipboardLinkOffered.value, isLeftFromLastPage = isOnboardingOnLastStep())) {
+                messageSink.sendMessage(Message.ClipboardLinkOffered)
+            } else {
+                clipboardLinkReader = null
+            }
             _isClipboardLinkOffered.update { false }
             scope.launch {
                 try {
@@ -385,3 +401,9 @@ internal class FirstRunController(
         const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
     }
 }
+
+/**
+ * Whether the onboarding leaving offers the copied link once more, in a snackbar: only where the offer stands and the
+ * onboarding was left before its last page, so that the card on that page was never seen.
+ */
+internal fun isClipboardLinkOfferedAgain(isOffered: Boolean, isLeftFromLastPage: Boolean) = isOffered && !isLeftFromLastPage

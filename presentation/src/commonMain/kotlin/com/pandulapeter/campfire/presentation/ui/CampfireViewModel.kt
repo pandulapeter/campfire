@@ -713,6 +713,7 @@ class CampfireViewModel(
         getScreenData = getScreenData,
         updateUserPreferences = updateUserPreferences,
         openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },
+        isOnboardingOnLastStep = { navigator.isOnboardingOnLastStep },
         awaitAppOnScreen = { launchState.isAppOnScreen.first { it } },
     )
 

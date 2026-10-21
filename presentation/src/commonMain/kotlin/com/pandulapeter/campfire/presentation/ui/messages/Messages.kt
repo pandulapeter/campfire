@@ -49,6 +49,8 @@ import com.pandulapeter.campfire.presentation.resources.import_details
 import com.pandulapeter.campfire.presentation.resources.import_open
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_result
+import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_open
+import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_question
 import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
 import com.pandulapeter.campfire.presentation.resources.paste_only_links
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
@@ -103,9 +105,11 @@ internal fun Messages(
     val importFinished = head?.value as? Message.ImportFinished
     val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
     val songToOpen = importFinished?.result?.convertedSongToOpen?.takeIf { areSongsEnabled }
+    val isClipboardLinkOffer = head?.value == Message.ClipboardLinkOffered
     val actionLabel = when {
         songToOpen != null -> stringResource(Res.string.import_open)
         importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
+        isClipboardLinkOffer -> stringResource(Res.string.onboarding_clipboard_link_open)
         else -> null
     }
     LaunchedEffect(head?.index) {
@@ -119,7 +123,11 @@ internal fun Messages(
                 when {
                     songToOpen != null -> viewModel.navigator.openImportedSong(songToOpen)
                     importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
+                    isClipboardLinkOffer -> viewModel.firstRunController.openClipboardLink()
                 }
+            } else if (isClipboardLinkOffer) {
+                // Let go, the offer is not kept for anything to read the clipboard later.
+                viewModel.firstRunController.dropClipboardLinkOffer()
             }
             viewModel.messageSink.onMessageShown(head)
         }
@@ -218,6 +226,7 @@ private fun messageText(current: Message?): String? =
                 else -> Res.string.share_stop_all_failed
             },
         )
+        Message.ClipboardLinkOffered -> stringResource(Res.string.onboarding_clipboard_link_question)
         Message.ClipboardNotCampfireLink -> stringResource(Res.string.clipboard_not_campfire_link)
         Message.ReconnectFailed -> stringResource(Res.string.settings_sync_reconnect_failed)
         null -> null
