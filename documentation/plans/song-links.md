@@ -154,7 +154,7 @@ campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons'
 - **Why a fragment, and why a path in the scheme**: a browser never sends the part after `#`, so the ids stay out of
   every server log. The scheme form uses a path instead because Android's `intent://` syntax claims the `#` (§9.1),
   and a custom scheme reaches no server anyway.
-- About 130 characters: a version 7 QR code at level M.
+- About 130 characters: a version 8 QR code at level M (49 × 49; 7-M holds only 122 bytes).
 
 ## 4. Dropbox (`:data:source:remote`)
 
@@ -276,9 +276,11 @@ completed index is saved and the watch point set, so a run that the step ends ne
 ### 5.2 Deterministic zips
 
 - **Shared zips must be byte-identical for identical content**, or two devices would re-upload each other's copies on
-  every run. `ArchiveLocalSourceImpl.pack` stamps every entry with the current local time (around lines 46-53).
-  - Add `pack(entries, modifiedAt: DosTimestamp)`, and pass `DosTimestamp.EARLIEST` for shared copies.
-  - The export screen's own Zip keeps today's timestamp.
+  every run. Done: `ArchiveLocalSource.pack(files, isDated)` and `ArchiveRepository.pack(files, isDated)` stamp
+  `DosTimestamp.EARLIEST` when undated (the API modules cannot name `DosTimestamp`, so it is a Boolean).
+  - Shared copies pack undated. The three export use cases pass `isDated = true`, so the export screen's own Zip keeps
+    today's timestamp; the shared-copy step needs an undated path through them (an `isDated` argument on
+    `ExportSetlistUseCase` and `ExportSongsUseCase`), or packs the same file map itself.
 - **What goes in**:
   - A shared setlist zip is exactly `ExportSetlistUseCase(setlistFileName, songFileNames = null)`: the stored
     setlist document plus every song it names, in setlist order.
