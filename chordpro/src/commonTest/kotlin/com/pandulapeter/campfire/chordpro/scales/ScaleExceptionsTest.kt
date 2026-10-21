@@ -75,6 +75,10 @@ class ScaleExceptionsTest {
     }
 
     @Test
+    fun `a flat third chord over a Phrygian dominant home is the home's Phrygian`() =
+        assertEquals(Triple("G", "E", "phrygian"), group("E F E F E F G F E", key = "E").exceptions.single { it.chordName == "G" }.first)
+
+    @Test
     fun `a borrowed chord of a major song is its parallel natural minor's, never a harmonic minor on the key`() {
         assertEquals(listOf(Triple("Ab", "C", "natural_minor")), group("C Am F Ab G C", key = "C").exceptions.map { it.first })
         assertEquals(listOf(Triple("Fm7", "F", "dorian")), group("Cmaj7 Am7 Fm7 Cmaj7", key = "C").exceptions.map { it.first })
