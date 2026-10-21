@@ -55,8 +55,10 @@ import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
 import com.pandulapeter.campfire.presentation.resources.clipboard_not_campfire_link
 import com.pandulapeter.campfire.presentation.resources.shared_link_not_imported
+import com.pandulapeter.campfire.presentation.resources.share_authorization
 import com.pandulapeter.campfire.presentation.resources.share_link_copied
 import com.pandulapeter.campfire.presentation.resources.share_qr_code_saved
+import com.pandulapeter.campfire.presentation.resources.share_scope_missing
 import com.pandulapeter.campfire.presentation.resources.share_stop_all_failed
 import com.pandulapeter.campfire.presentation.resources.share_stop_all_failed_network
 import com.pandulapeter.campfire.presentation.resources.share_stop_failed
@@ -197,11 +199,23 @@ private fun messageText(current: Message?): String? =
         Message.SharedLinkFromNewerVersion -> stringResource(Res.string.shared_link_from_newer_version)
         Message.LinkCopied -> stringResource(Res.string.share_link_copied)
         Message.QrCodeSaved -> stringResource(Res.string.share_qr_code_saved)
+        // A connection without the permission to make links, or one the service no longer takes, is told as Share tells it,
+        // since connecting again is what lets a stop through too.
         is Message.StopSharingFailed -> stringResource(
-            if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_failed_network else Res.string.share_stop_failed,
+            when (current.reason) {
+                SharingFailure.NETWORK -> Res.string.share_stop_failed_network
+                SharingFailure.SCOPE_MISSING -> Res.string.share_scope_missing
+                SharingFailure.AUTHORIZATION -> Res.string.share_authorization
+                else -> Res.string.share_stop_failed
+            },
         )
         is Message.StopSharingEverythingFailed -> stringResource(
-            if (current.reason == SharingFailure.NETWORK) Res.string.share_stop_all_failed_network else Res.string.share_stop_all_failed,
+            when (current.reason) {
+                SharingFailure.NETWORK -> Res.string.share_stop_all_failed_network
+                SharingFailure.SCOPE_MISSING -> Res.string.share_scope_missing
+                SharingFailure.AUTHORIZATION -> Res.string.share_authorization
+                else -> Res.string.share_stop_all_failed
+            },
         )
         Message.ClipboardNotCampfireLink -> stringResource(Res.string.clipboard_not_campfire_link)
         null -> null
