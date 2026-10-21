@@ -15,6 +15,10 @@ import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.CreateShareResult
+import com.pandulapeter.campfire.data.model.share.Share
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -24,6 +28,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
@@ -122,6 +127,14 @@ internal open class SyncRepositoryStub : SyncRepository {
     override suspend fun watchRemoteChanges(): Unit = unexpected()
     override fun startScheduledSynchronization(): SyncProgress? = unexpected()
     override fun cancelSynchronization(): Unit = unexpected()
+}
+
+/** A [SharedLinksRepository] whose every member fails the same way, see [SongRepositoryStub]. */
+internal open class SharedLinksRepositoryStub : SharedLinksRepository {
+    override val shares: Flow<List<Share>> get() = unexpected()
+    override suspend fun refresh(): SharingFailure? = unexpected()
+    override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray): CreateShareResult = unexpected()
+    override suspend fun stopSharing(shareId: String): SharingFailure? = unexpected()
 }
 
 /**

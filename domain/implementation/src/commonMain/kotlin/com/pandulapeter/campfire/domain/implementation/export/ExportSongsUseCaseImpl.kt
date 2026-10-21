@@ -24,7 +24,11 @@ internal class ExportSongsUseCaseImpl(
     private val archiveRepository: ArchiveRepository,
 ) : ExportSongsUseCase {
 
-    override suspend operator fun invoke(fileNames: List<String>, isArchive: Boolean): ExportedFile? {
+    override suspend operator fun invoke(
+        fileNames: List<String>,
+        isArchive: Boolean,
+        isDated: Boolean,
+    ): ExportedFile? {
         // Read from the files rather than from the cache, which may hold a version a file has left behind since.
         val contents = fileNames.mapNotNull { songContentRepository.loadSongContent(it, useCache = false) }
         return when {
@@ -43,7 +47,7 @@ internal class ExportSongsUseCaseImpl(
             else -> ExportedFile(
                 name = ARCHIVE_NAME,
                 mimeType = ExportedFile.ZIP_MIME_TYPE,
-                bytes = archiveRepository.pack(files = contents.associate { it.fileName to it.text.encodeToByteArray() }, isDated = true),
+                bytes = archiveRepository.pack(files = contents.associate { it.fileName to it.text.encodeToByteArray() }, isDated = isDated),
             )
         }
     }

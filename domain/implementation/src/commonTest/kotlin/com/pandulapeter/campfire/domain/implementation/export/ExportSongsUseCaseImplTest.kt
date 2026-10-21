@@ -25,21 +25,21 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `a single song is named by its header`() = runTest {
-        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false)
+        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false, isDated = true)
 
         assertEquals("new_title.cho", assertNotNull(exported).name)
     }
 
     @Test
     fun `the stored extension is kept`() = runTest {
-        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false)
+        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false, isDated = true)
 
         assertEquals("song.crd", assertNotNull(exported).name)
     }
 
     @Test
     fun `several songs keep their library names inside the archive`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false, isDated = true)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho", "b_2.cho"), archive.packed.keys)
@@ -47,7 +47,7 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `songs asked for as an archive are zipped even when one is left`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isDated = true)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho"), archive.packed.keys)

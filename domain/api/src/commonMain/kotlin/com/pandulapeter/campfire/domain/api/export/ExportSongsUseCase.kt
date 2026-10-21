@@ -16,7 +16,11 @@ interface ExportSongsUseCase {
     /**
      * A single song leaves as the `.cho` file it already is and several as a zip, unless [isArchive] asks for a zip
      * whatever the count: the songs ticked in the selection mode, whose export screen promised one. Null when none of
-     * them can be read.
+     * them can be read. [isDated] is as for `ExportSetlistUseCase`, and only matters for a zip.
      */
-    suspend operator fun invoke(fileNames: List<String>, isArchive: Boolean): ExportedFile?
+    suspend operator fun invoke(
+        fileNames: List<String>,
+        isArchive: Boolean,
+        isDated: Boolean,
+    ): ExportedFile?
 }

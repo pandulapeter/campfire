@@ -27,7 +27,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a setlist is named by its title`() = runTest {
-        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json")
+        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", songFileNames = null, isDated = true)
 
         assertEquals("summer_set.zip", assertNotNull(exported).name)
         assertEquals(setOf("summer_2.setlist.json"), archive.packed.keys)
@@ -35,7 +35,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a blank title is still a name`() = runTest {
-        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json")
+        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", songFileNames = null, isDated = true)
 
         assertEquals("untitled.zip", assertNotNull(exported).name)
     }
@@ -45,7 +45,7 @@ class ExportSetlistUseCaseImplTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
         val repository = FakeSetlistRepository(setlist)
 
-        useCase(repository, readable = setOf("a.cho", "b.cho", "c.cho")).invoke("gig.setlist.json", setOf("a.cho", "c.cho"))
+        useCase(repository, readable = setOf("a.cho", "b.cho", "c.cho")).invoke("gig.setlist.json", setOf("a.cho", "c.cho"), isDated = true)
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
         assertEquals(setOf("a.cho", "c.cho"), repository.requestedSongFileNames)

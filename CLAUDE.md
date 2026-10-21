@@ -71,6 +71,8 @@ preferences/preferences.json           UserPreferences; never exported (.bad kee
 preferences/sync-credentials.json      desktop and web; Keystore (sync-credentials.bin) / Keychain on Android / iOS
 preferences/sync-index.json            what sync last saw of both sides, file by file
 preferences/sync-credentials-forget-pending
+preferences/shared-links.json          the account's shared links as last read (the mirror)
+preferences/shared-links-journal.json  renames and deletions of shared items not yet applied to that list
 preferences/editor-draft.json          the editor's unsaved text, survives process death
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
 instance.lock / instance.endpoint      desktop only: single-instance guard

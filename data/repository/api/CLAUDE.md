@@ -10,7 +10,7 @@
 # :data:repository:api
 
 Repository interfaces only; consumed by `:domain:implementation`, implemented by `:data:repository:implementation`
-(and `SyncRepository` / `DemoLibraryRepository` by `:data:sync:implementation`).
+(and `SyncRepository`, `SharedLinksRepository`, and `DemoLibraryRepository` by `:data:sync:implementation`).
 
 - **Only `rescan()` lists the library folder again.** `refresh(fileNames)` re-reads named files (what a sync run
   changed); `adoptImported` puts an import's writes in as one change; every other write updates its one cached entry.
@@ -30,6 +30,8 @@ Repository interfaces only; consumed by `:domain:implementation`, implemented by
 - `SyncRepository` caches no list (the library stays in the song and setlist repositories, which a run feeds through
   `refresh`) and is the only thing above the data layer that knows a service is involved. `forgetStoredConnection` is
   local-only, retried by `restore` until it works.
+- `SharedLinksRepository` serves the account's list of shared links from this device's last read of it; only its
+  actions ask the service, never under the run lock, and each never throws but cancellation.
 - `DemoLibraryRepository` is not part of `SyncRepository`: it runs on every planting, sync connected or not.
 - `ArchiveRepository` and `DocumentRepository` are stateless boundaries so use cases reach the zip and extraction code
   without seeing local sources; `DocumentRepository` never retains bytes or swallows cancellation.

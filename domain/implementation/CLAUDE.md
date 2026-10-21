@@ -49,3 +49,6 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
   (`a b` after `ab c`).
 - Connecting (`ConnectSyncProviderUseCaseImpl`), and restoring at startup when credentials come back connected
   (`RestoreSyncUseCaseImpl`), start a sync run at once (not debounced) and do not wait for it.
+- `CreateShareLinkUseCaseImpl` reads the account's list first and answers an existing share of the item, then builds
+  the copy through the export use cases, undated (the same files make the same bytes on every device), and refuses one
+  over `ImportLimits.MAX_IMPORT_SIZE`, which the recipient's import would refuse. The races are the repository's.

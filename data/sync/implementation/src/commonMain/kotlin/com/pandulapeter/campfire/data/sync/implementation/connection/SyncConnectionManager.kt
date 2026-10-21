@@ -17,6 +17,8 @@ import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.toFailureReason
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -66,6 +68,8 @@ internal class SyncConnectionManager(
     private val indexStore: SyncIndexStore,
     private val runner: SyncRunner,
     private val scheduler: SyncRunScheduler,
+    private val sharedLinksMirror: SharedLinksMirror,
+    private val sharedLinksJournal: SharedLinksJournal,
     private val environment: SyncEnvironment,
 ) {
 
@@ -321,6 +325,7 @@ internal class SyncConnectionManager(
             // out; no new one can slip in, since the providers above no longer say they are connected.
             runner.withRunLock {
                 indexStore.clear()
+                forgetSharedLinks()
                 stateBeforeConnecting = null
                 stateHolder.update { SyncState.Disconnected }
             }
@@ -364,11 +369,22 @@ internal class SyncConnectionManager(
         // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
         // this installation has never looked at.
         quietly("clear the sync index") { indexStore.clear() }
+        forgetSharedLinks()
         stateHolder.update { SyncState.Disconnected }
         if (haveCredentialsGone) {
             quietly("note that the sync credentials are forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(false) }
         }
         return haveCredentialsGone
+    }
+
+    /**
+     * The shared links' mirror and journal describe the account's folder as the index does, and go with it. The shares
+     * themselves stay in the folder: connecting the same account again brings them back, and the journal's renames
+     * not yet applied are lost with it, which can leave those shares orphaned until stopped.
+     */
+    private suspend fun forgetSharedLinks() {
+        quietly("clear the shared links mirror") { sharedLinksMirror.clear() }
+        quietly("clear the shared links journal") { sharedLinksJournal.clear() }
     }
 
     /** For the clean-ups whose failure is worth a line in the log and nothing more. */
@@ -438,6 +454,7 @@ internal class SyncConnectionManager(
                 val document = indexStore.loadOrNull()?.adoptedBy(account)
                 if (document != null && document.accountId != account.indexKey()) {
                     indexStore.save(SyncIndexDocument())
+                    forgetSharedLinks()
                 }
                 stateBeforeConnecting = null
                 stateHolder.update {

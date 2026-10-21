@@ -283,12 +283,13 @@ internal class ExportController(
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
                 when {
-                    setlist != null -> exportSetlist.invoke(setlist.fileName, songFileNames)
+                    setlist != null -> exportSetlist(setlistFileName = setlist.fileName, songFileNames = songFileNames, isDated = true)
                     dialog.songs.isNotEmpty() -> exportSongs(
                         fileNames = dialog.songs.map { it.fileName }.filter { songFileNames == null || it in songFileNames },
                         isArchive = true,
+                        isDated = true,
                     )
-                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false)
+                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true)
                 }
             }
         }

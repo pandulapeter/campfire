@@ -9,15 +9,17 @@
 -->
 # :data:sync:implementation
 
-Implements `SyncRepository` and `DemoLibraryRepository`. Everything is `internal`. `SyncEngine` is built by a
-`DataSyncModule` function, since its demo lookup is a lambda over `UserPreferencesRepository` that Koin cannot inject.
+Implements `SyncRepository`, `SharedLinksRepository` (`shared/`, its own `CLAUDE.md`), and `DemoLibraryRepository`.
+Everything is `internal`. `SyncEngine` is built by a `DataSyncModule` function, since its demo lookup is a lambda over
+`UserPreferencesRepository` that Koin cannot inject.
 `DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks
 them up by.
 
 ## Locks
 
 - `SyncConnectionManager`'s restore lock: never held across a run; forgetting the stored connection runs under it.
-- `SyncRunner`'s run lock: held by a run, and by `disconnect` around the index deletion only.
+- `SyncRunner`'s run lock: held by a run, and by `disconnect` around deleting the index (and the shared links' mirror and
+  journal) only. Sharing actions never take it.
 - `LibraryFileLock`: held by the engine around local file calls only, never a request. Not reentrant: the repositories
   take their own locks first and this one inside; nothing holding it calls anything that takes it. A local write or
   deletion and its `onLocalFileChanged` finish together once started (`NonCancellable`), as the repositories' writes do.

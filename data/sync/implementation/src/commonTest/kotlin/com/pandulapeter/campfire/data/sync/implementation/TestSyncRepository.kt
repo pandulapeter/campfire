@@ -16,6 +16,9 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibrary
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRemoteWatcher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
+import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
@@ -55,6 +58,7 @@ internal fun TestScope.syncRepository(
     userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
     logger: Logger = Logger.Standard,
     connectivityMonitor: FakeConnectivityMonitor = FakeConnectivityMonitor(),
+    sharedLinksLocalSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
 ): SyncRepositoryImpl {
     val environment = testEnvironment(logger = logger)
     val syncProviders = SyncProviders(listOf(provider))
@@ -96,6 +100,8 @@ internal fun TestScope.syncRepository(
             indexStore = indexStore,
             runner = runner,
             scheduler = scheduler,
+            sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment),
+            sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment),
             environment = environment,
         ),
         scheduler = scheduler,

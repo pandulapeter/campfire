@@ -50,5 +50,6 @@ platform types. One multiplatform implementation, with platform differences in `
 - `CoverArtLocalSource`: bytes under a caller-derived key, outside `library/` (never exported, synced, or backed up).
   Never throws.
 - `SyncCredentialsLocalSource` / `SyncIndexLocalSource`: opaque strings, outside `library/`; the index source also holds
-  the forget-credentials-owed note.
+  the forget-credentials-owed note. `SharedLinksLocalSource` (the shared links' mirror and journal) follows the index's
+  rules: opaque, null only when missing, never exported, synced, or backed up.
 - `EditorDraftLocalSource`: `preferences/editor-draft.json`, never exported, synced, or backed up.

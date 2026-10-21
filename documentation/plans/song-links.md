@@ -177,7 +177,8 @@ campfire://s/1.setlist.<shareId>.<fileId>.<rlkey>.<title>          (the buttons'
 **The listing**: `DropboxSyncProvider.list()` already lists the whole app folder recursively and keeps only `/songs`
 and `/setlists` (`toRemoteFiles` in `DropboxEntries.kt`, which the change feed's `changesSince` shares).
 - `RemoteListing` gains, beside its `cursor`, the `/shared/*.zip` entries with their `content_hash` and revision, as a
-  separate `sharedFiles` list, and the registry's revision (`sharedLinksRevision`, §5.1). That costs no extra request.
+  separate `sharedFiles` list. That costs no extra request. The registry's revision needs no field of its own: it is
+  `documentRevisions["shared-links.json"]`, as `preferences.json`'s is.
 - Picked out in `list()` only, never in `toRemoteFiles`: the change feed must not report them (§5.5).
 - `PassListing` and `DeletionGuard` never see them.
 
@@ -221,7 +222,8 @@ Dropbox is full".
   action and a run's shared-copy step never clobber each other (§11.2). Taking the lock would make the first share
   after connecting wait for the whole first sync.
 - **The local mirror**, `preferences/shared-links.json`, is the last registry read, so the export screen and Settings
-  know what is shared without a request. It is tied to an account, like the sync index:
+  know what is shared without a request, stored as `{ "revision": …, "registry": … }` with the revision it was read
+  at. It is tied to an account, like the sync index:
   - replaced on every read and every successful operation;
   - **excluded from device backups** (Android `res/xml` rules; iOS `FileStorage.keepOutOfDeviceBackup`);
   - deleted on disconnect and by `forgetStoredConnection`;
@@ -237,16 +239,16 @@ Dropbox is full".
 `synchronizeSharedCopies(provider, listing)` is a new step in its own package `shared/`, with a `CLAUDE.md`. It runs
 in `SyncRunner.run()`'s `SyncEngine.Result.Completed` branch, right after `synchronizePreferences` and before the
 completed index is saved and the watch point set, so a run that the step ends never hands the feed a point.
-- The engine's `Result.Completed` carries its last listing's `sharedFiles` and `sharedLinksRevision` out, beside
-  `cursor`.
+- The engine's `Result.Completed` carries its last listing's `sharedFiles` and the registry's revision
+  (`documentRevisions["shared-links.json"]`) out, beside `cursor`.
 - It is part of the run, so the progress line at the top of the window stays up through its uploads.
 - Runs now start on every return to the front and on another device's change, not only after this device's edits, so
   the step must cost nothing when nothing changed.
 
 1. **Skip it entirely** when the listing has no `/shared/` files and the local journal is empty. This is the common
    case, and it costs no request.
-2. Read the registry: the mirror when `sharedLinksRevision` is the revision the mirror was read at and the journal is
-   empty, otherwise one download. Apply the journal (§5.4), then clear the journal entries that were applied.
+2. Read the registry: the mirror when the listing's revision of `shared-links.json` is the revision the mirror was
+   read at and the journal is empty, otherwise one download. Apply the journal (§5.4), then clear the journal entries that were applied.
 3. For each entry in the `ok` or `tooLarge` state:
    1. Find the item in the local library by `fileName`. If it is missing, the entry becomes `orphaned` (§5.4), and
       nothing is uploaded.

@@ -172,13 +172,13 @@ class ExportControllerTest {
             songRenderer = testSongRenderer(),
             getSongContent = FakeSongFiles(),
             exportSongs = object : ExportSongsUseCase {
-                override suspend fun invoke(fileNames: List<String>, isArchive: Boolean): ExportedFile {
+                override suspend fun invoke(fileNames: List<String>, isArchive: Boolean, isDated: Boolean): ExportedFile {
                     requests += "songs $fileNames archive: $isArchive"
                     return zip("songs.zip", size = 1)
                 }
             },
             exportSetlist = object : ExportSetlistUseCase {
-                override suspend fun invoke(setlistFileName: String, songFileNames: Set<String>?): ExportedFile {
+                override suspend fun invoke(setlistFileName: String, songFileNames: Set<String>?, isDated: Boolean): ExportedFile {
                     requests += "setlist $setlistFileName ${songFileNames.orEmpty().sorted()}"
                     return zip("gig.zip", size = 1)
                 }

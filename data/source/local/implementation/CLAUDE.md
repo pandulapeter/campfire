@@ -23,8 +23,9 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
 - **Directories**: `library/songs`, `library/setlists`, `preferences`, `covers`. Android's backup rules in `:app:android`
   name `library/` and `preferences/preferences.json` by path: moving a directory or renaming the file means changing
   those XML files. iOS backs up whole directories, so `SyncIndexLocalSourceImpl` (index, forget-pending note),
-  `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl` call `keepOutOfDeviceBackup` after **every** write: the
-  exclusion is a file attribute and the atomic write replaces the file.
+  `SharedLinksLocalSourceImpl`, `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl` call
+  `keepOutOfDeviceBackup` after **every** write: the exclusion is a file attribute and the atomic write replaces the
+  file.
 - **Text**: written as UTF-8, read through `:data:model`'s `decodeLibraryText` (UTF-8, else Windows-1250/1252, BOM
   stripped); a fallback-read file is written back as UTF-8. The web decodes valid NUL-free UTF-8 with `TextDecoder`, else
   `decodeLibraryText`; bytes cross the Wasm boundary as a one-char-per-byte string (typed array copies are per byte).

@@ -1,0 +1,181 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+@file:OptIn(ExperimentalTime::class)
+
+package com.pandulapeter.campfire.data.sync.implementation.shared
+
+import com.pandulapeter.campfire.data.model.share.CreateShareResult
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.data.model.share.SharingFailure
+import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncScopeMissingException
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
+import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.koin.core.annotation.Single
+import kotlin.time.ExperimentalTime
+
+/**
+ * Sharing actions against the connected account's folder, through [SharedLinksRegistry]. Never under the run lock: the
+ * copy is named by a fresh id and the list is edited against its revision, so an action and a run, which edits the
+ * same list, never clobber each other.
+ */
+@Single
+internal class SharedLinksRepositoryImpl(
+    syncProviders: SyncProviders,
+    private val stateHolder: SyncStateHolder,
+    private val mirror: SharedLinksMirror,
+    private val registry: SharedLinksRegistry,
+    private val environment: SyncEnvironment,
+) : SharedLinksRepository {
+
+    private val providers = syncProviders.all
+
+    override val shares = mirror.shares
+
+    override suspend fun refresh(): SharingFailure? {
+        val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
+        return failureOf("read the shared links") {
+            when (registry.read(folder)) {
+                is SharedLinksRegistry.Read.Readable -> null
+                is SharedLinksRegistry.Read.FromNewerVersion -> SharingFailure.NEWER_VERSION
+            }
+        }
+    }
+
+    override suspend fun share(
+        kind: SharedLinkKind,
+        fileName: String,
+        title: String,
+        copy: ByteArray,
+    ): CreateShareResult {
+        val folder = connectedFolder() ?: return CreateShareResult.Failed(SharingFailure.NOT_CONNECTED)
+        val shareId = ShareIds.generate()
+        var isUploaded = false
+        var isKept = false
+        return try {
+            when (folder.uploadSharedFile(shareId = shareId, bytes = copy, expectedRevision = null)) {
+                is RemoteWriteResult.Written -> isUploaded = true
+                // A fresh id that is taken is a copy nobody's list names, which is not this share's to overwrite.
+                RemoteWriteResult.Conflict -> return CreateShareResult.Failed(SharingFailure.UNKNOWN)
+            }
+            val link = when (val result = folder.createSharedLink(shareId)) {
+                is SharedLinkResult.Created -> result
+                SharedLinkResult.NotPublic -> return CreateShareResult.Failed(SharingFailure.NOT_PUBLIC)
+                SharedLinkResult.Refused -> return CreateShareResult.Failed(SharingFailure.REFUSED)
+            }
+            val entry = SharedLinksEntry(
+                shareId = shareId,
+                kind = kind.id,
+                fileName = fileName,
+                title = title,
+                fileId = link.fileId,
+                rlkey = link.rlkey,
+                sharedAt = environment.clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
+            )
+            if (entry.toShare() == null) {
+                environment.logger.log("The service answered a link whose parts make no Campfire link.")
+                return CreateShareResult.Failed(SharingFailure.REFUSED)
+            }
+            // The caller found no share of the item, but another device may have added one since. Every attempt of the
+            // edit reads the list again, so that share is found at the latest on the attempt after the conflict its
+            // write caused, and answered instead: one item never has two links.
+            val edit = registry.edit(folder) { document ->
+                val existing = document.entryFor(kind, fileName)
+                if (existing == null) {
+                    SharedLinksRegistry.Change(document.copy(links = document.links + entry), entry)
+                } else {
+                    SharedLinksRegistry.Change(null, existing)
+                }
+            }
+            when (edit) {
+                is SharedLinksRegistry.Edit.Done -> {
+                    isKept = edit.result.shareId == shareId
+                    edit.result.toShare()?.let(CreateShareResult::Shared) ?: CreateShareResult.Failed(SharingFailure.UNKNOWN)
+                }
+
+                is SharedLinksRegistry.Edit.FromNewerVersion -> CreateShareResult.Failed(SharingFailure.NEWER_VERSION)
+                SharedLinksRegistry.Edit.Contended -> CreateShareResult.Failed(SharingFailure.UNKNOWN)
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            CreateShareResult.Failed(exception.toSharingFailure("share $fileName"))
+        } finally {
+            // A copy no list names is served by a link nobody was given, and only Stop sharing everything would find it.
+            if (isUploaded && !isKept) {
+                withContext(NonCancellable) {
+                    failureOf("delete the unused shared copy $shareId") {
+                        folder.deleteSharedFile(shareId)
+                        null
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun stopSharing(shareId: String): SharingFailure? {
+        val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
+        return failureOf("stop sharing $shareId") {
+            // The copy goes first: an entry removed with its copy left behind would leave a working link that no
+            // screen shows any more.
+            folder.deleteSharedFile(shareId)
+            val edit = registry.edit(folder) { document ->
+                SharedLinksRegistry.Change(
+                    document = document.takeIf { it.links.any { entry -> entry.shareId == shareId } }
+                        ?.let { it.copy(links = it.links.filterNot { entry -> entry.shareId == shareId }) },
+                    result = Unit,
+                )
+            }
+            when (edit) {
+                is SharedLinksRegistry.Edit.Done -> null
+                is SharedLinksRegistry.Edit.FromNewerVersion -> SharingFailure.NEWER_VERSION
+                SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
+            }
+        }
+    }
+
+    /** The folder of the account on screen; an action never connects, or acts for an account that is failing. */
+    private fun connectedFolder(): SyncFolder? {
+        val account = (stateHolder.value as? SyncState.Connected)?.account ?: return null
+        return providers.firstOrNull { it.id == account.providerId }
+    }
+
+    private suspend fun failureOf(action: String, block: suspend () -> SharingFailure?) = try {
+        block()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        exception.toSharingFailure(action)
+    }
+
+    private fun Exception.toSharingFailure(action: String): SharingFailure {
+        environment.logger.log("Could not $action: ${this::class.simpleName}")
+        return when (this) {
+            is SyncScopeMissingException -> SharingFailure.SCOPE_MISSING
+            is SyncNetworkException -> SharingFailure.NETWORK
+            is SyncRemoteStorageFullException -> SharingFailure.REMOTE_STORAGE_FULL
+            is SyncAuthorizationException -> SharingFailure.AUTHORIZATION
+            else -> SharingFailure.UNKNOWN
+        }
+    }
+}
