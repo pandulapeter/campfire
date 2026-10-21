@@ -60,6 +60,8 @@ footage() {
     "$REPO"/presentation/src/commonMain/composeResources/font/inter_bold.ttf \
     "$REPO"/presentation/src/commonMain/composeResources/font/jetbrains_mono_bold.ttf "$HERE/public/fonts/"
   cp "$REPO"/app/desktop/src/main/composeResources/drawable/app_icon*.png "$HERE/public/icons/"
+  # The app's own icons for the chips, its vector drawables as SVG, since the fonts have no music or interface symbols.
+  python3 -I "$HERE/drawables_to_svg.py" "$REPO/presentation/src/commonMain/composeResources/drawable" "$HERE/public/icons"
 }
 
 music() {

@@ -36,41 +36,54 @@ Remotion is not open source: free for individuals and companies of up to three p
 
 - The Songs screen's search button (`songs_search`) and House of the Rising Sun heading what "hou" finds; the
   Chords and Scales tabs' key (`KEY_A`), how far the Scales tab is scrolled (`SCALE_FAMILIES_Y`) and the cell it
-  taps, the setlist's grip indexes, the drag and swipe positions, and the frames above, all in `Promo.kt`; the tuner
-  comes into tune around frame 90, bar 11's downbeat.
+  taps, the setlist's grip indexes, the drag and swipe positions, the paste that opens the editor (`PastedChordSheet.kt`),
+  and the frames above, all in `Promo.kt`; the tuner comes into tune around frame 90, bar 11's downbeat.
 - The claims on screen are text in `Promo.tsx`: the feature chips, the instruments the Chords clip switches to, the
   transposition badge (`STEPS`), the platform list, and "Free. No ads. No account. Offline."
-- Brand colors are the website's (`C` in `kit.tsx`); the tag colors are the app's `TagColor` dark variants.
+- Brand colors are the website's (`C` in `kit.tsx`); the tag colors are the app's `TagColor` dark variants. The chips'
+  icons are the app's vector drawables, converted to SVG by `drawables_to_svg.py` and painted through a mask (`Icon`).
 
 ## Decisions the owner made (keep them)
 
 - Features are demoed live in recorded clips (a setlist dragged, a song transposed and renotated, the Chords tab across
-  instruments, a scale's sheet opened on the Scales tab, a PDF's pages swiped), not illustrated with graphics.
+  instruments, a scale's sheet opened on the Scales tab, a chord sheet pasted into the editor, a PDF's pages swiped),
+  not illustrated with graphics.
 - Timeless: nothing calls a feature new.
-- A static, flat backdrop: the app's own dark background (`#15121C`, the website's too), no gradient and no grain.
+- A static backdrop, the store listings' linear gradient (`GRADIENT`: `#5A49CA` into `#F57C00` at 135°, as Screenshot
+  Bro frames them), the same through the light-theme scene; no grain.
+- Type is the app's bundled Inter, and JetBrains Mono for the badge's chord, with no fallback font: a symbol the fonts
+  lack is an icon instead.
 - No soft shadows or glows around devices, chips, or icons (they encoded as blocky halos); devices have a thin outline.
 - Generic devices, so one video serves every store: no notch or island, and the laptop shows the app's window alone
   (`Device.LAPTOP`); the phones' and tablet's status bars stay.
 - Text animates by moving and fading together, never masked or clipped.
-- No gradient text or buttons (they read as AI-made, and neither the app nor the website has them): a headline's
-  accented line is one flat color (`Accent`), and the URL plain text with nothing behind it.
-- Two complementary accents: orange is the primary, for every headline's accented line (purple on the light scene,
-  where orange reads poorly); lilac is the secondary, for the transposition badge, the off-beats, and the URL; chips
-  alternate the two (one is green).
-- Bold only for headlines and the name; the lines under the name, the chips, the badge's label, and the platform names
-  are Regular or Medium; the badge's chord is JetBrains Mono Bold.
+- No gradient text or buttons (they read as AI-made, and neither the app nor the website has them); the URL is plain
+  text with nothing behind it.
+- Headlines look exactly like the store listings' in Screenshot Bro, only their size differs: Inter Regular, white,
+  letter spacing −5% of the size, line height 0.9, centred, both lines alike.
+- In portrait and square, a headline is centred vertically in the gap between the frame's edge and its scene's device:
+  above the device's top, or (the opening's, in portrait) below its bottom (`deviceTop`, `deviceBottom`).
+- Type over the gradient is white (the lines under the name and the subtitle at 80%), since neither brand color reads
+  on a backdrop made of both. Dark chips carry the accents: orange and lilac by turns for their icons (one is green),
+  lilac for the transposition badge. A chip stays at least 40 px inside the portrait frame.
+- Bold only for the name and the four promises; the headlines, the lines under the name, the chips, the badge's label,
+  and the platform names are Regular or Medium; the badge's chord is JetBrains Mono Bold.
+- Chips name what the clip does not already show (no "search" chip over a search), and no other app by name.
 - The music is a backing track in A major for the owner's electric guitar: drums, bass, synths, and effects, no
   guitars, recorded rather than synthesized drums, no bells.
 - The chord chart (`soundtrack.py`'s docstring) is the owner's, who records guitars and likely the bass over it: the
   scenes are fitted to the music, never the music to the scenes.
 - The first frame already shows the app (the song list, under the name), since many feeds freeze on it.
 - The transposition, the notations, the metronome, and the tuner scenes stay as they are.
-- The opening: the phone shrinks into place over bar 1, the list scrolls from bar 2, and on bar 3 the phone rises over
-  its headline while the search opens and "hou" is typed on a generic keyboard, leaving the song the iPad then shows.
+- The opening: the phone's screen fills the frame and snaps back into place by bar 1's second beat, where the icon
+  lands; the list scrolls from bar 2, and on bar 3 the phone rises over its headline while the search opens and "hou"
+  is typed on a generic keyboard, a chip with each letter, leaving the song the iPad then shows.
 - The Chords scene has one headline, with no "every", and one instrument switch, keyboard to ukulele, never a quick run
   of them.
 - Bar 14 is one thing a beat: the laptop in dark on the downbeat (where the music goes to E), the light theme sweeping
-  across it on the second with the whoosh alone (`LIGHT_FROM`), then the iPad and the phone. Dark everywhere else.
+  across it on the second with the whoosh alone (`LIGHT_FROM`), then the iPad and the phone; bar 15 lands a platform
+  name an eighth note. The app is dark everywhere else.
+- After the light theme the pace is a scene a bar: the setlist, the import, the export, the promises, the name.
 - The whoosh is clearly heard: `whoosh(..., 3.0)` (`soundtrack.py`).
 
 ## Known limits

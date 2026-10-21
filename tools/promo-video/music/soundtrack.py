@@ -596,7 +596,7 @@ fill(2, 3, [(0, "snare"), (0.25, "snare"), (0.5, "snare"), (0.75, "snare")], 0.4
 
 # Bars 3–5: the groove under the library's search and the song. Palm-muted eighths on the bass and a pad that holds the
 # chord; the search opens on bar 3's downbeat and takes a letter on each of its last three beats, each with a high pluck
-# climbing A major's pentatonic.
+# climbing A major's pentatonic under the library's chips.
 VERSE = {3: "A", 4: ["A", "A", "A", "D"], 5: "A"}
 for bar, chords in VERSE.items():
     groove(bar, open_last=bar == 4)
@@ -607,7 +607,8 @@ for bar, chords in VERSE.items():
     if bar == 5:
         arpeggio(bar, chords, gain=0.8)
 crash(t_of(3), 0.9)
-# "h", "o", "u", one a beat from bar 3's second, each a pluck climbing A major's pentatonic, on the chips' own bus.
+# "h", "o", "u", one a beat from bar 3's second, each with a chip and a pluck climbing A major's pentatonic, on the
+# chips' own bus.
 for i, note in enumerate([76, 78, 81]):
     pluck(t_of(3, 1 + i), note, BEAT * 0.6, gain=0.55, bright=1.2, bus=chips)
 fill(4, 3, [(0, "snare"), (0.5, "snare"), (0.75, "snare")], 0.6, 0.25)
@@ -707,9 +708,10 @@ hit("rim", t_of(14, 3), 0.9)
 crash(t_of(15), 0.9, second=True)
 fill(15, 3, [(0, "snare"), (0.25, "snare"), (0.5, "tom_hi"), (0.75, "tom_mid")], 0.6, 0.35)
 
-# Bars 16–18: home on A, back in the dark: the setlist and the export over the opening's groove and its A–G–D/F♯–G,
-# the arpeggio back in its own octave. The setlist's song is lifted on bar 16's second beat and dropped on bar 17's
-# downbeat, at the end of a tom run; the export rides the ride, and the snare builds into the four promises.
+# Bars 16–18: home on A: the setlist, the import, and the export over the opening's groove and its A–G–D/F♯–G, the
+# arpeggio back in its own octave. The setlist's song is lifted on bar 16's second beat and dropped on its fourth, at the
+# end of a tom run; a chord sheet is pasted on bar 17's downbeat, a chip on each of its chords; the export rides the
+# ride, and the snare builds into the four promises.
 for bar, chords in ((16, "A"), (17, ["A", "G", "D/F#", "G"]), (18, "A")):
     groove(bar, cymbal="ride" if bar == 18 else "hat", kick_beats=(0, 1.5, 2, 2.5) if bar == 17 else (0, 2, 2.5))
     bass_eighths(bar, chords)
@@ -720,7 +722,8 @@ for bar, chords in ((16, "A"), (17, ["A", "G", "D/F#", "G"]), (18, "A")):
 impact(t_of(16), 0.6)
 crash(t_of(16), 1.0)
 crash(t_of(16), 0.8, second=True)
-fill(16, 3, [(0, "snare"), (0.5, "tom_hi"), (0.75, "tom_mid")], 0.65, 0.2)
+fill(16, 2, [(0, "snare"), (0.5, "tom_hi"), (0.75, "tom_mid")], 0.65, 0.2)
+crash(t_of(16, 3), 0.6, second=True)
 crash(t_of(17), 0.85, second=True)
 crash(t_of(18), 0.8)
 fill(18, 3, [(0, "snare"), (0.25, "snare"), (0.5, "snare"), (0.75, "snare")], 0.55, 0.4)
@@ -762,7 +765,10 @@ CHIPS = [
     (11, 2, 81),                             # Keyboard (A)
     (12, 0, 86), (12, 1, 90), (12, 2, 93),   # Ukulele; Guitar; Mandolin (D)
     (12, 3, 90),                             # Banjo (D)
-    (16, 1, 85), (17, 1, 83),                # Drag to reorder (A); Countdown (G)
+    (13, 2, 90), (13, 3, 91),                # Any instrument & tuning (D); Notes & intervals (G)
+    (16, 1, 85), (16, 3, 88),                # Drag to reorder; Countdown (A)
+    (17, 0, 85), (17, 1, 83),                # Paste from websites (A); PDF & Word (G)
+    (17, 2, 86), (17, 3, 91),                # OnSong & SongbookPro (D/F♯); OpenSong (G)
     (18, 1, 85), (18, 2, 88),                # Whole setlists; Individual songs (A)
 ]
 for bar, beat, note in CHIPS:

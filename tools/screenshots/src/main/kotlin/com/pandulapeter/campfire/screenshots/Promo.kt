@@ -253,7 +253,7 @@ internal val promoShots: List<PromoShot> by lazy {
             ),
         ),
         // Friday Night by the Lake in its reorder mode, Ring of Fire lifted by its grip on the second beat and dragged
-        // from fifth to second place, dropped on the fifth, the second bar's downbeat.
+        // from fifth to second place, dropped on the fourth.
         PromoShot(
             name = "setlist-reorder",
             device = Device.IPHONE,
@@ -271,7 +271,7 @@ internal val promoShots: List<PromoShot> by lazy {
                     check(handles.size > 4) { "The setlist shows ${handles.size} rows to reorder." }
                     val from = handles[4]
                     val to = handles[1]
-                    record(frames = 200) { frame ->
+                    record(frames = 110) { frame ->
                         val progress = ((frame - REORDER_START_FRAME) / (REORDER_END_FRAME - REORDER_START_FRAME).toFloat()).coerceIn(0f, 1f)
                         val eased = progress * progress * (3 - 2 * progress)
                         val position = Offset(from.x, from.y + (to.y - from.y) * eased)
@@ -280,6 +280,24 @@ internal val promoShots: List<PromoShot> by lazy {
                             frame in REORDER_PRESS_FRAME + 1..REORDER_END_FRAME + 8 -> touch(PointerEventType.Move, position)
                             frame == REORDER_END_FRAME + 9 -> touch(PointerEventType.Release, position)
                         }
+                    }
+                },
+            ),
+        ),
+        // A chord sheet as websites print it, chords over the lyrics, pasted on the Songs screen on the first beat: the editor
+        // opens on it as ChordPro, its title and artist read from the subject a browser's share would carry.
+        PromoShot(
+            name = "import",
+            device = Device.IPHONE,
+            isClip = true,
+            shot = Shot(
+                id = "import",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { mapOf("sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id)) },
+                prepare = { englishOnly() },
+                drive = {
+                    record(frames = 110) { frame ->
+                        if (frame == PASTE_FRAME) viewModel.pastedSongController.newSongFromText(PASTED_SHEET, PASTED_SUBJECT)
                     }
                 },
             ),
@@ -449,10 +467,14 @@ private const val EXPORT_PAGE_Y = 0.4f
 private val PAGE_SWIPES = listOf(16 to true, 60 to false)
 private const val PAGE_SWIPE_FRAMES = 10
 
-/** The grip is pressed just before the second beat and released nine frames after the drag ends, on the fifth. */
+/** The grip is pressed just before the second beat and released nine frames after the drag ends, on the fourth. */
 private const val REORDER_PRESS_FRAME = 16
 private const val REORDER_START_FRAME = 22
-private const val REORDER_END_FRAME = 81
+private const val REORDER_END_FRAME = 59
+
+/** The import's paste, a few frames in so that the Songs screen is seen before the editor takes it over. */
+private const val PASTE_FRAME = 4
+
 
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
 private const val COUNTRY_ROADS = "john_denver-take_me_home_country_roads.cho"

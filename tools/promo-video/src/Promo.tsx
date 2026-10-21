@@ -10,7 +10,6 @@
 import React from "react";
 import { AbsoluteFill, Easing, Freeze, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame } from "remotion";
 import {
-  Accent,
   Backdrop,
   BAR,
   BEAT,
@@ -44,10 +43,12 @@ const S = {
   tuner: { from: 9 * BAR, bars: 1.5 },
   chords: { from: 10.5 * BAR, bars: 1.5 },
   // The Scales tab has bar 13 to itself; the laptop comes in on bar 14, where the music goes to E, and the light sweeps
-  // across it a beat later. The setlist brings the dark back with the A on bar 16.
+  // across it a beat later. From the A on bar 16, a bar each: the setlist, the import on the four chords of bar 17, and
+  // the export.
   scales: { from: 12 * BAR, bars: 1 },
   everywhere: { from: 13 * BAR, bars: 2 },
-  setlist: { from: 15 * BAR, bars: 2 },
+  setlist: { from: 15 * BAR, bars: 1 },
+  import: { from: 16 * BAR, bars: 1 },
   export: { from: 17 * BAR, bars: 1 },
   values: { from: 18 * BAR, bars: 1 },
   outro: { from: 19 * BAR, bars: 1 },
@@ -70,14 +71,10 @@ export const Promo: React.FC = () => (
   </AbsoluteFill>
 );
 
-const Bars: React.FC = () => {
-  const frame = useCurrentFrame();
-  const light = ease(frame, [S.everywhere.from + LIGHT_FROM, S.everywhere.from + LIGHT_TO], [0, 1], Easing.out(Easing.cubic));
-  const dark = interpolate(frame, [S.setlist.from - 4, S.setlist.from + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  return (
+const Bars: React.FC = () => (
     <AbsoluteFill style={{ background: C.bg }}>
       <style>{fontFaces}</style>
-      <Backdrop light={light * (1 - dark)} />
+      <Backdrop />
       {scene(S.opening, <Opening />)}
       {scene(S.song, <Song />)}
       {scene(S.transpose, <Transpose />)}
@@ -87,12 +84,12 @@ const Bars: React.FC = () => {
       {scene(S.scales, <Scales />)}
       {scene(S.everywhere, <Everywhere />)}
       {scene(S.setlist, <Setlist />)}
+      {scene(S.import, <Import />)}
       {scene(S.export, <Export />)}
       {scene(S.values, <Values />, false)}
       {scene(S.outro, <Outro />, false)}
     </AbsoluteFill>
-  );
-};
+);
 
 /** How far into the next scene a scene's exit runs, under the next scene's devices coming in. */
 const OVERLAP = 14;
@@ -160,18 +157,26 @@ const Place: React.FC<{ x?: number; y: number; at: number; rotate?: number; from
   );
 };
 
+/** The top of a phone [height] tall, outlines included, that [Place] centres on [y]. */
+const phoneTop = (y: number, height = 1180) => y - (height * 1.036) / 2;
+
+/** The top of a tablet or laptop [width] wide that [Place] centres on [y], its laptop base included. */
+const slateTop = (y: number, width: number, aspect: number, laptop = false) =>
+  y - (width / aspect + width * (laptop ? 0.044 + 0.035 : 0.06)) / 2;
+
 // ─── Bars 1–4½: the library on screen from the first frame, under the icon, the name, and the promise ─
 
 /**
- * The icon landing on bar 1's downbeat beside the name, which spells itself in from the second beat, and "Lyrics."
+ * The icon landing on bar 1's second beat beside the name, as the phone that filled the frame lands under it, the name
+ * spelling itself in on the arpeggio from there, and "Lyrics."
  * "Chords." "Wherever you play." on bar 2's first three stabs: above the phone in the portrait frame, across the top of
  * a square one, and in the headline's column on the left of a landscape one.
  */
 const Brand: React.FC<{ exitAt: number }> = ({ exitAt }) => {
   const frame = useCurrentFrame();
   const format = useFormat();
-  const icon = spring({ frame, fps: 60, config: { damping: 9, stiffness: 120, mass: 0.7 } });
-  const ring = ease(frame, [0, 40], [0, 1], Easing.out(Easing.cubic));
+  const icon = spring({ frame: frame - ICON_AT, fps: 60, config: { damping: 9, stiffness: 120, mass: 0.7 } });
+  const ring = ease(frame, [ICON_AT, ICON_AT + 40], [0, 1], Easing.out(Easing.cubic));
   const exit = ease(frame, [exitAt, exitAt + 14], [0, 1], Easing.in(Easing.cubic));
   const place: React.CSSProperties = {
     portrait: { top: 110, transform: "scale(1)" },
@@ -212,9 +217,9 @@ const Brand: React.FC<{ exitAt: number }> = ({ exitAt }) => {
               position: "absolute",
               inset: -120,
               borderRadius: 999,
-              border: `5px solid ${C.orange}`,
-              // Not on the first frame, which a feed may freeze on, where the icon it bursts from has no size yet.
-              opacity: (1 - ring) * 0.8 * Math.min(1, frame / 3),
+              border: `5px solid ${C.white}`,
+              // Not before the icon it bursts from has a size.
+              opacity: (1 - ring) * 0.8 * Math.min(1, Math.max(0, frame - ICON_AT) / 3),
               scale: `${0.3 + ring * 0.9}`,
             }}
           />
@@ -223,10 +228,10 @@ const Brand: React.FC<{ exitAt: number }> = ({ exitAt }) => {
             style={{ width: 150, height: 150, transform: `scale(${icon}) rotate(${(1 - icon) * -40}deg)` }}
           />
         </div>
-        <div style={{ fontWeight: 700, fontSize: 132, letterSpacing: -5, color: C.ink }}>
+        <div style={{ fontWeight: 700, fontSize: 132, letterSpacing: -5, color: C.white }}>
           {"Campfire".split("").map((ch, i) => {
-            // Started early by the frames the spring takes to all but arrive, so the first letter is there on beat 2.
-            const p = spring({ frame: frame - (BEAT - 6) - i * 2.4, fps: 60, config: { damping: 12, stiffness: 160, mass: 0.6 } });
+            // Just after the icon, so that the letters follow it on the arpeggio's sixteenths.
+            const p = spring({ frame: frame - (ICON_AT + 4) - i * 2.4, fps: 60, config: { damping: 12, stiffness: 160, mass: 0.6 } });
             return (
               <span key={i} style={{ display: "inline-block", transform: `translateY(${(1 - p) * 60}px) scale(${0.6 + p * 0.4})`, opacity: p }}>
                 {ch}
@@ -237,31 +242,47 @@ const Brand: React.FC<{ exitAt: number }> = ({ exitAt }) => {
       </div>
       {/* Lighter than the name, so they read as its subtitle rather than as more titles; the orange line a step heavier
           to hold its own. */}
-      <div style={{ marginTop: 18, fontSize: 92, fontWeight: 400, color: C.ink, whiteSpace: "nowrap" }}>
+      <div style={{ marginTop: 18, fontSize: 92, fontWeight: 400, color: C.softWhite, whiteSpace: "nowrap" }}>
         {line("Lyrics.", 0)}
         {line("Chords.", 1)}
       </div>
-      <div style={{ marginTop: 4, fontSize: 84, fontWeight: 500, color: C.orange, whiteSpace: "nowrap" }}>{line("Wherever you play.", 2)}</div>
+      <div style={{ marginTop: 4, fontSize: 84, fontWeight: 500, color: C.white, whiteSpace: "nowrap" }}>{line("Wherever you play.", 2)}</div>
     </div>
   );
 };
 
-/** The list starts scrolling on bar 2's downbeat; its search opens on bar 3's, where the phone rises over the headline. */
+/**
+ * The phone lands, and the icon with it, on bar 1's second beat (a spring is mostly there five frames after it starts);
+ * the list starts scrolling on bar 2's downbeat; its search opens on bar 3's, where the phone rises over the headline.
+ */
+const LANDED_AT = beat(1);
+const ICON_AT = LANDED_AT - 5;
 const SCROLL_AT = BAR;
 const SEARCH_AT = 2 * BAR;
+
+// What the Songs screen shows, a chip with each letter typed into its search (the search itself is what the phone
+// shows), right and left of the phone by turns, where it has risen to: text, icon, x, y, rotation.
+const LIBRARY_CHIPS: [string, string, number, number, number][] = [
+  ["Colored tags", "ic_label", 850, 460, 4],
+  ["Language filters", "ic_language", 259, 720, -3],
+  ["Cover art", "ic_album", 860, 980, 5],
+];
 
 const Opening: React.FC = () => {
   const frame = useCurrentFrame();
   const format = useFormat();
-  // The phone fills the frame from its first picture, which a feed may freeze on, and shrinks into place over the first
-  // bar, about its top edge so that the name has the room above it.
-  const shrink = ease(frame, [0, BAR], [1.45, 1], Easing.inOut(Easing.cubic));
+  // The phone's screen fills the frame from its first picture, which a feed may freeze on, and snaps back into place by
+  // bar 1's second beat, fastest at first and settling with a slight overshoot, about its top edge so that the name has
+  // the room above it.
+  const zoom = ease(frame, [0, LANDED_AT], [0, 1], Easing.out(Easing.back(0.5)));
+  const shrink = interpolate(zoom, [0, 1], [2, 1]);
+  const top = interpolate(zoom, [0, 1], [-60, 600]);
   // Only the portrait frame has room for the headline under the phone; the others keep their headline where it is.
   const rise = format === "portrait" ? ease(frame, [SEARCH_AT - 6, SEARCH_AT + 24], [0, -440], Easing.inOut(Easing.cubic)) : 0;
   return (
     <AbsoluteFill>
       <Stage band={[590, 1830]}>
-        <div style={{ position: "absolute", left: 540, top: 600 + rise, transform: `translateX(-50%) scale(${shrink})`, transformOrigin: "50% 0" }}>
+        <div style={{ position: "absolute", left: 540, top: top + rise, transform: `translateX(-50%) scale(${shrink})`, transformOrigin: "50% 0" }}>
           <Phone height={1180}>
             {/* The clip's first frame until bar 2, where the finger starts dragging the list. */}
             <Freeze frame={SCROLL_AT} active={(f) => f < SCROLL_AT}>
@@ -271,12 +292,19 @@ const Opening: React.FC = () => {
             </Freeze>
           </Phone>
         </div>
+        {/* Placed where the risen phone is, and rising with it; the other formats' phone stays down. */}
+        {LIBRARY_CHIPS.map(([text, icon, x, y, rotate], i) => (
+          <Chip key={text} at={SEARCH_AT + onBeat(i + 1)} x={x} y={y + 440 + rise} rotate={rotate} color={i % 2 ? C.lilac : C.orange} icon={icon} text={text} size={42} />
+        ))}
       </Stage>
       <Brand exitAt={SEARCH_AT - 14} />
+      {/* Under the risen phone in the portrait frame, above the phone elsewhere. */}
       <Headline
-        top={format === "portrait" ? 1480 : 230}
+        band={[590, 1830]}
+        deviceTop={600}
+        deviceBottom={600 - 440 + 1180 * 1.036}
         at={SEARCH_AT + 8}
-        lines={["Your whole songbook,", <Accent key="a">beautifully organized.</Accent>]}
+        lines={["Your whole songbook,", "beautifully organized."]}
         size={84}
         exitAt={S.opening.bars * BAR - 14}
       />
@@ -303,11 +331,11 @@ const Song: React.FC = () => (
       </Place>
       {/* Each on an edge of the tablet, near what it names: the diagrams at the top left, the scales under them on the
           left, the page-turn button at the bottom right. */}
-      <Chip at={onBeat(2)} x={380} y={752} color={C.orange} icon="♪" text="Every chord, with diagrams" size={42} rotate={-3} />
-      <Chip at={onBeat(3)} x={250} y={1250} color={C.lilac} icon="♯" text="Scale suggestions" size={42} rotate={-4} />
-      <Chip at={onBeat(4)} x={720} y={1548} color={C.orange} icon="⇅" text="Pedal & tap to turn pages" size={42} rotate={3} />
+      <Chip at={onBeat(2)} x={380} y={752} color={C.orange} icon="ic_chords" text="Every chord, with diagrams" size={42} rotate={-3} />
+      <Chip at={onBeat(3)} x={280} y={1250} color={C.lilac} icon="ic_scales" text="Scale suggestions" size={42} rotate={-4} />
+      <Chip at={onBeat(4)} x={720} y={1548} color={C.orange} icon="ic_next" text="Pedal & tap to turn pages" size={42} rotate={3} />
     </Stage>
-    <Headline top={230} at={0} lines={["Lyrics and chords,", <Accent key="a">fit to any screen.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
+    <Headline band={[590, 1830]} deviceTop={slateTop(1150, 980, IPAD_ASPECT)} at={0} lines={["Lyrics and chords,", "fit to any screen."]} size={84} exitAt={1.5 * BAR - 14} />
   </AbsoluteFill>
 );
 
@@ -337,6 +365,7 @@ const Transpose: React.FC = () => {
   // The phone is drawn 1.4 times larger about the point 30% down its screen, so the stepper, the chord diagrams and
   // the first verse fill the frame; the rest of it runs off the bottom.
   const originY = 1215 - 590 + 0.3 * 1180;
+  const top = originY + (phoneTop(1215) - originY) * 1.4;
   const [chord, label] = STEPS[index];
   return (
     <AbsoluteFill>
@@ -371,13 +400,20 @@ const Transpose: React.FC = () => {
           <span style={{ fontSize: 52, color: C.lilac }}>{label}</span>
         </div>
       </Stage>
-      <Headline top={230} at={0} step={BEAT / 2} lines={["Transpose in a tap.", <Accent key="a">Every chord follows.</Accent>]} size={84} exitAt={BAR - 14} />
-      <Headline top={230} at={BAR} step={BEAT / 2} lines={["Read chords", <Accent key="a">your way.</Accent>]} size={84} exitAt={2 * BAR - 14} />
+      <Headline band={[440, 1890]} deviceTop={top} at={0} step={BEAT / 2} lines={["Transpose in a tap.", "Every chord follows."]} size={84} exitAt={BAR - 14} />
+      <Headline band={[440, 1890]} deviceTop={top} at={BAR} step={BEAT / 2} lines={["Read chords", "your way."]} size={84} exitAt={2 * BAR - 14} />
     </AbsoluteFill>
   );
 };
 
 // ─── Bars 8–9: the metronome, playing the soundtrack's own tempo ────────────────────────────
+
+/**
+ * Where the outlined "160 BPM" is centred, and its size: the headline is centred above its digits' tops, which stand
+ * Inter's cap height (0.727 of the size) tall about that centre.
+ */
+const BPM_Y = 650;
+const BPM_SIZE = 230;
 
 const Metronome: React.FC = () => {
   const frame = useCurrentFrame();
@@ -390,17 +426,17 @@ const Metronome: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: 650,
+          top: BPM_Y,
           left: 0,
           right: 0,
           textAlign: "center",
           fontFamily: SANS,
           fontWeight: 700,
-          fontSize: 230,
+          fontSize: BPM_SIZE,
           letterSpacing: -8,
           color: "transparent",
-          WebkitTextStroke: `4px ${downbeat ? C.orange : C.lilac}`,
-          opacity: 0.25 + 0.5 * kick,
+          WebkitTextStroke: `4px ${C.white}`,
+          opacity: (downbeat ? 0.35 : 0.25) + 0.5 * kick,
           transform: `translateY(-50%) scale(${1 + 0.06 * kick})`,
         }}
       >
@@ -413,10 +449,10 @@ const Metronome: React.FC = () => {
           </Phone>
         </div>
       </Place>
-      <Chip at={onBeat(3)} x={190} y={1720} color={C.orange} icon="♩" text="Tap tempo" size={40} rotate={-4} />
-      <Chip at={onBeat(5)} x={880} y={1600} color={C.lilac} icon="◔" text="Count-ins" size={40} rotate={4} />
+      <Chip at={onBeat(3)} x={197} y={1720} color={C.orange} icon="ic_tap_tempo" text="Tap tempo" size={40} rotate={-4} />
+      <Chip at={onBeat(5)} x={880} y={1600} color={C.lilac} icon="ic_clock" text="Count-ins" size={40} rotate={4} />
       </Stage>
-      <Headline top={230} at={0} lines={["A metronome that", <Accent key="a">knows every song.</Accent>]} size={84} exitAt={2 * BAR - 14} />
+      <Headline band={[520, 1890]} deviceTop={BPM_Y - BPM_SIZE * 0.364} at={0} lines={["A metronome that", "knows every song."]} size={84} exitAt={2 * BAR - 14} />
     </AbsoluteFill>
   );
 };
@@ -439,7 +475,7 @@ const Tuner: React.FC = () => {
           height: 900,
           transform: `translate(-50%, -50%) scale(${0.4 + (1 - inTune) * 1.2})`,
           borderRadius: 999,
-          border: `8px solid ${C.orange}`,
+          border: `8px solid ${C.white}`,
           opacity: inTune,
         }}
       />
@@ -448,14 +484,15 @@ const Tuner: React.FC = () => {
           <Clip name="tuner" />
         </Phone>
       </Place>
-      <Chip at={onBeat(1)} x={205} y={1010} color={C.lilac} icon="♪" text="Instrument tuner" size={38} rotate={-5} />
-      <Chip at={onBeat(2)} x={880} y={1260} color={C.orange} icon="◎" text="Chromatic tuner" size={38} rotate={4} />
-      <Chip at={onBeat(3)} x={210} y={1660} color="#81C995" icon="✓" text="Alternate tunings" size={38} rotate={-4} />
+      <Chip at={onBeat(1)} x={242} y={1010} color={C.lilac} icon="ic_tuner" text="Instrument tuner" size={38} rotate={-5} />
+      <Chip at={onBeat(2)} x={842} y={1260} color={C.orange} icon="ic_tune" text="Chromatic tuner" size={38} rotate={4} />
+      <Chip at={onBeat(3)} x={247} y={1660} color="#81C995" icon="ic_check" text="Alternate tunings" size={38} rotate={-4} />
       </Stage>
       <Headline
-        top={230}
+        band={[580, 1880]}
+        deviceTop={phoneTop(1280)}
         at={0}
-        lines={["A tuner,", <Accent key="a">built right in.</Accent>]}
+        lines={["A tuner,", "built right in."]}
         size={84}
         exitAt={1.5 * BAR - 14}
       />
@@ -469,10 +506,10 @@ const Tuner: React.FC = () => {
 // the phone: the keyboard as the scene opens on it, the ukulele as the clip switches to it on bar 12's downbeat, which it
 // then stays on, and the rest after it; they stay until the scene leaves: text, x, y, rotation, frame.
 const INSTRUMENTS: [string, number, number, number, number][] = [
-  ["Keyboard", 185, 790, -6, 6],
-  ["Ukulele", 915, 900, 5, 45],
+  ["Keyboard", 189, 790, -6, 6],
+  ["Ukulele", 914, 900, 5, 45],
   ["Guitar", 170, 1120, 4, 68],
-  ["Mandolin", 920, 1250, -5, 90],
+  ["Mandolin", 896, 1250, -5, 90],
   ["Banjo", 190, 1460, -3, 113],
 ];
 
@@ -488,14 +525,14 @@ const Chords: React.FC = () => (
         <Chip key={text} at={at - 4} x={x} y={y} rotate={rotate} color={i % 2 ? C.orange : C.lilac} text={text} size={44} />
       ))}
     </Stage>
-    <Headline top={230} at={0} lines={["Chord diagrams", <Accent key="a">for your instrument.</Accent>]} size={84} exitAt={1.5 * BAR - 14} />
+    <Headline band={[590, 1830]} deviceTop={phoneTop(1215)} at={0} lines={["Chord diagrams", "for your instrument."]} size={84} exitAt={1.5 * BAR - 14} />
   </AbsoluteFill>
 );
 
 // ─── Bar 13: the Scales tab in A, and a scale's sheet opened over it ──────────────────────────
 
 // The clip taps A's minor pentatonic on its 23rd frame, the second beat, and its sheet has slid up over the tab by the
-// third; nothing else moves, so the diagrams can be read.
+// third, where the first chip lands beside it, the second on the fourth; nothing else moves, so the diagrams can be read.
 const Scales: React.FC = () => (
   <AbsoluteFill>
     <Stage band={[590, 1830]}>
@@ -504,8 +541,10 @@ const Scales: React.FC = () => (
           <Clip name="scales" />
         </Phone>
       </Place>
+      <Chip at={onBeat(2)} x={375} y={1170} color={C.orange} icon="ic_tuner" text="Any instrument & tuning" size={42} rotate={-4} />
+      <Chip at={onBeat(3)} x={813} y={1590} color={C.lilac} icon="ic_scale_degrees" text="Notes & intervals" size={42} rotate={4} />
     </Stage>
-    <Headline top={230} at={0} lines={["Every scale and mode,", <Accent key="a">right under your fingers.</Accent>]} size={84} exitAt={BAR - 14} />
+    <Headline band={[590, 1830]} deviceTop={phoneTop(1215)} at={0} lines={["Every scale and mode,", "right under your fingers."]} size={84} exitAt={BAR - 14} />
   </AbsoluteFill>
 );
 
@@ -525,7 +564,6 @@ const PLATFORMS = ["Android", "iOS", "iPadOS", "macOS", "Windows", "Linux", "Web
 const Everywhere: React.FC = () => {
   const frame = useCurrentFrame();
   const t = ease(frame, [LIGHT_FROM, LIGHT_TO], [0, 1], Easing.out(Easing.cubic));
-  const ink = t > 0.5 ? C.inkLight : C.ink;
   return (
     <AbsoluteFill>
       <Stage band={[450, 1850]}>
@@ -551,37 +589,66 @@ const Everywhere: React.FC = () => {
         </Phone>
       </Place>
       <div style={{ position: "absolute", top: 1760, left: 20, right: 20, display: "flex", justifyContent: "center", gap: 22 }}>
+        {/* One an eighth note through bar 15, on the arpeggio, each started early by the frames its spring takes. */}
         {PLATFORMS.map((name, i) => {
-          const p = spring({ frame: frame - DOWNBEAT - beat(4) - i * 4, fps: 60, config: { damping: 12, stiffness: 180, mass: 0.6 } });
+          const p = spring({ frame: frame - DOWNBEAT - beat(4) - (i * BEAT) / 2 + 4, fps: 60, config: { damping: 12, stiffness: 180, mass: 0.6 } });
           return (
-            <span key={name} style={{ fontFamily: SANS, fontWeight: 500, fontSize: 40, color: i % 2 ? C.purple : "#C25E00", opacity: p, transform: `translateY(${(1 - p) * 30}px)`, display: "inline-block" }}>
+            <span key={name} style={{ fontFamily: SANS, fontWeight: 500, fontSize: 40, color: C.white, opacity: p, transform: `translateY(${(1 - p) * 30}px)`, display: "inline-block" }}>
               {name}
             </span>
           );
         })}
       </div>
       </Stage>
-      <Headline top={230} at={0} lines={["On every device", <Accent key="a" light={t > 0.5}>you own.</Accent>]} size={84} color={ink} exitAt={S.everywhere.bars * BAR - 14} />
+      <Headline band={[450, 1850]} deviceTop={slateTop(760, 860, LAPTOP_ASPECT, true)} at={0} lines={["On every device", "you own."]} size={84} exitAt={S.everywhere.bars * BAR - 14} />
     </AbsoluteFill>
   );
 };
 
-// ─── Bars 16–17: back in the dark, a setlist rearranged by a drag ────────────────────────────
+// ─── Bar 16: a setlist rearranged by a drag ──────────────────────────────────────────────────
 
 const Setlist: React.FC = () => (
   <AbsoluteFill>
     <Stage band={[590, 1830]}>
-      {/* The clip lifts Ring of Fire by its grip on the second beat and drops it in second place on its 90th frame,
-          bar 17's downbeat, at the end of the soundtrack's fill. */}
+      {/* The clip lifts Ring of Fire by its grip on the second beat and drops it in second place on the fourth, at the
+          end of the soundtrack's fill. */}
       <Place y={1215} at={-6} rotate={-3} enter="right">
         <Phone height={1180}>
           <Clip name="setlist-reorder" />
         </Phone>
       </Place>
-      <Chip at={onBeat(1)} x={850} y={1500} color={C.lilac} icon="⇅" text="Drag to reorder" size={44} rotate={5} />
-      <Chip at={onBeat(5)} x={225} y={645} color={C.orange} icon="⏳" text="Countdown" size={44} rotate={-5} />
+      <Chip at={onBeat(1)} x={820} y={1500} color={C.lilac} icon="ic_drag_handle" text="Drag to reorder" size={44} rotate={5} />
+      <Chip at={onBeat(3)} x={225} y={645} color={C.orange} icon="ic_calendar" text="Countdown" size={44} rotate={-5} />
     </Stage>
-    <Headline top={230} at={0} lines={["Setlists,", <Accent key="a">in the order you play.</Accent>]} size={84} exitAt={2 * BAR - 14} />
+    <Headline band={[590, 1830]} deviceTop={phoneTop(1215)} at={0} lines={["Setlists,", "in the order you play."]} size={84} exitAt={BAR - 14} />
+  </AbsoluteFill>
+);
+
+// ─── Bar 17: a chord sheet pasted, and the editor open on it ─────────────────────────────────
+
+// Where songs come from, one on each of bar 17's four chords, by turns beside the phone: text, icon, x, y, rotation.
+const SOURCES: [string, string, number, number, number][] = [
+  ["Paste from websites", "ic_content_paste", 302, 760, -4],
+  ["PDF & Word", "ic_import", 860, 1000, 4],
+  ["Other songbook apps", "ic_songs", 313, 1290, -3],
+  ["Zip archives", "ic_import", 850, 1560, 5],
+];
+
+// The clip pastes a chords-over-lyrics sheet on the Songs screen on its first beat, and the editor opens on it as
+// ChordPro.
+const Import: React.FC = () => (
+  <AbsoluteFill>
+    <Stage band={[590, 1830]}>
+      <Place y={1215} at={-6} rotate={2} enter="bottom">
+        <Phone height={1180}>
+          <Clip name="import" />
+        </Phone>
+      </Place>
+      {SOURCES.map(([text, icon, x, y, rotate], i) => (
+        <Chip key={text} at={onBeat(i)} x={x} y={y} rotate={rotate} color={i % 2 ? C.lilac : C.orange} icon={icon} text={text} size={42} />
+      ))}
+    </Stage>
+    <Headline band={[590, 1830]} deviceTop={phoneTop(1215)} at={0} step={BEAT / 2} lines={["Bring your songs.", "From anywhere."]} size={84} exitAt={BAR - 14} />
   </AbsoluteFill>
 );
 
@@ -601,10 +668,10 @@ const Export: React.FC = () => {
             </Phone>
           </div>
         </Place>
-        <Chip at={onBeat(1)} x={210} y={900} color={C.orange} icon="☰" text="Whole setlists" size={44} rotate={-5} />
-        <Chip at={onBeat(2)} x={870} y={1560} color={C.lilac} icon="♪" text="Individual songs" size={44} rotate={4} />
+        <Chip at={onBeat(1)} x={247} y={900} color={C.orange} icon="ic_setlists" text="Whole setlists" size={44} rotate={-5} />
+        <Chip at={onBeat(2)} x={790} y={1560} color={C.lilac} icon="ic_songs" text="Individual songs" size={44} rotate={4} />
       </Stage>
-      <Headline top={230} at={0} step={BEAT / 2} lines={["Print-ready PDFs,", <Accent key="a">for the music stand.</Accent>]} size={84} exitAt={S.export.bars * BAR - 14} />
+      <Headline band={[590, 1830]} deviceTop={phoneTop(1215)} at={0} step={BEAT / 2} lines={["Print-ready PDFs,", "for the music stand."]} size={84} exitAt={S.export.bars * BAR - 14} />
     </AbsoluteFill>
   );
 };
@@ -630,7 +697,7 @@ const Values: React.FC = () => {
               fontWeight: 700,
               fontSize: 170,
               letterSpacing: -6,
-              color: i % 2 ? C.orange : C.ink,
+              color: C.white,
               transform: `scale(${(0.5 + 0.5 * p) * (1 + out * 0.5)})`,
               opacity: frame >= at ? (1 - out) : 0,
               filter: out ? `blur(${out * 10}px)` : undefined,
@@ -666,10 +733,10 @@ const Outro: React.FC = () => {
           transform: `translate(-50%, -50%) scale(${enter})`,
         }}
       />
-      <div style={{ position: "absolute", top: 950, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 150, letterSpacing: -5, color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 50}px)` }}>
+      <div style={{ position: "absolute", top: 950, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 150, letterSpacing: -5, color: C.white, opacity: name, transform: `translateY(${(1 - name) * 50}px)` }}>
         Campfire
       </div>
-      <div style={{ position: "absolute", top: 1150, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 400, fontSize: 50, color: C.muted, opacity: sub, transform: `translateY(${(1 - sub) * 30}px)` }}>
+      <div style={{ position: "absolute", top: 1150, left: 0, right: 0, textAlign: "center", fontFamily: SANS, fontWeight: 400, fontSize: 50, color: C.softWhite, opacity: sub, transform: `translateY(${(1 - sub) * 30}px)` }}>
         Free and open source songbook
       </div>
       <div style={{ position: "absolute", top: 1290, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
@@ -679,7 +746,7 @@ const Outro: React.FC = () => {
             fontFamily: SANS,
             fontWeight: 700,
             fontSize: 56,
-            color: C.lilac,
+            color: C.white,
             transform: `scale(${url})`,
           }}
         >

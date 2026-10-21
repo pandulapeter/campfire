@@ -17,14 +17,16 @@ export const beat = (n: number) => Math.round(n * BEAT);
 
 export const C = {
   bg: "#15121C",
-  bgLight: "#FAF8FE",
   ink: "#E3E1EA",
-  inkLight: "#1D1A23",
-  muted: "#A9A3B9",
-  purple: "#5A49CA",
   lilac: "#D0BCFF",
   orange: "#FE851E",
+  white: "#FFFFFF",
+  // The lines under the name and the subtitle, a step back from the white of everything else.
+  softWhite: "rgba(255,255,255,0.8)",
 };
+
+/** The store listings' backdrop (the Screenshot Bro project's linear rows): the app's purple into its icon's orange. */
+export const GRADIENT = "linear-gradient(135deg, #5A49CA, #F57C00)";
 
 export const fontFaces = `
 @font-face { font-family: Inter; font-weight: 400; src: url(${staticFile("fonts/inter_regular.ttf")}) format("truetype"); }
@@ -33,8 +35,9 @@ export const fontFaces = `
 @font-face { font-family: JBM; font-weight: 700; src: url(${staticFile("fonts/jetbrains_mono_bold.ttf")}) format("truetype"); }
 `;
 
-export const SANS = "Inter, system-ui, sans-serif";
-export const MONO = "JBM, ui-monospace, monospace";
+// No fallback: a glyph the bundled fonts lack would be drawn in a system font, so the chips draw icons instead of symbols.
+export const SANS = "Inter";
+export const MONO = "JBM";
 
 /** A spring that starts at [from] frames, 0 → 1. */
 export const useSpring = (from: number, config: { damping?: number; stiffness?: number; mass?: number } = {}) => {
@@ -53,12 +56,8 @@ export const pulse = (frame: number, at: number, length = 18) => {
 export const ease = (frame: number, range: [number, number], out: [number, number], easing = Easing.bezier(0.22, 1, 0.36, 1)) =>
   interpolate(frame, range, out, { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing });
 
-/** The night sky behind everything: the app's dark background, which the light scene fades to its light one over. */
-export const Backdrop: React.FC<{ light?: number }> = ({ light = 0 }) => (
-  <AbsoluteFill style={{ background: C.bg }}>
-    <AbsoluteFill style={{ background: C.bgLight, opacity: light }} />
-  </AbsoluteFill>
-);
+/** The backdrop of every scene, the light theme's included: static, the same in every format. */
+export const Backdrop: React.FC = () => <AbsoluteFill style={{ background: GRADIENT }} />;
 
 /** A generic phone frame, with no camera notch or island, around a screen of the given aspect ratio, sized by its [height]. */
 export const Phone: React.FC<{ height: number; children: React.ReactNode; light?: boolean }> = ({ height, children, light }) => {
@@ -150,15 +149,7 @@ export const Stage: React.FC<{ band: [number, number]; full?: boolean; children:
   const format = useFormat();
   const { width, height } = useVideoConfig();
   if (format === "portrait") return <AbsoluteFill>{children}</AbsoluteFill>;
-  const region = full
-    ? { x: 0, y: 0, w: width, h: height }
-    : format === "square"
-      ? { x: 0, y: 250, w: 1080, h: 815 }
-      : { x: 910, y: 20, w: 990, h: 1040 };
-  const [y0, y1] = band;
-  const scale = Math.min(region.w / 1080, region.h / (y1 - y0), 1.25);
-  const x = region.x + (region.w - 1080 * scale) / 2;
-  const y = region.y + (region.h - (y1 - y0) * scale) / 2 - y0 * scale;
+  const { x, y, scale } = stageTransform(format, width, height, band, full);
   return (
     <div style={{ position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transformOrigin: "0 0", transform: `translate(${x}px, ${y}px) scale(${scale})` }}>
       {children}
@@ -166,41 +157,70 @@ export const Stage: React.FC<{ band: [number, number]; full?: boolean; children:
   );
 };
 
+/** Where [Stage] puts its portrait coordinates in a square or landscape frame: a scale, and the offset after it. */
+const stageTransform = (format: Format, width: number, height: number, band: [number, number], full?: boolean) => {
+  const region = full
+    ? { x: 0, y: 0, w: width, h: height }
+    : format === "square"
+      ? { x: 0, y: 250, w: 1080, h: 815 }
+      : { x: 910, y: 20, w: 990, h: 1040 };
+  const [y0, y1] = band;
+  const scale = Math.min(region.w / 1080, region.h / (y1 - y0), 1.25);
+  return {
+    scale,
+    x: region.x + (region.w - 1080 * scale) / 2,
+    y: region.y + (region.h - (y1 - y0) * scale) / 2 - y0 * scale,
+  };
+};
+
 /**
  * A headline whose lines rise a short way into place one after another, fading in as they move, and drift up as they
- * fade out on the way out, never cut off by a mask: at [top] across the
- * portrait frame, across the top of a square one, and in a column of its own on the left of a landscape one, where a
- * line too long for the column wraps.
+ * fade out on the way out, never cut off by a mask. In the portrait and square frames it is centred in the gap between
+ * the frame's top edge and the top of the scene's highest device, [deviceTop] in the [band] of the scene's [Stage]
+ * (in portrait, with [deviceBottom], between the device's bottom and the frame's bottom edge instead); in a landscape
+ * frame it has a column of its own on the left, where a line too long for the column wraps. It is set as the store
+ * listings' headlines are in Screenshot Bro: Inter Regular in white, letters 5% of the size closer, lines 0.9 apart.
  */
 export const Headline: React.FC<{
   lines: React.ReactNode[];
   at: number;
   step?: number;
-  top: number;
+  band: [number, number];
+  deviceTop: number;
+  deviceBottom?: number;
   size?: number;
-  color?: string;
   exitAt?: number;
-}> = ({ lines, at, step = BEAT, top, size = 92, color = C.ink, exitAt }) => {
+}> = ({ lines, at, step = BEAT, band, deviceTop, deviceBottom, size = 92, exitAt }) => {
   const frame = useCurrentFrame();
   const format = useFormat();
+  const { width, height } = useVideoConfig();
   const exit = exitAt === undefined ? 0 : ease(frame, [exitAt, exitAt + 14], [0, 1], Easing.in(Easing.cubic));
   const isLandscape = format === "landscape";
   const fontSize = format === "portrait" ? size : isLandscape ? size * 0.98 : size * 0.76;
+  const center =
+    format === "portrait"
+      ? deviceBottom === undefined
+        ? deviceTop / 2
+        : (deviceBottom + height) / 2
+      : (() => {
+          const stage = stageTransform(format, width, height, band);
+          return (stage.y + deviceTop * stage.scale) / 2;
+        })();
   const box: React.CSSProperties = isLandscape
     ? { position: "absolute", left: 100, width: 800, top: 0, bottom: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", textAlign: "left" }
-    : { position: "absolute", top: format === "portrait" ? top : 44, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" };
+    : { position: "absolute", top: center, left: 0, right: 0, transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" };
   return (
-    <div style={{ ...box, fontFamily: SANS, fontWeight: 700 }}>
+    <div style={{ ...box, fontFamily: SANS, fontWeight: 400 }}>
       {lines.map((line, i) => {
         const p = spring({ frame: frame - at - i * step, fps: 60, config: { damping: 16, stiffness: 150, mass: 0.7 } });
         return (
-          <div key={i} style={{ padding: isLandscape ? 0 : "0 40px", lineHeight: 1.12, alignSelf: "stretch" }}>
+          <div key={i} style={{ padding: isLandscape ? 0 : "0 40px", lineHeight: 0.9, alignSelf: "stretch" }}>
             <div
               style={{
                 fontSize,
-                letterSpacing: -fontSize * 0.03,
+                letterSpacing: -fontSize * 0.05,
                 textWrap: "balance",
-                color,
+                color: C.white,
                 transform: `translateY(${(1 - p) * 0.55 * fontSize - exit * 0.35 * fontSize}px)`,
                 opacity: Math.min(1, p * 1.3) * (1 - exit),
               }}
@@ -215,14 +235,15 @@ export const Headline: React.FC<{
 };
 
 /**
- * A headline's accented line in one flat brand color, never a gradient (neither the app nor the website has one): the
- * orange, the video's primary accent, which on the light theme's near-white gives way to the purple.
+ * One of the app's own icons (`public/icons/<name>.svg`, converted from its vector drawables), painted in [color]
+ * through a mask, since an SVG drawn as an image keeps its own fill.
  */
-export const Accent: React.FC<{ children: React.ReactNode; light?: boolean }> = ({ children, light }) => (
-  <span style={{ color: light ? C.purple : C.orange }}>{children}</span>
-);
+export const Icon: React.FC<{ name: string; size: number; color: string }> = ({ name, size, color }) => {
+  const mask = `url(${staticFile(`icons/${name}.svg`)}) center / contain no-repeat`;
+  return <span style={{ width: size, height: size, flexShrink: 0, background: color, mask, WebkitMask: mask }} />;
+};
 
-/** A rounded label that springs in at [at]. */
+/** A rounded label that springs in at [at], led by one of the app's icons ([icon], see [Icon]) or a dot of its color. */
 export const Chip: React.FC<{
   at: number;
   x: number;
@@ -260,7 +281,7 @@ export const Chip: React.FC<{
       }}
     >
       {icon ? (
-        <span style={{ color, fontSize: size * 1.05 }}>{icon}</span>
+        <Icon name={icon} size={size * 1.05} color={color} />
       ) : (
         <span style={{ width: size * 0.5, height: size * 0.5, borderRadius: 999, background: color, }} />
       )}
