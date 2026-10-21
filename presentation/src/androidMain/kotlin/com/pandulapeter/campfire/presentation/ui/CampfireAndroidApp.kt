@@ -23,12 +23,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
@@ -36,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.readInstallReferrer
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
@@ -55,6 +58,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent; the files
  *   of a pick that outlived its process join them here.
  * @param sharedTexts Texts shared to Campfire, read from the intent by the same activity.
+ * @param shareLinks Campfire links the app was opened with (the App Link, `campfire://s/`), read by the same activity.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
  * @param metronomeNotifier Starts the media playback service a playing metronome is kept alive and controlled by, for
@@ -70,6 +74,7 @@ fun CampfireAndroidApp(
     urlOpener: (url: String, isDarkTheme: Boolean) -> Boolean,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
+    shareLinks: Flow<SharedLink> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onAppReady: () -> Unit = {},
@@ -109,6 +114,10 @@ fun CampfireAndroidApp(
             navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
     }
+    // The view model asks only once, however many compositions it outlives, and reads in its own scope rather than this
+    // effect's, so the application context is what the read may hold on to, never the activity.
+    val applicationContext = LocalContext.current.applicationContext
+    LaunchedEffect(viewModel) { viewModel.firstRunController.importInstallReferrerLink { readInstallReferrer(applicationContext) } }
     val filePicker = rememberAndroidFilePicker()
     LaunchedEffect(filePicker, viewModel) {
         filePicker.orphanedExportResults.collect { isWritten -> if (!isWritten) viewModel.exportController.onExportFailed() }
@@ -125,6 +134,7 @@ fun CampfireAndroidApp(
                 urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.exportController.onLinkNotOpened(url) },
                 filesToImport = allFilesToImport,
                 sharedTexts = sharedTexts,
+                shareLinks = shareLinks,
                 onAppReady = onAppReady,
             )
         }

@@ -37,6 +37,9 @@
 - Both ways of planting record what they wrote under the demo's names (`RememberDemoLibraryFilesUseCase`, local-only;
   from `applyImportPlan` for an `isDemoLibrary` request), so sync takes another device's untouched demo from the cloud
   instead of keeping a copy of each.
+- On Android the first launch also reads Play's install referrer (`importInstallReferrerLink`, see
+  `src/androidMain/CLAUDE.md`); a shared link it names joins the import queue, so it lands beside the demo, after the
+  onboarding.
 
 ### The onboarding on a first run
 

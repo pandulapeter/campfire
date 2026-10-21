@@ -27,10 +27,11 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
-  over IPC (Play Store app); Android/iOS system backup copies `library/` and `preferences.json` — never the sync
-  credentials, the sync index, the editor draft, the iOS share inbox, or `covers/` (`app/android/src/main/res/xml`; on
-  iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch
-  with no preferences document forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
+  and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
+  and `preferences.json` — never the sync credentials, the sync index, the editor draft, the iOS share inbox, or
+  `covers/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`,
+  and the share inbox's own exclusion). A launch with no preferences document forgets any credentials it finds, since
+  the iOS Keychain outlives an uninstall.
 
 ## Architecture
 

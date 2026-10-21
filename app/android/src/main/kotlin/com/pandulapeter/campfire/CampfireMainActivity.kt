@@ -11,6 +11,7 @@ package com.pandulapeter.campfire
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -18,6 +19,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
@@ -54,6 +56,7 @@ class CampfireMainActivity : ComponentActivity() {
                 urlOpener = this::openUrl,
                 filesToImport = filesToImport,
                 sharedTexts = sharedTextsToImport,
+                shareLinks = shareLinksToImport,
                 syncNotifier = syncServiceStarter::onSyncNotificationChanged,
                 metronomeNotifier = { notification ->
                     // Nothing is done for a click that ended: the service follows the engine itself, since this activity
@@ -119,16 +122,28 @@ class CampfireMainActivity : ComponentActivity() {
     }
 
     /**
-     * The two things the system can hand this activity: a file to open, and the answer to a sync authorization the
-     * app sent the user to the browser for.
+     * The three things the system can hand this activity: a file to open, a shared song or setlist's link, and the
+     * answer to a sync authorization the app sent the user to the browser for.
+     *
+     * An address in a link's form that does not read as one (the landing page without a payload, a link cut short by a
+     * messenger) only brings the app to the front: it is no file, and handing it to the file import would report an
+     * unreadable one.
      */
     private fun handle(intent: Intent?) {
-        val data = intent?.data
-        if (intent?.action == Intent.ACTION_VIEW && data != null && isSyncRedirect(data.toString())) {
-            onSyncRedirectReceived(data.toString())
-        } else {
-            importFrom(intent)
+        val address = intent?.data?.takeIf { intent.action == Intent.ACTION_VIEW }
+        when {
+            address == null -> importFrom(intent)
+            isSyncRedirect(address.toString()) -> onSyncRedirectReceived(address.toString())
+            address.isShareLinkAddress() -> ShareLinks.parse(address.toString())?.let(::importShareLink)
+            else -> importFrom(intent)
         }
+    }
+
+    /** Whether [this] is one of the addresses the manifest's link filters claim, see `ShareLinks`. */
+    private fun Uri.isShareLinkAddress() = when (scheme) {
+        "https" -> host == "campfire-songbook.com" && path.orEmpty().startsWith("/s/")
+        "campfire" -> host == "s"
+        else -> false
     }
 
     /**

@@ -11,9 +11,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-      Campfire reaches the network for two things the user asks for: the cloud folder they connected in Settings, which
-      is off until they do, and the cover images their songs name and the cover search, which the Cover art switch in
-      Settings turns off. Nothing else in the app talks to anything.
+      Campfire reaches the network for what the user asks for: the cloud folder they connected in Settings, which is off
+      until they do, the cover images their songs name and the cover search, which the Cover art switch in Settings turns
+      off, and the file behind a shared link they open. Nothing else in the app talks to anything.
     -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -101,7 +101,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <!--
-          What other apps open Campfire with: a file, a share and the way back from the sync service's consent page.
+          What other apps open Campfire with: a file, a share, a shared link, and the way back from the sync service's consent page.
           These filters are on an alias rather than on the activity because since Android 15 an explicit intent from
           another app (the shell included) has to match one of the target's filters. The activity has none, so
           Android Studio's run configuration can start it with its MAIN / LAUNCHER intent. This alias is never one of
@@ -206,6 +206,40 @@
 
                 <data
                     android:host="oauth"
+                    android:scheme="campfire" />
+            </intent-filter>
+
+            <!--
+              A shared song or setlist, opened as its link. Only the landing page's /s/ is claimed, never the web app's
+              /app/, which is somebody using Campfire in a browser on purpose. Verified against the website's
+              assetlinks.json, which names only the release key: the .debug package is never verified, and a debug
+              build is given a link with "adb shell am start -a android.intent.action.VIEW -d '<link>'".
+            -->
+            <intent-filter
+                android:autoVerify="true"
+                android:label="@string/campfire">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="campfire-songbook.com" />
+                <data android:pathPrefix="/s/" />
+            </intent-filter>
+
+            <!--
+              The same link as the landing page's Open in Campfire button and its Android intent:// address give it,
+              campfire://s/<payload>. A custom scheme cannot be verified, so this one is not.
+            -->
+            <intent-filter android:label="@string/campfire">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="s"
                     android:scheme="campfire" />
             </intent-filter>
 

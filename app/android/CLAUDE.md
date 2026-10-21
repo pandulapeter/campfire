@@ -44,8 +44,14 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
   is `:presentation`'s. A stream wins over text in the same intent (the text is a caption).
 - **The activity declares no intent filter of its own**: since Android 15 an explicit intent from another app (Android
   Studio's shell included) must match one of the target's filters, and Studio's carries MAIN/LAUNCHER. A component with
-  no filters is exempt. The open, share, and sign-in filters are on `.CampfireIntentActivity`, an always-enabled alias
+  no filters is exempt. The open, share, link, and sign-in filters are on `.CampfireIntentActivity`, an always-enabled alias
   that is no launcher entry and not managed by `AppIconSwitcher`.
+- **Shared links**: an `autoVerify` App Link for `https://campfire-songbook.com/s/` (never `/app/`, the web app) and
+  `campfire://s/`, the landing page's button and its `intent://` address. `handle` checks the OAuth redirect first,
+  then a link's address: one `ShareLinks.parse` reads goes to `shareLinksToImport` (`AndroidFileImport.kt`, the same
+  process-owned queue as the files), one it doesn't only brings the app forward (never the file import). The `.debug`
+  package is not in the website's `assetlinks.json` (the debug key is public), so it is given links with
+  `adb shell am start -a android.intent.action.VIEW -d '<link>'`.
 - `FileProvider` (`${applicationId}.files`, `res/xml/file_paths.xml`) shares songs out.
 
 ## Permissions

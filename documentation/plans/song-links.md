@@ -120,9 +120,26 @@ deleted afterwards.
    `{"error": {".tag": "missing_scope", "required_scope": "sharing.write"}, "error_summary": "missing_scope/"}`, and
    `list_shared_links` the same with `sharing.read`. File calls on that token still worked. An old grant should
    answer the same, but that is inferred, not seen.
-8. **Android `intent://`** with a path payload and an `S.browser_fallback_url` to Play carrying a `referrer`:
-   - From Chrome, with and without the app installed: does it open the app, or Play?
-   - Does the referrer arrive through `InstallReferrerClient` after an install from Play's internal testing track?
+8. **Android `intent://`** with a path payload and an `S.browser_fallback_url` to Play carrying a `referrer`.
+   Probed on 2026-10-21 on an emulator (Android 17 Google APIs image, Chrome, no Play Store app), from links tapped on
+   a page Chrome loaded, with step 13's debug build:
+   - **App installed**: `intent://s/<payload>#Intent;scheme=campfire;package=<the app>;S.browser_fallback_url=…;end`
+     opens the app straight away, with no chooser, on the import screen downloading the link. `campfire://s/<payload>`
+     does the same.
+   - **App missing**: Chrome does not load a Play fallback in the tab. It turns a `play.google.com/store/apps/details`
+     fallback into a `market://` intent for the Play Store app, and on a device without one (this image, or any phone
+     without Play) **nothing happens at all**. A fallback to any other address (`https://example.com`) is loaded in the
+     tab, so the fallback itself works; only a device with Play shows the store page. §10's "Nothing happened?" line
+     under the button is what such a visitor has.
+   - **The `https` link, unverified** (the website is not deployed, and the `.debug` package is never in
+     `assetlinks.json`): tapped in Chrome or opened by another app, it stays in the browser (`pm get-app-links` says
+     `none` for the domain), so the landing page has to be there. Verification of the release package can only be
+     seen after the website is deployed and a Play build installed.
+   - **Install referrer without Play**: a first launch (data cleared) shows the onboarding and nothing else; the client
+     answers no referrer and nothing is logged or imported.
+   - **Unverified, left to a Play track**: whether the referrer arrives through `InstallReferrerClient` after an
+     install from Play's internal testing track, and in what form (§9.1 expects `campfire_link=<payload>`, decoded
+     once).
 9. **iOS pasteboard.** On iOS 16+, `UIPasteboard.general.detectPatterns(for: [.probableWebURL])` must not show the
    paste prompt. Reading `.url` or `.string` afterwards from a button tap shows "Allow Paste" once, which is
    acceptable.
@@ -628,8 +645,10 @@ A song that is only inside a shared setlist needs no extra line: the setlist's c
     and a README row.
   - **Read it once**, on the first launch only (`IsFirstRunUseCase`), off the main thread, through
     `InstallReferrerClient`.
-  - Play keeps answering the same referrer for 90 days, so record `UserPreferences.isInstallReferrerHandled = true`
-    whatever the answer, and never ask again.
+  - Play keeps answering the same referrer for 90 days. No `UserPreferences.isInstallReferrerHandled` was added (step
+    13): the first run's preferences write already makes every later launch not a first one, and a flag written
+    earlier would end the first run before the demo and the onboarding were recorded. A first run killed before that
+    write reads the referrer again, which reimports an identical link ("already in your library").
   - **Accept only** `campfire_link=<payload>` that `ShareLinks.parse` reads. Ignore any other referrer, such as a
     campaign or Play's `utm_source=google-play`.
   - On `SERVICE_UNAVAILABLE`, `FEATURE_NOT_SUPPORTED`, or no Play Store app, ignore it and record it as handled.

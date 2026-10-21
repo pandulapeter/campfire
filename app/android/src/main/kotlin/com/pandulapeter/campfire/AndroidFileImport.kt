@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +40,11 @@ private val pendingSharedTexts = Channel<SharedTextPayload>(Channel.BUFFERED)
 
 internal val sharedTextsToImport = pendingSharedTexts.receiveAsFlow()
 
+/** Campfire links the app was opened with, kept with the files for the same reason: an intent is acted on once. */
+private val pendingShareLinks = Channel<SharedLink>(Channel.BUFFERED)
+
+internal val shareLinksToImport = pendingShareLinks.receiveAsFlow()
+
 /**
  * Reads [uris] off the main thread and queues them, one that could not be read as an empty file that the import
  * reports as skipped. The application context is enough to read
@@ -58,6 +64,11 @@ internal fun Context.importFiles(uris: List<Uri>) {
 /** Queues texts shared to Campfire, for `PastedSongController.importSharedText` to decide what they come to. */
 internal fun importSharedTexts(texts: List<String>, subject: String?) {
     importScope.launch { pendingSharedTexts.send(SharedTextPayload(texts = texts, subject = subject)) }
+}
+
+/** Queues a Campfire link the app was opened with, see `ImportController.importSharedLink`. */
+internal fun importShareLink(link: SharedLink) {
+    importScope.launch { pendingShareLinks.send(link) }
 }
 
 /**

@@ -20,6 +20,7 @@ androidx-test-uiautomator = "2.4.0" # https://developer.android.com/jetpack/andr
 coil = "3.6.3" # https://github.com/coil-kt/coil/releases
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in-app-updates
+google-playInstallReferrer = "2.2" # https://developer.android.com/google/play/installreferrer/library
 gradle = "9.4.1" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jbr-api = "1.10.1" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
@@ -62,6 +63,7 @@ compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "jetbrains-
 compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "jetbrains-compose" }
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "jetbrains-compose" }
 google-playAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-playAppUpdate" }
+google-playInstallReferrer = { module = "com.android.installreferrer:installreferrer", version.ref = "google-playInstallReferrer" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr-api" }
 # Versioned by the JUnit BOM that kotlin-test brings in; Gradle no longer puts the launcher on the test runtime itself.

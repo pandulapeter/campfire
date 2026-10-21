@@ -87,6 +87,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             // Play's in-app update flow, the one thing only the Android build has, see ui/update/AppUpdate.kt.
             implementation(libs.google.playAppUpdate)
+            // The shared link a first launch was installed from, see ui/platform/InstallReferrer.kt.
+            implementation(libs.google.playInstallReferrer)
         }
         wasmJsMain.dependencies {
             // Opening URLs in a new tab, done by the web shell in ui/CampfireWebApp.kt.

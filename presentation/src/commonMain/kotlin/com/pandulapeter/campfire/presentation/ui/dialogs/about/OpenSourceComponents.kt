@@ -163,6 +163,15 @@ internal val openSourceComponents = listOf(
         licenseUrl = "https://developer.android.com/guide/playcore/license",
         builds = ANDROID,
     ),
+    OpenSourceComponent(
+        name = "Google Play Install Referrer Library",
+        holder = "Google LLC",
+        url = "https://developer.android.com/google/play/installreferrer/library",
+        licenseName = "Android Software Development Kit License",
+        licenseFile = "$LICENSES/android_sdk_license.txt",
+        licenseUrl = "https://developer.android.com/studio/terms",
+        builds = ANDROID,
+    ),
     apache("Guava ListenableFuture", "The Guava Authors", "https://github.com/google/guava", ANDROID),
     OpenSourceComponent(
         name = "HarfBuzz",

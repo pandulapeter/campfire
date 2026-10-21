@@ -16,6 +16,11 @@ The Android shell, called by `:app:android`.
   it may differ from the system's. `onAppIconChanged` reports the theme color once preferences are read
   (`AppIconSwitcher` in `app/android`). The `urlOpener` gets the dark theme flag (Custom Tabs colors) and returns
   whether anything opened the link (`Message.LinkNotOpened` otherwise).
+- **Install referrer** (`platform/InstallReferrer.kt`, Play's Install Referrer library): read once, on a first launch
+  only (`FirstRunController.importInstallReferrerLink`), off the main thread, and given up on after ten seconds. Only
+  `campfire_link=<payload>` that `ShareLinks` reads is taken (`installReferrerLink`); Play's own `utm_source` and
+  campaigns are ignored, as is a device or install without Play. No flag is kept: the first run's preferences write
+  already ends first launches.
 - `update/AppUpdate.android.kt` and `platform/SyncNotificationPermission.kt` live here rather than in `:app:android`
   because a composable can get the activity, a result launcher, and the lifecycle itself.
 - **Notification permission** is asked the moment sync becomes connected: a foreground service started without it keeps

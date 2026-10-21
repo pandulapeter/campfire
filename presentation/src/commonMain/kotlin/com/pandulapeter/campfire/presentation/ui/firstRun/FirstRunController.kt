@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOff
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportRequest
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
+import com.pandulapeter.campfire.presentation.ui.state.importing.installReferrerLink
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -195,6 +196,26 @@ internal class FirstRunController(
             // the launch screen is over the whole of it - and neither is the queue of imports.
             demoLibraryDecision.complete(Unit)
             _isDemoLibraryPending.update { false }
+        }
+    }
+
+    /** Whether [importInstallReferrerLink] has been asked, which every composition of the shell asks again. */
+    private var isInstallReferrerAsked = false
+
+    /**
+     * Imports the shared link the installation came from (`installReferrerLink`), asked of [readInstallReferrer] on a
+     * first launch only. The store keeps answering the same referrer for months, and a later launch taking it again
+     * would import a link the user may have long since dealt with; the first run's preferences write is what makes
+     * every later launch not a first one, so nothing else needs remembering. The link joins the import queue like
+     * any other, behind the demo library, and its import screen waits for the onboarding.
+     */
+    fun importInstallReferrerLink(readInstallReferrer: suspend () -> String?) {
+        if (isInstallReferrerAsked) return
+        isInstallReferrerAsked = true
+        scope.launch {
+            if (isFirstLaunch.await()) {
+                readInstallReferrer()?.let(::installReferrerLink)?.let(importController::importSharedLink)
+            }
         }
     }
 
