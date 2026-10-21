@@ -27,3 +27,15 @@ internal val FLOATING_CONTROLS_CLEARANCE = 88.dp
  * the band the page buttons' pill takes over it, so the pill never sits on the page.
  */
 internal val STACKED_PREVIEW_HEIGHT = 360.dp + FLOATING_CONTROLS_CLEARANCE - PAGE_MARGIN
+
+/** As wide as a phone camera reads comfortably from across a table, and no wider on a large screen. */
+internal val QR_CODE_WIDTH = 240.dp
+
+/** The smallest the QR code is made to fit a short pane, still read by a camera held close. */
+internal val QR_CODE_MIN_WIDTH = 120.dp
+
+/** The room between the shared link and the sides of its pane. */
+internal val SHARED_LINK_HORIZONTAL_PADDING = 24.dp
+
+/** The room between the shared link and the top and bottom of its pane. */
+internal val SHARED_LINK_VERTICAL_PADDING = 16.dp

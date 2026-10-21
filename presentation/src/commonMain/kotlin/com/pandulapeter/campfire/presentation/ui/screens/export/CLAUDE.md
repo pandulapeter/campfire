@@ -102,6 +102,11 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
   less one `FLOATING_CONTROLS_CLEARANCE` band at each end a control floats over (`PageFit`, `fitArea`). In a short window
   (`SHORT_WINDOW_HEIGHT`) the controls stack at the pane's end and the page sits beside them; the page-count pill is
   sized for its widest possible text so the page doesn't shift as pages turn.
+- The Link preview follows the same rule (`linkPreviewPaddingFor`), its QR code sized to its pane (`qrCodeSizeFor`, at
+  most 240dp, scrolling only below 120dp), so it is shown whole: in a short window beside the options the shared link
+  takes the pane less an end column, Copy link collapsing to its icon there; every other state keeps the bottom band,
+  its button's label saying what a bare icon would not. Each state keeps its own padding while it fades, and a resize
+  animates it.
 - The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
   arrangements, and the options move on the spatial spring (`animateBounds`).
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,

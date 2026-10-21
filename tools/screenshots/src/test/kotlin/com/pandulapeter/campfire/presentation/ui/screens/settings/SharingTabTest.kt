@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_al
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
+import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
@@ -36,6 +37,9 @@ import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 internal class SharingTabTest {
@@ -80,6 +84,26 @@ internal class SharingTabTest {
         tap(hasText(string(Res.string.settings_sharing_show_qr_code)) and hasClickAction())
 
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `a phone on its side shows the qr code whole, under the app bar and clear of copy link`() = runAppTest(
+        window = TestWindow.PHONE_ON_ITS_SIDE,
+        preferenceFiles = mapOf("shared-links.json" to MIRROR),
+    ) {
+        openQrCode()
+        waitForIdle()
+
+        // Clipped to the scrolling column's viewport, so a code cut at its edge has bounds smaller than its size.
+        val code = onNode(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNode()
+        val shown = code.boundsInRoot
+        assertTrue(code.size.width > 0)
+        assertEquals(code.size.width.toFloat(), shown.width, absoluteTolerance = 1f)
+        assertEquals(code.size.height.toFloat(), shown.height, absoluteTolerance = 1f)
+        val title = onNodeWithText(string(Res.string.songs_export_song)).fetchSemanticsNode().boundsInRoot
+        assertTrue(shown.top >= title.bottom)
+        val copyLink = onNode(hasContentDescription(string(Res.string.share_copy))).fetchSemanticsNode().boundsInRoot
+        assertFalse(shown.overlaps(copyLink))
     }
 
     @Test

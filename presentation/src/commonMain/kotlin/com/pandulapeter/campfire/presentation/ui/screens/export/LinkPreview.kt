@@ -10,16 +10,20 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -27,10 +31,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -64,21 +71,27 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 /**
  * The preview of the Link format: what sharing [kind] does and what it takes, or what went wrong, until it is shared,
  * then the link itself, as a QR code to be read off the screen and as text to be read or selected. States fade into one
- * another, each a user's tap or the connection's answer to one.
+ * another, each a user's tap or the connection's answer to one. Each state is padded by [contentPadding] for itself, so
+ * that one fading out stays where it was while the next takes room of its own, and a padding that changes as the window
+ * is resized is followed rather than jumped to.
  */
 @Composable
 internal fun LinkPreview(
     modifier: Modifier,
     state: LinkExportState,
     kind: SharedLinkKind,
-    contentPadding: PaddingValues,
+    contentPadding: (LinkExportState) -> PaddingValues,
 ) = AnimatedContent(
     targetState = state,
     modifier = modifier,
     contentKey = { it::class },
     transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) { shown ->
-    Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
+    val padding = contentPadding(shown)
+    val layoutDirection = LocalLayoutDirection.current
+    val end by animateDpAsState(padding.calculateEndPadding(layoutDirection))
+    val bottom by animateDpAsState(padding.calculateBottomPadding())
+    Box(Modifier.fillMaxSize().padding(end = end, bottom = bottom), contentAlignment = Alignment.Center) {
         when (shown) {
             LinkExportState.Creating -> DelayedLoadingIndicator(label = stringResource(Res.string.share_creating))
             LinkExportState.Stopping -> DelayedLoadingIndicator(label = stringResource(Res.string.share_stopping))
@@ -120,21 +133,37 @@ private fun LinkMessage(text: String) = Text(
 
 /**
  * The QR code, the link under it in the monospace face, selectable since some will rather copy a part of it by hand,
- * and the day it was shared; scrolled where a short window has no room for all of it. The code is made from the state
- * this is drawn for, not the screen's current one, so that a link fading out once Stop sharing is pressed keeps it.
+ * and the day it was shared; scrolled where a short window has no room for all of it. The code is sized to the pane
+ * outside the scrolling column ([qrCodeSizeFor]), so that it is shown whole where the pane allows, whatever comes under
+ * it. The code is made from the state this is drawn for, not the screen's current one, so that a link fading out once
+ * Stop sharing is pressed keeps it.
  */
 @Composable
 private fun SharedLink(
     state: LinkExportState.Shared,
-) = Column(
-    modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.spacedBy(12.dp),
+) = BoxWithConstraints {
+    val qrCodeSize = qrCodeSizeFor(paneWidth = maxWidth, paneHeight = maxHeight)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = SHARED_LINK_HORIZONTAL_PADDING, vertical = SHARED_LINK_VERTICAL_PADDING),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        SharedLinkContent(state = state, qrCodeSize = qrCodeSize)
+    }
+}
+
+@Composable
+private fun SharedLinkContent(
+    state: LinkExportState.Shared,
+    qrCodeSize: Dp,
 ) {
     val qrCode = remember(state.share.link.landingUrl) { QrCode.encode(state.share.link.landingUrl) }
     if (qrCode != null) {
         QrCodeImage(
-            modifier = Modifier.widthIn(max = QR_CODE_WIDTH).fillMaxWidth(),
+            modifier = Modifier.width(qrCodeSize),
             code = qrCode,
             contentDescription = stringResource(Res.string.share_qr_code),
         )
@@ -164,8 +193,5 @@ private fun SharedLink(
         )
     }
 }
-
-/** As wide as a phone camera reads comfortably from across a table, and no wider on a large screen. */
-private val QR_CODE_WIDTH = 240.dp
 
 private val MAX_TEXT_WIDTH = 480.dp

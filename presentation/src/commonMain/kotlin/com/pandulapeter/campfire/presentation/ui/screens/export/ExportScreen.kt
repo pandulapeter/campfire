@@ -18,7 +18,6 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -38,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -305,6 +305,8 @@ internal fun ExportScreen(
         val density = LocalDensity.current
         val pageButtonsWidth = pageButtonsWidthFor(pageCount)
         var saveButtonWidth by remember { mutableStateOf(0.dp) }
+        // The Link button floats outside the body, which alone knows whether the options stand beside the preview.
+        var isBodySideBySide by remember { mutableStateOf(false) }
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
@@ -324,6 +326,7 @@ internal fun ExportScreen(
                     val bodyHeight = maxHeight
                     val optionsWidth = optionsWidthFor(bodyWidth = bodyWidth, bodyHeight = bodyHeight)
                     val isSideBySide = optionsWidth != null
+                    SideEffect { isBodySideBySide = isSideBySide }
                     val pageFit = pageFitFor(
                         isSideBySide = isSideBySide,
                         isShortWindow = isShortWindow,
@@ -370,8 +373,14 @@ internal fun ExportScreen(
                                                     modifier = Modifier.fillMaxSize(),
                                                     state = link.state,
                                                     kind = shareTargetOf(dialog)!!.kind,
-                                                    // Beside the options the button floats over the end of this pane.
-                                                    contentPadding = PaddingValues(bottom = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 0.dp),
+                                                    contentPadding = { shown ->
+                                                        linkPreviewPaddingFor(
+                                                            isSideBySide = isSideBySide,
+                                                            isShortWindow = isShortWindow,
+                                                            isShared = shown is LinkExportState.Shared,
+                                                            bottomInset = bottomInset,
+                                                        )
+                                                    },
                                                 )
                                             }
                                         },
@@ -436,6 +445,7 @@ internal fun ExportScreen(
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(PAGE_MARGIN),
                 action = link?.action?.takeIf { isLink && content == PrintScreenContent.LOADED },
+                isInShortPane = isShortWindow && isBodySideBySide,
                 onClick = { link?.onAction?.invoke(it) },
             )
         }

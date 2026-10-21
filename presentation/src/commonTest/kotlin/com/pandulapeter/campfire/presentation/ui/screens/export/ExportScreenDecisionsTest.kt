@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -81,6 +82,41 @@ class ExportScreenDecisionsTest {
             PageFit(top = FLOATING_CONTROLS_CLEARANCE, bottom = 10.dp + FLOATING_CONTROLS_CLEARANCE),
             pageFitFor(isSideBySide = true, isShortWindow = false, floatingControlsWidth = 100.dp, bottomInset = 10.dp),
         )
+    }
+
+    @Test
+    fun `the qr code is as large as it reads best where the pane has room`() {
+        assertEquals(240.dp, qrCodeSizeFor(paneWidth = 600.dp, paneHeight = 600.dp))
+    }
+
+    @Test
+    fun `a short pane shrinks the qr code to show it whole`() {
+        val size = qrCodeSizeFor(paneWidth = 600.dp, paneHeight = 200.dp)
+        assertTrue(size < 240.dp)
+        assertEquals(200.dp - SHARED_LINK_VERTICAL_PADDING * 2, size)
+    }
+
+    @Test
+    fun `a narrow pane keeps the qr code within its width`() {
+        assertEquals(200.dp - SHARED_LINK_HORIZONTAL_PADDING * 2, qrCodeSizeFor(paneWidth = 200.dp, paneHeight = 600.dp))
+        assertEquals(100.dp - SHARED_LINK_HORIZONTAL_PADDING * 2, qrCodeSizeFor(paneWidth = 100.dp, paneHeight = 50.dp))
+    }
+
+    @Test
+    fun `a pane too short for a readable qr code scrolls it at its smallest`() {
+        assertEquals(QR_CODE_MIN_WIDTH, qrCodeSizeFor(paneWidth = 600.dp, paneHeight = 60.dp))
+    }
+
+    @Test
+    fun `only the shared link in a short window beside the options takes an end column instead of a bottom band`() {
+        assertEquals(
+            PaddingValues(end = FLOATING_CONTROLS_CLEARANCE, bottom = 10.dp + PAGE_MARGIN),
+            linkPreviewPaddingFor(isSideBySide = true, isShortWindow = true, isShared = true, bottomInset = 10.dp),
+        )
+        val band = PaddingValues(bottom = 10.dp + FLOATING_CONTROLS_CLEARANCE)
+        assertEquals(band, linkPreviewPaddingFor(isSideBySide = true, isShortWindow = true, isShared = false, bottomInset = 10.dp))
+        assertEquals(band, linkPreviewPaddingFor(isSideBySide = true, isShortWindow = false, isShared = true, bottomInset = 10.dp))
+        assertEquals(PaddingValues(), linkPreviewPaddingFor(isSideBySide = false, isShortWindow = true, isShared = true, bottomInset = 10.dp))
     }
 
     @Test

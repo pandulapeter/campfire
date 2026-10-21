@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtLeast
+import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_export
@@ -65,6 +68,28 @@ internal fun pageFitFor(isSideBySide: Boolean, isShortWindow: Boolean, floatingC
     isShortWindow -> PageFit(end = floatingControlsWidth + PAGE_MARGIN * 2, bottom = bottomInset + PAGE_MARGIN)
     else -> PageFit(top = FLOATING_CONTROLS_CLEARANCE, bottom = bottomInset + FLOATING_CONTROLS_CLEARANCE)
 }
+
+/**
+ * The room the Link preview leaves for the button floating over its pane. Beside the options it floats over the pane's
+ * end, which a short window takes as a column for the shared link alone, the one state whose button is a bare icon there
+ * (Copy link), so that its QR code has the pane's height; every other state's button keeps its label, which only a band
+ * at the bottom has the width for. Stacked, the button floats over the options' list instead.
+ */
+internal fun linkPreviewPaddingFor(isSideBySide: Boolean, isShortWindow: Boolean, isShared: Boolean, bottomInset: Dp) = when {
+    !isSideBySide -> PaddingValues()
+    isShortWindow && isShared -> PaddingValues(end = FLOATING_CONTROLS_CLEARANCE, bottom = bottomInset + PAGE_MARGIN)
+    else -> PaddingValues(bottom = bottomInset + FLOATING_CONTROLS_CLEARANCE)
+}
+
+/**
+ * How large the shared link's QR code is in a pane as large as [paneWidth] by [paneHeight]: as large as it reads best,
+ * smaller where the pane cannot show it whole otherwise, but never below what a camera still reads, where it scrolls
+ * with the link under it instead, and never wider than the pane.
+ */
+internal fun qrCodeSizeFor(paneWidth: Dp, paneHeight: Dp) = minOf(QR_CODE_WIDTH, paneHeight - SHARED_LINK_VERTICAL_PADDING * 2)
+    .coerceAtLeast(QR_CODE_MIN_WIDTH)
+    .coerceAtMost(paneWidth - SHARED_LINK_HORIZONTAL_PADDING * 2)
+    .coerceAtLeast(0.dp)
 
 /** The title of the screen, by what is exported. */
 internal fun exportTitleOf(dialog: DialogType.Export) = when {
