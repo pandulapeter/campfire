@@ -29,10 +29,11 @@ import sys
 from PIL import Image, ImageChops, ImageFilter
 
 SIBLINGS = ("CampfireWebsite", "campfire-website")
-# The laptop's window is 2000 by 1255 pixels, shown no wider than about 1100 device pixels on the page, so its shots are
-# saved at 1600, which keeps the text sharp on a 2x screen at half the bytes; the 14 of the text size demo load
-# together.
-SIZES = {"phone": (600, 1304), "tablet": (1400, 1050), "laptop": (1600, 1004)}
+# The page draws each device no wider than it ever needs: at its widest (a 768 pixel window, two columns becoming one)
+# a laptop or a tablet screen is about 600 CSS pixels across, so 1200 device pixels on a 2x screen, and a phone 170, so
+# 340. Each is saved at about that, in its own proportions, which keeps the text sharp at the fewest bytes; the 14 of
+# the text size demo load together.
+SIZES = {"phone": (450, 978), "tablet": (1200, 900), "laptop": (1200, 753)}
 OG_SIZE = (1200, 630)
 QUALITY = 86
 BEAT = re.compile(r"(?P<name>.+)-beat-(?P<beat>\d+)-(?P<theme>light|dark)")
