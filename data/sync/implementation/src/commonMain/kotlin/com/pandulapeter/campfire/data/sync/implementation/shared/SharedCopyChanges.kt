@@ -19,13 +19,16 @@ import com.pandulapeter.campfire.data.model.share.SharedLinkKind
  */
 internal class SharedCopyChanges {
 
-    private val renames = mutableListOf<Pair<String, String>>()
+    private val renames = mutableListOf<SharedLinksJournal.Entry.Rename>()
     private val removals = mutableSetOf<String>()
     private val updates = mutableMapOf<String, (SharedLinksEntry) -> SharedLinksEntry>()
 
-    /** The shared item [from] is now the library file [to], matched by any case or Unicode form of the name. */
-    fun rename(from: String, to: String) {
-        renames += from to to
+    /**
+     * The shared item [from] is now the library file [to]: the share [shareId] where it is known, else every entry
+     * named [from] by any case or Unicode form of the name.
+     */
+    fun rename(from: String, to: String, shareId: String?) {
+        renames += SharedLinksJournal.Entry.Rename(from = from, to = to, shareId = shareId)
     }
 
     fun remove(shareId: String) {
@@ -37,7 +40,7 @@ internal class SharedCopyChanges {
      * before it leave it; deleting a stopped share's copy is the caller's.
      */
     fun take(entry: SharedLinksJournal.Entry, document: SharedLinksDocument) = when (entry) {
-        is SharedLinksJournal.Entry.Rename -> rename(from = entry.from, to = entry.to)
+        is SharedLinksJournal.Entry.Rename -> rename(from = entry.from, to = entry.to, shareId = entry.shareId)
         else -> stoppedBy(entry, document).forEach(::remove)
     }
 
@@ -65,8 +68,9 @@ internal class SharedCopyChanges {
     fun applyTo(document: SharedLinksDocument) = document.copy(
         links = document.links
             .map { entry ->
-                renames.fold(entry) { renamed, (from, to) ->
-                    if (LibraryFiles.isSameLibraryName(renamed.fileName, from)) renamed.copy(fileName = to) else renamed
+                renames.fold(entry) { renamed, rename ->
+                    val isRenamed = rename.shareId?.let { it == renamed.shareId } ?: LibraryFiles.isSameLibraryName(renamed.fileName, rename.from)
+                    if (isRenamed) renamed.copy(fileName = rename.to) else renamed
                 }
             }
             .filterNot { it.shareId in removals }

@@ -9,19 +9,17 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
-import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.koin.core.annotation.Single
 
 /**
  * Tells the account's list about this device's renames and stops as soon as they are made, rather than at the next run,
  * so that another device's run does not find a renamed item missing in the meantime. Best effort: whatever this cannot
- * write stays in the journal, and the run applies it ([SharedCopySync]). Both may apply the same entries, which is
- * harmless, since each is idempotent.
+ * write stays in the journal, and the run applies it ([SharedCopySync]). The two never apply at once: each holds
+ * [SharedLinksJournal.whileApplying] from loading the entries until they are removed.
  *
  * The whole journal is applied, in order, never only its newest entry: a rename made offline and another made of the
  * same item once back online only lead to the item's name together.
@@ -35,28 +33,26 @@ internal class SharedLinksJournalApplier(
 
     private val scope = environment.scopeFor("shared links")
 
-    /** Keeps two applications started in a row from deleting the same copies twice. */
-    private val mutex = Mutex()
-
     /** Applies the journal to the list in [folder] without waiting for it; the caller has nothing to do with the result. */
     fun applySoon(folder: SyncFolder) {
         scope.launch { apply(folder) }
     }
 
-    suspend fun apply(folder: SyncFolder) = mutex.withLock {
+    /**
+     * Applies the journal to the list in [folder], while no run's step applies it ([SharedLinksJournal.whileApplying]).
+     * Answers what stopped it where something was thrown; whatever stays in the journal, the caller reads there.
+     */
+    suspend fun apply(folder: SyncFolder): Exception? = journal.whileApplying {
         val changes = SharedCopyChanges()
         val applied = mutableListOf<SharedLinksJournal.Entry>()
-        environment.logger.recovering(
-            describe = { "Could not apply the shared links journal: ${it::class.simpleName}" },
-            fallback = {},
-        ) {
+        val failure = failureOf("apply the shared links journal") {
             val pending = journal.load()
             // Only a stop by name or of everything needs the list to say which shares it stops; the final edit reads it
             // again, and removes by id, so a list that changes in between is still edited right.
             val document = if (pending.any { it is SharedLinksJournal.Entry.StopItem || it == SharedLinksJournal.Entry.StopAll }) {
                 when (val read = registry.read(folder)) {
                     is SharedLinksRegistry.Read.Readable -> read.document
-                    is SharedLinksRegistry.Read.FromNewerVersion -> return@withLock
+                    is SharedLinksRegistry.Read.FromNewerVersion -> return@whileApplying null
                 }
             } else {
                 SharedLinksDocument()
@@ -66,17 +62,25 @@ internal class SharedLinksJournalApplier(
                 applied += entry
             }
         }
-        if (applied.isEmpty()) return@withLock
+        if (applied.isEmpty()) return@whileApplying failure
         // What was applied before a failure is written all the same: a stopped share's copy is gone, so its entry must go.
-        environment.logger.recovering(
-            describe = { "Could not write the shared links journal to the list: ${it::class.simpleName}" },
-            fallback = {},
-        ) {
+        val writeFailure = failureOf("write the shared links journal to the list") {
             val edit = registry.edit(folder) { current ->
                 SharedLinksRegistry.Change(document = changes.applyTo(current).takeIf { it != current }, result = Unit)
             }
             if (edit is SharedLinksRegistry.Edit.Done) journal.remove(applied)
         }
+        failure ?: writeFailure
+    }
+
+    private inline fun failureOf(action: String, block: () -> Unit): Exception? = try {
+        block()
+        null
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        environment.logger.log("Could not $action: ${exception::class.simpleName}")
+        exception
     }
 }
 

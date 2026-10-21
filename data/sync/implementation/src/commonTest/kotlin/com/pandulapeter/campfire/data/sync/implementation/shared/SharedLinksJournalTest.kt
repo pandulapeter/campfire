@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 class SharedLinksJournalTest {
@@ -43,12 +44,15 @@ class SharedLinksJournalTest {
     }
 
     @Test
-    fun `a journal written before stops by name still reads`() = runTest {
+    fun `a journal written before stops by name and named renames still reads, its renames by name`() = runTest {
         val localSource = FakeSharedLinksLocalSource(
             journal = """{"entries": [{"type": "rename", "from": "a.cho", "to": "b.cho"}, {"type": "stop", "shareId": "aaaaaaaaaaaaaaaa"}]}""",
         )
 
-        assertEquals(listOf(rename, stop), SharedLinksJournal(localSource, testEnvironment()).load())
+        val entries = SharedLinksJournal(localSource, testEnvironment()).load()
+
+        assertEquals(listOf(rename, stop), entries)
+        assertNull(assertIs<SharedLinksJournal.Entry.Rename>(entries.first()).shareId)
     }
 
     @Test

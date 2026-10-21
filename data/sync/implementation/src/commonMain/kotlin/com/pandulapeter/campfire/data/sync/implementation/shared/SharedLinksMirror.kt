@@ -13,11 +13,9 @@ import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.SharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
@@ -53,10 +51,11 @@ internal class SharedLinksMirror(
     /** Keeps a read from the disk from replacing a fresher list saved while it was under way. */
     private val mutex = Mutex()
 
-    val shares = flow {
+    /** The mirror, read from the disk the first time, then every list saved. */
+    val mirrored = flow {
         load()
         emitAll(state.filterNotNull())
-    }.map { it.document.toShares() }.distinctUntilChanged()
+    }
 
     /** The mirror, read from the disk the first time; an empty list where there is none, or none that can be read. */
     suspend fun load(): Mirrored = state.value ?: mutex.withLock {

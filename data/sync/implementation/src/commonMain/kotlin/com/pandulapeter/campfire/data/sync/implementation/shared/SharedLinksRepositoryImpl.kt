@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -53,7 +55,8 @@ internal class SharedLinksRepositoryImpl(
 
     private val providers = syncProviders.all
 
-    override val shares = mirror.shares
+    override val shares = combine(mirror.mirrored, journal.entries) { mirrored, pending -> pendingApplied(mirrored.document, pending).toShares() }
+        .distinctUntilChanged()
 
     override suspend fun refresh(): SharingFailure? {
         val folder = connectedFolder() ?: return SharingFailure.NOT_CONNECTED
@@ -72,6 +75,9 @@ internal class SharedLinksRepositoryImpl(
         copy: ByteArray,
     ): CreateShareResult {
         val folder = connectedFolder() ?: return CreateShareResult.Failed(SharingFailure.NOT_CONNECTED)
+        // A stop by name or of everything, and a rename that names no share, are resolved against the list when applied,
+        // so one still waiting would catch this share too: the journal goes first, and a share waits for what stays.
+        applyPendingJournal(folder)?.let { return CreateShareResult.Failed(it) }
         val shareId = ShareIds.generate()
         var isUploaded = false
         var isKept = false
@@ -102,9 +108,11 @@ internal class SharedLinksRepositoryImpl(
             // The caller found no share of the item, but another device may have added one since. Every attempt of the
             // edit reads the list again, so that share is found at the latest on the attempt after the conflict its
             // write caused, and answered instead: one item never has two links. A share whose copy is gone is no share
-            // to answer, since its link opens nothing: this one takes its place in the same write.
+            // to answer, since its link opens nothing: this one takes its place in the same write. The item is looked up
+            // in the list as the journal will leave it, which an entry noted since its application may still change.
+            val pending = journal.load()
             val change = { document: SharedLinksDocument ->
-                val existing = document.entryFor(kind, fileName)
+                val existing = pendingApplied(document, pending).entryFor(kind, fileName)
                 if (existing == null || existing.copyMissing) {
                     SharedLinksRegistry.Change(document.copy(links = document.links.filterNot { it.shareId == existing?.shareId } + entry), entry)
                 } else {
@@ -204,8 +212,10 @@ internal class SharedLinksRepositoryImpl(
     }
 
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {
-        if (isAccountStored() || sharedNow().entryFor(kind, fileName) != null) {
-            listOf(SharedLinksJournal.Entry.Rename(from = fileName, to = newFileName))
+        // Naming the share where it is known keeps a new share of another item under the old name where it is.
+        val shared = sharedNow().entryFor(kind, fileName)
+        if (shared != null || isAccountStored()) {
+            listOf(SharedLinksJournal.Entry.Rename(from = fileName, to = newFileName, shareId = shared?.shareId))
         } else {
             emptyList()
         }
@@ -259,11 +269,28 @@ internal class SharedLinksRepositoryImpl(
      * The shares as the list will have them once the journal is applied: an item renamed while the list could not be
      * told is still shared under its new name, and its next rename must follow it too.
      */
-    private suspend fun sharedNow(): SharedLinksDocument {
+    private suspend fun sharedNow() = pendingApplied(mirror.load().document, journal.load())
+
+    /** [document] as applying [pending], this device's journal, will leave it. */
+    private fun pendingApplied(document: SharedLinksDocument, pending: List<SharedLinksJournal.Entry>): SharedLinksDocument {
         val changes = SharedCopyChanges()
-        val mirrored = mirror.load().document
-        journal.load().forEach { changes.take(it, mirrored) }
-        return changes.applyTo(mirrored)
+        pending.forEach { changes.take(it, document) }
+        return changes.applyTo(document)
+    }
+
+    /**
+     * Applies this device's journal where it holds anything, and answers why entries stay where some do: the cause
+     * thrown, or [SharingFailure.UNKNOWN] where nothing was. Free while the journal is empty; otherwise it may wait for
+     * a run's shared-copy step, which applies it too.
+     */
+    private suspend fun applyPendingJournal(folder: SyncFolder): SharingFailure? = failureOf("apply the shared links journal first") {
+        if (journal.load().isEmpty()) return@failureOf null
+        val failure = journalApplier.apply(folder)
+        when {
+            journal.load().isEmpty() -> null
+            failure != null -> failure.toSharingFailure("apply the shared links journal first")
+            else -> SharingFailure.UNKNOWN
+        }
     }
 
     override suspend fun stopSharingEverythingNow(): SharingFailure? {

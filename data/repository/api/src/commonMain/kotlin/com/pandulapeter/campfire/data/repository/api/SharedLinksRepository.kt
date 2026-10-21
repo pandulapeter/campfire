@@ -28,8 +28,9 @@ import kotlinx.coroutines.flow.Flow
 interface SharedLinksRepository {
 
     /**
-     * The shares as last read, most recent first; empty while no account is connected, and before the first read for
-     * one that is. Never asks the service: [refresh] does.
+     * The shares as last read, with the renames and stops this device made since applied as they will be once the list
+     * is told, most recent first; empty while no account is connected, and before the first read for one that is. Never
+     * asks the service: [refresh] does.
      */
     val shares: Flow<List<Share>>
 
@@ -40,7 +41,8 @@ interface SharedLinksRepository {
      * Uploads [copy] as the shared copy of the library file [fileName], makes a public link to it, and adds it to the
      * account's list. The caller has checked [shares], just refreshed, for a share of the same item; one that another
      * device adds in the meantime is answered instead, and the copy uploaded here deleted, so an item never has two
-     * links. A share of the item whose copy is gone ([ShareState.COPY_MISSING]) is replaced by this one, never answered.
+     * links. The renames and stops this device has not told the list yet go first, and a share fails while they cannot.
+     * A share of the item whose copy is gone ([ShareState.COPY_MISSING]) is replaced by this one, never answered.
      * Whatever fails after the upload deletes the copy again, as far as it can, except a copy the account's list may
      * name: a failure that leaves unclear whether the list was written keeps it.
      *

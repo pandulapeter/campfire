@@ -62,11 +62,12 @@ internal class SharedCopySync(
         index: Map<SyncKey, SyncIndexEntry>,
         sharedFiles: List<RemoteSharedFile>,
         registryRevision: String?,
-    ): Boolean {
+    ): Boolean = journal.whileApplying {
+        // Held from loading the journal until what was applied is removed: the applier must not take the same entries.
         val pending = journal.load()
         // A registry is looked at even with no copy listed: copies deleted by hand leave entries whose links open nothing.
-        if (sharedFiles.isEmpty() && pending.isEmpty() && registryRevision == null) return true
-        val (revision, document) = read(folder, registryRevision, pending.isEmpty()) ?: return true
+        if (sharedFiles.isEmpty() && pending.isEmpty() && registryRevision == null) return@whileApplying true
+        val (revision, document) = read(folder, registryRevision, pending.isEmpty()) ?: return@whileApplying true
         val changes = SharedCopyChanges()
         val applied = mutableListOf<SharedLinksJournal.Entry>()
         var isSettled = true
@@ -103,7 +104,7 @@ internal class SharedCopySync(
             false
         }
         failure?.let { throw it }
-        return isSettled && isWritten
+        isSettled && isWritten
     }
 
     private suspend fun read(folder: SyncFolder, registryRevision: String?, isJournalEmpty: Boolean): Pair<String?, SharedLinksDocument>? {

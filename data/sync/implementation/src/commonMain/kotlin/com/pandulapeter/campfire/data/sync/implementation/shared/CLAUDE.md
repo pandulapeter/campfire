@@ -18,7 +18,9 @@
   - Members a version does not know are kept through its edits; a higher `version` is neither shown nor edited. One
     that does not decode counts as empty, and only a sharing action writes over it.
 - **Mirror**: `preferences/shared-links.json` (`SharedLinksMirror`), the registry as last read or written, with that
-  revision, so screens need no request. Replaced on every read and successful edit.
+  revision, so screens need no request. Replaced on every read and successful edit. The repository's `shares` are the
+  mirror with the journal applied as it will be (the journal's entries kept in memory too), so a renamed or stopped
+  item shows as it will be before the list is told.
 - **Journal**: `preferences/shared-links-journal.json` (`SharedLinksJournal`), renames and deletions of shared items
   made here, applied by the next run before it looks items up. An unreadable one throws rather than being written over.
   - The domain's use cases note an entry (`followRename`, `stopSharingDeleted`, `stopSharingEverything`) for every
@@ -27,12 +29,16 @@
     shared the item since the mirror was read. A deletion the mirror (as the journal would leave it) does not name is a
     `StopItem` by name, a deleted library adds a `StopAll`; both are resolved against the list when applied, which the
     applier then reads first. Without credentials, only what the mirror names is noted.
-  - Accepted edges: a `StopAll` applied late also stops a share another device made after the deletion; a `Rename` of
-    an item the mirror did not name matches by name when applied, so one applied late also moves another device's new
-    share of a new item under the old name.
+  - A `Rename` names its share (`shareId`) where the mirror knew it, and moves only that one. Accepted edges: a
+    `StopAll` applied late also stops a share another device made after the deletion; a `Rename` without a `shareId`
+    (an item the mirror did not name, or an older journal) matches by name when applied, so one applied late also moves
+    another device's new share of a new item under the old name. This device's own new shares are safe: `share()`
+    applies a non-empty journal first, and fails while entries stay.
   - Older builds read a journal with `stopItem` or `stopAll` as empty: downgrades are not supported.
   - Noted first, then applied at once where connected (`SharedLinksJournalApplier`, without the caller waiting), the
-    whole journal in order, best effort; what it cannot write the run applies. Both applying an entry is harmless.
+    whole journal in order, best effort; what it cannot write the run applies. The applier and the run's step never
+    apply at once: each holds `SharedLinksJournal.whileApplying` from loading the entries until it removes them, so
+    `remove`'s first-equal match is always the entry applied.
 - Mirror and journal are forgotten with the index (disconnect, `forgetStoredConnection`, another account connected).
 
 ## Sharing (`SharedLinksRepositoryImpl`)

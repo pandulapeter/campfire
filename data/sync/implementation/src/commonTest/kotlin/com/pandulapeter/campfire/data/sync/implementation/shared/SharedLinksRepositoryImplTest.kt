@@ -356,7 +356,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
 
         repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
@@ -365,9 +365,89 @@ class SharedLinksRepositoryImplTest {
 
         assertEquals(listOf("a.cho"), registry(provider).links.map { it.fileName })
         assertEquals(
-            listOf(SharedLinksJournal.Entry.Rename("a.cho", "b.cho"), SharedLinksJournal.Entry.Rename("b.cho", "c.cho")),
+            listOf(
+                SharedLinksJournal.Entry.Rename("a.cho", "b.cho", share.shareId),
+                SharedLinksJournal.Entry.Rename("b.cho", "c.cho", share.shareId),
+            ),
             SharedLinksJournal(localSource, testEnvironment()).load(),
         )
+    }
+
+    @Test
+    fun `a pending rename moves the share in the list before the list is told`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+
+        repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+        runCurrent()
+
+        assertEquals(listOf("a.cho"), registry(provider).links.map { it.fileName })
+        assertEquals(listOf("b.cho"), repository.shares.first().map { it.fileName })
+    }
+
+    @Test
+    fun `sharing an item named like one renamed while offline makes its own link`() = runTest {
+        val provider = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        val renamed = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+        repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
+        runCurrent()
+        provider.onUploadDocument = {}
+
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+
+        assertTrue(share.shareId != renamed.shareId)
+        assertEquals(
+            setOf(renamed.shareId to "b.cho", share.shareId to "a.cho"),
+            registry(provider).links.map { it.shareId to it.fileName }.toSet(),
+        )
+        assertNull(localSource.journal)
+    }
+
+    @Test
+    fun `sharing an item deleted and recreated while offline makes a new link`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        val deleted = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
+        runCurrent()
+        provider.onUploadDocument = {}
+
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+
+        assertTrue(share.shareId != deleted.shareId)
+        assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
+        assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
+    }
+
+    @Test
+    fun `a share of an item deleted and recreated while a resolved stop waits keeps its new link`() = runTest {
+        val provider = FakeSyncProvider()
+        val elsewhere = shareElsewhere(provider, "a.cho")
+        val localSource = FakeSharedLinksLocalSource()
+        val repository = repository(provider, localSource = localSource)
+        provider.onUploadDocument = { throw SyncNetworkException("offline") }
+        repository.stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
+        runCurrent()
+        assertEquals(
+            listOf(SharedLinksJournal.Entry.StopItem(kind = SharedLinkKind.SONG.id, fileName = "a.cho")),
+            SharedLinksJournal(localSource, testEnvironment()).load(),
+        )
+        provider.onUploadDocument = {}
+
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        repository.followRename(SharedLinkKind.SONG, "other.cho", "another.cho")
+        runCurrent()
+
+        assertTrue(share.shareId != elsewhere.shareId)
+        assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
+        assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
+        assertNull(localSource.journal)
     }
 
     @Test

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.sync.implementation.Device
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
@@ -17,10 +18,14 @@ import com.pandulapeter.campfire.data.sync.implementation.GIG
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -175,6 +180,50 @@ class SharedCopySyncTest {
         assertFalse(SETLIST.shareId in cloud.sharedFiles)
         assertEquals(emptyList(), cloud.registry().links)
         assertEquals(emptyList(), SharedLinksJournal(device.sharedLinks, testEnvironment()).load())
+    }
+
+    @Test
+    fun `the run and the applier never apply one entry twice`() = runTest {
+        val environment = testEnvironment()
+        val localSource = FakeSharedLinksLocalSource()
+        val mirror = SharedLinksMirror(localSource, environment)
+        val registry = SharedLinksRegistry(mirror, environment)
+        val journal = SharedLinksJournal(localSource, environment)
+        val applier = SharedLinksJournalApplier(journal, registry, environment)
+        val step = SharedCopySync(
+            libraryFileLocalSource = FakeLibraryFileLocalSource(),
+            contents = FakeSharedCopyContents(),
+            registry = registry,
+            mirror = mirror,
+            journal = journal,
+            logger = Logger.Standard,
+            buildNumber = 1,
+        )
+        cloud.share(SETLIST)
+        journal.append(listOf(SharedLinksJournal.Entry.Rename(from = GIG.name, to = "summer.setlist.json")))
+        val release = CompletableDeferred<Unit>()
+        cloud.onDownloadDocument = { release.await() }
+
+        val applying = launch { applier.apply(cloud) }
+        runCurrent()
+        // Launched, not called: the step waits for the applier to finish applying, and only then loads the journal.
+        val running = launch { step.synchronize(folder = cloud, index = emptyMap(), sharedFiles = emptyList(), registryRevision = null) }
+        runCurrent()
+        // Renamed back and forth while both wait: the last rename equals the one the applier is applying.
+        journal.append(
+            listOf(
+                SharedLinksJournal.Entry.Rename(from = "summer.setlist.json", to = GIG.name),
+                SharedLinksJournal.Entry.Rename(from = GIG.name, to = "summer.setlist.json"),
+            ),
+        )
+        cloud.onDownloadDocument = {}
+        release.complete(Unit)
+        applying.join()
+        running.join()
+
+        assertEquals(emptyList(), journal.load())
+        assertNull(localSource.journal)
+        assertEquals("summer.setlist.json", cloud.entryOf(SETLIST.shareId).fileName)
     }
 
     @Test
