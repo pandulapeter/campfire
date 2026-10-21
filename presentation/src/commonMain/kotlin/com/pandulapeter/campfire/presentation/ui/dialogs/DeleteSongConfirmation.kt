@@ -32,7 +32,7 @@ internal fun DeleteSongConfirmation(
     viewModel: CampfireViewModel,
     dialog: DialogType.DeleteSong,
 ) {
-    val shares by viewModel.syncController.shares.collectAsStateWithLifecycle()
+    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
     ConfirmationDialog(
         title = stringResource(Res.string.songs_delete_song),
         text = textResource(

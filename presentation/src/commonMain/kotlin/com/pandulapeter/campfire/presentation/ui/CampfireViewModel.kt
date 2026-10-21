@@ -71,7 +71,6 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUse
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
-import com.pandulapeter.campfire.domain.api.sharing.GetSharedLinksUseCase
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.library.IsFirstRunUseCase
@@ -173,7 +172,6 @@ class CampfireViewModel(
     getUserPreferences: GetUserPreferencesUseCase,
     private val getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
-    getSharedLinks: GetSharedLinksUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
     private val getSongContent: GetSongContentUseCase,
@@ -401,7 +399,6 @@ class CampfireViewModel(
         messageSink = messageSink,
         getSyncState = getSyncState,
         getSyncProviders = getSyncProviders,
-        getSharedLinks = getSharedLinks,
         connectSyncProvider = connectSyncProvider,
         disconnectSyncProvider = disconnectSyncProvider,
         cancelSyncConnection = cancelSyncConnection,

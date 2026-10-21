@@ -72,7 +72,7 @@ internal fun DeleteLibraryDialog(
     viewModel: CampfireViewModel,
 ) {
     val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
-    val shares by viewModel.syncController.shares.collectAsStateWithLifecycle()
+    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }

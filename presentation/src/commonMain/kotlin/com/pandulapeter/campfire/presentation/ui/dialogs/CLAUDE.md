@@ -53,5 +53,5 @@ away and uncovers the one under it as it was (its sheet, draft, and scroll posit
   offer Cancel, from the writing ones, which are never cancelled. There is no progress dialog: an import that cannot
   put its screen up yet is read meanwhile behind the list screens' progress bar; the demo import shows nothing.
 - The delete confirmations (`DeleteSongConfirmation`, `DeleteSetlistConfirmation`, `DeleteLibraryDialog`) say when the
-  item, or anything, is shared as a link, which the deletion stops: read from `SyncController.shares`, this device's
+  item, or anything, is shared as a link, which the deletion stops: read from `ShareLinkController.shares`, this device's
   copy of the account's list, never a request. A song only inside a shared setlist gets no word.

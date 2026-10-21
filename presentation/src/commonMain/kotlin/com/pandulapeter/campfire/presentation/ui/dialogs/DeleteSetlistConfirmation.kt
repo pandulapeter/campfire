@@ -29,7 +29,7 @@ internal fun DeleteSetlistConfirmation(
     viewModel: CampfireViewModel,
     dialog: DialogType.DeleteSetlist,
 ) {
-    val shares by viewModel.syncController.shares.collectAsStateWithLifecycle()
+    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
     ConfirmationDialog(
         title = stringResource(Res.string.setlists_delete_setlist),
         text = textResource(
