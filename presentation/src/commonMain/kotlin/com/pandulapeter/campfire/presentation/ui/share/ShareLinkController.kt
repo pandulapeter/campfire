@@ -45,35 +45,43 @@ internal class ShareLinkController(
     /** Everything shared from the connected account, as this device last saw it, most recently shared first. */
     val shares: StateFlow<List<Share>> = getSharedLinks().asState(scope, emptyList())
 
-    private val _creation = MutableStateFlow<ShareCreation?>(null)
+    private val _creations = MutableStateFlow<Map<ShareTarget, ShareCreation>>(emptyMap())
 
-    /** The last share asked for, while it is made and after, until it is asked again or forgotten. */
-    val creation = _creation.asStateFlow()
+    /**
+     * The last share asked for of each song and setlist, while it is made and after, until it is asked again or forgotten.
+     * One per item rather than one in all, so that an item's Create link is not refused while another's copy is still
+     * being uploaded after its screen went: two shares made at once never clobber each other in the account's list.
+     */
+    val creations = _creations.asStateFlow()
 
     private val _stoppingShareIds = MutableStateFlow(emptySet<String>())
 
     /** The shares being stopped, which are still listed until the account's list says otherwise. */
     val stoppingShareIds = _stoppingShareIds.asStateFlow()
 
-    /** Shares [target] as a link, see [CreateShareLinkUseCase]; one at a time, a second request while one runs ignored. */
+    /**
+     * Shares [target] as a link, see [CreateShareLinkUseCase]; one at a time per item, a second request for the same item
+     * while it runs ignored.
+     */
     fun create(target: ShareTarget, title: String) {
-        if (_creation.value?.let { it.result == null } == true) return
-        _creation.value = ShareCreation(target = target, result = null)
+        if (_creations.value[target]?.let { it.result == null } == true) return
+        _creations.update { it + (target to ShareCreation(target = target, result = null)) }
         scope.launch {
             val result = createShareLink(kind = target.kind, fileName = target.fileName, title = title)
-            _creation.update { if (it?.target == target) it.copy(result = result) else it }
+            // Only into an entry still there, so that one cleared meanwhile by a stop is not put back.
+            _creations.update { map -> map[target]?.let { map + (target to it.copy(result = result)) } ?: map }
         }
     }
 
     /** Forgets how sharing [target] went, so that its screen offers to share it afresh; one still running is kept. */
-    fun forgetCreation(target: ShareTarget) = _creation.update { if (it?.target == target && it.result != null) null else it }
+    fun forgetCreation(target: ShareTarget) = _creations.update { map -> if (map[target]?.result != null) map - target else map }
 
     /** Stops sharing [share], saying so where it could not be done. */
     fun stop(share: Share) {
         if (share.shareId in _stoppingShareIds.value) return
         _stoppingShareIds.update { it + share.shareId }
         // A share made here a moment ago is otherwise still answered by its creation once the list has let it go.
-        _creation.update { if ((it?.result as? CreateShareResult.Shared)?.share?.shareId == share.shareId) null else it }
+        _creations.update { map -> map.filterValues { (it.result as? CreateShareResult.Shared)?.share?.shareId != share.shareId } }
         scope.launch {
             try {
                 stopSharing(share.shareId)?.let { messageSink.sendMessage(Message.StopSharingFailed(it)) }
@@ -92,7 +100,7 @@ internal class ShareLinkController(
     fun stopEverything() {
         if (_isStoppingEverything.value) return
         _isStoppingEverything.value = true
-        _creation.update { if (it?.result is CreateShareResult.Shared) null else it }
+        _creations.update { map -> map.filterValues { it.result !is CreateShareResult.Shared } }
         scope.launch {
             try {
                 stopSharingEverything()?.let { messageSink.sendMessage(Message.StopSharingEverythingFailed(it)) }

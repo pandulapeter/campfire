@@ -70,9 +70,9 @@ internal fun rememberLinkExport(
     val controller = viewModel.shareLinkController
     val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
     val shares by controller.shares.collectAsStateWithLifecycle()
-    val creation by controller.creation.collectAsStateWithLifecycle()
+    val creations by controller.creations.collectAsStateWithLifecycle()
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
-    val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creation, stoppingShareIds = stoppingShareIds)
+    val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creations[target], stoppingShareIds = stoppingShareIds)
     val link = (state as? LinkExportState.Shared)?.share?.link?.landingUrl
     val isStopAsked = rememberSaveable(dialog) { mutableStateOf(false) }
     // A question restored after process death over a share stopped meanwhile is dropped, so it does not come back over

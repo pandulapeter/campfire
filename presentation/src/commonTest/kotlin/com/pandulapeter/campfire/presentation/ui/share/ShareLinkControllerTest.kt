@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ShareLinkControllerTest {
@@ -43,6 +44,10 @@ class ShareLinkControllerTest {
         sharedAt = null,
         state = ShareState.OK,
     )
+
+    private val songA = ShareTarget(SharedLinkKind.SONG, "a.cho")
+
+    private val songB = ShareTarget(SharedLinkKind.SONG, "b.cho")
 
     @Test
     fun `a share is listed as stopping until its stop is over, and a second request meanwhile is ignored`() = runTest {
@@ -88,7 +93,54 @@ class ShareLinkControllerTest {
         )
     }
 
-    private fun TestScope.controller(stops: Stops): Pair<ShareLinkController, MessageSink> {
+    @Test
+    fun `an item's link is made while another's is still being made, each ending in its own entry`() = runTest {
+        val creations = Creations()
+        val (controller, _) = controller(creations = creations)
+
+        controller.create(songA, title = "A")
+        runCurrent()
+        controller.create(songB, title = "B")
+        runCurrent()
+
+        assertEquals(listOf("a.cho", "b.cho"), creations.fileNames)
+        creations.answer("b.cho", CreateShareResult.TooLarge)
+        creations.answer("a.cho", CreateShareResult.Missing)
+        runCurrent()
+        assertEquals(CreateShareResult.Missing, controller.creations.value[songA]?.result)
+        assertEquals(CreateShareResult.TooLarge, controller.creations.value[songB]?.result)
+    }
+
+    @Test
+    fun `a second create link for an item whose link is being made is ignored`() = runTest {
+        val creations = Creations()
+        val (controller, _) = controller(creations = creations)
+
+        controller.create(songA, title = "A")
+        runCurrent()
+        controller.create(songA, title = "A")
+        runCurrent()
+
+        assertEquals(listOf("a.cho"), creations.fileNames)
+    }
+
+    @Test
+    fun `forgetting a creation keeps one still running and drops one that is over`() = runTest {
+        val creations = Creations()
+        val (controller, _) = controller(creations = creations)
+
+        controller.create(songA, title = "A")
+        runCurrent()
+        controller.forgetCreation(songA)
+        assertEquals(ShareCreation(songA, result = null), controller.creations.value[songA])
+
+        creations.answer("a.cho", CreateShareResult.TooLarge)
+        runCurrent()
+        controller.forgetCreation(songA)
+        assertNull(controller.creations.value[songA])
+    }
+
+    private fun TestScope.controller(stops: Stops = Stops(), creations: CreateShareLinkUseCase = Unused): Pair<ShareLinkController, MessageSink> {
         val messages = MessageSink(backgroundScope)
         val controller = ShareLinkController(
             scope = backgroundScope,
@@ -96,12 +148,27 @@ class ShareLinkControllerTest {
             getSharedLinks = object : GetSharedLinksUseCase {
                 override fun invoke() = flowOf(listOf(share))
             },
-            createShareLink = Unused,
+            createShareLink = creations,
             stopSharing = stops,
             stopSharingEverything = stops,
             loadSharedLinks = Unused,
         )
         return controller to messages
+    }
+
+    /** Makes each link only once the test answers for its file. */
+    private class Creations : CreateShareLinkUseCase {
+
+        private val answers = mutableMapOf<String, CompletableDeferred<CreateShareResult>>()
+
+        val fileNames = mutableListOf<String>()
+
+        fun answer(fileName: String, result: CreateShareResult) = answers.getValue(fileName).complete(result)
+
+        override suspend operator fun invoke(kind: SharedLinkKind, fileName: String, title: String): CreateShareResult {
+            fileNames += fileName
+            return answers.getOrPut(fileName) { CompletableDeferred() }.await()
+        }
     }
 
     private class Stops(

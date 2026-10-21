@@ -49,8 +49,8 @@ The export screen. The PDF pipeline is in `ui/print/CLAUDE.md`.
   the last Create link went. Each failure is shown by what can be done: Connect again (missing
   scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB (`LinkButton`, in
   `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
-- A creation runs in the view model's scope and is forgotten when the screen goes; a share just made shows before the
-  list catches up. Song ticks are hidden: a link shares the whole setlist. Offered in read only mode.
+- A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
+  Create link), and is forgotten when the screen goes; a share just made shows before the list catches up. Song ticks are hidden: a link shares the whole setlist. Offered in read only mode.
 - Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
   too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Share
   in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,

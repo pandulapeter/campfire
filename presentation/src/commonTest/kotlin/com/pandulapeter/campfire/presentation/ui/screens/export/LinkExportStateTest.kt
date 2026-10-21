@@ -107,6 +107,13 @@ class LinkExportStateTest {
     }
 
     @Test
+    fun `another item's share being made leaves this one's create link to press`() {
+        val state = stateOf(connected, creation = ShareCreation(ShareTarget(SharedLinkKind.SONG, "a.cho"), result = null))
+        assertEquals(LinkExportState.NotShared, state)
+        assertEquals(LinkAction.CREATE, linkActionOf(state))
+    }
+
+    @Test
     fun `a failure is told apart by what can be done about it`() {
         fun actionAfter(result: CreateShareResult) = linkActionOf(stateOf(connected, creation = ShareCreation(target, result)))
         assertEquals(LinkAction.CONNECT_AGAIN, actionAfter(CreateShareResult.Failed(SharingFailure.SCOPE_MISSING)))
