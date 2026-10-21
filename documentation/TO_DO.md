@@ -8,16 +8,16 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-## Short-term (in this version)
-### Improvements
-- Update store descriptions to include the chord diagram library and other new features + new title
-
-## Midterm (in the next versions)
+- Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
+- Update third party dependencies
+- Sharing landing page should display the artist of the shared song, if available
+- Review scale suggestions for Aerosmith - Pink
+- Android force update doesn't seem to work
+- Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device
+- Fast scrolling is glitchy, especially on Setlists
 - Rename master branch to main
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-
-## Long-term
 - Streaming zip writer on all platforms
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
