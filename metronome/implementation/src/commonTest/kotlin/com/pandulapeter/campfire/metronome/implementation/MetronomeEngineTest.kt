@@ -262,13 +262,16 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `a preview while playing is mixed into the click without opening the output again`() = runTest {
+    fun `a preview while playing sounds nothing of its own and leaves the output open`() = runTest {
         val engine = engine()
         engine.start(pattern)
         runCurrent()
         engine.preview(MetronomeSound.BEEP, BeatLevel.NORMAL)
         advanceTimeBy(5_000)
         runCurrent()
+        val clicks = mutableListOf<MetronomeSound>()
+        output.stream?.schedule(nowFrame = 0, untilFrame = 0) { _, sound, _, _ -> clicks += sound }
+        assertEquals(emptyList(), clicks)
         assertEquals(listOf(false), output.starts)
         assertEquals(0, output.stopCount)
         assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)

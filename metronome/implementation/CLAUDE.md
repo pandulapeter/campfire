@@ -38,8 +38,9 @@ testable on virtual time. One `AudioOutput` per platform source set, found by `@
 - `AudioOutputStart.Unavailable` (no device, refused `AudioContext`) swaps in `SilentAudioOutput` clocked by
   `TimeSource.Monotonic` (`audioIssue = UNAVAILABLE`), so the UI has one beat source. `Refused` (audio taken by a call)
   ends in `Stopped(reason)`.
-- A preview while stopped holds the output open 1.5 s after the last tap, with preview focus (Android transient duck,
-  iOS ambient), not playback's.
+- A preview sounds only while stopped (a playing click already changes sound on its next tick; a preview mixed in
+  would be a doubled beat), holding the output open 1.5 s after the last tap, with preview focus (Android transient
+  duck, iOS ambient), not playback's.
 
 ## Outputs
 

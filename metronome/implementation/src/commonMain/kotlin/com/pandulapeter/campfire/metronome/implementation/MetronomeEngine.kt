@@ -120,28 +120,29 @@ internal class MetronomeEngine(
     }
 
     override fun preview(sound: MetronomeSound, level: BeatLevel) = onEngine {
-        if (_playback.value !is MetronomePlayback.Playing) {
-            if (previewEndJob == null) {
-                closeOutput()
-                val result = output.start(
-                    isPreview = true,
-                    createStream = streamFor(pattern = null),
-                    listener = listenerFor(++session),
-                )
-                if (result !is AudioOutputStart.Started) {
-                    stream = null
-                    return@onEngine
-                }
-                activeOutput = output
+        // A playing click is the preview: the sound picked reaches it from the next click, and one more mixed in between
+        // two would be heard as a beat played twice.
+        if (_playback.value is MetronomePlayback.Playing) return@onEngine
+        if (previewEndJob == null) {
+            closeOutput()
+            val result = output.start(
+                isPreview = true,
+                createStream = streamFor(pattern = null),
+                listener = listenerFor(++session),
+            )
+            if (result !is AudioOutputStart.Started) {
+                stream = null
+                return@onEngine
             }
-            // The output is kept for a moment after a preview rather than closed with its last sample, so that trying
-            // the sounds one after the other does not take and give back the audio for every tap.
-            previewEndJob?.cancel()
-            previewEndJob = scope.launch(confined) {
-                delay(PREVIEW_HOLD_MILLIS)
-                previewEndJob = null
-                closeOutput()
-            }
+            activeOutput = output
+        }
+        // The output is kept for a moment after a preview rather than closed with its last sample, so that trying
+        // the sounds one after the other does not take and give back the audio for every tap.
+        previewEndJob?.cancel()
+        previewEndJob = scope.launch(confined) {
+            delay(PREVIEW_HOLD_MILLIS)
+            previewEndJob = null
+            closeOutput()
         }
         stream?.preview(sound, level)
     }

@@ -59,8 +59,9 @@ public interface Metronome {
     public fun update(pattern: MetronomePattern, fromNextBar: Boolean)
 
     /**
-     * Plays the one click [sound] makes at [level], for choosing a sound: mixed into a playing click, or on its own
-     * when stopped. Changes nothing about [playback].
+     * Plays the one click [sound] makes at [level], for choosing a sound while the click is stopped. A playing click
+     * ignores it, since the sound picked reaches it from the next click with [update], and a preview mixed in as well
+     * would be heard as a beat played twice. Changes nothing about [playback].
      */
     public fun preview(sound: MetronomeSound, level: BeatLevel)
 
