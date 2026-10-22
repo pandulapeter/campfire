@@ -119,7 +119,13 @@ internal fun TestScope.syncRepository(
             environment = environment,
         ),
         scheduler = scheduler,
-        remoteWatcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, connectivityMonitor = connectivityMonitor, environment = environment),
+        remoteWatcher = SyncRemoteWatcher(
+            runner = runner,
+            scheduler = scheduler,
+            connectivityMonitor = connectivityMonitor,
+            registry = SharedLinksRegistry(sharedLinksMirror, environment),
+            environment = environment,
+        ),
     )
 }
 

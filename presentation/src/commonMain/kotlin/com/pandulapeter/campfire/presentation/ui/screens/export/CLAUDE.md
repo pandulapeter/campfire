@@ -55,7 +55,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB (`LinkButton`, in
   `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
 - A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
-  Create link), and is forgotten when the screen goes; a share just made shows before the list catches up. Song ticks are hidden: a link shares the whole setlist. Offered in read only mode.
+  Create link), and is forgotten when the screen goes; a share just made shows before the list catches up, and is
+  forgotten once the list names it, so a stop on another device clears an open screen. Song ticks are hidden: a link
+  shares the whole setlist. Offered in read only mode.
 - Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
   too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Send
   link in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,

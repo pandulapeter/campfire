@@ -144,6 +144,27 @@ class ShareLinkControllerTest {
     }
 
     @Test
+    fun `a share made here goes once the account's list has named it and then let it go`() = runTest {
+        val listed = MutableStateFlow(emptyList<Share>())
+        val creations = Creations()
+        val (controller, _) = controller(creations = creations, shares = listed)
+        val made = share.copy(fileName = "a.cho")
+
+        controller.create(songA, title = "A")
+        runCurrent()
+        creations.answer("a.cho", CreateShareResult.Shared(made))
+        runCurrent()
+        assertEquals(CreateShareResult.Shared(made), controller.creations.value[songA]?.result)
+
+        listed.value = listOf(made)
+        runCurrent()
+        listed.value = emptyList()
+        runCurrent()
+
+        assertNull(controller.creations.value[songA])
+    }
+
+    @Test
     fun `whether stops are pending follows the use case`() = runTest {
         val pendingStops = MutableStateFlow(false)
         val (controller) = controller(pendingStops = pendingStops)
@@ -160,13 +181,14 @@ class ShareLinkControllerTest {
         stops: Stops = Stops(),
         creations: CreateShareLinkUseCase = Unused,
         pendingStops: Flow<Boolean> = flowOf(false),
+        shares: Flow<List<Share>> = flowOf(listOf(share)),
     ): Pair<ShareLinkController, MessageSink> {
         val messages = MessageSink(backgroundScope)
         val controller = ShareLinkController(
             scope = backgroundScope,
             messageSink = messages,
             getSharedLinks = object : GetSharedLinksUseCase {
-                override fun invoke() = flowOf(listOf(share))
+                override fun invoke() = shares
             },
             getPendingShareStops = object : GetPendingShareStopsUseCase {
                 override fun invoke() = pendingStops

@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -58,6 +59,16 @@ internal class ShareLinkController(
      * being uploaded after its screen went: two shares made at once never clobber each other in the account's list.
      */
     val creations = _creations.asStateFlow()
+
+    init {
+        // A share made here stands in for the account's list only until the list names it: from then on the list alone
+        // says whether it is shared, so that a share stopped on another device goes from an open screen too.
+        scope.launch {
+            combine(shares, _creations) { listed, _ -> listed.mapTo(mutableSetOf()) { it.shareId } }.collect { listedIds ->
+                _creations.update { map -> map.filterValues { (it.result as? CreateShareResult.Shared)?.share?.shareId !in listedIds } }
+            }
+        }
+    }
 
     private val _stoppingShareIds = MutableStateFlow(emptySet<String>())
 

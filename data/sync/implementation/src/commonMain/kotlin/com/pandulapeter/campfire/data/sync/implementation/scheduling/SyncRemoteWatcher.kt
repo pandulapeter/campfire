@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkExceptio
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.annotation.Single
@@ -25,13 +27,15 @@ import kotlin.time.Duration.Companion.seconds
  * Brings another device's changes to this one while the app is in front: waits on the provider's feed of changes from
  * where the last completed run left the folder, and asks for an automatic run once something there is not this device's
  * own doing. Nothing is watched before a run has completed, nor while one is going (see [SyncRunner.watchPoint]): the
- * run that follows a change hands over a new point to watch from.
+ * run that follows a change hands over a new point to watch from. A change of the shared links' list alone starts no run,
+ * which nothing it settles needs, but reads the list again, so that a share made or stopped elsewhere reaches the screens.
  */
 @Single
 internal class SyncRemoteWatcher(
     private val runner: SyncRunner,
     private val scheduler: SyncRunScheduler,
     private val connectivityMonitor: ConnectivityMonitor,
+    private val registry: SharedLinksRegistry,
     private val environment: SyncEnvironment,
 ) {
 
@@ -65,8 +69,10 @@ internal class SyncRemoteWatcher(
                 val isOtherDevices = point.hasOtherChangesThanPreferences(changes) ||
                     SyncedPreferencesDocument.FILE_NAME in changes.documents &&
                     point.isOtherPreferences(point.folder.downloadFolderDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
-                // Moved on, and the waits started over, only once the changes are judged: a preferences download that
-                // failed asks again about the same changes, after waits that keep growing while it fails.
+                // The run another device's change brings reads the list itself.
+                if (!isOtherDevices && SharedLinksFormat.NAME in changes.documents) registry.read(point.folder)
+                // Moved on, and the waits started over, only once the changes are judged: a preferences download or a read
+                // of the list that failed asks again about the same changes, after waits that keep growing while it fails.
                 cursor = changes.cursor
                 failures = 0
                 if (isOtherDevices) {

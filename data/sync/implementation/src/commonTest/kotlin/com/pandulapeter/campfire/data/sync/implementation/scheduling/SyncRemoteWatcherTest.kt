@@ -34,6 +34,12 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
+import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksDocument
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
+import com.pandulapeter.campfire.data.sync.implementation.shared.mirrorOf
 import com.pandulapeter.campfire.data.sync.implementation.shared.registry
 import com.pandulapeter.campfire.data.sync.implementation.shared.share
 import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
@@ -196,6 +202,20 @@ class SyncRemoteWatcherTest {
         world.provider.share(sharedEntry(shareId = "songshare0000002", kind = SharedLinkKind.SONG, fileName = song(1).name))
         advanceTimeBy(1.hours)
 
+        assertEquals(1, world.runs.count)
+    }
+
+    @Test
+    fun `a share stopped elsewhere leaves the shared links' list without a run`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.provider.share(sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = song(1).name))
+        world.synchronizeAndWatch()
+        assertEquals(listOf("songshare0000001"), mirrorOf(world.sharedLinks).links.map { it.shareId })
+
+        world.provider.writeDocumentElsewhere(SharedLinksFormat.NAME, SharedLinksFormat.encode(SharedLinksDocument()).encodeToByteArray())
+        advanceTimeBy(1.hours)
+
+        assertEquals(emptyList(), mirrorOf(world.sharedLinks).links)
         assertEquals(1, world.runs.count)
     }
 
@@ -393,6 +413,7 @@ class SyncRemoteWatcherTest {
         val provider: FakeSyncProvider,
         val local: FakeLibraryFileLocalSource,
         val connectivity: FakeConnectivityMonitor,
+        val sharedLinks: FakeSharedLinksLocalSource,
     ) {
 
         /** A first run, then the watching the app does while in front, for as long as the test lasts. */
@@ -414,6 +435,7 @@ class SyncRemoteWatcherTest {
         val runs = RunCounter()
         val provider = FakeSyncProvider(files = remoteFiles, account = TEST_ACCOUNT, ignoresCase = ignoresCase)
         val syncProviders = SyncProviders(listOf(provider))
+        val sharedLinks = FakeSharedLinksLocalSource()
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
         }
@@ -430,7 +452,7 @@ class SyncRemoteWatcherTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
-            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment),
+            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment, localSource = sharedLinks),
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(RecordingSongRepository(), RecordingSetlistRepository(), environment),
             stateHolder = stateHolder,
@@ -448,11 +470,18 @@ class SyncRemoteWatcherTest {
         return World(
             scope = this,
             scheduler = scheduler,
-            watcher = SyncRemoteWatcher(runner = runner, scheduler = scheduler, connectivityMonitor = connectivityMonitor, environment = environment),
+            watcher = SyncRemoteWatcher(
+                runner = runner,
+                scheduler = scheduler,
+                connectivityMonitor = connectivityMonitor,
+                registry = SharedLinksRegistry(SharedLinksMirror(sharedLinks, environment), environment),
+                environment = environment,
+            ),
             runs = runs,
             provider = provider,
             local = libraryFileLocalSource,
             connectivity = connectivityMonitor,
+            sharedLinks = sharedLinks,
         )
     }
 

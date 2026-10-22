@@ -81,4 +81,5 @@
   whatever the library holds; such an entry is never built again.
 - Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is
   `SyncSummary.haveSharedCopiesFailed`, which never makes a run incomplete.
-- The feed ignores `shared-links.json` (`SyncWatchPoint`): a share made or stopped anywhere starts no run.
+- A feed change of `shared-links.json` alone starts no run (`SyncWatchPoint`) but reads the list into the mirror
+  (`SyncRemoteWatcher`): a share made or stopped anywhere reaches every device in front without a run.
