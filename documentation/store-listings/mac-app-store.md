@@ -104,7 +104,12 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
 
-New in 5.0.0, and where to find it:
+New in 5.0.1, and where to find it:
+- Export screen: "Export" in a song's or setlist's menu now offers Link first, and the PDF options are grouped into Page, Running order, and Song sheets.
+- The app's log: Settings → About has rows to email, share, or save it, each after a dialog saying what it holds; after a crash the next launch offers to send it. Nothing is sent by the app itself.
+- Metronome vibration: the Metronome screen's vibration switch now also covers subdivisions, more lightly than the beats.
+
+Also new in 5.0.0, and where to find it:
 - Scales and Chords tabs: two new tabs (under the Tools tab when the window is too short for every tab). Scales draws and plays every scale and mode on the chosen instrument; Chords lists each key's common chords and finds any chord by name.
 - Scale suggestions: an open song shows the scales that fit it after its chords.
 - More instruments and tunings: the instrument is picked in an open song's first section, or on the Tuner, Chords, and Scales tabs. Chord diagrams now cover mandolin and banjo, and a song's tabs are moved to the chosen instrument.
