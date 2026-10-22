@@ -22,6 +22,7 @@
   background run would stop the Android service.
 - `SyncLifecycleEffects`: a run on every ON_START but the first (the launch's run is the restore's), and the folder
   watched while STARTED. `SyncProgressBar` is the only sign of a run outside Settings: a trackless line along the top
-  of the window, over everything `CampfireApp` draws, for every run, automatic ones included.
+  of the window, over everything `CampfireApp` draws, for every run that has files to transfer, automatic ones
+  included; a run that only lists both sides never shows it, and once shown it stays at least 500 ms.
 - On a launch with no preferences document the stored credentials are forgotten inside `startRestoring`'s coroutine,
   before `restore` reads them.

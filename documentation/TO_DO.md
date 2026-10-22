@@ -9,8 +9,7 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
-- Debounce the loading indicator appearance
-- Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device
+- Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device - I would expect the first device's screen to get updated and the shared link to disappear. Is this an edge-case oversight or is the entire sync not as reactive / real time as I thought?
 - The website's sharing landing page should display the artist of the shared song, if available
 - Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
 - Tuner glitch on initial open (warning animates in for a few frames before disappearing), on web
