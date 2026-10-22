@@ -491,7 +491,7 @@ class SetlistRepositoryImplTest {
 
         override suspend fun loadSetlistFileSizes() = files.mapValues { (_, setlist) -> setlist.size }
 
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
+        override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
 
         /** A file whose deletion fails, as one held open by another program would on Windows. */
         var undeletableFileName: String? = null

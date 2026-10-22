@@ -63,6 +63,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -138,8 +141,7 @@ internal fun ExportScreen(
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false
         try {
-            state.source = viewModel.exportController.preparePrintSource(dialog, tabNoticeLabels)
-            if (state.selected == null) state.selected = state.source!!.songs.indices.toSet()
+            state.source = viewModel.exportController.preparePrintSource(dialog, tabNoticeLabels, labels.sections)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -156,14 +158,11 @@ internal fun ExportScreen(
     }
     val songsCount = pluralStringResource(Res.plurals.songs_selection_count, dialog.songs.size, dialog.songs.size)
     // Several songs have no title of their own, so the file is titled with how many of them it holds.
-    val chosenCount = state.selected.orEmpty().size
-    val chosenSongsTitle = pluralStringResource(Res.plurals.songs_selection_count, chosenCount, chosenCount)
-    val chosenSource = remember(state.source, state.selected, date, chosenSongsTitle) {
+    val titledSource = remember(state.source, date, songsCount) {
         state.source?.let { source ->
             source.copy(
-                title = if (source.kind == PrintSource.Kind.SONGS) chosenSongsTitle else source.title,
+                title = if (source.kind == PrintSource.Kind.SONGS) songsCount else source.title,
                 date = date,
-                songs = source.songs.filterIndexed { index, _ -> index in state.selected.orEmpty() },
             )
         }
     }
@@ -171,12 +170,22 @@ internal fun ExportScreen(
     // kept for the switch to be turned back on.
     val areChordsEnabled = preferences?.areChordsEnabled != false
     val isMetronomeEnabled = preferences?.isMetronomeEnabled != false
-    val printedSettings = state.settings.withinFeatures(areChordsEnabled = areChordsEnabled, isMetronomeEnabled = isMetronomeEnabled)
-    val laidOut by produceLaidOutDocument(state = state, source = chosenSource, settings = printedSettings, labels = labels, renderer = renderer, newRenderer = ::newRenderer)
+    val areScaleSuggestionsEnabled = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled
+    val printedSettings = state.settings.withinFeatures(
+        areChordsEnabled = areChordsEnabled,
+        areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
+        isMetronomeEnabled = isMetronomeEnabled,
+    )
+    val printedSource = rememberPrintScales(
+        source = titledSource,
+        isShown = printedSettings.showChords && printedSettings.showScales,
+        notation = (preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation(),
+    )
+    val laidOut by produceLaidOutDocument(state = state, source = printedSource, settings = printedSettings, labels = labels, renderer = renderer, newRenderer = ::newRenderer)
     // Only a document laid out from what the screen shows now may be saved: the producer restarts a frame after an option
     // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
     // since it is remembered and an equality check would walk every song in it.
-    val isCurrent = laidOut.let { it != null && it.source === chosenSource && it.settings == printedSettings && it.labels == labels }
+    val isCurrent = laidOut.let { it != null && it.source === printedSource && it.settings == printedSettings && it.labels == labels }
     // The screen stays composed while it slides away, after its settings were flushed and its drawing cancelled, so
     // nothing tapped in that moment may change an option or start an export. Equality, since an equal export opened
     // again during the slide is this one.
@@ -194,6 +203,8 @@ internal fun ExportScreen(
     val isFiles = state.settings.format == PrintSettings.Format.FILES
     val isLink = state.settings.format == PrintSettings.Format.LINK
     val isPdf = state.settings.format == PrintSettings.Format.PDF
+    // The floating controls of the format the screen opened on come with the screen; one the user picks animates in.
+    val isFirstShownAtOnce = state.pickedFormat == null
     val link = shareTargetOf(dialog)?.let { target ->
         rememberLinkExport(
             viewModel = viewModel,
@@ -204,8 +215,7 @@ internal fun ExportScreen(
             isOpen = isOpen,
         )
     }
-    val chosenSongFileNames = chosenSongFileNames(source = state.source, selected = state.selected.orEmpty())
-    val canExportFiles = canExportFiles(source = state.source, selected = state.selected.orEmpty())
+    val canExportFiles = canExportFiles(source = state.source)
     val hasPages = laidOut?.document?.pages?.isNotEmpty() == true
     val pageCount = laidOut?.document?.pages?.size ?: 0
     val pagerState = rememberPagerState(initialPage = state.page.coerceIn(0, maxOf(0, pageCount - 1))) { pageCount }
@@ -252,7 +262,7 @@ internal fun ExportScreen(
                 // From the screen's own settings, which the saved preferences may not have caught up with yet.
                 viewModel.exportController.exportPdf(
                     filePicker = filePicker,
-                    fileName = pdfFileName(state.source!!, state.settings),
+                    fileName = pdfFileName(state.source!!),
                     dialog = dialog,
                     pageCount = snapshot.pages.size,
                     isShare = request == ExportRequest.SHARE,
@@ -267,7 +277,7 @@ internal fun ExportScreen(
         if (isOpen && !isFileTransferActive) {
             when {
                 isLink -> if (request == ExportRequest.SHARE) link?.onShare?.invoke() else link?.onSaveQrCode?.invoke()
-                isFiles -> viewModel.exportController.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE)
+                isFiles -> viewModel.exportController.exportFiles(filePicker, dialog, isShare = request == ExportRequest.SHARE)
                 else -> requestedExport = request
             }
         }
@@ -363,7 +373,6 @@ internal fun ExportScreen(
                                         modifier = modifier,
                                         state = state,
                                         format = state.settings.format,
-                                        setlistFileName = dialog.setlist?.fileName,
                                         isSideBySide = isSideBySide,
                                         bottomInset = bottomInset,
                                         laidOut = laidOut,
@@ -378,13 +387,15 @@ internal fun ExportScreen(
                                             state.pageView = it
                                         },
                                         hasPages = hasPages,
+                                        isFirstShownAtOnce = isFirstShownAtOnce,
                                         onTurn = turnPage,
                                         linkPreview = {
                                             if (link != null) {
                                                 LinkPreview(
-                                                    modifier = Modifier.fillMaxSize(),
+                                                    modifier = if (isSideBySide) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
                                                     state = link.state,
                                                     kind = shareTargetOf(dialog)!!.kind,
+                                                    isInList = !isSideBySide,
                                                     contentPadding = { shown ->
                                                         linkPreviewPaddingFor(
                                                             isSideBySide = isSideBySide,
@@ -406,11 +417,10 @@ internal fun ExportScreen(
                                         formats = formats,
                                         areChordsEnabled = areChordsEnabled,
                                         isMetronomeEnabled = isMetronomeEnabled,
-                                        selected = state.selected.orEmpty(),
+                                        areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
                                         // Scroll under the controls, with enough trailing space to bring the last option above them.
                                         bottomPadding = bottomInset + if (isSideBySide) 8.dp else FLOATING_CONTROLS_CLEARANCE,
-                                        header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(STACKED_PREVIEW_HEIGHT)) } },
-                                        onSelected = { if (isOpen) state.selected = it },
+                                        header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth()) } },
                                         onSettings = update,
                                         linkOptions = {
                                             LinkOptions(
@@ -434,6 +444,7 @@ internal fun ExportScreen(
                             .align(Alignment.TopEnd)
                             .padding(PAGE_MARGIN),
                         isVisible = isSideBySide && content == PrintScreenContent.LOADED && isPdf && hasPages,
+                        isFirstShownAtOnce = isFirstShownAtOnce,
                         page = pagerState.currentPage,
                         pageCount = pageCount,
                         onTurn = turnPage,
@@ -447,6 +458,7 @@ internal fun ExportScreen(
                     .padding(PAGE_MARGIN)
                     .onSizeChanged { saveButtonWidth = with(density) { it.width.toDp() } },
                 isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow && !isLink,
+                isFirstShownAtOnce = isFirstShownAtOnce,
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
                 onCancel = viewModel.exportController::cancelPdfExport,
@@ -457,6 +469,7 @@ internal fun ExportScreen(
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(PAGE_MARGIN),
                 action = link?.action?.takeIf { isLink && content == PrintScreenContent.LOADED },
+                isFirstShownAtOnce = isFirstShownAtOnce,
                 isInShortPane = isShortWindow && isBodySideBySide,
                 onClick = { link?.onAction?.invoke(it) },
             )

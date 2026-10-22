@@ -20,7 +20,8 @@ The PDF pipeline behind the export screen (`ui/screens/export`, which has the fo
 viewer shows it (transposition, chord spelling); a missing/unreadable file is a `PrintSong` with no song, keeping its
 slot. `PrintSong.chords` (`printChordsOf`, the reader's instrument) is collected whether or not diagrams are asked for,
 so toggling them re-lays out rather than re-reads; none while chords or diagrams are off in the app (which also hides
-the option). The setlist date uses the date picker's formatter in the app's language (`calendarLocale`).
+the option). `PrintSong.scaleGroups` (`printScaleGroupsOf`, the song details screen's Scales section) likewise, put in
+words by the screen (`rememberPrintScales`) only while printed, since the layout cannot read resources. The setlist date uses the date picker's formatter in the app's language (`calendarLocale`).
 
 ### Layout
 
@@ -33,7 +34,7 @@ the option). The setlist date uses the date picker's formatter in the app's lang
 - A chorus bar is a `PrintRule` per row so it continues across columns and pages. `wrapPrintText` never breaks inside a
   grapheme cluster.
 - Diagram names and the instrument/tuning line above diagrams (`PrintLabels.chordTuning`, printed where not guitar or
-  keyboard, or not standard tuning) are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
+  keyboard, or not standard tuning) and the suggested scales under the diagrams are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
 - The playing row (`playingDetails`): key, transposition, and non-zero capo with `showKey` (on the keyboard the capo is
   counted into the transposition, as on screen); tempo and time signature with `showTempo`, which also prints later
   changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the

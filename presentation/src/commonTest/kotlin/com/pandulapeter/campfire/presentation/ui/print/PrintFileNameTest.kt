@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -18,20 +17,27 @@ internal class PrintFileNameTest {
     @Test
     fun `song is named by its header rather than its library file`() = assertEquals(
         "tukorfurogep-arviz.pdf",
-        pdfFileName(songSource(fileName = "Foo Bar (2).cho", title = "Árvíz", artist = "Tükörfúrógép"), PrintSettings()),
+        pdfFileName(songSource(fileName = "Foo Bar (2).cho", title = "Árvíz", artist = "Tükörfúrógép")),
     )
 
     @Test
     fun `song with blank artist is named by its title alone`() = assertEquals(
         "hallelujah.pdf",
-        pdfFileName(songSource(fileName = "hallelujah_2.cho", title = "Hallelujah", artist = " "), PrintSettings()),
+        pdfFileName(songSource(fileName = "hallelujah_2.cho", title = "Hallelujah", artist = " ")),
     )
 
     @Test
     fun `setlist song sheets are named by the setlist title`() = assertEquals(
         "summer_set_2026.pdf",
-        pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.SONG_SHEETS)),
+        pdfFileName(setlistSource()),
     )
+
+    @Test
+    fun `the library's own files are named as the export names them, a song keeping its stored extension`() {
+        assertEquals("tukorfurogep-arviz.chopro", filesFileName(songSource(fileName = "Foo Bar (2).chopro", title = "Árvíz", artist = "Tükörfúrógép")))
+        assertEquals("hallelujah.cho", filesFileName(songSource(fileName = "hallelujah", title = "Hallelujah", artist = "")))
+        assertEquals("summer_set_2026.zip", filesFileName(setlistSource()))
+    }
 
     @Test
     fun `a link's qr code is named after the song beside its pdf`() = assertEquals(
@@ -46,12 +52,6 @@ internal class PrintFileNameTest {
     )
 
     @Test
-    fun `setlist running order is told apart from its song sheets`() = assertEquals(
-        "summer_set_2026-running_order.pdf",
-        pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)),
-    )
-
-    @Test
     fun `several songs are named the way their zip is`() = assertEquals(
         "campfire_songs.pdf",
         pdfFileName(
@@ -63,7 +63,6 @@ internal class PrintFileNameTest {
                     PrintSong(fileName = "b.cho", title = "B", artist = null, song = null),
                 ),
             ),
-            PrintSettings(),
         ),
     )
 

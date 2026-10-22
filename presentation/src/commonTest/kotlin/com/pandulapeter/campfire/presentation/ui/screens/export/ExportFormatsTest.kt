@@ -27,15 +27,15 @@ class ExportFormatsTest {
     private val songsExport = DialogType.Export(songs = listOf(song("a.cho"), song("b.cho")))
 
     @Test
-    fun `a song or a setlist is offered as a link where sync is available`() {
-        val all = listOf(PrintSettings.Format.PDF, PrintSettings.Format.FILES, PrintSettings.Format.LINK)
+    fun `a song or a setlist is offered as a link where sync is available, the link first and the pdf last`() {
+        val all = listOf(PrintSettings.Format.LINK, PrintSettings.Format.FILES, PrintSettings.Format.PDF)
         assertEquals(all, exportFormatsOf(songExport, isSyncAvailable = true))
         assertEquals(all, exportFormatsOf(setlistExport, isSyncAvailable = true))
     }
 
     @Test
     fun `several songs, or a build without sync, are not offered as a link`() {
-        val files = listOf(PrintSettings.Format.PDF, PrintSettings.Format.FILES)
+        val files = listOf(PrintSettings.Format.FILES, PrintSettings.Format.PDF)
         assertEquals(files, exportFormatsOf(songsExport, isSyncAvailable = true))
         assertEquals(files, exportFormatsOf(songExport, isSyncAvailable = false))
     }
@@ -43,7 +43,7 @@ class ExportFormatsTest {
     @Test
     fun `a link left as the format opens an export that does not offer it on the pdf`() {
         val link = PrintSettings(format = PrintSettings.Format.LINK, fontSize = 14)
-        assertEquals(PrintSettings(fontSize = 14), link.withFormatIn(exportFormatsOf(songsExport, isSyncAvailable = true)))
+        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 14), link.withFormatIn(exportFormatsOf(songsExport, isSyncAvailable = true)))
         assertEquals(link, link.withFormatIn(exportFormatsOf(songExport, isSyncAvailable = true)))
     }
 

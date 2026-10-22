@@ -47,6 +47,7 @@ internal class SyncRemoteWatcher(
     private suspend fun watchFrom(point: SyncWatchPoint) {
         var cursor = point.cursor
         var failures = 0
+        environment.logger.log("Sync feed: watching")
         while (true) {
             try {
                 val askedAt = environment.timeSource.markNow()
@@ -58,6 +59,7 @@ internal class SyncRemoteWatcher(
                     // poll, asked at once with the same cursor, reports whatever came meanwhile. A poll can be held this
                     // long at most once a minute.
                     if (askedAt.elapsedNow() < HELD_POLL) throw exception
+                    environment.logger.log("Sync feed: a poll held for ${askedAt.elapsedNow().inWholeSeconds}s was lost, asking again")
                     failures = 0
                     continue
                 }
@@ -66,17 +68,30 @@ internal class SyncRemoteWatcher(
                     continue
                 }
                 val changes = point.folder.changesSince(cursor)
+                // Counts and the folder's own document names only: a file's name would name a song.
+                environment.logger.log(
+                    "Sync feed: changes after ${askedAt.elapsedNow().inWholeSeconds}s (${changes.files.size} files, " +
+                        "${changes.deletedFiles.size} deletions, documents: ${changes.documents.sorted().joinToString().ifEmpty { "none" }})",
+                )
                 val isOtherDevices = point.hasOtherChangesThanPreferences(changes) ||
                     SyncedPreferencesDocument.FILE_NAME in changes.documents &&
                     point.isOtherPreferences(point.folder.downloadFolderDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
                 // The run another device's change brings reads the list itself.
-                if (!isOtherDevices && SharedLinksFormat.NAME in changes.documents) registry.read(point.folder)
+                if (!isOtherDevices && SharedLinksFormat.NAME in changes.documents) {
+                    val read = registry.read(point.folder)
+                    environment.logger.log(
+                        "Sync feed: shared links read (" + when (read) {
+                            is SharedLinksRegistry.Read.Readable -> "${read.document.links.size} links"
+                            is SharedLinksRegistry.Read.FromNewerVersion -> "of a newer version"
+                        } + ")",
+                    )
+                }
                 // Moved on, and the waits started over, only once the changes are judged: a preferences download or a read
                 // of the list that failed asks again about the same changes, after waits that keep growing while it fails.
                 cursor = changes.cursor
                 failures = 0
                 if (isOtherDevices) {
-                    scheduler.schedule(after = Duration.ZERO)
+                    scheduler.schedule(after = Duration.ZERO, reason = SyncRunScheduler.RunReason.OTHER_DEVICE)
                     return
                 }
             } catch (exception: CancellationException) {
@@ -85,13 +100,15 @@ internal class SyncRemoteWatcher(
                 // Offline, refused, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
                 // device is back online, and nothing that changed meanwhile is lost by waiting.
                 environment.logger.log("Could not reach the sync folder's change feed: ${exception.message}")
-                connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])
+                if (connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])) {
+                    environment.logger.log("Sync feed: back online, polling again")
+                }
                 failures++
             } catch (exception: Exception) {
                 // A cursor the service no longer takes, or an answer nothing here expected: only a run's fresh listing
                 // gives a cursor to go on from, and a run is also what settles whatever did change.
                 environment.logger.log("Stopped watching the sync folder: ${exception.message}")
-                scheduler.schedule(after = Duration.ZERO)
+                scheduler.schedule(after = Duration.ZERO, reason = SyncRunScheduler.RunReason.FEED_LOST)
                 return
             }
         }

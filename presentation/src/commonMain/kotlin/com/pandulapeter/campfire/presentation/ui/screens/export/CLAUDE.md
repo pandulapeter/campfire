@@ -22,24 +22,25 @@ pipeline is in `ui/print/CLAUDE.md`.
 - Settings' Show QR code and the answer to a consent asked from the Link format open it on Link for that opening only
   (`DialogType.Export.format`, `openingSettingsOf`), the stored format untouched; a format picked on the screen is
   stored as ever, and saved with the screen so a rotation keeps it over the opening's own.
-- The screen asks the source two things: `hasRunningOrder` (setlist: content choice, overview, zip manifest) and
-  `hasSeveralSongs` (song ticks, Select all, new page per song, Zip). Several songs are unnumbered, in library keys,
-  zipped by `ExportSongsUseCase` as `campfire_songs.zip` (even if one is left) and saved as `campfire_songs.pdf`.
+- The screen asks the source two things: `hasRunningOrder` (setlist: running order page, zip manifest) and
+  `hasSeveralSongs` (new page per song, Zip). Several songs are unnumbered, in library keys, zipped by
+  `ExportSongsUseCase` as `campfire_songs.zip` and saved as `campfire_songs.pdf`.
 
 ## Formats and options
 
 - One Share entry per song and setlist (and selection mode's "Share songs") opens the export screen; no separate
-  file export entry. Formats: **PDF** (for printing), the library's own files (for Campfire users):
-  **ChordPro** for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or
-  for several selected songs (no manifest), and **Link** (below) for one song or setlist where the build has sync
-  (`exportFormatsOf`). A stored format an export does not offer opens it on PDF (`withFormatIn`), the preference kept.
-- A setlist's song ticks apply to both formats. A partial zip's manifest names only the ticked songs
-  (`ExportSetlistUseCase`'s `songFileNames`, rest of the document kept), so the archive never names a song the user left
-  out; a ticked song missing from the library is still named. All ticked → the stored manifest unchanged.
+  file export entry. Formats, in the order offered and recommended (`exportFormatsOf`): **Link** (below, for Campfire
+  users) for one song or setlist where the build has sync, the library's own files (for any ChordPro app): **ChordPro**
+  for a song (the `.cho` as stored), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or for several
+  selected songs (no manifest), and **PDF** (for printing). Link is the default; a stored format an export does not
+  offer opens it on PDF (`withFormatIn`), the preference kept.
+- **Every song goes out**: no song ticks and no choice of the setlist's content, which only cluttered the screen. A
+  setlist's PDF is its song sheets, after its running order where Include running order is on; its zip holds the
+  stored manifest unchanged.
 - `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
   size and folded sections.
-- **The Features switches reach the export**: an option whose feature is off (chords, which take diagrams and key; the
-  metronome, which takes tempo) is neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept
+- **The Features switches reach the export**: an option whose feature is off (chords, which take diagrams, scales, and
+  key; scale suggestions, which take scales; the metronome, which takes tempo) is neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept
   for when the switch comes back.
 - A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
   entry's key. Missing or unreadable songs keep a visibly marked slot.
@@ -56,8 +57,7 @@ pipeline is in `ui/print/CLAUDE.md`.
   `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
 - A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
   Create link), and is forgotten when the screen goes; a share just made shows before the list catches up, and is
-  forgotten once the list names it, so a stop on another device clears an open screen. Song ticks are hidden: a link
-  shares the whole setlist. Offered in read only mode.
+  forgotten once the list names it, so a stop on another device clears an open screen. Offered in read only mode.
 - Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
   too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Send
   link in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,
@@ -78,18 +78,22 @@ pipeline is in `ui/print/CLAUDE.md`.
 
 ## Format and files preview
 
-- **The format is the first option**, with a line saying what each is for (the names alone don't tell anybody).
+- **The format is the first option** (`FormatChoice`): a card per format (`ChoiceCard`), each saying whom it suits (the
+  names alone don't tell anybody), all at once so nobody has to try each.
   `Format.FILES` are written by `ExportController.exportFiles`; a saved one closes the screen like a PDF.
-- All PDF options fold away for files except a setlist's song ticks (switching doesn't restore unticked songs). A zip of
-  none isn't offered unless the setlist has no songs.
-- Files skip the layout; `FilesPreview` shows the song's text (`PrintSong.text`, monospace, unwrapped) or `ZipContents`
-  (manifest, then each `.cho`, missing ones dimmed).
-- Option and zip rows use `listItemAnimation`, keyed by their place in the source (a setlist may name a song twice).
+- All PDF options fold away for files.
+- Files skip the layout; `FilesPreview` is a summary that never scrolls (the name it is saved under, `filesFileName`;
+  what it holds and what reads it; how many songs are missing), since the text or a file list was a second scrolling
+  area beside the options. The cards say in a short line whom a format suits; the preview under them says the rest.
+- Stacked on a phone, only the PDF's pages take a fixed height (`STACKED_PREVIEW_HEIGHT`); the files and the link are
+  list rows as tall as what they say (`isInList`: messages start-aligned like the format's descriptions, no centring),
+  `LIST_PREVIEW_TOP_PADDING` under the cards, and the pane's crossfade animates the height between formats.
+- Option rows use `listItemAnimation`.
 
 ## State
 
-- `rememberExportState(dialog)`: selection, preview page, and zoom are `rememberSaveable` (survive rotation); options,
-  source, and Retry count start over.
+- `rememberExportState(dialog)`: preview page and zoom are `rememberSaveable` (survive rotation); options, source, and
+  Retry count start over.
 - The previous document stays up while the next is laid out (debounced). **Save only takes a document laid out from what
   is on screen**: an earlier tap (a FAB has no disabled look) is kept and carried out once it is (`ExportRequest`).
 - Options go to `pendingPrintSettings` as they change, saved after settling, and whatever is pending is saved however
@@ -99,12 +103,13 @@ pipeline is in `ui/print/CLAUDE.md`.
   `OutOfMemoryError` (not catchable on the web), report a failed export.
 - A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a
   share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android, iOS).
-- `pdfFileName` names it by `LibraryFiles.songBaseName`, like the library; a running order gets `-running_order`, so
-  the two exports of one setlist don't collide.
+- `pdfFileName` names it by `LibraryFiles.songBaseName`, like the library.
 
 ## Layout
 
-- Phone: the preview is the options list's first item and scrolls away; from 520dp wide, options sit beside it.
+- Phone: the preview is an item of the options list, under the format choice that decides it, and scrolls away; from
+  520dp wide, options sit beside it. The pages take the keyboard's focus (desktop, web) only beside the options: in the
+  list a focused item is scrolled into view, which would carry the formats away as PDF is chosen.
 - **The preview is its whole pane, and no floating control ever rests on the page at zoom 1**: the page fits the pane
   less one `FLOATING_CONTROLS_CLEARANCE` band at each end a control floats over (`PageFit`, `fitArea`). In a short window
   (`SHORT_WINDOW_HEIGHT`) the controls stack at the pane's end and the page sits beside them; the page-count pill is
@@ -114,6 +119,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   takes the pane less an end column, Copy link collapsing to its icon there; every other state keeps the bottom band,
   its button's label saying what a bare icon would not. Each state keeps its own padding while it fades, and a resize
   animates it.
+- The floating controls (Save, the Link button, the page pill) come and go through `FloatingControlVisibility`, whose
+  fading layer leaves room for their shadows; those of the format the screen opened on appear without animating, since
+  their pages arriving is data, not something the user did.
 - The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
   arrangements, and the options move on the spatial spring (`animateBounds`).
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,

@@ -32,21 +32,12 @@ internal fun exportContentOf(isFailed: Boolean, isLayoutFailed: Boolean, isPdf: 
 }
 
 /**
- * The songs a setlist's zip is narrowed to, by the same ticks ([selected], by place) a PDF is: null where every one of
- * them is chosen, which hands the setlist's manifest out exactly as it is stored, and for a single song.
+ * Whether the library's own files can be exported: a song whose file could not be read has nothing to write, while a
+ * zip always has something, a setlist with no songs its manifest.
  */
-internal fun chosenSongFileNames(source: PrintSource?, selected: Set<Int>): Set<String>? = source?.takeIf { it.hasSeveralSongs }?.let {
-    if (it.songs.indices.all { index -> index in selected }) null else it.songs.filterIndexed { index, _ -> index in selected }.mapTo(mutableSetOf()) { song -> song.fileName }
-}
-
-/**
- * Whether the library's own files can be exported: a song whose file could not be read has nothing to write, and a
- * setlist's zip wants a song chosen unless it has none at all, in which case its manifest is all there is to share.
- */
-internal fun canExportFiles(source: PrintSource?, selected: Set<Int>) = when {
+internal fun canExportFiles(source: PrintSource?) = when {
     source == null -> false
-    source.hasRunningOrder -> source.songs.isEmpty() || selected.isNotEmpty()
-    source.hasSeveralSongs -> selected.isNotEmpty()
+    source.hasSeveralSongs -> true
     else -> source.songs.firstOrNull()?.text != null
 }
 

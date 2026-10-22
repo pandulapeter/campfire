@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.tuner
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 
 /**
  * "What do you need?", the features a newcomer decides on as cards any of which can be kept, each the Settings → Features
@@ -117,7 +118,7 @@ private fun FeatureCard(
     icon: @Composable () -> Unit,
     isEnabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
-) = OnboardingChoiceCard(
+) = ChoiceCard(
     modifier = modifier.fillMaxWidth(),
     title = title,
     description = description,

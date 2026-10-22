@@ -76,7 +76,7 @@ internal class DropboxSyncProvider(
 
     private val requests = DropboxTransport(httpClientHolder = httpClientHolder, tokens = tokens)
 
-    private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests)
+    private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests, logger = logger)
 
     private val sharing = DropboxSharing(requests = requests, logger = logger)
 

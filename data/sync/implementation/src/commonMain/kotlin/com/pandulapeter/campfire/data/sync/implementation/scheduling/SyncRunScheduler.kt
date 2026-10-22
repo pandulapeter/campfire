@@ -83,17 +83,24 @@ internal class SyncRunScheduler(
     private val networkFailureCount = AtomicInt(0)
 
     init {
-        scope.launch { libraryChanges.changes.collect { schedule() } }
-        scope.launch { syncedPreferencesSync.localChanges.collect { schedule() } }
+        scope.launch { libraryChanges.changes.collect { schedule(reason = RunReason.LIBRARY_CHANGE) } }
+        scope.launch { syncedPreferencesSync.localChanges.collect { schedule(reason = RunReason.SETTINGS_CHANGE) } }
         // collectLatest is the debounce: a request that arrives while the previous one is still waiting, or still waiting
         // for a run to end, moves the start instead of adding a second run.
         scope.launch {
             scheduledRun.collectLatest { scheduled ->
                 if (scheduled == null) return@collectLatest
                 // A retry starts early once the device is back online: its wait is sized for an outage of unknown length.
-                if (scheduled.isRetry) connectivityMonitor.awaitReconnection(-scheduled.dueAt.elapsedNow()) else delay(-scheduled.dueAt.elapsedNow())
+                if (scheduled.isRetry) {
+                    if (connectivityMonitor.awaitReconnection(-scheduled.dueAt.elapsedNow())) environment.logger.log("Sync: back online, retrying now")
+                } else {
+                    delay(-scheduled.dueAt.elapsedNow())
+                }
                 syncJob.load()?.join()
-                if (scheduledRun.compareAndSet(scheduled, null)) startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
+                if (scheduledRun.compareAndSet(scheduled, null)) {
+                    environment.logger.log("Sync: starting the run asked for by ${scheduled.reason.description}")
+                    startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
+                }
             }
         }
     }
@@ -120,10 +127,11 @@ internal class SyncRunScheduler(
      *
      * @param after How long the library has to stay unchanged first. Zero for another device's change, which is already
      *   in the folder whole: the wait is for this device's edits, which come in bursts.
+     * @param reason What asked for the run, which the log says once it starts: a burst of edits asks many times.
      */
-    fun schedule(after: Duration = AUTOMATIC_RUN_DELAY) {
+    fun schedule(after: Duration = AUTOMATIC_RUN_DELAY, reason: RunReason) {
         if (stateHolder.value !is SyncState.Connected) return
-        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + after, isRetry = false)
+        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + after, isRetry = false, reason = reason)
     }
 
     /**
@@ -135,8 +143,15 @@ internal class SyncRunScheduler(
         val state = stateHolder.value as? SyncState.Connected ?: return
         // A question about deletions waits for its answer: asking it again would only take its rows off the screen for
         // the length of a run that stops at the same place.
-        if (state.lastOutcome == SyncOutcome.Interrupted || state.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) return
-        if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) scheduledRun.value = null
+        when {
+            state.lastOutcome == SyncOutcome.Interrupted -> environment.logger.log("Sync: back in front, no run, the last one having been stopped")
+            state.lastOutcome is SyncOutcome.DeletionsNeedConfirmation -> environment.logger.log("Sync: back in front, no run, a question about deletions being open")
+            startRun(SyncDeletionPolicy.ASK, isAutomatic = true) -> {
+                environment.logger.log("Sync: back in front, run started")
+                scheduledRun.value = null
+            }
+            else -> environment.logger.log("Sync: back in front, a run already going")
+        }
     }
 
     fun startScheduled(): SyncProgress? {
@@ -151,7 +166,9 @@ internal class SyncRunScheduler(
             // Started here rather than left to the debounce, which would start it on another thread a moment later:
             // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
             // it still is in front - which is what the progress this returns is for.
-            scheduledRun.compareAndSet(scheduled, null) -> if (!startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
+            scheduledRun.compareAndSet(scheduled, null) -> if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
+                environment.logger.log("Sync: leaving the front, starting the run asked for by ${scheduled.reason.description} for the keep-alive")
+            } else {
                 // A run started on another thread in between, and the one asked for now follows it.
                 scheduledRun.compareAndSet(null, scheduled.copy(dueAt = environment.timeSource.markNow()))
             }
@@ -161,6 +178,7 @@ internal class SyncRunScheduler(
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
     fun cancel() {
+        environment.logger.log("Sync: stopped")
         // Cleared first, so that the debounce cannot start a run between the stop and the clear.
         scheduledRun.value = null
         networkFailureCount.store(0)
@@ -219,9 +237,11 @@ internal class SyncRunScheduler(
             return
         }
         val count = networkFailureCount.incrementAndFetch()
-        val retryAt = environment.timeSource.markNow() + NETWORK_RETRY_DELAYS[minOf(count, NETWORK_RETRY_DELAYS.size) - 1]
+        val wait = NETWORK_RETRY_DELAYS[minOf(count, NETWORK_RETRY_DELAYS.size) - 1]
         // Never over a waiting run: a change made during this one asked for an earlier start, and that run is the retry.
-        scheduledRun.compareAndSet(null, ScheduledRun(dueAt = retryAt, isRetry = true))
+        if (scheduledRun.compareAndSet(null, ScheduledRun(dueAt = environment.timeSource.markNow() + wait, isRetry = true, reason = RunReason.RETRY))) {
+            environment.logger.log("Sync: the network failed $count runs in a row, trying again in ${wait.inWholeMinutes} min or once back online")
+        }
     }
 
     /**
@@ -229,6 +249,7 @@ internal class SyncRunScheduler(
      * authorization asked again for a connected account, which may end with another account behind the stored tokens.
      */
     suspend fun stopForConnectionChange() {
+        environment.logger.log("Sync: runs dropped for a change of the connection")
         scheduledRun.value = null
         runner.forgetWatchPoint()
         networkFailureCount.store(0)
@@ -237,8 +258,21 @@ internal class SyncRunScheduler(
         scheduledRun.value = null
     }
 
-    /** An automatic run waiting to start, and whether it only retries one the network failed rather than carries a change. */
-    private data class ScheduledRun(val dueAt: ComparableTimeMark, val isRetry: Boolean)
+    /**
+     * An automatic run waiting to start, whether it only retries one the network failed rather than carries a change, and
+     * what asked for it.
+     */
+    private data class ScheduledRun(val dueAt: ComparableTimeMark, val isRetry: Boolean, val reason: RunReason)
+
+    /** What asked for an automatic run, as the log names it. */
+    enum class RunReason(val description: String) {
+        LIBRARY_CHANGE("a library change"),
+        SETTINGS_CHANGE("a change of a synced setting"),
+        CONNECTION("the connection"),
+        OTHER_DEVICE("another device's change"),
+        FEED_LOST("the change feed failing"),
+        RETRY("a retry"),
+    }
 
     internal companion object {
         /** How long the library has to stay unchanged before an automatic run starts, see [schedule]. */

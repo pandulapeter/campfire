@@ -164,6 +164,7 @@ internal class SyncedPreferencesSync(
             // here: compared with a respelled one, such a leftover would look like the merged value and stay.
             val mergedPreferences = SyncedPreferencesDocument.preferencesOf(merged).respelled({ localNames[it.folded()] ?: it })
             if (mergedPreferences != snapshot) {
+                logger.log("Sync: synced settings changed in the folder are applied here")
                 userPreferencesRepository.updateUserPreferences { preferences ->
                     mergedPreferences.applyTo(preferences, since = snapshot).also { updated ->
                         // Marked only when the write is the run's alone. One that changes nothing synced emits nothing,
@@ -183,10 +184,16 @@ internal class SyncedPreferencesSync(
                 expectedRevision = remote?.revision,
             )
             when (result) {
-                is RemoteWriteResult.Written -> return SettledPreferences(document = merged, revision = result.revision)
+                is RemoteWriteResult.Written -> {
+                    logger.log("Sync: synced settings uploaded")
+                    return SettledPreferences(document = merged, revision = result.revision)
+                }
                 // Written elsewhere since it was read. The preferences here already hold what the document said then,
                 // so that is the base the next attempt merges what was written since against.
-                RemoteWriteResult.Conflict -> previous = effectiveRemote
+                RemoteWriteResult.Conflict -> {
+                    logger.log("Sync: synced settings were written elsewhere meanwhile, merging again")
+                    previous = effectiveRemote
+                }
             }
         }
         logger.log("Another device kept writing ${SyncedPreferencesDocument.FILE_NAME}; the next run settles it.")

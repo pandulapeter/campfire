@@ -16,7 +16,7 @@ package com.pandulapeter.campfire.data.model.preferences
  * remembered from then on.
  */
 data class PrintSettings(
-    val format: Format = Format.PDF,
+    val format: Format = Format.LINK,
     val paper: Paper = Paper.A4,
     val isLandscape: Boolean = false,
     val fontSize: Int = 12,
@@ -25,6 +25,11 @@ data class PrintSettings(
     val showChords: Boolean = true,
     /** The diagram of every chord a song plays under its heading, with [showChords] only, since it fingers chords that are printed. */
     val showChordDiagrams: Boolean = true,
+    /**
+     * The scales each part of a song is played over, as its Scales section suggests them, with [showChords] only, since
+     * they are read off the chords. On at first, as everything printed is, until the user's own choice is stored.
+     */
+    val showScales: Boolean = true,
     /** The key, the transposition it is printed in and the capo, on a line of their own under a song's heading. */
     val showKey: Boolean = true,
     /** The tempo and the time signature, under a song's heading and where the song changes them. */
@@ -33,7 +38,6 @@ data class PrintSettings(
     val showMetadata: Boolean = true,
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
-    val setlistMode: SetlistMode = SetlistMode.SONG_SHEETS,
     val includeSetlistOverview: Boolean = true,
 ) {
     fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, MAX_COLUMNS))
@@ -51,11 +55,6 @@ data class PrintSettings(
     enum class Paper(val id: String, val width: Float, val height: Float) {
         A4("a4", 595.276f, 841.89f),
         LETTER("letter", 612f, 792f),
-    }
-
-    enum class SetlistMode(val id: String) {
-        SONG_SHEETS("song_sheets"),
-        RUNNING_ORDER("running_order"),
     }
 
     companion object {

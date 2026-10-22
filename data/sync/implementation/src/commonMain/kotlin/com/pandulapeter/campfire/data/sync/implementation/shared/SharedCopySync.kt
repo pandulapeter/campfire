@@ -85,9 +85,11 @@ internal class SharedCopySync(
                 isListingCurrent = revision == registryRevision,
                 changes = changes,
             )
-            changes.applyTo(document).links.forEach { entry ->
+            val links = changes.applyTo(document).links
+            links.forEach { entry ->
                 if (!pass.settle(entry)) isSettled = false
             }
+            logger.log("Sync: shared copies: ${links.size} links, ${applied.size} noted changes applied, ${pass.uploads} copies uploaded")
             null
         } catch (exception: CancellationException) {
             throw exception
@@ -150,6 +152,10 @@ internal class SharedCopySync(
         private val isListingCurrent: Boolean,
         private val changes: SharedCopyChanges,
     ) {
+
+        /** How many copies this step uploaded, for the log. */
+        var uploads = 0
+            private set
 
         /** False where the entry could not be settled this time, which the next run tries again. */
         suspend fun settle(entry: SharedLinksEntry) = try {
@@ -230,7 +236,7 @@ internal class SharedCopySync(
             val isCurrent = hash != null && hash == remote.contentHash
             if (!isCurrent) {
                 when (folder.uploadSharedFile(shareId = entry.shareId, bytes = copy, expectedRevision = remote.revision)) {
-                    is RemoteWriteResult.Written -> Unit
+                    is RemoteWriteResult.Written -> uploads++
                     // Another device uploaded in between, most likely the same bytes; whichever is newer, the next run
                     // compares against it.
                     RemoteWriteResult.Conflict -> return

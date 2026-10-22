@@ -9,9 +9,10 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
+- Remove the horizontal fade from Settings tab bar
 - The website's sharing landing page should display the artist of the shared song, if available
-- Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
 - Fast scrolling is glitchy, especially on Setlists
+- Vibrate on beat should be enabled by default
 - Setlists screen initial slide animation caused by description
 - Changing the metronome sound while it's running causes a repeated beat
 - Make the pinned filters panel optional / get rid of it completely

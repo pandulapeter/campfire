@@ -64,7 +64,7 @@ internal class ConnectionBeforeConnecting(
         val after = state?.takeIf { provider?.hasStoredCredentials() == true } ?: SyncState.Disconnected
         stateHolder.update { if (it is SyncState.Connecting) after else it }
         forget()
-        scheduler.schedule()
+        scheduler.schedule(reason = SyncRunScheduler.RunReason.CONNECTION)
     }
 }
 

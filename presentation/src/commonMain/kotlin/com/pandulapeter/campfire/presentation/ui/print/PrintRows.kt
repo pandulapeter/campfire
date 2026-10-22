@@ -46,7 +46,7 @@ internal class PrintRows(
     private val annotationStyle = PrintStyle(size = options.fontSize, italic = true)
     private val commentStyle = PrintStyle(size = options.fontSize, italic = true, gray = 90)
     val detailStyle = PrintStyle(size = options.fontSize - 1, gray = 90)
-    private val labelStyle = PrintStyle(size = options.fontSize - 1, bold = true, gray = 90)
+    val labelStyle = PrintStyle(size = options.fontSize - 1, bold = true, gray = 90)
     val overviewArtistStyle = PrintStyle(size = options.fontSize, gray = 90)
     private val tabStyle = PrintStyle(size = options.fontSize, monospace = true)
     private val gridStyle = PrintStyle(size = options.fontSize, bold = true, monospace = true)

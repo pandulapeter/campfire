@@ -95,7 +95,7 @@ internal class SharedLinksRegistry(
                     return Edit.Done(result)
                 }
 
-                RemoteWriteResult.Conflict -> Unit
+                RemoteWriteResult.Conflict -> environment.logger.log("Sharing: the list changed under an edit, trying again")
             }
         }
         environment.logger.log("The shared links document kept changing under an edit; gave up after $MAX_ATTEMPTS attempts.")

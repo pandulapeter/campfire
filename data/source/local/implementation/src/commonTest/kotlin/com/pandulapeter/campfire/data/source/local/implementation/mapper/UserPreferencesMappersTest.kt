@@ -65,9 +65,8 @@ internal class UserPreferencesMappersTest {
     @Test
     fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
-            marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
-            showPageNumbers = false, startSongsOnNewPage = false, setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER,
-            includeSetlistOverview = false)
+            marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showScales = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
+            showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false)
         val preferences = UserPreferencesDocument().toModel().copy(printSettings = settings)
         val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
         assertEquals(settings, UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings)
@@ -88,9 +87,9 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun `malformed print sizes and unknown paper fall back without losing other choices`() {
-        val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid", setlistMode = "unknown",
+        val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid",
             fontSize = 400, marginMm = -1, columns = 50, showChords = false)).toModel()
-        assertEquals(PrintSettings(fontSize = 20, marginMm = 10, columns = 4, showChords = false), preferences.printSettings)
+        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false), preferences.printSettings)
     }
 
     @Test

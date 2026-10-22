@@ -154,6 +154,7 @@ internal class SyncEngine(
             // matched onto a local one either.
             if (pass == 0) summary = summary.plus(SyncSummary(failed = prepared.unstorable))
             val plan = SyncPlanner.plan(local = local, remote = remote, index = planningIndex)
+            logger.log("Sync: pass ${pass + 1}, ${remote.size} files in the folder and ${local.size} here: ${plan.describedForLog()}")
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) {
                 unresolved = emptySet()
@@ -164,7 +165,10 @@ internal class SyncEngine(
                 planningIndexSize = planningIndex.size,
                 isLocalListingEmpty = local.isEmpty(),
                 policy = deletionPolicy,
-            )?.let { return it }
+            )?.let { question ->
+                logger.log("Sync: stopped to ask before ${question.count} of ${question.total} files are deleted (${question.direction})")
+                return question
+            }
             val outcome = apply(
                 pass = SyncPass(
                     run = run,

@@ -206,7 +206,8 @@ internal class SharedLinksRepositoryImpl(
             folder.deleteSharedCopy(shareId)
             null
         }?.let { return@whileApplying it }
-        removeStopped(folder, setOf(shareId))
+        environment.logger.log("Sharing: the stopped link's copy is deleted, removing it from the list")
+        removeStopped(folder, setOf(shareId)).also { failure -> if (failure == null) environment.logger.log("Sharing: the stopped link is off the list") }
     }
 
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String) = note("note the rename of $fileName") {

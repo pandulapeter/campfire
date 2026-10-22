@@ -68,7 +68,10 @@ internal class SharedLinksJournalApplier(
             val edit = registry.edit(folder) { current ->
                 SharedLinksRegistry.Change(document = changes.applyTo(current).takeIf { it != current }, result = Unit)
             }
-            if (edit is SharedLinksRegistry.Edit.Done) journal.remove(applied)
+            if (edit is SharedLinksRegistry.Edit.Done) {
+                journal.remove(applied)
+                environment.logger.log("Sharing: ${applied.size} noted renames and stops applied to the list")
+            }
         }
         failure ?: writeFailure
     }

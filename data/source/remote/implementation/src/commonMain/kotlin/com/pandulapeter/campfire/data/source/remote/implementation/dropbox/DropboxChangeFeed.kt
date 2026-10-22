@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
@@ -27,6 +28,7 @@ import kotlinx.coroutines.delay
 internal class DropboxChangeFeed(
     private val httpClientHolder: HttpClientHolder,
     private val requests: DropboxTransport,
+    private val logger: Logger,
 ) {
 
     /** The `backoff` of a poll that reported a change, waited by the next poll, see [awaitChanges]. */
@@ -59,7 +61,11 @@ internal class DropboxChangeFeed(
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("reset")) return true
         response.ensureSuccessful()
         val answer = decodeAnswer(DropboxLongpollResponse.serializer(), transport { response.bodyAsText() })
-        answer.backoffSeconds?.let { seconds -> if (answer.changes) owedBackoffMillis = seconds * 1000L else delay(seconds * 1000L) }
+        answer.backoffSeconds?.let { seconds ->
+            // Logged, since a wait asked for after a change is how long the next change goes unseen.
+            logger.log("Sync feed: Dropbox asked for ${seconds}s before the next poll")
+            if (answer.changes) owedBackoffMillis = seconds * 1000L else delay(seconds * 1000L)
+        }
         return answer.changes
     }
 

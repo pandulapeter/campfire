@@ -18,10 +18,8 @@ import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
-/** The setlist an export puts in its zip, which leaves out the songs that were left out of the zip and nothing else. */
+/** The setlist an export puts in its zip: the stored file, unchanged. */
 class SetlistDocumentExportTest {
 
     private val root: File = Files.createTempDirectory("campfire-setlist-export").toFile()
@@ -38,19 +36,6 @@ class SetlistDocumentExportTest {
         fileStorage.writeText(StorageDirectory.SETLISTS, FILE_NAME, DOCUMENT)
 
         assertEquals(DOCUMENT, setlistLocalSource.loadSetlistDocument(FILE_NAME))
-    }
-
-    @Test
-    fun `a narrowed setlist keeps the chosen entries in order, their keys and what this version does not know`() = runBlocking {
-        fileStorage.writeText(StorageDirectory.SETLISTS, FILE_NAME, DOCUMENT)
-
-        val narrowed = assertNotNull(setlistLocalSource.loadSetlistDocument(FILE_NAME, setOf("c.cho", "a.cho")))
-        val setlist = assertNotNull(setlistLocalSource.parseSetlist(narrowed)).setlist
-
-        assertEquals(listOf("a.cho" to 2, "c.cho" to -1), setlist.entries.map { it.songFileName to it.transposition })
-        assertEquals("Gig", setlist.title)
-        assertTrue("\"venue\"" in narrowed)
-        assertTrue("\"capoNote\"" in narrowed)
     }
 
     private companion object {

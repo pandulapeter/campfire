@@ -86,7 +86,11 @@ internal class SharedLinksMirror(
      * fresh, and a list cleared meanwhile belonged to an account that is gone.
      */
     suspend fun saveRead(since: Long, revision: String?, document: SharedLinksDocument) = mutex.withLock {
-        if (generation == since) saveLocked(revision, document)
+        if (generation == since) {
+            saveLocked(revision, document)
+        } else {
+            environment.logger.log("Sharing: a read of the list was dropped, the mirror having changed while it was under way")
+        }
     }
 
     /**
@@ -98,6 +102,7 @@ internal class SharedLinksMirror(
     }
 
     private suspend fun saveLocked(revision: String?, document: SharedLinksDocument) {
+        if (state.value?.document?.links?.size != document.links.size) environment.logger.log("Sharing: the list now has ${document.links.size} links")
         generation++
         val mirrored = Mirrored(revision = revision, document = document)
         state.value = mirrored

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -74,12 +75,17 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
  * another, each a user's tap or the connection's answer to one. Each state is padded by [contentPadding] for itself, so
  * that one fading out stays where it was while the next takes room of its own, and a padding that changes as the window
  * is resized is followed rather than jumped to.
+ *
+ * @param isInList Whether it is an item of the options' list, stacked under the format, rather than a pane of its own:
+ *   there it is as tall as what it says, a message reading as the format's description does rather than centred in
+ *   room it does not need, and the shared link scrolls with the list rather than on its own.
  */
 @Composable
 internal fun LinkPreview(
     modifier: Modifier,
     state: LinkExportState,
     kind: SharedLinkKind,
+    isInList: Boolean,
     contentPadding: (LinkExportState) -> PaddingValues,
 ) = AnimatedContent(
     targetState = state,
@@ -91,12 +97,22 @@ internal fun LinkPreview(
     val layoutDirection = LocalLayoutDirection.current
     val end by animateDpAsState(padding.calculateEndPadding(layoutDirection))
     val bottom by animateDpAsState(padding.calculateBottomPadding())
-    Box(Modifier.fillMaxSize().padding(end = end, bottom = bottom), contentAlignment = Alignment.Center) {
+    val isProgress = shown == LinkExportState.Creating || shown == LinkExportState.Stopping
+    Box(
+        modifier = when {
+            !isInList -> Modifier.fillMaxSize().padding(end = end, bottom = bottom)
+            // A progress indicator keeps more room from the cards above it than a message does, and the room it takes
+            // once it shows itself, a moment later, is kept from the start, so that the options under it move once.
+            isProgress -> Modifier.fillMaxWidth().padding(top = LIST_PREVIEW_TOP_PADDING + 16.dp, bottom = 16.dp).heightIn(min = LIST_PROGRESS_HEIGHT)
+            else -> Modifier.fillMaxWidth()
+        },
+        contentAlignment = if (isInList && !isProgress) Alignment.TopStart else Alignment.Center,
+    ) {
         when (shown) {
             LinkExportState.Creating -> DelayedLoadingIndicator(label = stringResource(Res.string.share_creating))
             LinkExportState.Stopping -> DelayedLoadingIndicator(label = stringResource(Res.string.share_stopping))
-            is LinkExportState.Shared -> SharedLink(state = shown)
-            else -> LinkMessage(linkMessageOf(shown, kind))
+            is LinkExportState.Shared -> SharedLink(state = shown, isInList = isInList)
+            else -> LinkMessage(text = linkMessageOf(shown, kind), isInList = isInList)
         }
     }
 }
@@ -123,31 +139,50 @@ private fun linkMessageOf(state: LinkExportState, kind: SharedLinkKind) = when (
 }
 
 @Composable
-private fun LinkMessage(text: String) = Text(
-    text = text,
-    modifier = Modifier.widthIn(max = MAX_TEXT_WIDTH).padding(horizontal = 24.dp),
-    style = MaterialTheme.typography.bodyLarge,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-    textAlign = TextAlign.Center,
-)
+private fun LinkMessage(
+    text: String,
+    isInList: Boolean,
+) = if (isInList) {
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = LIST_PREVIEW_TOP_PADDING, bottom = 8.dp),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+} else {
+    Text(
+        text = text,
+        modifier = Modifier.widthIn(max = MAX_TEXT_WIDTH).padding(horizontal = 24.dp),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
+}
 
 /**
  * The QR code, the link under it in the monospace face, selectable since some will rather copy a part of it by hand,
  * and the day it was shared; scrolled where a short window has no room for all of it. The code is sized to the pane
  * outside the scrolling column ([qrCodeSizeFor]), so that it is shown whole where the pane allows, whatever comes under
  * it. The code is made from the state this is drawn for, not the screen's current one, so that a link fading out once
- * Stop sharing is pressed keeps it.
+ * Stop sharing is pressed keeps it. In the options' list ([isInList]) the list is what scrolls, and the pane is as tall
+ * as the largest code.
  */
 @Composable
 private fun SharedLink(
     state: LinkExportState.Shared,
+    isInList: Boolean,
 ) = BoxWithConstraints {
-    val qrCodeSize = qrCodeSizeFor(paneWidth = maxWidth, paneHeight = maxHeight)
+    val qrCodeSize = qrCodeSizeFor(paneWidth = maxWidth, paneHeight = if (isInList) QR_CODE_WIDTH + SHARED_LINK_VERTICAL_PADDING * 2 else maxHeight)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = SHARED_LINK_HORIZONTAL_PADDING, vertical = SHARED_LINK_VERTICAL_PADDING),
+            .then(if (isInList) Modifier else Modifier.verticalScroll(rememberScrollState()))
+            .padding(
+                start = SHARED_LINK_HORIZONTAL_PADDING,
+                end = SHARED_LINK_HORIZONTAL_PADDING,
+                top = if (isInList) LIST_PREVIEW_TOP_PADDING else SHARED_LINK_VERTICAL_PADDING,
+                bottom = SHARED_LINK_VERTICAL_PADDING,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -195,3 +230,6 @@ private fun SharedLinkContent(
 }
 
 private val MAX_TEXT_WIDTH = 480.dp
+
+/** What a progress indicator with its label takes: the indicator, the gap under it, and a line. */
+private val LIST_PROGRESS_HEIGHT = 88.dp

@@ -90,7 +90,7 @@ internal open class SetlistRepositoryStub : SetlistRepository {
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist = unexpected()
     override suspend fun adoptImported(setlists: Collection<Setlist>): Unit = unexpected()
     override suspend fun loadSetlistFileSizes(): Map<String, Long> = unexpected()
-    override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?): String? = unexpected()
+    override suspend fun loadSetlistDocument(fileName: String): String? = unexpected()
     override suspend fun deleteSetlist(fileName: String): Unit = unexpected()
     override suspend fun deleteAllSetlists(): Unit = unexpected()
 }

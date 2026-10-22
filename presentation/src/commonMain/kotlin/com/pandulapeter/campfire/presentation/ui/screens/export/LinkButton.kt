@@ -10,12 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,7 +42,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The Link format's floating action button, in [SaveButton]'s place: what the state asks for next, its label and icon
- * crossfading as one state follows another, and leaving where there is nothing to do. It is described by the label it
+ * crossfading as one state follows another, and leaving where there is nothing to do ([FloatingControlVisibility]). It is described by the label it
  * shows, since Material's extended floating button clears the semantics of its text, and so it is still described where
  * it is collapsed to its icon. That is Copy link's alone, and only [isInShortPane] (a short window, the options beside
  * the preview), where the QR code takes the pane's height beside it ([linkPreviewPaddingFor]) and says what it copies;
@@ -55,14 +52,15 @@ import org.jetbrains.compose.resources.painterResource
 internal fun LinkButton(
     modifier: Modifier,
     action: LinkAction?,
+    isFirstShownAtOnce: Boolean,
     isInShortPane: Boolean,
     onClick: (LinkAction) -> Unit,
 ) {
     // Kept while the button leaves, so that it fades out showing what it last offered rather than an empty label.
     var shown by remember { mutableStateOf(action) }
     if (action != null) shown = action
-    AnimatedVisibility(action != null, modifier = modifier, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-        val current = shown ?: return@AnimatedVisibility
+    FloatingControlVisibility(modifier = modifier, isVisible = action != null, isFirstShownAtOnce = isFirstShownAtOnce) {
+        val current = shown ?: return@FloatingControlVisibility
         val label = stringResource(current.label)
         ExtendedFloatingActionButton(
             text = {

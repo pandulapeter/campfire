@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.onboarding
+package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -39,15 +39,16 @@ import com.pandulapeter.campfire.presentation.resources.ic_check
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * One answer of an onboarding page, as a card big enough to be hit without aiming: an instrument of a group of which one
- * is picked ([Role.RadioButton]), or a feature of a list of which any are kept ([Role.Checkbox]). The selection is said
+ * One answer of a question asked as a list of cards big enough to be hit without aiming, each saying what it is for: an
+ * instrument or a sharing format of a group of which one is picked ([Role.RadioButton]), or a feature of a list of which
+ * any are kept ([Role.Checkbox]). The selection is said
  * three ways at once, the container, the border and the mark at the end, so that it reads in either theme, in every one
  * of the colors, and to somebody who cannot tell the container colors apart.
  *
  * @param icon Drawn in the content color at the start, decoration only: the title says what the card is.
  */
 @Composable
-internal fun OnboardingChoiceCard(
+internal fun ChoiceCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,

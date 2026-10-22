@@ -23,10 +23,17 @@ internal val PAGE_MARGIN = 16.dp
 internal val FLOATING_CONTROLS_CLEARANCE = 88.dp
 
 /**
- * The preview as the first item of the options' list on a phone: 360dp for the page, large enough to judge it by, plus
- * the band the page buttons' pill takes over it, so the pill never sits on the page.
+ * The preview as an item of the options' list on a phone, under the format: 360dp for the page, large enough to judge it
+ * by, plus the band the page buttons' pill takes over it, so the pill never sits on the page.
  */
 internal val STACKED_PREVIEW_HEIGHT = 360.dp + FLOATING_CONTROLS_CLEARANCE - PAGE_MARGIN
+
+/**
+ * The room between the format's cards and a preview stacked under them that is a list row rather than a page (the
+ * files, the link), more than between two rows, so that it reads as what the chosen card leads to rather than as one
+ * more card.
+ */
+internal val LIST_PREVIEW_TOP_PADDING = 24.dp
 
 /** As wide as a phone camera reads comfortably from across a table, and no wider on a large screen. */
 internal val QR_CODE_WIDTH = 240.dp

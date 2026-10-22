@@ -34,7 +34,7 @@ class CreateShareLinkUseCaseImplTest {
         val existing = share(fileName = "Gig.setlist.json")
         val repository = FakeSharedLinksRepository(afterRefresh = listOf(existing))
 
-        val result = useCase(repository, setlist = { _, _, _ -> error("Built a copy.") }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
+        val result = useCase(repository, setlist = { _, _ -> error("Built a copy.") }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
         assertEquals(CreateShareResult.Shared(existing), result)
         assertNull(repository.shared)
@@ -44,7 +44,7 @@ class CreateShareLinkUseCaseImplTest {
     fun `an item whose share lost its copy is shared anew`() = runTest {
         val repository = FakeSharedLinksRepository(afterRefresh = listOf(share(fileName = "gig.setlist.json", state = ShareState.COPY_MISSING)))
 
-        useCase(repository, setlist = { _, _, _ -> zip(1) }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
+        useCase(repository, setlist = { _, _ -> zip(1) }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
         assertContentEquals(zip(1).bytes, repository.shared)
     }
@@ -52,12 +52,12 @@ class CreateShareLinkUseCaseImplTest {
     @Test
     fun `a setlist is shared whole, as an undated copy`() = runTest {
         val repository = FakeSharedLinksRepository()
-        var request: Triple<String, Set<String>?, Boolean>? = null
+        var request: Pair<String, Boolean>? = null
 
-        useCase(repository, setlist = { name, songs, isDated -> zip(1).also { request = Triple(name, songs, isDated) } })
+        useCase(repository, setlist = { name, isDated -> zip(1).also { request = name to isDated } })
             .invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
-        assertEquals(Triple("gig.setlist.json", null, false), request)
+        assertEquals("gig.setlist.json" to false, request)
         assertContentEquals(zip(1).bytes, repository.shared)
     }
 
@@ -101,13 +101,12 @@ class CreateShareLinkUseCaseImplTest {
 
     private fun useCase(
         repository: FakeSharedLinksRepository,
-        setlist: (String, Set<String>?, Boolean) -> ExportedFile? = { _, _, _ -> error("Not a setlist.") },
+        setlist: (String, Boolean) -> ExportedFile? = { _, _ -> error("Not a setlist.") },
         songs: (List<String>, Boolean, Boolean) -> ExportedFile? = { _, _, _ -> error("Not a song.") },
     ) = CreateShareLinkUseCaseImpl(
         sharedLinksRepository = repository,
         exportSetlist = object : ExportSetlistUseCase {
-            override suspend fun invoke(setlistFileName: String, songFileNames: Set<String>?, isDated: Boolean) =
-                setlist(setlistFileName, songFileNames, isDated)
+            override suspend fun invoke(setlistFileName: String, isDated: Boolean) = setlist(setlistFileName, isDated)
         },
         exportSongs = object : ExportSongsUseCase {
             override suspend fun invoke(fileNames: List<String>, isArchive: Boolean, isDated: Boolean) = songs(fileNames, isArchive, isDated)

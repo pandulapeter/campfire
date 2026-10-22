@@ -221,12 +221,12 @@ internal class PrintLayoutTest {
             layout(source(entry), settings.copy(showComments = false)))
     }
 
-    @Test fun `setlist running order preserves selected positions keys and missing songs`() = runTest {
+    @Test fun `a setlist's running order page keeps every slot's number and key, and marks missing songs`() = runTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val missing = first.copy(fileName = "missing.cho", title = "Missing song", index = 3, song = null)
         val last = first.copy(title = "Last", index = 5)
         val source = PrintSource("Concert", kind = PrintSource.Kind.SETLIST, songs = listOf(first, missing, last))
-        val text = layout(source, PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)).pages.flatMap { it.texts }.map { it.text }
+        val text = layout(source).pages.first().texts.map { it.text }
         assertEquals(listOf("1. First (Key: D)", "3. Missing song [Missing]", "5. Last (Key: D)"), text.filter { it.firstOrNull()?.isDigit() == true && it.length > 8 })
         assertFalse("First lyrics" in text)
     }
@@ -414,7 +414,7 @@ internal class PrintLayoutTest {
 
     @Test fun `a multi line description takes a row per line`() = runTest {
         val entry = song(lyrics(1)).copy(index = 1)
-        val document = layout(PrintSource("Concert", "a\nb", kind = PrintSource.Kind.SETLIST, songs = listOf(entry)), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER))
+        val document = layout(PrintSource("Concert", "a\nb", kind = PrintSource.Kind.SETLIST, songs = listOf(entry)))
         val texts = document.pages.flatMap { it.texts }
         assertEquals(texts.first { it.text == "a" }.y + 12 * 1.45f, texts.first { it.text == "b" }.y, 0.01f)
         assertFalse(texts.any { '\n' in it.text || '\r' in it.text })
@@ -650,6 +650,21 @@ internal class PrintLayoutTest {
         assertTrue(page.diagrams.all { diagram -> diagram.y + diagram.height <= page.texts.first { it.text == "Line 1" }.y })
     }
 
+    @Test fun `suggested scales are printed under the diagrams only when asked for and with the chords, and are not selectable`() = runTest {
+        val scales = listOf(PrintScaleRow(title = null, text = "D major · B minor"), PrintScaleRow(title = "Over E7", text = "E Mixolydian"))
+        val entry = song(lyrics(1)).copy(chords = listOf(guitarChord("D")), scales = scales)
+        val scaleLabels = labels.copy(scales = "Scales")
+        val page = layoutPrintDocument(source(entry), PrintSettings(showChordDiagrams = true, showScales = true), scaleLabels, ::measure).pages.single()
+        val printed = listOf("Scales", "D major · B minor", "Over E7: E Mixolydian").map { text -> page.texts.single { it.text == text } }
+        assertTrue(printed.none { it.isSelectable })
+        assertEquals(printed, printed.sortedBy { it.y })
+        assertTrue(page.diagrams.single().let { it.y + it.height } < printed.first().y)
+        assertTrue(printed.last().y < page.texts.single { it.text == "Line 1" }.y)
+        listOf(PrintSettings(showScales = false), PrintSettings(showScales = true, showChords = false)).forEach { settings ->
+            assertTrue(layoutPrintDocument(source(entry), settings, scaleLabels, ::measure).pages.single().texts.none { it.text == "Scales" })
+        }
+    }
+
     @Test fun `the tuning line is printed above the diagrams only with them and is not selectable`() = runTest {
         val entry = song(lyrics(1)).copy(chords = listOf(guitarChord("G")))
         val tuningLabels = labels.copy(chordTuning = "Tuning: Drop D")
@@ -722,9 +737,13 @@ internal class PrintLayoutTest {
     }
 
     @Test fun `the feature switches leave out what they take away whatever the options say`() {
-        val chosen = PrintSettings(showChords = true, showChordDiagrams = true, showKey = true, showTempo = true)
-        assertEquals(chosen.copy(showChords = false, showChordDiagrams = false, showKey = false), chosen.withinFeatures(areChordsEnabled = false, isMetronomeEnabled = true))
-        assertEquals(chosen.copy(showTempo = false), chosen.withinFeatures(areChordsEnabled = true, isMetronomeEnabled = false))
-        assertEquals(chosen, chosen.withinFeatures(areChordsEnabled = true, isMetronomeEnabled = true))
+        val chosen = PrintSettings(showChords = true, showChordDiagrams = true, showScales = true, showKey = true, showTempo = true)
+        assertEquals(
+            chosen.copy(showChords = false, showChordDiagrams = false, showScales = false, showKey = false),
+            chosen.withinFeatures(areChordsEnabled = false, areScaleSuggestionsEnabled = true, isMetronomeEnabled = true),
+        )
+        assertEquals(chosen.copy(showScales = false), chosen.withinFeatures(areChordsEnabled = true, areScaleSuggestionsEnabled = false, isMetronomeEnabled = true))
+        assertEquals(chosen.copy(showTempo = false), chosen.withinFeatures(areChordsEnabled = true, areScaleSuggestionsEnabled = true, isMetronomeEnabled = false))
+        assertEquals(chosen, chosen.withinFeatures(areChordsEnabled = true, areScaleSuggestionsEnabled = true, isMetronomeEnabled = true))
     }
 }

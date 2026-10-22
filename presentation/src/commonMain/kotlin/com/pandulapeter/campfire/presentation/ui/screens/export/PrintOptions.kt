@@ -9,13 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -24,19 +22,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.triStateToggleable
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -51,17 +41,6 @@ import com.pandulapeter.campfire.presentation.resources.print_chords
 import com.pandulapeter.campfire.presentation.resources.print_columns
 import com.pandulapeter.campfire.presentation.resources.print_comments
 import com.pandulapeter.campfire.presentation.resources.print_font_size
-import com.pandulapeter.campfire.presentation.resources.print_format
-import com.pandulapeter.campfire.presentation.resources.print_format_chordpro
-import com.pandulapeter.campfire.presentation.resources.print_format_chordpro_song_description
-import com.pandulapeter.campfire.presentation.resources.print_format_link
-import com.pandulapeter.campfire.presentation.resources.print_format_link_setlist_description
-import com.pandulapeter.campfire.presentation.resources.print_format_link_song_description
-import com.pandulapeter.campfire.presentation.resources.print_format_pdf
-import com.pandulapeter.campfire.presentation.resources.print_format_pdf_description
-import com.pandulapeter.campfire.presentation.resources.print_format_zip
-import com.pandulapeter.campfire.presentation.resources.print_format_zip_description
-import com.pandulapeter.campfire.presentation.resources.print_format_zip_songs_description
 import com.pandulapeter.campfire.presentation.resources.print_landscape
 import com.pandulapeter.campfire.presentation.resources.print_letter
 import com.pandulapeter.campfire.presentation.resources.print_margin
@@ -77,18 +56,13 @@ import com.pandulapeter.campfire.presentation.resources.print_overview
 import com.pandulapeter.campfire.presentation.resources.print_page_numbers
 import com.pandulapeter.campfire.presentation.resources.print_paper
 import com.pandulapeter.campfire.presentation.resources.print_portrait
-import com.pandulapeter.campfire.presentation.resources.print_running_order
-import com.pandulapeter.campfire.presentation.resources.select_all
-import com.pandulapeter.campfire.presentation.resources.print_setlist_content
-import com.pandulapeter.campfire.presentation.resources.print_song_sheets
-import com.pandulapeter.campfire.presentation.resources.print_songs
 import com.pandulapeter.campfire.presentation.resources.print_tempo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
+import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
-import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
@@ -100,10 +74,10 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The options, in one list that scrolls on its own: the format and what it is good for, then for a PDF the paper, the
- * text and what is printed, and for a setlist what it exports, then for a setlist in either file format which of its
- * songs. The library's own files are the songs as the library holds them, so the PDF's options fold away under the format
- * while it is chosen; a link shares the whole item, so it takes no song ticks either, and offers [linkOptions] instead.
+ * The options, in one list that scrolls on its own: the format and what it is good for, then the preview where it is
+ * stacked with them ([header]), then for a PDF the paper, the text and what is printed, and for several songs how their
+ * sheets follow one another. Every song goes out, a setlist whole. The library's own files are the songs as the library
+ * holds them, so the PDF's options fold away under the format while it is chosen; a link offers [linkOptions] instead.
  * [onSettings] takes every change, normalized and saved by the screen.
  */
 @Composable
@@ -114,10 +88,9 @@ internal fun PrintOptions(
     formats: List<PrintSettings.Format>,
     areChordsEnabled: Boolean,
     isMetronomeEnabled: Boolean,
-    selected: Set<Int>,
+    areScaleSuggestionsEnabled: Boolean,
     bottomPadding: Dp,
     header: (@Composable () -> Unit)? = null,
-    onSelected: (Set<Int>) -> Unit,
     onSettings: (PrintSettings) -> Unit,
     linkOptions: @Composable () -> Unit,
 ) {
@@ -127,9 +100,8 @@ internal fun PrintOptions(
     val isPdf = settings.format == PrintSettings.Format.PDF
     val isLink = settings.format == PrintSettings.Format.LINK
     LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state, MaterialTheme.colorScheme.background), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
-        if (header != null) {
-            item(key = "preview") { header() }
-        }
+        // The format comes before the preview it decides, so that what the preview shows follows from what is chosen
+        // above it, and the choice is the first thing on the screen.
         item(key = "format") {
             FormatChoice(
                 modifier = listItemAnimation(state, placementSpec = null),
@@ -138,6 +110,9 @@ internal fun PrintOptions(
                 kind = source.kind,
                 onSelected = { onSettings(settings.copy(format = it)) },
             )
+        }
+        if (header != null) {
+            item(key = "preview") { header() }
         }
         if (isLink) {
             item(key = "link") { Column(listItemAnimation(state, placementSpec = null)) { linkOptions() } }
@@ -219,6 +194,16 @@ internal fun PrintOptions(
                         onCheckedChange = { onSettings(settings.copy(showChordDiagrams = it)) },
                     )
                 }
+                // Only where a song has a scale to suggest, which none has with the suggestions switched off in the app;
+                // disabled with the chords, as the diagrams are, since the scales are read off them.
+                if (areChordsEnabled && areScaleSuggestionsEnabled && source.songs.any { it.scaleGroups.isNotEmpty() }) {
+                    CheckboxListItem(
+                        title = stringResource(Res.string.settings_scale_suggestions),
+                        isChecked = settings.showScales,
+                        isEnabled = settings.showChords,
+                        onCheckedChange = { onSettings(settings.copy(showScales = it)) },
+                    )
+                }
                 if (areChordsEnabled) {
                     CheckboxListItem(
                         title = stringResource(Res.string.print_key),
@@ -253,50 +238,20 @@ internal fun PrintOptions(
         if (source.hasSeveralSongs) {
             item(key = "songSheets") {
                 PdfOption(modifier = listItemAnimation(state, placementSpec = null), isPdf = isPdf) {
-                    if (source.hasRunningOrder) SetlistContentChoice(settings = settings, onSettings = onSettings)
-                    // Several songs that are not a setlist have no running order to print, so they are always song sheets.
-                    // A setlist printed as its running order has no sheets to arrange, so these fold away with that choice.
-                    FoldingOption(isVisible = !source.hasRunningOrder || settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                        if (source.hasRunningOrder) {
-                            Spacer(Modifier.height(8.dp))
-                            CheckboxListItem(
-                                title = stringResource(Res.string.print_overview),
-                                isChecked = settings.includeSetlistOverview,
-                                onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
-                            )
-                        }
+                    // Several songs that are not a setlist have no running order to print before their sheets.
+                    if (source.hasRunningOrder) {
                         CheckboxListItem(
-                            title = stringResource(Res.string.print_new_page),
-                            isChecked = settings.startSongsOnNewPage,
-                            onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
+                            title = stringResource(Res.string.print_overview),
+                            isChecked = settings.includeSetlistOverview,
+                            onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
                         )
                     }
-                }
-            }
-            // Which songs go out is a question for either format, and one answer to both: the same ticks narrow the PDF and
-            // the zip, so switching between the two does not quietly put back the songs that were left out.
-            if (source.songs.isNotEmpty() && !isLink) {
-                item(key = "selectAll") {
-                    SelectAllListItem(
-                        modifier = listItemAnimation(state, placementSpec = null),
-                        state = when (selected.size) {
-                            0 -> ToggleableState.Off
-                            source.songs.size -> ToggleableState.On
-                            else -> ToggleableState.Indeterminate
-                        },
-                        onClick = { onSelected(if (selected.size == source.songs.size) emptySet() else source.songs.indices.toSet()) },
+                    CheckboxListItem(
+                        title = stringResource(Res.string.print_new_page),
+                        isChecked = settings.startSongsOnNewPage,
+                        onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
                     )
                 }
-            }
-            itemsIndexed(if (isLink) emptyList() else source.songs, key = { index, _ -> index }) { index, entry ->
-                CheckboxListItem(
-                    modifier = listItemAnimation(state, placementSpec = null),
-                    // Several songs that are not a setlist are in no order of anyone's making, so they are not numbered.
-                    title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title,
-                    description = if (entry.song == null) stringResource(Res.string.print_missing) else entry.artist,
-                    isChecked = index in selected,
-                    onCheckedChange = { onSelected(if (it) selected + index else selected - index) },
-                )
             }
         } else if (source.songs.any { it.song == null }) {
             item(key = "missing") {
@@ -310,99 +265,15 @@ internal fun PrintOptions(
     }
 }
 
-/**
- * The first of the options, PDF, the library's own files - ChordPro for a song, a zip for a setlist or for several
- * songs - or a link, where [formats] offers one, and a line under it saying what the chosen one is for and, for the zip,
- * what is in it, since they are told apart by what the person receiving it can do with it rather than by anything the
- * names say.
- */
-@Composable
-private fun FormatChoice(
-    modifier: Modifier,
-    format: PrintSettings.Format,
-    formats: List<PrintSettings.Format>,
-    kind: PrintSource.Kind,
-    onSelected: (PrintSettings.Format) -> Unit,
-) = Column(modifier) {
-    SettingsSectionTitle(
-        text = stringResource(Res.string.print_format),
-        contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 8.dp),
-    )
-    SegmentedChoice(
-        options = formats.map { option ->
-            option to stringResource(
-                when {
-                    option == PrintSettings.Format.PDF -> Res.string.print_format_pdf
-                    option == PrintSettings.Format.LINK -> Res.string.print_format_link
-                    kind != PrintSource.Kind.SONG -> Res.string.print_format_zip
-                    else -> Res.string.print_format_chordpro
-                },
-            )
-        },
-        selected = format,
-        onSelected = onSelected,
-    )
-    val description = when {
-        format == PrintSettings.Format.PDF -> stringResource(Res.string.print_format_pdf_description)
-        format == PrintSettings.Format.LINK && kind == PrintSource.Kind.SETLIST -> stringResource(Res.string.print_format_link_setlist_description)
-        format == PrintSettings.Format.LINK -> stringResource(Res.string.print_format_link_song_description)
-        kind == PrintSource.Kind.SETLIST -> stringResource(Res.string.print_format_zip_description)
-        kind == PrintSource.Kind.SONGS -> stringResource(Res.string.print_format_zip_songs_description)
-        else -> stringResource(Res.string.print_format_chordpro_song_description)
-    }
-    AnimatedContent(description, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
-        Text(
-            text = shown,
-            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** One group of the options that only a PDF has, folding away while the library's own files are the format. */
+/** One group of the options that only a PDF has, folding out under the format while it is chosen and away again. */
 @Composable
 private fun PdfOption(
     modifier: Modifier,
     isPdf: Boolean,
     content: @Composable () -> Unit,
-) = FoldingOption(modifier = modifier, isVisible = isPdf, content = content)
-
-/** Options that only some other choice makes sense with, folding out under it and away again as it changes. */
-@Composable
-private fun FoldingOption(
-    modifier: Modifier = Modifier,
-    isVisible: Boolean,
-    content: @Composable () -> Unit,
-) = AnimatedVisibility(isVisible, modifier, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+) = AnimatedVisibility(isPdf, modifier, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
     Column { content() }
 }
-
-/**
- * One row standing for every song under it, its checkbox ticked when all of them are, empty when none is and a dash in
- * between, and a tap ticking them all or, when they all are, none: a row like the ones it acts on rather than a pair of
- * text buttons, which in the heading's color and size read as a second heading.
- */
-@Composable
-private fun SelectAllListItem(
-    modifier: Modifier,
-    state: ToggleableState,
-    onClick: () -> Unit,
-) = Column(modifier) {
-    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
-    SelectAllRow(state = state, onClick = onClick)
-}
-
-@Composable
-private fun SelectAllRow(
-    state: ToggleableState,
-    onClick: () -> Unit,
-) = ListItem(
-    modifier = Modifier.triStateToggleable(state = state, role = Role.Checkbox, onClick = onClick),
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(stringResource(Res.string.select_all)) },
-    leadingContent = { TriStateCheckbox(state = state, onClick = null) },
-)
 
 /**
  * A label and a stepper on one line at the screen's own keyline, the label going above the stepper where a word of it
@@ -427,25 +298,3 @@ private const val MIN_MARGIN_MM = 10
 private const val MAX_MARGIN_MM = 25
 
 private const val MARGIN_STEP_MM = 5
-
-/** Whether a setlist is printed as its song sheets or as its running order on one page. */
-@Composable
-private fun SetlistContentChoice(
-    settings: PrintSettings,
-    onSettings: (PrintSettings) -> Unit,
-) {
-    SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
-    SegmentedChoice(
-        options = PrintSettings.SetlistMode.entries.map { mode ->
-            mode to stringResource(
-                if (mode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                    Res.string.print_song_sheets
-                } else {
-                    Res.string.print_running_order
-                },
-            )
-        },
-        selected = settings.setlistMode,
-        onSelected = { onSettings(settings.copy(setlistMode = it)) },
-    )
-}

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_time
+import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
@@ -44,6 +45,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val tempoValue = textResource(Res.string.song_details_tempo, TEMPO_VALUE)
     val time = stringResource(Res.string.print_time)
     val missing = stringResource(Res.string.print_missing)
+    val scales = stringResource(Res.string.scales)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->
         preferences.chordTuning()?.let { tuning ->
@@ -57,7 +59,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             ).joinToString(" · ").ifEmpty { null }
         }
     }
-    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning) {
+    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales) {
         PrintLabels(
             key = key,
             transposition = transposition,
@@ -68,6 +70,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             missing = missing,
             sections = sections,
             chordTuning = chordTuning,
+            scales = scales,
         )
     }
 }

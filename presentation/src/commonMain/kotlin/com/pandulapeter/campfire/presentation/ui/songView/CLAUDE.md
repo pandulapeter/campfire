@@ -51,8 +51,8 @@ builds what it draws, `grid/` places it.
   a vamp keeps its chord's two textbook scales, but a rare fourth chip never follows; the chord sheet keeps the full
   list), and one chip a chord (a common scale where one holds the chord), titled "Over E7" ("Over F♯7 and F♯" where
   one scale serves several) in every song; the Scales tab and the chord's sheet have the rest.
-- **Screen only**: neither the PDF nor a print carries it, as a suggestion is for the player reading along, not the
-  sheet.
+- The PDF prints it as lines of text under the diagrams, with Scale suggestions in the export's options (on at first,
+  like every other option of what is printed, then as the user last left it).
 
 ### Folding (keys in `model/`)
 

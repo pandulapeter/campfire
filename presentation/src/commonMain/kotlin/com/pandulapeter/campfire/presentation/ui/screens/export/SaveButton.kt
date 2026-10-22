@@ -10,12 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -42,17 +39,18 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Save, which while the pages of a PDF are drawn counts them in a ring in place of its icon and cancels; once the picker
  * is up there is nothing to cancel, and a tap waits for it to answer. It leaves while there is nothing to save: no pages,
- * or a song file that could not be read. It is described by the label it shows, since Material's extended floating
- * button clears the semantics of its text.
+ * or a song file that could not be read ([FloatingControlVisibility]). It is described by the label it shows, since
+ * Material's extended floating button clears the semantics of its text.
  */
 @Composable
 internal fun SaveButton(
     modifier: Modifier,
     isVisible: Boolean,
+    isFirstShownAtOnce: Boolean,
     progress: PdfExportProgress?,
     onSave: () -> Unit,
     onCancel: () -> Unit,
-) = AnimatedVisibility(isVisible, modifier = modifier, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+) = FloatingControlVisibility(modifier = modifier, isVisible = isVisible, isFirstShownAtOnce = isFirstShownAtOnce) {
     val label = stringResource(if (progress != null) Res.string.cancel else Res.string.print_save)
     ExtendedFloatingActionButton(
         onClick = if (progress != null) onCancel else onSave,

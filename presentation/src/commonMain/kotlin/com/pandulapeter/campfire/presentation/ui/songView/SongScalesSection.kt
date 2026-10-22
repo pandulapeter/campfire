@@ -23,16 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.scales
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_and_unnamed
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_and_unnamed_several
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_from
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_other
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_over
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_several
-import com.pandulapeter.campfire.presentation.resources.song_details_scales_over_two
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_unheld
 import com.pandulapeter.campfire.presentation.ui.chords.SCALE_CHIPS_TITLE_GAP
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipsTitle
@@ -40,8 +33,6 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
-import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleException
-import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
 /**
  * One chunk of the scales the song is played over: the slots [items] names (counted as [RenderSection.Scales.itemCount]),
@@ -163,31 +154,6 @@ private fun UnheldScalesRow(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-}
-
-/**
- * What a row of chips over chords is titled: "Over E7", "Over F♯7 and F♯", or "Over A7, D7, and G7", the list said as
- * the language says one.
- */
-@Composable
-private fun SongScaleException.title(): String = when (chordNames.size) {
-    1 -> stringResource(Res.string.song_details_scales_over, chordNames.single())
-    2 -> stringResource(Res.string.song_details_scales_over_two, chordNames[0], chordNames[1])
-    else -> stringResource(Res.string.song_details_scales_over_several, chordNames.dropLast(1).joinToString(", "), chordNames.last())
-}
-
-/**
- * What a group's row of chips is titled where the song has several: its sections' names, saying so where it also holds
- * parts without a heading, else its first words where several groups have no name, else the rest of the song, [other].
- */
-@Composable
-private fun SongScaleGroup.title(other: String): String {
-    val label = label ?: return opening?.let { textResource(Res.string.song_details_scales_from, it) } ?: other
-    return when {
-        !hasUnnamed -> label
-        joinsSeveral -> textResource(Res.string.song_details_scales_and_unnamed_several, label)
-        else -> textResource(Res.string.song_details_scales_and_unnamed, label)
-    }
 }
 
 private val SCALES_HEADER_GAP = 16.dp

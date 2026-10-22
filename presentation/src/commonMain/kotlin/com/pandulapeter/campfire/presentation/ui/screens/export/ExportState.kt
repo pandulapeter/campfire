@@ -28,8 +28,8 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 /**
  * What the screen keeps while it is open, built by [rememberExportState]. Each field is remembered on its own, as
  * saveable or not as it has to be, rather than the holder being remembered whole, which could not be saved field by
- * field: the selection, the page and how it is zoomed outlive a rotation, while the options, the source and the attempt
- * are read again.
+ * field: the page and how it is zoomed outlive a rotation, while the options, the source and the attempt are read
+ * again.
  */
 internal class ExportState(
     settings: MutableState<PrintSettings>,
@@ -37,7 +37,6 @@ internal class ExportState(
     source: MutableState<PrintSource?>,
     failed: MutableState<Boolean>,
     attempt: MutableIntState,
-    selected: MutableState<Set<Int>?>,
     page: MutableIntState,
     pageView: MutableState<PageView>,
     layoutFailed: MutableState<Boolean>,
@@ -59,9 +58,6 @@ internal class ExportState(
 
     /** Counts the tries of Retry, which both the read of the source and the layout are keyed by. */
     var attempt by attempt
-
-    /** The songs to export, by their place in [source]; null until the source has been read. */
-    var selected by selected
 
     /** The page of the preview that is open. */
     var page by page
@@ -85,8 +81,6 @@ internal fun rememberExportState(
         source = remember(dialog) { mutableStateOf<PrintSource?>(null) },
         failed = remember(dialog) { mutableStateOf(false) },
         attempt = remember(dialog) { mutableIntStateOf(0) },
-        // Saved, or a rotation would put back every song somebody had unticked; null until the source has been read.
-        selected = rememberSaveable(dialog, stateSaver = SELECTION_SAVER) { mutableStateOf<Set<Int>?>(null) },
         page = rememberSaveable(dialog) { mutableIntStateOf(0) },
         pageView = rememberSaveable(dialog, stateSaver = PAGE_VIEW_SAVER) { mutableStateOf(PageView()) },
         layoutFailed = remember { mutableStateOf(false) },
@@ -108,6 +102,3 @@ internal class LaidOutDocument(
 
 /** The format picked on the screen by its name, with null (none picked yet) saved as nothing at all. */
 private val FORMAT_SAVER = Saver<PrintSettings.Format?, String>(save = { it?.name }, restore = { PrintSettings.Format.valueOf(it) })
-
-/** The selected songs by their place in the source, with null (nothing read yet) saved as nothing at all. */
-private val SELECTION_SAVER = Saver<Set<Int>?, List<Int>>(save = { it?.toList() }, restore = { it.toSet() })

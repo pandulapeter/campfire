@@ -176,7 +176,7 @@ class ExportLibraryUseCaseImplTest {
         setlistRepository = object : SetlistRepositoryStub() {
             override suspend fun loadSetlistsIfNeeded() = setlists
             override suspend fun loadSetlistFileSizes() = setlistFolder
-            override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = if (fileName in unreadable) null else setlistDocument
+            override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else setlistDocument
         },
         archiveRepository = archive,
     )

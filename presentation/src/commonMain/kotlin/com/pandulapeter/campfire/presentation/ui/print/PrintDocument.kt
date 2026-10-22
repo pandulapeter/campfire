@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
@@ -18,6 +19,9 @@ import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometr
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
+import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleGroupsOf
 
 /**
  * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
@@ -36,7 +40,7 @@ internal data class PrintSource(
     /** Whether the songs are in an order of somebody's making, which is what a running order and a manifest are of. */
     val hasRunningOrder get() = kind == Kind.SETLIST
 
-    /** Whether the songs can be ticked off, put on pages of their own and zipped together. */
+    /** Whether the songs can be put on pages of their own and zipped together. */
     val hasSeveralSongs get() = kind != Kind.SONG
 }
 
@@ -52,13 +56,30 @@ internal data class PrintSong(
     val transposition: Int = 0,
     /** Null for an unreadable or missing file; its place remains visible in the running order. */
     val song: ChordProSong?,
-    /** The file as it is stored, which the export screen shows for a song exported as ChordPro, and null when it could not be read. */
+    /** The file as it is stored, which the library's own files are written from, and null when it could not be read. */
     val text: String? = null,
     /**
      * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with in
      * the reader's tuning; empty where the chord diagrams are switched off in the app, whatever the export asks for.
      */
     val chords: List<PrintChord> = emptyList(),
+    /**
+     * The scales the song's parts are played over, as its Scales section suggests them in the key it is printed in;
+     * empty where the app suggests none (the Scales, the Scale suggestions, or the Chords switch off), whatever the
+     * export asks for.
+     */
+    val scaleGroups: List<SongScaleGroup> = emptyList(),
+    /** [scaleGroups] in words, which the export screen puts them in only while they are to be printed. */
+    val scales: List<PrintScaleRow> = emptyList(),
+)
+
+/**
+ * One line of a song's suggested scales: the parts it is for ([title], none for the home, which most of the song is
+ * played over) and its scales, or what says no scale fits them.
+ */
+internal data class PrintScaleRow(
+    val title: String?,
+    val text: String,
 )
 
 /**
@@ -89,6 +110,21 @@ internal fun printChordsOf(
         geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root) }
             ?: emptyChordDiagramGeometryOf(tuning.instrument),
     )
+}
+
+/**
+ * The scales [song], transposed as it is printed and still in the standard notation, is played over, as the song details
+ * screen's Scales section suggests them, its sections named by [labels] and its chords in [notation]; none for a
+ * songbook, for which the section suggests none either.
+ */
+internal fun printScaleGroupsOf(
+    song: ChordProSong,
+    labels: DefaultSectionLabels,
+    notation: ChordNotation,
+): List<SongScaleGroup> = if (song.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT) {
+    emptyList()
+} else {
+    songScaleGroupsOf(song, labels, notation)
 }
 
 /**
@@ -171,6 +207,8 @@ internal data class PrintLabels(
      * diagram says it), the tuning where it is not the standard one, and null where neither is named.
      */
     val chordTuning: String? = null,
+    /** The heading over a song's suggested scales, the song details screen's own. */
+    val scales: String? = null,
 )
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */

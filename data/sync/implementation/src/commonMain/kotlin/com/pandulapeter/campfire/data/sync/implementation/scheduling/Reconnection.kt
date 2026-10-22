@@ -16,10 +16,12 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 
 /**
- * Waits [duration], or less if the device gets its connection back in the meantime: what a network failure waits. A
- * monitor whose flow ends without emitting (the desktop's is empty) still waits the full length, since an exception
- * thrown here would end the scheduler's or the change feed's loop for the rest of the process.
+ * Waits [duration], or less if the device gets its connection back in the meantime: what a network failure waits, and
+ * answers whether it was the reconnection that ended the wait. A monitor whose flow ends without emitting (the desktop's
+ * is empty) still waits the full length, since an exception thrown here would end the scheduler's or the change feed's
+ * loop for the rest of the process.
  */
-internal suspend fun ConnectivityMonitor.awaitReconnection(duration: Duration) {
-    withTimeoutOrNull(duration) { reconnections.firstOrNull() ?: awaitCancellation() }
-}
+internal suspend fun ConnectivityMonitor.awaitReconnection(duration: Duration): Boolean = withTimeoutOrNull(duration) {
+    reconnections.firstOrNull() ?: awaitCancellation()
+    true
+} ?: false

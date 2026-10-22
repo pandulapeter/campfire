@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.DEVELOPER_EMAIL
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -47,8 +48,10 @@ import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
+import com.pandulapeter.campfire.presentation.ui.print.printScaleGroupsOf
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.tabReadingOf
 import kotlinx.coroutines.CancellationException
@@ -141,7 +144,7 @@ internal class ExportController(
         return job
     }
 
-    suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels): PrintSource {
+    suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels, sectionLabels: DefaultSectionLabels): PrintSource {
         val preferences = userPreferencesState.value.data
         val setlist = dialog.setlist
         val entries = when {
@@ -159,6 +162,9 @@ internal class ExportController(
         val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
         val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
         val readsCapoAsTransposition = preferences.readsCapoAsTransposition
+        // Read whether or not the export asks for them, as the chords are, and only where the song details screen suggests
+        // them, which is also where the export offers them.
+        val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->
@@ -188,8 +194,14 @@ internal class ExportController(
             } else {
                 emptyList()
             }
+            val scaleGroups = if (transposed != null && suggestsScales) {
+                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation()) }
+            } else {
+                emptyList()
+            }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
-                index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords)
+                index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords,
+                scaleGroups = scaleGroups)
         }
         // Several songs are titled by the screen, which counts them in the app's language.
         return PrintSource(
@@ -264,12 +276,11 @@ internal class ExportController(
 
     /**
      * The export screen's other format: a song as the `.cho` file it already is, a setlist as a zip of its manifest and
-     * the songs it names, and several songs as a zip of those songs alone, each narrowed to [songFileNames] where some
-     * were left out (null being all of them). A saved file
-     * closes the screen, as a saved PDF does, and the same guard keeps a tap that lands while the screen slides away from
-     * bringing a picker up over whatever is under it.
+     * the songs it names, and several songs as a zip of those songs alone. A saved file closes the screen, as a saved PDF
+     * does, and the same guard keeps a tap that lands while the screen slides away from bringing a picker up over
+     * whatever is under it.
      */
-    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, songFileNames: Set<String>?, isShare: Boolean) {
+    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, isShare: Boolean) {
         if (dialogHost.visibleDialog.value != dialog) return
         val setlist = dialog.setlist
         launchFileTransfer {
@@ -287,12 +298,8 @@ internal class ExportController(
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
                 when {
-                    setlist != null -> exportSetlist(setlistFileName = setlist.fileName, songFileNames = songFileNames, isDated = true)
-                    dialog.songs.isNotEmpty() -> exportSongs(
-                        fileNames = dialog.songs.map { it.fileName }.filter { songFileNames == null || it in songFileNames },
-                        isArchive = true,
-                        isDated = true,
-                    )
+                    setlist != null -> exportSetlist(setlistFileName = setlist.fileName, isDated = true)
+                    dialog.songs.isNotEmpty() -> exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isDated = true)
                     else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true)
                 }
             }

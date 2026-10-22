@@ -26,12 +26,15 @@ internal fun shareTargetOf(dialog: DialogType.Export) = when {
 }
 
 /**
- * The formats offered for [dialog]: a link only for one song or setlist, and only where the build can connect an
- * account to make it from ([isSyncAvailable]).
+ * The formats offered for [dialog], in the order they are recommended in: a link first, then the library's own files,
+ * then a PDF, from what keeps the most for whoever receives it to what keeps the least. A link only for one song or
+ * setlist, and only where the build can connect an account to make it from ([isSyncAvailable]).
  */
-internal fun exportFormatsOf(dialog: DialogType.Export, isSyncAvailable: Boolean) = PrintSettings.Format.entries.filter {
-    it != PrintSettings.Format.LINK || isSyncAvailable && shareTargetOf(dialog) != null
-}
+internal fun exportFormatsOf(dialog: DialogType.Export, isSyncAvailable: Boolean) = listOf(
+    PrintSettings.Format.LINK,
+    PrintSettings.Format.FILES,
+    PrintSettings.Format.PDF,
+).filter { it != PrintSettings.Format.LINK || isSyncAvailable && shareTargetOf(dialog) != null }
 
 /** These settings in a format among [formats]: one left for an export that does not offer it is a PDF there. */
 internal fun PrintSettings.withFormatIn(formats: List<PrintSettings.Format>) = if (format in formats) this else copy(format = PrintSettings.Format.PDF)

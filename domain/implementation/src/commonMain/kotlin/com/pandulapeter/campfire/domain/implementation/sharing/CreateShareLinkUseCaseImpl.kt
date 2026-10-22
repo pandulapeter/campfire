@@ -43,7 +43,7 @@ internal class CreateShareLinkUseCaseImpl(
         // Undated, so that the same files make the same bytes on every device, and a run that builds the copy again
         // from unchanged files finds nothing to upload.
         val copy = when (kind) {
-            SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, songFileNames = null, isDated = false)
+            SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, isDated = false)
             SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false)
         } ?: return CreateShareResult.Missing
         // Anyone opening the link takes the copy in as an import, which refuses anything larger.

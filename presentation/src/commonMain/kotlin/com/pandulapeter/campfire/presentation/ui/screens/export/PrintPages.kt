@@ -124,7 +124,9 @@ internal fun PrintPages(
         }
     }
     // Only where a keyboard is the way the app is driven: on a touch screen it would bring the keyboard's focus ring up.
-    LaunchedEffect(Unit) { if (isDesktopPlatform) focusRequester.requestFocus() }
+    // And only where the pages are a pane of their own: above the options they are an item of the options' list, which
+    // a focused item is scrolled into view of, so choosing the PDF would scroll the list away from the formats.
+    LaunchedEffect(Unit) { if (isDesktopPlatform && !areOptionsBelow) focusRequester.requestFocus() }
     fun shownPageBounds() = pageBounds(viewportSize, fitArea(), aspectRatio, pageView())
     fun zoomTo(target: Float, pivot: Offset = fitArea().center) {
         val view = pageView()

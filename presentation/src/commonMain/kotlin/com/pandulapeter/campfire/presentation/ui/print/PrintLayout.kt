@@ -27,13 +27,15 @@ import kotlinx.coroutines.yield
  * while it is suspended can the page paint and a newer choice of options cancel a stale layout.
  */
 /**
- * [this] with what the app's own feature switches take away left out too: the chords, their diagrams and the key with
- * the Chords switch, the tempo and the time signature with the Metronome one. The options themselves are kept as they
+ * [this] with what the app's own feature switches take away left out too: the chords, their diagrams, their scales, and
+ * the key with the Chords switch, the scales with the Scale suggestions one too, the tempo and the time signature with
+ * the Metronome one. The options themselves are kept as they
  * were chosen, since a switch only hides, and switched back on the export prints them again.
  */
-internal fun PrintSettings.withinFeatures(areChordsEnabled: Boolean, isMetronomeEnabled: Boolean) = copy(
+internal fun PrintSettings.withinFeatures(areChordsEnabled: Boolean, areScaleSuggestionsEnabled: Boolean, isMetronomeEnabled: Boolean) = copy(
     showChords = showChords && areChordsEnabled,
     showChordDiagrams = showChordDiagrams && areChordsEnabled,
+    showScales = showScales && areChordsEnabled && areScaleSuggestionsEnabled,
     showKey = showKey && areChordsEnabled,
     showTempo = showTempo && isMetronomeEnabled,
 )
@@ -82,9 +84,8 @@ private class PrintLayouter(
 
     suspend fun layout(source: PrintSource): PrintDocument {
         page()
-        if (source.hasRunningOrder && (options.includeSetlistOverview || options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER)) {
+        if (source.hasRunningOrder && options.includeSetlistOverview) {
             overview(source)
-            if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finish()
             // Song sheets follow the running order on a fresh page, including in the compact layout.
             newPage()
         }
@@ -160,19 +161,19 @@ private class PrintLayouter(
         }
     }
 
-    /** One song sheet: its heading, how it is played, its chord diagrams, then its blocks. */
+    /** One song sheet: its heading, how it is played, its chord diagrams and its scales, then its blocks. */
     private suspend fun song(entry: PrintSong) {
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = printRows.wrapped(title, printRows.titleStyle).toMutableList()
         if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += printRows.wrapped(it) }
         entry.song?.let { playingDetails(entry, it).takeIf(String::isNotBlank)?.let { heading += printRows.wrapped(it, printRows.detailStyle) } }
         // The heading travels with the first segment that prints anything (a missing song's notice standing in for it),
-        // or with the chord diagrams where the song has them: that segment whole where heading and segment fit a column
-        // together, otherwise its first two rows, after which it flows on from under its heading. A break before the
-        // first segment is ignored, since the heading has just started the song where it is. The blocks are grouped as
-        // the screen groups them, which joins a change of tempo or time over exactly where it is not shown.
+        // or with the chord diagrams and scales where the song has them: that segment whole where heading and segment fit
+        // a column together, otherwise its first two rows, after which it flows on from under its heading. A break before
+        // the first segment is ignored, since the heading has just started the song where it is. The blocks are grouped
+        // as the screen groups them, which joins a change of tempo or time over exactly where it is not shown.
         val groups = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections).joinCutSections(joinsTimings = !options.showTempo)
-        val diagramRows = entry.song?.let { chordDiagramRows(entry.chords) }.orEmpty()
+        val chordRows = entry.song?.let { chordDiagramRows(entry.chords).withSpaceBetween(scaleRows(entry.scales)) }.orEmpty()
         var firstGroup = -1
         var firstSegment = -1
         var firstBlockRows = if (entry.song == null) printRows.wrapped(labels.missing) else emptyList()
@@ -186,15 +187,15 @@ private class PrintLayouter(
                 break
             }
         }
-        val firstRows = diagramRows.ifEmpty { firstBlockRows }
+        val firstRows = chordRows.ifEmpty { firstBlockRows }
         val headingHeight = heading.height()
         val keepFirstWhole = headingHeight + headingGap + firstRows.height() <= capacity
         val together = headingHeight + headingGap + if (keepFirstWhole) firstRows.height() else firstRows.take(2).height()
         if (firstRows.isNotEmpty() && together <= capacity && y + together > bottom) nextColumn()
         place(heading)
         space(headingGap)
-        if (diagramRows.isNotEmpty()) {
-            place(diagramRows, keepWhole = keepFirstWhole)
+        if (chordRows.isNotEmpty()) {
+            place(chordRows, keepWhole = keepFirstWhole)
             space(options.fontSize * 0.65f)
         }
         if (entry.song == null) {
@@ -216,7 +217,7 @@ private class PrintLayouter(
                             // A break inside a section starts a new column whether or not anything after it prints.
                             if (segmentIndex > 0 && y > margin) nextColumn()
                             if (index == firstGroup && segmentIndex == 0) {
-                                if (diagramRows.isEmpty()) place(rows, keepWhole = keepFirstWhole) else place(rows)
+                                if (chordRows.isEmpty()) place(rows, keepWhole = keepFirstWhole) else place(rows)
                                 hasPlaced = true
                             } else if (rows.isNotEmpty()) {
                                 place(timingRows + rows)
@@ -270,6 +271,27 @@ private class PrintLayouter(
             val height = rowNameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
             Row(parts, height, diagrams = diagrams)
         }.let { diagramRows -> labels.chordTuning?.let { printRows.wrapped(it, printRows.detailStyle, isSelectable = false) + diagramRows } ?: diagramRows }
+    }
+
+    /**
+     * The song's suggested scales as its Scales section has them: under the heading, the home's line first, then a line
+     * for each other part and chord worth a scale of its own, titled by it. None of it is selectable, for the reason the
+     * diagrams' names are not: the importer would read the lines back as the song's own. Only with the chords, which the
+     * scales are read off.
+     */
+    private fun scaleRows(scales: List<PrintScaleRow>): List<Row> {
+        if (!options.showChords || !options.showScales || scales.isEmpty()) return emptyList()
+        val heading = labels.scales?.let { printRows.wrapped(it, printRows.labelStyle, isSelectable = false) }.orEmpty()
+        return heading + scales.flatMap { row ->
+            printRows.wrapped(row.title?.let { "$it: ${row.text}" } ?: row.text, printRows.detailStyle, isSelectable = false)
+        }
+    }
+
+    /** [this] and [other] one after the other, a diagrams' gap between them where both have rows. */
+    private fun List<Row>.withSpaceBetween(other: List<Row>) = when {
+        isEmpty() -> other
+        other.isEmpty() -> this
+        else -> this + Row(emptyList(), options.fontSize * DIAGRAM_GAP) + other
     }
 
     /**

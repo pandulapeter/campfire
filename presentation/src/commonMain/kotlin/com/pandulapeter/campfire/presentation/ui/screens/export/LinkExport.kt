@@ -73,6 +73,8 @@ internal fun rememberLinkExport(
     val creations by controller.creations.collectAsStateWithLifecycle()
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
     val state = linkExportStateOf(syncState = syncState, target = target, shares = shares, creation = creations[target], stoppingShareIds = stoppingShareIds)
+    // Into the process log, so that a report says when an open screen followed a share made or stopped elsewhere.
+    LaunchedEffect(state::class) { println("Share screen: link ${state::class.simpleName}") }
     val link = (state as? LinkExportState.Shared)?.share?.link?.landingUrl
     val isStopAsked = rememberSaveable(dialog) { mutableStateOf(false) }
     // A question restored after process death over a share stopped meanwhile is dropped, so it does not come back over

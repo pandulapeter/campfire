@@ -57,29 +57,29 @@ class ExportControllerTest {
     private val picker = RecordingFilePicker()
 
     @Test
-    fun `a setlist's files are saved narrowed to the chosen songs, confirmed, and the screen closes`() = runTest {
+    fun `a setlist's files are saved whole, confirmed, and the screen closes`() = runTest {
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, songFileNames = setOf("a.cho"), isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false)
         runCurrent()
-        assertEquals(listOf("setlist gig.setlist.json [a.cho]"), requests)
+        assertEquals(listOf("setlist gig.setlist.json"), requests)
         assertEquals(listOf("gig.zip"), picker.saved.map { it.name })
         assertEquals(listOf<Message>(Message.SetlistExported), messageSink.messages())
         assertNull(dialogHost.visibleDialog.value)
     }
 
     @Test
-    fun `several songs are exported as an archive of the chosen ones`() = runTest {
+    fun `several songs are exported as an archive of them all`() = runTest {
         val (controller, _, messageSink) = controller(visibleDialog = songsExport)
-        controller.exportFiles(picker, songsExport, songFileNames = setOf("a.cho", "c.cho"), isShare = false)
+        controller.exportFiles(picker, songsExport, isShare = false)
         runCurrent()
-        assertEquals(listOf("songs [a.cho, c.cho] archive: true"), requests)
+        assertEquals(listOf("songs [a.cho, b.cho, c.cho] archive: true"), requests)
         assertEquals(listOf<Message>(Message.SongsExported), messageSink.messages())
     }
 
     @Test
     fun `nothing is exported for a screen that is no longer shown`() = runTest {
         val (controller, _, _) = controller(visibleDialog = null)
-        controller.exportFiles(picker, setlistExport, songFileNames = null, isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false)
         runCurrent()
         assertTrue(requests.isEmpty())
         assertTrue(picker.saved.isEmpty())
@@ -88,7 +88,7 @@ class ExportControllerTest {
     @Test
     fun `a share is not confirmed and leaves the screen open`() = runTest {
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, songFileNames = null, isShare = true)
+        controller.exportFiles(picker, setlistExport, isShare = true)
         runCurrent()
         assertEquals(listOf("gig.zip"), picker.shared.map { it.name })
         assertTrue(messageSink.messages().isEmpty())
@@ -99,7 +99,7 @@ class ExportControllerTest {
     fun `a dismissed picker says nothing and leaves the screen open`() = runTest {
         picker.isSaved = false
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, songFileNames = null, isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false)
         runCurrent()
         assertTrue(messageSink.messages().isEmpty())
         assertEquals(setlistExport, dialogHost.visibleDialog.value)
@@ -178,8 +178,8 @@ class ExportControllerTest {
                 }
             },
             exportSetlist = object : ExportSetlistUseCase {
-                override suspend fun invoke(setlistFileName: String, songFileNames: Set<String>?, isDated: Boolean): ExportedFile {
-                    requests += "setlist $setlistFileName ${songFileNames.orEmpty().sorted()}"
+                override suspend fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile {
+                    requests += "setlist $setlistFileName"
                     return zip("gig.zip", size = 1)
                 }
             },

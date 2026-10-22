@@ -15,6 +15,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
@@ -25,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.print_no_songs
 import com.pandulapeter.campfire.presentation.resources.print_setlist_empty
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import kotlinx.coroutines.flow.SharedFlow
@@ -39,7 +40,6 @@ internal fun ExportPreviewPane(
     modifier: Modifier,
     state: ExportState,
     format: PrintSettings.Format,
-    setlistFileName: String?,
     isSideBySide: Boolean,
     bottomInset: Dp,
     laidOut: LaidOutDocument?,
@@ -50,6 +50,7 @@ internal fun ExportPreviewPane(
     magnifications: SharedFlow<Float>,
     onPageViewChanged: (PageView) -> Unit,
     hasPages: Boolean,
+    isFirstShownAtOnce: Boolean,
     onTurn: (Int) -> Unit,
     linkPreview: @Composable () -> Unit,
 ) = AnimatedContent(format, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shownFormat ->
@@ -57,23 +58,22 @@ internal fun ExportPreviewPane(
         linkPreview()
     } else if (shownFormat == PrintSettings.Format.FILES) {
         FilesPreview(
-            modifier = Modifier.fillMaxSize(),
+            modifier = if (isSideBySide) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
             source = state.source!!,
-            setlistFileName = setlistFileName,
-            selected = state.selected.orEmpty(),
+            isInList = !isSideBySide,
             // Beside the options the save button floats over the end of this pane.
-            bottomPadding = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 8.dp,
-            isBottomAnchored = isSideBySide,
+            bottomPadding = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 0.dp,
         )
     } else {
         val emptyMessage = when {
             state.source!!.songs.isEmpty() -> stringResource(Res.string.print_setlist_empty)
-            state.selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
             else -> null
         }
-        // Stacked, the preview is the first item of the options' list, so the pill turning its pages
-        // is drawn inside it and scrolls away with it rather than staying over the options.
-        Box(Modifier.fillMaxSize()) {
+        // Stacked, the preview is an item of the options' list, under the format, so the pill turning its pages
+        // is drawn inside it and scrolls away with it rather than staying over the options. There only the pages take
+        // a height of their own, the files and the link being as tall as what they say, and the change between them is
+        // the size this pane's crossfade animates.
+        Box(if (isSideBySide) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(STACKED_PREVIEW_HEIGHT)) {
             PrintPreview(
                 modifier = Modifier.fillMaxSize(),
                 laidOut = laidOut,
@@ -91,6 +91,7 @@ internal fun ExportPreviewPane(
                 PageButtons(
                     modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
                     isVisible = hasPages,
+                    isFirstShownAtOnce = isFirstShownAtOnce,
                     page = pagerState.currentPage,
                     pageCount = pagerState.pageCount,
                     onTurn = onTurn,

@@ -53,7 +53,7 @@ internal class SyncRepositoryImpl(
 
     override fun synchronize(deletionPolicy: SyncDeletionPolicy) = scheduler.synchronize(deletionPolicy)
 
-    override fun scheduleSynchronization() = scheduler.schedule()
+    override fun scheduleSynchronization() = scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
 
     override fun synchronizeOnReturn() = scheduler.synchronizeOnReturn()
 

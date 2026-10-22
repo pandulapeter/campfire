@@ -90,7 +90,7 @@ internal data class UserPreferencesDocument(
 
 @Serializable
 internal data class PrintSettingsDocument(
-    val format: String = "pdf",
+    val format: String = "link",
     val paper: String = "a4",
     val isLandscape: Boolean = false,
     val fontSize: Int = 12,
@@ -98,6 +98,7 @@ internal data class PrintSettingsDocument(
     val columns: Int = 1,
     val showChords: Boolean = true,
     val showChordDiagrams: Boolean = true,
+    val showScales: Boolean = true,
     /**
      * Null in a document from before the key and the tempo had boxes of their own, when [showMetadata] printed them, so
      * that somebody who had unticked that box does not find them printed again.
@@ -109,7 +110,6 @@ internal data class PrintSettingsDocument(
     val showMetadata: Boolean = true,
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
-    val setlistMode: String = "song_sheets",
     val includeSetlistOverview: Boolean = true,
 )
 

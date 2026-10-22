@@ -39,25 +39,17 @@ class ExportScreenDecisionsTest {
     }
 
     @Test
-    fun `every song of a setlist chosen hands its manifest out as it is`() {
-        assertNull(chosenSongFileNames(setlist, selected = setOf(0, 1)))
-        assertEquals(setOf("b.cho"), chosenSongFileNames(setlist, selected = setOf(1)))
-        assertNull(chosenSongFileNames(PrintSource(title = "Song", songs = listOf(song("a.cho"))), selected = emptySet()))
-    }
-
-    @Test
-    fun `a setlist's files want a song chosen unless it has none`() {
-        assertTrue(canExportFiles(setlist, selected = setOf(0)))
-        assertFalse(canExportFiles(setlist, selected = emptySet()))
-        assertTrue(canExportFiles(setlist.copy(songs = emptyList()), selected = emptySet()))
-        assertFalse(canExportFiles(setlist.copy(kind = PrintSource.Kind.SONGS), selected = emptySet()))
-        assertFalse(canExportFiles(null, selected = emptySet()))
+    fun `a zip can always be exported once read, a setlist with no songs as its manifest alone`() {
+        assertTrue(canExportFiles(setlist))
+        assertTrue(canExportFiles(setlist.copy(songs = emptyList())))
+        assertTrue(canExportFiles(setlist.copy(kind = PrintSource.Kind.SONGS)))
+        assertFalse(canExportFiles(null))
     }
 
     @Test
     fun `a song's file is exported only once it has been read`() {
-        assertTrue(canExportFiles(PrintSource(title = "Song", songs = listOf(song("a.cho", text = "{title: A}"))), selected = emptySet()))
-        assertFalse(canExportFiles(PrintSource(title = "Song", songs = listOf(song("a.cho"))), selected = setOf(0)))
+        assertTrue(canExportFiles(PrintSource(title = "Song", songs = listOf(song("a.cho", text = "{title: A}")))))
+        assertFalse(canExportFiles(PrintSource(title = "Song", songs = listOf(song("a.cho")))))
     }
 
     @Test

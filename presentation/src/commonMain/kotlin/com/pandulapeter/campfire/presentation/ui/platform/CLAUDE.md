@@ -75,8 +75,9 @@ The `expect` declarations and the interfaces the platform shells provide.
   and dialogs (class names, kept through R8 by `app/android/proguard-rules.pro`), changed setting names
   (`changedPropertyNames`, from `toString`, values never), the metronome, the tuner, imports, and the song filter;
   `MessageSink.launchLibraryChange`'s `action` for every library write; exports, share links, searches opened, and
-  sync runs (`SyncRunner`, counts only) at their own sources. Kinds, counts, and names; never typed text or a song's
-  content.
+  sync at its own sources, counts only: the connection's state, why a run starts and retries, each pass's plan, the
+  synced settings and shared copies steps, the change feed (`Sync feed:`), and the shared links list (`Sharing:`), with
+  the Share screen's link state. Kinds, counts, and names; never typed text or a song's content.
 - Android and desktop (`jvmSharedMain`): `System.out` / `System.err` mirrored into `campfire.log`, in
   `noBackupFilesDir` on Android, the data directory on desktop; the previous uncaught exception handler still runs.
 - iOS: stdout and stderr dup'ed onto a **non-blocking** pipe read by its own thread (a stalled reader drops output,

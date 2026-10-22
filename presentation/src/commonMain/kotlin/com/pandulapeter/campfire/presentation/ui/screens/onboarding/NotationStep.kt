@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_notation_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_notation_title
 import com.pandulapeter.campfire.presentation.ui.chords.label
+import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 
 /**
  * "How do you write chords?", the notations of the settings screen's list as cards named and nothing more, under a few
@@ -58,7 +59,7 @@ internal fun NotationStep(
             count = notations.size,
         ) { index, itemModifier ->
             val (notation, title) = notations[index]
-            OnboardingChoiceCard(
+            ChoiceCard(
                 modifier = itemModifier,
                 title = stringResource(title),
                 isSelected = notation == selected,

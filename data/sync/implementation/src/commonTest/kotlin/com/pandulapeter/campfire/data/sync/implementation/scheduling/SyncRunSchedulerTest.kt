@@ -72,9 +72,9 @@ class SyncRunSchedulerTest {
     fun `a second request moves the start of the automatic run`() = runTest {
         val world = world()
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY / 2)
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY - 100.milliseconds)
         assertEquals(0, world.runs.count)
         advanceTimeBy(200.milliseconds)
@@ -89,7 +89,7 @@ class SyncRunSchedulerTest {
 
         world.scheduler.synchronize(SyncDeletionPolicy.ASK)
         world.stateHolder.state.first { (it as? SyncState.Connected)?.progress?.total == 1 }
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         gate.complete(Unit)
         runCurrent()
         assertEquals(1, world.runs.count)
@@ -102,7 +102,7 @@ class SyncRunSchedulerTest {
     fun `a run asked for takes the place of the waiting automatic one`() = runTest {
         val world = world()
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         world.scheduler.synchronize(SyncDeletionPolicy.ASK)
         advanceTimeBy(20_000)
 
@@ -113,7 +113,7 @@ class SyncRunSchedulerTest {
     fun `cancelling drops the waiting automatic run`() = runTest {
         val world = world()
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         world.scheduler.cancel()
         // Not even leaving the app, which starts a waiting run at once, finds one.
         world.scheduler.startScheduled()
@@ -138,7 +138,7 @@ class SyncRunSchedulerTest {
         val world = world()
         world.provider.failListingOnce()
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
         assertEquals(1, world.runs.count)
         assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), world.lastOutcome)
@@ -155,7 +155,7 @@ class SyncRunSchedulerTest {
         val world = world()
         world.provider.onList = { throw SyncNetworkException("Offline") }
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
         advanceTimeBy(NETWORK_RETRY_DELAYS[0])
         assertEquals(2, world.runs.count)
@@ -166,7 +166,7 @@ class SyncRunSchedulerTest {
         assertEquals(3, world.runs.count)
         assertIs<SyncOutcome.Success>(world.lastOutcome)
         world.provider.failListingOnce()
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
         assertEquals(4, world.runs.count)
         advanceTimeBy(NETWORK_RETRY_DELAYS[0] - MARGIN * 2)
@@ -183,8 +183,8 @@ class SyncRunSchedulerTest {
         val storageFull = world(localFiles = mapOf(song(1) to "One".encodeToByteArray()))
         storageFull.provider.onUpload = { throw SyncRemoteStorageFullException("Full") }
 
-        unknown.scheduler.schedule()
-        storageFull.scheduler.schedule()
+        unknown.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
+        storageFull.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
         assertEquals(SyncOutcome.Failure(SyncFailureReason.UNKNOWN), unknown.lastOutcome)
         assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), storageFull.lastOutcome)
@@ -216,10 +216,10 @@ class SyncRunSchedulerTest {
     fun `a change made while a retry waits starts after the usual delay`() = runTest {
         val world = world()
         world.provider.failListingOnce()
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
         assertEquals(2, world.runs.count)
@@ -229,7 +229,7 @@ class SyncRunSchedulerTest {
     fun `Stop drops a waiting retry`() = runTest {
         val world = world()
         world.provider.failListingOnce()
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
         world.scheduler.cancel()
@@ -242,7 +242,7 @@ class SyncRunSchedulerTest {
     fun `leaving the app with only a retry waiting starts nothing`() = runTest {
         val world = world()
         world.provider.failListingOnce()
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
         val progress = world.scheduler.startScheduled()
@@ -256,7 +256,7 @@ class SyncRunSchedulerTest {
     fun `returning to the app starts a run that carries the waiting one`() = runTest {
         val world = world()
 
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         world.scheduler.synchronizeOnReturn()
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
@@ -307,7 +307,7 @@ class SyncRunSchedulerTest {
     fun `a run the network failed is tried again as soon as the device is back online`() = runTest {
         val world = world()
         world.provider.failListingOnce()
-        world.scheduler.schedule()
+        world.scheduler.schedule(reason = SyncRunScheduler.RunReason.LIBRARY_CHANGE)
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
         world.connectivity.reconnect()

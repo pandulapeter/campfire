@@ -14,15 +14,9 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 interface ExportSetlistUseCase {
 
     /**
-     * A zip of the setlist and the songs in it, so that importing it elsewhere restores both. [songFileNames] narrows it
-     * to those songs, the setlist in the zip naming only them, so that an import of it finds every song it names; null
-     * exports the whole setlist with its document unchanged. [isDated] stamps the zip's entries with the time, as a file
-     * the user saves has; undated, the same files always make the same bytes, as a shared copy compared by its bytes
-     * needs.
+     * A zip of the setlist, its document unchanged, and the songs in it, so that importing it elsewhere restores both.
+     * [isDated] stamps the zip's entries with the time, as a file the user saves has; undated, the same files always make
+     * the same bytes, as a shared copy compared by its bytes needs.
      */
-    suspend operator fun invoke(
-        setlistFileName: String,
-        songFileNames: Set<String>?,
-        isDated: Boolean,
-    ): ExportedFile?
+    suspend operator fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile?
 }

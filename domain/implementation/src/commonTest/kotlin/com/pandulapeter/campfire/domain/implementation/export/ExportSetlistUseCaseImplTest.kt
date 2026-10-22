@@ -27,7 +27,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a setlist is named by its title`() = runTest {
-        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", songFileNames = null, isDated = true)
+        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", isDated = true)
 
         assertEquals("summer_set.zip", assertNotNull(exported).name)
         assertEquals(setOf("summer_2.setlist.json"), archive.packed.keys)
@@ -35,20 +35,18 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a blank title is still a name`() = runTest {
-        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", songFileNames = null, isDated = true)
+        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", isDated = true)
 
         assertEquals("untitled.zip", assertNotNull(exported).name)
     }
 
     @Test
-    fun `songs left out are neither in the archive nor named by the setlist in it`() = runTest {
+    fun `every song the setlist names goes in beside it, a missing one left out`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
-        val repository = FakeSetlistRepository(setlist)
 
-        useCase(repository, readable = setOf("a.cho", "b.cho", "c.cho")).invoke("gig.setlist.json", setOf("a.cho", "c.cho"), isDated = true)
+        useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isDated = true)
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
-        assertEquals(setOf("a.cho", "c.cho"), repository.requestedSongFileNames)
     }
 
     private fun useCase(setlist: Setlist) = useCase(FakeSetlistRepository(setlist))
@@ -62,16 +60,11 @@ class ExportSetlistUseCaseImplTest {
         archiveRepository = archive,
     )
 
-    /** Holds the one setlist, and records which songs its document was asked to name. */
+    /** Holds the one setlist. */
     private class FakeSetlistRepository(private val setlist: Setlist) : SetlistRepositoryStub() {
-
-        var requestedSongFileNames: Set<String>? = null
 
         override suspend fun loadSetlistsIfNeeded() = listOf(setlist)
 
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?): String? {
-            requestedSongFileNames = songFileNames
-            return if (fileName == setlist.fileName) "{}" else null
-        }
+        override suspend fun loadSetlistDocument(fileName: String) = if (fileName == setlist.fileName) "{}" else null
     }
 }
