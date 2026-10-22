@@ -13,6 +13,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
@@ -36,7 +37,7 @@ import kotlin.time.TimeSource
  * both sides and finds nothing to transfer, as the one on every return to the front mostly does, never shows it; once
  * shown, it stays for the rest of the run (a second pass lists again) and for at least [MINIMUM_VISIBLE_DURATION], so
  * a run of a single file does not flash it. Without a track, so that between runs and at its unfilled end nothing
- * covers what is under it.
+ * covers what is under it but the [SyncProgressPulse] that keeps moving there while the fill waits on a slow transfer.
  */
 @Composable
 internal fun SyncProgressBar(
@@ -70,13 +71,19 @@ internal fun SyncProgressBar(
     ) {
         // Animated, or a run that finishes several files between frames would make the bar jump.
         val fraction by animateFloatAsState(targetValue = shownFraction, label = "syncProgress")
-        LinearProgressIndicator(
-            progress = { fraction },
-            modifier = Modifier.fillMaxWidth(),
-            trackColor = Color.Transparent,
-            gapSize = 0.dp,
-            drawStopIndicator = {},
-        )
+        Box {
+            SyncProgressPulse(
+                modifier = Modifier.matchParentSize(),
+                fraction = { fraction },
+            )
+            LinearProgressIndicator(
+                progress = { fraction },
+                modifier = Modifier.fillMaxWidth(),
+                trackColor = Color.Transparent,
+                gapSize = 0.dp,
+                drawStopIndicator = {},
+            )
+        }
     }
 }
 

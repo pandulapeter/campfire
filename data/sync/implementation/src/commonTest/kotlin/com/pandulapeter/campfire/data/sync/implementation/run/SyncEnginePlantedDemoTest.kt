@@ -69,9 +69,11 @@ class SyncEnginePlantedDemoTest {
             plantedContentHash = { key -> if (key == song(1)) localContentHash(planted) else null },
         )
 
-        assertContentEquals(edited, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertContentEquals(edited, provider.files.getValue(song(1)).first)
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        assertContentEquals(there, local.files[song(1)])
+        assertContentEquals(edited, local.files[copy])
+        assertContentEquals(there, provider.files.getValue(song(1)).first)
+        assertContentEquals(edited, provider.files.getValue(copy).first)
         assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
     }
 
@@ -89,8 +91,8 @@ class SyncEnginePlantedDemoTest {
             plantedContentHash = { key -> if (key == song(2)) localContentHash(here) else null },
         )
 
-        assertContentEquals(here, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+        assertContentEquals(there, local.files[song(1)])
+        assertContentEquals(here, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
         assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
     }
 

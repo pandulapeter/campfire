@@ -31,7 +31,7 @@ data class MetronomeSettings(
     val volume: Float = 1f,
     val subdivisionId: String = "none",
     val isVisualBeatEnabled: Boolean = true,
-    val isHapticBeatEnabled: Boolean = false,
+    val isHapticBeatEnabled: Boolean = true,
     val beatLevels: Map<String, List<String>> = emptyMap(),
     val bpm: Int = 120,
     val timeSignature: String = "4/4",

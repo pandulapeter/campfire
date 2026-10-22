@@ -35,6 +35,10 @@ them up by.
 - **Content decides what changed, never a clock**: the platforms disagree about modification times and the web has
   none. **An edit always beats a deletion.** A file changed on both sides is never merged. `SyncPlanner` stays a pure,
   tested function of (local hashes, remote listing, index).
+- **A conflict keeps both versions; the index decides which one keeps the name.** A file the last run saw keeps this
+  device's edit under its name and the other version as the ` (2)` copy. One the index has never seen (a device
+  connecting, perhaps with an old copy of the library) keeps the cloud folder's version, so every other device gets
+  one new file per conflict instead of a rewritten song with its own version moved aside.
 
 ## Renames
 

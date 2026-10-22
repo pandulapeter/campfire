@@ -53,6 +53,10 @@ internal class ConflictResolver(
      * A demo file this device planted that still holds exactly what was planted ([plantedContentHash]) takes the remote
      * version too, but only where the index has no entry for it, the first time this device meets the name in this
      * folder.
+     *
+     * A file that both sides held when the pass listed them and that the index has no entry for ([isFirstMeeting]) is
+     * settled the other way round from every other conflict: the cloud folder's version keeps the name and this
+     * device's goes up next to it, see [keepRemoteUnderName].
      */
     suspend fun resolveWith(
         pass: SyncPass,
@@ -61,6 +65,7 @@ internal class ConflictResolver(
         localBytes: ByteArray,
         remote: ByteArray,
         indexEntry: SyncIndexEntry?,
+        isFirstMeeting: Boolean,
     ): SyncEngine.OperationOutcome {
         val provider = pass.run.provider
         val onLocalFileChanged = pass.run.onLocalFileChanged
@@ -85,6 +90,9 @@ internal class ConflictResolver(
             if (isOnlyTheDayHere || setlistComparison.isSameApartFromDate(localBytes, remote)) {
                 return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
             }
+        }
+        if (isFirstMeeting) {
+            return keepRemoteUnderName(pass = pass, key = key, revision = revision, localBytes = localBytes, remote = remote)
         }
         // Free on both sides, not only here: the listing may hold a file under the copy's name that has not come down
         // yet - another device's copy, or a song that simply has that name - and is planned as a download later in
@@ -149,6 +157,68 @@ internal class ConflictResolver(
             entries = entries,
             summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
         )
+    }
+
+    /**
+     * The first time a device meets a file the cloud folder also holds, neither version is newer by anything sync knows,
+     * and the folder's is the one every other device already has under that name. Kept there, the two versions cost
+     * each of them one new file to download; the local version keeping the name instead would rewrite the song on every
+     * other device and move the version they had aside into a copy - all of them at once, for a device connected with
+     * an old copy of the whole library.
+     *
+     * This device's version is written to its copy before the folder's goes over it, so that it is on disk throughout;
+     * a copy left by an earlier attempt that already holds it is used again. A save landing on the file in between
+     * leaves the file to the next pass and takes the copy back, since the save supersedes what the copy holds. The
+     * copy goes up as a new file, or is left to its own operation where the folder already lists its name.
+     */
+    private suspend fun keepRemoteUnderName(
+        pass: SyncPass,
+        key: SyncKey,
+        revision: String,
+        localBytes: ByteArray,
+        remote: ByteArray,
+    ): SyncEngine.OperationOutcome {
+        val onLocalFileChanged = pass.run.onLocalFileChanged
+        val remoteNames = pass.remoteFiles.keys.filter { it.kind == key.kind }.mapTo(hashSetOf()) { it.folded().name }
+        val (copyName, isReused) = libraryFileLock.withLock {
+            withContext(NonCancellable) {
+                val reusable = libraryFileLocalSource.numberedVariantHolding(key.kind, key.name, localBytes)
+                    ?.takeUnless { name -> SyncKey(kind = key.kind, name = name).isDeletedElsewhere(pass, remoteNames) }
+                if (reusable != null) {
+                    reusable to true
+                } else {
+                    val written = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, localBytes) { name ->
+                        SyncKey(kind = key.kind, name = name).folded().name in remoteNames
+                    }
+                    onLocalFileChanged(SyncKey(kind = key.kind, name = written))
+                    written to false
+                }
+            }
+        }
+        val copyKey = SyncKey(kind = key.kind, name = copyName)
+        val taken = takeRemote(
+            key = key,
+            revision = revision,
+            localBytes = localBytes,
+            remote = remote,
+            onLocalFileChanged = onLocalFileChanged,
+        )
+        if (taken.isUnresolved) {
+            if (!isReused) discardCopy(copyKey, localBytes, onLocalFileChanged)
+            return taken
+        }
+        if (copyKey.folded().name in remoteNames) {
+            return taken.copy(summary = taken.summary.copy(conflicts = listOf(copyName)))
+        }
+        return when (val uploaded = pass.run.provider.upload(copyKey.kind, copyKey.name, localBytes, expectedRevision = null)) {
+            is RemoteWriteResult.Written -> SyncEngine.OperationOutcome(
+                entries = taken.entries + (copyKey to SyncIndexEntry(localContentHash(localBytes), uploaded.revision)),
+                summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
+            )
+
+            // Taken in the cloud since the listing: the copy is an ordinary local file now, which the next pass settles.
+            RemoteWriteResult.Conflict -> taken.copy(summary = taken.summary.copy(conflicts = listOf(copyName)), isUnresolved = true)
+        }
     }
 
     /** Whether the folder held this file once (the pass's index has it) and no longer lists it: deleted elsewhere. */

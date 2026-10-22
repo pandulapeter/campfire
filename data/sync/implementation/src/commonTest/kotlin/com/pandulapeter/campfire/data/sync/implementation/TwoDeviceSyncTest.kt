@@ -105,6 +105,23 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a device connected with older copies of the library leaves the other device's songs as they are`() = runTest {
+        val a = Device(shared())
+        a.sync(cloud)
+        val older = shared().mapValues { (_, bytes) -> "Older ".encodeToByteArray() + bytes }
+        val b = Device(older + (song(9) to "Only on B".encodeToByteArray()))
+        b.sync(cloud)
+        a.sync(cloud)
+
+        // Every song the folder held keeps its name and what A wrote; B's versions come down next to them as copies.
+        val copies = shared().entries.associate { (key, bytes) ->
+            key.name.replace(".cho", " (2).cho") to "Older " + bytes.decodeToString()
+        }
+        assertEverywhere(sharedContents() + copies + ("song_9.cho" to "Only on B"), a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
     fun `a conflict settled over a failing network leaves one copy on both devices`() = runTest {
         val (a, b) = devicesInStep()
         a.library.files[song(1)] = "Edited on A".encodeToByteArray()

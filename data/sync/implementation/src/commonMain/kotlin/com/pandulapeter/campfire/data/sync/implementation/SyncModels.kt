@@ -74,8 +74,9 @@ internal sealed interface SyncOperation {
 
     /**
      * Changed on both sides. Nothing is merged and nothing is thrown away: the local version keeps the name, and the
-     * remote one is written next to it under a free one, exactly as an import that collides would be - except a
-     * setlist whose versions differ only in the day each device gave it, which takes the remote one (see `SyncEngine`).
+     * remote one is written next to it under a free one, exactly as an import that collides would be - the other way
+     * round for a file the index has never seen, and except a setlist whose versions differ only in the day each
+     * device gave it, which takes the remote one (see `ConflictResolver`).
      */
     data class Resolve(override val key: SyncKey, val revision: String) : SyncOperation
 

@@ -169,48 +169,6 @@ internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState) = fadingVert
 )
 
 /**
- * [fadingVerticalEdges] sideways, for a row that scrolls: each end fades as far as there is content left past it, so a
- * row that fits, or rests at an end, is drawn whole there. The start is the right edge in a right to left layout.
- * Masked, so for a row on no one known color.
- */
-internal fun Modifier.fadingHorizontalEdges(scrollState: ScrollState) = this
-    .graphicsLayer {
-        compositingStrategy = if (scrollState.value > 0 || scrollState.maxValue - scrollState.value > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
-    }
-    .drawWithContent {
-        drawContent()
-        val width = EDGE_FADE_SIZE.toPx()
-        val isRtl = layoutDirection == LayoutDirection.Rtl
-        val startStrength = (scrollState.value / width).coerceIn(0f, 1f)
-        val endStrength = ((scrollState.maxValue - scrollState.value) / width).coerceIn(0f, 1f)
-        val leftStrength = if (isRtl) endStrength else startStrength
-        val rightStrength = if (isRtl) startStrength else endStrength
-        if (leftStrength > 0f) {
-            drawRect(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color.Black.copy(alpha = 1f - leftStrength), Color.Black),
-                    startX = 0f,
-                    endX = width,
-                ),
-                size = Size(width, size.height),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-        if (rightStrength > 0f) {
-            drawRect(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color.Black, Color.Black.copy(alpha = 1f - rightStrength)),
-                    startX = size.width - width,
-                    endX = size.width,
-                ),
-                topLeft = Offset(size.width - width, 0f),
-                size = Size(width, size.height),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-    }
-
-/**
  * [fadingVerticalEdges] for a lazy list over a known opaque background, which only knows how far it is scrolled into
  * its first item, and how far its last one reaches past the viewport once that one has been laid out.
  */

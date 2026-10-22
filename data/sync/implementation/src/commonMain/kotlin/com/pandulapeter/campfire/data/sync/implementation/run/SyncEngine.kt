@@ -315,7 +315,7 @@ internal class SyncEngine(
         when (operation) {
             is SyncOperation.Download -> download(pass, operation)
             is SyncOperation.Upload -> upload(pass, operation)
-            is SyncOperation.Resolve -> resolve(pass, operation)
+            is SyncOperation.Resolve -> resolve(pass, operation, isFirstMeeting = operation.key !in pass.index)
             is SyncOperation.DeleteLocal -> deleteLocally(pass, operation)
 
             is SyncOperation.DeleteRemote -> deleteRemotely(pass, listOf(operation)).single().second
@@ -388,7 +388,7 @@ internal class SyncEngine(
             // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
             // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
             // it is resolved as that rather than written over.
-            return resolve(pass, SyncOperation.Resolve(key, operation.revision))
+            return resolve(pass, SyncOperation.Resolve(key, operation.revision), isFirstMeeting = false)
         }
         val downloaded = downloadWithinLimit(pass, key)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
@@ -417,6 +417,7 @@ internal class SyncEngine(
                 localBytes = changed,
                 remote = downloaded.bytes,
                 indexEntry = index[key],
+                isFirstMeeting = false,
             )
         }
         // The revision of what was fetched rather than the listing's: another device may have written the file again in
@@ -480,8 +481,10 @@ internal class SyncEngine(
     /**
      * A file that changed on both sides. The local version keeps the name and goes up; the remote one comes down
      * next to it under a free name and goes back up under that name, so that both devices end with both versions
-     * and the same two names. Nothing is merged, and nothing is thrown away - except where the file is a setlist and
-     * the only difference is the day it names, which [ConflictResolver.resolveWith] settles by taking the remote version.
+     * and the same two names. A file both sides held when the pass listed them that the index has never seen
+     * ([isFirstMeeting]) goes the other way round. Nothing is merged, and nothing is thrown away - except where the
+     * file is a setlist and the only difference is the day it names, which [ConflictResolver.resolveWith] settles by
+     * taking the remote version.
      *
      * The incoming version is on disk before the local one goes up, because going up is what destroys it on the
      * remote: held only in memory across that request, a copy that then cannot be written - a full disk, a process
@@ -492,7 +495,7 @@ internal class SyncEngine(
      * device's own write. Where nothing says either way - the network dropped, the run was stopped - it stays, and the
      * worst that follows is a second identical copy.
      */
-    private suspend fun resolve(pass: SyncPass, operation: SyncOperation.Resolve): OperationOutcome {
+    private suspend fun resolve(pass: SyncPass, operation: SyncOperation.Resolve, isFirstMeeting: Boolean): OperationOutcome {
         val key = operation.key
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
         // The two sides changed to the same thing, which is not a conflict at all - the same edit made twice.
@@ -508,6 +511,7 @@ internal class SyncEngine(
             localBytes = local,
             remote = remote.bytes,
             indexEntry = pass.index[key],
+            isFirstMeeting = isFirstMeeting,
         )
     }
 

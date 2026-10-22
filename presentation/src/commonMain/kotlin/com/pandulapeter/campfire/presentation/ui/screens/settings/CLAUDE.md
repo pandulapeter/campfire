@@ -38,7 +38,7 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 ## Layout invariants
 
 - No app bar; tabs at the top, everything start-aligned. **Tabs stay flat**, no divider: pages fade into them
-  (`fadingTopEdge`); the tab row fades at an end with more tabs (`fadingHorizontalEdges`).
+  (`fadingTopEdge`); the tab row has no fade at its ends.
 - `targetPage` lights the tab name (a press answers at once); **the indicator follows the pages**
   (`pagerIndicatorSpan`), so swipe, press, and predictive back move it identically.
 - **Each page is one column**, capped at `THEME_COLOR_CHOICE_WIDTH`, at every width: two columns made tabs look unlike

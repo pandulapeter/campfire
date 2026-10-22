@@ -372,6 +372,50 @@ class SyncEngineConflictTest {
     }
 
     @Test
+    fun `a file met for the first time keeps the cloud folder's version under its name`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+
+        val result = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, SyncIndexDocument()))
+
+        assertEquals(listOf(copy.name), result.summary.conflicts)
+        assertContentEquals(THERE, local.files[song(1)])
+        assertContentEquals(HERE, local.files[copy])
+        assertEquals("r1", provider.files.getValue(song(1)).second)
+        assertContentEquals(HERE, provider.files.getValue(copy).first)
+    }
+
+    @Test
+    fun `a file met for the first time with a copy of it here already makes no new one`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+
+        synchronize(local, provider, SyncIndexDocument())
+
+        assertEquals(setOf(song(1), copy), local.files.keys)
+        assertContentEquals(THERE, local.files[song(1)])
+        assertContentEquals(HERE, provider.files.getValue(copy).first)
+    }
+
+    @Test
+    fun `a file met for the first time and saved while it is settled keeps the save rather than a copy of what it replaced`() =
+        runTest {
+            val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+            val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+            val saved = "Saved during the run".encodeToByteArray()
+            provider.onDownload = { key -> if (key == song(1)) local.files[song(1)] = saved }
+
+            synchronize(local, provider, SyncIndexDocument())
+
+            val expected = setOf(THERE.decodeToString(), saved.decodeToString())
+            assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
+            assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
+            assertEquals(2, local.files.size)
+        }
+
+    @Test
     fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {
         val another = "Another song".encodeToByteArray()
         val local = FakeLibraryFileLocalSource(files = mapOf(song("x") to HERE))

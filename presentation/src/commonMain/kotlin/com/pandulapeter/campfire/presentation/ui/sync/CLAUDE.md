@@ -23,6 +23,8 @@
 - `SyncLifecycleEffects`: a run on every ON_START but the first (the launch's run is the restore's), and the folder
   watched while STARTED. `SyncProgressBar` is the only sign of a run outside Settings: a trackless line along the top
   of the window, over everything `CampfireApp` draws, for every run that has files to transfer, automatic ones
-  included; a run that only lists both sides never shows it, and once shown it stays at least 500 ms.
+  included; a run that only lists both sides never shows it, and once shown it stays at least 500 ms. A faint segment
+  (`SyncProgressPulse`) keeps running from the fill's end to the edge, so a slow transfer still moves; it fades out as
+  that room shrinks.
 - On a launch with no preferences document the stored credentials are forgotten inside `startRestoring`'s coroutine,
   before `restore` reads them.
