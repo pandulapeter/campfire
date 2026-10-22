@@ -26,7 +26,8 @@ public object ChordProPrettifier {
      * Orders the opening metadata by the toolbar's header order, separates the header and sections, and uses LF
      * with a final newline. Repeated directives keep their relative order. Source comments and settings anchor
      * metadata groups; body directives (including key changes) stay where they were written. Lyrics and the inside
-     * of environments retain their whitespace, including blank lines in tabs, grids and delegated notation.
+     * of environments retain their whitespace, including blank lines in tabs, grids and delegated notation, except for
+     * the blank lines that end a section, right before its `{end_of_…}`.
      *
      * A `{tempo}` or a `{time}` is the exception, since what it means depends on where it stands: the first readable one
      * in the body of a song whose header has none is the song's own value (see [ChordProParser]), so it is moved into
@@ -118,6 +119,11 @@ public object ChordProPrettifier {
 
             if (hoisted[song]?.contains(index) == true) continue
             if (environments.isNotEmpty()) {
+                // A section ends with its last line: blank lines before its end separate nothing from anything. A tab's
+                // or a grid's are their literal text, and delegated notation is another language's.
+                if (!delegated && end != null && end != "tab" && end != "grid" && end in environments) {
+                    while (output.lastOrNull()?.isBlank() == true) output.removeAt(output.lastIndex)
+                }
                 output += rawLine
                 if (!delegated && start != null) environments += start
                 if (end != null) {

@@ -9,12 +9,14 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
+import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /** The words of a line, the cells of a grid line and the staff of a tab, see [words]. */
 internal object ChordProTokens {
 
-    private val barLines = setOf("|", "||", "|.", "|:", ":|", ":|:")
+    private const val PLAIN_BAR = "|"
+    private val barLines = setOf(PLAIN_BAR, "||", "|.", "|:", ":|", ":|:")
     private val voltaRegex = Regex(":?\\|\\d+>?")
 
     const val GRID_CELL_CHORD_SEPARATOR = "~"
@@ -53,14 +55,23 @@ internal object ChordProTokens {
      * whatever follows the last one in the right margin, so on a line that has a bar both are text: a margin label
      * such as `A` or `Coda` names a part of the song, and taking it for a chord would transpose it. A `/` marks where a
      * chord is played and is not one either.
+     *
+     * A row may also leave out its outer bar lines (`G | D | Em | C`), and then its first and last cells stand where
+     * the margins would. A right margin made only of cells ([isMarginCell]: chords, beats, and repeats) is read as
+     * cells, since a note there (`x2`, `(twice)`) is never a chord name. A left margin is read as cells only when it is
+     * made of them, the line's first bar line is a plain `|`, and the right margin holds no label either: a part name
+     * is written before a `||` or a `|:` (`A || G7 . |`), and a line with a label on its right has its margins in use.
      */
     fun parseGridTokens(trimmedLine: String): List<GridToken> {
         val words = words(trimmedLine).map { it.value }
         val firstBarIndex = words.indexOfFirst { isBar(it) }
         val lastBarIndex = words.indexOfLast { isBar(it) }
+        val isRightMarginCells = firstBarIndex >= 0 && words.drop(lastBarIndex + 1).all(::isMarginCell)
+        val isLeftMarginCells = isRightMarginCells && words[firstBarIndex] == PLAIN_BAR && words.take(firstBarIndex).all(::isMarginCell)
         return words.mapIndexed { index, word ->
             when {
-                firstBarIndex >= 0 && (index < firstBarIndex || index > lastBarIndex) -> GridToken.Text(word)
+                index < firstBarIndex && !isLeftMarginCells -> GridToken.Text(word)
+                firstBarIndex >= 0 && index > lastBarIndex && !isRightMarginCells -> GridToken.Text(word)
                 isBar(word) -> GridToken.Bar(word)
                 word == "." -> GridToken.Beat
                 word == "%" || word == "%%" -> GridToken.Repeat(word)
@@ -69,6 +80,10 @@ internal object ChordProTokens {
             }
         }
     }
+
+    /** Whether [word], standing where a margin would, is a cell of the row instead: a beat, a repeat, or a cell of chords. */
+    private fun isMarginCell(word: String) =
+        word == "." || word == "%" || word == "%%" || cellChords(word).all(ChordProChordNames::isChordName)
 
     /** The bar lines of a grid, the repeats and the voltas (`|1`, `:|2`, `:|2>`) included. */
     fun isBar(word: String) = word in barLines || voltaRegex.matches(word)

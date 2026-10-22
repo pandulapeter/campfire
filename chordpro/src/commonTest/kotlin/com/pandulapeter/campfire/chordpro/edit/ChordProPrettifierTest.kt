@@ -41,6 +41,20 @@ class ChordProPrettifierTest {
     }
 
     @Test
+    fun `blank lines at the end of a section are removed and the one between sections stays`() {
+        val raw = "{title: Song}\n\n{start_of_verse}\nHello\n\n\n{end_of_verse}\n\n{soc}\n  [C]Sing\n \n{eoc}\n\n{sov}\n{sot}\ne|--0--|\n\n{eot}\n\n{eov}\n"
+        val formatted = ChordProPrettifier.prettify(raw)
+        assertEquals(
+            "{title: Song}\n\n{start_of_verse}\nHello\n{end_of_verse}\n\n{soc}\n  [C]Sing\n{eoc}\n\n{sov}\n{sot}\ne|--0--|\n\n{eot}\n{eov}\n",
+            formatted,
+        )
+        assertEquals(formatted, ChordProPrettifier.prettify(formatted))
+        val caret = raw.indexOf("\n\n\n{end_of_verse}") + 2
+        assertEquals(formatted.indexOf("{end_of_verse}"), ChordProPrettifier.prettifiedOffset(raw, formatted, caret))
+        assertEquals(formatted.indexOf("Sing") + 2, ChordProPrettifier.prettifiedOffset(raw, formatted, raw.indexOf("Sing") + 2))
+    }
+
+    @Test
     fun `tab grid and nested environment interiors are untouched`() {
         val interior = "{sov}\n{sot}\n    G     C  \n\n\n e|--0--   \n{eot}\n{sog}\n | G . | C . |  \n\n{eog}\n{eov}"
         assertEquals("{title: Song}\n\n$interior\n", ChordProPrettifier.prettify("{title: Song}\n$interior"))

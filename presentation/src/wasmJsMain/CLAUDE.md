@@ -42,6 +42,8 @@ canvas listener — and most dialogs open with a field focused.
 - **Ctrl/Cmd + F** (`SearchShortcutEffect`, a Kotlin listener, since the view model decides synchronously): calls
   `openCurrentSearch` and prevents the find bar only if that opened something. In the editor, F and R are always
   prevented (its Find / Find and replace; R would reload).
+- **Ctrl/Cmd + E** (`EditShortcutEffect`): prevented on song details outside performance mode, where it opens the
+  editor; Chrome would focus its address bar.
 - **Ctrl/Cmd + V** (`PasteShortcutEffect`): the `paste` event, not the key, since it carries the text with no permission
   asked; a paste into an editable target is left alone, and only `isNewSongPasteAvailable` takes one.
 - **Zoom** (`SongTextZoomEffect`, song details only): Ctrl/Cmd + plus/minus/zero go to `zoomSongText`, matched by `key`

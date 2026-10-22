@@ -46,6 +46,27 @@ class EditorInsertionWritesTest {
     }
 
     @Test
+    fun `a section around whole selected lines closes right after the last of them`() {
+        val text = "Intro\nLa la\nLa la la\nOutro"
+        val state = TextFieldState(text, TextRange(6, 21))
+
+        state.insert(EditorInsertion.section(label = "Verse", name = "verse"))
+
+        assertEquals("Intro\n{start_of_verse}\nLa la\nLa la la\n{end_of_verse}\nOutro", state.text.toString())
+        assertEquals(TextRange("Intro\n{start_of_verse}\n".length, "Intro\n{start_of_verse}\nLa la\nLa la la".length), state.selection)
+    }
+
+    @Test
+    fun `a section around lines selected with the break before them opens right before the first of them`() {
+        val text = "Intro\nLa la\nOutro"
+        val state = TextFieldState(text, TextRange(5, 11))
+
+        state.insert(EditorInsertion.section(label = "Verse", name = "verse"))
+
+        assertEquals("Intro\n{start_of_verse}\nLa la\n{end_of_verse}\nOutro", state.text.toString())
+    }
+
+    @Test
     fun `a tab with nothing selected puts the caret after the name of its top string`() {
         val state = TextFieldState("", TextRange(0))
 

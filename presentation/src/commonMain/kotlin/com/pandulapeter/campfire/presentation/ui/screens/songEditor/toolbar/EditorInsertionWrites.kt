@@ -77,16 +77,30 @@ internal fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes, ins
  * Puts the two halves of [insertion] around the selection, or around the caret when there is none.
  *
  * A directive only counts as one when nothing shares its line, so the halves grow a line break of their own where
- * the text on either side would otherwise run into them.
+ * the text on either side would otherwise run into them. Selected whole lines usually end in their last line break
+ * (and a selection dragged up from below starts with the one before them), which a half that brings a line break of
+ * its own would turn into a blank line inside the section, so such a break is moved out to the other side of it.
  */
 private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit {
     val start = minOf(selection.start, selection.end)
     val end = maxOf(selection.start, selection.end)
-    val selected = originalText.substring(start, end)
-    val prefix = if (selected.isEmpty()) insertion.emptyPrefix else insertion.prefix
-    val suffix = if (selected.isEmpty()) insertion.emptySuffix else insertion.suffix
-    val opening = if (insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n') "\n$prefix" else prefix
-    val closing = if (insertion.isOwnLine && end < originalText.length && originalText[end] != '\n') "$suffix\n" else suffix
+    val text = originalText.substring(start, end)
+    val prefix = if (text.isEmpty()) insertion.emptyPrefix else insertion.prefix
+    val suffix = if (text.isEmpty()) insertion.emptySuffix else insertion.suffix
+    val hasTrailingBreak = insertion.isOwnLine && suffix.startsWith('\n') && text.endsWith('\n')
+    val withoutTrailingBreak = if (hasTrailingBreak) text.dropLast(1) else text
+    val hasLeadingBreak = insertion.isOwnLine && prefix.endsWith('\n') && withoutTrailingBreak.startsWith('\n')
+    val selected = if (hasLeadingBreak) withoutTrailingBreak.drop(1) else withoutTrailingBreak
+    val opening = when {
+        hasLeadingBreak -> "\n$prefix"
+        insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n' -> "\n$prefix"
+        else -> prefix
+    }
+    val closing = when {
+        hasTrailingBreak -> "$suffix\n"
+        insertion.isOwnLine && end < originalText.length && originalText[end] != '\n' -> "$suffix\n"
+        else -> suffix
+    }
     delete(start, end)
     insert(start, opening + selected + closing)
     // With nothing selected the caret lands between the two halves, which is where the next thing typed belongs.

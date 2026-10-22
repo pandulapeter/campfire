@@ -234,6 +234,15 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the first and last cells of a grid row without outer bar lines are chords`() {
+        val text = "{start_of_intro}\n{start_of_grid}\nG    |    D    |    Em    |    C\n{end_of_grid}\n{end_of_intro}"
+        assertEquals(
+            listOf("G", "D", "Em", "C"),
+            ChordProHighlighter.tokenize(text).filter { it.type == TokenType.CHORD }.map { text.substring(it.start, it.end) },
+        )
+    }
+
+    @Test
     fun `the chord cells of an indented grid line are found where they are written`() {
         val text = "{sog}\n  | Am  . |\n{eog}"
         val chord = ChordProHighlighter.tokenize(text).single { it.type == TokenType.CHORD }

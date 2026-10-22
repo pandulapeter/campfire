@@ -73,6 +73,7 @@ fun CampfireWebApp(
     remember(viewModel) { viewModel.navigateToBrowserAddress() }
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
+    EditShortcutEffect(viewModel)
     PasteShortcutEffect(viewModel)
     // Read only mode takes no drop, which the page says as the drag passes over it rather than as it ends.
     LaunchedEffect(viewModel) { viewModel.preferencesController.isPerformanceModeEnabled.collect(::refuseDrops) }

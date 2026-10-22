@@ -14,6 +14,7 @@
 - Fast scrolling is glitchy, especially on Setlists
 - Vibrate on beat should be enabled by default
 - Setlists screen initial slide animation caused by description
+- Document all keyboard shortcuts used in the app
 - Changing the metronome sound while it's running causes a repeated beat
 - Make the pinned filters panel optional / get rid of it completely
 - Determinate progress bars should have an indeterminate part so that slow syncs still have a moving section

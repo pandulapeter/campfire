@@ -239,6 +239,7 @@ internal fun SongDetailsScreen(
                 isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
+                onEdit = currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
             ),
     ) {
         SongDetailsAppBar(
@@ -399,6 +400,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
     isUncovered: Boolean,
     stepBack: (from: Int?) -> Unit,
     stepForward: (from: Int?) -> Unit,
+    onEdit: (() -> Unit)?,
 ) = songKeyboardShortcuts(
     onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
     onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
@@ -413,6 +415,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
         null
     },
     isUncovered = isUncovered,
+    onEdit = onEdit,
     onPreviousSong = if (hasPreviousSong) {
         { pageStepper.step(-1) }
     } else {

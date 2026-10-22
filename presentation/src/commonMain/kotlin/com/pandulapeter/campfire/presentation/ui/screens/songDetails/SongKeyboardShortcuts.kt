@@ -59,6 +59,10 @@ import kotlinx.coroutines.launch
  * without detectable auto-repeat), a held key still steps per repeat. A scroll keeps taking every repeat, which is
  * what makes a held arrow scroll continuously.
  *
+ * Ctrl / Cmd + E opens the editor, the way the overflow menu's Edit does, so not in performance mode, where there is none.
+ * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
+ *
+ * @param onEdit Opens the editor on the song being read, or null where it cannot be edited; the key is then left alone.
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
  * @param onNextSong Null when the current song is the last one, the same way.
@@ -82,6 +86,7 @@ internal fun Modifier.songKeyboardShortcuts(
     onStepBack: (() -> Unit)?,
     onStepForward: (() -> Unit)?,
     isUncovered: Boolean,
+    onEdit: (() -> Unit)?,
 ): Modifier {
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
@@ -108,6 +113,11 @@ internal fun Modifier.songKeyboardShortcuts(
         .onPreviewKeyEvent { keyEvent ->
             // Before the check for modifiers below, so that a key released with one of them down is still released.
             if (keyEvent.type == KeyEventType.KeyUp) heldStepKeys.remove(keyEvent.key)
+            if (onEdit != null && keyEvent.key == Key.E && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+                // The key-up is taken too, so that nothing under this sees half a shortcut.
+                if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onEdit()
+                return@onPreviewKeyEvent true
+            }
             // Key repeats arrive as further KeyDown events, which is what makes a held arrow scroll continuously.
             if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             // An arrow pressed with Alt, Meta or Ctrl belongs to whoever sent it rather than to the reader: Alt + Left

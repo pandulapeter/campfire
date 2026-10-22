@@ -640,6 +640,16 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a fragment of lyrics with bracketed headings is converted though it has no chords`() {
+        assertEquals(
+            "{start_of_verse: Verse}\nAragorn and Boromir\nWhy so afraid\n\n{end_of_verse}\n{start_of_chorus: Chorus}\nAragorn and Boromir\n" +
+                "{end_of_chorus}\n{start_of_verse: Verse 2}\nYour friends will wait\n{end_of_verse}",
+            ChordSheetConverter.convertFragment("[Verse]\nAragorn and Boromir\nWhy so afraid\n\n[Chorus]\nAragorn and Boromir\n[Verse 2]\nYour friends will wait"),
+        )
+        assertEquals(null, ChordSheetConverter.convertFragment("Verse:\nA long time ago\nin a galaxy far away"))
+    }
+
+    @Test
     fun `a fragment in Latin or German notation keeps its chords as written`() {
         assertEquals("[Lam]1 4 [Re]5 [Mi]", ChordSheetConverter.convertFragment("Lam Re Mi\n1 4 5"))
         assertEquals("[am]Hello [H7]world", ChordSheetConverter.convertFragment("am     H7\nHello world"))

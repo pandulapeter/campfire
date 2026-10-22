@@ -63,6 +63,7 @@ only), and nothing on the desktop.
   keys wherever focus has moved and the scroll container never handles an arrow.
 - Left and Right are unconsumed at the setlist's ends and for a single song; all four with Alt, Meta, or Ctrl (Alt + Left
   is the web's Back, Cmd + Left / Right a Mac's Back and Forward).
+- Ctrl/Cmd + E opens the editor, as the menu's Edit does: not in performance mode, which has no Edit.
 
 ### The metronome button
 

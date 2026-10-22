@@ -17,7 +17,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - It reads back Campfire's own PDF export (the heading row, wrapped chord lines, narrow-column titles).
 - `convertFragment` converts what is pasted into the editor: the body as `convert` writes it (chords set, headings as
   sections, prose escaped), but no title or credit guessed and metadata lines kept as text, since the song it goes into
-  has its own header. Only a paste with a chord row is converted.
+  has its own header. Only a paste with a chord row or a bracketed heading
+  (`[Verse]`, which ChordPro would read as a chord) is converted.
 - `setChordRows` sets the rows a format marks itself as they are marked, guessing nothing, for OpenSong.
 - `convert` can be told not to guess a title (`guessesTitle`), for a caller that has the song's title from another
   app's field.

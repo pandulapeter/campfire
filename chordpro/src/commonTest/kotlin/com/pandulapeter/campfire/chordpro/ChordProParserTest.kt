@@ -870,6 +870,50 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a grid row without its outer bar lines starts and ends on chords`() {
+        assertEquals(
+            listOf(
+                GridToken.Chord("G"),
+                GridToken.Bar("|"),
+                GridToken.Chord("D"),
+                GridToken.Bar("|"),
+                GridToken.Chord("Em"),
+                GridToken.Bar("|"),
+                GridToken.Chord("C"),
+            ),
+            ChordProTokens.parseGridTokens("G    |    D    |    Em    |    C"),
+        )
+        assertEquals(
+            listOf(GridToken.Chord("Am"), GridToken.Beat, GridToken.Bar("|"), GridToken.Chord("F~G"), GridToken.Bar("|.")),
+            ChordProTokens.parseGridTokens("Am . | F~G |."),
+        )
+        assertEquals(
+            listOf(GridToken.Bar("||"), GridToken.Chord("G"), GridToken.Bar(":|"), GridToken.Chord("D7"), GridToken.Repeat("%")),
+            ChordProTokens.parseGridTokens("|| G :| D7 %"),
+        )
+        assertEquals(
+            listOf(GridToken.Bar("|:"), GridToken.Chord("C"), GridToken.Bar(":|2"), GridToken.Chord("G")),
+            ChordProTokens.parseGridTokens("|: C :|2 G"),
+        )
+    }
+
+    @Test
+    fun `a grid row keeps its margin labels and notes where they are not chords`() {
+        assertEquals(
+            listOf(GridToken.Text("A"), GridToken.Bar("|:"), GridToken.Chord("G"), GridToken.Bar(":|"), GridToken.Text("x2")),
+            ChordProTokens.parseGridTokens("A |: G :| x2"),
+        )
+        assertEquals(
+            listOf(GridToken.Text("A"), GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"), GridToken.Text("Coda")),
+            ChordProTokens.parseGridTokens("A | G | Coda"),
+        )
+        assertEquals(
+            listOf(GridToken.Text("Intro"), GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"), GridToken.Chord("D")),
+            ChordProTokens.parseGridTokens("Intro | G | D"),
+        )
+    }
+
+    @Test
     fun `repeats voltas and chord positions are not chords`() {
         assertEquals(
             listOf(

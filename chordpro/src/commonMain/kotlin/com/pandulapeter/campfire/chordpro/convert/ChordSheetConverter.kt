@@ -87,14 +87,16 @@ public object ChordSheetConverter {
      * headings such as "Verse 1:" made sections, tablature put in its environment, and the rest escaped so it cannot
      * become markup. What only a whole song has is left out: no title or credit is guessed from the first lines, and a
      * line naming a capo, a key or a tempo stays a line of text rather than becoming the song's header in its middle.
-     * Null where [text] is ChordPro already or has no chord row to set, which is when there is nothing to convert.
+     * Null where [text] is ChordPro already or has neither a chord row to set nor a bracketed heading (`[Verse]`, which
+     * ChordPro would read as a chord), which is when there is nothing to convert.
      */
     public fun convertFragment(text: String, normalize: (String) -> String = { it }): String? {
         if (isChordPro(text)) return null
         val lines = expandLabels(ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) })
         val candidates = chordCandidates(lines)
         val kinds = classify(lines, candidates).map { if (it == Kind.METADATA) Kind.LYRIC else it }
-        if (Kind.CHORD !in kinds) return null
+        // A bracketed heading pasted as it is would read as a chord, so it is reason enough to convert lyrics with no chords.
+        if (Kind.CHORD !in kinds && kinds.indices.none { kinds[it] == Kind.SECTION && lines[it].text.trimStart().startsWith('[') }) return null
         // The line breaks the paste ends with are kept after the section it opened rather than inside it, so that what
         // follows the paste in the song is not pulled into the section, nor the section given an empty last line.
         val trailingBlanks = kinds.takeLastWhile { it == Kind.BLANK }.size
