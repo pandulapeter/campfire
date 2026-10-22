@@ -46,8 +46,9 @@ import androidx.compose.ui.unit.sp
  * The body of a song card next to its actions, both centered vertically. Not a [ListItem]: Material pins the content
  * of a three-line item to its top and grows it to 88dp, so a card whose labels made it three lines left a band of
  * empty card under them, and the actions, which Material top-aligns there too, would have been measured against a
- * body they did not share a center with. The paddings, the minimum heights and the text styles are the list item's,
- * except at the end: next to actions the body runs up to them as they are drawn, moved towards the card's edge by
+ * body they did not share a center with. The minimum heights, the text styles and the paddings are the list item's,
+ * except at the start, where [SONG_CARD_CONTENT_PADDING] keeps a cover as far from the card's edge as from its top and
+ * bottom, and at the end: next to actions the body runs up to them as they are drawn, moved towards the card's edge by
  * [LocalListItemTrailingKeylineAdjustment], and stops [SONG_CARD_ACTIONS_GAP] short of them. An icon button keeps its
  * icon well inside its touch target, so text that kept a list item's padding and gap from that target as well was cut
  * off with a wide empty band before the icon.
@@ -97,8 +98,8 @@ internal fun CenteredSongCardContent(
                     modifier = Modifier
                         .heightIn(min = if (supportingContent == null && detailsContent == null && labelsContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
                         .padding(
-                            start = songCardContentPadding,
-                            end = if (actions == null) songCardContentPadding else 0.dp,
+                            start = SONG_CARD_CONTENT_PADDING,
+                            end = if (actions == null) SONG_CARD_CONTENT_PADDING else 0.dp,
                             top = SONG_CARD_VERTICAL_CONTENT_PADDING,
                             bottom = SONG_CARD_VERTICAL_CONTENT_PADDING,
                         ),

@@ -56,7 +56,7 @@ internal data class NavigationChromeSize(
  */
 internal fun navigationChromeKind(windowWidth: Dp, songColumnWidth: Dp) = when {
     !WindowSize.fromWidth(windowWidth).usesNavigationRail -> NavigationChromeKind.BAR
-    hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH, songColumnWidth) -> NavigationChromeKind.EXPANDED_RAIL
+    hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH - NAVIGATION_RAIL_CONTENT_GAP, songColumnWidth) -> NavigationChromeKind.EXPANDED_RAIL
     else -> NavigationChromeKind.RAIL
 }
 
@@ -65,8 +65,6 @@ internal val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
 /**
  * The content padding the screens keep from the rail on top of their own: the rail stands on a color of its own, and
  * content that starts right at its edge reads as pressed against it. A padding rather than room taken from the
- * window, so that what scrolls sideways - the Settings pages - still slides under the rail. The list screens go without
- * it, since their cards keep a margin of their own, which would otherwise start their text further from the rail than
- * every other screen's.
+ * window, so that what scrolls sideways - the Settings pages - still slides under the rail.
  */
 internal val NAVIGATION_RAIL_CONTENT_GAP = 8.dp

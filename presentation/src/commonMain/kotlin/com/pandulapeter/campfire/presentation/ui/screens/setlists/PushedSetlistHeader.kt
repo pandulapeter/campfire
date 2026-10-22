@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -38,6 +39,7 @@ internal fun PushedSetlistHeader(
     setlistActions: SetlistActionHandler,
     listState: LazyGridState,
     setlistsWithSongs: List<SetlistWithSongs>,
+    contentPadding: PaddingValues,
     endPadding: () -> Dp,
     isPerformanceModeEnabled: Boolean,
     reorderingSetlistFileName: String?,
@@ -49,7 +51,7 @@ internal fun PushedSetlistHeader(
     val setlistWithSongs = key?.let { setlistsByKey[it] } ?: return
     val setlist = setlistWithSongs.setlist
     SectionHeader(
-        modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
+        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).clearAndSetSemantics {},
         text = setlist.title,
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.

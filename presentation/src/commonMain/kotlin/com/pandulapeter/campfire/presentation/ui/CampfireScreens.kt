@@ -149,16 +149,6 @@ internal fun CampfireScreens(
         ime = ime,
         density = density,
     )
-    // The song cards keep a margin of their own from the edge of the list, which is room enough from the rail.
-    val listContentPadding: PaddingValues = KeyboardAwarePadding(
-        start = if (windowSize.usesNavigationRail) 0.dp else systemBars.calculateStartPadding(layoutDirection),
-        end = systemBars.calculateEndPadding(layoutDirection),
-        bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
-        chromeHeight = NoChromeRoom,
-        coveredHeight = navigationBarHeight,
-        ime = ime,
-        density = density,
-    )
     val songEditorContentPadding: PaddingValues = KeyboardAwarePadding(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
@@ -202,7 +192,7 @@ internal fun CampfireScreens(
     val sortingMode by remember(userPreferences) { derivedStateOf { userPreferences.value?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE } }
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
-        contentPadding = listContentPadding,
+        contentPadding = shellContentPadding,
         layoutDirection = layoutDirection,
         songColumnWidth = songColumnWidth,
         songGridColumnWidth = songGridColumnWidth(
@@ -302,7 +292,7 @@ internal fun CampfireScreens(
                         SongsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
-                            contentPadding = listContentPadding,
+                            contentPadding = shellContentPadding,
                         )
                     }
                 }
@@ -311,7 +301,7 @@ internal fun CampfireScreens(
                         SetlistsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
-                            contentPadding = listContentPadding,
+                            contentPadding = shellContentPadding,
                         )
                     }
                 }

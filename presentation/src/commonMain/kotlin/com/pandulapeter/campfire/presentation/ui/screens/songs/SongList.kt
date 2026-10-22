@@ -372,6 +372,7 @@ internal fun SongList(
             PushedSongSectionHeader(
                 listState = listState,
                 sectionIndex = sectionIndex,
+                contentPadding = contentPadding,
                 endPadding = headerEndPadding,
                 selectionCount = selection.size,
                 appBarOverlap = appBarOverlap,

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_
 import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardContentPadding
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_CONTENT_PADDING
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -180,7 +180,7 @@ internal fun SectionHeader(
                         },
                     )
                     .graphicsLayer { alpha = nameAlpha }
-                    .padding(start = songCardContentPadding, end = if (hasAction) SECTION_HEADER_TEXT_GAP else songCardContentPadding),
+                    .padding(start = SONG_CARD_CONTENT_PADDING, end = if (hasAction) SECTION_HEADER_TEXT_GAP else SONG_CARD_CONTENT_PADDING),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Keep the painter through its exit animation when a setlist is archived from this row's own menu.

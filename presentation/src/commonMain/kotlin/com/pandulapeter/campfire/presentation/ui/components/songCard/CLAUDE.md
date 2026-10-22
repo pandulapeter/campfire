@@ -33,8 +33,9 @@ The song card the song lists and setlists draw (`SongListItem`).
   each starts with its own mark (`SongCardGap`).
 - **Under an artist header the artist is left off** (`isArtistShown`, Songs sorted by artist, search closed): it fades
   and closes up, unless nothing else is under the title (the card keeps its height), and is still read out.
-- **In a window under 480dp wide** card text uses 8dp padding (and headers follow, `songCardTextKeyline`) and titles get
-  two lines; touch targets stay.
+- Card text (or the cover) starts 8dp in, as far as a three-line card's cover stands from its top and bottom, so the
+  cover sits evenly; headers follow (`SONG_CARD_TEXT_KEYLINE`), 16dp from the list's edge like every screen's content.
+  **In a window under 480dp wide** titles get two lines; touch targets stay.
 - **Column width** (`minSongColumnWidth`): a 336dp base, +68dp for the cover while covers are on (whether or not a song
   has one, so arriving covers never change the count), so the default card keeps 404dp and a phone on its side stays one
   column. The key, tempo, and duration stand on a line of their own and add nothing. Setlists are laid out by the same

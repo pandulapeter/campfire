@@ -31,7 +31,7 @@ class NavigationChromeKindTest {
     @Test
     fun `the expanded rail is only used where the side panel fits beside it`() = sweep { column, _ ->
         WIDTHS.filter { navigationChromeKind(it, column) == NavigationChromeKind.EXPANDED_RAIL }.forEach { width ->
-            assertTrue(hasRoomForSidePanel(width - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH, column), "No panel beside the expanded rail at $width")
+            assertTrue(hasRoomForSidePanel(width - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH - NAVIGATION_RAIL_CONTENT_GAP, column), "No panel beside the expanded rail at $width")
         }
     }
 
@@ -58,7 +58,7 @@ class NavigationChromeKindTest {
             NavigationChromeKind.RAIL -> COLLAPSED_RAIL_WIDTH
             NavigationChromeKind.EXPANDED_RAIL -> EXPANDED_NAVIGATION_RAIL_MIN_WIDTH
         }
-        return hasRoomForSidePanel(windowWidth - railWidth, column)
+        return hasRoomForSidePanel(windowWidth - railWidth - if (railWidth > 0.dp) NAVIGATION_RAIL_CONTENT_GAP else 0.dp, column)
     }
 
     private companion object {

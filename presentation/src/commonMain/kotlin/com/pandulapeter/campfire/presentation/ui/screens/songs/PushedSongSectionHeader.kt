@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -33,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHe
 internal fun PushedSongSectionHeader(
     listState: LazyGridState,
     sectionIndex: SongSectionIndex,
+    contentPadding: PaddingValues,
     endPadding: () -> Dp,
     selectionCount: Int,
     appBarOverlap: () -> AppBarOverlap,
@@ -41,7 +43,7 @@ internal fun PushedSongSectionHeader(
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
     val header = key?.let(sectionIndex::headerForKey) ?: return
     SectionHeader(
-        modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
+        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).clearAndSetSemantics {},
         text = header.displayText(selectionCount = selectionCount),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.

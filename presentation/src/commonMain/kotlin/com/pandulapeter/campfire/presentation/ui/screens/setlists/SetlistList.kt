@@ -380,6 +380,7 @@ internal fun SetlistList(
                 setlistActions = setlistActions,
                 listState = listState,
                 setlistsWithSongs = shownSetlists,
+                contentPadding = contentPadding,
                 endPadding = headerEndPadding,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
                 reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },

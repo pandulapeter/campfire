@@ -46,7 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabel
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabelMark
 import com.pandulapeter.campfire.presentation.ui.components.list.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_VERTICAL_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTextKeyline
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_TEXT_KEYLINE
 
 /**
  * What there is to read about a setlist under the row naming it: its countdown and running time, then its description. Not a
@@ -86,9 +86,9 @@ internal fun SetlistSummary(
             .outset(vertical = LABEL_TOUCH_VERTICAL_PADDING)
             .animateContentSize()
             .padding(
-                start = songCardTextKeyline,
+                start = SONG_CARD_TEXT_KEYLINE,
                 top = LABEL_TOUCH_VERTICAL_PADDING,
-                end = songCardTextKeyline,
+                end = SONG_CARD_TEXT_KEYLINE,
                 bottom = (gap - SONG_CARD_VERTICAL_PADDING).coerceAtLeast(0.dp) + LABEL_TOUCH_VERTICAL_PADDING,
             ),
     ) {

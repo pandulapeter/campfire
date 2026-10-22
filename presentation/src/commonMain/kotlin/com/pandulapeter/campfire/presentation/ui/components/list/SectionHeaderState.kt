@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.components.list
 
 import com.pandulapeter.campfire.presentation.ui.components.only
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -79,12 +81,17 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
 /**
  * Puts the copy of a [pushed] header where the header is in the grid and makes it as wide, reading both while it is
  * laid out, so that the push moves it without recomposing it. Nothing is laid out once there is no header to follow.
+ * The grid's item offsets leave out its start content padding, so the grid's [contentPadding] puts it back.
  */
-internal fun Modifier.pushedSectionHeaderPlacement(pushed: State<PushedSectionHeader?>) = layout { measurable, constraints ->
+internal fun Modifier.pushedSectionHeaderPlacement(
+    pushed: State<PushedSectionHeader?>,
+    contentPadding: PaddingValues,
+) = layout { measurable, constraints ->
     val header = pushed.value ?: return@layout layout(0, 0) {}
     val width = header.width.coerceIn(constraints.minWidth, constraints.maxWidth)
     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
-    layout(placeable.width, placeable.height) { placeable.placeRelativeWithLayer(header.offset) }
+    val startPadding = contentPadding.calculateStartPadding(layoutDirection).roundToPx()
+    layout(placeable.width, placeable.height) { placeable.placeRelativeWithLayer(header.offset.copy(x = header.offset.x + startPadding)) }
 }
 
 /**
