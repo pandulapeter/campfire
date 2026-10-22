@@ -26,9 +26,15 @@ internal actual val beatHapticsDispatcher: CoroutineDispatcher = Dispatchers.Mai
 internal actual fun rememberBeatHaptics(): BeatHaptics? = remember {
     val heavy = UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleHeavy).apply { prepare() }
     val light = UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleLight).apply { prepare() }
-    BeatHaptics { isAccent ->
-        val generator = if (isAccent) heavy else light
-        generator.impactOccurred()
-        generator.prepare()
+    BeatHaptics { tap ->
+        when (tap) {
+            BeatTap.ACCENT -> heavy.impactOccurred()
+            BeatTap.BEAT -> light.impactOccurred()
+            BeatTap.SUBDIVISION -> light.impactOccurredWithIntensity(SUBDIVISION_INTENSITY)
+        }
+        if (tap == BeatTap.ACCENT) heavy.prepare() else light.prepare()
     }
 }
+
+/** A subdivision is the light tap at less than its full strength, still clear of the engine's weakest. */
+private const val SUBDIVISION_INTENSITY = 0.5

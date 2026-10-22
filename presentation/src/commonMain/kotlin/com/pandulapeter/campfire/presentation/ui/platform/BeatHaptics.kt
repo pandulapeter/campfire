@@ -12,9 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineDispatcher
 
-/** A tap on the hand for every beat of the metronome, heavier on an accent. */
+/** A tap on the hand for every click of the metronome, heavier on an accent and lighter on a subdivision. */
 internal fun interface BeatHaptics {
-    fun onBeat(isAccent: Boolean)
+    fun onBeat(tap: BeatTap)
 }
 
 /**

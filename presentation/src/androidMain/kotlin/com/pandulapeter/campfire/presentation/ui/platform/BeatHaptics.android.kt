@@ -35,13 +35,26 @@ internal actual fun rememberBeatHaptics(): BeatHaptics? {
             @Suppress("DEPRECATION")
             context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
-        vibrator?.takeIf { it.hasVibrator() }?.let { BeatHaptics { isAccent -> it.vibrate(beatEffect(isAccent)) } }
+        vibrator?.takeIf { it.hasVibrator() }?.let { BeatHaptics { tap -> it.vibrate(beatEffect(tap)) } }
     }
 }
 
 /** The predefined clicks where there are any, which every device tunes to its own motor; a short pulse before them. */
-private fun beatEffect(isAccent: Boolean) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-    VibrationEffect.createPredefined(if (isAccent) VibrationEffect.EFFECT_HEAVY_CLICK else VibrationEffect.EFFECT_CLICK)
+private fun beatEffect(tap: BeatTap) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    VibrationEffect.createPredefined(
+        when (tap) {
+            BeatTap.ACCENT -> VibrationEffect.EFFECT_HEAVY_CLICK
+            BeatTap.BEAT -> VibrationEffect.EFFECT_CLICK
+            BeatTap.SUBDIVISION -> VibrationEffect.EFFECT_TICK
+        },
+    )
 } else {
-    VibrationEffect.createOneShot(if (isAccent) 30L else 15L, VibrationEffect.DEFAULT_AMPLITUDE)
+    VibrationEffect.createOneShot(
+        when (tap) {
+            BeatTap.ACCENT -> 30L
+            BeatTap.BEAT -> 15L
+            BeatTap.SUBDIVISION -> 8L
+        },
+        VibrationEffect.DEFAULT_AMPLITUDE,
+    )
 }

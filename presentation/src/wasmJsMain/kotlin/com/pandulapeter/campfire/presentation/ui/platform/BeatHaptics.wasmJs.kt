@@ -30,13 +30,26 @@ internal actual fun rememberBeatHaptics(): BeatHaptics? = webBeatHaptics
  * has none, and a desktop browser defines `navigator.vibrate` with nothing to vibrate, which is why the primary pointer
  * has to be a finger too - a switch that is offered and does nothing is worse than none.
  */
-private val webBeatHaptics = if (canVibrate()) BeatHaptics { isAccent -> vibrate(if (isAccent) ACCENT_PULSE_MILLIS else BEAT_PULSE_MILLIS) } else null
+private val webBeatHaptics = if (canVibrate()) {
+    BeatHaptics { tap ->
+        vibrate(
+            when (tap) {
+                BeatTap.ACCENT -> ACCENT_PULSE_MILLIS
+                BeatTap.BEAT -> BEAT_PULSE_MILLIS
+                BeatTap.SUBDIVISION -> SUBDIVISION_PULSE_MILLIS
+            },
+        )
+    }
+} else {
+    null
+}
 
 private fun canVibrate(): Boolean = js("typeof navigator.vibrate === 'function' && window.matchMedia('(pointer: coarse)').matches")
 
 private fun vibrate(millis: Int): Boolean = js("navigator.vibrate(millis)")
 
 // Longer than the predefined clicks the Android app plays, since a page has plain pulses only, and many phones' motors
-// do not get going in less than about twenty milliseconds.
-private const val BEAT_PULSE_MILLIS = 20
-private const val ACCENT_PULSE_MILLIS = 40
+// do not get going in less than about twenty milliseconds: a subdivision, the lightest, is that shortest pulse still felt.
+private const val SUBDIVISION_PULSE_MILLIS = 20
+private const val BEAT_PULSE_MILLIS = 30
+private const val ACCENT_PULSE_MILLIS = 50

@@ -87,4 +87,5 @@ The `expect` declarations and the interfaces the platform shells provide.
 - `MetronomeNotifier` (`BackgroundMetronome.kt`) is provided like `SyncNotifier`, and only told a click ended once it
   was shown.
 - `BeatHaptics.kt`: web vibration only where `navigator.vibrate` can vibrate; on Android felt while composed, not only
-  resumed (`areBeatHapticsFeltInBackground`).
+  resumed (`areBeatHapticsFeltInBackground`). Every heard click is felt, at three strengths (`BeatTap`): accent, beat,
+  and a lighter subdivision.

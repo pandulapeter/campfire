@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.platform.BeatTap
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.beatHapticsDispatcher
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
@@ -37,7 +38,14 @@ internal fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
         lifecycleOwner.repeatOnLifecycle(if (areBeatHapticsFeltInBackground) Lifecycle.State.CREATED else Lifecycle.State.RESUMED) {
             withContext(beatHapticsDispatcher) {
                 viewModel.metronomeController.metronomeBeats.collect { beat ->
-                    if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
+                    // A subdivision carries its beat's level, so a muted beat leaves its subdivisions unfelt too.
+                    val tap = when {
+                        beat.level == BeatLevel.MUTED -> null
+                        beat.isSubdivision -> BeatTap.SUBDIVISION
+                        beat.level == BeatLevel.ACCENT -> BeatTap.ACCENT
+                        else -> BeatTap.BEAT
+                    }
+                    if (tap != null) haptics.onBeat(tap)
                 }
             }
         }
