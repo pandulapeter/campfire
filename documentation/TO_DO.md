@@ -9,6 +9,7 @@
 -->
 # To do
 - Submit version 5.0.1 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
+- CI issue on iOS: Your account has reached the maximum number of certificates.
 - Fix compile-time warnings on all platforms
 - Songs screen: scroll to top is not smooth
 - Editor bug when copy-pasting grid sections (it tries to use the chords syntax even though we're in a grid)
