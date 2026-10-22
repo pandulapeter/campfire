@@ -108,15 +108,6 @@ New in 5.0.1, and where to find it:
 - Export screen: "Export" in a song's or setlist's menu now offers Link first, and the PDF options are grouped into Page, Running order, and Song sheets.
 - The app's log: Settings → About has rows to email, share, or save it, each after a dialog saying what it holds; after a crash the next launch offers to send it. Nothing is sent by the app itself.
 - Metronome vibration: the Metronome screen's vibration switch now also covers subdivisions, more lightly than the beats.
-
-Also new in 5.0.0, and where to find it:
-- Scales and Chords tabs: two new tabs (under the Tools tab when the window is too short for every tab). Scales draws and plays every scale and mode on the chosen instrument; Chords lists each key's common chords and finds any chord by name.
-- Scale suggestions: an open song shows the scales that fit it after its chords.
-- More instruments and tunings: the instrument is picked in an open song's first section, or on the Tuner, Chords, and Scales tabs. Chord diagrams now cover mandolin and banjo, and a song's tabs are moved to the chosen instrument.
-- Paste or drop a song: "Paste from clipboard" in the New button's menu on the Songs screen (or Cmd+V on the song list), or text or a file dragged onto the window. A new song opens in the editor; nothing is saved before Save.
-- Import from more apps: "Import files" in the same menu takes other songbook apps' backups, and every import lists its songs for review before anything is saved.
-- Share as a link: "Share song" in a song's menu (or "Share setlist"), then the Link format. This needs the user's own Dropbox account, connected in Settings → Sync; links made are listed in Settings → Sharing. A link's web page opens it in Campfire through the campfire:// scheme.
-- Song details lookup: click an open song's title for the "About the song" sheet, then the details tile (beside the cover) for the "Edit song details" sheet; the search button at the start of its header looks the song up. Lookup only fills the form; nothing is written before Save.
 ```
 
 ## App Sandbox Information

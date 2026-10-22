@@ -8,8 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Submit version 5.0.1 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
 - CI issue on iOS: Your account has reached the maximum number of certificates.
+- Onboarding: the circular hero element has some inset handling issues
 - Fix compile-time warnings on all platforms
 - Songs screen: scroll to top is not smooth
 - PDF floating page controls show / hide should also fade
