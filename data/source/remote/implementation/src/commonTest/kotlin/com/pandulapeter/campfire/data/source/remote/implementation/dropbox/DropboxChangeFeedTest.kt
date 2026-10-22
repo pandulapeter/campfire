@@ -140,6 +140,23 @@ class DropboxChangeFeedTest {
     }
 
     @Test
+    fun `a change reported with a wait Dropbox asks for is answered at once and the next poll waits`() = runTest {
+        var polls = 0
+        val provider = dropboxProvider(configure = { install(HttpTimeout) }) {
+            polls++
+            respondJson(if (polls == 1) """{"changes":true,"backoff":30}""" else """{"changes":false}""")
+        }
+
+        assertTrue(provider.awaitChanges("cursor 1"))
+        assertEquals(0L, currentTime)
+
+        provider.awaitChanges("cursor 2")
+
+        assertTrue(currentTime >= 30_000)
+        assertEquals(2, polls)
+    }
+
+    @Test
     fun `a cursor Dropbox no longer takes is answered as a change`() = runTest {
         val provider = dropboxProvider(configure = { install(HttpTimeout) }) {
             respondJson("""{"error_summary":"reset/..","error":{".tag":"reset"}}""", status = HttpStatusCode.Conflict)

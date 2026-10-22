@@ -28,12 +28,15 @@
   of a file it no longer holds (names matched ignoring case and Unicode form, as the run files them), or a
   `preferences.json` that decodes to the one the run left, is this device's own, and `shared-links.json` starts no run
   (none depends on it) but is read again into the mirror, so the screens follow a share made or stopped elsewhere;
-  anything else schedules a run and stops watching until that run hands over a new
-  point. A run clears the point as it starts and only a completed one sets it, so a stopped run or an open deletion
+  anything else starts a run at once (no `AUTOMATIC_RUN_DELAY`, which is for this device's
+  edits) and stops watching until that run hands over a new point. A run clears the point as it starts and only a completed one sets it, so a stopped run or an open deletion
   question is never restarted by the feed. A poll the service held for
-  `HELD_POLL` and then lost is asked again at once; one that failed sooner is asked again after `NETWORK_RETRY_DELAYS`;
+  `HELD_POLL` and then lost is asked again at once; one that failed sooner is asked again after `NETWORK_RETRY_DELAYS`, the first of them a couple of
+  seconds, since one failure on a working link reports no reconnection to end the wait;
   any other failure schedules a run.
 - Every network wait (the feed's, and a failed run's retry) ends early when `ConnectivityMonitor` reports the device
   back online (`awaitReconnection`), listened to only while such a wait is going.
-- `SyncLibraryRefresher` re-reads only the files a run changed, never a rescan, after any ending.
+- `SyncLibraryRefresher` re-reads only the files a run changed, never a rescan, after any ending, and while it goes:
+  a live refresh asked for inside its pause waits for the pause to end rather than being dropped, so another device's
+  change to the song on screen shows once it is downloaded, not after the run's last steps.
 - Tests advance `SyncEnvironment`'s scope with `runCurrent` / `advanceTimeBy`, never `advanceUntilIdle`.

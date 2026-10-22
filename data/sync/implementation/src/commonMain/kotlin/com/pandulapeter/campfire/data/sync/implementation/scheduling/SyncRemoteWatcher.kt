@@ -76,7 +76,7 @@ internal class SyncRemoteWatcher(
                 cursor = changes.cursor
                 failures = 0
                 if (isOtherDevices) {
-                    scheduler.schedule()
+                    scheduler.schedule(after = Duration.ZERO)
                     return
                 }
             } catch (exception: CancellationException) {
@@ -84,21 +84,27 @@ internal class SyncRemoteWatcher(
             } catch (exception: SyncNetworkException) {
                 // Offline, refused, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
                 // device is back online, and nothing that changed meanwhile is lost by waiting.
+                environment.logger.log("Could not reach the sync folder's change feed: ${exception.message}")
                 connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])
                 failures++
             } catch (exception: Exception) {
                 // A cursor the service no longer takes, or an answer nothing here expected: only a run's fresh listing
                 // gives a cursor to go on from, and a run is also what settles whatever did change.
                 environment.logger.log("Stopped watching the sync folder: ${exception.message}")
-                scheduler.schedule()
+                scheduler.schedule(after = Duration.ZERO)
                 return
             }
         }
     }
 
     private companion object {
-        /** The waits after the feed could not be reached, the last one repeated. */
-        val NETWORK_RETRY_DELAYS: List<Duration> = listOf(30.seconds, 1.minutes, 2.minutes, 5.minutes)
+        /**
+         * The waits after the feed could not be reached, the last one repeated. The first is short: a single failure on a
+         * working link - a pooled connection the far end had already closed, one 5xx of Dropbox's - is the common one,
+         * no reconnection is reported to end the wait for it, and the desktop reports none at all, so a long first wait
+         * would leave another device's change unseen for that long.
+         */
+        val NETWORK_RETRY_DELAYS: List<Duration> = listOf(2.seconds, 30.seconds, 1.minutes, 2.minutes, 5.minutes)
 
         /**
          * How long a poll has to have been open for its failure to count as the service holding it and then losing it

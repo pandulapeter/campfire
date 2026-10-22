@@ -57,8 +57,8 @@ Silent failures go to the injected `Logger`.
   comes from something in between, not from Dropbox.
 - Watching (`DropboxChangeFeed`): `list_folder/longpoll` on `notify.dropboxapi.com` takes the cursor of a listing's
   last page and no token, held 240 s (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's
-  documented 90 s (104 s measured), with the call's own bounds raised past that; its `backoff` is waited before
-  answering, and a `reset` cursor answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
+  documented 90 s (104 s measured), with the call's own bounds raised past that; its `backoff` delays the next poll
+  (a quiet answer waits it before returning, a change is answered at once), and a `reset` cursor answers "changed". `list_folder/continue` from the cursor gives the changes; a top-level deletion is reported as a
   document, since a library folder deleted whole may come as one entry.
 - `ConnectivityMonitor` (per platform, in `network/`): offline-to-online changes only, never the starting state, and
   nothing that needs a permission prompt. Android: the default network becoming validated (`ACCESS_NETWORK_STATE`,

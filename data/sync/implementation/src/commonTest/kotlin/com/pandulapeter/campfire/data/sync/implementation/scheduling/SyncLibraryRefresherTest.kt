@@ -42,7 +42,7 @@ class SyncLibraryRefresherTest {
     }
 
     @Test
-    fun `a live refresh asked for inside the pause does nothing`() = runTest {
+    fun `a live refresh asked for inside the pause waits for its end`() = runTest {
         val songRepository = RecordingSongRepository()
         val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), testEnvironment())
 
@@ -54,10 +54,22 @@ class SyncLibraryRefresherTest {
         runCurrent()
         assertEquals(listOf("a.cho"), songRepository.refreshed)
         advanceTimeBy(LIVE_RESCAN_INTERVAL.inWholeMilliseconds + 100)
+
+        assertEquals(listOf("a.cho", "b.cho"), songRepository.refreshed)
+    }
+
+    @Test
+    fun `a live refresh with nothing to read starts no pause`() = runTest {
+        val songRepository = RecordingSongRepository()
+        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), testEnvironment())
+
+        refresher.scheduleLiveRefresh()
+        runCurrent()
+        refresher.onFileChanged(song("a"))
         refresher.scheduleLiveRefresh()
         runCurrent()
 
-        assertEquals(listOf("a.cho", "b.cho"), songRepository.refreshed)
+        assertEquals(listOf("a.cho"), songRepository.refreshed)
     }
 
     private fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")

@@ -19,6 +19,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -29,7 +30,6 @@ import kotlin.concurrent.Volatile
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
-import kotlin.time.measureTime
 
 /**
  * Sync writes song and setlist files behind these two repositories' backs, so it is the one thing that has to tell
@@ -82,15 +82,21 @@ internal class SyncLibraryRefresher(
      * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to: this
      * hands them the files the run has changed so far, which they read again one by one. Throttled by what the last one
      * cost, see [liveRescanPauseAfter], since a first sync changes files several times a second and every refresh
-     * rebuilds the lists downstream. Whatever is still waiting when the run ends is refreshed then.
+     * rebuilds the lists downstream. A refresh asked for inside the pause waits for its end rather than being dropped: a
+     * run that downloads one song, the change another device made to the song open on screen, would otherwise show it
+     * only once its last steps are over. One that found nothing to read starts no pause, since the run reports progress
+     * before it has changed anything.
      */
     fun scheduleLiveRefresh() {
         if (liveRefreshJob?.isActive == true) return
-        if (lastLiveRescanEnd?.let { it.elapsedNow() < liveRescanPause } == true) return
+        val pauseLeft = lastLiveRescanEnd?.let { liveRescanPause - it.elapsedNow() } ?: Duration.ZERO
         liveRefreshJob = scope.launch {
-            val duration = environment.timeSource.measureTime { refreshChangedFiles() }
-            liveRescanPause = liveRescanPauseAfter(duration)
-            lastLiveRescanEnd = environment.timeSource.markNow()
+            if (pauseLeft.isPositive()) delay(pauseLeft)
+            val start = environment.timeSource.markNow()
+            if (refreshChangedFiles()) {
+                liveRescanPause = liveRescanPauseAfter(start.elapsedNow())
+                lastLiveRescanEnd = environment.timeSource.markNow()
+            }
         }
     }
 
@@ -102,11 +108,11 @@ internal class SyncLibraryRefresher(
     /**
      * Hands the files changed since the last refresh to the two repositories. They are taken out of [changedFiles]
      * before they are read, so a file the run changes again meanwhile waits for the next refresh, and put back when
-     * this one is stopped before it got to them.
+     * this one is stopped before it got to them. Answers whether there was anything to read.
      */
-    private suspend fun refreshChangedFiles() {
+    private suspend fun refreshChangedFiles(): Boolean {
         val keys = changedFilesMutex.withLock { changedFiles.toSet().also { changedFiles.clear() } }
-        if (keys.isEmpty()) return
+        if (keys.isEmpty()) return false
         try {
             songRepository.refresh(keys.namesOf(LibraryFileKind.SONG))
             setlistRepository.refresh(keys.namesOf(LibraryFileKind.SETLIST))
@@ -114,6 +120,7 @@ internal class SyncLibraryRefresher(
             withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
             throw exception
         }
+        return true
     }
 
     private fun Set<SyncKey>.namesOf(kind: LibraryFileKind) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }

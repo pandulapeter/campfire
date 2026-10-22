@@ -115,12 +115,15 @@ internal class SyncRunScheduler(
     }
 
     /**
-     * Asks for an automatic run [AUTOMATIC_RUN_DELAY] from now. It overwrites a waiting retry unconditionally: that is
-     * never meaningfully earlier, and a change makes the run one the keep-alive should carry.
+     * Asks for an automatic run [after] from now. It overwrites a waiting retry unconditionally: that is never
+     * meaningfully earlier, and a change makes the run one the keep-alive should carry.
+     *
+     * @param after How long the library has to stay unchanged first. Zero for another device's change, which is already
+     *   in the folder whole: the wait is for this device's edits, which come in bursts.
      */
-    fun schedule() {
+    fun schedule(after: Duration = AUTOMATIC_RUN_DELAY) {
         if (stateHolder.value !is SyncState.Connected) return
-        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY, isRetry = false)
+        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + after, isRetry = false)
     }
 
     /**

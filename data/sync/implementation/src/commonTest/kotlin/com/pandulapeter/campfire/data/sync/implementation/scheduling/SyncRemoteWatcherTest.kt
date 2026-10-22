@@ -84,6 +84,18 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
+    fun `another device's change starts a run without waiting for the library to settle`() = runTest {
+        val world = world(localFiles = mapOf(song(1) to ONE))
+        world.synchronizeAndWatch()
+
+        world.provider.writeElsewhere(song(2), TWO)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY / 2)
+
+        assertEquals(2, world.runs.count)
+        assertContentEquals(TWO, world.local.files[song(2)])
+    }
+
+    @Test
     fun `another device's deletion is brought over`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE, song(2) to TWO))
         world.synchronizeAndWatch()
@@ -185,8 +197,8 @@ class SyncRemoteWatcherTest {
         )
         advanceTimeBy(30.minutes)
 
-        // Tried at once, then after 30 s, 1, 2, and every 5 minutes: nine times in half an hour, not sixty.
-        assertEquals(9, downloads)
+        // Tried at once, then after 2 s, 30 s, 1, 2, and every 5 minutes: ten times in half an hour, not sixty.
+        assertEquals(10, downloads)
     }
 
     @Test
@@ -266,8 +278,8 @@ class SyncRemoteWatcherTest {
         world.synchronizeAndWatch()
         world.provider.writeElsewhere(song(2), TWO)
 
-        // Two failures wait 30 seconds and a minute; after the quiet answer, the next one waits 30 seconds again.
-        advanceTimeBy(2.minutes + 5.seconds)
+        // Two failures wait 2 and 30 seconds; after the quiet answer, the next one waits 2 seconds again, not a minute.
+        advanceTimeBy(40.seconds)
 
         assertEquals(2, world.runs.count)
     }
@@ -290,21 +302,30 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
-    fun `a poll lost soon after it was sent still waits before it is asked again`() = runTest {
+    fun `a poll lost soon after it was sent is asked again after a moment, and less often while it keeps failing`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
-        world.provider.awaitAnswers.add {
+        val refused: suspend () -> Boolean = {
             delay(10.seconds)
             throw SyncNetworkException("Connection refused.")
         }
+        world.provider.awaitAnswers.addAll(listOf(refused, refused))
         world.synchronizeAndWatch()
 
         world.provider.writeElsewhere(song(2), TWO)
-        advanceTimeBy(10.seconds + AUTOMATIC_RUN_DELAY + MARGIN)
+        advanceTimeBy(11.seconds)
 
         assertEquals(1, world.runs.count)
         assertEquals(1, world.provider.awaitCount)
 
-        advanceTimeBy(30.seconds)
+        advanceTimeBy(2.seconds)
+
+        assertEquals(2, world.provider.awaitCount)
+
+        advanceTimeBy(10.seconds + 29.seconds)
+
+        assertEquals(1, world.runs.count)
+
+        advanceTimeBy(2.seconds)
 
         assertEquals(2, world.runs.count)
     }
@@ -326,8 +347,8 @@ class SyncRemoteWatcherTest {
 
         advanceTimeBy(30.minutes)
 
-        // After the held poll at 301 s, then after 30 s, 1, 2, and every 5 minutes: eight in half an hour.
-        assertEquals(8, listings)
+        // After the held poll at 301 s, then after 2 s, 30 s, 1, 2, and every 5 minutes: nine in half an hour.
+        assertEquals(9, listings)
     }
 
     @Test

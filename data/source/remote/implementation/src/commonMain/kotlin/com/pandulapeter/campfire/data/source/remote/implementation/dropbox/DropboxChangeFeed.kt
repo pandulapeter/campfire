@@ -29,14 +29,25 @@ internal class DropboxChangeFeed(
     private val requests: DropboxTransport,
 ) {
 
+    /** The `backoff` of a poll that reported a change, waited by the next poll, see [awaitChanges]. */
+    private var owedBackoffMillis = 0L
+
     /**
      * `list_folder/longpoll`, which takes no token: the cursor is all it goes by. Dropbox holds the request for
      * [LONGPOLL_TIMEOUT_SECONDS] plus the minute and a half of its own that Dropbox documents (104 s was measured), so
      * the call's own bounds are raised past that, or the silence of a folder nobody touches would read as a dead
      * connection. It is sent once and never retried here: what a poll that ends without an answer means is the watcher's
      * call (`SyncRemoteWatcher`), which asks again at once after one the service held.
+     *
+     * Dropbox's `backoff` is a wait before the next poll, not before acting on this one's answer: a quiet answer waits it
+     * out before returning, since the next poll follows at once, while a change is answered at once and the wait is left
+     * to the poll after it.
      */
     suspend fun awaitChanges(cursor: String): Boolean {
+        if (owedBackoffMillis > 0) {
+            delay(owedBackoffMillis)
+            owedBackoffMillis = 0
+        }
         val response = transport {
             httpClientHolder.client().post(LONGPOLL_URL) {
                 attributes.put(BrowserCallTimeout, LONGPOLL_CALL_TIMEOUT_MILLIS)
@@ -48,7 +59,7 @@ internal class DropboxChangeFeed(
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("reset")) return true
         response.ensureSuccessful()
         val answer = decodeAnswer(DropboxLongpollResponse.serializer(), transport { response.bodyAsText() })
-        answer.backoffSeconds?.let { delay(it * 1000L) }
+        answer.backoffSeconds?.let { seconds -> if (answer.changes) owedBackoffMillis = seconds * 1000L else delay(seconds * 1000L) }
         return answer.changes
     }
 

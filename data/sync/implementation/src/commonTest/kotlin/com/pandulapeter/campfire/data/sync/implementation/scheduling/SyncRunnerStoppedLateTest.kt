@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -51,13 +52,16 @@ class SyncRunnerStoppedLateTest {
     @Test
     fun `a run stopped while the library reads what it changed keeps the completed index`() = runTest {
         val folderDocument = document("""{"song_1.cho":{"capo":3}}""")
-        val provider = FakeSyncProvider(files = mapOf(song(1) to ONE), account = TEST_ACCOUNT)
+        // The second download lands inside the pause the live refresh of the first one starts, so the run's own refresh
+        // at its end is the one that reads it.
+        val provider = FakeSyncProvider(files = mapOf(song(1) to ONE, song(2) to ONE), account = TEST_ACCOUNT)
+        provider.onDownload = { key -> if (key == song(2)) delay(100) }
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(folderDocument) to "r1"
         val stateLocalSource = FakeSyncIndexLocalSource()
         val refreshStarted = CompletableDeferred<Unit>()
         val songRepository = RecordingSongRepository(
-            onRefresh = {
-                if (!refreshStarted.isCompleted) {
+            onRefresh = { fileNames ->
+                if (song(2).name in fileNames && !refreshStarted.isCompleted) {
                     refreshStarted.complete(Unit)
                     awaitCancellation()
                 }
