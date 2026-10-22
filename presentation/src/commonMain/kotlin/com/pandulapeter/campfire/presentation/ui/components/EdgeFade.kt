@@ -286,30 +286,5 @@ internal fun Modifier.fadingUnderStartOverlay(scrolledFromStart: () -> Int, over
 
 private fun LazyListState.scrolledFromTop() = if (firstVisibleItemIndex > 0) Int.MAX_VALUE else firstVisibleItemScrollOffset
 
-/**
- * Fades what scrolls in this container out towards its left edge during horizontal slide animation, painted in the
- * [backgroundColor] it stands on, so a swipe draws a strip rather than the whole container into a layer of its own.
- *
- * @param alpha How strong the fade is, read while it is drawn, so that animating it draws again without composing.
- */
-internal fun Modifier.fadingLeftEdge(
-    alpha: () -> Float,
-    backgroundColor: Color,
-) = drawWithCache {
-    val width = EDGE_FADE_SIZE.toPx()
-    val gradient = Brush.horizontalGradient(
-        colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
-        startX = 0f,
-        endX = width,
-    )
-    onDrawWithContent {
-        drawContent()
-        val strength = alpha().coerceIn(0f, 1f)
-        if (strength > 0f) {
-            drawRect(brush = gradient, size = Size(width, size.height), alpha = strength)
-        }
-    }
-}
-
 /** How far content fades in over below whatever it scrolls under, and how far it is scrolled before it fades fully. */
 internal val EDGE_FADE_SIZE = 24.dp

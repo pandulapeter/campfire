@@ -144,7 +144,7 @@ internal fun ChordsScreen(
     val fadeHeight = with(density) { EDGE_FADE_SIZE.roundToPx() }
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
+        contentAlignment = Alignment.TopStart,
     ) {
         LazyVerticalGrid(
             modifier = Modifier

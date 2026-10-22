@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui
 import com.pandulapeter.campfire.presentation.ui.chrome.KeyboardAwarePadding
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
+import com.pandulapeter.campfire.presentation.ui.chrome.NAVIGATION_RAIL_CONTENT_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationScrim
@@ -139,11 +140,21 @@ internal fun CampfireScreens(
     // Never read here, see KeyboardAwarePadding.
     val ime = rememberUpdatedState(WindowInsets.ime)
     val shellContentPadding: PaddingValues = KeyboardAwarePadding(
-        start = if (windowSize.usesNavigationRail) 0.dp else systemBars.calculateStartPadding(layoutDirection),
+        start = if (windowSize.usesNavigationRail) NAVIGATION_RAIL_CONTENT_GAP else systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
         bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
         chromeHeight = NoChromeRoom,
         // The keyboard covers the navigation bar instead of pushing it away, so only what is left of it counts.
+        coveredHeight = navigationBarHeight,
+        ime = ime,
+        density = density,
+    )
+    // The song cards keep a margin of their own from the edge of the list, which is room enough from the rail.
+    val listContentPadding: PaddingValues = KeyboardAwarePadding(
+        start = if (windowSize.usesNavigationRail) 0.dp else systemBars.calculateStartPadding(layoutDirection),
+        end = systemBars.calculateEndPadding(layoutDirection),
+        bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
+        chromeHeight = NoChromeRoom,
         coveredHeight = navigationBarHeight,
         ime = ime,
         density = density,
@@ -191,7 +202,7 @@ internal fun CampfireScreens(
     val sortingMode by remember(userPreferences) { derivedStateOf { userPreferences.value?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE } }
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
-        contentPadding = shellContentPadding,
+        contentPadding = listContentPadding,
         layoutDirection = layoutDirection,
         songColumnWidth = songColumnWidth,
         songGridColumnWidth = songGridColumnWidth(
@@ -291,7 +302,7 @@ internal fun CampfireScreens(
                         SongsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
-                            contentPadding = shellContentPadding,
+                            contentPadding = listContentPadding,
                         )
                     }
                 }
@@ -300,7 +311,7 @@ internal fun CampfireScreens(
                         SetlistsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
-                            contentPadding = shellContentPadding,
+                            contentPadding = listContentPadding,
                         )
                     }
                 }
@@ -356,7 +367,6 @@ internal fun CampfireScreens(
                             viewModel = viewModel,
                             layout = settingsLayout,
                             contentPadding = shellContentPadding,
-                            isNavigationRailVisible = windowSize.usesNavigationRail,
                             urlOpener = urlOpener,
                         )
                     }

@@ -14,13 +14,17 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
 
 /** Lays the content out [amount] wider on either side than it is given, over the padding around it. */
-internal fun Modifier.bleedHorizontally(amount: Dp) = layout { measurable, constraints ->
-    val bleed = amount.roundToPx()
+internal fun Modifier.bleedHorizontally(amount: Dp) = bleedHorizontally(start = amount, end = amount)
+
+/** Lays the content out [start] wider before it and [end] wider after it than it is given, over the padding around it. */
+internal fun Modifier.bleedHorizontally(start: Dp, end: Dp) = layout { measurable, constraints ->
+    val startBleed = start.roundToPx()
+    val bleed = startBleed + end.roundToPx()
     val placeable = measurable.measure(
         constraints.copy(
-            minWidth = constraints.minWidth + bleed * 2,
-            maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth + bleed * 2 else constraints.maxWidth,
+            minWidth = constraints.minWidth + bleed,
+            maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth + bleed else constraints.maxWidth,
         ),
     )
-    layout(placeable.width - bleed * 2, placeable.height) { placeable.place(-bleed, 0) }
+    layout(placeable.width - bleed, placeable.height) { placeable.placeRelative(-startBleed, 0) }
 }

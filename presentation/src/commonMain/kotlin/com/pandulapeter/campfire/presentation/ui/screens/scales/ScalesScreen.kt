@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.scales
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -33,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -127,7 +130,7 @@ internal fun ScalesScreen(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.roundToPx() }
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
+        contentAlignment = Alignment.TopStart,
     ) {
         LazyVerticalGrid(
             modifier = Modifier
@@ -185,6 +188,7 @@ internal fun ScalesScreen(
                     familyLabels = familyLabels,
                     selectedFamilyIndex = state.familyIndex,
                     familyScrollState = familyScrollState,
+                    contentPadding = contentPadding,
                     onFamilySelected = state::selectFamily,
                 )
             }
@@ -266,6 +270,7 @@ private fun ScaleLibraryHeader(
     familyLabels: List<String>,
     selectedFamilyIndex: Int,
     familyScrollState: ScrollState,
+    contentPadding: PaddingValues,
     onFamilySelected: (Int) -> Unit,
 ) = AnimatedContent(
     modifier = modifier.fillMaxWidth(),
@@ -278,15 +283,22 @@ private fun ScaleLibraryHeader(
     label = "scaleLibraryHeader",
 ) { content ->
     when (content) {
-        ScaleLibraryHeaderContent.FAMILIES -> ScaleFamilyRow(
-            modifier = Modifier
-                .bleedHorizontally(TOOL_PAGE_PADDING)
-                .padding(bottom = TOOL_GROUP_GAP - CELL_GAP),
-            labels = familyLabels,
-            selectedIndex = selectedFamilyIndex,
-            scrollState = familyScrollState,
-            onSelected = onFamilySelected,
-        )
+        ScaleLibraryHeaderContent.FAMILIES -> {
+            val layoutDirection = LocalLayoutDirection.current
+            val startPadding = contentPadding.calculateStartPadding(layoutDirection) + TOOL_PAGE_PADDING
+            val endPadding = contentPadding.calculateEndPadding(layoutDirection) + TOOL_PAGE_PADDING
+            ScaleFamilyRow(
+                modifier = Modifier
+                    .bleedHorizontally(start = startPadding, end = endPadding)
+                    .padding(bottom = TOOL_GROUP_GAP - CELL_GAP),
+                labels = familyLabels,
+                selectedIndex = selectedFamilyIndex,
+                scrollState = familyScrollState,
+                startPadding = startPadding,
+                endPadding = endPadding,
+                onSelected = onFamilySelected,
+            )
+        }
         ScaleLibraryHeaderContent.FOUND -> Text(
             modifier = Modifier
                 .fillMaxWidth()

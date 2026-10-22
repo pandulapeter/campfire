@@ -9,10 +9,12 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
-- Sharing landing page should display the artist of the shared song, if available
-- Consider a surface background for the navigation rail
-- Improve the UX of sharing links + recommend it more than PDF or chordPro / zip export
+- Fix card alignment symmetry issues
 - Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device
+- The website's sharing landing page should display the artist of the shared song, if available
+- Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
+- Tuner glitch on initial open (warning animates in for a few frames before disappearing), on web
+- M keyboard shortcut should work on the metronome screen too
 - Fast scrolling is glitchy, especially on Setlists
 - Rename master branch to main
 - Comments in setlists (between songs)

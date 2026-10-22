@@ -9,19 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -29,7 +24,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
-import com.pandulapeter.campfire.presentation.ui.components.fadingLeftEdge
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import kotlinx.coroutines.flow.collectLatest
@@ -57,7 +51,6 @@ internal fun SettingsTabPager(
     isImporting: Boolean,
     startPadding: Dp,
     endPadding: Dp,
-    isNavigationRailVisible: Boolean,
     backProgress: () -> Float?,
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
@@ -118,14 +111,10 @@ internal fun SettingsTabPager(
             },
         )
         ImportProgress(isImporting = isImporting)
-        // Derived, so that a swipe recomposes this when it starts and when it ends rather than on every frame of it.
-        val isSwiping by remember(pagerState) { derivedStateOf { pagerState.isScrollInProgress || pagerState.currentPageOffsetFraction != 0f } }
-        val fadeAlpha = animateFloatAsState(if (isNavigationRailVisible && isSwiping) 1f else 0f)
         HorizontalPager(
             modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
                 .weight(1f)
-                .fillMaxWidth()
-                .fadingLeftEdge(alpha = { fadeAlpha.value }, backgroundColor = MaterialTheme.colorScheme.background),
+                .fillMaxWidth(),
             state = pagerState,
             beyondViewportPageCount = tabs.size - 1,
             key = { tabs[it] },

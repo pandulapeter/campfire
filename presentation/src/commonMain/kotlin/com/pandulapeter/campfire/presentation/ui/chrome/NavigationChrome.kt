@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
@@ -106,6 +107,9 @@ internal fun NavigationChrome(
         WideNavigationRail(
             state = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded),
             windowInsets = WideNavigationRailDefaults.windowInsets.withMinTopEdge,
+            // Every kind of chrome wears the bar's container color, so that a handover from one kind to another
+            // changes its shape and not its color.
+            colors = WideNavigationRailDefaults.colors(containerColor = NavigationBarDefaults.containerColor),
             // The default leaves room above the items for a header this rail does not have, which would drop them
             // 40dp lower than the collapsed rail's as the window crosses from the one to the other.
             contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
@@ -135,7 +139,10 @@ internal fun NavigationChrome(
             }
         }
     } else if (kind == NavigationChromeKind.RAIL) {
-        NavigationRail(windowInsets = NavigationRailDefaults.windowInsets.withMinTopEdge) {
+        NavigationRail(
+            containerColor = NavigationBarDefaults.containerColor,
+            windowInsets = NavigationRailDefaults.windowInsets.withMinTopEdge,
+        ) {
             items.forEach { (item, isShown) ->
                 NavigationItemPresence(isShown = isShown) { presence ->
                     NavigationRailItem(

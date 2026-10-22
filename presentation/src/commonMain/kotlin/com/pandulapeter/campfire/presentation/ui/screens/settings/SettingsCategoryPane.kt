@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
@@ -40,7 +41,7 @@ internal fun SettingsCategoryPane(
     label: @Composable (SettingsTab) -> String,
     onTabSelected: (SettingsTab) -> Unit,
 ) = Column(
-    modifier = modifier.width(SETTINGS_CATEGORY_PANE_WIDTH).padding(horizontal = 12.dp, vertical = PAGE_TOP_PADDING),
+    modifier = modifier.width(SETTINGS_CATEGORY_PANE_WIDTH).padding(start = TOOL_PAGE_PADDING, end = 12.dp, top = PAGE_TOP_PADDING, bottom = PAGE_TOP_PADDING),
     verticalArrangement = Arrangement.spacedBy(4.dp),
 ) {
     tabs.forEach { tab ->

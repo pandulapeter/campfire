@@ -77,7 +77,6 @@ internal fun SettingsScreen(
     viewModel: CampfireViewModel,
     layout: PageWidthLayout,
     contentPadding: PaddingValues,
-    isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,
 ) {
     // A build without sync leaves the Sharing tab out rather than offering a tab that cannot work, and an address that
@@ -200,7 +199,6 @@ internal fun SettingsScreen(
                 isImporting = isImporting,
                 startPadding = startPadding,
                 endPadding = endPadding,
-                isNavigationRailVisible = isNavigationRailVisible,
                 backProgress = backProgress,
                 onSelectedTabPressed = scrollTabToTop,
             ) { tab ->

@@ -31,6 +31,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -266,7 +267,7 @@ internal fun SongsScreen(
                     actions = rememberSongFilterActions(viewModel),
                     normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
                     contentPadding = panelContentPadding,
-                    fadeBackgroundColor = MaterialTheme.colorScheme.background,
+                    fadeBackgroundColor = NavigationBarDefaults.containerColor,
                 )
             }
         }
