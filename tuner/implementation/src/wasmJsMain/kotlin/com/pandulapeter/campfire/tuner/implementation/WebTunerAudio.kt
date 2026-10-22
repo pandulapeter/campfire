@@ -74,7 +74,10 @@ private fun disarmTunerGestures(): Unit = js(
     }"""
 )
 
-/** Resolves to `"ok"` once the microphone is open and connected, or to the name of the error it was refused with. */
+/**
+ * Resolves to `"ok"` once the microphone is open and connected and the context running (or given up waiting for), or to
+ * the name of the error it was refused with.
+ */
 internal fun openTunerMicrophone(): Promise<JsString> = js(
     """(function () {
         var tuner = window.__campfireTuner;
@@ -103,7 +106,17 @@ internal fun openTunerMicrophone(): Promise<JsString> = js(
                 tuner.source = source;
                 tuner.analyser = analyser;
                 tuner.stream = stream;
-                return 'ok';
+                // A context made or resumed just now reaches 'running' a few frames later even where the page may play,
+                // and an answer read before then would show the waiting-for-a-tap line only to take it back. Where no
+                // gesture allows it, resume() never settles, so the wait is cut short and the line shows after all.
+                if (context.state === 'running') return 'ok';
+                return Promise.race([
+                    context.resume().catch(function () {}),
+                    new Promise(function (resolve) { setTimeout(resolve, 500); }),
+                ]).then(function () {
+                    // The microphone was closed while it waited, which has already ended the stream's tracks.
+                    return generation === tuner.generation ? 'ok' : 'AbortError';
+                });
             } catch (error) {
                 // A graph that could not be built must not leave the browser's recording indicator on for a stream nothing reads.
                 if (source) { try { source.disconnect(); } catch (ignored) {} }

@@ -9,13 +9,11 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
-- Shared links don't seem to get reactively updated: share a link, leave the screen open, stop sharing it on another device - I would expect the first device's screen to get updated and the shared link to disappear. Is this an edge-case oversight or is the entire sync not as reactive / real time as I thought?
 - The website's sharing landing page should display the artist of the shared song, if available
 - Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
-- Tuner glitch on initial open (warning animates in for a few frames before disappearing), on web
-- M keyboard shortcut should work on the metronome screen too
-- Fast scrolling is glitchy, especially on Setlists
+- The "M" keyboard shortcut should work on the metronome screen too
 - Metronome clicks per beat vibration is missing
+- Fast scrolling is glitchy, especially on Setlists
 - Share to Android can work unexpectedly if the app is already open
 - Select all in input fields when they become focused
 - Simplify import and edit flows based on user testing

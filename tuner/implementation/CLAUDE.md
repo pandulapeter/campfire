@@ -79,10 +79,11 @@ only once its fade has been played (the scale sheet replaces a tone every quarte
 - **Web**: `getUserMedia` (processing off) into an `AnalyserNode` on the tuner's `AudioContext`, shared with the tone
   (`WebTunerAudio`, `window.__campfireTuner`). Stream kept only once connected; a failed graph ends its tracks.
   Capture-phase listener resumes the context while a tuner screen shows (`setStartable`), `WAITING_FOR_GESTURE` until
-  then. Closing ends the tracks (browser indicator off); a generation counter ends tracks of an answer arriving after
-  a close. Nothing calls back into Kotlin, so ended tracks and context state are read every poll. A tone's stop holds
-  its gain ramp with `cancelAndHoldAtTime` (reading `gain.value` only in Firefox), since the read value is a block
-  stale.
+  then; an opening waits up to 0.5 s for a new context to start running, which it does a few frames late even where
+  it may, so the line never flashes. Closing ends the tracks (browser indicator off); a generation counter ends tracks
+  of an answer arriving after a close. Nothing calls back into Kotlin, so ended tracks and context state are read every
+  poll. A tone's stop holds its gain ramp with `cancelAndHoldAtTime` (reading `gain.value` only in Firefox), since the
+  read value is a block stale.
 
 `RecordedStringsTest` (`desktopTest`) reads every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by its
 note (see its README).
