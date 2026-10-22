@@ -47,7 +47,7 @@ a beat not muted, which plays on (iOS has no background haptics).
   elsewhere.
 - `toggleMetronome` starts or stops the context's pattern; starting over a song opens its panel. A click that stops on
   its own is a `Message.MetronomeStopped` snackbar naming why.
-- Space (on the tab) and M (on a song) toggle it on the desktop and the web (`toggleMetronomeByKey`), under no dialog or
+- Space (on the tab) and M (on the tab and on a song) toggle it on the desktop and the web (`toggleMetronomeByKey`), under no dialog or
   menu, only on a held key's first press.
 
 ## The panel (`MetronomePanel.kt`)

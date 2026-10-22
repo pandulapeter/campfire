@@ -11,7 +11,6 @@
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
 - The website's sharing landing page should display the artist of the shared song, if available
 - Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
-- The "M" keyboard shortcut should work on the metronome screen too
 - Metronome clicks per beat vibration is missing
 - Fast scrolling is glitchy, especially on Setlists
 - Share to Android can work unexpectedly if the app is already open
