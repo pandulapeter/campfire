@@ -12,6 +12,7 @@
 - CI issue on iOS: Your account has reached the maximum number of certificates.
 - Fix compile-time warnings on all platforms
 - Songs screen: scroll to top is not smooth
+- PDF floating page controls show / hide should also fade
 - Editor bug when copy-pasting grid sections (it tries to use the chords syntax even though we're in a grid)
 - Fast scrolling is glitchy, especially on Setlists
 - Document all keyboard shortcuts used in the app
