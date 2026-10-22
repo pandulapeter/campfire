@@ -44,14 +44,18 @@ internal class MessageSink(
      * [scope]'s `launch` for the intents that write to the library. A write that fails throws out of the
      * repository, and an exception nobody catches in a launched coroutine takes the whole app down on Android: here
      * it becomes one line at the bottom of the screen instead, and the library stays what it was.
+     *
+     * @param action What the user asked for, in a few words, for the process log (`ui/platform`): every write to the
+     *   library passes through here, which makes it the one place they are all recorded, without the songs' content.
      */
-    fun launchLibraryChange(block: suspend () -> Unit) = scope.launch {
+    fun launchLibraryChange(action: String, block: suspend () -> Unit) = scope.launch {
+        println("Library: $action")
         try {
             block()
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            println("The change could not be written: ${exception.message}")
+            println("The change could not be written ($action): ${exception.message}")
             sendMessage(Message.OperationFailed)
         }
     }

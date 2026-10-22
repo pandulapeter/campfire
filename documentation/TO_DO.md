@@ -12,6 +12,10 @@
 - The website's sharing landing page should display the artist of the shared song, if available
 - Improve the UX of sharing links + recommend it more than the PDF or chordPro / zip export
 - Fast scrolling is glitchy, especially on Setlists
+- Setlists screen initial slide animation caused by description
+- Changing the metronome sound while it's running causes a repeated beat
+- Make the pinned filters panel optional / get rid of it completely
+- Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
 - Share to Android can work unexpectedly if the app is already open
 - Select all in input fields when they become focused
 - Simplify import and edit flows based on user testing

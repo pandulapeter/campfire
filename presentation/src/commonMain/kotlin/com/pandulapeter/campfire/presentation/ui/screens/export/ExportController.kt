@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -29,7 +30,10 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.platform.DEVELOPER_EMAIL
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.appBuild
+import com.pandulapeter.campfire.presentation.ui.platform.readProcessLog
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
@@ -336,6 +340,30 @@ internal class ExportController(
         }
     }
 
+    /**
+     * Attaches the process log ([readProcessLog]) to a new mail to the developer where the platform can, and otherwise
+     * hands it to the share sheet, or to a save dialog where there is none either. It goes under a first line naming the
+     * version and the build, which the log itself says nothing about.
+     */
+    fun sendProcessLog(filePicker: FilePicker) = launchFileTransfer {
+        val file = withContext(Dispatchers.Default) { readProcessLog() }?.let { log ->
+            ExportedFile(
+                name = "campfire-log.txt",
+                mimeType = ExportedFile.TEXT_MIME_TYPE,
+                bytes = "Campfire $CAMPFIRE_VERSION_NAME (${appBuild.name.lowercase()})\n\n$log".encodeToByteArray(),
+            )
+        }
+        val isEmailed = file != null && filePicker.canEmailFiles && try {
+            filePicker.emailFile(file = file, to = DEVELOPER_EMAIL, subject = "Campfire $CAMPFIRE_VERSION_NAME log")
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not email the log: ${exception.message}")
+            false
+        }
+        if (!isEmailed) save(filePicker = filePicker, savedMessage = Message.ProcessLogSaved, isShare = filePicker.canShare) { file }
+    }
+
     /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
     fun onExportFailed() {
         messageSink.sendMessage(Message.ExportFailed)
@@ -370,6 +398,7 @@ internal class ExportController(
         export: suspend () -> ExportedFile?,
     ) = try {
         val file = export()
+        println("Export: ${file?.let { "${it.mimeType}, ${it.bytes.size} bytes, ${if (isShare) "shared" else "saved"}" } ?: "nothing to export"}")
         when {
             !isWanted() -> Unit
             file == null -> messageSink.sendMessage(Message.ExportFailed)

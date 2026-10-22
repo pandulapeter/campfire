@@ -360,6 +360,15 @@ private fun CampfireDialog(
             },
         )
 
+        is DialogType.SendProcessLog -> SendProcessLogDialog(
+            isAfterCrash = dialog.isAfterCrash,
+            onSend = { filePicker ->
+                viewModel.exportController.sendProcessLog(filePicker)
+                viewModel.dialogHost.dismissDialog()
+            },
+            onDismiss = viewModel.dialogHost::dismissDialog,
+        )
+
         DialogType.DeleteLibrary -> DeleteLibraryDialog(
             viewModel = viewModel,
         )

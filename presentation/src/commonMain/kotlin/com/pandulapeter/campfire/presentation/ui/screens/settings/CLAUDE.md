@@ -87,3 +87,5 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 - **campfire-songbook.com is the website** (downloads, support page, privacy policy) and is linked first; **GitHub is
   the source code and issue tracker**, after it. Nothing else is linked but the author's site and the donation page.
 - Every About row has a description and a leading icon, none a trailing mark.
+- The log row (Help, last) is named for what it does here (`processLogActionTitle`: email, share, or save) and opens
+  the `SendProcessLog` confirmation, which carries the privacy warning.

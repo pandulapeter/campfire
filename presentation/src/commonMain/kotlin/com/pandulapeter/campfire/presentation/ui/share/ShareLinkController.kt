@@ -83,7 +83,16 @@ internal class ShareLinkController(
         if (_creations.value[target]?.let { it.result == null } == true) return
         _creations.update { it + (target to ShareCreation(target = target, result = null)) }
         scope.launch {
+            println("Sharing: create a ${target.kind.name.lowercase()} link")
             val result = createShareLink(kind = target.kind, fileName = target.fileName, title = title)
+            println(
+                "Sharing: " + when (result) {
+                    is CreateShareResult.Shared -> "shared"
+                    CreateShareResult.TooLarge -> "too large"
+                    CreateShareResult.Missing -> "missing"
+                    is CreateShareResult.Failed -> "failed (${result.reason})"
+                },
+            )
             // Only into an entry still there, so that one cleared meanwhile by a stop is not put back.
             _creations.update { map -> map[target]?.let { map + (target to it.copy(result = result)) } ?: map }
         }
@@ -99,6 +108,7 @@ internal class ShareLinkController(
         // A share made here a moment ago is otherwise still answered by its creation once the list has let it go.
         _creations.update { map -> map.filterValues { (it.result as? CreateShareResult.Shared)?.share?.shareId != share.shareId } }
         scope.launch {
+            println("Sharing: stop a link")
             try {
                 stopSharing(share.shareId)?.let { messageSink.sendMessage(Message.StopSharingFailed(it)) }
             } finally {
@@ -118,6 +128,7 @@ internal class ShareLinkController(
         _isStoppingEverything.value = true
         _creations.update { map -> map.filterValues { it.result !is CreateShareResult.Shared } }
         scope.launch {
+            println("Sharing: stop everything")
             try {
                 stopSharingEverything()?.let { messageSink.sendMessage(Message.StopSharingEverythingFailed(it)) }
             } finally {

@@ -35,7 +35,7 @@ class MessageSinkTest {
     @Test
     fun `a library change that fails becomes a message`() = runTest {
         val sink = MessageSink(this)
-        sink.launchLibraryChange { throw IllegalStateException("The disk is full.") }.join()
+        sink.launchLibraryChange("test") { throw IllegalStateException("The disk is full.") }.join()
         assertEquals(listOf<Message>(Message.OperationFailed), sink.messageQueue.value.map { it.value })
     }
 }

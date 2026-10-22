@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
+import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
 import kotlinx.cinterop.BetaInteropApi
 import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSMutableCharacterSet
@@ -55,6 +56,8 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
  */
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(): UIViewController {
+    // Before anything else of the app's, so that the log has the start of its own process too.
+    installProcessLog()
     koinApplication
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null

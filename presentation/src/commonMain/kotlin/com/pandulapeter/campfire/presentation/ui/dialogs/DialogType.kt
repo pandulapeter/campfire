@@ -237,4 +237,10 @@ sealed interface DialogType {
 
     /** What Campfire is built with and under which licenses, opened from Settings → About. */
     data object OpenSourceLicenses : DialogType
+
+    /**
+     * What the process log holds, asked before it goes anywhere: from Settings, or on the launch after a crash
+     * ([isAfterCrash]), where the question is also whether to send it at all.
+     */
+    data class SendProcessLog(val isAfterCrash: Boolean) : DialogType
 }

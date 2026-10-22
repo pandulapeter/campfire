@@ -585,7 +585,7 @@ internal class ImportController(
      * Only ever offered from the settings screen, whose back stack holds no song screen and no editor, so there is
      * nothing open on a file that is about to go.
      */
-    fun deleteLibrary() = messageSink.launchLibraryChange {
+    fun deleteLibrary() = messageSink.launchLibraryChange("delete the library") {
         // An import writes against the library it planned for: one running, or one still being read or reviewed, would
         // either outlive the deletion in part or be applied to a library that is gone. The import queue waits for the
         // flag the other way round. Checked and set before the first suspension, as import claims its own flag.

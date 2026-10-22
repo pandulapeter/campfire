@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,8 @@ internal fun ConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     isDestructive: Boolean = true,
+    dismissLabel: String = stringResource(Res.string.cancel),
+    extraButton: (@Composable () -> Unit)? = null,
 ) = AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(title) },
@@ -38,6 +41,9 @@ internal fun ConfirmationDialog(
         ) { Text(confirmLabel) }
     },
     dismissButton = {
-        TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+        Row {
+            extraButton?.invoke()
+            TextButton(onClick = onDismiss) { Text(dismissLabel) }
+        }
     },
 )

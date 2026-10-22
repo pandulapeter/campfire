@@ -78,6 +78,7 @@
     <string name="export_setlist_saved">Lista elmentve</string>
     <string name="export_songs_saved">Dalok elmentve</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
+    <string name="export_log_saved">Napló elmentve</string>
     <string name="export_too_large_to_import">Ez az archívum nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importáld a dalokat néhány ezres adagokban.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Egy fájlt nem sikerült beolvasni, így nincs benne az archívumban: %2$s</item>
@@ -472,6 +473,19 @@
     <string name="settings_about">Névjegy</string>
     <string name="settings_git_hub">Campfire a GitHubon</string>
     <string name="settings_git_hub_description">Forráskód és hibajegyek</string>
+    <string name="settings_log_email">Az alkalmazás naplójának elküldése e-mailben</string>
+    <string name="settings_log_share">Az alkalmazás naplójának megosztása</string>
+    <string name="settings_log_save">Az alkalmazás naplójának mentése</string>
+    <string name="settings_log_description">Segít a fejlesztőnek kideríteni, mi romlott el</string>
+    <string name="log_dialog_text">A napló azt mutatja, mit csinált mostanában a Campfire: milyen képernyőket nyitottál meg, a dalaid nevét és az esetleges hibákat. Mást nem tartalmaz rólad, és csak az olvashatja, akinek elküldöd.</string>
+    <string name="log_dialog_send_to">Kérlek, küldd el ide: %1$s.</string>
+    <string name="log_dialog_email">E-mail</string>
+    <string name="log_dialog_share">Megosztás</string>
+    <string name="log_dialog_copy_address">Cím másolása</string>
+    <string name="log_dialog_address_copied">Cím kimásolva</string>
+    <string name="crash_report_title">A Campfire váratlanul bezárult</string>
+    <string name="crash_report_text">A Campfire legutóbb leállt használat közben. Ha elküldöd a naplóját a fejlesztőnek, azzal segítesz kijavítani a hibát.</string>
+    <string name="crash_report_not_now">Most nem</string>
     <string name="settings_help">Súgó és támogatás</string>
     <string name="settings_help_description">Gyakori kérdések, és hogyan jelezhetsz egy hibát</string>
     <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>

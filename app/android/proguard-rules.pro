@@ -8,3 +8,7 @@
 
 # kotlinx.serialization ships its own consumer rules; only the coroutine machinery needs an explicit keep.
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+
+# The process log names screens and dialogs by class (`logBreadcrumbs`), which reads as nothing once R8 has renamed them.
+-keepnames class com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination$**
+-keepnames class com.pandulapeter.campfire.presentation.ui.dialogs.DialogType$**

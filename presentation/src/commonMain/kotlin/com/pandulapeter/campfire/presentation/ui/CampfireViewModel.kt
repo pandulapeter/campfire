@@ -133,6 +133,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.state.logBreadcrumbs
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
@@ -741,6 +742,16 @@ class CampfireViewModel(
         libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
+        viewModelScope.launch { firstRunController.offerCrashReport() }
+        viewModelScope.logBreadcrumbs(
+            navigator = navigator,
+            dialogHost = dialogHost,
+            userPreferences = preferencesController.userPreferencesState.map { it.data },
+            metronomePlayback = metronome.playback,
+            tunerListening = tunerController.tunerState.map { it.listening },
+            isImporting = importController.isImporting,
+            songFilter = _songFilter,
+        )
         // The origin is taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
         syncController.startRestoring(isFirstLaunch = isFirstLaunch) {
             navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)

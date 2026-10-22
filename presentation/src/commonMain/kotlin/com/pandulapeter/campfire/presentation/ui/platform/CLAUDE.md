@@ -67,6 +67,34 @@ The `expect` declarations and the interfaces the platform shells provide.
   `ExportController.launchFileTransfer` runs one transfer at a time and ignores others, so one that never answers
   blocks import and export for good.
 
+### `ProcessLog.kt`
+
+- Every shell calls `installProcessLog` before anything else of the app's; `ProcessLogWriter` (common, tested) stamps
+  lines and rotates at line starts, keeping the current file and the one before. Diagnostics stay plain `println`s;
+  actions are recorded where they take effect, never per button: `logBreadcrumbs` (`ui/state`) for the start, screens
+  and dialogs (class names, kept through R8 by `app/android/proguard-rules.pro`), changed setting names
+  (`changedPropertyNames`, from `toString`, values never), the metronome, the tuner, imports, and the song filter;
+  `MessageSink.launchLibraryChange`'s `action` for every library write; exports, share links, searches opened, and
+  sync runs (`SyncRunner`, counts only) at their own sources. Kinds, counts, and names; never typed text or a song's
+  content.
+- Android and desktop (`jvmSharedMain`): `System.out` / `System.err` mirrored into `campfire.log`, in
+  `noBackupFilesDir` on Android, the data directory on desktop; the previous uncaught exception handler still runs.
+- iOS: stdout and stderr dup'ed onto a **non-blocking** pipe read by its own thread (a stalled reader drops output,
+  never blocks a `println`), into the caches directory (never backed up); an uncaught exception is written by the
+  thread it ends. Not installed by the share extension.
+- Web: the console methods and uncaught errors, into `localStorage` (UTF-16 in a few MB for the site, which the 256 KB bound fits), stored
+  a second after a burst and on `pagehide`. Tabs share it; the last to store wins.
+- Sent by `ExportController.sendProcessLog`, under a line naming the version and build, after `SendProcessLogDialog`
+  (`ui/dialogs`), whose text is the privacy warning: attached to a mail to `DEVELOPER_EMAIL` where `canEmailFiles`
+  (Android's send with a `mailto:` selector, iOS's Mail compose sheet where Mail has an account), else shared or saved,
+  the dialog then naming the address, with a Copy address button (a `mailto:` carries no attachment on desktop or the
+  web). The JVM's
+  `withoutUserName` replaces the home directory with `~` and the login name in other paths. Song names stay: they are
+  what makes a report readable, and a hash of a known song's name is no secret.
+- **Crashes**: an uncaught exception leaves `campfire.crash` beside the log (JVM, iOS); the next launch asks once
+  (`FirstRunController.offerCrashReport`, waiting like What's new), and either answer forgets it
+  (`forgetPendingCrashReport`). Never on the web, whose uncaught errors are mostly not the app's and do not end it.
+
 ### `ClipboardText.kt`
 
 - Read only on a tap, never to decide whether to show the entry (the web's read prompts). A refusal is

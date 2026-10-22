@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
+import com.pandulapeter.campfire.presentation.ui.platform.hasPendingCrashReport
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -347,14 +348,7 @@ internal class FirstRunController(
         if (preferences.isOnboardingPending) return recordWhatsNewVersion()
         awaitAppOnScreen()
         if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
-            combine(dialogHost.visibleDialog, importController.isImporting, importReport, importController.queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
-                canShowWhatsNew(
-                    hasDialog = dialog != null,
-                    isImporting = isImporting,
-                    hasImportReport = report != null,
-                    queuedImportCount = queuedImportCount,
-                )
-            }.first { it }
+            awaitNothingInFront()
             if (dialogHost.showIfNoneIsShown(DialogType.WhatsNew)) {
                 // A close before the dialog's own delay ran out; being covered leaves the dialog where it is.
                 dialogHost.visibleDialog.first { it != DialogType.WhatsNew }
@@ -363,6 +357,29 @@ internal class FirstRunController(
         } else {
             recordWhatsNewVersion()
         }
+    }
+
+    /**
+     * Asks whether to send the log of a session that ended in a crash ([hasPendingCrashReport]), once the app is on
+     * screen with nothing in front of it, as What's new waits. A question another dialog took the place of is asked at
+     * the next launch, since only an answer forgets the crash.
+     */
+    suspend fun offerCrashReport() {
+        if (!hasPendingCrashReport()) return
+        awaitAppOnScreen()
+        awaitNothingInFront()
+        dialogHost.showIfNoneIsShown(DialogType.SendProcessLog(isAfterCrash = true))
+    }
+
+    private suspend fun awaitNothingInFront() {
+        combine(dialogHost.visibleDialog, importController.isImporting, importReport, importController.queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
+            canShowWhatsNew(
+                hasDialog = dialog != null,
+                isImporting = isImporting,
+                hasImportReport = report != null,
+                queuedImportCount = queuedImportCount,
+            )
+        }.first { it }
     }
 
     /** What [DialogType.WhatsNew] calls once it has stayed on screen for a moment, see [showWhatsNewOnVersionChange]. */

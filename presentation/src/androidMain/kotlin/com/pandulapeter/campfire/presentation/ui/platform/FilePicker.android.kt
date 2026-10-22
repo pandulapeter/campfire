@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -174,11 +175,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
      * other app can read, and the provider declared in the manifest only exposes that one directory.
      */
     override suspend fun shareFile(file: ExportedFile): Boolean {
-        val uri = withContext(Dispatchers.IO) {
-            val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
-            val target = java.io.File(directory, file.name).apply { writeBytes(file.bytes) }
-            FileProvider.getUriForFile(context, "${context.packageName}.files", target)
-        }
+        val uri = file.toSharedUri()
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = file.mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -186,6 +183,36 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         }
         context.startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         return true
+    }
+
+    override val canEmailFiles = true
+
+    /**
+     * A send whose selector is a `mailto:` address, which is what limits the apps offered to mail apps while still
+     * carrying the attachment, which `ACTION_SENDTO` alone cannot. With no mail app at all nothing is shown.
+     */
+    override suspend fun emailFile(file: ExportedFile, to: String, subject: String): Boolean {
+        val uri = file.toSharedUri()
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = file.mimeType
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            selector = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        return try {
+            context.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+    }
+
+    private suspend fun ExportedFile.toSharedUri() = withContext(Dispatchers.IO) {
+        val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
+        val target = java.io.File(directory, name).apply { writeBytes(bytes) }
+        FileProvider.getUriForFile(context, "${context.packageName}.files", target)
     }
 
     override suspend fun shareText(text: String, subject: String): Boolean {

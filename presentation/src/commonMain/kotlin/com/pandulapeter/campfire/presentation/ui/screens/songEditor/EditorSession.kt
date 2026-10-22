@@ -373,6 +373,7 @@ internal class EditorSession(
 
     /** The editor's Save action. Fire and forget: the outcome reaches the user as the editor's own state. */
     fun saveSongContent(fileName: String, text: String) = scope.launch {
+        println("Library: save the editor's text")
         writeEditorText(fileName = fileName, text = text)
     }.also { currentSaveJob = it }
 

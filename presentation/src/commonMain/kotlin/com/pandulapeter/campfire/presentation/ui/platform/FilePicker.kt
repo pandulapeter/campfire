@@ -47,6 +47,16 @@ interface FilePicker {
 
     /** Whether [shareFile] does something other than [saveFile], and [shareText] something at all. */
     val canShare: Boolean get() = false
+
+    /**
+     * Opens a new mail to [to], titled [subject], with [file] attached, for the user to read and send. False where nothing
+     * was shown, which the caller answers by sharing or saving the file instead: a device with no mail app or account,
+     * and every platform where [canEmailFiles] is false, since a `mailto:` address carries no attachment.
+     */
+    suspend fun emailFile(file: ExportedFile, to: String, subject: String): Boolean = false
+
+    /** Whether [emailFile] can do anything here, asked again each time, since a mail account can be set up meanwhile. */
+    val canEmailFiles: Boolean get() = false
 }
 
 val LocalFilePicker = staticCompositionLocalOf<FilePicker> { error("No FilePicker has been provided.") }

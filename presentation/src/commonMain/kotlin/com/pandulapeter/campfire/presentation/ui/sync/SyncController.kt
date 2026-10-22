@@ -84,7 +84,7 @@ internal class SyncController(
         isConnectionCancelled = false
         // Connecting writes the credentials, and a storage that refuses them is reported by the repository as a
         // failed connection. This is for the exception that one day is not: it must cost a message, not the app.
-        syncConnectionJob = messageSink.launchLibraryChange {
+        syncConnectionJob = messageSink.launchLibraryChange("connect sync") {
             val stateBefore = getSyncState().first()
             val isConnected = connectSyncProvider.invoke(providerId, completionPage)
             // The answer is false for a Cancel too, and a reconnect that failed must not look like one: the screen
@@ -117,7 +117,7 @@ internal class SyncController(
 
     fun disconnectSyncProvider() {
         if (disconnectJob?.isActive == true) return
-        disconnectJob = messageSink.launchLibraryChange { disconnectSyncProvider.invoke() }
+        disconnectJob = messageSink.launchLibraryChange("disconnect sync") { disconnectSyncProvider.invoke() }
     }
 
     /**

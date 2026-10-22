@@ -81,7 +81,7 @@ preferences/shared-links-journal.json  renames and deletions of shared items not
 preferences/editor-draft.json          the editor's unsaved text, survives process death
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
 instance.lock / instance.endpoint      desktop only: single-instance guard
-campfire.log / campfire.log.1          desktop only: bounded process log
+campfire.log / campfire.log.1          desktop only, here: the process log (Android, iOS, web keep it elsewhere, ui/platform)
 ```
 
 ## Conventions
@@ -178,6 +178,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/screens/songs`.
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
+- Every platform keeps a bounded log of what the app printed and what the user did, never sent by itself;
+  Settings → About, and the launch after a crash, mail it to the developer (or share or save it) after a dialog saying
+  it names songs: `ui/platform`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
 - The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
 - Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:

@@ -80,10 +80,10 @@ belongs to the process); the view model is obtained outside `Window` so resizing
     left to Compose. One queue for all windows, never popped (`EventQueue.pop` removes the topmost, whoever pushed it).
   - **Re-check after every Compose update** (on a Mac, by posting `MouseWheelEvent`s of those scroll types).
 
-## Log (`DesktopLog`)
+## Log (`installProcessLog`, see `ui/platform` in `:presentation`)
 
-- Output and uncaught exceptions are mirrored to `campfire.log`, rotated at 1 MB. Installed after the single-instance
-  check, so a hand-over process never rotates the owner's log.
+- Output and uncaught exceptions are mirrored to `campfire.log` in the data directory. Installed after the
+  single-instance check, so a hand-over process never rotates the owner's log.
 - It starts with the renderer and the start line; a later `Renderer info` (a Direct3D fallback) wins. It names song
   files.
 

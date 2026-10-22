@@ -164,7 +164,7 @@ internal class SetlistsController(
      * the setlists screen offers no other way of doing that in one place. The picker only opens where nothing else
      * has been opened while the file was being written, and only where the library has songs to pick from.
      */
-    fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange {
+    fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange("create a setlist") {
         val setlist = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
         if (allSongs.value.isNotEmpty()) {
             dialogHost.showIfNoneIsShown(DialogType.SongPicker(setlist))
@@ -178,7 +178,7 @@ internal class SetlistsController(
      * leaves an empty setlist behind.
      */
     fun createSetlistWithSongs(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileNames: List<String>) =
-        messageSink.launchLibraryChange {
+        messageSink.launchLibraryChange("create a setlist with songs") {
             withContext(NonCancellable) {
                 saveSetlist(
                     createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
@@ -191,16 +191,16 @@ internal class SetlistsController(
      * Adds every one of [songFileNames] the setlist does not name yet to its end, as one write: the selection's Choose
      * setlists sheet, ticking a setlist for the songs. The ones it names already keep their places and their keys.
      */
-    fun addSongsToSetlist(songFileNames: List<String>, setlistFileName: String) = messageSink.launchLibraryChange {
+    fun addSongsToSetlist(songFileNames: List<String>, setlistFileName: String) = messageSink.launchLibraryChange("add ${songFileNames.size} songs to a setlist") {
         updateEditableSetlist(setlistFileName) { it.withSongsAdded(songFileNames) } ?: messageSink.sendMessage(Message.OperationFailed)
     }
 
     /** Takes back what the selection's sheet added to the setlist, and nothing else, see [addSongsToSetlist]. */
-    fun takeSongsOutOfSetlist(songFileNames: Collection<String>, setlistFileName: String) = messageSink.launchLibraryChange {
+    fun takeSongsOutOfSetlist(songFileNames: Collection<String>, setlistFileName: String) = messageSink.launchLibraryChange("take ${songFileNames.size} songs out of a setlist") {
         updateEditableSetlist(setlistFileName) { it.withSongsTakenOut(songFileNames) }
     }
 
-    fun addSongToSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange {
+    fun addSongToSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange("add a song to a setlist") {
         updateEditableSetlist(setlistFileName) { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
                 setlist.copy(entries = setlist.entries + Setlist.Entry(songFileName = songFileName))
@@ -223,7 +223,7 @@ internal class SetlistsController(
      * back from the sheet's copy: that copy is the setlist as it was when the sheet opened, and nothing else in the app
      * recreates a setlist by changing it.
      */
-    fun setSetlistSong(setlistFileName: String, songFileName: String, isTicked: Boolean) = messageSink.launchLibraryChange {
+    fun setSetlistSong(setlistFileName: String, songFileName: String, isTicked: Boolean) = messageSink.launchLibraryChange(if (isTicked) "tick a song in a setlist" else "untick a song in a setlist") {
         updateEditableSetlist(setlistFileName) { it.withSongTicked(songFileName, isTicked) } ?: messageSink.sendMessage(Message.OperationFailed)
     }
 
@@ -235,7 +235,7 @@ internal class SetlistsController(
      * brought another device's description or date in since. One that is gone by now is not brought back, and saying
      * so is a failed operation rather than a sheet that closes as if it had saved.
      */
-    fun editSetlist(offered: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange {
+    fun editSetlist(offered: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange("edit a setlist") {
         val current = setlists.value.firstOrNull { it.fileName == offered.fileName }
             ?: return@launchLibraryChange messageSink.sendMessage(Message.OperationFailed)
         if (current.isArchived) return@launchLibraryChange
@@ -259,7 +259,7 @@ internal class SetlistsController(
      * through a copied file name, so the copy gets its own name and none of the original's archived state - a copy is
      * made to be worked on.
      */
-    fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange {
+    fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = messageSink.launchLibraryChange("duplicate a setlist") {
         reorderingSetlistFileName = null
         // An archived setlist is copied too, since a set that has been played is the likeliest start for the next one.
         // The sheet's copy is the setlist as it was when the sheet opened; a sync run or a song rename since then has moved
@@ -274,19 +274,19 @@ internal class SetlistsController(
     }
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
-    fun setSetlistArchived(setlist: Setlist, isArchived: Boolean) = messageSink.launchLibraryChange {
+    fun setSetlistArchived(setlist: Setlist, isArchived: Boolean) = messageSink.launchLibraryChange(if (isArchived) "archive a setlist" else "restore an archived setlist") {
         reorderingSetlistFileName = null
         updateSetlist(setlist.fileName) { it.copy(isArchived = isArchived) }
     }
 
-    fun deleteSetlist(setlistFileName: String) = messageSink.launchLibraryChange {
+    fun deleteSetlist(setlistFileName: String) = messageSink.launchLibraryChange("delete a setlist") {
         if (reorderingSetlistFileName == setlistFileName) reorderingSetlistFileName = null
         deleteSetlist.invoke(setlistFileName)
         followReportedFileNames { it.takeUnless { it == setlistFileName } }
     }
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
-    fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange {
+    fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange("remove a song from a setlist") {
         updateEditableSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
     }
 
@@ -302,7 +302,7 @@ internal class SetlistsController(
      * so refused the order. A drag's screen holds the order it drew until the library agrees with it, which a write
      * that never happened would leave it waiting for.
      */
-    fun reorderSetlist(setlistFileName: String, songFileNames: List<String>, onNotWritten: () -> Unit = {}) = messageSink.launchLibraryChange {
+    fun reorderSetlist(setlistFileName: String, songFileNames: List<String>, onNotWritten: () -> Unit = {}) = messageSink.launchLibraryChange("reorder a setlist") {
         var isWritten = false
         try {
             isWritten = updateEditableSetlist(setlistFileName) { it.withSongOrder(songFileNames) }?.isArchived == false

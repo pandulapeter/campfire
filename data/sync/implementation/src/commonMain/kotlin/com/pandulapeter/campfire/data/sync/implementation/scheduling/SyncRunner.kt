@@ -116,6 +116,7 @@ internal class SyncRunner(
                 return@withLock
             }
             val connected = stateHolder.value as? SyncState.Connected ?: return@withLock
+            environment.logger.log("Sync: run started (${if (isAutomatic) "automatic" else "asked for"}, $deletionPolicy)")
             _watchPoint.value = null
             stateHolder.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
@@ -253,6 +254,7 @@ internal class SyncRunner(
                 // The one thing that has to be true on every way out, including any added later: no progress means
                 // the settings screen offers to start a run again instead of offering to stop one that is over.
                 stateHolder.updateConnected { if (it.progress == null) it else it.copy(progress = null) }
+                environment.logger.log("Sync: run ended (${describe((stateHolder.value as? SyncState.Connected)?.lastOutcome)})")
             }
         }
     }
@@ -346,6 +348,18 @@ internal class SyncRunner(
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
         val INDEX_WRITE_INTERVAL = 2.seconds
     }
+}
+
+/** A run's ending in a few words for the process log: counts and reasons, never the names of the files involved. */
+private fun describe(outcome: SyncOutcome?) = when (outcome) {
+    null -> "no outcome"
+    is SyncOutcome.Success -> with(outcome.summary) {
+        "completed: $downloaded downloaded, $uploaded uploaded, ${deletedLocally + deletedRemotely} deleted, ${conflicts.size} conflicts, " +
+            "${failed.size} failed${if (havePreferencesFailed) ", preferences failed" else ""}${if (haveSharedCopiesFailed) ", shared copies failed" else ""}"
+    }
+    is SyncOutcome.DeletionsNeedConfirmation -> "asks about ${outcome.count} deletions"
+    SyncOutcome.Interrupted -> "stopped"
+    is SyncOutcome.Failure -> "failed, ${outcome.reason}"
 }
 
 internal fun Throwable.toFailureReason() = when (this) {

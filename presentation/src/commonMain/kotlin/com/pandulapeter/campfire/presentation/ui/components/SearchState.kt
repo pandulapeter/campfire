@@ -88,6 +88,8 @@ internal class SearchState(
 
     /** Opens onto an empty field rather than onto the last search, which is a question the user has moved on from. */
     fun open() {
+        // What is typed is never logged, only that a search was opened, over whichever screen the log names before it.
+        println("Search opened")
         textFieldState.clearText()
         isFocusOwed = true
         isOpenSnapshot = true

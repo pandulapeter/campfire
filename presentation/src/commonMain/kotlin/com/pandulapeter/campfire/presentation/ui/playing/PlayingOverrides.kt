@@ -129,7 +129,7 @@ internal class PlayingOverrides(
      *
      * The result is wrapped around the octave ([wrapTransposition]), so the stepper never runs into an end.
      */
-    private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = messageSink.launchLibraryChange {
+    private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = messageSink.launchLibraryChange("change the transposition") {
         if (setlistFileName == null) {
             updateUserPreferences { preferences ->
                 val transposition = wrapTransposition(change(preferences.transpositions[songFileName] ?: 0))

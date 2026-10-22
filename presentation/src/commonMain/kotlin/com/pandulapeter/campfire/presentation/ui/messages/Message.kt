@@ -34,6 +34,7 @@ sealed interface Message {
     data object SongsExported : Message
     data object SetlistExported : Message
     data object LibraryExported : Message
+    data object ProcessLogSaved : Message
 
     /** An archive that was saved, but that the import would refuse for its size. */
     data object ExportTooLargeToImport : Message

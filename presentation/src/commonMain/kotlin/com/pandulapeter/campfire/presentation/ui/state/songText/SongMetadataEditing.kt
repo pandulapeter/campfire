@@ -191,7 +191,7 @@ internal class SongMetadataEditing(
     private fun editSong(target: SongEditTarget, edit: (String) -> String) {
         when (target) {
             is SongEditTarget.EditorDraft -> emitEditorTextEdit(EditorTextEdit(fileName = target.fileName, edit = edit))
-            is SongEditTarget.File -> messageSink.launchLibraryChange { songTextStore.editSongText(target.fileName, edit) }
+            is SongEditTarget.File -> messageSink.launchLibraryChange("edit a song's details") { songTextStore.editSongText(target.fileName, edit) }
         }
     }
 

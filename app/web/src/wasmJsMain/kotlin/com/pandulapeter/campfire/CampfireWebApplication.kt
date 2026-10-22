@@ -13,11 +13,13 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.presentation.ui.CampfireWebApp
+import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
 
 // Compose empties the element it is given, so it gets one of its own: the loading screen next to it in
 // index.html has to outlive the handover, and it is CampfireWebApp that decides when that is.
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
+    installProcessLog()
     startCampfireDependencyGraph()
     ComposeViewport(viewportContainerId = "app") {
         CampfireWebApp()

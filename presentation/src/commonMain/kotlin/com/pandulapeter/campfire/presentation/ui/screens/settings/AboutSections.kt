@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
@@ -35,6 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_help
 import com.pandulapeter.campfire.presentation.resources.settings_group_legal
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
+import com.pandulapeter.campfire.presentation.resources.settings_log_description
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
@@ -47,7 +49,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.processLogActionTitle
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
@@ -55,8 +59,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * What the app is and where it lives, in three groups: the app itself (where every build of it is, how to give
- * something back, and, last, who made it and which version this is); help (the website's support page, and the source code
- * and issue tracker); and the fine print. The row that names the author is the link to the
+ * something back, and, last, who made it and which version this is); help (the website's support page, the source code
+ * and issue tracker, and the app's log for a report there); and the fine print. The row that names the author is the link to the
  * author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
  * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
  * platforms, since a page can be kept up to date without a release and it is the one place App Review has nothing to
@@ -74,7 +78,11 @@ internal fun AboutSections(
     urlOpener: (String) -> Unit,
 ) {
     AppSection(urlOpener = urlOpener)
-    HelpSection(urlOpener = urlOpener)
+    HelpSection(
+        urlOpener = urlOpener,
+        processLogTitle = processLogActionTitle(LocalFilePicker.current),
+        onProcessLogClicked = { viewModel.dialogHost.showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
+    )
     LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.dialogHost.showDialog(DialogType.OpenSourceLicenses) })
 }
 
@@ -117,6 +125,8 @@ private fun AppSection(
 @Composable
 private fun HelpSection(
     urlOpener: (String) -> Unit,
+    processLogTitle: String,
+    onProcessLogClicked: () -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_help)) {
     LinkListItem(
         title = stringResource(Res.string.settings_help),
@@ -129,6 +139,12 @@ private fun HelpSection(
         description = stringResource(Res.string.settings_git_hub_description),
         icon = painterResource(Res.drawable.ic_git_hub),
         onClick = { urlOpener("https://github.com/pandulapeter/campfire") },
+    )
+    LinkListItem(
+        title = processLogTitle,
+        description = stringResource(Res.string.settings_log_description),
+        icon = painterResource(Res.drawable.ic_share),
+        onClick = onProcessLogClicked,
     )
 }
 

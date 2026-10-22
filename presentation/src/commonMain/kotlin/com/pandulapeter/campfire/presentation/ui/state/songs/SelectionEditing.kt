@@ -64,7 +64,7 @@ internal class SelectionEditing(
         if (edited == codes) text else ChordProLanguages.setLanguages(text, edited)
     }
 
-    private fun edit(fileNames: List<String>, edit: (String) -> String) = messageSink.launchLibraryChange {
+    private fun edit(fileNames: List<String>, edit: (String) -> String) = messageSink.launchLibraryChange("edit the selected songs") {
         runningEdits.update { it + 1 }
         try {
             // Not cancellable once it has started: the view model going away with the Android activity is no reason to leave a

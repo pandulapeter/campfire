@@ -40,6 +40,7 @@ import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
 import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
+import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
 import java.awt.Color
 import java.awt.Component
@@ -76,7 +77,7 @@ fun main(args: Array<String>) {
     // Nothing has been started yet, so there is nothing to wind down - and Koin must not be, since its singletons
     // are what would read the library a second time.
     if (!isFirstInstance) exitProcess(0)
-    DesktopLog.install(desktopDataDirectory())
+    installProcessLog(desktopDataDirectory())
     // skiko says nothing about the renderer it settled on unless asked, and a software fallback is the first thing a
     // slow desktop's log has to rule out. It prints the API and the graphics adapter once a context is up.
     if (System.getProperty("skiko.hardwareInfo.enabled") == null) System.setProperty("skiko.hardwareInfo.enabled", "true")

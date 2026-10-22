@@ -42,6 +42,9 @@ import platform.Foundation.NSURL
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
+import platform.MessageUI.MFMailComposeResult
+import platform.MessageUI.MFMailComposeViewController
+import platform.MessageUI.MFMailComposeViewControllerDelegateProtocol
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
 import platform.UIKit.UIPresentationController
@@ -144,6 +147,29 @@ internal class IosFilePicker(
         host.presentShareSheet(item = NSURL.URLWithString(text) ?: text) {}
         true
     }
+
+    override val canEmailFiles get() = MFMailComposeViewController.canSendMail()
+
+    /**
+     * Mail's own compose sheet, which only exists where Mail has an account; everywhere else the caller shares the file.
+     * Answered as the sheet is shown, as a share is, and the sheet takes itself down through [MailComposeDelegate].
+     */
+    override suspend fun emailFile(file: ExportedFile, to: String, subject: String): Boolean = withContext(Dispatchers.Main) {
+        val host = viewController()
+        if (!MFMailComposeViewController.canSendMail() || host.presentedViewController != null) return@withContext false
+        val controller = MFMailComposeViewController()
+        controller.setToRecipients(listOf(to))
+        controller.setSubject(subject)
+        controller.addAttachmentData(file.bytes.toNSData(), mimeType = file.mimeType, fileName = file.name)
+        val composeDelegate = MailComposeDelegate { mailDelegate = null }
+        mailDelegate = composeDelegate
+        controller.mailComposeDelegate = composeDelegate
+        host.presentViewController(controller, animated = true, completion = null)
+        true
+    }
+
+    // Held here for the same reason as the picker's delegate, apart from it, since a mail and a picker are never both up.
+    private var mailDelegate: NSObject? = null
 
     private fun present(controller: UIDocumentPickerViewController, onFinished: (List<NSURL>) -> Unit) {
         val host = viewController()
@@ -319,3 +345,12 @@ private fun ByteArray.toNSData() = if (isEmpty()) {
  * is its bundle id.
  */
 private const val SHARE_EXTENSION_SUFFIX = ".ShareExtension"
+
+/** Takes the compose sheet down whichever way it was finished: sent, saved as a draft, deleted, or failed. */
+private class MailComposeDelegate(private val onFinished: () -> Unit) : NSObject(), MFMailComposeViewControllerDelegateProtocol {
+
+    override fun mailComposeController(controller: MFMailComposeViewController, didFinishWithResult: MFMailComposeResult, error: NSError?) {
+        controller.dismissViewControllerAnimated(true, completion = null)
+        onFinished()
+    }
+}

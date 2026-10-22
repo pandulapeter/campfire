@@ -48,7 +48,7 @@ internal class SongFilesController(
      * Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. The caret
      * starts inside the template's empty verse.
      */
-    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = messageSink.launchLibraryChange {
+    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = messageSink.launchLibraryChange("create a song") {
         val song = createSongFile(
             title = values[ChordProMetadataFields.Field.TITLE].orEmpty(),
             artist = values[ChordProMetadataFields.Field.ARTIST].orEmpty(),
@@ -62,7 +62,7 @@ internal class SongFilesController(
      * the album and the rest are not part of the song list's lighter metadata. The file is read here rather than into
      * the texts the open screens hold, which are all read again on every sync run.
      */
-    fun showDuplicateSongDialog(song: Song) = messageSink.launchLibraryChange {
+    fun showDuplicateSongDialog(song: Song) = messageSink.launchLibraryChange("offer to duplicate a song") {
         showDialog(duplicateSongDialogOf(song) ?: return@launchLibraryChange messageSink.sendMessage(Message.OperationFailed))
     }
 
@@ -77,7 +77,7 @@ internal class SongFilesController(
         song: Song,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
-    ) = messageSink.launchLibraryChange {
+    ) = messageSink.launchLibraryChange("duplicate a song") {
         val changes = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
         val copy = duplicateSongFile(fileName = song.fileName, changes = changes)
             ?: return@launchLibraryChange messageSink.sendMessage(Message.OperationFailed)
@@ -92,7 +92,7 @@ internal class SongFilesController(
      * transposition could not follow, the rename still stands and the screens still follow it; that is said
      * afterwards (`Message.SongFileRenamedPartly`).
      */
-    fun updateSongFileName(song: Song) = messageSink.launchLibraryChange {
+    fun updateSongFileName(song: Song) = messageSink.launchLibraryChange("update a song's file name") {
         // Before the file moves, so that the moment the library drops the old name is already covered.
         songTextStore.updateSongsBeingRenamed { it + (song.fileName to song) }
         try {
@@ -114,7 +114,7 @@ internal class SongFilesController(
         }
     }
 
-    fun deleteSong(fileName: String) = messageSink.launchLibraryChange {
+    fun deleteSong(fileName: String) = messageSink.launchLibraryChange("delete a song") {
         val haveReferencesBeenRemoved = deleteSongFile(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
         clearEditorDraft()

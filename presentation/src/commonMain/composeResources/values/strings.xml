@@ -78,6 +78,7 @@
     <string name="export_setlist_saved">Setlist saved</string>
     <string name="export_songs_saved">Songs saved</string>
     <string name="export_library_saved">Library exported</string>
+    <string name="export_log_saved">Log saved</string>
     <string name="export_too_large_to_import">This archive is larger than the 24 MB Campfire can import at once. It is a complete copy of your library; to bring it back, unzip it and import the songs a few thousand at a time.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">One file could not be read and is not in the archive: %2$s</item>
@@ -472,6 +473,19 @@
     <string name="settings_about">About</string>
     <string name="settings_git_hub">Campfire on GitHub</string>
     <string name="settings_git_hub_description">Source code and issue tracker</string>
+    <string name="settings_log_email">Email the app's log</string>
+    <string name="settings_log_share">Share the app's log</string>
+    <string name="settings_log_save">Save the app's log</string>
+    <string name="settings_log_description">Helps the developer find out what went wrong</string>
+    <string name="log_dialog_text">The log shows what Campfire did lately: the screens you opened, the names of your songs, and any errors. It holds nothing else about you, and only whoever you send it to can read it.</string>
+    <string name="log_dialog_send_to">Please send it to %1$s.</string>
+    <string name="log_dialog_email">Email</string>
+    <string name="log_dialog_share">Share</string>
+    <string name="log_dialog_copy_address">Copy address</string>
+    <string name="log_dialog_address_copied">Address copied</string>
+    <string name="crash_report_title">Campfire closed unexpectedly</string>
+    <string name="crash_report_text">Campfire stopped working the last time you used it. Sending its log to the developer helps fix that.</string>
+    <string name="crash_report_not_now">Not now</string>
     <string name="settings_help">Help and support</string>
     <string name="settings_help_description">Common questions, and how to report a problem</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
