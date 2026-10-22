@@ -231,6 +231,28 @@ internal class PrintLayoutTest {
         assertFalse("First lyrics" in text)
     }
 
+    @Test fun `the running order's details follow their own switch, not the song sheets' artist`() = runTest {
+        val entry = song(lyrics(1)).copy(title = "First", index = 1)
+        val source = PrintSource("Concert", "Notes", date = "Today", kind = PrintSource.Kind.SETLIST, songs = listOf(entry))
+        val withDetails = layout(source, PrintSettings(showMetadata = false)).pages.first().texts.map { it.text }
+        assertTrue(listOf("Today", "Notes", "Artist").all { it in withDetails })
+        val withoutDetails = layout(source, PrintSettings(showOverviewDetails = false)).pages.first().texts.map { it.text }
+        assertTrue(listOf("Today", "Notes", "Artist").none { it in withoutDetails })
+        assertTrue("Artist" in layout(source, PrintSettings(showOverviewDetails = false)).pages[1].texts.map { it.text })
+    }
+
+    @Test fun `the running order has columns of its own, starting under the heading that spans the page`() = runTest {
+        val entries = (1..120).map { song(lyrics(1)).copy(title = "Song $it", index = it) }
+        val source = PrintSource("Concert", "A description", kind = PrintSource.Kind.SETLIST, songs = entries)
+        val page = layout(source, PrintSettings(columns = 1, overviewColumns = 3)).pages.first()
+        val heading = page.texts.single { it.text == "A description" }
+        val entryStarts = page.texts.filter { it.text.matches(Regex("""\d+\. Song \d+.*""")) }
+        assertEquals(3, entryStarts.map { it.x }.distinct().size)
+        assertTrue(entryStarts.all { it.y > heading.y })
+        val sheets = layout(source, PrintSettings(columns = 1, overviewColumns = 3)).pages.drop(1).flatMap { it.texts }
+        assertEquals(1, sheets.filter { it.text.startsWith("Line") }.map { it.x }.distinct().size)
+    }
+
     @Test fun `setlist songs start on new pages and keep original order`() = runTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val last = first.copy(title = "Last", index = 2)

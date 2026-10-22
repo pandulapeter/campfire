@@ -38,7 +38,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - The playing row (`playingDetails`): key, transposition, and non-zero capo with `showKey` (on the keyboard the capo is
   counted into the transposition, as on screen); tempo and time signature with `showTempo`, which also prints later
   changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the
-  artist and a setlist's date and description.
+  song sheets' artist; the running order has its own: `showOverviewDetails` (the setlist's date and description and its
+  songs' artists, read as `showMetadata` from a file older than it) and `overviewColumns`, its song list flowing in them
+  under a heading that spans the page.
 
 ### Renderer
 

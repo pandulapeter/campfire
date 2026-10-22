@@ -154,6 +154,8 @@ internal fun PrintSettingsDocument.toModel() = PrintSettings(
     showPageNumbers = showPageNumbers,
     startSongsOnNewPage = startSongsOnNewPage,
     includeSetlistOverview = includeSetlistOverview,
+    overviewColumns = overviewColumns,
+    showOverviewDetails = showOverviewDetails ?: showMetadata,
 ).normalized()
 
 internal fun PrintSettings.toDocument() = normalized().let { settings ->
@@ -174,6 +176,8 @@ internal fun PrintSettings.toDocument() = normalized().let { settings ->
         showPageNumbers = settings.showPageNumbers,
         startSongsOnNewPage = settings.startSongsOnNewPage,
         includeSetlistOverview = settings.includeSetlistOverview,
+        overviewColumns = settings.overviewColumns,
+        showOverviewDetails = settings.showOverviewDetails,
     )
 }
 

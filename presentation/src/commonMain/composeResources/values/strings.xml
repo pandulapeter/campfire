@@ -1137,7 +1137,7 @@
         <item quantity="one">%1$d song is missing or unreadable and is left out.</item>
         <item quantity="other">%1$d songs are missing or unreadable and are left out.</item>
     </plurals>
-    <string name="print_paper">Paper size</string>
+    <string name="print_section_page">Page</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>
     <string name="print_portrait">Portrait</string>
@@ -1148,14 +1148,19 @@
     <string name="print_margin_decrease">Decrease margins</string>
     <string name="print_margin_increase">Increase margins</string>
     <string name="print_columns">Columns</string>
+    <string name="print_columns_decrease">Fewer columns</string>
+    <string name="print_columns_increase">More columns</string>
     <string name="print_chords">Chords, tablature, and grids</string>
     <string name="print_comments">Comments</string>
     <string name="print_key">Key, transposition, and capo</string>
     <string name="print_tempo">Tempo and time signature</string>
     <string name="print_metadata">Artist</string>
-    <string name="print_metadata_setlist">Artists, date, and description</string>
     <string name="print_page_numbers">Page numbers</string>
     <string name="print_overview">Include running order</string>
+    <string name="print_overview_details">Date, description, and artists</string>
+    <string name="print_running_order">Running order</string>
+    <string name="print_song_sheets">Song sheets</string>
+    <string name="print_song_sheet">Song sheet</string>
     <string name="print_new_page">Start each song on a new page</string>
     <string name="print_missing">Song file missing or unreadable</string>
     <string name="print_load_failed">Could not prepare the PDF.</string>

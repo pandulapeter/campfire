@@ -21,17 +21,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * A control floating over the screen with a shadow of its own (a floating action button, the page buttons' pill), faded
- * and grown in while [isVisible] and faded and shrunk away again. Not `fadeIn` and `scaleIn`: a fade draws what it fades
- * into an offscreen buffer the size of its layer while it is not yet opaque, and their layer is the control's size, which
- * cut the shadow around it off until the fade was over. This layer reaches [SHADOW_ROOM] past the control on every side,
- * so the shadow fades with it, while the control still takes up only its own size in the layout, and none while gone.
+ * A control floating over the screen with a shadow (a floating action button, the page buttons' pill), faded and grown in
+ * while [isVisible] and faded and shrunk away again. Not `fadeIn` and `scaleIn`, whose fade draws the control into an
+ * offscreen buffer the size of its layer until it is opaque, cutting off the shadow around it, the further the lower on
+ * the screen the control is, since the light that casts it is above the window. Here the fade is applied to each thing
+ * drawn instead (`ModulateAlpha`), and the shadow is drawn around [content] by this layer itself, in [shape], with
+ * [elevation] growing and shrinking with the fade, so that whatever a platform does with a shadow under a fade, it never
+ * shows up late or alone: the control draws none of its own. The layer also reaches [SHADOW_ROOM] past the control on
+ * every side, for a platform that does draw a buffer, while the control takes up only its own size in the layout.
  *
  * Where [isFirstShownAtOnce], its first appearance is not animated: a control the screen opened with is part of the
  * screen, and the pages it waits for are data arriving, not something the user did.
@@ -41,6 +47,8 @@ internal fun FloatingControlVisibility(
     modifier: Modifier,
     isVisible: Boolean,
     isFirstShownAtOnce: Boolean,
+    shape: Shape,
+    elevation: Dp,
     content: @Composable () -> Unit,
 ) {
     val progress = remember { Animatable(0f) }
@@ -54,6 +62,7 @@ internal fun FloatingControlVisibility(
         if (isVisible) hasBeenShown = true
         if (!isShownAtOnce) progress.animateTo(if (isVisible) 1f else 0f, spring(stiffness = Spring.StiffnessMediumLow))
     }
+    val shown = { if (isShownAtOnce) 1f else progress.value }
     Box(modifier) {
         if (isVisible || progress.value > 0f) {
             Box(
@@ -64,12 +73,17 @@ internal fun FloatingControlVisibility(
                         layout(placeable.width - 2 * room, placeable.height - 2 * room) { placeable.place(-room, -room) }
                     }
                     .graphicsLayer {
-                        val shown = if (isShownAtOnce) 1f else progress.value
-                        alpha = shown
-                        scaleX = shown
-                        scaleY = shown
+                        alpha = shown()
+                        scaleX = shown()
+                        scaleY = shown()
+                        compositingStrategy = CompositingStrategy.ModulateAlpha
                     }
-                    .padding(SHADOW_ROOM),
+                    .padding(SHADOW_ROOM)
+                    .graphicsLayer {
+                        shadowElevation = elevation.toPx() * shown()
+                        this.shape = shape
+                        clip = false
+                    },
             ) {
                 content()
             }

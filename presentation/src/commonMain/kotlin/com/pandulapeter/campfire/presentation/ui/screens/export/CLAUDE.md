@@ -44,6 +44,11 @@ pipeline is in `ui/print/CLAUDE.md`.
   for when the switch comes back.
 - A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
   entry's key. Missing or unreadable songs keep a visibly marked slot.
+- The PDF's options (`PdfOptions`) are **sections of the document, one heading each**: Page (paper, orientation, text
+  size, margins, page numbers), Running order for a setlist (whether, then folding out its own columns and its date,
+  description, and artists), and Song sheets (their columns, a new page per song, then what a sheet prints in the order
+  it prints it: artist, key, tempo, chord diagrams, scales, chords, comments). Columns are a stepper inside the section
+  they shape, never a control between sections; a new option goes into the section, and at the place, where it prints.
 - **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
   excluded metadata. No platform print service: the file is saved or shared.
 
@@ -53,8 +58,8 @@ pipeline is in `ui/print/CLAUDE.md`.
   syncs; Connecting with Cancel; a failure in Settings' words), then a share the account lists (`ShareLinkController`,
   `ui/share/`; one whose copy is gone is `CopyMissing`, saying so and offering Create link, which replaces it), then how
   the last Create link went. Each failure is shown by what can be done: Connect again (missing
-  scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB (`LinkButton`, in
-  `SaveButton`'s place) is `linkActionOf`; Create link is not held for a sync run.
+  scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB's action
+  (`ExportActionButton`) is `linkActionOf`; Create link is not held for a sync run.
 - A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
   Create link), and is forgotten when the screen goes; a share just made shows before the list catches up, and is
   forgotten once the list names it, so a stop on another device clears an open screen. Offered in read only mode.
@@ -119,9 +124,11 @@ pipeline is in `ui/print/CLAUDE.md`.
   takes the pane less an end column, Copy link collapsing to its icon there; every other state keeps the bottom band,
   its button's label saying what a bare icon would not. Each state keeps its own padding while it fades, and a resize
   animates it.
-- The floating controls (Save, the Link button, the page pill) come and go through `FloatingControlVisibility`, whose
-  fading layer leaves room for their shadows; those of the format the screen opened on appear without animating, since
-  their pages arriving is data, not something the user did.
+- **One FAB for every format** (`ExportActionButton`): a change of format or of the link's next step crossfades its
+  icon and label inside it, never a button leaving for another. The floating controls (it and the page pill) come and
+  go through `FloatingControlVisibility`, which fades each thing drawn (`ModulateAlpha`, no offscreen buffer to cut a
+  shadow off) and draws the shadow itself, growing with the fade; the controls draw none of their own. Those of the
+  format the screen opened on appear without animating: their pages arriving is data, not something the user did.
 - The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
   arrangements, and the options move on the spatial spring (`animateBounds`).
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,

@@ -66,7 +66,7 @@ internal class UserPreferencesMappersTest {
     fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showScales = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
-            showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false)
+            showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false, overviewColumns = 3, showOverviewDetails = false)
         val preferences = UserPreferencesDocument().toModel().copy(printSettings = settings)
         val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
         assertEquals(settings, UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings)
@@ -86,9 +86,18 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `the running order's details follow the artist option until they are chosen`() {
+        fun printSettingsOf(text: String) = UserPreferencesDocumentFormat.decode("""{"printSettings":$text}""").document.toModel().printSettings
+
+        assertEquals(false, printSettingsOf("""{"showMetadata":false}""").showOverviewDetails)
+        assertEquals(true, printSettingsOf("""{"showMetadata":false,"showOverviewDetails":true}""").showOverviewDetails)
+        assertEquals(true, printSettingsOf("""{}""").showOverviewDetails)
+    }
+
+    @Test
     fun `malformed print sizes and unknown paper fall back without losing other choices`() {
         val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid",
-            fontSize = 400, marginMm = -1, columns = 50, showChords = false)).toModel()
+            fontSize = 400, marginMm = -1, columns = 50, overviewColumns = 0, showChords = false)).toModel()
         assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false), preferences.printSettings)
     }
 

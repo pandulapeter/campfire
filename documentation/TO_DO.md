@@ -16,6 +16,8 @@
 - Setlists screen initial slide animation caused by description
 - Changing the metronome sound while it's running causes a repeated beat
 - Make the pinned filters panel optional / get rid of it completely
+- Determinate progress bars should have an indeterminate part so that slow syncs still have a moving section
+- Make sure cover art cache for deleted songs / changed cover art is properly cleared
 - Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
 - Share to Android can work unexpectedly if the app is already open
 - Select all in input fields when they become focused

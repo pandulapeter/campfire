@@ -39,8 +39,17 @@ data class PrintSettings(
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
     val includeSetlistOverview: Boolean = true,
+    /** The columns of a setlist's running order page, apart from the song sheets' [columns]. */
+    val overviewColumns: Int = 1,
+    /** The setlist's date and description and its songs' artists on the running order page, apart from [showMetadata]. */
+    val showOverviewDetails: Boolean = true,
 ) {
-    fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, MAX_COLUMNS))
+    fun normalized() = copy(
+        fontSize = fontSize.coerceIn(8, 20),
+        marginMm = marginMm.coerceIn(10, 25),
+        columns = columns.coerceIn(1, MAX_COLUMNS),
+        overviewColumns = overviewColumns.coerceIn(1, MAX_COLUMNS),
+    )
 
     /**
      * [FILES] is what the library holds: a song's ChordPro file, or a setlist's zip of its manifest and its songs. [LINK]

@@ -1136,7 +1136,7 @@
         <item quantity="one">%1$d dal hiányzik vagy olvashatatlan, ezért kimarad.</item>
         <item quantity="other">%1$d dal hiányzik vagy olvashatatlan, ezért kimarad.</item>
     </plurals>
-    <string name="print_paper">Papírméret</string>
+    <string name="print_section_page">Oldal</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>
     <string name="print_portrait">Álló tájolás</string>
@@ -1147,14 +1147,19 @@
     <string name="print_margin_decrease">Margók csökkentése</string>
     <string name="print_margin_increase">Margók növelése</string>
     <string name="print_columns">Oszlopok</string>
+    <string name="print_columns_decrease">Kevesebb oszlop</string>
+    <string name="print_columns_increase">Több oszlop</string>
     <string name="print_chords">Akkordok, tabulatúrák és akkordrácsok</string>
     <string name="print_comments">Megjegyzések</string>
     <string name="print_key">Hangnem, transzponálás és capo</string>
     <string name="print_tempo">Tempó és ütemmutató</string>
     <string name="print_metadata">Előadó</string>
-    <string name="print_metadata_setlist">Előadók, dátum és leírás</string>
     <string name="print_page_numbers">Oldalszámok</string>
     <string name="print_overview">Dalsorrend hozzáadása</string>
+    <string name="print_overview_details">Dátum, leírás és előadók</string>
+    <string name="print_running_order">Dalsorrend</string>
+    <string name="print_song_sheets">Dalok</string>
+    <string name="print_song_sheet">Dal</string>
     <string name="print_new_page">Minden dal új oldalon kezdődjön</string>
     <string name="print_missing">A dal fájlja hiányzik vagy nem olvasható</string>
     <string name="print_load_failed">Nem sikerült elkészíteni a PDF-et.</string>

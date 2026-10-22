@@ -324,7 +324,7 @@ internal fun ExportScreen(
         val isShortWindow = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
         val density = LocalDensity.current
         val pageButtonsWidth = pageButtonsWidthFor(pageCount)
-        var saveButtonWidth by remember { mutableStateOf(0.dp) }
+        var actionButtonWidth by remember { mutableStateOf(0.dp) }
         // The Link button floats outside the body, which alone knows whether the options stand beside the preview.
         var isBodySideBySide by remember { mutableStateOf(false) }
         Box(Modifier.fillMaxSize()) {
@@ -352,7 +352,7 @@ internal fun ExportScreen(
                     val pageFit = pageFitFor(
                         isSideBySide = isSideBySide,
                         isShortWindow = isShortWindow,
-                        floatingControlsWidth = maxOf(pageButtonsWidth, saveButtonWidth),
+                        floatingControlsWidth = maxOf(pageButtonsWidth, actionButtonWidth),
                         bottomInset = bottomInset,
                     )
                     val turnPage: (Int) -> Unit = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } }
@@ -451,27 +451,25 @@ internal fun ExportScreen(
                     )
                 }
             }
-            SaveButton(
+            ExportActionButton(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(PAGE_MARGIN)
-                    .onSizeChanged { saveButtonWidth = with(density) { it.width.toDp() } },
-                isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow && !isLink,
-                isFirstShownAtOnce = isFirstShownAtOnce,
-                progress = exportProgress,
-                onSave = { requestExport(ExportRequest.SAVE) },
-                onCancel = viewModel.exportController::cancelPdfExport,
-            )
-            LinkButton(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
-                    .padding(PAGE_MARGIN),
-                action = link?.action?.takeIf { isLink && content == PrintScreenContent.LOADED },
+                    .onSizeChanged { actionButtonWidth = with(density) { it.width.toDp() } },
+                action = when {
+                    isLink -> link?.action?.takeIf { content == PrintScreenContent.LOADED }?.let { ExportButtonAction.Link(it) }
+                    exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow -> ExportButtonAction.Save(exportProgress)
+                    else -> null
+                },
                 isFirstShownAtOnce = isFirstShownAtOnce,
                 isInShortPane = isShortWindow && isBodySideBySide,
-                onClick = { link?.onAction?.invoke(it) },
+                onClick = { action ->
+                    when (action) {
+                        is ExportButtonAction.Link -> link?.onAction?.invoke(action.action)
+                        is ExportButtonAction.Save -> if (action.progress != null) viewModel.exportController.cancelPdfExport() else requestExport(ExportRequest.SAVE)
+                    }
+                },
             )
         }
     }

@@ -64,7 +64,13 @@ private class PrintLayouter(
     private val height = if (options.isLandscape) options.paper.width else options.paper.height
     private val margin = options.marginMm * 72f / 25.4f
     private val gutter = 18f
-    private val columnWidth = (width - 2 * margin - gutter * (options.columns - 1)) / options.columns
+
+    /** The columns being filled: the song sheets' by default, the running order's while it is laid out. */
+    private var columns = options.columns
+    private var columnWidth = columnWidthFor(columns)
+
+    /** Where a column after the first starts on the current page: below a heading the running order spans the page with. */
+    private var columnTop = 0f
     private val bottom = height - margin - if (options.showPageNumbers) 18f else 0f
     private val capacity = bottom - margin
     private val headingGap = options.fontSize * 0.8f
@@ -97,16 +103,19 @@ private class PrintLayouter(
         return finish()
     }
 
+    private fun columnWidthFor(count: Int) = (width - 2 * margin - gutter * (count - 1)) / count
+
     private fun page() {
         pages.add(PageContent())
         column = 0
         y = margin
+        columnTop = margin
     }
 
     private fun nextColumn() {
-        if (column + 1 < options.columns) {
+        if (column + 1 < columns) {
             column++
-            y = margin
+            y = columnTop
         } else {
             page()
         }
@@ -139,26 +148,38 @@ private class PrintLayouter(
         }
     }
 
-    /** The setlist's title, its date and description, and one entry per song in its running order. */
+    /**
+     * The setlist's title, its date and description, across the page, then one entry per song in its running order, in
+     * the running order's own columns ([PrintSettings.overviewColumns]), which start under the heading on its page. The
+     * date, the description, and the songs' artists follow [PrintSettings.showOverviewDetails], not the song sheets'
+     * artist option.
+     */
     private fun overview(source: PrintSource) {
-        place(printRows.wrapped(source.title, printRows.titleStyle))
-        if (options.showMetadata) {
-            source.date?.let { place(printRows.wrapped(it)) }
-            if (source.description.isNotBlank()) place(printRows.wrapped(source.description))
+        columns = 1
+        columnWidth = columnWidthFor(columns)
+        place(printRows.wrapped(source.title, printRows.titleStyle, columnWidth))
+        if (options.showOverviewDetails) {
+            source.date?.let { place(printRows.wrapped(it, width = columnWidth)) }
+            if (source.description.isNotBlank()) place(printRows.wrapped(source.description, width = columnWidth))
         }
         space(options.fontSize.toFloat())
+        columns = options.overviewColumns
+        columnWidth = columnWidthFor(columns)
+        columnTop = y
         source.songs.forEach { entry ->
             val detail = entry.song?.metadata?.key?.takeIf { options.showKey }?.let { " (${labels.key}: $it)" }.orEmpty()
             val missing = if (entry.song == null) " [${labels.missing}]" else ""
-            val title = printRows.wrapped("${entry.index}. ${entry.title}$detail$missing", printRows.chordStyle)
-            val artist = if (options.showMetadata && !entry.artist.isNullOrBlank()) {
-                printRows.wrapped(entry.artist, printRows.overviewArtistStyle)
+            val title = printRows.wrapped("${entry.index}. ${entry.title}$detail$missing", printRows.chordStyle, columnWidth)
+            val artist = if (options.showOverviewDetails && !entry.artist.isNullOrBlank()) {
+                printRows.wrapped(entry.artist, printRows.overviewArtistStyle, columnWidth)
             } else {
                 emptyList()
             }
             place(title + artist)
             space(options.fontSize / 2f)
         }
+        columns = options.columns
+        columnWidth = columnWidthFor(columns)
     }
 
     /** One song sheet: its heading, how it is played, its chord diagrams and its scales, then its blocks. */

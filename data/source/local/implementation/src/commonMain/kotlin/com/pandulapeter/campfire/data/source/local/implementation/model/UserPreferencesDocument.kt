@@ -111,6 +111,9 @@ internal data class PrintSettingsDocument(
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
     val includeSetlistOverview: Boolean = true,
+    val overviewColumns: Int = 1,
+    /** Null in a document written before the running order had a switch of its own, which [showMetadata] then stands for. */
+    val showOverviewDetails: Boolean? = null,
 )
 
 /** The ids are the metronome's own and are checked where they are read into its types, in `:presentation`. */

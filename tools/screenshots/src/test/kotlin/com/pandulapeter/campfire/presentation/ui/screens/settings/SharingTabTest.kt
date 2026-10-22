@@ -18,7 +18,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.print_paper
+import com.pandulapeter.campfire.presentation.resources.print_format_pdf
+import com.pandulapeter.campfire.presentation.resources.print_section_page
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_sharing
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
@@ -95,6 +96,15 @@ internal class SharingTabTest {
         window = WIDE_WINDOW,
         preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
+        // The PDF picked on the song's own export first, since a link is what an export opens on until another is picked.
+        openSong()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        tap(hasText(string(Res.string.songs_share_song)) and hasClickAction())
+        tap(hasText(string(Res.string.print_format_pdf)) and hasClickAction())
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_section_page))).fetchSemanticsNodes().isNotEmpty() }
+        pressBack()
+        pressBack()
+
         openQrCode()
         pressBack()
         assertSharingTabUncovered()
@@ -104,7 +114,7 @@ internal class SharingTabTest {
         tap(hasContentDescription(string(Res.string.songs_actions)))
         tap(hasText(string(Res.string.songs_share_song)) and hasClickAction())
 
-        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_paper))).fetchSemanticsNodes().isNotEmpty() }
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_section_page))).fetchSemanticsNodes().isNotEmpty() }
         onNode(hasContentDescription(string(Res.string.share_qr_code))).assertDoesNotExist()
     }
 

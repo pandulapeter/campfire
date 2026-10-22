@@ -54,7 +54,13 @@ internal fun PageButtons(
     page: Int,
     pageCount: Int,
     onTurn: (Int) -> Unit,
-) = FloatingControlVisibility(modifier = modifier, isVisible = isVisible, isFirstShownAtOnce = isFirstShownAtOnce) {
+) = FloatingControlVisibility(
+    modifier = modifier,
+    isVisible = isVisible,
+    isFirstShownAtOnce = isFirstShownAtOnce,
+    shape = CircleShape,
+    elevation = 6.dp,
+) {
     PageButtonsPill(
         modifier = Modifier,
         page = page,
@@ -73,7 +79,6 @@ private fun PageButtonsPill(
     modifier = modifier.height(PAGE_BUTTONS_HEIGHT),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    shadowElevation = 6.dp,
 ) {
     val textWidth = pageCountTextWidth(pageCount)
     Row(

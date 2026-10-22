@@ -12,16 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_setlists
-import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.print_files_missing
 import com.pandulapeter.campfire.presentation.resources.print_files_setlist_description
 import com.pandulapeter.campfire.presentation.resources.print_files_song_description
@@ -43,7 +36,6 @@ import com.pandulapeter.campfire.presentation.resources.print_files_songs_descri
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.filesFileName
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * What a song's ChordPro or a zip writes, in the preview's place: a summary that never scrolls, since the file's text or
@@ -79,9 +71,8 @@ private fun FilesPreviewMessage(
 }
 
 /**
- * The file in a few lines: its icon, the name it is saved under ([filesFileName]), what it holds and what reads it, and
- * how many of its songs are left out; centred in a pane, a list row's icon and lines
- * in the list.
+ * The file in a few lines: the name it is saved under ([filesFileName]), what it holds and what reads it, and how many of
+ * its songs are left out; centred in a pane, start-aligned as a list row's lines in the list.
  */
 @Composable
 private fun FilesSummary(
@@ -111,40 +102,17 @@ private fun FilesSummary(
         SummaryLine(text = description, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = textAlign)
         if (missing > 0) SummaryLine(text = missingNote, color = MaterialTheme.colorScheme.error, textAlign = textAlign)
     }
-    if (isInList) {
-        Row(
-            modifier = modifier.padding(start = 16.dp, end = 16.dp, top = LIST_PREVIEW_TOP_PADDING, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            FileIcon(kind = source.kind)
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) { lines() }
-        }
-    } else {
-        Column(
-            modifier = modifier.padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-        ) {
-            FileIcon(kind = source.kind)
-            lines()
-        }
+    Column(
+        modifier = if (isInList) {
+            modifier.padding(start = 16.dp, end = 16.dp, top = LIST_PREVIEW_TOP_PADDING, bottom = 8.dp)
+        } else {
+            modifier.padding(horizontal = 24.dp)
+        },
+        horizontalAlignment = if (isInList) Alignment.Start else Alignment.CenterHorizontally,
+        verticalArrangement = if (isInList) Arrangement.spacedBy(2.dp) else Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+    ) {
+        lines()
     }
-}
-
-@Composable
-private fun FileIcon(
-    kind: PrintSource.Kind,
-) = Surface(
-    shape = CircleShape,
-    color = MaterialTheme.colorScheme.secondaryContainer,
-    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-) {
-    Icon(
-        painter = painterResource(if (kind == PrintSource.Kind.SETLIST) Res.drawable.ic_setlists else Res.drawable.ic_songs),
-        contentDescription = null,
-        modifier = Modifier.padding(12.dp).size(24.dp),
-    )
 }
 
 @Composable
