@@ -301,6 +301,7 @@ internal fun SetlistList(
                                     runningTime = setlistWithSongs.runningTimeText(),
                                     description = setlistWithSongs.setlist.description,
                                     contentPadding = contentPadding,
+                                    isSizeAnimated = scrollerColumn.hasMeasuredWidth,
                                 )
                             }
                         }

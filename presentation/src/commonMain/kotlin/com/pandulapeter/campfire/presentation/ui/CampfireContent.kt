@@ -79,7 +79,7 @@ internal fun CampfireContent(
         isEnabled = metronomeSettings.isVisualBeatEnabled,
     )
 
-    // Worked out once for both the expanded rail and the Songs screen's side panel, so that the two are never decided
+    // Worked out once for both the expanded rail and the Songs screen's columns, so that the two are never decided
     // from different widths, see minSongColumnWidth.
     // The two preferences read here are derived from the rest, so that a transposition or a fold written while a song is
     // read does not compose the app's root again.

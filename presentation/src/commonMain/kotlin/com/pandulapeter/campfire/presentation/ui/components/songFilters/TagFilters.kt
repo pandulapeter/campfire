@@ -41,7 +41,7 @@ import org.jetbrains.compose.resources.painterResource
  * The tags of the library as a filter. There is no fixed set of tags to lay out: they are whatever the songs happen
  * to carry, so the first ones in the chosen order - the most used, or the alphabet's first - are shown and the rest
  * are a tap away once there are more than the room [FilterGroupsLayout] gives them holds: a library with two hundred
- * tags must not push the languages under it off the bottom of the panel.
+ * tags must not push the languages under it off the bottom of the sheet.
  *
  * A selected tag is always among the ones shown, whatever its position: the filter that is on has to be visible to
  * be turned off. That holds while the group's search field above the chips narrows them ([chipsMatching]) to the

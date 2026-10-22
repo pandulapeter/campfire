@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ListLayoutTest {
@@ -70,7 +69,7 @@ class ListLayoutTest {
     }
 
     @Test
-    fun `sorted by artist the songs fit more columns while the side panel stays where it was`() {
+    fun `sorted by artist the songs fit more columns while the setlists keep theirs`() {
         val byArtist = songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_ARTIST)
         assertEquals(MIN_SONG_COLUMN_WIDTH, songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_TITLE))
         (300..3000).map { it.dp }.forEach { width ->
@@ -81,7 +80,6 @@ class ListLayoutTest {
                 layoutDirection = LayoutDirection.Ltr,
                 songGridColumnWidth = byArtist,
             )
-            assertEquals(byTitleLayout.hasRoomForSidePanel, byArtistLayout.hasRoomForSidePanel)
             assertTrue(byArtistLayout.columnCount >= byTitleLayout.columnCount)
             assertEquals(byTitleLayout.setlistColumnCount, byArtistLayout.setlistColumnCount)
         }
@@ -98,14 +96,6 @@ class ListLayoutTest {
         val wide = layout(MIN_SONG_COLUMN_WIDTH * 20)
         assertEquals(wide, layout(MIN_SONG_COLUMN_WIDTH * 200))
         assertTrue(wide.columnCount < 20)
-    }
-
-    @Test
-    fun `the side panel is only shown where two song columns still fit beside it`() {
-        val panelWithTwoColumns = SIDE_PANEL_WIDTH + FAST_SCROLLER_WIDTH + MIN_SONG_COLUMN_WIDTH * 2
-        assertTrue(layout(panelWithTwoColumns).hasRoomForSidePanel)
-        assertFalse(layout(panelWithTwoColumns - 1.dp).hasRoomForSidePanel)
-        (300..3000).map { layout(it.dp) }.filter { it.hasRoomForSidePanel }.forEach { assertTrue(it.columnCountBesideSidePanel >= 2) }
     }
 
     @Test

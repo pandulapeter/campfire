@@ -78,7 +78,7 @@ internal class SongListState(
      *
      * Read from [screenData] itself rather than from [tags] and [languages], which are states of it already: one hop
      * further, the answer for the last batch of the library would land after `LibraryState.isLoading` has gone false,
-     * and the side panel would slide in as if somebody had tagged a song.
+     * and the filter action would slide in as if somebody had tagged a song.
      */
     val hasSongFilters = screenData.map { state ->
         state.data.let { data -> data?.tags.orEmpty().isNotEmpty() || data?.languages.orEmpty().size > 1 }

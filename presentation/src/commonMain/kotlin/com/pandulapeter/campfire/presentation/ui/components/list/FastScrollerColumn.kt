@@ -19,7 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -60,6 +63,14 @@ internal class FastScrollerColumn(
     val thumbAlpha = Animatable(if (position.isScrollable) 1f else 0f)
 
     /**
+     * Whether [width] is the one measured for this list rather than the one it started from. Until then a change in it
+     * is the column finding its place, not something the user did, so what reflows with the cards must not animate it:
+     * on a list opened for the first time the column starts at nothing and snaps to its width a frame later.
+     */
+    var hasMeasuredWidth by mutableStateOf(false)
+        private set
+
+    /**
      * Called right after the grid is measured, while [isAnimated] is still the one of the composition that gave the
      * grid its content. A coroutine watching the grid would hear about the library's last batch only after the screen
      * had recomposed as loaded, and so animate the cards squeezing in as the app opens.
@@ -87,6 +98,7 @@ internal class FastScrollerColumn(
                 widthAnimatable.snapTo(width)
                 thumbAlpha.snapTo(alpha)
             }
+            hasMeasuredWidth = true
         }
     }
 

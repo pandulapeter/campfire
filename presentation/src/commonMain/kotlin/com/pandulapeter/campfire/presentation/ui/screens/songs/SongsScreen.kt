@@ -24,14 +24,11 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -60,8 +57,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
-import com.pandulapeter.campfire.presentation.ui.components.songFilters.ControlsSidePanel
-import com.pandulapeter.campfire.presentation.ui.screens.songs.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
@@ -70,11 +65,9 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlaySta
 import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
-import com.pandulapeter.campfire.presentation.ui.components.songFilters.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
@@ -82,8 +75,6 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelS
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
-import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 
@@ -112,9 +103,6 @@ internal fun SongsScreen(
     } else {
         songGroups
     }
-    val isSidePanelVisible = hasSongFilters && layout.hasRoomForSidePanel
-    val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
-    val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !songGroups.isLibraryRead)
     val clipboardReader = rememberClipboardTextReader()
     val badgeRecession = songFilterBackRecession(
@@ -128,11 +116,6 @@ internal fun SongsScreen(
         // Latest, for the reason the settings screen gives.
         viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToItem(0) }
     }
-    DismissSheetWhenSidePanelAppears(
-        isSidePanelVisible = isSidePanelVisible,
-        isSheetVisible = visibleDialog == DialogType.SongFilters,
-        onDismiss = viewModel.dialogHost::dismissDialog,
-    )
     // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
     LaunchedEffect(hasSongFilters) {
         if (!hasSongFilters && visibleDialog == DialogType.SongFilters) viewModel.dialogHost.dismissDialog()
@@ -159,117 +142,99 @@ internal fun SongsScreen(
         { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarProgress()) }
     }
     Box(modifier = modifier.fillMaxSize()) {
-        Row {
-            // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
-            // top of the list they act on instead of standing over the side panel beside it.
-            ListUnderAppBar(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                list = {
-                    SongList(
-                        modifier = Modifier.fillMaxSize().underAppBar { 1f - appBarOverlap().coverage },
-                        viewModel = viewModel,
-                        listState = listState,
-                        placeholder = placeholder,
-                        isSearchOpen = isSearchOpen,
-                        songGroups = shownSongGroups,
-                        columnCount = columnCount,
-                        hasLoadedLibrary = hasLoadedLibrary,
-                        contentPadding = listContentPadding,
-                        appBarOverlap = appBarOverlap,
-                        isSelecting = isSelecting,
-                        selection = selection.orEmpty(),
-                    )
-                },
-            ) {
-                SearchableTopAppBar(
-                    contentPadding = listContentPadding,
-                    appBarReveal = appBarProgress,
-                    placeholder = stringResource(Res.string.songs_search),
-                    searchState = viewModel.songListState.songsSearch,
-                    onReachChanged = { appBarReach = it },
-                    areClosedSearchActionsShown = isSelecting || !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
-                    // The search is where most of a selection is put together, so its menu stays while the search is open.
-                    areClosedSearchActionsKeptInSearch = isSelecting,
-                    areClosedSearchActionsDetached = !isSelecting,
-                    closedSearchActions = {
-                        AnimatedContent(
-                            targetState = isSelecting,
-                            // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
-                            // menu, and scaled, so that it is out of the way of the menu fading in where it stood. Resized on the
-                            // search's spring, which the bar moves the search action and the pill's end on as the two swap.
-                            transitionSpec = {
-                                fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
-                                    fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
-                                    SizeTransform(clip = false) { _, _ -> searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold) }
-                            },
-                        ) { isShowingSelectionMenu ->
-                            if (isShowingSelectionMenu) {
-                                val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-                                val listedFileNames = remember(songGroups) { songGroups.groups.flatMap { group -> group.songs.map { it.fileName } } }
-                                val ticked = selection.orEmpty()
-                                SongSelectionMenu(
-                                    isRoomy = layout.columnCount > 1,
-                                    canSelectAll = listedFileNames.any { it !in ticked },
-                                    hasSelection = ticked.isNotEmpty(),
-                                    areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
-                                    areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-                                    onSelectAll = { viewModel.songSelection.select(listedFileNames) },
-                                    onDeselectAll = viewModel.songSelection::deselectAll,
-                                    onChooseSetlists = viewModel::showSelectionSetlists,
-                                    onManageTags = viewModel::showSelectionTags,
-                                    onManageLanguages = viewModel::showSelectionLanguages,
-                                    onExport = viewModel::exportSelection,
-                                )
-                            } else {
-                                NewItemMenu(
-                                    contentDescription = stringResource(Res.string.songs_new_song),
-                                    createLabel = stringResource(Res.string.songs_create_song),
-                                    onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
-                                    onImport = viewModel.importController::importFiles,
-                                    onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        // Read here rather than by the screen, so that a preference changing recomposes the bar's
-                        // actions alone.
-                        val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-                        SongSortMenu(
-                            modifier = Modifier.overlappingAction(),
-                            selected = userPreferences?.sortingMode,
-                            onSelected = viewModel.preferencesController::setSortingMode,
-                        )
-                        // The last tag leaving the library takes the filters with it while the list is being looked at,
-                        // but the first one arriving with the library is no change anybody made.
-                        AnimatedVisibility(
-                            modifier = Modifier.overlappingAction(),
-                            visible = hasSongFilters && !isSidePanelVisible,
-                            enter = if (hasLoadedLibrary) fadeIn() + expandHorizontally() else EnterTransition.None,
-                        ) {
-                            SongFiltersAction(
-                                isSongFilterActive = isSongFilterActive,
-                                badgeRecession = badgeRecession,
-                                onClick = { viewModel.dialogHost.showDialog(DialogType.SongFilters) },
+        ListUnderAppBar(
+            modifier = Modifier.fillMaxSize(),
+            list = {
+                SongList(
+                    modifier = Modifier.fillMaxSize().underAppBar { 1f - appBarOverlap().coverage },
+                    viewModel = viewModel,
+                    listState = listState,
+                    placeholder = placeholder,
+                    isSearchOpen = isSearchOpen,
+                    songGroups = shownSongGroups,
+                    columnCount = layout.columnCount,
+                    hasLoadedLibrary = hasLoadedLibrary,
+                    contentPadding = contentPadding,
+                    appBarOverlap = appBarOverlap,
+                    isSelecting = isSelecting,
+                    selection = selection.orEmpty(),
+                )
+            },
+        ) {
+            SearchableTopAppBar(
+                contentPadding = contentPadding,
+                appBarReveal = appBarProgress,
+                placeholder = stringResource(Res.string.songs_search),
+                searchState = viewModel.songListState.songsSearch,
+                onReachChanged = { appBarReach = it },
+                areClosedSearchActionsShown = isSelecting || !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
+                // The search is where most of a selection is put together, so its menu stays while the search is open.
+                areClosedSearchActionsKeptInSearch = isSelecting,
+                areClosedSearchActionsDetached = !isSelecting,
+                closedSearchActions = {
+                    AnimatedContent(
+                        targetState = isSelecting,
+                        // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
+                        // menu, and scaled, so that it is out of the way of the menu fading in where it stood. Resized on the
+                        // search's spring, which the bar moves the search action and the pill's end on as the two swap.
+                        transitionSpec = {
+                            fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
+                                fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
+                                SizeTransform(clip = false) { _, _ -> searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold) }
+                        },
+                    ) { isShowingSelectionMenu ->
+                        if (isShowingSelectionMenu) {
+                            val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+                            val listedFileNames = remember(songGroups) { songGroups.groups.flatMap { group -> group.songs.map { it.fileName } } }
+                            val ticked = selection.orEmpty()
+                            SongSelectionMenu(
+                                isRoomy = layout.columnCount > 1,
+                                canSelectAll = listedFileNames.any { it !in ticked },
+                                hasSelection = ticked.isNotEmpty(),
+                                areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
+                                areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
+                                onSelectAll = { viewModel.songSelection.select(listedFileNames) },
+                                onDeselectAll = viewModel.songSelection::deselectAll,
+                                onChooseSetlists = viewModel::showSelectionSetlists,
+                                onManageTags = viewModel::showSelectionTags,
+                                onManageLanguages = viewModel::showSelectionLanguages,
+                                onExport = viewModel::exportSelection,
+                            )
+                        } else {
+                            NewItemMenu(
+                                contentDescription = stringResource(Res.string.songs_new_song),
+                                createLabel = stringResource(Res.string.songs_create_song),
+                                onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
+                                onImport = viewModel.importController::importFiles,
+                                onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
                             )
                         }
-                    },
-                )
-            }
-            ControlsSidePanel(
-                isVisible = isSidePanelVisible,
-                isAnimated = hasLoadedLibrary,
-                contentPadding = contentPadding,
-            ) { panelModifier, panelContentPadding ->
-                SongFilters(
-                    modifier = panelModifier,
-                    state = rememberSongFilterUiState(viewModel),
-                    actions = rememberSongFilterActions(viewModel),
-                    normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
-                    contentPadding = panelContentPadding,
-                    fadeBackgroundColor = NavigationBarDefaults.containerColor,
-                )
-            }
+                    }
+                },
+                actions = {
+                    // Read here rather than by the screen, so that a preference changing recomposes the bar's
+                    // actions alone.
+                    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+                    SongSortMenu(
+                        modifier = Modifier.overlappingAction(),
+                        selected = userPreferences?.sortingMode,
+                        onSelected = viewModel.preferencesController::setSortingMode,
+                    )
+                    // The last tag leaving the library takes the filters with it while the list is being looked at,
+                    // but the first one arriving with the library is no change anybody made.
+                    AnimatedVisibility(
+                        modifier = Modifier.overlappingAction(),
+                        visible = hasSongFilters,
+                        enter = if (hasLoadedLibrary) fadeIn() + expandHorizontally() else EnterTransition.None,
+                    ) {
+                        SongFiltersAction(
+                            isSongFilterActive = isSongFilterActive,
+                            badgeRecession = badgeRecession,
+                            onClick = { viewModel.dialogHost.showDialog(DialogType.SongFilters) },
+                        )
+                    }
+                },
+            )
         }
         ImportProgress(isImporting = isImporting || isEditingSongs)
     }
@@ -282,12 +247,11 @@ internal fun SongsScreen(
 }
 
 /**
- * The action that opens the filters where there is no room for them beside the list. While a filter is on its funnel
- * is filled in and carries a badge in the accent color, since a filter hides songs for the moment rather than as a
- * standing preference, and a list that is shorter than the library with nothing on screen saying why reads as songs
- * having gone missing. The badge is not Material's default error red: nothing is wrong, the list is only narrowed.
- * The side panel needs no such mark, since the selected chips are in it. A back gesture that would reset the filters
- * fades the badge and the fill with the finger ([badgeRecession], see [songFilterBackRecession]).
+ * The action that opens the filters in a sheet, on every screen size. While a filter is on its funnel is filled in and
+ * carries a badge in the accent color, since a filter hides songs for the moment rather than as a standing preference,
+ * and a list that is shorter than the library with nothing on screen saying why reads as songs having gone missing. The
+ * badge is not Material's default error red: nothing is wrong, the list is only narrowed. A back gesture that would
+ * reset the filters fades the badge and the fill with the finger ([badgeRecession], see [songFilterBackRecession]).
  */
 @Composable
 private fun SongFiltersAction(

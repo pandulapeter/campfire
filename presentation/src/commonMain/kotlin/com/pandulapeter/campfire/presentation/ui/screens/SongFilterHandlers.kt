@@ -19,8 +19,8 @@ import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilt
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterUiState
 
 /**
- * What [com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters] shows, as [viewModel] holds it, for the two
- * places that show it: the songs screen's side panel and the filters sheet.
+ * What [com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters] shows in the filters sheet, as
+ * [viewModel] holds it.
  */
 @Composable
 internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilterUiState {

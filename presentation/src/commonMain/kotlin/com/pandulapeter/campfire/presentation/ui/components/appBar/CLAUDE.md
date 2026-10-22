@@ -35,8 +35,7 @@ The top app bars of the list screens.
   place, since a clipped shrink would slice it.
 - The divider before it (`ClosedSearchActionsDivider`, shown with `areClosedSearchActionsShown`) animates on the search
   action's spring, not inside the button's exit, whose clipped shrink would cut it off on the first frame.
-- The bar stays filled while the list has no header (placeholder, ranked results). It spans the list only, never the
-  side panel.
+- The bar stays filled while the list has no header (placeholder, ranked results).
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
   hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is
   layout, not a drawn translation, so `animateBounds` carries on from where the gesture left.

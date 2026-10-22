@@ -40,6 +40,5 @@ The song card the song lists and setlists draw (`SongListItem`).
   has one, so arriving covers never change the count), so the default card keeps 404dp and a phone on its side stays one
   column. The key, tempo, and duration stand on a line of their own and add nothing. Setlists are laid out by the same
   width (the slot number comes out of the title), so both screens fit the same columns. `CampfireContent` computes it
-  and `CampfireScreens` hands it to `ListLayout.of`. Sorted by artist, the Songs grid (not its side panel or the
-  expanded rail, so sorting never moves the chrome) takes 8dp off (`songGridColumnWidth`), the room the card's artist
-  line no longer needs.
+  and `CampfireScreens` hands it to `ListLayout.of`. Sorted by artist, the Songs grid (not the expanded rail, so sorting
+  never moves the chrome) takes 8dp off (`songGridColumnWidth`), the room the card's artist line no longer needs.

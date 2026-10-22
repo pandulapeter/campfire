@@ -9,11 +9,10 @@
 -->
 # To do
 - Submit version 5.0.0 for macOS once 4.8.0 finally gets accepted - don't forget to rename the app
-- Changing the metronome sound while it's running causes a repeated beat
-- Make the pinned filters panel optional / get rid of it completely
+- Fix compile-time warnings on all platforms
+- Editor bug when copy-pasting grid sections (it tries to use the chords syntax even though we're in a grid)
 - The website's sharing landing page should display the artist of the shared song, if available
 - Fast scrolling is glitchy, especially on Setlists
-- Setlists screen initial slide animation caused by description
 - Document all keyboard shortcuts used in the app
 - Make sure cover art cache for deleted songs / changed cover art is properly cleared
 - Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)

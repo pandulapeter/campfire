@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedCh
  * Title of a group of controls: the label above a [SegmentedChoice] or a set of switches, in the same color as a
  * [SectionHeader] pill but without the pill, since it names a part of a section rather than a section.
  *
- * [contentPadding] defaults to the gaps a sheet or a side panel wants, where the groups are the whole content; a
+ * [contentPadding] defaults to the gaps a sheet wants, where the groups are the whole content; a
  * list that has a rhythm of its own passes its own gaps instead.
  */
 @Composable

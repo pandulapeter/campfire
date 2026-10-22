@@ -44,20 +44,19 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
- * The filters of the song list, shown in a side panel on wide enough screens and in a bottom sheet otherwise, and
- * neither where there is nothing to filter by (`SongListState.hasSongFilters`). The order of the list is not among
+ * The filters of the song list, shown in a bottom sheet on every screen size, and not offered where there is nothing to
+ * filter by (`SongListState.hasSongFilters`). The order of the list is not among
  * them: it is a [SortMenu] in the app bar, as on the setlists screen, since it changes how the library is laid out
  * rather than which songs are in it.
  *
- * The groups share the height of the panel or the sheet between them ([FilterGroupsLayout]), so that as much of both
+ * The groups share the height of the sheet between them ([FilterGroupsLayout]), so that as much of both
  * is in sight at once as fits, and each keeps the rest of its chips behind a "Show all" of its own.
  *
  * @param state What the filters show, see [SongFilterUiState].
  * @param actions What their controls change.
  * @param uncoveredTopInset The sheet's `BottomSheetContentScope.uncoveredTopInset`, for the height of the sheet at
  *   its tallest rather than at the offset it happens to be at.
- * @param fadeBackgroundColor The opaque color the filters stand on, the screen's or the sheet's, which their top edge
- *   fades into.
+ * @param fadeBackgroundColor The opaque color of the sheet the filters stand on, which their top edge fades into.
  * @param normalizeForSearch How a group's search and its chips' names are folded before they are compared:
  *   `SongRenderer.normalizeForSearch`, so that a tag is found the way a song is.
  */
@@ -66,8 +65,8 @@ internal fun SongFilters(
     modifier: Modifier = Modifier,
     state: SongFilterUiState,
     actions: SongFilterActions,
-    contentPadding: PaddingValues = PaddingValues(),
-    uncoveredTopInset: () -> Dp = { 0.dp },
+    contentPadding: PaddingValues,
+    uncoveredTopInset: () -> Dp,
     fadeBackgroundColor: Color,
     normalizeForSearch: (String) -> String,
 ) = BoxWithConstraints(

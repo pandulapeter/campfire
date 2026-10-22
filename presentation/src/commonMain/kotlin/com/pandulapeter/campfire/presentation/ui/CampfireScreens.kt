@@ -128,8 +128,7 @@ internal fun CampfireScreens(
     // The screens next to the chrome always settle at the width the chrome leaves them, whether or not one of them
     // happens to be covered right now; the song details screen covers the chrome, so it settles at the full width.
     // Anything a screen has to decide once, before it is first drawn, is decided from these rather than from the
-    // width it is being measured at: the column counts of the song lists and the lyrics, and whether the lists have
-    // room for their filter side panel.
+    // width it is being measured at: the column counts of the song lists and the lyrics.
     val settledListWidth = windowWidth - chromeSize.settledRailWidth
     val settledSongDetailsWidth = windowWidth
 

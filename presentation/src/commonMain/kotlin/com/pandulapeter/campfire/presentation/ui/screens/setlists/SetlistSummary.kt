@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.list.FastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabel
 import com.pandulapeter.campfire.presentation.ui.components.labels.IconLabelMark
 import com.pandulapeter.campfire.presentation.ui.components.list.sectionHeaderBottomGap
@@ -56,6 +57,8 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_T
  * @param onCountdownClick Opens the calendar of the setlist's date; null where it cannot be changed (read only mode, an
  *   archived setlist).
  * @param runningTime How long the setlist's songs take ([runningTimeText]), after the countdown.
+ * @param isSizeAnimated False while the list's width is still being found ([FastScrollerColumn.hasMeasuredWidth]): the
+ *   description reflowing to it is not a change to animate, and would push the cards under it down over several frames.
  */
 @Composable
 internal fun SetlistSummary(
@@ -65,6 +68,7 @@ internal fun SetlistSummary(
     runningTime: String?,
     description: String,
     contentPadding: PaddingValues,
+    isSizeAnimated: Boolean,
 ) {
     // A description of four lines is most of what a short window shows, and with the keyboard
     // of a search up it pushes the setlist's songs out of sight, so there it starts at two
@@ -84,7 +88,7 @@ internal fun SetlistSummary(
     Column(
         modifier = modifier
             .outset(vertical = LABEL_TOUCH_VERTICAL_PADDING)
-            .animateContentSize()
+            .then(if (isSizeAnimated) Modifier.animateContentSize() else Modifier)
             .padding(
                 start = SONG_CARD_TEXT_KEYLINE,
                 top = LABEL_TOUCH_VERTICAL_PADDING,

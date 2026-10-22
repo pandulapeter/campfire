@@ -9,61 +9,44 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chrome
 
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.list.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.list.FAST_SCROLLER_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.list.columnCountForWidth
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NavigationChromeKindTest {
 
     @Test
-    fun `widening a window never takes the side panel away once it has appeared`() = sweep { column, widths ->
-        var hasAppeared = false
-        widths.forEach { (width, hasPanel) ->
-            if (hasAppeared) assertTrue(hasPanel, "The panel went away at $width with $column columns")
-            hasAppeared = hasAppeared || hasPanel
-        }
-    }
-
-    @Test
-    fun `the expanded rail is only used where the side panel fits beside it`() = sweep { column, _ ->
+    fun `the expanded rail leaves three song columns beside it`() = COLUMNS.forEach { column ->
         WIDTHS.filter { navigationChromeKind(it, column) == NavigationChromeKind.EXPANDED_RAIL }.forEach { width ->
-            assertTrue(hasRoomForSidePanel(width - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH - NAVIGATION_RAIL_CONTENT_GAP, column), "No panel beside the expanded rail at $width")
+            val columns = columnCountForWidth(width - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH - NAVIGATION_RAIL_CONTENT_GAP - FAST_SCROLLER_WIDTH, column)
+            assertTrue(columns >= 3, "Only $columns columns beside the expanded rail at $width")
         }
     }
 
     @Test
-    fun `widening a window never collapses the expanded rail again`() = sweep { column, _ ->
+    fun `widening a window never collapses the expanded rail again`() = COLUMNS.forEach { column ->
         var hasExpanded = false
         WIDTHS.forEach { width ->
             val kind = navigationChromeKind(width, column)
             if (hasExpanded) assertFalse(kind == NavigationChromeKind.RAIL, "The rail collapsed again at $width with $column columns")
             hasExpanded = hasExpanded || kind == NavigationChromeKind.EXPANDED_RAIL
         }
+        assertTrue(hasExpanded, "The rail never expanded with $column columns")
     }
 
-    /** Runs [assert] for the column width with and without covers, with the panel at every width. */
-    private fun sweep(assert: (column: Dp, widths: List<Pair<Dp, Boolean>>) -> Unit) = listOf(false, true).forEach { isCoverArtEnabled ->
-        val column = minSongColumnWidth(isCoverArtEnabled)
-        assert(column, WIDTHS.map { it to hasPanel(it, column) })
-    }
-
-    /** Whether the Songs screen shows its side panel in a window this wide, beside the rail the window gets. */
-    private fun hasPanel(windowWidth: Dp, column: Dp): Boolean {
-        val railWidth = when (navigationChromeKind(windowWidth, column)) {
-            NavigationChromeKind.BAR -> 0.dp
-            NavigationChromeKind.RAIL -> COLLAPSED_RAIL_WIDTH
-            NavigationChromeKind.EXPANDED_RAIL -> EXPANDED_NAVIGATION_RAIL_MIN_WIDTH
-        }
-        return hasRoomForSidePanel(windowWidth - railWidth - if (railWidth > 0.dp) NAVIGATION_RAIL_CONTENT_GAP else 0.dp, column)
+    @Test
+    fun `a window under 600dp gets the bar`() = COLUMNS.forEach { column ->
+        assertEquals(NavigationChromeKind.BAR, navigationChromeKind(599.dp, column))
+        assertTrue(navigationChromeKind(600.dp, column).isRail)
     }
 
     private companion object {
-        /** Material's collapsed `WideNavigationRail` width. */
-        val COLLAPSED_RAIL_WIDTH = 96.dp
+        val COLUMNS = listOf(false, true).map { minSongColumnWidth(isCoverArtEnabled = it) }
         val WIDTHS = (600..3000).map { it.dp }
     }
 }
