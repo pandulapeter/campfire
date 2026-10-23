@@ -10,7 +10,7 @@
 # Campfire
 *Your songbook, on every screen you own.*
 
-Campfire is a chord sheet viewer and editor built around the plain-text [ChordPro](https://www.chordpro.org/chordpro/chordpro-introduction/) format.
+[Campfire](https://campfire-songbook.com/) is a chord sheet viewer and editor built around the plain-text [ChordPro](https://www.chordpro.org/chordpro/chordpro-introduction/) format.
 It runs natively on Android, iOS, macOS, Windows, Linux, and the web. 
 
 <img src="documentation/screenshots/01.webp" width="32%" /> <img src="documentation/screenshots/02.webp" width="32%" /> <img src="documentation/screenshots/03.webp" width="32%" />
@@ -39,7 +39,7 @@ The app is currently available for the following platforms:
 ## Under the hood
 
 Campfire is a [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) project targeting Android, iOS, desktop (JVM) and the web (Kotlin/Wasm).
-The whole interface is written once with Compose Multiplatform and Material 3 Expressive, with navigation handled by Navigation 3 and dependencies wired together at compile time using Koin Annotations.
+The whole interface is written once with [Compose Multiplatform](https://kotlinlang.org/compose-multiplatform/) and [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive), with navigation handled by [Jetpack Navigation 3](https://developer.android.com/guide/navigation/navigation-3) and dependencies wired together at compile time using [Koin Annotations](https://insert-koin.io/).
 Platform-specific code is limited to thin shells: file pickers, system bars, share and "open with" intents, and the storage behind the library, which is a plain folder on Android, iOS and desktop and the Origin Private File System in the browser.
 
 The code is split into small modules with a strict `api` / `implementation` boundary at every layer: a `presentation` module with the screens and the ViewModel, a `domain` layer of single-method use cases, repositories on top of local and remote data sources, and the `app` modules that hold each platform's entry point.
@@ -48,6 +48,7 @@ The metronome is a self-contained `metronome` module of its own: every click is 
 
 Everything the app owns is a plain file: songs are `.cho` files and setlists are small JSON documents, so nothing is locked inside a database.
 Syncing is a pure planning step over file hashes and a remote listing, run against a provider interface that Dropbox implements through OAuth with PKCE, which is why no backend of Campfire's own is needed.
+Real-time sync between devices is achieved by lifecycle-aware HTTP long polling.
 
 ## License
 

@@ -10,8 +10,12 @@
 # To do
 - CI issue on iOS: Your account has reached the maximum number of certificates.
 - Onboarding: the circular hero element has some inset handling issues
+- Add 5/4 metronome preset
+- Export screen FAB is not visible enough on large screens
+- Web app pops during scale playback
+- Tab transposition bug: it doesn't compensate for the digit-count changes
+- The Songs / Setlists screens (similarly to other screens in the app) should animate scrolling to the top when their navigation button is reselected. However, at least on the Songs screen (check Setlists too) this animation is not smooth: it animates to a certain sticky header, slows down, then animates to the top. Fix it so that one smooth animation scrolls to the very beginning of the list
 - Fix compile-time warnings on all platforms
-- Songs screen: scroll to top is not smooth
 - PDF floating page controls show / hide should also fade
 - Editor bug when copy-pasting grid sections (it tries to use the chords syntax even though we're in a grid)
 - Fast scrolling is glitchy, especially on Setlists
@@ -24,8 +28,10 @@
 - Rename master branch to main
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
+- Editor multi-cursor support
 - Streaming zip writer on all platforms
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - AI skill for exposing direct access to the library folder
+- Add support for abcnotation https://abcnotation.com/
 - Investigate Google Drive integration, maybe self-hosted sync server
