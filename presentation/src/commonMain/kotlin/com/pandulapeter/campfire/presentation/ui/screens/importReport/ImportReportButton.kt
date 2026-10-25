@@ -46,6 +46,7 @@ import org.jetbrains.compose.resources.painterResource
  * Nothing while the files are read or written: there is nothing to do then but wait, and Close is still there.
  *
  * @param importCount How many files Import writes; null where the review has nothing to tick.
+ * @param isImportEnabled False while files are being added to the review, whose count is not final yet.
  * @param isKeyboardVisible Hides the button while the keyboard is up: that is when the rows it would cover are being
  *   searched, and in a window that leaves little height it sits over the tick boxes and the conflict buttons at their ends.
  *
@@ -57,6 +58,7 @@ internal fun ImportReportButton(
     modifier: Modifier = Modifier,
     report: ImportReport,
     importCount: Int?,
+    isImportEnabled: Boolean,
     isKeyboardVisible: Boolean,
     onImport: () -> Unit,
     onRetry: () -> Unit,
@@ -70,7 +72,7 @@ internal fun ImportReportButton(
     when (stage) {
         ImportReport.Review::class -> {
             val count = importCount ?: 0
-            val isEnabled = count > 0
+            val isEnabled = count > 0 && isImportEnabled
             val label = pluralStringResource(Res.plurals.import_review_confirm, count, count)
             val containerColor by animateColorAsState(
                 if (isEnabled) FloatingActionButtonDefaults.containerColor else MaterialTheme.colorScheme.surfaceContainerHighest,

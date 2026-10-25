@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -52,6 +53,14 @@ class ImportReportTest {
         assertEquals("Riverlight", review(ImportPlan(songs = songs.take(1)), sharedLinkTitle = "Old title").subtitleName)
         assertEquals("Old title", review(ImportPlan(songs = songs), sharedLinkTitle = "Old title").subtitleName)
         assertEquals("abcdefghijklmnop.zip", review(withSetlist, sharedLinkTitle = null).subtitleName)
+    }
+
+    @Test
+    fun `a review of several files counts them, the skipped ones included, rather than naming them`() {
+        val plan = ImportPlan(songs = listOf(song("a.cho", "Riverlight")), skippedFileNames = listOf("cover.jpg"), sourceNames = listOf("a.cho", "cover.jpg"))
+        assertNull(review(plan, sharedLinkTitle = null).subtitleName)
+        assertEquals(2, review(plan, sharedLinkTitle = null).sourceCount)
+        assertEquals("a.cho", review(plan.copy(sourceNames = listOf("a.cho")), sharedLinkTitle = null).subtitleName)
     }
 
     private fun review(plan: ImportPlan, sharedLinkTitle: String?) =

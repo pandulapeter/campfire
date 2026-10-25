@@ -51,6 +51,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -535,6 +536,67 @@ class ImportControllerQueueTest {
         assertTrue(settled.isCompleted)
         assertTrue(downloadedUrls.isEmpty())
         assertEquals(listOf<Message>(Message.SharedLinkFromNewerVersion), messageSink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a batch arriving during a review is added to it rather than waiting for a screen of its own`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        reportState.setImportEntriesChosen(listOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0)), isChosen = false)
+        nextPlans += listOf(songEntry("other.cho"))
+        val settled = enqueue()
+        settle()
+        val joined = assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertEquals(listOf("new.cho", "other.cho"), joined.plan.songs.map { it.fileName })
+        assertEquals(setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0)), joined.choices.leftOut)
+        assertEquals(1, backStack.count { it == CampfireDestination.ImportReport })
+        assertFalse(settled.isCompleted)
+        assertFalse(controller.isAddingToReview.value)
+        leaveImportReport()
+        assertTrue(settled.isCompleted)
+        assertNull(reportState.importReport.value)
+    }
+
+    @Test
+    fun `the same files dropped twice during a review leave it as it was`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        val review = assertIs<ImportReport.Review>(reportState.importReport.value)
+        enqueue()
+        settle()
+        assertEquals(2, prepareCount)
+        assertSame(review, reportState.importReport.value)
+        assertEquals(0, messageSink.messageQueue.value.size)
+    }
+
+    @Test
+    fun `a batch added to a review is written with it`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        nextPlans += listOf(songEntry("other.cho"))
+        enqueue()
+        settle()
+        controller.confirmImport()
+        settle()
+        assertEquals(1, importCount)
+        assertEquals(setOf("new.cho", "other.cho"), library.value.songsByFileName.keys)
+    }
+
+    @Test
+    fun `a pasted song arriving during a review waits for it rather than joining it`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        nextPlans += listOf(songEntry("pasted.cho", text = "[G]Hello"))
+        enqueuePaste()
+        settle()
+        assertEquals(1, prepareCount)
+        assertEquals(listOf("new.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        leaveImportReport()
+        assertEquals(listOf("[G]Hello"), newSongTexts)
     }
 
     private val sharedLink = assertIs<SharedLink.Readable>(

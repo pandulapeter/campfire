@@ -18,12 +18,17 @@ internal sealed interface ImportSource {
     /** What the import screen's subtitle names while the source is read; null where there is nothing worth naming. */
     val name: String?
 
+    /** How many files were picked, which the subtitle counts in place of their names once there is more than one. */
+    val fileCount: Int get() = 1
+
     val isEmpty: Boolean
 
     /** Files already in hand: picked, dropped, handed over by the system, or the one an [Address] downloaded. */
     data class Files(val files: List<ImportedFile>) : ImportSource {
 
-        override val name get() = files.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.name }
+        override val name get() = files.singleOrNull()?.name
+
+        override val fileCount get() = files.size
 
         override val isEmpty get() = files.isEmpty()
     }

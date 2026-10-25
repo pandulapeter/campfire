@@ -13,6 +13,7 @@ import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
@@ -44,6 +45,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlinx.coroutines.flow.Flow
@@ -55,6 +57,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -114,6 +117,16 @@ internal class ImportController(
      */
     private var activeRequest: ImportRequest? = null
 
+    /** The shared links among the batches of the review on screen, and which of its entries each brought, see [addToReview]. */
+    private var sharedLinkParts = emptyList<SharedLinkPart>()
+
+    /**
+     * True while a batch that arrived during the review is read to be added to it (see [addToReview]), which the import
+     * screen shows as a progress bar under its app bar, holding Import back until the list is whole.
+     */
+    private val _isAddingToReview = MutableStateFlow(false)
+    val isAddingToReview: StateFlow<Boolean> = _isAddingToReview.asStateFlow()
+
     /**
      * The reading and comparing half of the import being run, which [cancelImportPreparation] can end. Touched only on the
      * main thread, like [isPreparationCancelled]: [import] runs in [scope] and the screen's click calls in there.
@@ -129,7 +142,8 @@ internal class ImportController(
      * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
      * handed over whenever the system or the user feels like it - a second archive dropped while the first is still
      * being written, a file opened with the app while a review is up - and an import can only run while
-     * no other one is, so what arrives in the meantime waits here rather than being dropped.
+     * no other one is, so what arrives in the meantime waits here rather than being dropped. What arrives while a review
+     * is on screen joins it instead where it can, see [awaitImportSettled].
      */
     private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
 
@@ -246,6 +260,96 @@ internal class ImportController(
     }
 
     /**
+     * [awaitImportSettled] for the queue, which takes every batch arriving meanwhile: one that can join the review on
+     * screen ([canJoinReview]) is added to it and settled with it ([joined]), since a second review waiting behind the
+     * first is a second screen for what the user dropped onto the first; the rest are [held] for after it, in order.
+     */
+    private suspend fun awaitImportSettled(joined: MutableList<ImportRequest>, held: ArrayDeque<ImportRequest>) = coroutineScope {
+        val settled = async { awaitImportSettled() }
+        while (true) {
+            // Biased towards the first clause, so that a batch arriving as the review is left is held rather than added.
+            val next = select<ImportRequest?> {
+                settled.onAwait { null }
+                importQueue.onReceiveCatching { it.getOrNull() }
+            } ?: break
+            if (canJoinReview(next)) {
+                joined += next
+                addToReview(next)
+            } else {
+                held += next
+            }
+        }
+    }
+
+    /**
+     * Whether [request] is more files for the review on screen rather than an import of its own: not while that review is
+     * being written or is the demo library's, and never the demo library, a text that may be one new song for the editor,
+     * or anything once the desktop process is on its way out.
+     */
+    private fun canJoinReview(request: ImportRequest): Boolean {
+        val review = reportState.report as? ImportReport.Review ?: return false
+        return activeRequest != null && !review.isDemoLibrary && !request.isDemoLibrary && !request.isNewSongFromText &&
+            request.shouldAnnounceResult && !isLeaving()
+    }
+
+    /**
+     * Reads [request] as a batch of its own and adds what it holds to the review on screen ([withAdded]), leaving every
+     * tick and choice made there as it is; what it adds starts ticked, a shared link's own taken names on Replace as in
+     * its own review (see [sharedLinkChoices]). The review stays usable meanwhile, but Import waits for the list to be
+     * whole. Leaving the screen cancels the reading with the review; a batch that cannot be read is one snackbar, since
+     * the review it was to join is still there to answer.
+     */
+    private suspend fun addToReview(request: ImportRequest) {
+        isPreparationCancelled = false
+        val deferred = scope.async { prepare(request) }
+        preparation = deferred
+        _isAddingToReview.value = true
+        val outcome = try {
+            deferred.await()
+        } catch (exception: CancellationException) {
+            if (isPreparationCancelled && currentCoroutineContext().isActive) return
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not read the files to add to the import: ${exception.message}")
+            Preparation.Failed(ImportFailure.UNREADABLE)
+        } finally {
+            preparation = null
+            _importProgress.value = null
+            _isAddingToReview.value = false
+        }
+        if (isPreparationCancelled || reportState.report !is ImportReport.Review) return
+        when (outcome) {
+            is Preparation.Failed -> messageSink.sendMessage(Message.ImportFailed)
+            is Preparation.Planned -> {
+                request.source = ImportSource.Files(emptyList())
+                val recorded = request.sharedLinkFileId?.let { getSharedLinkImport(it) }
+                // Read after the last suspension, so that a tick made while the batch was read is kept.
+                val review = reportState.report as? ImportReport.Review ?: return
+                val plan = review.plan.withAdded(outcome.plan)
+                if (plan === review.plan) return
+                val linkResolutions = recorded?.let { sharedLinkChoices(plan, it).conflictResolutions }.orEmpty().filterKeys { key ->
+                    key.index >= if (key.kind == ImportEntryKey.Kind.SONG) review.plan.songs.size else review.plan.setlists.size
+                }
+                request.sharedLinkFileId?.let { fileId ->
+                    sharedLinkParts += SharedLinkPart(
+                        fileId = fileId,
+                        songIndices = review.plan.songs.size until plan.songs.size,
+                        setlistIndices = review.plan.setlists.size until plan.setlists.size,
+                    )
+                }
+                reportState.report = review.copy(
+                    plan = plan,
+                    // A choice made for a name that is no longer a question would only be counted as a replacement.
+                    choices = review.choices.copy(
+                        conflictResolutions = (review.choices.conflictResolutions + linkResolutions).filterKeys(plan::isConflicting),
+                    ),
+                    sharedLinkUpdateCount = review.sharedLinkUpdateCount + linkResolutions.size,
+                )
+            }
+        }
+    }
+
+    /**
      * The first half of an import only works out what it would do. Nothing is written until the user has reviewed it
      * and pressed Import, or, for a batch that is not reviewed, until the plan turns out to have no name taken - which
      * is why the plan is kept here rather than on the screen: the answer can arrive long after the screen that started
@@ -263,7 +367,7 @@ internal class ImportController(
         if (isReviewed) {
             activeRequest = request
             // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
-            reportState.show(ImportReport.Loading(request.source.name))
+            reportState.show(ImportReport.Loading(sourceName = request.source.name, sourceCount = request.source.fileCount))
         }
         return prepare(request = request, isReviewed = isReviewed)
     }
@@ -308,7 +412,7 @@ internal class ImportController(
                 _isImporting.value = false
                 if (isReviewed) {
                     // The source is kept, so that Try again has something to read.
-                    reportState.report = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name)
+                    reportState.report = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name, sourceCount = request.source.fileCount)
                 } else {
                     // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
                     if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
@@ -345,10 +449,17 @@ internal class ImportController(
                         sharedLinkTitle = sharedLink?.title,
                         sharedLinkUpdateCount = choices.conflictResolutions.size,
                     )
+                    sharedLinkParts = listOfNotNull(request.sharedLinkFileId?.let { SharedLinkPart(it, plan.songs.indices, plan.setlists.indices) })
                     if (isReviewed) reportState.report = review else reportState.show(review)
                     _isImporting.value = false
                 } else {
-                    applyImportPlan(plan = plan, choices = ImportChoices(), request = request, isReported = false)
+                    applyImportPlan(
+                        plan = plan,
+                        choices = ImportChoices(),
+                        request = request,
+                        sharedLinkParts = listOfNotNull(request.sharedLinkFileId?.let { SharedLinkPart(it, plan.songs.indices, plan.setlists.indices) }),
+                        isReported = false,
+                    )
                 }
             }
         }
@@ -417,7 +528,7 @@ internal class ImportController(
     fun retryImport() {
         val request = activeRequest ?: return
         if (reportState.report !is ImportReport.Failed) return
-        reportState.report = ImportReport.Loading(request.source.name)
+        reportState.report = ImportReport.Loading(sourceName = request.source.name, sourceCount = request.source.fileCount)
         _isImporting.update { true }
         scope.launch { prepare(request = request, isReviewed = true) }
     }
@@ -428,6 +539,8 @@ internal class ImportController(
      */
     fun confirmImport() {
         val review = reportState.report as? ImportReport.Review ?: return
+        // The batch being added is planned against this review, which it could no longer join once written.
+        if (_isAddingToReview.value) return
         val count = replaceCount(review.plan, review.choices)
         if (count > 0) dialogHost.showDialog(DialogType.ConfirmImportReplace(count)) else resolveImport()
     }
@@ -439,17 +552,23 @@ internal class ImportController(
     fun resolveImport() {
         val review = reportState.report as? ImportReport.Review ?: return
         val request = activeRequest ?: return
+        if (_isAddingToReview.value) return
+        val parts = sharedLinkParts
         activeRequest = null
+        sharedLinkParts = emptyList()
         // Claimed before the review goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
         reportState.report = ImportReport.Importing
-        scope.launch { applyImportPlan(plan = review.plan, choices = review.choices, request = request, isReported = true) }
+        scope.launch {
+            applyImportPlan(plan = review.plan, choices = review.choices, request = request, sharedLinkParts = parts, isReported = true)
+        }
     }
 
     /**
      * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
      *
+     * @param sharedLinkParts The shared links among the batches of [plan], each remembered with what it wrote.
      * @param isReported Whether the import screen was put up for this import before it started writing, which is
      *   where its outcome goes for as long as that screen has not been left, unless it went clean: the user has just
      *   read the list, and reading it again as a result is one tap more than it is worth. Otherwise the outcome is a
@@ -459,6 +578,7 @@ internal class ImportController(
         plan: ImportPlan,
         choices: ImportChoices,
         request: ImportRequest,
+        sharedLinkParts: List<SharedLinkPart>,
         isReported: Boolean,
     ) {
         try {
@@ -477,11 +597,12 @@ internal class ImportController(
                                 setlistFileNames = DemoLibrary.setlistFileNamesWrittenBy(result),
                             )
                         }
-                        request.sharedLinkFileId?.let { linkFileId ->
+                        sharedLinkParts.forEach { part ->
+                            val linkPlan = part.of(plan)
                             rememberSharedLinkImport(
-                                linkFileId = linkFileId,
-                                songFileNames = sharedLinkSongFileNamesWrittenBy(plan, result),
-                                setlistFileNames = sharedLinkSetlistFileNamesWrittenBy(plan, result),
+                                linkFileId = part.fileId,
+                                songFileNames = sharedLinkSongFileNamesWrittenBy(linkPlan, result),
+                                setlistFileNames = sharedLinkSetlistFileNamesWrittenBy(linkPlan, result),
                             )
                         }
                     }
@@ -573,7 +694,10 @@ internal class ImportController(
 
             is ImportReport.Failed, is ImportReport.Review -> {
                 activeRequest = null
+                sharedLinkParts = emptyList()
                 reportState.report = null
+                // A batch being read to join the review is dropped with it.
+                cancelImportPreparation()
             }
 
             ImportReport.Importing -> Unit
@@ -612,7 +736,11 @@ internal class ImportController(
      */
     fun startQueue(demoLibraryDecision: Deferred<Unit>) = scope.launch {
         demoLibraryDecision.await()
-        for (request in importQueue) {
+        // Batches that arrived during a review they could not join, taken in their order before the queue's next.
+        val held = ArrayDeque<ImportRequest>()
+        while (true) {
+            val request = held.removeFirstOrNull() ?: importQueue.receiveCatching().getOrNull() ?: break
+            val batches = mutableListOf(request)
             try {
                 // A result reopened from the snackbar's Details is on screen while the queue is idle; a batch taken now
                 // would replace it in place, and leaving the screen would drop the new import with it. A batch that
@@ -628,13 +756,15 @@ internal class ImportController(
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue
                 import(request)?.let { song -> showNewSongEditor(song, request) }
-                // The next batch waits for this one's review too: it would have nowhere to be shown.
-                awaitImportSettled()
+                awaitImportSettled(joined = batches, held = held)
             } finally {
                 // Here rather than in import, so that the count is honest whatever that did: returned after the
-                // preparation was cancelled, failed, or left a review that was answered or abandoned.
-                _queuedImportCount.update { it - 1 }
-                request.settled.complete(Unit)
+                // preparation was cancelled, failed, or left a review that was answered or abandoned. A batch added to
+                // the review is settled with it, since it is written, or dropped, with the rest.
+                batches.forEach { batch ->
+                    _queuedImportCount.update { it - 1 }
+                    batch.settled.complete(Unit)
+                }
             }
         }
     }

@@ -57,13 +57,16 @@ import com.pandulapeter.campfire.presentation.resources.import_progress_download
 import com.pandulapeter.campfire.presentation.resources.import_progress_title
 import com.pandulapeter.campfire.presentation.resources.import_review_demo_library
 import com.pandulapeter.campfire.presentation.resources.import_review_from
+import com.pandulapeter.campfire.presentation.resources.import_review_from_files
 import com.pandulapeter.campfire.presentation.resources.import_review_title
 import com.pandulapeter.campfire.presentation.resources.import_review_title_empty
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_status_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
@@ -88,6 +91,7 @@ internal fun ImportReportScreen(
     current?.let { report = it }
     val shown = report ?: return
     val progress by viewModel.importController.importProgress.collectAsStateWithLifecycle()
+    val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
     val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -123,13 +127,15 @@ internal fun ImportReportScreen(
     Column(Modifier.fillMaxSize()) {
         ImportReportTopAppBar(
             title = shown.title(progress),
-            subtitle = if ((shown as? ImportReport.Review)?.isDemoLibrary == true) {
-                stringResource(Res.string.import_review_demo_library)
-            } else {
-                shown.sourceName?.let { textResource(Res.string.import_review_from, it) }
+            subtitle = when {
+                (shown as? ImportReport.Review)?.isDemoLibrary == true -> stringResource(Res.string.import_review_demo_library)
+                shown.sourceCount > 1 -> pluralStringResource(Res.plurals.import_review_from_files, shown.sourceCount, shown.sourceCount)
+                else -> shown.sourceName?.let { textResource(Res.string.import_review_from, it) }
             },
             onClose = onBack,
         )
+        // Files dropped or opened while the review is up are read into it, which can take a while for an archive.
+        ImportProgress(isImporting = isAddingToReview)
         Box(
             Modifier
                 .fillMaxWidth()
@@ -219,6 +225,7 @@ internal fun ImportReportScreen(
                     .padding(end = 16.dp),
                 report = shown,
                 importCount = importCount,
+                isImportEnabled = !isAddingToReview,
                 isKeyboardVisible = isKeyboardVisible,
                 onImport = viewModel.importController::confirmImport,
                 onRetry = viewModel.importController::retryImport,
@@ -250,6 +257,15 @@ private val ImportReport.sourceName
         is ImportReport.Failed -> sourceName
         is ImportReport.Review -> subtitleName
         ImportReport.Importing, is ImportReport.Finished -> null
+    }
+
+/** How many files the stage is about, which the subtitle counts in place of naming them once there is more than one. */
+private val ImportReport.sourceCount
+    get() = when (this) {
+        is ImportReport.Loading -> sourceCount
+        is ImportReport.Failed -> sourceCount
+        is ImportReport.Review -> sourceCount
+        ImportReport.Importing, is ImportReport.Finished -> 0
     }
 
 /** How many items [reviewHeader] and [finishedHeader] put above the search field, which is where it pins from. */

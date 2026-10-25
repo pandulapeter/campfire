@@ -20,6 +20,12 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 - Not reviewed: the demo library (`shouldReview = false`) and, while the songs are switched on, a single song file
   opened with, shared to, or dropped on the app, which is written and opened directly. Each shows the screen only for a taken name, as a one-row review. A
   song picked from the app's own Import files *is* reviewed.
+- **One review at a time**: a batch arriving while a review is up (dropped, opened with, shared, picked, a shared
+  link) is read on its own and appended to it (`withAdded`), under a progress bar that holds Import back; ticks and
+  choices made stay. What the review lists already is left out (a song by its text, a setlist by its fields, a skipped
+  name), so the same zip twice changes nothing; a taken name stays one question. Joined batches settle with the review.
+  One arriving during Loading joins once the review is up. Not joined, waiting in the queue instead: the demo library,
+  a pasted or shared text (it may be the editor's), and anything over a Failed or Finished stage.
 
 ## Stages
 
@@ -35,7 +41,8 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   on this device, with a line under the counts saying so (`sharedLinkChoices`); every other taken name starts on Keep
   both, since it may be the recipient's own song. The record is `UserPreferences.sharedLinkImports`, never synced or
   exported, and bounded (100 links, 1,000 names each). The review is subtitled by the setlist or the
-  one song the zip holds, never the download's random name (`Review.subtitleName`). It steps aside while the keyboard is up. Choices live in the view model's report
+  one song the zip holds, never the download's random name (`Review.subtitleName`); several picked files (a joined
+  review too) are counted, skipped ones included, never listed by name (`sourceCount`). It steps aside while the keyboard is up. Choices live in the view model's report
   (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
   summary only.
 - **Tags** (`ImportReviewTags`, under the counts while any song could be written): one set for the whole batch, picked

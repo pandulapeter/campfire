@@ -21,11 +21,14 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
  */
 sealed interface ImportReport {
 
-    /** The files being read and compared, or the address being downloaded; [sourceName] names what is read, if anything. */
-    data class Loading(val sourceName: String?) : ImportReport
+    /**
+     * The files being read and compared, or the address being downloaded; [sourceName] names what is read, if anything,
+     * and [sourceCount] says how many files were picked, which the subtitle counts once there is more than one.
+     */
+    data class Loading(val sourceName: String?, val sourceCount: Int = 1) : ImportReport
 
-    /** Why nothing could be read, which `ImportController.retryImport` asks again about. */
-    data class Failed(val reason: ImportFailure, val sourceName: String?) : ImportReport
+    /** Why nothing could be read, which `ImportController.retryImport` asks again about; the source as [Loading] has it. */
+    data class Failed(val reason: ImportFailure, val sourceName: String?, val sourceCount: Int = 1) : ImportReport
 
     /**
      * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
@@ -47,16 +50,25 @@ sealed interface ImportReport {
         val isSharedLink get() = sharedLinkTitle != null
 
         /**
-         * What the review is of, for the subtitle. A shared link's download is named after a random id, so it is named by
-         * the setlist it holds, or its one song, as the zip says now, and only then by the title the link carried.
+         * How many files the review is of, those it skips included: the subtitle counts them once there is more than
+         * one, since a list of their names soon says less than the number does.
+         */
+        val sourceCount get() = plan.sourceNames.size
+
+        /**
+         * What the review is of, for the subtitle, where it is one file. A shared link's download is named after a random
+         * id, so it is named by the setlist it holds, or its one song, as the zip says now, and only then by the title the
+         * link carried.
          */
         val subtitleName
-            get() = if (isSharedLink) {
+            get() = if (sourceCount > 1) {
+                null
+            } else if (isSharedLink) {
                 plan.setlists.firstOrNull()?.setlist?.title?.takeIf { it.isNotBlank() }
                     ?: plan.songs.singleOrNull()?.title?.takeIf { it.isNotBlank() }
                     ?: sharedLinkTitle?.takeIf { it.isNotBlank() }
             } else {
-                plan.sourceNames.takeIf { it.isNotEmpty() }?.joinToString(", ")
+                plan.sourceNames.singleOrNull()
             }
     }
 
