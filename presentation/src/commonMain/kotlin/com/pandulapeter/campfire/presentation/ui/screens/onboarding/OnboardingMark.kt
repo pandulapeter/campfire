@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.roundToInt
 
 /**
  * The mark at the top of the onboarding, one for every page rather than one on each: the pages keep only an empty place
@@ -103,6 +104,13 @@ internal fun onboardingMarkTop(frame: OnboardingMarkFrame, tops: Map<OnboardingS
     val to = tops[frame.to] ?: from
     return lerp(from, to, frame.fraction)
 }
+
+/**
+ * How far the pages under the mark at [frame] are scrolled, from how far each one is ([scrolled]): what the mark's own
+ * top edge fade is as strong as, so that it leaves under the bar with the page it sits on rather than being cut off there.
+ */
+internal fun onboardingMarkScrolled(frame: OnboardingMarkFrame, scrolled: (OnboardingStep) -> Int) =
+    lerp(scrolled(frame.from).toFloat(), scrolled(frame.to).toFloat(), frame.fraction).roundToInt()
 
 private fun lerp(start: Float, stop: Float, fraction: Float) = start + (stop - start) * fraction
 

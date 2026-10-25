@@ -78,3 +78,4 @@ kept: drop D stays drop D).
 - Page turns follow the pager position, never timers (a held gesture holds the mark halfway); the question layer only
   moves sideways, never scales, since the mark tracks its place.
 - The mark is one shared element over the pager; neighbour pages are composed so it knows its target on the first frame.
+  It fades into the top edge with the page under it as that scrolls (`onboardingMarkScrolled`), never cut off there.

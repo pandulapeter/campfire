@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
@@ -33,8 +34,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.chrome.withMinTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 
@@ -135,6 +139,7 @@ internal fun OnboardingScreen(
             // Where each page keeps the mark's place, in the window's coordinates, and where the pager itself is in them,
             // since the pages report while they slide and the mark is drawn over all of them.
             val markTops = remember { mutableStateMapOf<OnboardingStep, Float>() }
+            val scrollStates = remember { mutableStateMapOf<OnboardingStep, ScrollState>() }
             var pagerTop by remember { mutableFloatStateOf(0f) }
             Box(
                 modifier = Modifier
@@ -151,22 +156,23 @@ internal fun OnboardingScreen(
                     key = { steps.getOrNull(it) ?: it },
                 ) { page ->
                     steps.getOrNull(page)?.let { step ->
-                        val pageOffset = remember(pagerState, page) { { (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction } }
-                        val footer = if (step == steps.last()) lastPageFooter else NO_FOOTER
-                        CompositionLocalProvider(LocalOnboardingPageOffset provides pageOffset, LocalOnboardingPageFooter provides footer) {
-                            OnboardingStepPage(
-                                viewModel = viewModel,
-                                step = step,
-                                markModifier = Modifier.onGloballyPositioned { markTops[step] = it.positionInRoot().y },
-                                isCompact = isCompact,
-                            )
-                        }
+                        OnboardingPagerPage(
+                            viewModel = viewModel,
+                            pagerState = pagerState,
+                            page = page,
+                            step = step,
+                            footer = if (step == steps.last()) lastPageFooter else NO_FOOTER,
+                            markTops = markTops,
+                            scrollStates = scrollStates,
+                            isCompact = isCompact,
+                        )
                     }
                 }
                 OnboardingMarkLayer(
                     pagerState = pagerState,
                     steps = steps,
                     markTops = markTops,
+                    scrollStates = scrollStates,
                     pagerTop = pagerTop,
                     isCompact = isCompact,
                 )
@@ -212,6 +218,41 @@ private val NO_FOOTER: @Composable () -> Unit = {}
 private class PagerFollowingStep(var isMoving: Boolean = false)
 
 /**
+ * The page of [step] in the pager, telling the screen where it keeps the mark's place ([markTops]) and what it scrolls by
+ * ([scrollStates]), since the mark drawn over the pages follows both.
+ */
+@Composable
+private fun OnboardingPagerPage(
+    viewModel: CampfireViewModel,
+    pagerState: PagerState,
+    page: Int,
+    step: OnboardingStep,
+    footer: @Composable () -> Unit,
+    markTops: MutableMap<OnboardingStep, Float>,
+    scrollStates: MutableMap<OnboardingStep, ScrollState>,
+    isCompact: Boolean,
+) {
+    val pageOffset = remember(pagerState, page) { { (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction } }
+    val scrollState = rememberScrollState()
+    DisposableEffect(step, scrollState) {
+        scrollStates[step] = scrollState
+        onDispose { scrollStates.remove(step) }
+    }
+    CompositionLocalProvider(
+        LocalOnboardingPageOffset provides pageOffset,
+        LocalOnboardingPageFooter provides footer,
+        LocalOnboardingPageScrollState provides scrollState,
+    ) {
+        OnboardingStepPage(
+            viewModel = viewModel,
+            step = step,
+            markModifier = Modifier.onGloballyPositioned { markTops[step] = it.positionInRoot().y },
+            isCompact = isCompact,
+        )
+    }
+}
+
+/**
  * The mark over the pages, at the pager's position as it is in this frame. A composable of its own, so that a turn
  * recomposes the mark on every frame rather than the screen.
  */
@@ -220,6 +261,7 @@ private fun BoxScope.OnboardingMarkLayer(
     pagerState: PagerState,
     steps: List<OnboardingStep>,
     markTops: Map<OnboardingStep, Float>,
+    scrollStates: Map<OnboardingStep, ScrollState>,
     pagerTop: Float,
     isCompact: Boolean,
 ) {
@@ -229,19 +271,27 @@ private fun BoxScope.OnboardingMarkLayer(
     if (presence == 0f) return
     val frame = onboardingMarkFrame(steps, pagerState.currentPage + pagerState.currentPageOffsetFraction) ?: return
     val top = onboardingMarkTop(frame, markTops) ?: return
-    OnboardingMark(
+    // A page that scrolls takes the mark up under the bar with it, so the mark fades into the top edge as the page does;
+    // left out of that fade, it would be cut off in one line at the edge of the inset the page stays clear of.
+    Box(
         modifier = Modifier
-            .align(Alignment.TopCenter)
-            .offset { IntOffset(x = 0, y = (top - pagerTop).roundToInt()) }
-            .graphicsLayer {
-                // Faster than it shrinks, so that the fade reads as one with the shrink rather than as a smaller mark.
-                alpha = presence * presence
-                scaleX = presence
-                scaleY = presence
-                transformOrigin = TransformOrigin(pivotFractionX = 0.5f, pivotFractionY = 0f)
-            },
-        frame = frame,
-    )
+            .matchParentSize()
+            .fadingTopEdge { onboardingMarkScrolled(frame) { step -> scrollStates[step]?.value ?: 0 } },
+    ) {
+        OnboardingMark(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset { IntOffset(x = 0, y = (top - pagerTop).roundToInt()) }
+                .graphicsLayer {
+                    // Faster than it shrinks, so that the fade reads as one with the shrink rather than as a smaller mark.
+                    alpha = presence * presence
+                    scaleX = presence
+                    scaleY = presence
+                    transformOrigin = TransformOrigin(pivotFractionX = 0.5f, pivotFractionY = 0f)
+                },
+            frame = frame,
+        )
+    }
 }
 
 /** The page of one step, with the settings it reads and the setters it writes through. */

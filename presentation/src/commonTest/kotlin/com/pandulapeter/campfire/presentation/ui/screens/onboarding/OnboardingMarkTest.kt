@@ -51,4 +51,12 @@ class OnboardingMarkTest {
         assertEquals(100f, onboardingMarkTop(OnboardingMarkFrame(OnboardingStep.LOOK, OnboardingStep.WELCOME, 0.5f), tops))
         assertNull(onboardingMarkTop(OnboardingMarkFrame(OnboardingStep.SYNC, OnboardingStep.SYNC, 0f), tops))
     }
+
+    @Test
+    fun `the mark fades as far as the pages it is between are scrolled`() {
+        val scrolled = mapOf(OnboardingStep.WELCOME to 0, OnboardingStep.LOOK to 80)
+        val frame = OnboardingMarkFrame(OnboardingStep.WELCOME, OnboardingStep.LOOK, 0.25f)
+        assertEquals(20, onboardingMarkScrolled(frame) { scrolled.getValue(it) })
+        assertEquals(80, onboardingMarkScrolled(OnboardingMarkFrame(OnboardingStep.LOOK, OnboardingStep.LOOK, 0f)) { scrolled.getValue(it) })
+    }
 }

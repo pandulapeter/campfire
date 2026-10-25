@@ -16,6 +16,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -67,7 +69,7 @@ internal fun OnboardingPage(
     isCompact: Boolean,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val scrollState = rememberScrollState()
+    val scrollState = LocalOnboardingPageScrollState.current ?: rememberScrollState()
     BoxWithConstraints(
         modifier = modifier.fillMaxSize().fadingVerticalEdges(scrollState),
     ) {
@@ -155,6 +157,12 @@ private fun OnboardingPageHeader(
  * a copied link ([OnboardingClipboardLinkCard]), which belongs to no question of its own, and every other page nothing.
  */
 internal val LocalOnboardingPageFooter = compositionLocalOf<@Composable () -> Unit> { {} }
+
+/**
+ * What a page scrolls by, given by the screen, which fades the mark drawn over the page as the page fades its own top
+ * edge ([onboardingMarkScrolled]); a page given none keeps one of its own.
+ */
+internal val LocalOnboardingPageScrollState = staticCompositionLocalOf<ScrollState?> { null }
 
 private val GAP = 16.dp
 private val ROOMY_GAP = 24.dp

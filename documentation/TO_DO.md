@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Onboarding: the circular hero element has some inset handling issues
 - Document all keyboard shortcuts used in the app
 - Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
 - Rename master branch to main
