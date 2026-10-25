@@ -38,6 +38,10 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   one song the zip holds, never the download's random name (`Review.subtitleName`). It steps aside while the keyboard is up. Choices live in the view model's report
   (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
   summary only.
+- **Tags** (`ImportReviewTags`, under the counts while any song could be written): one set for the whole batch, picked
+  in the ordinary tag sheet (`ImportTagsSheet`, Done, not Save) and kept in `ImportChoices.tags`, so it starts empty on
+  every import and is gone with it. Written into each song's text as it is written (only added, never removing one the
+  file carries); a song already in the library is not written, so it keeps its own.
 - **Importing**: progress, nothing to press.
 - **Finished**: a clean reviewed import closes into a snackbar with **Details** (`openImportReport`); one that left
   anything out (the user's unticks included), stopped, or failed stays here, failures first

@@ -139,6 +139,11 @@
         <item quantity="one">One is left out by you</item>
         <item quantity="other">%1$d are left out by you</item>
     </plurals>
+    <string name="import_review_tags">Tags for the imported songs</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">Added to the one song this import writes</item>
+        <item quantity="other">Added to the %1$d songs this import writes</item>
+    </plurals>
     <string name="import_review_conflicts">Names already taken</string>
     <string name="import_review_songs">Songs</string>
     <string name="import_review_setlists">Setlists</string>

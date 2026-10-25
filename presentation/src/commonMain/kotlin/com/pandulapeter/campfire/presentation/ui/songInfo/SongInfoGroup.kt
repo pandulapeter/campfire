@@ -61,6 +61,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SongInfoGroup(
+    modifier: Modifier = Modifier,
     title: String?,
     count: Int,
     fontScale: Float,
@@ -73,7 +74,7 @@ internal fun SongInfoGroup(
     isContentShown: Boolean = true,
     content: @Composable () -> Unit,
 ) = Row(
-    modifier = Modifier
+    modifier = modifier
         .fillMaxWidth()
         .padding(horizontal = horizontalPadding)
         .clip(tileShape)

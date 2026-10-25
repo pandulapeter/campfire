@@ -425,6 +425,26 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `the review's tags go onto every song written and leave the ones already there alone`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("same.cho" to "{title: Same}\n", "taken.cho" to "{title: Taken}\n"))
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "new.cho", text = "{title: New}\n{tag: christmas}\n", status = ImportPlan.Status.NEW, sourceFileName = "new.cho"),
+                ImportPlan.SongEntry(fileName = "same.cho", text = "{title: Same}\n", status = ImportPlan.Status.IDENTICAL, sourceFileName = "same.cho"),
+                ImportPlan.SongEntry(fileName = "taken.cho", text = "{title: Other}\n", status = ImportPlan.Status.CONFLICTING, sourceFileName = "taken.cho"),
+            ),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard)
+            .invoke(plan, ImportChoices(tags = listOf("Christmas", "Choir")))
+
+        assertEquals("{title: New}\n{tag: christmas}\n{tag: Choir}\n", songs.files["new.cho"])
+        assertEquals("{title: Same}\n", songs.files["same.cho"])
+        assertEquals("{title: Taken}\n", songs.files["taken.cho"])
+        assertEquals("{title: Other}\n{tag: Christmas}\n{tag: Choir}\n", songs.files["taken_2.cho"])
+    }
+
+    @Test
     fun `a replacement goes over the spelling the library lists and keeping both under the derived name`() = runTest {
         val plan = ImportPlan(
             songs = listOf(

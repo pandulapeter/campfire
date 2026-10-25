@@ -31,7 +31,7 @@ internal fun SongTagsDialog(
     dialog: DialogType.SongTags,
 ) = TagsSheet(
     viewModel = viewModel,
-    songs = listOf(dialog.song),
+    tagsPerSong = listOf(dialog.song.tags),
     sheetKey = dialog.song.fileName,
     subtitle = songLabel(dialog.song),
     confirmLabel = stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save),

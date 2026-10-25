@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.import_review_title_empt
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_status_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.localization.textResource
 
@@ -165,7 +166,13 @@ internal fun ImportReportScreen(
                         contentPadding = listPadding,
                         searchFieldIndex = REVIEW_HEADER_ITEM_COUNT.takeIf { reviewSections.isNotEmpty() },
                     ) { listState ->
-                        reviewHeader(plan = stage.plan, choices = choices, warning = warning, sharedLinkUpdateCount = stage.sharedLinkUpdateCount)
+                        reviewHeader(
+                            plan = stage.plan,
+                            choices = choices,
+                            warning = warning,
+                            sharedLinkUpdateCount = stage.sharedLinkUpdateCount,
+                            onEditTags = { viewModel.dialogHost.showDialog(DialogType.ImportTags(it)) },
+                        )
                         if (reviewSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = REVIEW_HEADER_ITEM_COUNT)
                         reviewSections(
                             sections = matchingReviewSections,

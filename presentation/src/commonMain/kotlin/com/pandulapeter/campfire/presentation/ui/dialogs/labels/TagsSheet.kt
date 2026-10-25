@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -82,8 +81,10 @@ import org.jetbrains.compose.resources.painterResource
  * typed ticks the tag it spells, whatever its case, and a tag is only created where there is none to tick.
  *
  * Over several songs a tag only some of them carry is half ticked, and stays so in every file unless it is tapped
- * ([BulkLabelDraft]); over one song no row ever is, which is the case the one-song sheet ([SongTagsDialog]) is.
+ * ([BulkLabelDraft]); over one song no row ever is, which is the case the one-song sheet ([SongTagsDialog]) is, and the
+ * import's ([ImportTagsSheet]), whose one set of tags goes onto every song it writes.
  *
+ * @param tagsPerSong The tags each song the sheet is about carries, one list per song.
  * @param sheetKey What the draft is kept under across a recreated Activity: the sheet it belongs to.
  * @param onSave Called with the draft, any tag still typed into the field entered, and the spelling each folded tag was
  *   offered under, which is how a tag is written.
@@ -91,7 +92,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun TagsSheet(
     viewModel: CampfireViewModel,
-    songs: List<Song>,
+    tagsPerSong: List<List<String>>,
     sheetKey: String,
     subtitle: String,
     confirmLabel: String,
@@ -105,12 +106,12 @@ internal fun TagsSheet(
     var query by rememberSaveable { mutableStateOf("") }
     // Saved, since the sheet outlives a recreated Activity and Save writes whatever is ticked at that moment.
     var draft by rememberSaveable(sheetKey, stateSaver = BulkLabelDraft.saver) {
-        mutableStateOf(BulkLabelDraft.of(songs.map { song -> song.tags.map { it.lowercase() } }))
+        mutableStateOf(BulkLabelDraft.of(tagsPerSong.map { tags -> tags.map { it.lowercase() } }))
     }
     var createdTags by rememberSaveable(sheetKey, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
     // Keep the library's sorting order, using the songs' spelling where the same tag differs only by case.
-    val offeredTags = remember(songs, createdTags, libraryTags, sortingMode) {
-        offeredTagsOf(libraryTags = libraryTags, sortingMode = sortingMode, ownTags = songs.flatMap { it.tags } + createdTags)
+    val offeredTags = remember(tagsPerSong, createdTags, libraryTags, sortingMode) {
+        offeredTagsOf(libraryTags = libraryTags, sortingMode = sortingMode, ownTags = tagsPerSong.flatten() + createdTags)
     }
     val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.songRenderer.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {

@@ -34,6 +34,11 @@ data class ImportChoices(
     val conflictResolution: ImportConflictResolution = ImportConflictResolution.KEEP_BOTH,
     /** The rows the user set by hand, kept when [conflictResolution] changes. */
     val conflictResolutions: Map<ImportEntryKey, ImportConflictResolution> = emptyMap(),
+    /**
+     * Tags added to every song the import writes, next to the ones its file carries; a song already in the library, and
+     * so not written, keeps its own.
+     */
+    val tags: List<String> = emptyList(),
 ) {
 
     fun resolutionOf(key: ImportEntryKey) = conflictResolutions[key] ?: conflictResolution

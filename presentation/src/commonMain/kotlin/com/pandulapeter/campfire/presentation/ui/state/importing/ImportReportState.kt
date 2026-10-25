@@ -141,6 +141,9 @@ internal class ImportReportState(
         resolution: ImportConflictResolution,
     ) = updateChoices { it.withGroupResolution(keys = keys, isFiltered = isFiltered, resolution = resolution) }
 
+    /** The tags every song the import writes is given, as the review's tag sheet left them. */
+    fun setImportTags(tags: List<String>) = updateChoices { it.copy(tags = tags) }
+
     private fun updateChoices(update: (ImportChoices) -> ImportChoices) = _importReport.update { report ->
         if (report is ImportReport.Review) report.copy(choices = update(report.choices)) else report
     }

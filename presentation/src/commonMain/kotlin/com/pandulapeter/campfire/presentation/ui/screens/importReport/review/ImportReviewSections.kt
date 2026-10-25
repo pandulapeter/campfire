@@ -238,6 +238,9 @@ internal fun replaceCount(plan: ImportPlan, choices: ImportChoices) = importRevi
 internal val ImportPlan.hasEntriesToChoose
     get() = songs.any { it.status != ImportPlan.Status.IDENTICAL } || setlists.any { it.status != ImportPlan.Status.IDENTICAL }
 
+/** Whether the review of [plan] has a song it could write, which is what the import's tags are for. */
+internal val ImportPlan.hasSongsToChoose get() = songs.any { it.status != ImportPlan.Status.IDENTICAL }
+
 /**
  * The choice for all of them in the header of the names already taken: what every row of [rows] with a box resolves to,
  * or null where they differ, which the header shows as Mixed. A group with no such row reads the default.

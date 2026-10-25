@@ -14,6 +14,8 @@ The sheets that edit a song's tags and languages, one song or a selection at a t
 - **Manage tags / Manage languages** (`TagsSheet`, `LanguagesSheet`, shared with the one-song dialogs) run on
   `BulkLabelDraft`: a half-ticked row cycles on → off → half; Save writes only rows turned on or off, leaving half rows
   alone. Writes go through `EditSongsUseCase` on the file as on disk, run `NonCancellable`, and end in one snackbar.
+- `ImportTagsSheet` is the one-song `TagsSheet` over the import's own set (`ImportChoices.tags`); Done writes nothing,
+  the import does (`ui/screens/importReport/`).
 - A tag's color (`TagColorButton`, a popup rather than a second sheet) is written at once (`setTagColor`), not on Save,
   and survives cancelling: the color belongs to the tag library-wide.
 - Language picker: search over names and codes (`HUN` and `hu-HU` both find Hungarian, via `ChordProLanguages.code`);

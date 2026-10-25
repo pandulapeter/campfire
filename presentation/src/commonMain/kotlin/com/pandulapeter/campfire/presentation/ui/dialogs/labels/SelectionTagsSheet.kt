@@ -32,10 +32,10 @@ internal fun SelectionTagsSheet(
     dialog: DialogType.SelectionTags,
 ) {
     val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
-    val songs = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it] } }
+    val tagsPerSong = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it]?.tags } }
     TagsSheet(
         viewModel = viewModel,
-        songs = songs,
+        tagsPerSong = tagsPerSong,
         sheetKey = dialog.songFileNames.joinToString(),
         subtitle = pluralStringResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size),
         confirmLabel = stringResource(Res.string.save),

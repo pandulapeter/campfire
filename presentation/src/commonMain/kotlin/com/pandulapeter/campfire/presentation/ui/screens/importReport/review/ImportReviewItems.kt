@@ -53,20 +53,27 @@ import org.jetbrains.compose.resources.StringResource
  * @param sharedLinkUpdateCount How many names already taken a shared link's review started on Replace rather than Keep
  *   both, being files the same link wrote here before: a line under the counts, above the names it is about, says so and
  *   what Keep both is for.
+ * @param onEditTags Opens the tag sheet of the songs the import writes, how many as the ticks stand; the tile it is opened
+ *   from is there only where the import has a song it could write.
  */
 internal fun LazyListScope.reviewHeader(
     plan: ImportPlan,
     choices: () -> ImportChoices,
     warning: ImportFeatureWarning?,
     sharedLinkUpdateCount: Int,
+    onEditTags: (songCount: Int) -> Unit,
 ) = item(key = "summary", contentType = "summary") {
     val summary by remember(plan) { derivedStateOf { importReviewSummary(plan, choices()) } }
+    val tags by remember { derivedStateOf { choices().tags } }
     Column(
         modifier = ItemWidth.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         warning?.let { WarningCard(text = it.text()) }
         ImportReviewSummaryCard(modifier = Modifier.fillMaxWidth(), summary = summary)
+        if (plan.hasSongsToChoose) {
+            ImportReviewTags(tags = tags, onEdit = { onEditTags(summary.songCount) })
+        }
         if (sharedLinkUpdateCount > 0) {
             ReportNote(text = pluralStringResource(Res.plurals.import_review_shared_updates, sharedLinkUpdateCount, sharedLinkUpdateCount))
         }

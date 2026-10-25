@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SelectionSetlis
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionLanguagesSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.labels.ImportTagsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionTagsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongLanguagesDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongTagsDialog
@@ -390,6 +391,11 @@ private fun CampfireDialog(
                 viewModel.dialogHost.dismissDialog()
                 viewModel.importController.resolveImport()
             },
+        )
+
+        is DialogType.ImportTags -> ImportTagsSheet(
+            viewModel = viewModel,
+            dialog = dialog,
         )
 
         DialogType.ConfirmExit -> ConfirmationDialog(

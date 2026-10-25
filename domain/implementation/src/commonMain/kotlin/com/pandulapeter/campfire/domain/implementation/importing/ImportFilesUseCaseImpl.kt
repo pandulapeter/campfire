@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
@@ -16,6 +17,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
@@ -135,17 +137,20 @@ internal class ImportFilesUseCaseImpl(
                         val replacedFileName = entry.replacesFileName ?: entry.fileName
                         val shouldReplace = action == Action.REPLACE && replacedFileName !in keptSongFileNames &&
                             replacedSongFileNames.add(replacedFileName)
+                        // Tagged in the text that is written rather than afterwards, so that each file is written once and
+                        // a sync run sees a song arrive, not a song arrive and then change.
+                        val text = choices.tags.fold(entry.text) { text, tag -> ChordProTags.addTag(text, tag, fold = String::normalizedToNfc) }
                         songRepository.importSong(
                             fileName = when {
                                 shouldReplace -> replacedFileName
                                 isLibraryFileGone -> songRepository.importFileName(
                                     fallbackTitle = entry.sourceFileName?.substringBeforeLast('.').orEmpty(),
-                                    text = entry.text,
+                                    text = text,
                                 )
 
                                 else -> entry.fileName
                             },
-                            text = entry.text,
+                            text = text,
                             shouldReplace = shouldReplace,
                             takenNames = takenNames,
                         ).also {

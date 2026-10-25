@@ -23,6 +23,8 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
   `:presentation`'s `ui/screens/importReport/`): every entry listed and ticked; names taken by something *different*
   each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out. A single
   song file opened with, shared to, or dropped on the app is written and opened directly unless its name is taken.
+- `ImportChoices.tags` go into every song written (new, numbered, or replacing) through `ChordProTags.addTag`, in the
+  text it is written with, so a file is written once; identical songs, which are never written, are left untagged.
 - **Replacing is the only overwrite in the app**: a choice on that screen plus a confirmation, and only
   `ImportConflictResolution.REPLACE` overwrites. `ImportFilesUseCaseImpl` re-checks the rule at the write.
 - A song already in the library under its name, a numbered sibling (`x_2.cho`), or the exact name it arrived under is

@@ -139,6 +139,11 @@
         <item quantity="one">Egyet kihagytál</item>
         <item quantity="other">%1$d fájlt kihagytál</item>
     </plurals>
+    <string name="import_review_tags">Címkék az importált dalokra</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">Az importált dalra kerülnek</item>
+        <item quantity="other">Mind a(z) %1$d importált dalra felkerülnek</item>
+    </plurals>
     <string name="import_review_conflicts">Már foglalt nevek</string>
     <string name="import_review_songs">Dalok</string>
     <string name="import_review_setlists">Listák</string>
