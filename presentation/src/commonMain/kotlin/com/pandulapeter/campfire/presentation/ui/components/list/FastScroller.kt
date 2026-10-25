@@ -22,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -357,6 +358,9 @@ private class FastScrollerState(
         private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
 
+    /** The fraction the list was last scrolled to by this drag, which the next one is a step from; null before there is one. */
+    private var scrolledFraction: Float? = null
+
     /**
      * The end of the track the dragged thumb is held against, decided by where the finger asked it to be rather than by
      * where it was drawn: the thumb's range follows the estimated size of the list, which changes as rows of another
@@ -406,6 +410,7 @@ private class FastScrollerState(
         draggedEnd = trackEnd(draggedThumbTop)
         isDraggedByTouch = isTouch
         isDragging = true
+        scrolledFraction = thumbRange.takeIf { it > 0f }?.let { draggedThumbTop / it }
         return if (pressY in thumbTop - touchSlack..thumbTop + thumbHeight + touchSlack) null else dragBy(pressY - thumbCenter)
     }
 
@@ -430,9 +435,29 @@ private class FastScrollerState(
         isDragging = false
     }
 
+    /**
+     * Scrolls the list to where a thumb at [fraction] of its range says it should be. A drag moves it by the thumb's
+     * step ([fastScrollerStep]) rather than placing it by the estimate, which shifts as rows of other heights come into
+     * view; the estimate places it only for a jump of more than a screen, which nobody follows with the eye, and the ends
+     * are the list's own.
+     */
     suspend fun scrollToFraction(fraction: Float) {
         val metrics = metrics ?: return
+        val previous = scrolledFraction
+        scrolledFraction = fraction
         val scrollOffset = fraction * metrics.maxScrollOffset
+        val step = previous?.let { (fraction - it) * metrics.maxScrollOffset }
+        when {
+            fraction <= 0f -> gridState.scrollToItem(0)
+            fraction >= 1f -> gridState.scrollToItem(metrics.totalItemsCount - 1)
+            step != null && abs(step) <= metrics.viewportHeight -> {
+                if (step != 0f) gridState.scrollBy(fastScrollerStep(step = step, error = scrollOffset - metrics.scrollOffset - step))
+            }
+            else -> scrollToEstimate(metrics, scrollOffset)
+        }
+    }
+
+    private suspend fun scrollToEstimate(metrics: ScrollMetrics, scrollOffset: Float) {
         val index = (scrollOffset / metrics.averageItemSize).toInt().coerceIn(0, metrics.totalItemsCount - 1)
         gridState.scrollToItem(index, (scrollOffset - index * metrics.averageItemSize).roundToInt())
     }
@@ -471,6 +496,8 @@ private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
     val scrollOffset = (firstIndex * averageItemSize + firstVisibleItemScrollOffset).coerceIn(0f, maxScrollOffset)
     return ScrollMetrics(
         scrollFraction = scrollOffset / maxScrollOffset,
+        scrollOffset = scrollOffset,
+        viewportHeight = info.viewportSize.height,
         viewportFraction = (info.viewportSize.height / contentHeight).coerceIn(0f, 1f),
         averageItemSize = averageItemSize,
         totalItemsCount = info.totalItemsCount,
@@ -480,6 +507,8 @@ private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
 
 private class ScrollMetrics(
     val scrollFraction: Float,
+    val scrollOffset: Float,
+    val viewportHeight: Int,
     val viewportFraction: Float,
     val averageItemSize: Float,
     val totalItemsCount: Int,

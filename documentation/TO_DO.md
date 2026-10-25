@@ -9,15 +9,9 @@
 -->
 # To do
 - Onboarding: the circular hero element has some inset handling issues
-- Export screen FAB is not visible enough on large screens
 - Fix compile-time warnings on all platforms
-- Fast scrolling is glitchy, especially on Setlists
 - Document all keyboard shortcuts used in the app
-- Make sure cover art cache for deleted songs / changed cover art is properly cleared
 - Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
-- Share to Android can work unexpectedly if the app is already open
-- Select all in input fields when they become focused
-- Simplify import and edit flows based on user testing
 - Rename master branch to main
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs

@@ -35,7 +35,9 @@ headers.
 - The letter bubble is a surface pill reaching out of the thumb, as tall as the app bar's actions pill (48dp), the
   letter in primary at its far end under the pill's last button (`CLOSED_PILL_LAST_ACTION_END_INSET`, which assumes
   New is detached), so the finger on the thumb doesn't cover it.
-- Position is estimated from average item size, excluding the pinned sticky header (listed out of order).
+- Position is estimated from average item size, excluding the pinned sticky header (listed out of order). The estimate
+  shifts as rows of other heights scroll in, so a drag scrolls by the thumb's step plus a bounded share of the error
+  (`fastScrollerStep`), never against the thumb; only a jump over a screen and the two ends are placed absolutely.
 - Haptics (touch only): a tick per row, a notch per section letter and at the ends (`FastScrollerDetent.kt`,
   `detentNotch`), the end decided by where the finger asked the thumb to be; read once a frame.
 
