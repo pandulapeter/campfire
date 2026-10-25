@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import com.pandulapeter.campfire.presentation.ui.components.list.animateScrollToTop
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopRequest
 import kotlinx.coroutines.flow.Flow
@@ -51,7 +52,7 @@ internal fun ScrollToTopOnRequest(
     destination = destination,
     key = gridState,
     canScrollBackward = { gridState.canScrollBackward },
-    scrollToTop = { gridState.animateScrollToItem(0) },
+    scrollToTop = { gridState.animateScrollToTop() },
     onSelectDestination = onSelectDestination,
 )
 

@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.list.animateScrollToTop
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -75,7 +76,7 @@ internal fun SetlistsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
+        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToTop() }
     }
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }

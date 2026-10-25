@@ -49,6 +49,12 @@ headers.
   section before shows in that room: the pushed header's fraction is measured to the content's start
   (`pushedHeaderVisibleFraction`), and `ListTopFade` thins its fade near a section start only for that section's cards.
 
+### Scrolling to the top
+
+- A grid with sticky headers goes to its top with `animateScrollToTop`, never `animateScrollToItem(0)`, whose guessed
+  distance is corrected at every header, so the scroll slows down and starts again. It re-estimates the remaining
+  distance each frame and covers the easing curve's share of it.
+
 ### Scrolling performance
 
 - `ListTopFade` caches an inverse gradient and draws with `DstOut` in its existing layer, translating rather than

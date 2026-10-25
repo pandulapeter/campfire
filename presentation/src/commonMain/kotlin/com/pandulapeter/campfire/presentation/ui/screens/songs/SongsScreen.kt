@@ -70,6 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMe
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
+import com.pandulapeter.campfire.presentation.ui.components.list.animateScrollToTop
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
@@ -114,7 +115,7 @@ internal fun SongsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToItem(0) }
+        viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToTop() }
     }
     // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
     LaunchedEffect(hasSongFilters) {
