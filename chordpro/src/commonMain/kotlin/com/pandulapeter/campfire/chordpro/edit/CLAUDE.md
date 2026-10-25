@@ -21,6 +21,8 @@
 - `ChordProPrettifier` formats raw text, never re-serializes a model, so unsupported directives survive. **No blank line
   is added around a tab or grid, or inside a legacy heading section or implicit paragraph** — it would split or close
   it. `define` is deliberately not in `metadataOrder`.
+- `ChordProMarkupLines` is where markup is read, line by line, in one walk, by the parser's rule; `isLiteralAt` shares
+  its literal-line rule.
 
 ### `ChordProHighlighter`
 

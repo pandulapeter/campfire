@@ -14,14 +14,17 @@ import kotlin.test.assertEquals
 
 class EditorFormattingTest {
 
-    /** The text after toggling [tag] over the part of [text] between the two `|`s, with the new selection marked the same way. */
-    private fun toggled(text: String, tag: String = "b"): String {
-        val start = text.indexOf('|')
-        val end = text.indexOf('|', start + 1) - 1
-        val plain = text.replace("|", "")
+    /**
+     * The text after toggling [tag] over the part of [text] between the two [marker]s, with the new selection marked the
+     * same way. Tabs and grids are written with `|`, so their tests mark the selection with another character.
+     */
+    private fun toggled(text: String, tag: String = "b", marker: Char = '|'): String {
+        val start = text.indexOf(marker)
+        val end = text.indexOf(marker, start + 1) - 1
+        val plain = text.replace(marker.toString(), "")
         val toggle = formattingToggle(plain, start, end, tag)
         val result = plain.replaceRange(toggle.start, toggle.end, toggle.text)
-        return result.substring(0, toggle.selectionStart) + "|" + result.substring(toggle.selectionStart, toggle.selectionEnd) + "|" +
+        return result.substring(0, toggle.selectionStart) + marker + result.substring(toggle.selectionStart, toggle.selectionEnd) + marker +
             result.substring(toggle.selectionEnd)
     }
 
@@ -58,5 +61,30 @@ class EditorFormattingTest {
     @Test
     fun `lines of which only some are formatted are all formatted`() {
         assertEquals("|<b>one</b>\n<b>two</b>|", toggled("|<b>one</b>\ntwo|"))
+    }
+
+    @Test
+    fun `a selection over a tab formats only the lyrics after it`() {
+        assertEquals(
+            "^{start_of_tab}\ne|--0--|\n{end_of_tab}\n<b>Words</b>^",
+            toggled("^{start_of_tab}\ne|--0--|\n{end_of_tab}\nWords^", marker = '^'),
+        )
+    }
+
+    @Test
+    fun `a grid row and a word inside a tab line are left alone`() {
+        assertEquals("{sog}\n^| C . | G . |\n^{eog}", toggled("{sog}\n^| C . | G . |\n^{eog}", marker = '^'))
+        assertEquals("{start_of_tab}\ne|--^0^--|\n{end_of_tab}", toggled("{start_of_tab}\ne|--^0^--|\n{end_of_tab}", marker = '^'))
+    }
+
+    @Test
+    fun `a selection of several lines formats a comment's value, but never a Campfire 3 heading`() {
+        assertEquals("|<b>One</b>\n{c: <b>note</b>}|", toggled("|One\n{c: note}|"))
+        assertEquals("|<b>One</b>\n{c: Verse 1}|", toggled("|One\n{c: Verse 1}|"))
+    }
+
+    @Test
+    fun `lines ended by a bare CR are formatted one by one`() {
+        assertEquals("|<b>One</b>\r<b>Two</b>|", toggled("|One\rTwo|"))
     }
 }

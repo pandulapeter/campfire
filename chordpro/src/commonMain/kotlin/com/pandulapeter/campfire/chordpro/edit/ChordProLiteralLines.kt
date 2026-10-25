@@ -26,7 +26,9 @@ public object ChordProLiteralLines {
     public fun isLiteralAt(text: String, offset: Int): Boolean {
         val prefix = text.substring(0, offset.coerceIn(0, text.length))
         val lineIndex = ChordProLines.splitLines("$prefix.").lastIndex
-        val line = ChordProLineScanner.scan(text).elementAtOrNull(lineIndex) ?: return false
-        return line.isDelegated || line.environment == TAB || line.environment == GRID
+        return ChordProLineScanner.scan(text).elementAtOrNull(lineIndex)?.isLiteral == true
     }
 }
+
+/** Whether this line is notation of its environment as written, the rule of [ChordProLiteralLines.isLiteralAt]. */
+internal val ChordProLineScanner.ScannedLine.isLiteral get() = isDelegated || environment == TAB || environment == GRID
