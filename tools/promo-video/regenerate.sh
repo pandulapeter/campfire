@@ -10,17 +10,15 @@
 # Regenerates the Campfire promo videos from the app's current UI into ~/Desktop/Campfire Promo Video, the way the
 # store screenshots are exported to the Desktop. See CLAUDE.md next to this file.
 #
-#   ./regenerate.sh            everything: footage, music, and the three videos
+#   ./regenerate.sh            everything: footage and the three videos
 #   ./regenerate.sh footage    record the app again and re-encode the clips and stills (the slow part)
-#   ./regenerate.sh music      synthesize the backing track (and its stems) again
-#   ./regenerate.sh video      render the three formats and put the backing track on them
+#   ./regenerate.sh video      render the three formats and put the soundtrack (soundtrack.m4a) on them
 #
-# CAMPFIRE_PROMO_OUT overrides where the videos, the backing track, its stems, and the cue sheet are written.
+# CAMPFIRE_PROMO_OUT overrides where the videos are written.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-VENV="$HERE/.venv"
 OUT="${CAMPFIRE_PROMO_OUT:-$HOME/Desktop/Campfire Promo Video}"
 FORMATS=("Promo:vertical-9x16" "PromoSquare:square-1x1" "PromoLandscape:landscape-16x9")
 
@@ -64,43 +62,24 @@ footage() {
   python3 -I "$HERE/drawables_to_svg.py" "$REPO/presentation/src/commonMain/composeResources/drawable" "$HERE/public/icons"
 }
 
-music() {
-  log "Synthesizing the soundtrack"
-  if [ ! -x "$VENV/bin/python" ]; then
-    python3 -m venv "$VENV"
-    "$VENV/bin/pip" install -q numpy scipy
-  fi
-  # The recorded drum kit and bass guitar (CC0), downloaded once into music/samples/.
-  "$VENV/bin/python" -I "$HERE/music/fetch_samples.py"
-  local tmp
-  tmp="$(mktemp -d)"
-  "$VENV/bin/python" -I "$HERE/music/soundtrack.py" "$tmp/backing.wav" --stems "$OUT/stems"
-  ffmpeg -loglevel error -y -i "$tmp/backing.wav" -af loudnorm=I=-14:TP=-1:LRA=11 -ar 48000 "$OUT/campfire-promo-backing-track.wav"
-  rm -rf "$tmp"
-}
-
 video() {
   log "Rendering the three formats"
   [ -d "$HERE/node_modules" ] || (cd "$HERE" && npm ci --silent)
-  [ -f "$OUT/campfire-promo-backing-track.wav" ] || music
   mkdir -p "$HERE/out"
   for entry in "${FORMATS[@]}"; do
     local id="${entry%%:*}" name="${entry##*:}"
     (cd "$HERE" && npx remotion render src/index.ts "$id" "out/silent-$name.mp4" --codec=h264 --crf=14 --log=error)
-    ffmpeg -loglevel error -y -i "$HERE/out/silent-$name.mp4" -i "$OUT/campfire-promo-backing-track.wav" \
-      -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart "$OUT/campfire-promo-$name.mp4"
+    ffmpeg -loglevel error -y -i "$HERE/out/silent-$name.mp4" -i "$HERE/soundtrack.m4a" \
+      -map 0:v -map 1:a -c:v copy -c:a copy -shortest -movflags +faststart "$OUT/campfire-promo-$name.mp4"
     echo "wrote campfire-promo-$name.mp4"
   done
 }
 
 mkdir -p "$OUT"
-# What a guitar take over the backing track is timed against goes with it.
-cp "$HERE/cue-sheet.md" "$OUT/"
 
 case "${1:-all}" in
   footage) footage ;;
-  music) music ;;
   video) video ;;
-  all) footage; music; video ;;
-  *) echo "usage: $0 [all|footage|music|video]" >&2; exit 1 ;;
+  all) footage; video ;;
+  *) echo "usage: $0 [all|footage|video]" >&2; exit 1 ;;
 esac

@@ -1,7 +1,15 @@
 # Campfire promo (updated): cue sheet
 
-The backing track (campfire-promo-backing-track.wav, already in the three videos) is synthesized by
-tools/promo-video/music/soundtrack.py in the Campfire repository from this sheet (its docstring has the chords), so its hits are where the table says.
+The soundtrack (soundtrack.m4a next to this sheet) is the owner's recording over this chart; regenerate.sh puts it on
+the three videos. The music column is what the scenes were cut to.
+
+The chords, one per beat where a bar has several:
+
+     1 A (ringing)        6 A A# B C        11 A A A G        16 A
+     2 A G D/F# G         7 C#              12 D              17 A G D/F# G
+     3 A                  8 D (metronome)   13 D D D G        18 A
+     4 A A A D            9 D D D G         14 E              19 A G D/F# G
+     5 A                 10 A (tuner)       15 E E E G        20 A (ringing)
 
 1080 × 1920, 60 fps, 30.0 s (1800 frames). 160 BPM in 4/4: a beat is 0.375 s, a bar is 1.5 s. The video is exactly
 20 bars: the first frame is bar 1's downbeat, and the last chord rings through bar 20. Bar N starts at (N − 1) × 1.5 s.
@@ -27,14 +35,5 @@ Each scene's exit runs about a quarter of a second into the next, under its devi
 | 18 | 0:25.5 | Export phone from the left; "Whole setlists" b2, "Individual songs" b3; the PDF swiped to its second page on b2, back on b4 | Groove on A on the ride; plucks on the chips; a snare build |
 | 19 | 0:27.0 | "Free." "No ads." "No account." "Offline." | Bar 2's four stabs again, A, G, D/F♯, G, one per word, a line climbing over them |
 | 20 | 0:28.5 | The icon and "Campfire" on 1, the URL on 2, the subtitle on 3, held to the end | A, ringing out and fading over the last second |
-
-The chord chart is the owner's, written for guitars recorded over it; the bass may be replaced too. Compared with the
-previous track the chart is the same; the setlist is a bar shorter, its drop and tom run on bar 16's fourth beat, and
-bar 17 shows songs imported; chips came to the library's search (on its letters' plucks) and the Scales tab (bar 13's
-last two beats, with plucks).
-
-Putting a track of your own on a video (WAV/AIFF/MP3, starting with the video, on bar 1's downbeat):
-
-    ffmpeg -i campfire-promo-vertical-9x16.mp4 -i track.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -shortest out.mp4
 
 Regenerating anything: see tools/promo-video/CLAUDE.md and regenerate.sh in the Campfire repository.
