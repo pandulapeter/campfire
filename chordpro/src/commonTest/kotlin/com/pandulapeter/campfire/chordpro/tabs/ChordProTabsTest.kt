@@ -108,7 +108,7 @@ class ChordProTabsTest {
 
         val moved = ChordProTransposer.transpose(song, 0, tabPlayer = player(GUITAR))
 
-        assertEquals("E|--10--12-|", moved.tabLines().last())
+        assertEquals("E|--10---12--|", moved.tabLines().last())
         assertEquals(listOf(TabNotice(TabNotice.Kind.MOVED, octaves = 1)), moved.notices())
     }
 
@@ -126,7 +126,7 @@ class ChordProTabsTest {
     fun `a transposition that takes a fret off the neck is an octave move with a notice`() {
         val moved = ChordProTransposer.transpose(tab("e|--0--|", "B|-----|", "G|-----|", "D|-----|", "A|-----|", "E|-----|"), -2, tabPlayer = player(GUITAR))
 
-        assertEquals("e|--10-|", moved.tabLines().first())
+        assertEquals("e|--10--|", moved.tabLines().first())
         assertEquals(listOf(TabNotice(TabNotice.Kind.MOVED, octaves = 1)), moved.notices())
     }
 

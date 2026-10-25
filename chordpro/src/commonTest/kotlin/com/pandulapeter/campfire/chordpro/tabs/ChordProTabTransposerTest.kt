@@ -64,4 +64,52 @@ class ChordProTabTransposerTest {
             ChordProTabTransposer.transpose(lines, 2) { name -> ChordProTransposer.transposeChord(name, 2, preferFlats = false) },
         )
     }
+
+    @Test
+    fun `a fret that grows a digit widens its column on every string`() {
+        assertEquals(
+            listOf("e|-15-17-|", "B|-------|"),
+            ChordProTabTransposer.transpose(listOf("e|-3-5-|", "B|-----|"), 12) { it },
+        )
+    }
+
+    @Test
+    fun `a fret that loses a digit narrows its column on every string`() {
+        assertEquals(
+            listOf("e|--9--|", "B|-----|"),
+            ChordProTabTransposer.transpose(listOf("e|--10--|", "B|------|"), -1) { it },
+        )
+    }
+
+    @Test
+    fun `a column as wide as its widest fret does not move when a narrower one grows into it`() {
+        assertEquals(
+            listOf("e|--11--|", "B|--10--|"),
+            ChordProTabTransposer.transpose(listOf("e|--10--|", "B|--9---|"), 1) { it },
+        )
+    }
+
+    @Test
+    fun `a tab transposed up and back down is the tab it was`() {
+        val tab = listOf(
+            "  Am       C",
+            "e|-5---7h9-----|",
+            "B|---9-------8-|",
+            "G|-----------9-|",
+        )
+
+        (1..5).forEach { semitones ->
+            val up = ChordProTabTransposer.transpose(tab, semitones) { it }
+
+            assertEquals(tab, ChordProTabTransposer.transpose(up, -semitones) { it }, "up and down by $semitones")
+        }
+    }
+
+    @Test
+    fun `a chord name stays over the note it is written over when a column before it widens`() {
+        assertEquals(
+            listOf("      C", "e|-10-1-|", "B|----1-|"),
+            ChordProTabTransposer.transpose(listOf("     C", "e|-9-0-|", "B|---0-|"), 1) { it },
+        )
+    }
 }

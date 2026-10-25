@@ -10,7 +10,6 @@
 # To do
 - Onboarding: the circular hero element has some inset handling issues
 - Export screen FAB is not visible enough on large screens
-- The Songs / Setlists screens (similarly to other screens in the app) should animate scrolling to the top when their navigation button is reselected. However, at least on the Songs screen (check Setlists too) this animation is not smooth: it animates to a certain sticky header, slows down, then animates to the top. Fix it so that one smooth animation scrolls to the very beginning of the list
 - Fix compile-time warnings on all platforms
 - Fast scrolling is glitchy, especially on Setlists
 - Document all keyboard shortcuts used in the app

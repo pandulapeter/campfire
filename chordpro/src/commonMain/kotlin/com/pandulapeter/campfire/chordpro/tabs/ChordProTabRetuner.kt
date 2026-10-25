@@ -274,17 +274,28 @@ internal object ChordProTabRetuner {
             // Where the names are written, the music of every staff line starts in the column after the widest name and
             // its bar, and the lines above the staff move with it, so that a chord stays over the note it is written over.
             val nameWidth = names?.maxOf { it?.length ?: 0 } ?: 0
-            val columnShift = if (names == null) 0 else nameWidth + 1 - (system.prefixes.firstOrNull()?.bodyStart ?: 0)
-            system.range.forEach { index ->
-                val line = system.staff.indexOf(index)
-                rewritten[index] = when {
-                    index in plan.dropped -> null
-                    line < 0 -> ChordProTabTransposer.rewriteChordLine(lines[index], rename).shiftedBy(columnShift)
-                    else -> {
-                        val bodyStart = system.prefixes[line].bodyStart
-                        val body = ChordProTabTransposer.transposeStaffLine(lines[index].substring(bodyStart), plan.shifts[line] + offset)
-                        if (names == null) lines[index].substring(0, bodyStart) + body else names[line].orEmpty().padStart(nameWidth) + BAR + body
+            val firstBodyStart = system.prefixes.firstOrNull()?.bodyStart ?: 0
+            val columnShift = if (names == null) 0 else nameWidth + 1 - firstBodyStart
+            // The columns are those of the music, so every line is cut where its own music starts, and a line above the
+            // staff where the first staff line's does, which is where the column shift above takes it from as well.
+            val kept = system.range.filter { index -> index !in plan.dropped }
+            val bodyStarts = kept.map { index -> system.staff.indexOf(index).let { line -> if (line < 0) firstBodyStart else system.prefixes[line].bodyStart } }
+            val bodies = ChordProTabColumns.replace(
+                lines = kept.mapIndexed { position, index -> lines[index].drop(bodyStarts[position]) },
+                replacements = kept.mapIndexed { position, index ->
+                    system.staff.indexOf(index).takeIf { it >= 0 }?.let { line ->
+                        ChordProTabTransposer.fretReplacements(lines[index].drop(bodyStarts[position]), plan.shifts[line] + offset)
                     }
+                },
+            )
+            system.range.forEach { index -> rewritten[index] = null }
+            kept.forEachIndexed { position, index ->
+                val line = system.staff.indexOf(index)
+                val prefix = lines[index].take(bodyStarts[position])
+                rewritten[index] = when {
+                    line < 0 -> ChordProTabTransposer.rewriteChordLine(prefix + bodies[position], rename).shiftedBy(columnShift)
+                    names == null -> prefix + bodies[position]
+                    else -> names[line].orEmpty().padStart(nameWidth) + BAR + bodies[position]
                 }
             }
         }

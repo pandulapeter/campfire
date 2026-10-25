@@ -10,8 +10,10 @@
 # chordpro/tabs
 
 - `ChordProTabTransposer` moves frets, not the tuning: a run moves as a whole, **by octaves if a fret would leave the
-  neck**, and one that fits no octave is left alone rather than half moved. Only staff lines are fretted; columns stay
-  aligned.
+  neck**, and one that fits no octave is left alone rather than half moved. Only staff lines are fretted.
+- `ChordProTabColumns` keeps a system's columns: a column widens or narrows on every line by exactly what its widest
+  fret gained or lost, never borrowing a neighbouring dash, so **transposing up and back gives back the same text**
+  (the editor writes it), and an author's padding stays.
 - `ChordProTabs.select` keeps, of adjacent selector tabs, the reader's, else `guitar`, else the first. `TabPlayer`
   comes from `:presentation`, which knows the instruments.
 - **A staff's string names are its tuning**; an unnamed staff is in the standard tuning `TabPlayer.assumedTuning` picks.

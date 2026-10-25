@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.SOURCE_COMME
  * Moves the contents of one tab environment by a number of semitones, on the raw lines, for [ChordProTransposer].
  *
  * A tab is transposed on the fingerboard and not on the staff: every fret number moves by the same amount, the tuning
- * stays what it was. Since a fret number is not always as wide as the one it replaces, the surrounding dashes are
- * absorbed or padded so that the columns of the whole environment keep lining up.
+ * stays what it was. Since a fret number is not always as wide as the one it replaces, every system is rewritten by
+ * [ChordProTabColumns], which keeps its columns lining up.
  */
 internal object ChordProTabTransposer {
 
@@ -39,12 +39,13 @@ internal object ChordProTabTransposer {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
-        return lines.mapIndexed { index, line ->
-            if (isStaffLine[index]) {
-                transposeStaffLine(line, shift)
-            } else {
-                rewriteChordLine(line, rename)
-            }
+        return ChordProTabWrapper.systems(lines, isStaffLine).flatMap { range ->
+            val system = lines.subList(range.first, range.last + 1)
+            val moved = ChordProTabColumns.replace(
+                lines = system,
+                replacements = range.map { index -> if (isStaffLine[index]) fretReplacements(lines[index], shift) else null },
+            )
+            moved.mapIndexed { position, line -> if (isStaffLine[range.first + position]) line else rewriteChordLine(line, rename) }
         }
     }
 
@@ -104,15 +105,9 @@ internal object ChordProTabTransposer {
         return SEMITONES_IN_OCTAVE * 0.coerceIn(lowestOctave, highestOctave) // The one closest to not moving at all.
     }
 
-    internal fun transposeStaffLine(line: String, shift: Int): String {
-        if (shift == 0) return line
-        return replaceKeepingColumns(
-            line = line,
-            replacements = fretRanges(line).mapNotNull { range ->
-                line.substring(range).toIntOrNull()?.let { fret -> range to (fret + shift).toString() }
-            },
-            filler = DASH,
-        )
+    /** The fret numbers of a staff line moved by [shift], for [ChordProTabColumns.replace]. */
+    internal fun fretReplacements(line: String, shift: Int) = fretRanges(line).mapNotNull { range ->
+        line.substring(range).toIntOrNull()?.let { fret -> range to (fret + shift).toString() }
     }
 
     /**
@@ -157,9 +152,9 @@ internal object ChordProTabTransposer {
     /**
      * Applies [replacements] (in order, non-overlapping) to [line], keeping everything after each of them in the
      * column it was in: a wider replacement eats a [filler] character next to it (after it, or if there is none to
-     * spare there, before it), a narrower one puts one back, except a space at the end of the line. A filler is only ever eaten while another one is left to
-     * separate the replacement from its neighbour, so a tab whose notes are one dash apart grows rather than becoming
-     * unreadable.
+     * spare there, before it), a narrower one puts one back, except a space at the end of the line. A filler is only
+     * ever eaten while another one is left to separate the replacement from its neighbour, so a row of chord names
+     * written one space apart grows rather than running its names together.
      */
     private fun replaceKeepingColumns(line: String, replacements: List<Pair<IntRange, String>>, filler: Char): String {
         val result = StringBuilder()
@@ -190,7 +185,6 @@ internal object ChordProTabTransposer {
     }
 
     internal const val SEMITONES_IN_OCTAVE = 12
-    private const val DASH = '-'
     private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar or a `4x` after the last one, whose number is not a fret.
     private const val BEAT = "."
     private const val REPEAT = "%"

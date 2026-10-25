@@ -606,13 +606,13 @@ class ChordProTransposerTest {
         val widening = "{sot}\ne|--0--3--5--|\ne|--10-12----|\n{eot}"
         val narrowing = "{sot}\ne|--3--5--|\ne|--10-12----|\n{eot}"
 
-        assertEquals("{sot}\ne|--9--12-14-|\ne|--19-21----|\n{eot}", ChordProTransposer.transposeText(widening, 9))
-        assertEquals("{sot}\ne|--1--3--|\ne|--8--10----|\n{eot}", ChordProTransposer.transposeText(narrowing, -2))
+        assertEquals("{sot}\ne|--9--12--14--|\ne|--19-21----|\n{eot}", ChordProTransposer.transposeText(widening, 9))
+        assertEquals("{sot}\ne|--1--3--|\ne|--8-10----|\n{eot}", ChordProTransposer.transposeText(narrowing, -2))
     }
 
     @Test
     fun `a tab that would fall off the fingerboard moves by an octave instead`() {
-        assertEquals("{sot}\ne|--10-13-15-|\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--3--5--|\n{eot}", -2))
+        assertEquals("{sot}\ne|--10--13--15--|\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--3--5--|\n{eot}", -2))
     }
 
     @Test
@@ -632,7 +632,7 @@ class ChordProTransposerTest {
                 ChordProTransposer.transpose(ChordProParser.parse(text), -1, preferFlats = false),
                 ChordProParser.parse(ChordProTransposer.transposeText(text, -1, preferFlats = false)),
             )
-            assertEquals(listOf("e|--11-|", "e|--11--|"), ChordProTransposer.transpose(ChordProParser.parse(text), -1, preferFlats = false).tabLines())
+            assertEquals(listOf("e|--11--|", "e|--11--|"), ChordProTransposer.transpose(ChordProParser.parse(text), -1, preferFlats = false).tabLines())
         }
     }
 
@@ -666,7 +666,7 @@ class ChordProTransposerTest {
             ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false),
             ChordProParser.parse(ChordProTransposer.transposeText(text, -2, preferFlats = false)),
         )
-        assertEquals("{sot}\ne|--10-|\n{c: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
+        assertEquals("{sot}\ne|--10--|\n{c: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
     }
 
     @Test
@@ -677,7 +677,7 @@ class ChordProTransposerTest {
             ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false),
             ChordProParser.parse(ChordProTransposer.transposeText(text, -2, preferFlats = false)),
         )
-        assertEquals("{sot}\ne|--10-|\n{highlight: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
+        assertEquals("{sot}\ne|--10--|\n{highlight: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
     }
 
     @Test
