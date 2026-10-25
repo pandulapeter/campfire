@@ -22,6 +22,12 @@ covers the generic pieces at the root.
 - Keys travel only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a
   frame in and only if nothing has focus yet, so a form's first field keeps the caret. The key is always consumed.
 
+### `AddressTextField.kt`
+
+Every field for a web address (a song's links, a cover's address) selects all of it whenever it gains the focus, a tap
+included: an address is pasted over, not edited by hand. A tap's caret arrives in the frame the focus does and is
+dropped; later ones go through.
+
 ### `WarningCard.kt`
 
 What a switch flipped elsewhere has done to a whole screen, on the onboarding note's card with a warning icon: the

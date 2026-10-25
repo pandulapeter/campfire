@@ -99,20 +99,20 @@ internal class EditorSearch(
     /**
      * Opens the sheet of [mode], with what is selected in the field as the query where it is something to search for: a
      * word or a chord picked out to be found again, rather than a whole verse. The query is selected whole, so that the
-     * first key typed replaces it. With a sheet open already it only switches to [mode]: the field's selection is the
-     * current match by then, which may differ from the query in its case.
+     * first key typed replaces it, and so is the replacement left from an earlier use whenever the sheet turns to
+     * replacing, since the caret goes to it then. With a sheet open already it only switches to [mode]: the field's
+     * selection is the current match by then, which may differ from the query in its case.
      */
     fun open(mode: EditorSearchMode) {
-        if (this.mode != null) {
-            this.mode = mode
-            return
+        if (this.mode == null) {
+            val fieldSelection = textFieldState.selection
+            if (!fieldSelection.collapsed) {
+                val selected = text.value.substring(fieldSelection.min, fieldSelection.max)
+                if ('\n' !in selected && selected.length <= MAX_SEARCH_QUERY_LENGTH) query.setTextAndPlaceCursorAtEnd(selected)
+            }
+            query.edit { selection = TextRange(0, length) }
         }
-        val fieldSelection = textFieldState.selection
-        if (!fieldSelection.collapsed) {
-            val selected = text.value.substring(fieldSelection.min, fieldSelection.max)
-            if ('\n' !in selected && selected.length <= MAX_SEARCH_QUERY_LENGTH) query.setTextAndPlaceCursorAtEnd(selected)
-        }
-        query.edit { selection = TextRange(0, length) }
+        if (mode == EditorSearchMode.REPLACE && this.mode != EditorSearchMode.REPLACE) replacement.edit { selection = TextRange(0, length) }
         this.mode = mode
     }
 

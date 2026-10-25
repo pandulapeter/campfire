@@ -27,10 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
@@ -56,6 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_address_failed
 import com.pandulapeter.campfire.presentation.resources.cover_art_address_hint
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.AddressTextField
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -80,14 +78,13 @@ internal fun CoverArtAddress(
     scrollState: ScrollState = rememberScrollState(),
 ) {
     val field: @Composable (Modifier) -> Unit = { fieldModifier ->
-        OutlinedTextField(
+        AddressTextField(
             modifier = fieldModifier.fillMaxWidth(),
             value = address,
             onValueChange = { onAddressChange(it.replace("\n", "").take(MAX_ADDRESS_LENGTH)) },
             label = { Text(stringResource(Res.string.cover_art_address)) },
             trailingIcon = rememberClearTextButton(isVisible = address.isNotEmpty(), onClear = { onAddressChange("") }),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+            imeAction = ImeAction.Done,
             keyboardActions = KeyboardActions(onDone = { onDone() }),
         )
     }

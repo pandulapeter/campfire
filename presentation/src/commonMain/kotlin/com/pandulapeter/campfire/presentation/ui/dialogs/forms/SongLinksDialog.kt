@@ -45,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -68,6 +67,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.AddressTextField
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
@@ -227,17 +227,16 @@ private fun SongLinkFields(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
-            OutlinedTextField(
+            AddressTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = link.url,
                 onValueChange = { url -> onChange(link.copy(url = url.filterNot { it == '\n' || it == '\r' })) },
                 label = { Text(stringResource(Res.string.song_details_link_address)) },
                 trailingIcon = rememberClearTextButton(isVisible = link.url.isNotEmpty(), onClear = { onChange(link.copy(url = "")) }),
-                singleLine = true,
                 isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null) ||
                     (link.url.isBlank() && !link.name.isNullOrBlank()),
                 supportingText = if (isDuplicate) ({ Text(stringResource(Res.string.song_details_link_duplicate)) }) else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                imeAction = ImeAction.Done,
                 keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
             )
         }
