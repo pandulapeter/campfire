@@ -23,8 +23,7 @@
 # provisioning profiles (the app's and the bundled Java runtime's) that name them, through the App Store Connect API -
 # creating each where there is none, and a new certificate two months before one expires
 # (.github/scripts/app_store_signing.py). Nothing is ever revoked, since a build whose certificate is revoked before App
-# Review approves it is refused. That takes an API key with the Admin role, and actions: write for the artifacts in which
-# earlier runs kept identities of their own until their builds were decided.
+# Review approves it is refused. That takes an API key with the Admin role.
 #
 # Called by publish-all.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
 # accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
@@ -64,8 +63,6 @@ on:
 
 permissions:
   contents: read
-  # To find, read and delete the signing identities earlier runs kept for their builds (app_store_signing.py).
-  actions: write
 
 jobs:
   build:
@@ -128,7 +125,6 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           APPLE_SIGNING_KEY: ${{ secrets.APPLE_SIGNING_KEY }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           # altool finds the key by its name in this directory; the signing script is given the path.
           ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
@@ -139,9 +135,6 @@ jobs:
           export ASC_KEY_PATH
           export APPLE_SIGNING_KEY_PATH="$RUNNER_TEMP/apple-signing-key.pem"
           (umask 077 && printf '%s\n' "$APPLE_SIGNING_KEY" > "$APPLE_SIGNING_KEY_PATH")
-          # What earlier runs kept for the builds they uploaded, revoked once those builds are no longer waiting for
-          # Apple, since they would be refused without it.
-          python3 .github/scripts/app_store_signing.py cleanup-earlier app-store-signing-macos com.pandulapeter.campfire MAC_OS
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"

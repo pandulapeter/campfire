@@ -100,11 +100,11 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
 
 ### `publish-ios.yml`
 
-Archives with the signing key's Apple Distribution certificate; xcodebuild makes the App Store profile with the API key;
-uploads to TestFlight. The Xcode project starts Gradle without properties, so the sync key goes into
-`local.properties`, which the version build phase also reads (after `gradle.properties`, last value wins) — that is how
-the `build_number` input works without a commit. The share extension's App ID and the App Group on both App IDs were
-registered in the developer portal by hand, once; automatic signing then puts the group into every profile.
+Archives and exports with the signing key's Apple Distribution certificate and the App Store profiles of the app and
+the share extension (`app_store_signing.py profile`), signed by hand; uploads to TestFlight. The Xcode project starts
+Gradle without properties, so the sync key goes into `local.properties`, which the version build phase also reads (after
+`gradle.properties`, last value wins) — that is how the `build_number` input works without a commit. The share extension's App ID and the App Group on both App IDs were
+registered in the developer portal by hand, once; a profile made through the API carries them.
 
 ### Apple submission (both Apple workflows)
 
@@ -124,15 +124,15 @@ registered in the developer portal by hand, once; automatic signing then puts th
   Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID`, `_PRIVATE_KEY` — the `.p8` text, not base64, an Admin key).
   `.github/scripts/app_store_signing.py` finds each certificate type made for the signing key (matched by public key),
   imports it into a run-local keychain, and creates a new one for the same key when none exists or the newest has under
-  two months left; Mac App Store profiles likewise.
+  two months left; App Store profiles likewise.
+- **xcodebuild never gets the API key** (no `-allowProvisioningUpdates`): automatic signing makes an "Apple Development:
+  Created via API" certificate on every runner, its key lost with the runner, until the team's limit refuses the
+  archive ("Your account has reached the maximum number of certificates", 5.0.1). Kubriko's iOS workflow too.
 - **Kubriko shares the same key and secrets**: Apple allows two Apple Distribution certificates per team, one shared and
   one free for renewal. A certificate made by hand in Xcode takes the free slot (a 409 on creation means that).
 - **Never revoke the signing key's certificates**: a revoked certificate makes any build not yet approved an invalid
   binary (ITMS-90238), even after submission. Old ones expire on their own; renewal comes early enough.
-- The `app-store-signing-ios` / `-macos` artifacts list certificates runs made for keys of their own; a run revokes
-  those once the build they signed is not attached to a version waiting, being prepared, or rejected (one naming no
-  build is kept while any version is waiting), then deletes the artifact. **Never use this for a Developer ID
-  certificate** — revoking it breaks every downloaded copy.
+- **Never revoke a Developer ID certificate** either: that breaks every downloaded copy.
 
 ### `publish-android.yml`
 

@@ -24,29 +24,22 @@ Kubriko's pipeline signs with the same key and so with the same certificates, wh
 only two Apple Distribution certificates: the two pipelines hold one between them, and the other place is the renewal's.
 A certificate somebody made by hand in Xcode takes a place too, which is what a creation refused with 409 means.
 
-The Mac App Store profiles (`profile`) are found the same way: the active one of the type for the bundle ID that names
-the certificate is used again, and one is created where there is none. A profile expires with its certificate, so
-nothing ever deletes one either.
-
-Identities a run made for a key of its own, named by the state files in the app-store-signing-* artifacts of earlier
-runs, are revoked by `cleanup-earlier` - unless App Store Connect says the build they signed is attached to a version
-that is still waiting for review, in review or not on the store yet, in which case they are left alone and the artifact
-kept, to be asked about again by the run after. A state file that names no build is kept for as long as any version of
-the platform is waiting for Apple. Revoking those does not touch what Apple has already released, which it signs again.
+The App Store profiles (`profile`) are found the same way: the active one of the type for the bundle ID that names the
+certificate is used again, and one is created where there is none. A profile expires with its certificate, so nothing
+ever deletes one either. Both builds sign with these by hand and never give xcodebuild the API key: Xcode's automatic
+signing makes an Apple Development certificate of its own on every runner, whose key dies with the runner, until the
+team has as many as Apple allows and every build is refused.
 
 Never use this for a Developer ID certificate: an app signed outside the store is checked against it on every Mac that
 opens it. It only needs the Python standard library and the system's openssl.
 
     app_store_signing.py certificate <certificateType> <keychain>
     app_store_signing.py profile <profileType> <bundle identifier> <certificateType> <output file>
-    app_store_signing.py cleanup-earlier <artifact name> <bundle identifier> <IOS | MAC_OS>
 
-Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNING_KEY_PATH, the signing key as PEM;
-`cleanup-earlier` also GITHUB_REPOSITORY and GH_TOKEN, for the gh command line tool, with the actions: write permission.
+Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNING_KEY_PATH, the signing key as PEM.
 """
 
 import base64
-import glob
 import json
 import os
 import subprocess
@@ -64,17 +57,8 @@ OPENSSL = "/usr/bin/openssl"
 # Two months: far longer than any review takes, so a build is never signed with a certificate that could expire before
 # App Review has decided it, and long enough that a release in the last weeks is not the only chance to renew.
 RENEWAL_DAYS = 60
-# The states of a version that has been submitted and is not on the store yet: the build attached to one is still checked
-# against its certificate. An approved one counts until it is on the store: keeping a certificate one run longer costs
-# nothing, and revoking it early gets the build refused.
-AWAITING_STATES = {
-    "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW", "WAITING_FOR_EXPORT_COMPLIANCE", "PENDING_CONTRACT",
-    "ACCEPTED", "PROCESSING_FOR_APP_STORE", "PENDING_APPLE_RELEASE", "PENDING_DEVELOPER_RELEASE",
-}
-# The states of a version that has not been submitted but may still be with the build attached to it: one a run prepared
-# and left for screenshots, or one rejected and sent again as it is. Its build is submitted later, by hand, and is
-# refused if its certificate was revoked in between.
-UNSUBMITTED_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED"}
+
+
 def token():
     """An ES256 JSON Web Token for the API key, valid for ten minutes, which is the most the API accepts."""
     encode = lambda data: base64.urlsafe_b64encode(data).rstrip(b"=")
@@ -108,15 +92,13 @@ def error_details(error):
     return details
 
 
-def request(method, path, body=None, missing_ok=False, conflict_ok=False):
+def request(method, path, body=None, conflict_ok=False):
     """
     One call of the API. A GET is asked again where the service or the network failed it, since one bad answer among
     the polls that follow an upload would otherwise fail a job that cannot simply be run again: App Store Connect
     refuses the build number it has already seen.
     """
     answers = {}
-    if missing_ok:
-        answers[404] = None
     if conflict_ok:
         answers[409] = None
     return request_json(method, API + path, token, body, error_details=error_details, answers=answers, label=path)
@@ -273,104 +255,11 @@ def save_profile(profile_type, bundle_identifier, certificate_type, output):
         file.write(base64.b64decode(profile["attributes"]["profileContent"]))
 
 
-def remove(state):
-    """Deletes the profiles and revokes the certificates of a state file; one that is gone already is not an error."""
-    for profile in state["profiles"]:
-        request("DELETE", f"/profiles/{profile}", missing_ok=True)
-        print(f"Deleted profile {profile}")
-    for certificate_type, certificate in state["certificates"].items():
-        request("DELETE", f"/certificates/{certificate}", missing_ok=True)
-        print(f"Revoked {certificate_type} certificate {certificate}")
-
-
-def gh(*arguments):
-    return subprocess.run(["gh", *arguments], check=True, capture_output=True, text=True).stdout
-
-
-def find_app_id(bundle_identifier):
-    apps = request("GET", f"/apps?filter[bundleId]={bundle_identifier}")["data"]
-    app = next((item for item in apps if item["attributes"]["bundleId"] == bundle_identifier), None)
-    if app is None:
-        fail(f"There is no app with the bundle ID {bundle_identifier} in App Store Connect.")
-    return app["id"]
-
-
-def awaiting_versions(app_id, platform):
-    """The platform's versions that have been submitted and are not on the store yet."""
-    versions = request(
-        "GET", f"/apps/{app_id}/appStoreVersions?filter[platform]={platform}&limit=50"
-        "&fields[appStoreVersions]=versionString,appStoreState",
-    )["data"]
-    return [item for item in versions if item["attributes"]["appStoreState"] in AWAITING_STATES]
-
-
-def pending_version_of_build(app_id, build):
-    """The version the build is attached to, where that one is not on the store yet and may still be submitted with it."""
-    builds = request(
-        "GET", f"/builds?filter[app]={app_id}&filter[version]={build['number']}"
-        f"&filter[preReleaseVersion.version]={build['version']}&filter[preReleaseVersion.platform]={build['platform']}",
-    )["data"]
-    if not builds:
-        return None
-    version = (request("GET", f"/builds/{builds[0]['id']}/appStoreVersion", missing_ok=True) or {}).get("data")
-    return version if version and version["attributes"]["appStoreState"] in AWAITING_STATES | UNSUBMITTED_STATES else None
-
-
-def still_needed(app_id, platform, state):
-    """Why the identities of a state file must not be revoked yet, or None where they may be."""
-    build = state.get("build")
-    if build:
-        version = pending_version_of_build(app_id, build)
-        if version:
-            return (f"build {build['version']} ({build['number']}) is attached to the {platform} version "
-                    f"{version['attributes']['versionString']}, which is {version['attributes']['appStoreState']}")
-        return None
-    # A state file that names no build tells nothing about which one it signed, so it is kept for as long as any version
-    # of the platform is waiting for Apple, since that may be the one.
-    awaiting = awaiting_versions(app_id, platform)
-    if awaiting:
-        version = awaiting[0]["attributes"]
-        return f"the {platform} version {version['versionString']} is {version['appStoreState']}"
-    return None
-
-
-def cleanup_earlier(artifact_name, bundle_identifier, platform):
-    """
-    Revokes what the state files of earlier runs name, except for a build that is still waiting for Apple, and deletes
-    each artifact once nothing in it is kept any more - so identities that are kept are asked about again by the next run.
-    """
-    repository = os.environ["GITHUB_REPOSITORY"]
-    artifacts = json.loads(gh("api", f"repos/{repository}/actions/artifacts?name={artifact_name}&per_page=100"))["artifacts"]
-    app_id = None
-    for artifact in artifacts:
-        if artifact["expired"]:
-            continue
-        run_id = artifact["workflow_run"]["id"]
-        kept = False
-        with tempfile.TemporaryDirectory() as directory:
-            gh("run", "download", str(run_id), "--repo", repository, "--name", artifact_name, "--dir", directory)
-            for path in glob.glob(os.path.join(directory, "*.json")):
-                with open(path) as file:
-                    state = json.load(file)
-                app_id = app_id or find_app_id(bundle_identifier)
-                reason = still_needed(app_id, platform, state)
-                if reason:
-                    print(f"Keeping what run {run_id} made, since {reason}: revoking it would get that build refused.")
-                    kept = True
-                else:
-                    remove(state)
-        if not kept:
-            gh("api", "--method", "DELETE", f"repos/{repository}/actions/artifacts/{artifact['id']}")
-            print(f"Removed what run {run_id} kept for its build.")
-
-
 if __name__ == "__main__":
     command, arguments = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else (None, [])
     if command == "certificate" and len(arguments) == 2:
         import_certificate(*arguments)
     elif command == "profile" and len(arguments) == 4:
         save_profile(*arguments)
-    elif command == "cleanup-earlier" and len(arguments) == 3:
-        cleanup_earlier(*arguments)
     else:
         fail(next(part for part in __doc__.split("\n\n") if part.lstrip().startswith("app_store_signing.py")))
