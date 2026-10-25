@@ -221,8 +221,9 @@ internal fun LoadedSongEditor(
     val wasFieldFocused = remember(panes) { fieldFocus.hasFocus }
     val typingRequest = rememberTypingRequest(fieldFocusRequester)
     // An editor opened on a selection (the title a shared song was given, selected to be typed over) is opened to type
-    // into it, so it starts with the caret in the field and the keyboard up instead.
-    var hasOpened by remember { mutableStateOf(false) }
+    // into it, so it starts with the caret in the field and the keyboard up instead. That is saved with the field's own
+    // selection, so an editor recreated over a word the user selected later does not take the focus back.
+    var hasOpened by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(panes) {
         when {
             panes == EditorPanes.PREVIEW -> focusRequester.requestFocus()
