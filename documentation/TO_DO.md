@@ -9,7 +9,6 @@
 -->
 # To do
 - Document all keyboard shortcuts used in the app
-- Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
 - Rename master branch to main
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs

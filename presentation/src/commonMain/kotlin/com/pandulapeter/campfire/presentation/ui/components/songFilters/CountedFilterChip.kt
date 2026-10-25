@@ -89,6 +89,9 @@ internal fun CountedFilterChip(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        // The chip is held to the width its animateBounds is travelling through, so a count gaining a digit gets less
+        // room than it needs until the chip has grown: wrapped, it would stack its digits for those frames. Unwrapped,
+        // the extra digit draws over the chip's end padding instead.
         Text(
             modifier = Modifier.padding(
                 start = TAG_GAP,
@@ -97,6 +100,9 @@ internal fun CountedFilterChip(
             text = songCount.toString(),
             style = MaterialTheme.typography.labelSmall,
             color = if (isEnabled) MaterialTheme.colorScheme.onSurfaceVariant else colors.disabledLabelColor,
+            softWrap = false,
+            maxLines = 1,
+            overflow = TextOverflow.Visible,
         )
     }
 }
