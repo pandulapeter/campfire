@@ -41,6 +41,7 @@ internal actual fun forgetPendingCrashReport() = Unit
 private class LocalStorageProcessLogStore : ProcessLogStore {
     private var current = StringBuilder(loadStored(CURRENT_KEY).orEmpty())
     private var previous = loadStored(PREVIOUS_KEY).orEmpty()
+    private var isPreviousStored = true
     private var isStoreScheduled = false
     private var hasReportedStoreFailure = false
 
@@ -53,6 +54,7 @@ private class LocalStorageProcessLogStore : ProcessLogStore {
 
     override fun rotate() {
         previous = current.toString()
+        isPreviousStored = false
         current = StringBuilder()
         scheduleStore()
     }
@@ -66,7 +68,9 @@ private class LocalStorageProcessLogStore : ProcessLogStore {
             isStoreScheduled = false
             // Not thrown at the writer, which would give the log up: storage that is full now may have room again later.
             // Said once, since every try comes a second after the last line written.
-            if (!store(PREVIOUS_KEY, previous) || !store(CURRENT_KEY, current.toString())) {
+            // The previous file changes only at a rotation, and rewriting it, up to the whole limit, blocks the page.
+            if (!isPreviousStored) isPreviousStored = store(PREVIOUS_KEY, previous)
+            if (!isPreviousStored || !store(CURRENT_KEY, current.toString())) {
                 if (!hasReportedStoreFailure) logToConsoleOnly("Could not store the log.")
                 hasReportedStoreFailure = true
             }
