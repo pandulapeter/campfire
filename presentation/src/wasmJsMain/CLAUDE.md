@@ -40,8 +40,9 @@ canvas listener — and most dialogs open with a field focused.
   phase.
 - **Ctrl/Cmd + S**: default prevented in the capture phase, or "Save page as" opens on every shortcut save.
 - **Ctrl/Cmd + F** (`SearchShortcutEffect`, a Kotlin listener, since the view model decides synchronously): calls
-  `openCurrentSearch` and prevents the find bar only if that opened something. In the editor, F, R, B, I, and U are
-  always prevented (its Find / Find and replace and its formatting; R would reload, U show the page source).
+  `openCurrentSearch` and prevents the find bar only if that opened something. In the editor, F and R are
+  always prevented (its Find / Find and replace; R would reload), and B, I, and U without Shift (its formatting; U
+  would show the page source), so Ctrl + Shift + I still opens the developer tools.
 - **Ctrl/Cmd + E** (`EditShortcutEffect`): prevented on song details outside performance mode, where it opens the
   editor; Chrome would focus its address bar.
 - **Ctrl/Cmd + V** (`PasteShortcutEffect`): the `paste` event, not the key, since it carries the text with no permission

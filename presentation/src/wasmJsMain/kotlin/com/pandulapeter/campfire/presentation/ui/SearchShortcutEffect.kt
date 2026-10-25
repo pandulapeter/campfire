@@ -55,10 +55,13 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
 
 /**
  * Ctrl / Cmd + F, R, B, I, or U without Alt, by the physical key as Compose goes by it, or by the character a virtual
- * keyboard sends.
+ * keyboard sends. B, I, and U only without Shift, as the editor hears them, so the browser keeps Ctrl + Shift + I
+ * (its developer tools) and the others it gives those keys.
  */
 private fun isEditorShortcutKey(keyEvent: KeyboardEvent) = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey &&
-    (keyEvent.code in EDITOR_KEY_CODES || keyEvent.key.lowercase() in EDITOR_KEYS)
+    (keyEvent.isOneOf(SEARCH_KEYS) || (!keyEvent.shiftKey && keyEvent.isOneOf(FORMATTING_KEYS)))
 
-private val EDITOR_KEYS = setOf("f", "r", "b", "i", "u")
-private val EDITOR_KEY_CODES = EDITOR_KEYS.map { "Key${it.uppercase()}" }.toSet()
+private fun KeyboardEvent.isOneOf(keys: Set<String>) = code.removePrefix("Key").lowercase() in keys || key.lowercase() in keys
+
+private val SEARCH_KEYS = setOf("f", "r")
+private val FORMATTING_KEYS = setOf("b", "i", "u")
