@@ -170,7 +170,6 @@ private fun runApp(
                 keyboardHeight = keyboardHeight.value,
                 onViewModel = {},
                 onAppReady = { isAppReady = true },
-                overlay = {},
             )
         }
         waitUntil(timeoutMillis = LAUNCH_TIMEOUT_MILLIS) { isAppReady }

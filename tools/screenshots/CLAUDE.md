@@ -28,7 +28,9 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 - **Looking like the platform**: `PlatformImpersonation` (`:presentation`'s desktop source set) supplies the
   platform's answers (touch scale, store, icon, Android wallpaper colors); the tool provides the `FilePicker`
   (whether Share is offered) and insets through `LocalPlatformWindowInsets` (an internal Compose API), which
-  `SystemChrome` draws over the app (9:41, full battery).
+  `SystemChrome` draws over the app (9:41, full battery). The app's scene is only its window (`DeviceScreen`), the
+  chrome a full-screen scene laid over it: a dialog (every bottom sheet) is a layer as large as its scene, so it would
+  otherwise cover a taskbar, a shelf, or a menu bar. A shot's touches are in the screen's pixels.
 - Fonts: the app is drawn in the fonts it bundles, as on every platform. Only the system chrome around it takes the
   platform's: Roboto (Android, ChromeOS), Open Sans (Windows; Segoe UI's license keeps it on Windows), the Mac's own SF
   (Apple). The build downloads the two into `build/fonts`, each pinned to a commit and checked against its SHA-256 in

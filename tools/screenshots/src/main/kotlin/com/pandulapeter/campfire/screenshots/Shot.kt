@@ -124,7 +124,8 @@ internal open class PrepareScope(
 
 /**
  * What a [Shot] drives the app with once it is on screen: the view model, touches on what the screen shows, and the
- * [keyboard] a clip raises and types on.
+ * [keyboard] a clip raises and types on. Positions are in the screen's pixels; [scene] is the app's window, [windowTop]
+ * pixels down the screen.
  */
 internal class ShotScope(
     viewModel: CampfireViewModel,
@@ -132,6 +133,7 @@ internal class ShotScope(
     language: UserPreferences.Language,
     settle: suspend (milliseconds: Long) -> Unit,
     private val scene: ImageComposeScene,
+    private val windowTop: Float,
     private val captureFrame: suspend () -> Unit,
     val keyboard: OnScreenKeyboard,
 ) : PrepareScope(viewModel, device, language, settle) {
@@ -146,8 +148,8 @@ internal class ShotScope(
         captureFrame()
     }
 
-    /** Sends a touch of [type] at [position], in the scene's pixels, for a gesture a recording draws frame by frame. */
-    fun touch(type: PointerEventType, position: Offset) = scene.sendPointerEvent(type, position, type = PointerType.Touch)
+    /** Sends a touch of [type] at [position], in the screen's pixels, for a gesture a recording draws frame by frame. */
+    fun touch(type: PointerEventType, position: Offset) = scene.sendPointerEvent(type, position - Offset(0f, windowTop), type = PointerType.Touch)
 
     /**
      * Taps the middle of whatever on screen is labelled [label] - its text, or what a screen reader calls an icon - with
@@ -160,9 +162,9 @@ internal class ShotScope(
     /** Taps what is labelled [label] the way [tap] does, where the screen shows it, and says whether it did. */
     suspend fun tapIfPresent(label: String): Boolean {
         val center = centerOf(label) ?: return false
-        scene.sendPointerEvent(PointerEventType.Press, center, type = PointerType.Touch)
+        touch(PointerEventType.Press, center)
         settle(FRAME_MILLIS * 4)
-        scene.sendPointerEvent(PointerEventType.Release, center, type = PointerType.Touch)
+        touch(PointerEventType.Release, center)
         settle()
         return true
     }
@@ -184,23 +186,23 @@ internal class ShotScope(
             scene.semanticsOwners.firstNotNullOfOrNull { owner ->
                 owner.unmergedRootSemanticsNode.find { it.config.getOrNull(SemanticsProperties.EditableText) != null }
             },
-        ) { "There is no text field on screen." }.boundsInRoot.center
+        ) { "There is no text field on screen." }.boundsInRoot.center.onScreen()
         drag(from, Offset(from.x, from.y - device.heightPx * fraction))
     }
 
     private suspend fun drag(from: Offset, to: Offset) {
-        scene.sendPointerEvent(PointerEventType.Press, from, type = PointerType.Touch)
+        touch(PointerEventType.Press, from)
         repeat(SCROLL_FRAMES) { frame ->
             settle(FRAME_MILLIS)
-            scene.sendPointerEvent(PointerEventType.Move, lerp(from, to, (frame + 1) / SCROLL_FRAMES.toFloat()), type = PointerType.Touch)
+            touch(PointerEventType.Move, lerp(from, to, (frame + 1) / SCROLL_FRAMES.toFloat()))
         }
         settle(FRAME_MILLIS * 12)
-        scene.sendPointerEvent(PointerEventType.Release, to, type = PointerType.Touch)
+        touch(PointerEventType.Release, to)
         settle()
     }
 
     /**
-     * The middle of whatever on screen is labelled [label], in the scene's pixels, for a recording to [touch] it on the
+     * The middle of whatever on screen is labelled [label], in the screen's pixels, for a recording to [touch] it on the
      * frames it chooses: [tap] settles between its press and its release, which a clip would skip as a jump.
      */
     @OptIn(ExperimentalComposeUiApi::class)
@@ -208,6 +210,7 @@ internal class ShotScope(
         .firstNotNullOfOrNull { owner -> owner.unmergedRootSemanticsNode.find { it.isLabelled(label) } }
         ?.boundsInRoot
         ?.center
+        ?.onScreen()
 
     /**
      * The middles of everything on screen whose label starts with [prefix], from the top of the screen down, for a label
@@ -219,8 +222,10 @@ internal class ShotScope(
         .flatMap { owner -> owner.unmergedRootSemanticsNode.findAll { node -> node.labels().any { it.startsWith(prefix) } } }
         // A node that takes no room (one a screen reader announces) is nothing a finger could touch.
         .filterNot { it.boundsInRoot.isEmpty }
-        .map { it.boundsInRoot.center }
+        .map { it.boundsInRoot.center.onScreen() }
         .sortedWith(compareBy({ it.y }, { it.x }))
+
+    private fun Offset.onScreen() = this + Offset(0f, windowTop)
 
     private fun SemanticsNode.find(predicate: (SemanticsNode) -> Boolean): SemanticsNode? =
         if (predicate(this)) this else children.firstNotNullOfOrNull { it.find(predicate) }

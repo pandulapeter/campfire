@@ -12,14 +12,11 @@ package com.pandulapeter.campfire.screenshots
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.unit.Density
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
@@ -78,36 +75,34 @@ internal suspend fun render(
     var isPrepared by mutableStateOf(false)
     var isAppReady = false
     val keyboard = OnScreenKeyboard()
-    val scene = ImageComposeScene(
-        width = device.widthPx,
-        height = device.heightPx,
-        density = Density(device.density),
-        coroutineContext = Dispatchers.Main,
-    ) {
-        host.Content(
-            filePicker = ScreenshotFilePicker(canShare = device.platform.canShare),
-            isPrepared = isPrepared,
-            keyboardHeight = keyboard.height,
-            onViewModel = { viewModel = it },
-            onAppReady = { isAppReady = true },
-            overlay = {
-                OnScreenKeyboardView(keyboard = keyboard, appearance = appearance)
-                device.chrome.Overlay(appearance)
-            },
-        )
-    }
+    val screen = DeviceScreen(
+        device = device,
+        app = {
+            host.Content(
+                filePicker = ScreenshotFilePicker(canShare = device.platform.canShare),
+                isPrepared = isPrepared,
+                keyboardHeight = keyboard.height,
+                onViewModel = { viewModel = it },
+                onAppReady = { isAppReady = true },
+            )
+        },
+        chrome = {
+            OnScreenKeyboardView(keyboard = keyboard, appearance = appearance)
+            device.chrome.Overlay(appearance)
+        },
+    )
     var time = 0L
     suspend fun settle(milliseconds: Long) {
         repeat((milliseconds / FRAME_MILLIS).toInt().coerceAtLeast(1)) {
             time += FRAME_MILLIS * 1_000_000
-            scene.render(time)
+            screen.render(time)
             delay(FRAME_MILLIS)
         }
     }
     var frameCount = 0
     suspend fun captureFrame() {
         time += RECORDING_FRAME_NANOS
-        val image = scene.render(time)
+        val image = screen.render(time)
         if (frames != null) {
             frames.mkdirs()
             File(frames, "%05d.jpg".format(frameCount++)).writeBytes(checkNotNull(image.encodeToData(EncodedImageFormat.JPEG, JPEG_QUALITY)).bytes)
@@ -129,12 +124,12 @@ internal suspend fun render(
             while (!isAppReady) settle(FRAME_MILLIS)
         } ?: error("The app did not finish starting within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
         settle(SETTLE_MILLIS)
-        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = scene, captureFrame = ::captureFrame, keyboard = keyboard)
+        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = screen.window, windowTop = screen.windowTop.toFloat(), captureFrame = ::captureFrame, keyboard = keyboard)
             .apply { shot.drive(this) }
         settle(SETTLE_MILLIS)
         // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather
         // than for a fixed while that a slower start would outlast.
-        fun frameHash() = scene.render(time).encodeToData(EncodedImageFormat.PNG)?.bytes?.contentHashCode()
+        fun frameHash() = screen.render(time).encodeToData(EncodedImageFormat.PNG)?.bytes?.contentHashCode()
         var previous = frameHash()
         var checks = 0
         while (checks++ < STABLE_CHECKS) {
@@ -148,9 +143,9 @@ internal suspend fun render(
             settle(FRAME_MILLIS * 3)
         }
         output.parentFile.mkdirs()
-        output.writeBytes(checkNotNull(scene.render(time).encodeToData(EncodedImageFormat.PNG)).bytes)
+        output.writeBytes(checkNotNull(screen.render(time).encodeToData(EncodedImageFormat.PNG)).bytes)
     } finally {
-        scene.close()
+        screen.close()
     }
 }
 

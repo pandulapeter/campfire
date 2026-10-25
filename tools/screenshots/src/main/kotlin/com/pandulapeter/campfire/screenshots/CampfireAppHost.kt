@@ -9,14 +9,10 @@
  */
 package com.pandulapeter.campfire.screenshots
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.InternalComposeUiApi
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalPlatformWindowInsets
 import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
@@ -114,10 +110,13 @@ internal class CampfireAppHost(
     val owner = SceneOwner()
 
     /**
-     * The app as a window shows it, inside [chrome]'s bars, with the window owners the view model is created from. The
-     * view model is created (and handed to [onViewModel]) as soon as this is composed, but the app is composed only
-     * once [isPrepared], so a state a screen reads as it is first composed can be set before. [keyboardHeight] is the
-     * on-screen keyboard's, reported to the app as the platform would while it is up; only [overlay] may draw one.
+     * The app as a window shows it, filling the scene it is composed in, which is the window itself rather than the
+     * screen: a dialog, every bottom sheet among them, is a layer as large as the scene, and on a screen with a taskbar or
+     * a menu bar it would reach over them. [chrome]'s bars that fall inside the window are reported as its insets, and
+     * the window owners the view model is created from are provided. The view model is created (and handed to
+     * [onViewModel]) as soon as this is composed, but the app is composed only once [isPrepared], so a state a screen
+     * reads as it is first composed can be set before. [keyboardHeight] is the on-screen keyboard's, reported to the app
+     * as the platform would while it is up.
      */
     @OptIn(InternalComposeUiApi::class)
     @Composable
@@ -127,28 +126,21 @@ internal class CampfireAppHost(
         keyboardHeight: Dp,
         onViewModel: (CampfireViewModel) -> Unit,
         onAppReady: () -> Unit,
-        overlay: @Composable () -> Unit,
     ) = CompositionLocalProvider(
         LocalViewModelStoreOwner provides owner,
         LocalLifecycleOwner provides owner,
         LocalSavedStateRegistryOwner provides owner,
         LocalFilePicker provides filePicker,
+        LocalPlatformWindowInsets provides DeviceInsets(chrome, density, keyboardHeight),
     ) {
-        Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().padding(top = chrome.windowTop, bottom = chrome.windowBottom)) {
-                CompositionLocalProvider(LocalPlatformWindowInsets provides DeviceInsets(chrome, density, keyboardHeight)) {
-                    val viewModel = koinViewModel<CampfireViewModel>()
-                    SideEffect { onViewModel(viewModel) }
-                    if (isPrepared) {
-                        CampfireApp(
-                            viewModel = viewModel,
-                            urlOpener = {},
-                            onAppReady = onAppReady,
-                        )
-                    }
-                }
-            }
-            overlay()
+        val viewModel = koinViewModel<CampfireViewModel>()
+        SideEffect { onViewModel(viewModel) }
+        if (isPrepared) {
+            CampfireApp(
+                viewModel = viewModel,
+                urlOpener = {},
+                onAppReady = onAppReady,
+            )
         }
     }
 }
