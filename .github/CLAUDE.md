@@ -101,7 +101,7 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
 ### `publish-ios.yml`
 
 Archives and exports with the signing key's Apple Distribution certificate and the App Store profiles of the app and
-the share extension (`app_store_signing.py profile`), signed by hand; uploads to TestFlight. The Xcode project starts
+the share extension (`app_store_signing.py profile`, never one Xcode made, which manual signing refuses), signed by hand; uploads to TestFlight. The Xcode project starts
 Gradle without properties, so the sync key goes into `local.properties`, which the version build phase also reads (after
 `gradle.properties`, last value wins) — that is how the `build_number` input works without a commit. The share extension's App ID and the App Group on both App IDs were
 registered in the developer portal by hand, once; a profile made through the API carries them.

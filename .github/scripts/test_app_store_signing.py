@@ -9,7 +9,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from app_store_signing import RENEWAL_DAYS, needs_renewal, newest_valid, parse_expiration
+from app_store_signing import RENEWAL_DAYS, is_xcode_managed, needs_renewal, newest_valid, parse_expiration
 
 NOW = datetime(2026, 10, 2, 12, tzinfo=timezone.utc)
 
@@ -50,6 +50,15 @@ class NeedsRenewalTest(unittest.TestCase):
 
     def test_once_less_is_left(self):
         self.assertTrue(needs_renewal(certificate("a", RENEWAL_DAYS - 1), NOW))
+
+
+class IsXcodeManagedTest(unittest.TestCase):
+
+    def test_a_profile_xcode_made(self):
+        self.assertTrue(is_xcode_managed(b"0\x82<plist><dict><key>IsXcodeManaged</key>\n\t<true/></dict></plist>"))
+
+    def test_a_profile_made_through_the_api(self):
+        self.assertFalse(is_xcode_managed(b"0\x82<plist><dict><key>IsXcodeManaged</key>\n\t<false/></dict></plist>"))
 
 
 if __name__ == "__main__":

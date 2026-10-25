@@ -42,6 +42,7 @@ Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNI
 import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -215,6 +216,12 @@ def import_certificate(certificate_type, keychain):
         run("security", "import", certificate, "-k", keychain, "-t", "cert", "-f", "x509")
 
 
+def is_xcode_managed(profile_content):
+    """Whether Xcode made the profile: the archive signs manually, and xcodebuild refuses such a profile for that."""
+    # A profile is a signed message carrying its property list as plain XML.
+    return re.search(rb"<key>IsXcodeManaged</key>\s*<true\s*/>", profile_content) is not None
+
+
 def find_bundle_id(bundle_identifier):
     matches = request("GET", f"/bundleIds?filter[identifier]={bundle_identifier}&limit=200")["data"]
     # The filter matches prefixes as well, so com.example.app also finds com.example.app.widget.
@@ -236,6 +243,7 @@ def save_profile(profile_type, bundle_identifier, certificate_type, output):
         item for item in profiles
         if item["relationships"]["bundleId"]["data"]["id"] == bundle
         and certificate["id"] in [entry["id"] for entry in item["relationships"]["certificates"]["data"]]
+        and not is_xcode_managed(base64.b64decode(item["attributes"]["profileContent"]))
     ), None)
     if profile is None:
         # Profile names are unique in an account, the expired and invalid ones included.
