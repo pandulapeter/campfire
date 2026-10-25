@@ -52,6 +52,21 @@ class ChordPaddingTest {
     }
 
     @Test
+    fun `formatting covers the same words after padding, never the padding`() {
+        val line = lyrics("[C]a b [G]cd").copy(
+            formatting = listOf(
+                ChordProLine.Lyrics.Formatting(0, 1, ChordProLine.Lyrics.Formatting.Style.BOLD),
+                ChordProLine.Lyrics.Formatting(2, 6, ChordProLine.Lyrics.Formatting.Style.ITALIC),
+            ),
+        )
+        val padded = line.padded(chordWidth = 80f)
+
+        assertEquals("a", padded.text.substring(padded.formatting[0].start, padded.formatting[0].end))
+        assertTrue(padded.text.substring(padded.formatting[1].start, padded.formatting[1].end).endsWith("cd"))
+        assertEquals('b', padded.text[padded.formatting[1].start])
+    }
+
+    @Test
     fun `a word is never broken between its chords`() {
         assertFalse('​' in lyrics("wo[C]n[G]der").padded().text)
     }

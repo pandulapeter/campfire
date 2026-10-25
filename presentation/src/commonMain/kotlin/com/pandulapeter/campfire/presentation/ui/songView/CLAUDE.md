@@ -19,6 +19,9 @@ builds what it draws, `grid/` places it.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
   (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary, so no chord is pulled
   back over the one before.
+- A line's markup, and a comment's (stripped into `RenderSection.Comment.formatting`, after the transposition), is drawn
+  as spans of its text (`formattedText`); padding under chords moves the ranges with the words and leaves the padding
+  itself unformatted.
 - Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
   block's its lines, so screen readers read the chords.
 - Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together.

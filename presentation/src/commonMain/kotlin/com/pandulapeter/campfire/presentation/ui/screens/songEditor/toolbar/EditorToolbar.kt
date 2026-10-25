@@ -28,9 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_editor_format_bold
+import com.pandulapeter.campfire.presentation.resources.song_editor_format_italic
+import com.pandulapeter.campfire.presentation.resources.song_editor_format_underline
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_annotation
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_artist
@@ -169,7 +173,8 @@ private fun EditorToolbarRow(
 }
 
 /**
- * What goes into the song itself: what is written inside a line, every section the app has a name for, the two ways
+ * What goes into the song itself: what is written inside a line (chords, annotations, and the markup that sets words in
+ * bold, italic, or underlined, which Ctrl / Cmd + B, I, and U toggle too), every section the app has a name for, the two ways
  * of writing lines down, the three kinds of comment, and the changes a song makes from where they stand — of key, of
  * tempo and of time signature.
  *
@@ -202,6 +207,11 @@ private fun contentInsertions(tabStaff: (UserPreferences.Instrument?) -> List<St
     listOf(
         EditorInsertion(stringResource(Res.string.song_editor_insert_chord), prefix = "[", suffix = "]", isOwnLine = false),
         EditorInsertion(stringResource(Res.string.song_editor_insert_annotation), prefix = "[*", suffix = "]", isOwnLine = false),
+    ),
+    listOf(
+        EditorInsertion.formatting(stringResource(Res.string.song_editor_format_bold), Formatting.Style.BOLD),
+        EditorInsertion.formatting(stringResource(Res.string.song_editor_format_italic), Formatting.Style.ITALIC),
+        EditorInsertion.formatting(stringResource(Res.string.song_editor_format_underline), Formatting.Style.UNDERLINE),
     ),
     listOf(
         EditorInsertion.section(stringResource(Res.string.song_editor_section_intro), name = "intro"),

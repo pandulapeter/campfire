@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
@@ -179,11 +180,13 @@ internal class PrintRows(
             visible
         }
         val chordLineHeight = options.fontSize * 1.3f
-        val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, lyricStyle) }
+        val wrappingStyle = lyrics.formatting.wrappingStyle(lyricStyle)
+        val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, wrappingStyle) }
         var start = 0
         return buildList {
             fragments.forEachIndexed { fragmentIndex, fragment ->
                 val end = start + fragment.length
+                val pieces = styledPieces(lyrics.formatting, start, fragment, lyricStyle)
                 val chords = lyrics.chords.filter { it.position >= start && (it.position < end || fragmentIndex == fragments.lastIndex) }
                 // Chords anchored at the same character are kept beside each other; if the chord run is wider than the
                 // column, extra chord-only rows keep every symbol readable.
@@ -191,7 +194,7 @@ internal class PrintRows(
                 var chordX = 0f
                 var chordY = 0f
                 chords.forEach { chord ->
-                    val anchor = measure(fragment.take((chord.position - start).coerceIn(0, fragment.length)), lyricStyle)
+                    val anchor = pieces.widthUntil((chord.position - start).coerceIn(0, fragment.length), ::measure)
                     var x = maxOf(anchor, chordX)
                     // An annotation is an instruction rather than a chord, so it is set apart from the chords.
                     val style = if (chord.isAnnotation) annotationStyle else chordStyle
@@ -215,7 +218,13 @@ internal class PrintRows(
                 // a blank fragment without chords is an empty line the song asked for.
                 val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
                 val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
-                if (!isChordsOnly) parts += Part(fragment, y = lyricY, style = lyricStyle)
+                if (!isChordsOnly) {
+                    var x = 0f
+                    pieces.forEach { piece ->
+                        parts += Part(piece.text, x = x, y = lyricY, style = piece.style)
+                        x += measure(piece.text, piece.style)
+                    }
+                }
                 val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
                 if (rowHeight <= capacity) {
                     add(Row(parts, rowHeight))
@@ -304,7 +313,23 @@ internal class PrintRows(
     private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()
         comment.style == CommentStyle.BOX -> boxedRows(comment.text, width)
-        else -> wrapped(comment.text, commentStyle, width)
+        else -> formattedRows(comment.text, commentStyle, width)
+    }
+
+    /** [wrapped] for a text that may carry markup, a comment's: one text for every change of style, side by side. */
+    private fun formattedRows(text: String, style: PrintStyle, width: Float): List<Row> {
+        val stripped = ChordProMarkup.strip(text)
+        if (stripped.formatting.isEmpty()) return wrapped(stripped.text, style, width)
+        val wrappingStyle = stripped.formatting.wrappingStyle(style)
+        var start = 0
+        return wrapPrintText(stripped.text, width) { measure(it, wrappingStyle) }.map { fragment ->
+            var x = 0f
+            val parts = styledPieces(stripped.formatting, start, fragment, style).map { piece ->
+                Part(piece.text, x = x, style = piece.style).also { x += measure(piece.text, piece.style) }
+            }
+            start += fragment.length
+            Row(parts, style.size * 1.45f)
+        }
     }
 
     /**
@@ -351,7 +376,7 @@ internal class PrintRows(
      * splits between columns continues as an open frame and never draws over what is before or after it.
      */
     private fun boxedRows(text: String, width: Float): List<Row> {
-        val rows = wrapped(text, lyricStyle, width - 10f)
+        val rows = formattedRows(text, lyricStyle, width - 10f)
         return rows.mapIndexed { index, row ->
             val top = if (index == 0) 3f else 0f
             val height = row.height + top + if (index == rows.lastIndex) 3f else 0f

@@ -51,6 +51,10 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
   empty one included, which is how a cleared value stays cleared.
 - `{transpose}` before the first line transposes the whole song; later ones, and body `{tempo}`/`{time}` that differ
   from the one in force, are mid-song changes that cut the section. Recalled choruses leave them out.
+- **Markup** (`ChordProMarkup`): `<b>`/`<strong>`, `<i>`/`<em>`, and `<u>` in a lyrics line are taken out of its text
+  into `Lyrics.formatting`, chords moved with it; tags are read inside one line only, and any other angle bracket is
+  lyrics. A comment keeps its markup in its text, since its chords are rewritten there after parsing: whoever draws
+  it calls `ChordProMarkup.strip`. Delegated environments, tabs, grids, and other directives have no markup.
 - `ChordProSplitter` splits at `{new_song}` outside delegated environments. `comparable` (what an import compares
   against the file on disk) also folds line endings, notation, and directive spellings, which Prettify must not do.
   Both drop a BOM anywhere, or a `{title}` behind it would read as lyrics.

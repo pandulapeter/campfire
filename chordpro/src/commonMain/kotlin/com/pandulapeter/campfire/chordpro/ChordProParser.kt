@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
@@ -346,7 +347,13 @@ public object ChordProParser {
             consumedUntil = bracket.range.last + 1
         }
         text.append(rawLine, consumedUntil, rawLine.length)
-        return ChordProLine.Lyrics(text = text.toString(), chords = chords)
+        // Chords first, so that a tag written inside a chord's brackets stays part of its name.
+        val stripped = ChordProMarkup.strip(text.toString())
+        return ChordProLine.Lyrics(
+            text = stripped.text,
+            chords = if (stripped.text.length == text.length) chords else chords.map { it.copy(position = stripped.offsetOf(it.position)) },
+            formatting = stripped.formatting,
+        )
     }
 
     private const val VERSE = "verse"

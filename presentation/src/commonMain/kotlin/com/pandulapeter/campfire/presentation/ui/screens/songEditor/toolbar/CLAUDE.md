@@ -15,7 +15,9 @@ The editor's Shortcuts toolbar and its control row.
 
 - **Two Shortcuts rows** (`EditorToolbar.kt`): a button for every directive `ChordProParser` understands and the app
   shows. First row: what the song *is* (header directives, then Tag, Language, Link, then Chord shape); second: the song
-  body (chords, sections, Tab and Grid, comments, then Key change, Tempo, and Time signature).
+  body (chords, Bold, Italic, and Underline, sections, Tab and Grid, comments, then Key change, Tempo, and Time
+  signature).
+- Bold, Italic, and Underline toggle markup like their shortcuts, see the editor's own notes.
 
 ### Shortcut rules
 

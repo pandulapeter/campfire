@@ -129,7 +129,8 @@ internal fun printScaleGroupsOf(
 
 /**
  * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up
- * (everything else is in the app's text font, as in the viewer), and [gray] from 0 (black) to 255 (white).
+ * (everything else is in the app's text font, as in the viewer), [gray] from 0 (black) to 255 (white), and
+ * [underline] only where a song's markup asks for it.
  */
 internal data class PrintStyle(
     val size: Int,
@@ -137,6 +138,7 @@ internal data class PrintStyle(
     val italic: Boolean = false,
     val monospace: Boolean = false,
     val gray: Int = 0,
+    val underline: Boolean = false,
 )
 
 /**

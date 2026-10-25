@@ -197,11 +197,15 @@ internal sealed interface RenderSection {
             ?.let(::shortenedForDescription)
     }
 
-    /** A comment between two sections, or one inside a section as one of its [SectionPart]s. */
+    /**
+     * A comment between two sections, or one inside a section as one of its [SectionPart]s, its [text] without the
+     * markup that gave it its [formatting].
+     */
     @Immutable
     data class Comment(
         val text: String,
         val style: CommentStyle,
+        val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
     ) : RenderSection, SectionPart
 
     /**

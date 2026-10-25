@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
@@ -172,7 +173,12 @@ internal fun ChordProSong.toRenderSections(
 
 /** What a comment is drawn as, or null where lyrics-only mode leaves out the tab or grid it is a note about. */
 private fun ChordProBlock.Comment.toRenderSection(shouldShowChords: Boolean) =
-    if (isInTabOrGrid && !shouldShowChords) null else RenderSection.Comment(text = text, style = style)
+    if (isInTabOrGrid && !shouldShowChords) {
+        null
+    } else {
+        val stripped = ChordProMarkup.strip(text)
+        RenderSection.Comment(text = stripped.text, style = style, formatting = stripped.formatting)
+    }
 
 /** The line naming the key a modulation takes the song to, or null where the song declares none or the chords are not shown. */
 private fun ChordProBlock.Transpose.toRenderSection(shouldShowChords: Boolean) =

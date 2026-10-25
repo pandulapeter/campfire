@@ -205,7 +205,7 @@ internal fun SongSectionContent(
                     is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
-                            text = line.text,
+                            text = remember(line) { line.formattedText() },
                             style = lyricsStyle,
                             color = MaterialTheme.colorScheme.onSurface,
                         )

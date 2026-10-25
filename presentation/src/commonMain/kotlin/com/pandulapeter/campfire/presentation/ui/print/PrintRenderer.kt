@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
@@ -53,6 +54,7 @@ internal class PrintRenderer(
         fontSize = size.sp,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+        textDecoration = if (underline) TextDecoration.Underline else null,
         fontFeatureSettings = "liga=0",
     )
 

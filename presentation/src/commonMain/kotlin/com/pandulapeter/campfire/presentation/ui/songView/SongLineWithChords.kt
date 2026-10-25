@@ -66,6 +66,7 @@ internal fun SongLineWithChords(
             measureWidth = textMeasurements::fragmentWidth,
         )
     }
+    val paddedText = remember(paddedLine) { paddedLine.formattedText() }
     val chordLineHeight = chordLayouts.maxOf { it.size.height }
     // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves. The height is in pixels
     // and is handed over as a multiple of the font size rather than in sp: under Android's non-linear font scaling a
@@ -137,7 +138,7 @@ internal fun SongLineWithChords(
                     }
                 }
             },
-        text = paddedLine.text,
+        text = paddedText,
         style = lyricsStyle.copy(
             lineHeight = lineHeight,
             lineHeightStyle = LineHeightStyle(

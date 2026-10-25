@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
 
 /**
@@ -253,11 +254,21 @@ object ChordProSerializer {
         var consumedUntil = 0
         line.chords.sortedBy { it.position }.forEach { chord ->
             val position = chord.position.coerceIn(consumedUntil, line.text.length)
-            append(line.text, consumedUntil, position)
+            appendFormatted(line, consumedUntil, position)
             append(if (chord.isAnnotation) "[*${chord.name}]" else "[${chord.name}]")
             consumedUntil = position
         }
-        append(line.text, consumedUntil, line.text.length)
+        appendFormatted(line, consumedUntil, line.text.length)
+    }
+
+    /** The text from [start] to [end] with the tags of the formatting that opens or closes inside it, closing first. */
+    private fun StringBuilder.appendFormatted(line: ChordProLine.Lyrics, start: Int, end: Int) {
+        for (index in start..end) {
+            line.formatting.filter { it.end == index && (index > start || start == 0) }.forEach { append("</${ChordProMarkup.tagOf(it.style)}>") }
+            if (index == end) break
+            line.formatting.filter { it.start == index }.forEach { append("<${ChordProMarkup.tagOf(it.style)}>") }
+            append(line.text[index])
+        }
     }
 
     private fun serializeGridToken(token: GridToken) = when (token) {

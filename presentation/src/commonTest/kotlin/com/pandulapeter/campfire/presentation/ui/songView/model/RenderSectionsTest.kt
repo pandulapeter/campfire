@@ -76,6 +76,19 @@ class RenderSectionsTest {
     }
 
     @Test
+    fun `a comment is shown without its markup, the formatting kept beside it, after the transposition moved its chords`() {
+        val comment = prepareSongLyrics(
+            song = ChordProTransposer.transpose(ChordProParser.parse("{c: <b>Slower</b> from [Am]here}"), 2),
+            shouldShowChords = true,
+            labels = labels,
+            showsTiming = true,
+        ).sections.filterIsInstance<RenderSection.Comment>().single()
+
+        assertEquals("Slower from [Bm]here", comment.text)
+        assertEquals(listOf(ChordProLine.Lyrics.Formatting(0, 6, ChordProLine.Lyrics.Formatting.Style.BOLD)), comment.formatting)
+    }
+
+    @Test
     fun `a timing change is a line of its own between two sections or where it cuts one`() {
         assertEquals(
             listOf("Versszak: lines", "timing 90 3/4", "Refrén: lines"),

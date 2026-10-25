@@ -234,6 +234,7 @@ internal fun LoadedSongEditor(
                 onFind = { onOpenSearch(EditorSearchMode.FIND) },
                 onReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
             )
+            .editorFormattingShortcuts(isEnabled = panes != EditorPanes.PREVIEW, onToggle = textFieldState::toggleFormatting),
     ) {
         CampfireTopAppBar(
             isCompact = isTypingInShortWindow,

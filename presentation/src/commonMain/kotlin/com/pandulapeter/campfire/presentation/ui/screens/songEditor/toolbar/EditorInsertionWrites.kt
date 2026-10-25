@@ -17,11 +17,20 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toggleFormatting
 
-/** Writes [insertion] where it belongs: into the song's header when it describes the song, at the caret otherwise. */
+/**
+ * Writes [insertion] where it belongs: into the song's header when it describes the song, around the selection as markup
+ * that is toggled when it formats it, at the caret otherwise.
+ */
 internal fun TextFieldState.insert(insertion: EditorInsertion) {
     val metadataName = insertion.metadataName
-    if (metadataName == null) insertAtSelection(insertion) else insertIntoHeader(insertion, metadataName)
+    val formatting = insertion.formatting
+    when {
+        formatting != null -> toggleFormatting(formatting)
+        metadataName == null -> insertAtSelection(insertion)
+        else -> insertIntoHeader(insertion, metadataName)
+    }
 }
 
 /**

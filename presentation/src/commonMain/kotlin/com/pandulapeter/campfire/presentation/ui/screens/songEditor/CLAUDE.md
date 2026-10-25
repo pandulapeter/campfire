@@ -88,6 +88,10 @@ numbers nothing to count from.
 - Ctrl / Cmd + S is heard by the whole editor, which takes focus itself on open and whenever panes change, except that
   a field being typed in keeps focus across a change that still shows it (rotation, resize across Split).
 - Insertion rows leave whenever only the preview shows.
+- **Bold, Italic, and Underline toggle** (`formattingToggle`, tested), from the Shortcuts row and as Ctrl / Cmd + B, I,
+  and U while the field shows (`editorFormattingShortcuts`): tags around or at the ends of the selection are taken off,
+  else written around it; several lines are formatted line by line, since markup is read within one, directives and
+  `#` lines left alone.
 - `ChordProOutputTransformation` colours tokens like the viewer (and draws search matches); unreadable directive values
   (`{time: 5/7}`) are drawn whole in the error colour.
 

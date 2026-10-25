@@ -800,6 +800,9 @@
     <string name="song_editor_hide_shortcuts">Hide shortcuts</string>
     <string name="song_editor_insert_chord">Chord</string>
     <string name="song_editor_insert_annotation">Annotation</string>
+    <string name="song_editor_format_bold">Bold</string>
+    <string name="song_editor_format_italic">Italic</string>
+    <string name="song_editor_format_underline">Underline</string>
     <string name="song_editor_section_intro">Intro</string>
     <string name="song_editor_section_verse">Verse</string>
     <string name="song_editor_section_pre_chorus">Pre-chorus</string>

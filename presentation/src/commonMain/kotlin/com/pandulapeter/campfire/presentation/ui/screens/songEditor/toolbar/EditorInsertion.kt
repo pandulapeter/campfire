@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
+
 /**
  * One thing a toolbar button writes around the selection, or around the caret where there is none.
  *
@@ -20,6 +22,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
  * @param emptySuffix What is written after the caret in place of [suffix] where nothing is selected.
  * @param choices What a button that opens a menu offers, each written as an insertion of its own once it is picked;
  *   empty for a button that writes itself.
+ * @param formatting The markup a Bold, Italic, or Underline button toggles around the selection (see
+ *   `toggleFormatting`), in place of the two halves; null for every other button.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -30,9 +34,19 @@ internal data class EditorInsertion(
     val emptyPrefix: String = prefix,
     val emptySuffix: String = suffix,
     val choices: List<EditorInsertion> = emptyList(),
+    val formatting: Formatting.Style? = null,
 ) {
 
     companion object {
+
+        /** Markup around the selection, inside a line of lyrics or a comment, taken off again where it is there. */
+        fun formatting(label: String, style: Formatting.Style) = EditorInsertion(
+            label = label,
+            prefix = "",
+            suffix = "",
+            isOwnLine = false,
+            formatting = style,
+        )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */
         fun menu(label: String, choices: List<EditorInsertion>) = EditorInsertion(

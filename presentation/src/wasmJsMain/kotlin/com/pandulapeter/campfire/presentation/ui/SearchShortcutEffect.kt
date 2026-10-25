@@ -24,8 +24,9 @@ import kotlin.js.unsafeCast
  * Opens the search of the list screen that is on top on Ctrl / Cmd + F (`ScreenSearches.openCurrentSearch`), and
  * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
  * one canvas with none. With the song editor on top, Ctrl / Cmd + F and R are the editor's Find and Find and replace
- * (`editorSearchShortcuts`), so there the browser is kept from its find bar and from reloading the page under the text
- * being typed, and the key goes on to Compose. Everywhere else - another screen, a dialog - the key is left alone and
+ * (`editorSearchShortcuts`), and B, I, and U its Bold, Italic, and Underline (`editorFormattingShortcuts`), so there the
+ * browser is kept from its find bar, from reloading the page under the text being typed, and from its bookmarks, page
+ * info, and page source, and the key goes on to Compose. Everywhere else - another screen, a dialog - the key is left alone and
  * the browser opens its bar as it always does.
  *
  * It is a listener on the window in the capture phase rather than a key handler inside the composition, for two
@@ -44,7 +45,7 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
         val shortcut = if (isF) appShortcutOf(ShortcutKey.F, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey) else null
         if (shortcut is AppShortcut.OpenSearch && viewModel.perform(shortcut)) {
             keyEvent.preventDefault()
-        } else if (isEditorSearchKey(keyEvent) && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongEditor) {
+        } else if (isEditorShortcutKey(keyEvent) && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongEditor) {
             keyEvent.preventDefault()
         }
     }
@@ -52,6 +53,12 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
 }
 
-/** Ctrl / Cmd + F or R without Alt, by the physical key as Compose goes by it, or by the character a virtual keyboard sends. */
-private fun isEditorSearchKey(keyEvent: KeyboardEvent) = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey &&
-    (keyEvent.code == "KeyF" || keyEvent.code == "KeyR" || keyEvent.key.lowercase() == "f" || keyEvent.key.lowercase() == "r")
+/**
+ * Ctrl / Cmd + F, R, B, I, or U without Alt, by the physical key as Compose goes by it, or by the character a virtual
+ * keyboard sends.
+ */
+private fun isEditorShortcutKey(keyEvent: KeyboardEvent) = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey &&
+    (keyEvent.code in EDITOR_KEY_CODES || keyEvent.key.lowercase() in EDITOR_KEYS)
+
+private val EDITOR_KEYS = setOf("f", "r", "b", "i", "u")
+private val EDITOR_KEY_CODES = EDITOR_KEYS.map { "Key${it.uppercase()}" }.toSet()

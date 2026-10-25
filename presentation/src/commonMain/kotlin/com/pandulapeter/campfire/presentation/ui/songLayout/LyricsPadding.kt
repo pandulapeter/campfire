@@ -32,10 +32,13 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
     measureWidth: (String) -> Float,
 ): ChordProLine.Lyrics {
     val paddedLyrics = StringBuilder(text.substring(0, chords.first().position))
+    // Where each piece of the text starts in the padded one, so that the formatting can be moved with it.
+    val pieceStarts = IntArray(chords.size)
     val paddedChords = chords.mapIndexed { index, chord ->
         val end = chords.getOrNull(index + 1)?.position ?: text.length
         val fragment = text.substring(chord.position, end)
         val paddedChord = chord.copy(position = paddedLyrics.length)
+        pieceStarts[index] = paddedLyrics.length
         val missingWidth = chordWidths[index] + gap - measureWidth(fragment)
         if (missingWidth > 0 && paddingWidth > 0) {
             val innerStart = fragment.indexOfFirst { !it.isWhitespace() }.let { if (it < 0) fragment.length else it }
@@ -51,7 +54,27 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
         if (index < chords.lastIndex && isWordBoundary) paddedLyrics.append(BREAK_OPPORTUNITY)
         paddedChord
     }
-    return ChordProLine.Lyrics(text = paddedLyrics.toString(), chords = paddedChords)
+    return ChordProLine.Lyrics(
+        text = paddedLyrics.toString(),
+        chords = paddedChords,
+        formatting = formatting.map { range ->
+            range.copy(start = paddedOffset(range.start, pieceStarts, isEnd = false), end = paddedOffset(range.end, pieceStarts, isEnd = true))
+        },
+    )
+}
+
+/**
+ * Where [offset] of the text stands in the padded one, whose pieces start at [pieceStarts]. An offset at the end of a
+ * piece is both its end and the next one's start: the end of a range stops before the padding, which is not part of the
+ * text it formats, and the start of one comes after it.
+ */
+private fun ChordProLine.Lyrics.paddedOffset(offset: Int, pieceStarts: IntArray, isEnd: Boolean): Int {
+    var piece = -1
+    for (index in chords.indices) {
+        val position = chords[index].position
+        if (if (isEnd) position < offset else position <= offset) piece = index else break
+    }
+    return if (piece < 0) offset else pieceStarts[piece] + offset - chords[piece].position
 }
 
 /**

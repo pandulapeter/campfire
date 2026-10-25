@@ -16,14 +16,34 @@ import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
  */
 public sealed interface ChordProLine {
 
-    /** A lyrics line: text with chords anchored at character offsets. */
-    public data class Lyrics(val text: String, val chords: List<Chord>) : ChordProLine {
+    /**
+     * A lyrics line: text with chords anchored at character offsets, and the [formatting] its markup (`<b>`, `<i>`,
+     * `<u>`) gave ranges of it, ordered by where they start, then by style. The tags themselves are not part of [text].
+     */
+    public data class Lyrics(
+        val text: String,
+        val chords: List<Chord>,
+        val formatting: List<Formatting> = emptyList(),
+    ) : ChordProLine {
 
         public data class Chord(
             val position: Int, // offset into text where the chord sits
             val name: String, // "Am7", "N.C.", ...
             val isAnnotation: Boolean, // [*text] annotations: shown like a chord, never transposed
         )
+
+        /**
+         * The characters of [text] from [start] (inclusive) to [end] (exclusive) set in [style], never empty. Ranges of
+         * different styles may overlap, and one of a style never overlaps or touches another of the same style.
+         */
+        public data class Formatting(
+            val start: Int,
+            val end: Int,
+            val style: Style,
+        ) {
+
+            public enum class Style { BOLD, ITALIC, UNDERLINE }
+        }
     }
 
     /**

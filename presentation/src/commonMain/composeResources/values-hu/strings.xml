@@ -799,6 +799,9 @@
     <string name="song_editor_hide_shortcuts">Gyorsgombok elrejtése</string>
     <string name="song_editor_insert_chord">Akkord</string>
     <string name="song_editor_insert_annotation">Annotáció</string>
+    <string name="song_editor_format_bold">Félkövér</string>
+    <string name="song_editor_format_italic">Dőlt</string>
+    <string name="song_editor_format_underline">Aláhúzott</string>
     <string name="song_editor_section_intro">Intro</string>
     <string name="song_editor_section_verse">Versszak</string>
     <string name="song_editor_section_pre_chorus">Pre-refrén</string>

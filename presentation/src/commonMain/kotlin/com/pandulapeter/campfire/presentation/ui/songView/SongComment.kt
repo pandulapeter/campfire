@@ -45,9 +45,9 @@ internal fun SongComment(
     }
     val chordColor = LocalSecondAccentColor.current
     // The transposition moves the brackets of a comment as it moves those of the lyrics, so they are drawn as chords.
-    val annotatedText = remember(comment.text, notation, chordColor) {
+    val annotatedText = remember(comment, notation, chordColor) {
         buildAnnotatedString {
-            append(comment.text)
+            append(formattedText(comment.text, comment.formatting))
             ChordProHighlighter.chordsOfShownText(comment.text, notation).forEach { addStyle(SpanStyle(color = chordColor, fontWeight = FontWeight.Bold), it.start, it.end) }
         }
     }
