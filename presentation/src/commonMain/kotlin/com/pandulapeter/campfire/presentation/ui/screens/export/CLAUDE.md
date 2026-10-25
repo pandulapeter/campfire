@@ -128,9 +128,10 @@ pipeline is in `ui/print/CLAUDE.md`.
   animates it.
 - **One FAB for every format** (`ExportActionButton`): a change of format or of the link's next step crossfades its
   icon and label inside it, never a button leaving for another. The floating controls (it and the page pill) come and
-  go through `FloatingControlVisibility`, which fades each thing drawn (`ModulateAlpha`, no offscreen buffer to cut a
-  shadow off) and draws the shadow itself, growing with the fade; the controls draw none of their own. Those of the
-  format the screen opened on appear without animating: their pages arriving is data, not something the user did.
+  go through `FloatingControlVisibility`, which scales them, draws the shadow itself, fading its colors (a shrinking
+  elevation stays dark on Skia), and fades only the control inside it, so no buffer cuts the shadow off (never
+  `ModulateAlpha`, which on Skia skips the layers inside); the controls draw none of their own. Those of the format the
+  screen opened on appear without animating: their pages arriving is data, not something the user did.
 - The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
   arrangements, and the options move on the spatial spring (`animateBounds`).
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,

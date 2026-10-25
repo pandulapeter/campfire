@@ -21,7 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
@@ -33,11 +33,14 @@ import androidx.compose.ui.unit.dp
  * A control floating over the screen with a shadow (a floating action button, the page buttons' pill), faded and grown in
  * while [isVisible] and faded and shrunk away again. Not `fadeIn` and `scaleIn`, whose fade draws the control into an
  * offscreen buffer the size of its layer until it is opaque, cutting off the shadow around it, the further the lower on
- * the screen the control is, since the light that casts it is above the window. Here the fade is applied to each thing
- * drawn instead (`ModulateAlpha`), and the shadow is drawn around [content] by this layer itself, in [shape], with
- * [elevation] growing and shrinking with the fade, so that whatever a platform does with a shadow under a fade, it never
- * shows up late or alone: the control draws none of its own. The layer also reaches [SHADOW_ROOM] past the control on
- * every side, for a platform that does draw a buffer, while the control takes up only its own size in the layout.
+ * the screen the control is, since the light that casts it is above the window. Here the shadow is drawn around
+ * [content] by a layer of its own, in [shape] and at [elevation], its colors faded with the control, so that it never
+ * shows up late or alone: the control draws none of its own. Not the elevation shrunk instead, which on Skia leaves a
+ * tight, dark shadow standing out of the background until the very end. Only [content] is faded, in a layer inside the
+ * shadow's, whose buffer holds no shadow to cut off. Not `ModulateAlpha` on a layer around both, which on Skia (desktop, iOS, and
+ * the web) fades only what that layer draws itself and none of the layers inside it, so the control would only grow.
+ * The scaling layer also reaches [SHADOW_ROOM] past the control on every side, for a platform that draws it into a
+ * buffer, while the control takes up only its own size in the layout.
  *
  * Where [isFirstShownAtOnce], its first appearance is not animated: a control the screen opened with is part of the
  * screen, and the pages it waits for are data arriving, not something the user did.
@@ -73,19 +76,21 @@ internal fun FloatingControlVisibility(
                         layout(placeable.width - 2 * room, placeable.height - 2 * room) { placeable.place(-room, -room) }
                     }
                     .graphicsLayer {
-                        alpha = shown()
                         scaleX = shown()
                         scaleY = shown()
-                        compositingStrategy = CompositingStrategy.ModulateAlpha
                     }
                     .padding(SHADOW_ROOM)
                     .graphicsLayer {
-                        shadowElevation = elevation.toPx() * shown()
+                        shadowElevation = elevation.toPx()
+                        ambientShadowColor = DefaultShadowColor.copy(alpha = DefaultShadowColor.alpha * shown())
+                        spotShadowColor = ambientShadowColor
                         this.shape = shape
                         clip = false
                     },
             ) {
-                content()
+                Box(Modifier.graphicsLayer { alpha = shown() }) {
+                    content()
+                }
             }
         }
     }
