@@ -76,6 +76,14 @@ internal fun Project.configureKotlinMultiplatform(
         }
         sourceSets.commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.findLibrary("kotlin-coroutines-test").get())
+        }
+        // kotlinx-coroutines-test still marks its virtual time (runCurrent, advanceTimeBy, advanceUntilIdle) experimental,
+        // and every coroutine test drives it. Every test source set opts in, not just commonTest, since a compilation
+        // takes its opt-ins from the source set it is built from; the library comes with the opt-in, so that the marker
+        // resolves in a module whose tests start no coroutine.
+        sourceSets.matching { it.name.endsWith("Test") }.configureEach {
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
     }
 }

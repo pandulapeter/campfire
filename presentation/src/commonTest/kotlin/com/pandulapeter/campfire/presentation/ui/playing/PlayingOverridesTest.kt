@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestScope
@@ -28,7 +27,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 /** Over a store that keeps whatever is written into it, as the preferences and the setlist files do. */
-@OptIn(ExperimentalCoroutinesApi::class)
 class PlayingOverridesTest {
 
     private val preferences = MutableStateFlow(testPreferences())

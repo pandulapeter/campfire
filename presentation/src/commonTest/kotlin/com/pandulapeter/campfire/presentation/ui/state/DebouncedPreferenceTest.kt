@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -19,7 +18,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DebouncedPreferenceTest {
 
     private var stored = preferences()

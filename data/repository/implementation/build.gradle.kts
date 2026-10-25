@@ -22,8 +22,5 @@ kotlin {
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlin.serialization.json)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
     }
 }

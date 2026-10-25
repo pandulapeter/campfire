@@ -68,7 +68,7 @@ application {
  * also what makes the task download it again.
  */
 val fonts: Provider<Directory> = layout.buildDirectory.dir("fonts")
-val downloadFonts by tasks.registering {
+val downloadFonts = tasks.register("downloadFonts") {
     val fontSources = mapOf(
         "Roboto.ttf" to Pair(
             "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf",

@@ -50,8 +50,5 @@ kotlin {
                 implementation(libs.kotlin.serialization.json)
             }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
     }
 }

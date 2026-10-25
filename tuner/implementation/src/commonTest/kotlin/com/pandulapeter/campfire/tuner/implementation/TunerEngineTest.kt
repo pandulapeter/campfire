@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.tuner.api.model.TunerState
 import com.pandulapeter.campfire.tuner.api.model.TunerStopReason
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -34,7 +33,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class TunerEngineTest {
     private val input = FakeAudioInput()
     private val output = FakeToneOutput()

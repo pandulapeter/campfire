@@ -37,7 +37,7 @@ internal actual fun CompactKeyboardEffect(isEnabled: Boolean) {
         onDispose {
             if (isEnabled) {
                 if (wasVisible) controller?.show(WindowInsetsCompat.Type.statusBars())
-                if (behavior != null) controller?.systemBarsBehavior = behavior
+                if (behavior != null) controller.systemBarsBehavior = behavior
             }
         }
     }

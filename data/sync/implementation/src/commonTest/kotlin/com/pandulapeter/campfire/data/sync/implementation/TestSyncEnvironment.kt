@@ -7,12 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalTime::class)
 
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlin.time.Clock

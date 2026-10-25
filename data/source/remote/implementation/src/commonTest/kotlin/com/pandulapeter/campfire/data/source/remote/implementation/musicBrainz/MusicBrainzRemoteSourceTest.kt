@@ -28,7 +28,6 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -45,7 +44,6 @@ import kotlin.time.Duration.Companion.milliseconds
  * How the cover search and the song details lookup keep to MusicBrainz's pace. The service is a [MockEngine] and the waiting happens in virtual
  * time, so the spacing and the back-off are measured exactly.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class MusicBrainzRemoteSourceTest {
 
     @Test

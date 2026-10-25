@@ -19,8 +19,5 @@ kotlin {
             implementation(project(":data:repository:api"))
             implementation(libs.kotlin.coroutines)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
     }
 }

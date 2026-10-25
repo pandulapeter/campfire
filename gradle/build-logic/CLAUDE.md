@@ -19,7 +19,7 @@ registered in `build-logic/build.gradle.kts`; a new convention plugin is a class
   on the KMP Android target). Passes `gradle/compose-stability.conf`, marking the `:chordpro` model stable: that module
   is not built with the Compose compiler, so otherwise a new parse would recompose every line of a song. Name each
   class individually, never a wildcard, and leave `kotlin.collections` out.
-- `campfire-koin` (`KoinPlugin`): the Koin compiler plugin (`aiAssist` off) plus `koin-annotations` and `koin-core`.
+- `campfire-koin` (`KoinPlugin`): the Koin compiler plugin (`aiAssist` off, its notes at info severity) plus `koin-annotations` and `koin-core`.
   Applies in either order with the above (waits via `pluginManager.withPlugin`). The root `build.gradle.kts` keeps its
   `apply false` so the extension type comes from one classloader.
 - `campfire-style` (`StylePlugin`): ktlint via Spotless for `src/**/*.kt` and the module's `*.gradle.kts`. The library
@@ -35,7 +35,8 @@ A new target or platform-wide compiler setting goes here, never in a module's bu
 - `archivesName` and the Android namespace derive from the Gradle path (klibs carry the artifact name, and many modules
   are called `api` or `implementation`).
 - Android host tests are on (`withHostTest {}`) so `commonTest` compiles there; tests still run on desktop.
-- `commonTest` gets `kotlin("test")` everywhere.
+- `commonTest` gets `kotlin("test")` and kotlinx-coroutines-test everywhere, and every test source set opts in to
+  `ExperimentalCoroutinesApi` (coroutines-test's virtual time); no test file or module build file does.
 - Every version comes from the catalog via `extensions/VersionCatalog.kt`; nothing here hardcodes one.
 
 ## Tasks

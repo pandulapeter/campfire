@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.components.list
 
 import androidx.compose.runtime.BroadcastFrameClock
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -20,7 +19,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class FastScrollerTest {
 
     @Test

@@ -7,9 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire.data.source.remote.implementation.network
 
 import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
+import kotlin.js.ExperimentalWasmJsInterop
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import org.koin.core.annotation.Single

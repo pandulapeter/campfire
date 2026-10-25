@@ -24,6 +24,7 @@ sealed interface SharedLink {
      * Every part is validated, and [downloadUrl] is built from them rather than taken from the link, so a crafted link
      * cannot point the app at another host. [title] is the title the item had when it was shared, for display only.
      */
+    @ConsistentCopyVisibility
     data class Readable internal constructor(
         val kind: SharedLinkKind,
         val shareId: String,
@@ -47,6 +48,7 @@ sealed interface SharedLink {
      * A link a later version of Campfire made, in a format this one cannot read: the recipient is told to update rather
      * than that the link is broken. Nothing past its version is known.
      */
+    @ConsistentCopyVisibility
     data class FromNewerVersion internal constructor(
         override val version: Int,
     ) : SharedLink

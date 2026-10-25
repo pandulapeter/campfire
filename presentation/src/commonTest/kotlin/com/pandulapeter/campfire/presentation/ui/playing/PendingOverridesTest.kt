@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -20,7 +19,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class PendingOverridesTest {
 
     private val stored = MutableStateFlow(SongOverrides<Int>())

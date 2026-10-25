@@ -81,7 +81,7 @@ internal class AndroidSyncAuthenticator(
         } catch (exception: Exception) {
             SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.toString())
         } finally {
-            callbacks?.let { application?.unregisterActivityLifecycleCallbacks(it) }
+            callbacks?.let { application.unregisterActivityLifecycleCallbacks(it) }
         }
     }
 

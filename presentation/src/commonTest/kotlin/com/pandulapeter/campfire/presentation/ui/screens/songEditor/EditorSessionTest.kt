@@ -56,7 +56,7 @@ class EditorSessionTest {
         private val getSongContent = object : GetSongContentUseCase {
             override suspend fun invoke(fileName: String) = files[fileName]?.let { SongContent(fileName = fileName, text = it) }
         }
-        lateinit var session: EditorSession
+        val session: EditorSession
         val songTextStore = SongTextStore(
             scope = scope,
             backStack = backStack,

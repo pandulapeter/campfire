@@ -29,8 +29,11 @@ class KoinPlugin : Plugin<Project> {
             pluginManager.apply(libs.pluginId("koin-compiler"))
             // A failed graph check is reported as the missing definition; the line advertising an AI service after it is
             // left out. Only :app:di runs the whole graph check, but one setting everywhere keeps the modules alike.
+            // The plugin's own notes, such as every other module's "no Koin entry point" when it skips that check, are
+            // information rather than warnings; its diagnostics keep their severity.
             extensions.configure<KoinGradleExtension> {
                 aiAssist.set(false)
+                logSeverity.set("info")
             }
             extensions.configure<KotlinMultiplatformExtension> {
                 sourceSets.getByName("commonMain").dependencies {

@@ -73,9 +73,6 @@ kotlin {
                 implementation(libs.kotlin.serialization.json)
             }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
         desktopTest.dependencies {
             // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.
             implementation(compose.desktop.currentOs)

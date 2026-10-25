@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -20,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SyncNotificationSchedulerTest {
 
     private class Harness(scope: CoroutineScope, onRelease: Harness.() -> Unit = {}) {

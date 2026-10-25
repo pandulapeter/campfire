@@ -28,7 +28,7 @@ internal class StoredSyncCredentials(var credentials: String? = null) : SyncCred
     var writeAttemptCount = 0
 
     /** [credentials] read back the way the provider reads them. */
-    val document get() = credentials?.let { Json { ignoreUnknownKeys = true }.decodeFromString<SyncCredentialsDocument>(it) }
+    val document get() = credentials?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
 
     override suspend fun loadSyncCredentials(): String? {
         readCount++
@@ -54,6 +54,10 @@ internal class StoredSyncCredentials(var credentials: String? = null) : SyncCred
             shouldCancelNextWriteAfterStoring = false
             throw CancellationException("The writer went away.")
         }
+    }
+
+    private companion object {
+        val json = Json { ignoreUnknownKeys = true }
     }
 }
 

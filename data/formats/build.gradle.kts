@@ -19,8 +19,5 @@ kotlin {
             // The extractors give way and rethrow a cancellation on long documents.
             implementation(libs.kotlin.coroutines)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
     }
 }

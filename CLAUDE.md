@@ -251,7 +251,7 @@ size checks, and compiles every platform (iOS on macOS) on every PR, on every pu
 - Versions in `gradle/libs.versions.toml`. `campfire.versionName` / `campfire.buildNumber` serve every platform (the
   Xcode build phase writes them into `Info.plist`).
 - **Everything configurable is a `campfire.*` property** with a default in `gradle.properties`, read with
-  `project.property(...)` (not `findProperty`, so a typo fails the build; inside `tasks.registering { }` it must be
+  `project.property(...)` (never findProperty, so a typo fails the build; inside `tasks.register(...) { }` it must be
   `project.property`). **`local.properties` overrides any of them and is never committed**; `settings.gradle.kts`
   copies its entries onto every project. Defaults use the committed debug keystore and an empty Dropbox key, so a fresh
   clone builds everything (unpublishable, sync not configured). Real signing and sync need:

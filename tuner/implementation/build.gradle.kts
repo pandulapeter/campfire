@@ -18,8 +18,5 @@ kotlin {
             api(project(":tuner:api"))
             implementation(libs.kotlin.coroutines)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
     }
 }

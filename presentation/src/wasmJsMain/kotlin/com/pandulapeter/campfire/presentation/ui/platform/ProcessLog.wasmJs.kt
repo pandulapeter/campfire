@@ -7,7 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire.presentation.ui.platform
+
+import kotlin.js.ExperimentalWasmJsInterop
 
 /**
  * Keeps everything the page writes to the console, see [readProcessLog], and every error nothing caught, in the site's

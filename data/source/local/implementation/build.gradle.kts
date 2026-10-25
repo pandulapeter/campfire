@@ -23,9 +23,6 @@ kotlin {
             implementation(libs.kotlin.datetime)
             implementation(libs.kotlin.serialization.json)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.coroutines.test)
-        }
         wasmJsMain.dependencies {
             // The Origin Private File System is reached through the browser APIs, see OpfsFileStorage.kt.
             implementation(libs.kotlin.browser)
