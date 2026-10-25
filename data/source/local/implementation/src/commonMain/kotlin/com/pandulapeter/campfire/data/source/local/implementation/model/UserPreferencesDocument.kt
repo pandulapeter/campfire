@@ -67,8 +67,6 @@ internal data class UserPreferencesDocument(
     val chordInstrument: String = "",
     val chordTunings: Map<String, String> = emptyMap(),
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
-    val isChordSectionFolded: Boolean = false,
-    val isScaleSectionFolded: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
     val tempos: Map<String, Int> = emptyMap(),
     val capos: Map<String, Int> = emptyMap(),

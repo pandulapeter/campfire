@@ -142,10 +142,6 @@ data class UserPreferences(
      * this version does not know is kept as it is, for the version that does.
      */
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
-    /** Whether the chord diagrams are folded away, one choice for every song rather than one per song like [foldedSections]. */
-    val isChordSectionFolded: Boolean = false,
-    /** Whether the scale suggestions are folded away, one choice for every song, as [isChordSectionFolded] is. */
-    val isScaleSectionFolded: Boolean = false,
     /**
      * Song file name to semitones, for songs opened from the library rather than from a setlist. Never exported, but
      * synced: with [tempos] and [capos] it is what every device connected to one cloud folder shares through its
@@ -173,10 +169,10 @@ data class UserPreferences(
      */
     val beatLevels: Map<String, Map<String, List<String>>> = emptyMap(),
     /**
-     * Song file name to the sections (and the tabs and grids inside them) the reader has folded away on the song details
-     * screen, as the opaque keys that screen names them by. One set per song, wherever the song is opened from: unlike a
-     * transposition, which the band plays the song in, how much of it one reader keeps open is their own business, so it
-     * is never written into a setlist, exported or synced.
+     * Song file name to the sections (the tabs and grids inside them, and the Chords and Scales sections) the reader has
+     * folded away on the song details screen, as the opaque keys that screen names them by. One set per song, wherever
+     * the song is opened from: unlike a transposition, which the band plays the song in, how much of it one reader keeps
+     * open is their own business, so it is never written into a setlist, exported or synced.
      */
     val foldedSections: Map<String, Set<String>>,
     /**

@@ -66,7 +66,7 @@ Definitions:
 - **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the row
   its index names at the measured width, the last holding the rest.
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
-- One fold for every song (`UserPreferences.isChordSectionFolded`), read only mode included.
+- Folded per song (`CHORDS_FOLD_KEY` in `UserPreferences.foldedSections`), read only mode included.
 - **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
   highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
   is consumed so it doesn't also turn the page. A screen reader gets one custom action per cell.

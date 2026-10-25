@@ -120,8 +120,7 @@ internal class UserPreferencesMappersTest {
         assertEquals(true, defaults.isTunerEnabled)
         assertEquals(true, defaults.areScalesEnabled)
         assertEquals(true, defaults.areScaleSuggestionsEnabled)
-        assertEquals(false, defaults.isScaleSectionFolded)
-        val scalesOff = defaults.copy(areScalesEnabled = false, areScaleSuggestionsEnabled = false, isScaleSectionFolded = true)
+        val scalesOff = defaults.copy(areScalesEnabled = false, areScaleSuggestionsEnabled = false)
         assertEquals(scalesOff, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(scalesOff.toDocument())).document.toModel())
         val lyricsOnly = UserPreferencesDocumentFormat.decode("""{"isLyricsOnlyModeEnabled":true}""").document
         assertEquals(false, lyricsOnly.toModel().areChordsEnabled)
@@ -133,14 +132,12 @@ internal class UserPreferencesMappersTest {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(true, defaults.areChordDiagramsEnabled)
         assertEquals(UserPreferences.Instrument.GUITAR, defaults.instrument)
-        assertEquals(false, defaults.isChordSectionFolded)
         assertEquals(emptyMap(), defaults.tunings)
         val chosen = defaults.copy(
             areChordDiagramsEnabled = false,
             instrument = UserPreferences.Instrument.UKULELE,
             tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d"),
             chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to "x x 3 2 1 1"), "banjo" to mapOf("G:0.4.7" to "0 0 0 0 0")),
-            isChordSectionFolded = true,
         )
         assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
         val bass = defaults.copy(instrument = UserPreferences.Instrument.BASS_FIVE_STRING)

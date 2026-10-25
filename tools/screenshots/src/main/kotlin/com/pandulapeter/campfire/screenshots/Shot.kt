@@ -273,8 +273,15 @@ internal val shots = listOf(
                     Device.ANDROID_PHONE, Device.CHROMEBOOK -> put("fontScale", JsonPrimitive(1f))
                     else -> Unit
                 }
-                if (device.isPhone) put("foldedSections", buildJsonObject { putJsonArray(HOUSE_OF_THE_RISING_SUN) { add("Picking pattern#1") } })
-                put("isScaleSectionFolded", JsonPrimitive(true))
+                put(
+                    "foldedSections",
+                    buildJsonObject {
+                        putJsonArray(HOUSE_OF_THE_RISING_SUN) {
+                            add("scales")
+                            if (device.isPhone) add("Picking pattern#1")
+                        }
+                    },
+                )
             }
         },
         drive = { openSong(HOUSE_OF_THE_RISING_SUN) },

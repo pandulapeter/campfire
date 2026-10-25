@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  *
  * @param tuning The tuning the diagrams are drawn for, null for an instrument without shapes, which draws none.
  *
- * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
+ * @param onFoldToggled Folds the section or unfolds it, one choice per song ([CHORDS_FOLD_KEY]); null where nothing folds.
  * @param onChordClicked Opens the sheet of the chord a diagram was tapped on, by the name the page shows it with; null in
  * read only mode (performance mode, or a song read from an archived setlist), which takes the controls off the page.
  * @param onInstrumentClicked Opens the sheet of the instrument, from its pill at the top of the song's first section;

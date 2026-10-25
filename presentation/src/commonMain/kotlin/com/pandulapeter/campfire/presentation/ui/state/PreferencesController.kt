@@ -130,8 +130,6 @@ internal class PreferencesController(
 
     fun setTuning(tuning: InstrumentTuning) = changeUserPreferences { withTuning(tuning) }
 
-    fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
-
     /**
      * Stores [shape] as the player's own for the chord [chordId] under [voicingKey] (a tuning's
      * [ChordTuning.voicingKey]), in every song, or forgets their choice where it is null. Written at once, as the page's
@@ -157,10 +155,8 @@ internal class PreferencesController(
     /** The onboarding's scales card, which stands for the scale suggestions too; one write, so neither change is lost. */
     fun setScalesWithSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value, areScaleSuggestionsEnabled = value) }
 
-    fun toggleScaleSectionFold() = changeUserPreferences { copy(isScaleSectionFolded = !isScaleSectionFolded) }
-
     /**
-     * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
+     * Folds or unfolds one section of a song (or one tab or grid inside it, or its Chords or Scales section), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
      * setlist, since it is how one reader reads the song rather than how the band plays it. It toggles what the
      * preferences hold when the change runs, which already has the previous tap in it (see `PlayingOverrides.changeTransposition`).

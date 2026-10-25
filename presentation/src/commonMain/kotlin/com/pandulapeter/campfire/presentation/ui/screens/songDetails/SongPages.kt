@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingTools
+import com.pandulapeter.campfire.presentation.ui.songView.model.CHORDS_FOLD_KEY
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.songView.model.SCALES_FOLD_KEY
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.Orientation
@@ -142,6 +144,9 @@ internal fun SongPages(
         var hasShownLyrics by remember { mutableStateOf(text != null) }
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
+        val foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty()
+        val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
+        val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
         val readsCapoAsTransposition = userPreferences.readsCapoAsTransposition
         val shownPlayback = playback.shownFor(userPreferences)
@@ -201,7 +206,7 @@ internal fun SongPages(
             keepsStepButtonInset = canPage,
             // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
             // setlist has the band play it.
-            foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
+            foldedSections = foldedSections,
             onFoldToggled = { key -> viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = key) },
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
@@ -211,8 +216,10 @@ internal fun SongPages(
             onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
+            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly, isChordSectionFolded) {
                 chordDiagrams?.copy(
+                    isFolded = isChordSectionFolded,
+                    onFoldToggled = { viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = CHORDS_FOLD_KEY) },
                     onChordClicked = if (isReadOnly) null else {
                         { chordName -> viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
                     },
@@ -222,7 +229,12 @@ internal fun SongPages(
                 )
             },
             tabs = tabs,
-            scaleSuggestions = scaleSuggestions,
+            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded) {
+                scaleSuggestions?.copy(
+                    isFolded = isScaleSectionFolded,
+                    onFoldToggled = { viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = SCALES_FOLD_KEY) },
+                )
+            },
         )
     }
 }
@@ -230,7 +242,7 @@ internal fun SongPages(
 /**
  * What the Scales section of every page is drawn with, null where it is off: with the chords, since the scales are
  * read from them, and with the Scale suggestions switch, which the Scales switch takes with it. One for the whole pager,
- * since nothing in it belongs to one song.
+ * since nothing else in it belongs to one song: whether the section is folded is each song's own, given by its page.
  */
 @Composable
 private fun rememberScaleSuggestions(
@@ -239,12 +251,9 @@ private fun rememberScaleSuggestions(
     shouldShowChords: Boolean,
 ): ScaleSuggestions? {
     if (!shouldShowChords || !FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) return null
-    val isFolded = userPreferences?.isScaleSectionFolded == true
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    return remember(isFolded, notation) {
+    return remember(notation) {
         ScaleSuggestions(
-            isFolded = isFolded,
-            onFoldToggled = viewModel.preferencesController::toggleScaleSectionFold,
             onScaleClicked = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName)) },
             notation = notation,
         )

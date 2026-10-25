@@ -37,7 +37,7 @@ builds what it draws, `grid/` places it.
 - `RenderSection.Scales`, after the Chords section (else after the metadata section, else first), while chords and
   Scale suggestions are on (`ScaleSuggestions`, null otherwise); read only mode keeps it, since a scale sheet writes
   nothing; none for a songbook (over `MAX_CUT_SECTION_COUNT` sections) or a song playing over `MAX_PLAYED_CHORDS`
-  chords. One fold for every song (`UserPreferences.isScaleSectionFolded`).
+  chords. Folded per song, under `SCALES_FOLD_KEY` in `UserPreferences.foldedSections`.
 - Cut only between its rows of chips (a group's, then one per chord of it worth a scale), never between the lines one
   row wraps into, so a title always heads all of its chips. Each row has one slot per chip
   (`RenderSection.Scales.rowStarts`), and a chunk places only its own rows (`ScaleChipRows`), since which line a chip

@@ -36,6 +36,13 @@ internal class FoldedRuns(
     fun toggle(key: String) = onToggled(key)
 }
 
+/**
+ * The keys the Chords and the Scales sections are folded under, saved with the song's other folds. Every other key has
+ * a `#` in it ([nextFoldKey]), so no section the file names can take one of these.
+ */
+internal const val CHORDS_FOLD_KEY = "chords"
+internal const val SCALES_FOLD_KEY = "scales"
+
 /** The next key of a fold named [name] where the ones before it were counted in this map: `name#1`, `name#2`… */
 internal fun MutableMap<String, Int>.nextFoldKey(name: String): String {
     val occurrence = (this[name] ?: 0) + 1

@@ -349,8 +349,8 @@ private fun LoadSongTexts(
 
 /**
  * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
- * nothing in it belongs to one song: the instrument, the tuning, the player's shapes and whether the section is folded
- * are the same wherever a song is read. An instrument without shapes still gets one, with no tuning to draw in, so that
+ * nothing else in it belongs to one song: the instrument, the tuning, and the player's shapes are the same wherever a
+ * song is read. Whether the section is folded is each song's own, given by its page. An instrument without shapes still gets one, with no tuning to draw in, so that
  * the first section keeps the chips that change it.
  */
 @Composable
@@ -364,16 +364,13 @@ private fun rememberChordDiagrams(
     val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
     val instrument = preferences.instrument
     val instrumentTuning = preferences.instrumentTuning
-    val isChordSectionFolded = preferences.isChordSectionFolded
     val notation = preferences.chordSpelling.notation.toChordNotation()
-    return remember(chordTuning, storedChordShapes, instrument, instrumentTuning, isChordSectionFolded, notation) {
+    return remember(chordTuning, storedChordShapes, instrument, instrumentTuning, notation) {
         ChordDiagrams(
             tuning = chordTuning,
             instrument = instrument,
             instrumentTuning = instrumentTuning,
             storedShapes = storedChordShapes,
-            isFolded = isChordSectionFolded,
-            onFoldToggled = viewModel.preferencesController::toggleChordSectionFold,
             notation = notation,
         )
     }
