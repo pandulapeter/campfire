@@ -26,6 +26,9 @@ The editor's Shortcuts toolbar and its control row.
 
 - Toolbar buttons and menus (`EditorToolbarMenuButton`) **take no focus**, or the keyboard closes on every tap and the
   insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
+- A write that leaves a value to type (`leavesValueToType`: a new selection, or the caret inside a directive's braces or
+  a chord's brackets) brings the keyboard up and scrolls to it (`TypingRequest`), even if the user had put it away;
+  sections, tabs, Repeat chorus, wrapping a selection, and the formatting buttons never do.
 - Everything in braces goes on a line of its own (the only way ChordPro reads a directive).
 - Deliberately absent: `{new_song}` (one song per editor) and `{new_page}` / `{column_break}` (Campfire flows sections
   into columns itself). `{transpose}` is offered only as **Key change**, written at the caret, never in the header: one

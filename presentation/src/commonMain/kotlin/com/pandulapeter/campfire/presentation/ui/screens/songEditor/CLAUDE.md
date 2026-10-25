@@ -89,6 +89,8 @@ numbers nothing to count from.
 - Ctrl / Cmd + S is heard by the whole editor, which takes focus itself on open and whenever panes change, except that
   a field being typed in keeps focus across a change that still shows it (rotation, resize across Split).
 - Insertion rows leave whenever only the preview shows.
+- An editor opened on a selection (a shared song's filled-in title) puts the caret in the field, asks for the keyboard,
+  and scrolls to the selection once the keyboard has settled (`TypingRequest`), so the first key typed replaces it.
 - **Bold, Italic, and Underline toggle** (`formattingToggle`, tested), from the Shortcuts row and as Ctrl / Cmd + B, I,
   and U while the field shows (`editorFormattingShortcuts`): tags around or at the ends of the selection are taken off,
   else written around it; several lines are formatted line by line, since markup is read within one, directives and

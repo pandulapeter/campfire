@@ -39,9 +39,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
@@ -82,6 +84,9 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  *   one is scrolled into view whenever it changes, since the field has no focus under the sheet to follow it with.
  * @param searchSheetTop Where the search sheet's top edge is on the screen ([EditorSearch.sheetTop]), above which the
  *   current match is revealed, or null while there is no sheet laid out.
+ * @param selectionReveals Asks for the selection to be scrolled into view ([TypingRequest.reveals]), once the field has
+ *   stopped changing its height: the keyboard asked for with it slides in over several frames, and the line has to end
+ *   up above where it stops.
  */
 @OptIn(FlowPreview::class)
 @Composable
@@ -96,6 +101,7 @@ internal fun ChordProTextField(
     contentPadding: PaddingValues,
     searchHighlights: () -> SearchHighlights?,
     searchSheetTop: () -> Float?,
+    selectionReveals: Flow<Unit>,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val secondAccentColor = LocalSecondAccentColor.current
@@ -162,6 +168,22 @@ internal fun ChordProTextField(
                 horizontalScrollState = horizontalScrollState,
                 textStart = textStart,
                 uncoveredHeight = height,
+                margin = margin,
+            )
+        }
+    }
+    LaunchedEffect(selectionReveals, textFieldState, scrollState, horizontalScrollState) {
+        val margin = with(density) { REVEAL_MARGIN.toPx() }
+        selectionReveals.collectLatest {
+            snapshotFlow { scrollState.viewportSize }.debounce(UNCOVERED_HEIGHT_SETTLING_MILLIS).first()
+            val layout = textLayout.getResult() ?: return@collectLatest
+            revealOffset(
+                offset = textFieldState.selection.min,
+                layout = layout,
+                scrollState = scrollState,
+                horizontalScrollState = horizontalScrollState,
+                textStart = textStart,
+                uncoveredHeight = scrollState.viewportSize.toFloat(),
                 margin = margin,
             )
         }

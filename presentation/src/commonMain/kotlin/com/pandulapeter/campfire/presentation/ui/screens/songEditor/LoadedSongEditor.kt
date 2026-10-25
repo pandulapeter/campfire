@@ -219,8 +219,18 @@ internal fun LoadedSongEditor(
     val fieldFocusRequester = remember { FocusRequester() }
     val fieldFocus = remember { FieldFocus() }
     val wasFieldFocused = remember(panes) { fieldFocus.hasFocus }
+    val typingRequest = rememberTypingRequest(fieldFocusRequester)
+    // An editor opened on a selection (the title a shared song was given, selected to be typed over) is opened to type
+    // into it, so it starts with the caret in the field and the keyboard up instead.
+    var hasOpened by remember { mutableStateOf(false) }
     LaunchedEffect(panes) {
-        if (wasFieldFocused && panes != EditorPanes.PREVIEW) fieldFocusRequester.requestFocus() else focusRequester.requestFocus()
+        when {
+            panes == EditorPanes.PREVIEW -> focusRequester.requestFocus()
+            !hasOpened && !textFieldState.selection.collapsed -> typingRequest.request()
+            wasFieldFocused -> fieldFocusRequester.requestFocus()
+            else -> focusRequester.requestFocus()
+        }
+        hasOpened = true
     }
 
     val layoutDirection = LocalLayoutDirection.current
@@ -317,6 +327,7 @@ internal fun LoadedSongEditor(
                             val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
                             { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, notation.toChordNotation()) }
                         },
+                        onValueToType = typingRequest::request,
                     )
                 }
             },
@@ -338,6 +349,7 @@ internal fun LoadedSongEditor(
                 contentPadding = contentPadding.only(start = true, end = !hasSideBySidePreview, bottom = true),
                 searchHighlights = searchHighlights,
                 searchSheetTop = searchSheetTop,
+                selectionReveals = typingRequest.reveals,
             )
         }
         val preview: @Composable (Modifier) -> Unit = { paneModifier ->

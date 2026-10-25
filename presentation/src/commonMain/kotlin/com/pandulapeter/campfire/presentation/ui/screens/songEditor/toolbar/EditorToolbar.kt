@@ -100,6 +100,9 @@ import org.jetbrains.compose.resources.painterResource
  *   ([chordShapeInstruments]), see `chordShapeInsertion`.
  * @param tabStaff The empty staff the Tab button writes where nothing is selected for the instrument picked from its
  *   menu, or for none, its strings named.
+ * @param onValueToType Called after a write that left a value to type ([leavesValueToType]), so that the keyboard comes
+ *   up for it even where the user had put it away. Never for the formatting buttons: markup is toggled around what is
+ *   there, and with nothing selected its empty pair waits for words as much as a section does.
  */
 @Composable
 internal fun EditorToolbar(
@@ -108,10 +111,16 @@ internal fun EditorToolbar(
     contentPadding: PaddingValues,
     chordShapes: EditorChordShapes,
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
+    onValueToType: () -> Unit,
 ) {
     val onInsert = { insertion: EditorInsertion ->
+        val textBefore = textFieldState.text.toString()
+        val selectionBefore = textFieldState.selection
         val instrument = insertion.chordShapeInstrument
         if (instrument == null) textFieldState.insert(insertion) else textFieldState.insertChordShape(chordShapes, instrument)
+        if (insertion.formatting == null && leavesValueToType(textBefore, selectionBefore, textFieldState.text.toString(), textFieldState.selection)) {
+            onValueToType()
+        }
     }
     Column(
         modifier = modifier.padding(bottom = TOOLBAR_PADDING),
