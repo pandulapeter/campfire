@@ -25,6 +25,9 @@ builds what it draws, `grid/` places it.
 - Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
   block's its lines, so screen readers read the chords.
 - Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together.
+- A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested): strings run from bar to bar,
+  broken by every other character, and a bar joins the strings above and under it that have one in its column. Only
+  the screen draws them so far; the PDF prints the characters.
 - Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) aligns bar lines across lines; each bar is one text,
   since only one monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`).
 - A paragraph holding nothing but one tab or grid run is headed "Tab" / "Grid" (screen and PDF).

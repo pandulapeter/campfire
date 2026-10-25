@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro.tabs
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
+import com.pandulapeter.campfire.chordpro.model.TabRowLine
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
 
@@ -54,21 +55,29 @@ public object ChordProTabWrapper {
      * shown that wide anyway, since a staff cut into pieces of two characters is not a staff any more.
      */
     public fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
+        val rows = wrapLines(lines, maxColumns)
+        // A run that is one row of all its lines is the run as it came, and is handed back as the same list.
+        return if (rows.size == 1 && rows.single().size == lines.size) listOf(lines) else rows.map { row -> row.map { it.text } }
+    }
+
+    /** [wrap], with every line of every row telling whether it is a piece of a staff line, for drawing the staff. */
+    public fun wrapLines(lines: List<String>, maxColumns: Int): List<List<TabRowLine>> {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val length = lines.maxOfOrNull { it.length } ?: 0
-        if (isStaffLine.none { it } || length <= maxColumns) return listOf(lines)
+        val unwrapped = listOf(lines.mapIndexed { index, line -> TabRowLine(line, isStaffLine[index]) })
+        if (isStaffLine.none { it } || length <= maxColumns) return unwrapped
         // Proportional to the run rather than a fixed number, since a fixed cap per run or per system still lets a file
         // of many runs or many small systems multiply its size by the number of rows. A real system stays far below
         // it: with at least MIN_CAPACITY columns a row, its row lines are at most an eighth of its characters.
         var budget = lines.size + lines.sumOf { it.length } / 2
-        val rows = mutableListOf<List<String>>()
+        val rows = mutableListOf<List<TabRowLine>>()
         systems(lines, isStaffLine).forEach { system ->
             val systemRows = wrapSystem(
                 lines = lines.subList(system.first, system.last + 1),
                 isStaffLine = isStaffLine.subList(system.first, system.last + 1),
                 maxColumns = maxColumns,
                 budget = budget,
-            ) ?: return listOf(lines)
+            ) ?: return unwrapped
             budget -= systemRows.sumOf { it.size }
             rows += systemRows
         }
@@ -168,15 +177,17 @@ public object ChordProTabWrapper {
     private const val ROMAN_ONE = "I"
 
     /** [wrap] for the lines of one system, or null as soon as its rows hold more than [budget] lines. */
-    private fun wrapSystem(lines: List<String>, isStaffLine: List<Boolean>, maxColumns: Int, budget: Int): List<List<String>>? {
+    private fun wrapSystem(lines: List<String>, isStaffLine: List<Boolean>, maxColumns: Int, budget: Int): List<List<TabRowLine>>? {
         val length = lines.maxOfOrNull { it.length } ?: 0
-        if (isStaffLine.none { it } || length <= maxColumns) return if (lines.size > budget) null else listOf(lines)
+        if (isStaffLine.none { it } || length <= maxColumns) {
+            return if (lines.size > budget) null else listOf(lines.mapIndexed { index, line -> TabRowLine(line, isStaffLine[index]) })
+        }
         val repeatedPrefixes = lines.mapIndexed { index, line -> if (isStaffLine[index]) staffPrefix(line) else "" }
         val repeatsPrefixes = maxColumns - repeatedPrefixes.maxOf { it.length } >= MIN_CAPACITY
         val prefixes = if (repeatsPrefixes) repeatedPrefixes else lines.map { "" }
         val prefixWidth = prefixes.maxOf { it.length }
         val barColumns = barColumns(lines, isStaffLine, length)
-        val rows = mutableListOf<List<String>>()
+        val rows = mutableListOf<List<TabRowLine>>()
         var lineCount = 0
         var start = 0
         while (start < length) {
@@ -192,7 +203,7 @@ public object ChordProTabWrapper {
                 val to = cutBoundary(line, end)
                 val content = if (from < to) line.substring(from, to) else ""
                 val row = if (start == 0) content else (if (isStaffLine[index]) prefixes[index].padStart(prefixWidth) else " ".repeat(prefixWidth)) + content
-                row.trimEnd().takeIf { isStaffLine[index] || it.isNotBlank() }
+                row.trimEnd().takeIf { isStaffLine[index] || it.isNotBlank() }?.let { TabRowLine(it, isStaffLine[index]) }
             }
             lineCount += rowLines.size
             if (lineCount > budget) return null

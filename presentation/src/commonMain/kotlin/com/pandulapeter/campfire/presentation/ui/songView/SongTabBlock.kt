@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
@@ -25,6 +28,8 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.isSpecified
+import com.pandulapeter.campfire.chordpro.model.TabRowLine
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
 import kotlin.math.roundToInt
@@ -38,7 +43,8 @@ import kotlin.math.roundToInt
  * one is never read as the first string of the next; one with no staff in it is preformatted text - chord names over
  * lyrics most often - cut between words, each line of chord names together with the lyrics under it, and read like
  * wrapped text with no gap between its rows (see [ChordProTabWrapper] for both). Neither scrolls sideways, since a song
- * may be read with nothing but a pedal that scrolls it up and down.
+ * may be read with nothing but a pedal that scrolls it up and down. The strings and bar lines of a staff are drawn as
+ * strokes under the rest of its text ([TabStaffGeometry]), so that they join up the way a printed staff does.
  *
  * The text is drawn rather than composed, because where the cuts fall depends on the width the block is measured
  * at, and the section this block is in is measured at several widths before one wins (see [SongSectionsLayout]):
@@ -54,9 +60,10 @@ internal fun SongTabBlock(
     isLastSlot: Boolean,
 ) {
     val color = MaterialTheme.colorScheme.onSurface
+    val staffColor = MaterialTheme.colorScheme.onSurfaceVariant
     // The rows of the slot at a width, and whether the run goes on after them, which is what leaves the gap that keeps
     // the last string of one system from being read as the first string of the next under them.
-    fun slotRows(width: Int): Pair<List<List<TextLayoutResult>>, Boolean> {
+    fun slotRows(width: Int): Pair<List<TabRow>, Boolean> {
         val all = rows.at(width)
         val mine = if (isLastSlot) all.drop(slot) else listOfNotNull(all.getOrNull(slot))
         return mine to (slot + mine.size < all.size)
@@ -69,7 +76,8 @@ internal fun SongTabBlock(
             .drawBehind {
                 var y = 0f
                 slotRows(size.width.roundToInt()).first.forEach { row ->
-                    row.forEach { line ->
+                    drawStaff(row = row, top = y, columnWidth = rows.columnWidth, stringOffset = rows.stringOffset, color = staffColor)
+                    row.lines.forEach { line ->
                         drawText(textLayoutResult = line, color = color, topLeft = Offset(0f, y))
                         y += line.size.height
                     }
@@ -79,18 +87,45 @@ internal fun SongTabBlock(
     ) { _, constraints ->
         val width = constraints.maxWidth
         val (rowsAtWidth, goesOn) = slotRows(width)
-        val height = rowsAtWidth.sumOf { row -> row.sumOf { it.size.height } } +
+        val height = rowsAtWidth.sumOf { row -> row.lines.sumOf { it.size.height } } +
             rows.rowGap * (rowsAtWidth.size - 1).coerceAtLeast(0) +
             if (goesOn && rowsAtWidth.isNotEmpty()) rows.rowGap else 0
         // Asked how wide it would be, every piece answers for the whole run, unwrapped: the layout narrows a column to
         // the widest of what it holds, and a column narrowed to what one piece of a run needs would wrap the run's other
         // pieces into rows of fewer bars - taller than the rows the page was planned with, and different ones.
         layout(
-            width = if (width == Constraints.Infinity) rows.at(width).maxOfOrNull { row -> row.maxOf { it.size.width } } ?: 0 else width,
+            width = if (width == Constraints.Infinity) rows.naturalWidth else width,
             height = height.coerceIn(constraints.minHeight, constraints.maxHeight),
         ) {}
     }
 }
+
+/**
+ * The strings and bar lines of [row], drawn from [top]. A bar line on a string with no bar above or under it stops short
+ * of the lines next to it, so that it is not read as joining the staff of another system.
+ */
+private fun DrawScope.drawStaff(row: TabRow, top: Float, columnWidth: Float, stringOffset: Float, color: Color) {
+    val tops = row.lines.runningFold(top) { lineTop, line -> lineTop + line.size.height }
+    val strokeWidth = (columnWidth * STROKE_WIDTH_PER_COLUMN).coerceAtLeast(1f)
+    row.staff.strings.forEach { string ->
+        val y = tops[string.line] + stringOffset
+        drawLine(color = color, start = Offset(string.from * columnWidth, y), end = Offset(string.to * columnWidth, y), strokeWidth = strokeWidth)
+    }
+    row.staff.bars.forEach { bar ->
+        val x = (bar.column + HALF_COLUMN) * columnWidth
+        val (from, to) = if (bar.fromLine == bar.toLine) {
+            val inset = (tops[bar.fromLine + 1] - tops[bar.fromLine]) * LONE_BAR_INSET
+            tops[bar.fromLine] + inset to tops[bar.fromLine + 1] - inset
+        } else {
+            tops[bar.fromLine] + stringOffset to tops[bar.toLine] + stringOffset
+        }
+        // Square caps reach half the stroke past the outer strings, which closes the corner where a string meets a bar.
+        drawLine(color = color, start = Offset(x, from), end = Offset(x, to), strokeWidth = strokeWidth, cap = StrokeCap.Square)
+    }
+}
+
+/** One row of a run as it is drawn: its lines laid out in order, and the strokes of its staff under them. */
+internal class TabRow(val lines: List<TextLayoutResult>, val staff: TabStaffGeometry)
 
 /**
  * The laid out rows of one run of tablature, per width. A run is measured at every width the column layout tries
@@ -111,28 +146,55 @@ internal class TabRows(
     /** The height of a blank line in the tab's own font between the systems of tablature, and nothing elsewhere. */
     val rowGap = if (isTablature) textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), style).size.height else 0
 
+    private val sample = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE.repeat(CHARACTER_WIDTH_SAMPLE_LENGTH)), style)
+
     // A monospace font, so the width of one character is the width of many divided by their count, measured with
     // enough of them for the rounding of the total not to matter.
-    private val characterWidth = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE.repeat(CHARACTER_WIDTH_SAMPLE_LENGTH)), style).size.width /
-            CHARACTER_WIDTH_SAMPLE_LENGTH.toFloat()
-    // The width the widest line takes whole, which is also the minimum intrinsic width of the block. A block given that
-    // much must not wrap: the character width above is an estimate a fraction of a pixel off, and counting characters
-    // with it at exactly this width can come out one short and cut the last bar off onto a staff of its own.
-    private val naturalWidth by lazy(LazyThreadSafetyMode.NONE) {
+    private val characterWidth = sample.size.width / CHARACTER_WIDTH_SAMPLE_LENGTH.toFloat()
+
+    /**
+     * The exact width of a column, where the strokes of a staff are drawn: a position inside the text is not rounded to
+     * whole pixels as its size is, and a stroke placed by the rounded estimate would drift off its column along a long line.
+     */
+    val columnWidth = sample.getHorizontalPosition(CHARACTER_WIDTH_SAMPLE_LENGTH, usePrimaryDirection = true) / CHARACTER_WIDTH_SAMPLE_LENGTH
+
+    /**
+     * How far below the top of a line its string runs: through the middle of the digits of its frets, which stand on the
+     * baseline as tall as a capital, so that a fret number sits on its string as it does in print.
+     */
+    val stringOffset = if (style.fontSize.isSpecified) {
+        with(sample.layoutInput.density) { sample.firstBaseline - style.fontSize.toPx() * CAP_HEIGHT_PER_EM / 2 }
+    } else {
+        sample.size.height / 2f
+    }
+
+    /**
+     * The width the widest line takes whole, which is also the minimum intrinsic width of the block. A block given that
+     * much must not wrap: the character width above is an estimate a fraction of a pixel off, and counting characters
+     * with it at exactly this width can come out one short and cut the last bar off onto a staff of its own.
+     */
+    val naturalWidth by lazy(LazyThreadSafetyMode.NONE) {
         lines.maxOfOrNull { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false).size.width } ?: 0
     }
-    private val rowsByWidth = mutableMapOf<Int, List<List<TextLayoutResult>>>()
+    private val rowsByWidth = mutableMapOf<Int, List<TabRow>>()
     private val recentWidths = ArrayDeque<Int>()
 
-    fun at(width: Int): List<List<TextLayoutResult>> {
+    fun at(width: Int): List<TabRow> {
         recentWidths.remove(width)
         recentWidths.addLast(width)
         if (recentWidths.size > MAX_TAB_WIDTHS) rowsByWidth.remove(recentWidths.removeFirst())
         return rowsByWidth.getOrPut(width) {
             val maxColumns = if (width >= naturalWidth || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
-            val rows = if (isTablature) ChordProTabWrapper.wrap(lines, maxColumns) else ChordProTabWrapper.wrapPreformatted(lines, maxColumns)
+            val rows = if (isTablature) {
+                ChordProTabWrapper.wrapLines(lines, maxColumns)
+            } else {
+                ChordProTabWrapper.wrapPreformatted(lines, maxColumns).map { row -> row.map { TabRowLine(it, isStaffLine = false) } }
+            }
             rows.map { row ->
-                row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
+                TabRow(
+                    lines = row.map { line -> textMeasurer.measure(AnnotatedString(line.drawnText), style, softWrap = false) },
+                    staff = tabStaffGeometryOf(row),
+                )
             }
         }
     }
@@ -140,3 +202,7 @@ internal class TabRows(
 
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
+private const val CAP_HEIGHT_PER_EM = 0.73f // JetBrains Mono's capitals and digits, which every platform draws tabs in.
+private const val STROKE_WIDTH_PER_COLUMN = 0.08f
+private const val LONE_BAR_INSET = 0.15f
+private const val HALF_COLUMN = 0.5f

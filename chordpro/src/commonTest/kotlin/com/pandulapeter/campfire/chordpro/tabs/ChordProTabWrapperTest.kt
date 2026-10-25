@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.tabs
 
+import com.pandulapeter.campfire.chordpro.model.TabRowLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -406,5 +407,18 @@ class ChordProTabWrapperTest {
         val character = this[index]
         (character.isHighSurrogate() && getOrNull(index + 1)?.isLowSurrogate() != true) ||
                 (character.isLowSurrogate() && getOrNull(index - 1)?.isHighSurrogate() != true)
+    }
+
+    @Test
+    fun `every piece of a staff line stays a staff line, however few dashes it is cut down to`() {
+        val rows = ChordProTabWrapper.wrapLines(listOf("  Am", "e|--0--|-3|", "B|--1--|-1|"), maxColumns = 10)
+
+        assertEquals(
+            listOf(
+                listOf(TabRowLine("  Am", isStaffLine = false), TabRowLine("e|--0--|", isStaffLine = true), TabRowLine("B|--1--|", isStaffLine = true)),
+                listOf(TabRowLine("e|-3|", isStaffLine = true), TabRowLine("B|-1|", isStaffLine = true)),
+            ),
+            rows,
+        )
     }
 }

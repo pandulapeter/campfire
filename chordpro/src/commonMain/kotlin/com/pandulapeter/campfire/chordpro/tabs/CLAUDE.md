@@ -23,4 +23,5 @@
 - `TabNotice` records only judgment calls (octave move, another instrument, failure); a `hidesTabs` instrument
   (keyboard, violin) gets a notice in place of every tab.
 - `ChordProTabWrapper` cuts a run into rows (**nothing scrolls sideways**: songs are read with an up/down pedal), every
-  line at the same columns, never inside a surrogate pair or combining mark.
+  line at the same columns, never inside a surrogate pair or combining mark. `wrapLines` marks every piece of a staff
+  line as one, since a short piece (`--|`) no longer passes `isStaffLine` by itself.
