@@ -9,38 +9,20 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.menu.SortMenu
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LookaheadScope
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.songs_filters_reset
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
@@ -140,38 +122,6 @@ private fun FilterGroups(
             onSortingModeSelected = actions::setLanguageSortingMode,
             normalizeForSearch = normalizeForSearch,
         )
-        ResetFiltersButton(
-            modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
-            isVisible = state.isActive,
-            onClick = actions::clearSongFilter,
-        )
-    }
-}
-
-/**
- * Empties every group at once, under the last one. It is offered for exactly as long as the filter action carries its
- * badge, since what it resets is the selection that badge points at, and it is left out of the sharing like the
- * "any / every" choice, so its arrival takes no room from the chips that were just tapped.
- */
-@Composable
-private fun ResetFiltersButton(
-    modifier: Modifier = Modifier,
-    isVisible: Boolean,
-    onClick: () -> Unit,
-) = AnimatedVisibility(
-    modifier = modifier,
-    visible = isVisible,
-    enter = expandVertically() + fadeIn(),
-    exit = shrinkVertically() + fadeOut(),
-) {
-    OutlinedButton(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CONTROLS_PADDING)
-            .padding(top = FILTER_GROUP_GAP * 2),
-        onClick = onClick,
-    ) {
-        Text(text = stringResource(Res.string.songs_filters_reset))
     }
 }
 

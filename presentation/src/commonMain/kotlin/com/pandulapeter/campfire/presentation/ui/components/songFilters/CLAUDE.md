@@ -25,9 +25,10 @@ The tag and language filters of the songs screen, in a bottom sheet.
   minimum the content scrolls.
 - In a sheet, use the sheet's tallest height (`BottomSheetContentScope.uncoveredTopInset`): Material's offset-dependent
   top padding would otherwise make the layout oscillate every frame.
-- The "any / every" choice (only with two selected) and "Reset all filters" are `FilterSlot.TRANSIENT`, out of the
-  sharing, so selecting a chip never hides chips under the finger. The clear action sits in `FilterSectionTitle`, built
-  to keep the plain title's height, so the sheet never resizes on a selection.
+- The "any / every" choice (only with two selected) is `FilterSlot.TRANSIENT`, out of the sharing, so selecting a
+  chip never hides chips under the finger. A group's clear action sits in `FilterSectionTitle`, built to keep the plain
+  title's height, so the sheet never resizes on a selection. Reset (`ResetFiltersAction`), emptying every group, is the
+  sheet's header action, always passed and faded in and out inside, so its arrival moves nothing either.
 - Room is shared in the lookahead pass only; the approach pass animates bounds. Moving chips use `animateBounds` in one
   `LookaheadScope`.
 - The language group appears only with more than one language (no-language songs counting as one).

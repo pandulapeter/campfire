@@ -36,9 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDia
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongMetadataDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongPlayingDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetCloseRequested
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -75,12 +73,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
-import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
 import com.pandulapeter.campfire.presentation.localization.textResource
-import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
-import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -207,19 +201,7 @@ private fun CampfireDialog(
             },
         )
 
-        DialogType.SongFilters -> CampfireBottomSheet(
-            title = stringResource(Res.string.songs_filter),
-            onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
-        ) { contentPadding ->
-            SongFilters(
-                state = rememberSongFilterUiState(viewModel),
-                actions = rememberSongFilterActions(viewModel),
-                normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
-                contentPadding = contentPadding,
-                uncoveredTopInset = uncoveredTopInset,
-                fadeBackgroundColor = sheetContainerColor(),
-            )
-        }
+        DialogType.SongFilters -> SongFiltersSheet(viewModel = viewModel)
 
         is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
         is DialogType.ChordShape -> ChordShapeSheet(viewModel = viewModel, dialog = dialog)

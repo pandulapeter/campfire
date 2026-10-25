@@ -11,6 +11,8 @@
 - Document all keyboard shortcuts used in the app
 - Rename master branch to main
 - Comments in setlists (between songs)
+- Fix capo issues
+- If no key is specified, display the inferred key of the song, with a question mark
 - Simplify adding comments / annotations to songs
 - Editor multi-cursor support
 - Streaming zip writer on all platforms
