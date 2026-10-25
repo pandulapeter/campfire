@@ -52,6 +52,23 @@ class PastedLinesTest {
     }
 
     @Test
+    fun `grid rows pasted into a grid stay grid rows`() {
+        val paste = "| C . . . | G . . . |\n| Am . . . | F . . . |\n"
+        val text = "{title: Song}\n\n{start_of_grid}\n" + paste + "{end_of_grid}\n"
+        val start = text.indexOf(paste)
+        assertNull(formattedAfterPaste(text, PastedLines(start = start, text = paste)))
+        val afterDirective = text.indexOf(paste) - 1
+        assertNull(formattedAfterPaste(text, PastedLines(start = afterDirective, text = "\n" + paste.dropLast(1))))
+    }
+
+    @Test
+    fun `chords over lyrics pasted into a tab are not converted`() {
+        val paste = "G       D\nSing it loud\n"
+        val text = "{title: Song}\n\n{start_of_tab}\n" + paste + "{end_of_tab}\n"
+        assertNull(formattedAfterPaste(text, PastedLines(start = text.indexOf(paste), text = paste)))
+    }
+
+    @Test
     fun `a song that is already in shape is left as the paste made it`() {
         val text = "{title: Song}\n\n[G]One\n[C]Two\n"
         assertNull(formattedAfterPaste(text, PastedLines(start = 15, text = "[G]One\n[C]Two\n")))

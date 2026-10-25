@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
+import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralLines
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 
 /** Lines put into the editor's field in one edit, starting at [start] of the text as that edit left it. */
@@ -27,14 +28,16 @@ internal fun pastedLinesOf(insertions: List<Pair<Int, CharSequence>>): PastedLin
 /**
  * What the field holding [text] becomes once [paste] has arrived in it, and where the caret goes, or null where it stays
  * as the paste left it. Lines with chords written over the lyrics are converted first (`ChordSheetConverter.convertFragment`:
- * headings become sections, no title is guessed), with the caret after them; then the whole song is formatted as the
- * menu's Prettify formats it, the caret kept next to its text, since a paste is where the spacing between sections and
- * around the header goes wrong. Neither happens in a document longer than [LONG_DOCUMENT_LENGTH]: the edit is recorded
+ * headings become sections, no title is guessed), with the caret after them, unless the paste's first line lands in a
+ * tab, a grid, or another environment whose lines are its own notation (`ChordProLiteralLines`); then the whole song is
+ * formatted as the menu's Prettify formats it, the caret kept next to its text, since a paste is where the spacing
+ * between sections and around the header goes wrong. Neither happens in a document longer than [LONG_DOCUMENT_LENGTH]: the edit is recorded
  * in the undo history as a whole, and there it would be the whole text twice.
  */
 internal fun formattedAfterPaste(text: String, paste: PastedLines): Pair<String, Int>? {
     if (text.length > LONG_DOCUMENT_LENGTH) return null
-    val converted = ChordSheetConverter.convertFragment(paste.text)
+    val firstLine = paste.start + paste.text.indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
+    val converted = if (ChordProLiteralLines.isLiteralAt(text, firstLine)) null else ChordSheetConverter.convertFragment(paste.text)
     val withPaste = converted?.let { text.replaceRange(paste.start, paste.start + paste.text.length, it) } ?: text
     val caret = paste.start + (converted ?: paste.text).length
     val prettified = ChordProPrettifier.prettify(withPaste)

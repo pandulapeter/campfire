@@ -58,7 +58,8 @@ numbers nothing to count from.
 
 - `PastedTextFormatting`, the field's `InputTransformation`, answers an edit that brought two non-blank lines or more
   (a one-line paste looks like a keyboard's committed word): chords over lyrics in it are converted
-  (`ChordSheetConverter.convertFragment`, headings as sections, no title guessed), then the whole song is prettified as
+  (`ChordSheetConverter.convertFragment`, headings as sections, no title guessed) unless the paste lands in a tab, a
+  grid, or delegated notation (`ChordProLiteralLines`), then the whole song is prettified as
   the menu's Prettify does, caret kept by `prettifiedOffset` (`formattedAfterPaste`, tested). One undo step with the
   paste; never the editor's own `edit`s; nothing past `LONG_DOCUMENT_LENGTH`.
 
