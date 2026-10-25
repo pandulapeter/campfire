@@ -28,6 +28,19 @@ class ProcessLogWriterTest {
     }
 
     @Test
+    fun `every finished line is flushed once, and an unfinished one only once it ends`() {
+        val store = MemoryStore()
+        val writer = writer(store)
+
+        writer.append("Hel".encodeToByteArray())
+        assertEquals(emptyList(), store.flushedText)
+        writer.append("lo\nWorld\nAnd".encodeToByteArray())
+        assertEquals(listOf("[T] Hello\n[T] World\n[T] And"), store.flushedText)
+        writer.append(" more\n".encodeToByteArray())
+        assertEquals(listOf("[T] Hello\n[T] World\n[T] And", "[T] Hello\n[T] World\n[T] And more\n"), store.flushedText)
+    }
+
+    @Test
     fun `a full file is rotated at the start of a line, keeping the one before`() {
         val store = MemoryStore()
         val writer = writer(store, maxBytes = 20)
@@ -75,6 +88,7 @@ class ProcessLogWriterTest {
     ) : ProcessLogStore {
         var previous = ByteArray(0)
         var appendAttempts = 0
+        val flushedText = mutableListOf<String>()
 
         override val currentSize get() = current.size.toLong()
 
@@ -82,6 +96,10 @@ class ProcessLogWriterTest {
             appendAttempts++
             if (isFailing) error("The disk is full.")
             current += bytes.copyOfRange(offset, offset + length)
+        }
+
+        override fun flush() {
+            flushedText += current.decodeToString()
         }
 
         override fun rotate() {

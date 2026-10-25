@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.io.PrintStream
 
@@ -127,8 +128,9 @@ private class FileProcessLogStore(directory: File) : ProcessLogStore {
 
     override fun append(bytes: ByteArray, offset: Int, length: Int) {
         stream.write(bytes, offset, length)
-        stream.flush()
     }
+
+    override fun flush() = stream.flush()
 
     override fun rotate() {
         stream.close()
@@ -137,7 +139,15 @@ private class FileProcessLogStore(directory: File) : ProcessLogStore {
         stream = BufferedOutputStream(FileOutputStream(file))
     }
 
-    override fun read() = previousFile.readBytesIfThere() + file.readBytesIfThere()
+    override fun read(): ByteArray {
+        // Brings in an unfinished last line too. A stream that has failed, which the writer has already said, must not
+        // cost the report the files on disk.
+        try {
+            stream.flush()
+        } catch (_: IOException) {
+        }
+        return previousFile.readBytesIfThere() + file.readBytesIfThere()
+    }
 
     private fun File.readBytesIfThere() = if (exists()) readBytes() else ByteArray(0)
 

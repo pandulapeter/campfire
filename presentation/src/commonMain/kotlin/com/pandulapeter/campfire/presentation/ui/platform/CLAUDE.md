@@ -79,7 +79,8 @@ The `expect` declarations and the interfaces the platform shells provide.
   synced settings and shared copies steps, the change feed (`Sync feed:`), and the shared links list (`Sharing:`), with
   the Share screen's link state. Kinds, counts, and names; never typed text or a song's content.
 - Android and desktop (`jvmSharedMain`): `System.out` / `System.err` mirrored into `campfire.log`, in
-  `noBackupFilesDir` on Android, the data directory on desktop; the previous uncaught exception handler still runs.
+  `noBackupFilesDir` on Android, the data directory on desktop, flushed once per finished line, so the lines before an
+  uncaught exception are in the file; the previous uncaught exception handler still runs.
 - iOS: stdout and stderr dup'ed onto a **non-blocking** pipe read by its own thread (a stalled reader drops output,
   never blocks a `println`), into the caches directory (never backed up); an uncaught exception is written by the
   thread it ends. Not installed by the share extension.

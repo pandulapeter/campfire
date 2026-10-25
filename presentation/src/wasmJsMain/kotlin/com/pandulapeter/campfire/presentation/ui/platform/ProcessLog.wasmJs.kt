@@ -52,6 +52,9 @@ private class LocalStorageProcessLogStore : ProcessLogStore {
         scheduleStore()
     }
 
+    /** Nothing to hand over: what was appended is stored on its own schedule. */
+    override fun flush() = Unit
+
     override fun rotate() {
         previous = current.toString()
         isPreviousStored = false

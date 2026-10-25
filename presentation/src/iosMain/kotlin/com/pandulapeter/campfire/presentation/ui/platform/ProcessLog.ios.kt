@@ -172,7 +172,11 @@ private class PosixProcessLogStore(private val path: String) : ProcessLogStore {
     override fun append(bytes: ByteArray, offset: Int, length: Int) {
         if (length == 0) return
         val written = bytes.usePinned { fwrite(it.addressOf(offset), 1u, length.convert(), file) }
-        if (written.toInt() != length || fflush(file) != 0) error("Could not write $path (errno $errno)")
+        if (written.toInt() != length) error("Could not write $path (errno $errno)")
+    }
+
+    override fun flush() {
+        if (fflush(file) != 0) error("Could not write $path (errno $errno)")
     }
 
     override fun rotate() {

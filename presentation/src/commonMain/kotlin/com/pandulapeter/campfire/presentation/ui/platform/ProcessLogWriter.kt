@@ -25,6 +25,9 @@ internal interface ProcessLogStore {
 
     fun append(bytes: ByteArray, offset: Int, length: Int)
 
+    /** Hands what was appended to the system, which the writer asks for at the end of every line. */
+    fun flush()
+
     /** Makes the file being written the previous one, replacing that, and starts an empty one. */
     fun rotate()
 
@@ -36,7 +39,8 @@ internal interface ProcessLogStore {
  * Stamps every line of what the process prints with the time it was written at, which is what lines a log up with what
  * the user remembers, and keeps the log bounded: once the file being written reaches [maxBytes], it becomes the previous
  * one and a new one is started, so a session that runs for weeks holds at most twice that. Files are only ever rotated at
- * the start of a line, so that no line is split between the two.
+ * the start of a line, so that no line is split between the two. Every finished line is flushed, once, which is what keeps
+ * the lines before a crash in the file; a line still being written waits in the store's buffer until it ends.
  *
  * Nothing here may ever throw at the app, which prints from everywhere: a store that fails is given up on for the rest of
  * the session, and said so once through [onFailure], rather than tried again for every line the app writes. [onFailure]
@@ -62,6 +66,7 @@ internal class ProcessLogWriter(
     fun append(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) = guard {
         val end = offset + length
         var start = offset
+        var hasEndedLine = false
         while (start < end) {
             if (isAtLineStart) {
                 val prefix = "[${now()}] ".encodeToByteArray()
@@ -73,8 +78,10 @@ internal class ProcessLogWriter(
             val lineEnd = if (newLine == -1) end else newLine + 1
             write(bytes, start, lineEnd - start)
             isAtLineStart = newLine != -1
+            if (isAtLineStart) hasEndedLine = true
             start = lineEnd
         }
+        if (hasEndedLine) store.flush()
     }
 
     /** What the store holds, even after a write failed, since what came before it can still be read. */
