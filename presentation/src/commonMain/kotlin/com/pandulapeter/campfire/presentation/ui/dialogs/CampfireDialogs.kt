@@ -388,8 +388,10 @@ private fun CampfireDialog(
             confirmLabel = stringResource(Res.string.import_conflicts_replace),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {
-                viewModel.dialogHost.dismissDialog()
+                // Resolved first: a batch waiting for this dialog to close can resume inside dismissDialog, and would
+                // join the review it confirms unless the import has already taken it.
                 viewModel.importController.resolveImport()
+                viewModel.dialogHost.dismissDialog()
             },
         )
 

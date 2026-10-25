@@ -227,8 +227,9 @@ sealed interface DialogType {
      */
     data class ConfirmImportReplace(val count: Int) : DialogType
 
-    /** The tags the import under review puts on every song it writes, [songCount] of them as the ticks stand. */
-    data class ImportTags(val songCount: Int) : DialogType
+    /** The tags the import under review puts on every song it writes. */
+    data object ImportTags : DialogType
+
     /** Asked before the editor throws away everything typed since the last save, see `EditorSession.revertEditorChanges`. */
     data object RevertChanges : DialogType
 

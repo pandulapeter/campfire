@@ -177,7 +177,7 @@ internal fun ImportReportScreen(
                             choices = choices,
                             warning = warning,
                             sharedLinkUpdateCount = stage.sharedLinkUpdateCount,
-                            onEditTags = { viewModel.dialogHost.showDialog(DialogType.ImportTags(it)) },
+                            onEditTags = { viewModel.dialogHost.showDialog(DialogType.ImportTags) },
                         )
                         if (reviewSections.isNotEmpty()) searchField(searchState = searchState, listState = listState, index = REVIEW_HEADER_ITEM_COUNT)
                         reviewSections(

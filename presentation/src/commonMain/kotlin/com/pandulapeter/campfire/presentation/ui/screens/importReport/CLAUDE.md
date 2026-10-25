@@ -36,7 +36,8 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 - **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
   names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
   button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
-  (`DialogType.ConfirmImportReplace`). A shared link's review starts on **Replace** only the taken names that an
+  (`DialogType.ConfirmImportReplace`); a batch arriving while it is open joins only once it is answered, and is
+  imported after the review if Replace wrote it. A shared link's review starts on **Replace** only the taken names that an
   earlier import of the same link (by its Dropbox file id, which another link cannot borrow) wrote under its own names
   on this device, with a line under the counts saying so (`sharedLinkChoices`); every other taken name starts on Keep
   both, since it may be the recipient's own song. The record is `UserPreferences.sharedLinkImports`, never synced or

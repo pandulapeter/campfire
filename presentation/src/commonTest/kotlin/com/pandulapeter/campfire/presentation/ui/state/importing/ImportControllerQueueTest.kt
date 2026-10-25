@@ -599,6 +599,42 @@ class ImportControllerQueueTest {
         assertEquals(listOf("[G]Hello"), newSongTexts)
     }
 
+    @Test
+    fun `a batch arriving while Replace is being confirmed joins the review once the confirmation is cancelled`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        dialogHost.showDialog(DialogType.ConfirmImportReplace(1))
+        nextPlans += listOf(songEntry("other.cho"))
+        enqueue()
+        settle()
+        assertEquals(listOf("new.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        assertEquals(1, prepareCount)
+        assertFalse(controller.isAddingToReview.value)
+        dialogHost.dismissDialog()
+        settle()
+        assertEquals(listOf("new.cho", "other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+    }
+
+    @Test
+    fun `a batch arriving while Replace is being confirmed is not written by it, and is imported after it`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        dialogHost.showDialog(DialogType.ConfirmImportReplace(1))
+        nextPlans += listOf(songEntry("other.cho"))
+        enqueue()
+        settle()
+        controller.resolveImport()
+        dialogHost.dismissDialog()
+        settle()
+        assertEquals(1, importCount)
+        assertEquals(setOf("new.cho"), library.value.songsByFileName.keys)
+        if (reportState.importReport.value !is ImportReport.Review) leaveImportReport()
+        settle()
+        assertEquals(listOf("other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+    }
+
     private val sharedLink = assertIs<SharedLink.Readable>(
         ShareLinks.create(kind = SharedLinkKind.SONG, shareId = "abcdefghijklmnop", fileId = "fileid", rlkey = "rlkey", title = "Riverlight"),
     )

@@ -262,7 +262,9 @@ internal class ImportController(
     /**
      * [awaitImportSettled] for the queue, which takes every batch arriving meanwhile: one that can join the review on
      * screen ([canJoinReview]) is added to it and settled with it ([joined]), since a second review waiting behind the
-     * first is a second screen for what the user dropped onto the first; the rest are [held] for after it, in order.
+     * first is a second screen for what the user dropped onto the first; the rest are [held] for after it, in order. A
+     * batch that could join waits while [DialogType.ConfirmImportReplace] is open, and is held instead if Replace
+     * starts writing the review.
      */
     private suspend fun awaitImportSettled(joined: MutableList<ImportRequest>, held: ArrayDeque<ImportRequest>) = coroutineScope {
         val settled = async { awaitImportSettled() }
@@ -272,6 +274,14 @@ internal class ImportController(
                 settled.onAwait { null }
                 importQueue.onReceiveCatching { it.getOrNull() }
             } ?: break
+            // Replace confirms the review as it stands: a batch joining under the dialog would add replacements nobody
+            // confirmed, or make the confirmation do nothing while it is read. Checked again after every wait, with
+            // nothing suspending between the last check and addToReview marking the batch as being added.
+            while (canJoinReview(next) && dialogHost.visibleDialog.value is DialogType.ConfirmImportReplace) {
+                combine(dialogHost.visibleDialog, reportState.importReport) { dialog, _ ->
+                    dialog !is DialogType.ConfirmImportReplace || !canJoinReview(next)
+                }.first { it }
+            }
             if (canJoinReview(next)) {
                 joined += next
                 addToReview(next)
