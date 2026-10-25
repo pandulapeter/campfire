@@ -371,6 +371,7 @@ internal fun printSettings(isLandscape: Boolean) = buildJsonObject {
         "showPageNumbers",
         "startSongsOnNewPage",
         "includeSetlistOverview",
+        "includeSongSheets",
     ).forEach { put(it, true) }
 }
 

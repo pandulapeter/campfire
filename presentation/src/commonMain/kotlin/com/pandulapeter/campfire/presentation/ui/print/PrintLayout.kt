@@ -91,12 +91,14 @@ private class PrintLayouter(
 
     suspend fun layout(source: PrintSource): PrintDocument {
         page()
+        // Only a setlist has a running order to print instead of its song sheets; any other source always prints them.
+        val hasSongSheets = !source.hasRunningOrder || options.includeSongSheets
         if (source.hasRunningOrder && options.includeSetlistOverview) {
             overview(source)
             // Song sheets follow the running order on a fresh page, including in the compact layout.
-            newPage()
+            if (hasSongSheets) newPage()
         }
-        source.songs.forEachIndexed { index, entry ->
+        if (hasSongSheets) source.songs.forEachIndexed { index, entry ->
             yield()
             if (index > 0 && options.startSongsOnNewPage) newPage()
             song(entry)

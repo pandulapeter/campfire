@@ -11,15 +11,29 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 /**
  * The names of the properties whose values differ between two `toString`s of one data class, read from the text, since
- * common code has no reflection: a property added later is covered without anybody remembering to. Null where either
- * text does not split into the same names, which a value with an unbalanced bracket or a ", name=" of its own can cause;
- * the caller then only says that something changed.
+ * common code has no reflection: a property added later is covered without anybody remembering to. A nested data class
+ * is named down to what changed in it (`printSettings.format`), since its name alone says little; one that does not
+ * split is named whole. Null where either text does not split into the same names, which a value with an unbalanced
+ * bracket or a ", name=" of its own can cause; the caller then only says that something changed.
  */
 internal fun changedPropertyNames(before: String, after: String): List<String>? {
     val old = topLevelProperties(before) ?: return null
     val new = topLevelProperties(after) ?: return null
     if (old.map { it.first } != new.map { it.first }) return null
-    return old.zip(new).filter { (oldProperty, newProperty) -> oldProperty.second != newProperty.second }.map { it.first.first }
+    return old.zip(new).filter { (oldProperty, newProperty) -> oldProperty.second != newProperty.second }.flatMap { (oldProperty, newProperty) ->
+        val nested = if (isDataClassText(oldProperty.second) && isDataClassText(newProperty.second)) {
+            changedPropertyNames(oldProperty.second, newProperty.second)?.takeIf { it.isNotEmpty() }
+        } else {
+            null
+        }
+        nested?.map { "${oldProperty.first}.$it" } ?: listOf(oldProperty.first)
+    }
+}
+
+/** Whether a value reads as `Name(…)`, rather than a list, a map, or a string that only holds a bracket. */
+private fun isDataClassText(text: String): Boolean {
+    val start = text.indexOf('(')
+    return start > 0 && text.endsWith(")") && text.substring(0, start).all { it.isLetterOrDigit() || it == '_' }
 }
 
 /** The `name=value` pairs between the outermost brackets of a data class's `toString`, nested ones kept whole. */

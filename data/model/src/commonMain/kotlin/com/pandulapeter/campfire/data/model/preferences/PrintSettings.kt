@@ -42,6 +42,11 @@ data class PrintSettings(
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
     val includeSetlistOverview: Boolean = true,
+    /**
+     * A setlist's song sheets after its running order: off, the PDF is the running order alone, a page to hand round or
+     * tape to the floor. Never off together with [includeSetlistOverview], and only a setlist leaves them out.
+     */
+    val includeSongSheets: Boolean = true,
     /** The columns of a setlist's running order page, apart from the song sheets' [columns]. */
     val overviewColumns: Int = 1,
     /** The setlist's date and description and its songs' artists on the running order page, apart from [showMetadata]. */

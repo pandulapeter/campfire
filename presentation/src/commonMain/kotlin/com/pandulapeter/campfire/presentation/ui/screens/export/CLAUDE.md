@@ -35,8 +35,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   selected songs (no manifest), and **PDF** (for printing). Link is the default; a stored format an export does not
   offer opens it on PDF (`withFormatIn`), the preference kept.
 - **Every song goes out**: no song ticks and no choice of the setlist's content, which only cluttered the screen. A
-  setlist's PDF is its song sheets, after its running order where Include running order is on; its zip holds the
-  stored manifest unchanged.
+  setlist's PDF is its song sheets, after its running order where Include running order is on, or the running order
+  alone where Include song sheets is off (never both off: each box is disabled while the other is unticked); its zip
+  holds the stored manifest unchanged.
 - `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
   size and folded sections.
 - **The Features switches reach the export**: an option whose feature is off (chords, which take tablature, diagrams,
@@ -46,9 +47,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   entry's key. Missing or unreadable songs keep a visibly marked slot.
 - The PDF's options (`PdfOptions`) are **sections of the document, one heading each**: Page (paper, orientation, text
   size, margins, page numbers), Running order for a setlist (whether, then folding out its own columns and its date,
-  description, and artists), and Song sheets (their columns, a new page per song, then what a sheet prints in the order
-  it prints it: artist, key, tempo, chord diagrams, scales, chords and grids, tablature (apart from the chords, offered
-  where a song has any), comments). Columns are a stepper inside the section
+  description, and artists), and Song sheets (for a setlist whether, then folding out their columns, a new page per
+  song, then what a sheet prints in the order it prints it: artist, key, tempo, chord diagrams, scales, chords and grids,
+  tablature (apart from the chords, offered where a song has any), comments). Columns are a stepper inside the section
   they shape, never a control between sections; a new option goes into the section, and at the place, where it prints.
 - **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
   excluded metadata. No platform print service: the file is saved or shared.

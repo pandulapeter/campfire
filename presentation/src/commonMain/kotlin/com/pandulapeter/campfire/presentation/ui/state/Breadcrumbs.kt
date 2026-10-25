@@ -30,10 +30,11 @@ import kotlinx.coroutines.launch
  * Writes into the process log (`ui/platform`) what the user did, from the few places every action passes through
  * rather than from each button, so that a report reads as the steps that led to it and a new feature is covered
  * without anybody remembering to: the screen on top whenever another arrives, every dialog, which settings changed,
- * the metronome and the tuner starting and stopping, imports, and the song filter. The library's writes say so
+ * the export format picked, the metronome and the tuner starting and stopping, imports, and the song filter. The library's writes say so
  * themselves (`MessageSink.launchLibraryChange`), as do exports and shared links.
  *
  * Kinds and names only, never what a destination, a setting, or a filter holds: a destination can carry a whole song.
+ * The export format is the exception, a choice among three fixed ones that a report about an export needs.
  * Nothing of it leaves the device unless the user sends the log.
  */
 internal fun CoroutineScope.logBreadcrumbs(
@@ -64,6 +65,10 @@ internal fun CoroutineScope.logBreadcrumbs(
                     println(if (names == null) "Settings changed" else "Settings changed: ${names.joinToString()}")
                 }
             }
+    }
+    launch {
+        userPreferences.filterNotNull().map { it.printSettings.format }.distinctUntilChanged().drop(1)
+            .collect { println("Export format: ${it.id}") }
     }
     launch {
         metronomePlayback.map { (it is MetronomePlayback.Playing) to (it as? MetronomePlayback.Stopped)?.reason }.distinctUntilChanged().drop(1)

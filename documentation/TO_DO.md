@@ -10,7 +10,6 @@
 # To do
 - Onboarding: the circular hero element has some inset handling issues
 - Export screen FAB is not visible enough on large screens
-- Add ability to only print the running order of a setlist
 - Screenshot generator: bottom sheets seem to cover the bottom window chrome
 - Tab transposition bug: it doesn't compensate for the digit-count changes
 - The Songs / Setlists screens (similarly to other screens in the app) should animate scrolling to the top when their navigation button is reselected. However, at least on the Songs screen (check Setlists too) this animation is not smooth: it animates to a certain sticky header, slows down, then animates to the top. Fix it so that one smooth animation scrolls to the very beginning of the list

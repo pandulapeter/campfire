@@ -20,11 +20,11 @@ class ChangedPropertiesTest {
     private data class Settings(val fontScale: Float, val details: Details, val capos: Map<String, Int>)
 
     @Test
-    fun `the properties that changed are named, nested values compared whole`() {
+    fun `the properties that changed are named, inside a nested data class too`() {
         val before = Settings(fontScale = 1f, details = Details(isTempoShown = false, tags = listOf("a", "b")), capos = mapOf("x.cho" to 1))
         val after = before.copy(details = before.details.copy(isTempoShown = true), capos = mapOf("x.cho" to 2))
 
-        assertEquals(listOf("details", "capos"), changedPropertyNames(before.toString(), after.toString()))
+        assertEquals(listOf("details.isTempoShown", "capos"), changedPropertyNames(before.toString(), after.toString()))
     }
 
     @Test

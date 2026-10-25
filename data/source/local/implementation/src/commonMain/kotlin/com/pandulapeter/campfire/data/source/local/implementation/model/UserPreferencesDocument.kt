@@ -113,6 +113,7 @@ internal data class PrintSettingsDocument(
     val showPageNumbers: Boolean = true,
     val startSongsOnNewPage: Boolean = true,
     val includeSetlistOverview: Boolean = true,
+    val includeSongSheets: Boolean = true,
     val overviewColumns: Int = 1,
     /** Null in a document written before the running order had a switch of its own, which [showMetadata] then stands for. */
     val showOverviewDetails: Boolean? = null,

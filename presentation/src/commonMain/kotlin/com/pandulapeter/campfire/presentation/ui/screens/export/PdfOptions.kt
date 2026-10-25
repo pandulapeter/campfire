@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.print_running_order
 import com.pandulapeter.campfire.presentation.resources.print_section_page
 import com.pandulapeter.campfire.presentation.resources.print_song_sheet
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
+import com.pandulapeter.campfire.presentation.resources.print_song_sheets_include
 import com.pandulapeter.campfire.presentation.resources.print_tabs
 import com.pandulapeter.campfire.presentation.resources.print_tempo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
@@ -160,7 +161,8 @@ private fun PageOptions(
 
 /**
  * A setlist's running order page: whether it is printed, and, folding out while it is, its own columns and whether it
- * says the setlist's date and description and the songs' artists, apart from the song sheets' artist.
+ * says the setlist's date and description and the songs' artists, apart from the song sheets' artist. It cannot be left
+ * out while the song sheets are, which would print nothing.
  */
 @Composable
 private fun RunningOrderOptions(
@@ -171,6 +173,7 @@ private fun RunningOrderOptions(
     CheckboxListItem(
         title = stringResource(Res.string.print_overview),
         isChecked = settings.includeSetlistOverview,
+        isEnabled = settings.includeSongSheets,
         onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
     )
     FoldingOption(modifier = Modifier, isVisible = settings.includeSetlistOverview) {
@@ -184,9 +187,10 @@ private fun RunningOrderOptions(
 }
 
 /**
- * The song sheets: their columns, and for several songs whether each starts a page, then what each sheet prints, in the
- * order it prints it: the artist under the title, the key and the tempo, the chord diagrams and the scales, then the
- * song's chords, tablature, and comments.
+ * The song sheets: for a setlist whether they are printed at all, then, folding out while they are, their columns, and
+ * for several songs whether each starts a page, then what each sheet prints, in the order it prints it: the artist under
+ * the title, the key and the tempo, the chord diagrams and the scales, then the song's chords, tablature, and comments.
+ * Like the running order, they cannot be left out while it is.
  */
 @Composable
 private fun SongSheetOptions(
@@ -198,69 +202,79 @@ private fun SongSheetOptions(
     onSettings: (PrintSettings) -> Unit,
 ) {
     SettingsSectionTitle(text = stringResource(if (source.hasSeveralSongs) Res.string.print_song_sheets else Res.string.print_song_sheet))
-    ColumnsStepperRow(columns = settings.columns) { onSettings(settings.copy(columns = it)) }
-    if (source.hasSeveralSongs) {
+    if (source.hasRunningOrder) {
         CheckboxListItem(
-            title = stringResource(Res.string.print_new_page),
-            isChecked = settings.startSongsOnNewPage,
-            onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
+            title = stringResource(Res.string.print_song_sheets_include),
+            isChecked = settings.includeSongSheets,
+            isEnabled = settings.includeSetlistOverview,
+            onCheckedChange = { onSettings(settings.copy(includeSongSheets = it)) },
         )
     }
-    CheckboxListItem(
-        title = stringResource(Res.string.print_metadata),
-        isChecked = settings.showMetadata,
-        onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
-    )
-    if (areChordsEnabled) {
+    FoldingOption(modifier = Modifier, isVisible = !source.hasRunningOrder || settings.includeSongSheets) {
+        ColumnsStepperRow(columns = settings.columns) { onSettings(settings.copy(columns = it)) }
+        if (source.hasSeveralSongs) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_new_page),
+                isChecked = settings.startSongsOnNewPage,
+                onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
+            )
+        }
         CheckboxListItem(
-            title = stringResource(Res.string.print_key),
-            isChecked = settings.showKey,
-            onCheckedChange = { onSettings(settings.copy(showKey = it)) },
+            title = stringResource(Res.string.print_metadata),
+            isChecked = settings.showMetadata,
+            onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
+        )
+        if (areChordsEnabled) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_key),
+                isChecked = settings.showKey,
+                onCheckedChange = { onSettings(settings.copy(showKey = it)) },
+            )
+        }
+        if (isMetronomeEnabled) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_tempo),
+                isChecked = settings.showTempo,
+                onCheckedChange = { onSettings(settings.copy(showTempo = it)) },
+            )
+        }
+        // Only where a song has a chord to draw, which none has with the diagrams switched off in the app.
+        if (areChordsEnabled && source.songs.any { it.chords.isNotEmpty() }) {
+            CheckboxListItem(
+                title = stringResource(Res.string.settings_chord_diagrams),
+                isChecked = settings.showChordDiagrams,
+                onCheckedChange = { onSettings(settings.copy(showChordDiagrams = it)) },
+            )
+        }
+        // Only where a song has a scale to suggest, which none has with the suggestions switched off in the app.
+        if (areChordsEnabled && areScaleSuggestionsEnabled && source.songs.any { it.scaleGroups.isNotEmpty() }) {
+            CheckboxListItem(
+                title = stringResource(Res.string.settings_scale_suggestions),
+                isChecked = settings.showScales,
+                onCheckedChange = { onSettings(settings.copy(showScales = it)) },
+            )
+        }
+        if (areChordsEnabled) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_chords),
+                isChecked = settings.showChords,
+                onCheckedChange = { onSettings(settings.copy(showChords = it)) },
+            )
+        }
+        // Only where a song has tablature to leave out, like the diagrams and the scales.
+        if (areChordsEnabled && source.hasTabs()) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_tabs),
+                isChecked = settings.showTabs,
+                onCheckedChange = { onSettings(settings.copy(showTabs = it)) },
+            )
+        }
+        CheckboxListItem(
+            title = stringResource(Res.string.print_comments),
+            isChecked = settings.showComments,
+            onCheckedChange = { onSettings(settings.copy(showComments = it)) },
         )
     }
-    if (isMetronomeEnabled) {
-        CheckboxListItem(
-            title = stringResource(Res.string.print_tempo),
-            isChecked = settings.showTempo,
-            onCheckedChange = { onSettings(settings.copy(showTempo = it)) },
-        )
-    }
-    // Only where a song has a chord to draw, which none has with the diagrams switched off in the app.
-    if (areChordsEnabled && source.songs.any { it.chords.isNotEmpty() }) {
-        CheckboxListItem(
-            title = stringResource(Res.string.settings_chord_diagrams),
-            isChecked = settings.showChordDiagrams,
-            onCheckedChange = { onSettings(settings.copy(showChordDiagrams = it)) },
-        )
-    }
-    // Only where a song has a scale to suggest, which none has with the suggestions switched off in the app.
-    if (areChordsEnabled && areScaleSuggestionsEnabled && source.songs.any { it.scaleGroups.isNotEmpty() }) {
-        CheckboxListItem(
-            title = stringResource(Res.string.settings_scale_suggestions),
-            isChecked = settings.showScales,
-            onCheckedChange = { onSettings(settings.copy(showScales = it)) },
-        )
-    }
-    if (areChordsEnabled) {
-        CheckboxListItem(
-            title = stringResource(Res.string.print_chords),
-            isChecked = settings.showChords,
-            onCheckedChange = { onSettings(settings.copy(showChords = it)) },
-        )
-    }
-    // Only where a song has tablature to leave out, like the diagrams and the scales.
-    if (areChordsEnabled && source.hasTabs()) {
-        CheckboxListItem(
-            title = stringResource(Res.string.print_tabs),
-            isChecked = settings.showTabs,
-            onCheckedChange = { onSettings(settings.copy(showTabs = it)) },
-        )
-    }
-    CheckboxListItem(
-        title = stringResource(Res.string.print_comments),
-        isChecked = settings.showComments,
-        onCheckedChange = { onSettings(settings.copy(showComments = it)) },
-    )
 }
 
 private fun PrintSource.hasTabs() = songs.any { song ->

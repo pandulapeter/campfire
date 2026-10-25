@@ -1166,6 +1166,7 @@
     <string name="print_overview_details">Date, description, and artists</string>
     <string name="print_running_order">Running order</string>
     <string name="print_song_sheets">Song sheets</string>
+    <string name="print_song_sheets_include">Include song sheets</string>
     <string name="print_song_sheet">Song sheet</string>
     <string name="print_new_page">Start each song on a new page</string>
     <string name="print_missing">Song file missing or unreadable</string>

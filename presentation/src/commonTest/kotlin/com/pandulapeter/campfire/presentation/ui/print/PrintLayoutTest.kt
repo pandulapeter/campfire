@@ -306,6 +306,16 @@ internal class PrintLayoutTest {
         assertEquals(listOf("Concert", "1. First", "2. Last"), document.pages.map { it.texts.first().text })
     }
 
+    @Test fun `a setlist's running order can be printed without its song sheets, which only a setlist can leave out`() = runTest {
+        val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
+        val last = first.copy(title = "Last", index = 2)
+        val runningOrderOnly = layout(PrintSource("Concert", kind = PrintSource.Kind.SETLIST, songs = listOf(first, last)), PrintSettings(includeSongSheets = false))
+        assertEquals(1, runningOrderOnly.pages.size)
+        assertFalse("First lyrics" in runningOrderOnly.pages.single().texts.map { it.text })
+        val songs = layout(PrintSource("Songs", kind = PrintSource.Kind.SONGS, songs = listOf(first, last)), PrintSettings(includeSongSheets = false))
+        assertTrue("First lyrics" in songs.pages.flatMap { page -> page.texts.map { it.text } })
+    }
+
     @Test fun `landscape letter uses physical paper size and empty selection produces no pages`() = runTest {
         val settings = PrintSettings(paper = PrintSettings.Paper.LETTER, isLandscape = true)
         val document = layout(PrintSource("Empty", songs = emptyList()), settings)

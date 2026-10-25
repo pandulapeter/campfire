@@ -1165,6 +1165,7 @@
     <string name="print_overview_details">Dátum, leírás és előadók</string>
     <string name="print_running_order">Dalsorrend</string>
     <string name="print_song_sheets">Dalok</string>
+    <string name="print_song_sheets_include">Dalok hozzáadása</string>
     <string name="print_song_sheet">Dal</string>
     <string name="print_new_page">Minden dal új oldalon kezdődjön</string>
     <string name="print_missing">A dal fájlja hiányzik vagy nem olvasható</string>

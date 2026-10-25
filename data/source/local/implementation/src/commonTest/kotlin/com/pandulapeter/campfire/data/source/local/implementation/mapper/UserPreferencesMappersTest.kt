@@ -66,7 +66,7 @@ internal class UserPreferencesMappersTest {
     fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showTabs = false, showChordDiagrams = false, showScales = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
-            showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false, overviewColumns = 3, showOverviewDetails = false)
+            showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false, includeSongSheets = false, overviewColumns = 3, showOverviewDetails = false)
         val preferences = UserPreferencesDocument().toModel().copy(printSettings = settings)
         val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
         assertEquals(settings, UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings)

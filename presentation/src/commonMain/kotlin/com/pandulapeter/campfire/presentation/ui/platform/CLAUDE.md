@@ -73,7 +73,7 @@ The `expect` declarations and the interfaces the platform shells provide.
   lines and rotates at line starts, keeping the current file and the one before. Diagnostics stay plain `println`s;
   actions are recorded where they take effect, never per button: `logBreadcrumbs` (`ui/state`) for the start, screens
   and dialogs (class names, kept through R8 by `app/android/proguard-rules.pro`), changed setting names
-  (`changedPropertyNames`, from `toString`, values never), the metronome, the tuner, imports, and the song filter;
+  (`changedPropertyNames`, from `toString`, nested ones dotted, values never), the export format, the metronome, the tuner, imports, and the song filter;
   `MessageSink.launchLibraryChange`'s `action` for every library write; exports, share links, searches opened, and
   sync at its own sources, counts only: the connection's state, why a run starts and retries, each pass's plan, the
   synced settings and shared copies steps, the change feed (`Sync feed:`), and the shared links list (`Sharing:`), with
