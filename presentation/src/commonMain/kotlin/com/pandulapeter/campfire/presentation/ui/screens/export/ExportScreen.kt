@@ -37,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -325,8 +324,6 @@ internal fun ExportScreen(
         val density = LocalDensity.current
         val pageButtonsWidth = pageButtonsWidthFor(pageCount)
         var actionButtonWidth by remember { mutableStateOf(0.dp) }
-        // The Link button floats outside the body, which alone knows whether the options stand beside the preview.
-        var isBodySideBySide by remember { mutableStateOf(false) }
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
@@ -348,7 +345,6 @@ internal fun ExportScreen(
                     val bodyHeight = maxHeight
                     val optionsWidth = optionsWidthFor(bodyWidth = bodyWidth, bodyHeight = bodyHeight)
                     val isSideBySide = optionsWidth != null
-                    SideEffect { isBodySideBySide = isSideBySide }
                     val pageFit = pageFitFor(
                         isSideBySide = isSideBySide,
                         isShortWindow = isShortWindow,
@@ -449,28 +445,30 @@ internal fun ExportScreen(
                         pageCount = pageCount,
                         onTurn = turnPage,
                     )
+                    // In the body, which knows from its first frame whether the options stand beside the preview.
+                    ExportActionButton(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom))
+                            .padding(PAGE_MARGIN)
+                            .onSizeChanged { actionButtonWidth = with(density) { it.width.toDp() } },
+                        action = when {
+                            isLink -> link?.action?.takeIf { content == PrintScreenContent.LOADED }?.let { ExportButtonAction.Link(it) }
+                            exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow -> ExportButtonAction.Save(exportProgress)
+                            else -> null
+                        },
+                        isFirstShownAtOnce = isFirstShownAtOnce,
+                        isInShortPane = isShortWindow && isSideBySide,
+                        isFilled = isActionButtonFilledFor(isSideBySide = isSideBySide, isShortWindow = isShortWindow),
+                        onClick = { action ->
+                            when (action) {
+                                is ExportButtonAction.Link -> link?.onAction?.invoke(action.action)
+                                is ExportButtonAction.Save -> if (action.progress != null) viewModel.exportController.cancelPdfExport() else requestExport(ExportRequest.SAVE)
+                            }
+                        },
+                    )
                 }
             }
-            ExportActionButton(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
-                    .padding(PAGE_MARGIN)
-                    .onSizeChanged { actionButtonWidth = with(density) { it.width.toDp() } },
-                action = when {
-                    isLink -> link?.action?.takeIf { content == PrintScreenContent.LOADED }?.let { ExportButtonAction.Link(it) }
-                    exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow -> ExportButtonAction.Save(exportProgress)
-                    else -> null
-                },
-                isFirstShownAtOnce = isFirstShownAtOnce,
-                isInShortPane = isShortWindow && isBodySideBySide,
-                onClick = { action ->
-                    when (action) {
-                        is ExportButtonAction.Link -> link?.onAction?.invoke(action.action)
-                        is ExportButtonAction.Save -> if (action.progress != null) viewModel.exportController.cancelPdfExport() else requestExport(ExportRequest.SAVE)
-                    }
-                },
-            )
         }
     }
     link?.takeIf { it.isStopAsked && it.shared != null }?.let {

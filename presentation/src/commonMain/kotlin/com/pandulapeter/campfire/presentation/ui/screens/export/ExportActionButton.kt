@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -19,7 +20,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +69,8 @@ internal sealed interface ExportButtonAction {
  * by the label it shows, since Material's extended floating button clears the semantics of its text, and so it is still
  * described where it is collapsed to its icon. That is Copy link's alone, and only [isInShortPane] (a short window, the
  * options beside the preview), where the QR code takes the pane's height beside it ([linkPreviewPaddingFor]) and says
- * what it copies; any other action's bare icon would not say what it does.
+ * what it copies; any other action's bare icon would not say what it does. Where [isFilled] ([isActionButtonFilledFor]) it
+ * is filled with the primary color, the change animated across a resize.
  */
 @Composable
 internal fun ExportActionButton(
@@ -73,11 +78,15 @@ internal fun ExportActionButton(
     action: ExportButtonAction?,
     isFirstShownAtOnce: Boolean,
     isInShortPane: Boolean,
+    isFilled: Boolean,
     onClick: (ExportButtonAction) -> Unit,
 ) {
     // Kept while the button leaves, so that it fades out showing what it last offered rather than an empty label.
     var shown by remember { mutableStateOf(action) }
     if (action != null) shown = action
+    val containerColor by animateColorAsState(
+        if (isFilled) MaterialTheme.colorScheme.primary else FloatingActionButtonDefaults.containerColor,
+    )
     FloatingControlVisibility(
         modifier = modifier,
         isVisible = action != null,
@@ -107,6 +116,8 @@ internal fun ExportActionButton(
                 }
             },
             onClick = { action?.let(onClick) },
+            containerColor = containerColor,
+            contentColor = contentColorFor(containerColor),
             modifier = Modifier.semantics { contentDescription = label },
             // From the action kept while the button leaves, so that it does not grow again as it fades out.
             expanded = !(isInShortPane && current == ExportButtonAction.Link(LinkAction.COPY)),
@@ -127,6 +138,8 @@ private fun ButtonIcon(
         CircularProgressIndicator(
             progress = { if (progress.total == 0) 0f else progress.done.toFloat() / progress.total },
             modifier = Modifier.size(24.dp),
+            // The button's own content color, since the indicator's primary would vanish into the filled button.
+            color = LocalContentColor.current,
             strokeWidth = 3.dp,
         )
     }

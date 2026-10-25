@@ -61,6 +61,13 @@ internal fun pageFitFor(isSideBySide: Boolean, isShortWindow: Boolean, floatingC
 }
 
 /**
+ * Whether the save button is filled with the primary color rather than tinted: where the options stand beside a preview
+ * pane that is not short, the button floats in the far corner of a large window, away from the options the eye is on,
+ * where the tinted one went unnoticed beside the page.
+ */
+internal fun isActionButtonFilledFor(isSideBySide: Boolean, isShortWindow: Boolean) = isSideBySide && !isShortWindow
+
+/**
  * The room the Link preview leaves for the button floating over its pane. Beside the options it floats over the pane's
  * end, which a short window takes as a column for the shared link alone, the one state whose button is a bare icon there
  * (Copy link), so that its QR code has the pane's height; every other state's button keeps its label, which only a band

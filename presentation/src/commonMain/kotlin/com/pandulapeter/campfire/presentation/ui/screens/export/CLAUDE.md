@@ -132,6 +132,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   elevation stays dark on Skia), and fades only the control inside it, so no buffer cuts the shadow off (never
   `ModulateAlpha`, which on Skia skips the layers inside); the controls draw none of their own. Those of the format the
   screen opened on appear without animating: their pages arriving is data, not something the user did.
+- **Beside the options in a window that is not short, the FAB is filled with `primary`** (`isActionButtonFilledFor`): in
+  the far corner of a large window the tonal one went unnoticed. A resize across the line animates the color. It sits in
+  the body, which knows the arrangement from its first frame.
 - The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
   arrangements, and the options move on the spatial spring (`animateBounds`).
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,

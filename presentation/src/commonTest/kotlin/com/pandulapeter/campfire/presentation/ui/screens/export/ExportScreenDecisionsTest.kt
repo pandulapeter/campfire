@@ -77,6 +77,13 @@ class ExportScreenDecisionsTest {
     }
 
     @Test
+    fun `the save button is filled only beside the options in a window that is not short`() {
+        assertTrue(isActionButtonFilledFor(isSideBySide = true, isShortWindow = false))
+        assertFalse(isActionButtonFilledFor(isSideBySide = true, isShortWindow = true))
+        assertFalse(isActionButtonFilledFor(isSideBySide = false, isShortWindow = false))
+    }
+
+    @Test
     fun `the qr code is as large as it reads best where the pane has room`() {
         assertEquals(240.dp, qrCodeSizeFor(paneWidth = 600.dp, paneHeight = 600.dp))
     }
