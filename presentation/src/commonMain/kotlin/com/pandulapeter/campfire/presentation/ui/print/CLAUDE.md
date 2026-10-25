@@ -31,8 +31,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - Sections and runs are grouped by the screen's own `joinCutSections` and `groupIntoRuns` (`ui/songLayout/`):
   a chorus is one unit under one bar, a break the one cut the PDF keeps.
 - Section labels: hidden when the options hide all its lines; an unnamed verse is "Verse", an unnamed paragraph has none.
-- A lyric row or a comment with markup prints as one text per change of style (`styledPieces`), side by side; a line
-  with any bold wraps measured in bold, so no bold word passes the column.
+- A lyric row or a comment with markup prints as one text carrying its markup as spans, laid out once so right-to-left
+  lines keep their order; the text layer keeps the text's own style. A line with any bold wraps measured in bold, so no
+  bold word passes the column.
 - A chorus bar is a `PrintRule` per row so it continues across columns and pages. `wrapPrintText` never breaks inside a
   grapheme cluster.
 - Diagram names and the instrument/tuning line above diagrams (`PrintLabels.chordTuning`, printed where not guitar or

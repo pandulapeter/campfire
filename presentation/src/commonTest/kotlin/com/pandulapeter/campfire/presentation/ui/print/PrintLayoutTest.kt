@@ -52,7 +52,7 @@ internal class PrintLayoutTest {
         return texts.single { it.text == "Line 2" }.y - texts.single { it.text == "Line 1" }.y
     }
 
-    @Test fun `formatted lyrics print in their styles, one after the other, under their chords`() = runTest {
+    @Test fun `formatted lyrics print as one text carrying their styles, under their chords`() = runTest {
         val line = ChordProLine.Lyrics(
             text = "Some bold and under",
             chords = listOf(ChordProLine.Lyrics.Chord(5, "Am", false)),
@@ -62,23 +62,39 @@ internal class PrintLayoutTest {
             ),
         )
         val texts = layout(source(song(listOf(line)))).pages.single().texts
-        val pieces = texts.filter { !it.style.bold || it.text == "bold" }.dropWhile { it.text != "Some " }.take(4)
+        val lyric = texts.single { it.text == "Some bold and under" }
 
-        assertEquals(listOf("Some ", "bold", " and ", "under"), pieces.map { it.text })
-        assertEquals(listOf(false, true, false, false), pieces.map { it.style.bold })
-        assertEquals(listOf(false, false, false, true), pieces.map { it.style.underline })
-        pieces.zipWithNext { piece, next -> assertEquals(piece.x + measure(piece.text, piece.style), next.x, 0.01f) }
-        assertEquals(pieces[1].x, texts.single { it.text == "Am" }.x, 0.01f)
+        assertFalse(lyric.style.bold)
+        assertEquals(
+            listOf(
+                ChordProLine.Lyrics.Formatting(5, 9, ChordProLine.Lyrics.Formatting.Style.BOLD),
+                ChordProLine.Lyrics.Formatting(14, 19, ChordProLine.Lyrics.Formatting.Style.UNDERLINE),
+            ),
+            lyric.formatting,
+        )
+        assertEquals(lyric.x + measure("Some ", lyric.style), texts.single { it.text == "Am" }.x, 0.01f)
     }
 
-    @Test fun `a comment prints in its markup's styles, plain and boxed`() = runTest {
+    @Test fun `a right-to-left line with markup prints as one text, which the renderer lays out in its order`() = runTest {
+        val line = ChordProLine.Lyrics(
+            text = "שלום עולם",
+            chords = emptyList(),
+            formatting = listOf(ChordProLine.Lyrics.Formatting(5, 9, ChordProLine.Lyrics.Formatting.Style.BOLD)),
+        )
+        val lyric = layout(source(song(listOf(line)))).pages.single().texts.single { it.text.startsWith("שלום") }
+
+        assertEquals("שלום עולם", lyric.text)
+        assertEquals(listOf(ChordProLine.Lyrics.Formatting(5, 9, ChordProLine.Lyrics.Formatting.Style.BOLD)), lyric.formatting)
+    }
+
+    @Test fun `a comment prints as one text carrying its markup, plain and boxed`() = runTest {
         listOf(CommentStyle.PLAIN, CommentStyle.BOX).forEach { style ->
             val comment = ChordProBlock.Comment("Play <u>slowly</u> here", style)
             val texts = layout(source(song(emptyList(), blocks = listOf(comment)))).pages.single().texts
-            val pieces = texts.dropWhile { it.text != "Play " }.take(3)
+            val text = texts.single { it.text.startsWith("Play") }
 
-            assertEquals(listOf("Play ", "slowly", " here"), pieces.map { it.text })
-            assertEquals(listOf(false, true, false), pieces.map { it.style.underline })
+            assertEquals("Play slowly here", text.text)
+            assertEquals(listOf(ChordProLine.Lyrics.Formatting(5, 11, ChordProLine.Lyrics.Formatting.Style.UNDERLINE)), text.formatting)
         }
     }
 

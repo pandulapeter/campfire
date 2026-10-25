@@ -19,8 +19,9 @@ internal data class PrintLyricPiece(
 )
 
 /**
- * The pieces of [fragment], the text from [start] on, each in [base] with the [formatting] of the text that covers it,
- * so that one text is printed for every change of style. A fragment no formatting reaches is one piece.
+ * The pieces of [fragment], the text from [start] on, each in [base] with the bold and italic of the [formatting] that
+ * covers it, which is what the width of a styled prefix of the row is measured in. A fragment no formatting reaches is one
+ * piece; underlining changes no width.
  */
 internal fun styledPieces(formatting: List<Formatting>, start: Int, fragment: String, base: PrintStyle): List<PrintLyricPiece> {
     val end = start + fragment.length
@@ -35,9 +36,18 @@ internal fun styledPieces(formatting: List<Formatting>, start: Int, fragment: St
             style = base.copy(
                 bold = base.bold || has(Formatting.Style.BOLD),
                 italic = base.italic || has(Formatting.Style.ITALIC),
-                underline = base.underline || has(Formatting.Style.UNDERLINE),
             ),
         )
+    }
+}
+
+/** The formatting of [this] that reaches [fragment], the text from [start] on, as offsets into the fragment. */
+internal fun List<Formatting>.clippedTo(start: Int, fragment: String): List<Formatting> {
+    val end = start + fragment.length
+    return mapNotNull { range ->
+        val from = maxOf(range.start, start)
+        val to = minOf(range.end, end)
+        if (from < to) Formatting(from - start, to - start, range.style) else null
     }
 }
 

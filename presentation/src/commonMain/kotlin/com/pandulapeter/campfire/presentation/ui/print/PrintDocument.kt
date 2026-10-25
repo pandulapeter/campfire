@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
@@ -129,8 +130,7 @@ internal fun printScaleGroupsOf(
 
 /**
  * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up
- * (everything else is in the app's text font, as in the viewer), [gray] from 0 (black) to 255 (white), and
- * [underline] only where a song's markup asks for it.
+ * (everything else is in the app's text font, as in the viewer), and [gray] from 0 (black) to 255 (white).
  */
 internal data class PrintStyle(
     val size: Int,
@@ -138,7 +138,6 @@ internal data class PrintStyle(
     val italic: Boolean = false,
     val monospace: Boolean = false,
     val gray: Int = 0,
-    val underline: Boolean = false,
 )
 
 /**
@@ -146,6 +145,10 @@ internal data class PrintStyle(
  *
  * @property isSelectable False for the names over the chord diagrams, which are left out of the file's selectable text:
  *   read back by an import, a row of them would be a line of chords above the song's first line.
+ * @property formatting The bold, italic, and underlined ranges of a lyric's or a comment's markup, as offsets into [text].
+ *   They are drawn as spans of the one text, laid out once, so that the bidirectional algorithm sees the whole line and a
+ *   right-to-left one keeps its order; the selectable text is written in [style] alone, since the importer would read a
+ *   bold word that is a chord name back as a chord.
  */
 internal data class PrintText(
     val text: String,
@@ -153,6 +156,7 @@ internal data class PrintText(
     val y: Float,
     val style: PrintStyle,
     val isSelectable: Boolean = true,
+    val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
 )
 
 /** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */

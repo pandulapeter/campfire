@@ -218,13 +218,7 @@ internal class PrintRows(
                 // a blank fragment without chords is an empty line the song asked for.
                 val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
                 val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
-                if (!isChordsOnly) {
-                    var x = 0f
-                    pieces.forEach { piece ->
-                        parts += Part(piece.text, x = x, y = lyricY, style = piece.style)
-                        x += measure(piece.text, piece.style)
-                    }
-                }
+                if (!isChordsOnly) parts += Part(fragment, y = lyricY, style = lyricStyle, formatting = lyrics.formatting.clippedTo(start, fragment))
                 val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
                 if (rowHeight <= capacity) {
                     add(Row(parts, rowHeight))
@@ -316,19 +310,16 @@ internal class PrintRows(
         else -> formattedRows(comment.text, commentStyle, width)
     }
 
-    /** [wrapped] for a text that may carry markup, a comment's: one text for every change of style, side by side. */
+    /** [wrapped] for a text that may carry markup, a comment's: one text a row, carrying the markup that reaches it. */
     private fun formattedRows(text: String, style: PrintStyle, width: Float): List<Row> {
         val stripped = ChordProMarkup.strip(text)
         if (stripped.formatting.isEmpty()) return wrapped(stripped.text, style, width)
         val wrappingStyle = stripped.formatting.wrappingStyle(style)
         var start = 0
         return wrapPrintText(stripped.text, width) { measure(it, wrappingStyle) }.map { fragment ->
-            var x = 0f
-            val parts = styledPieces(stripped.formatting, start, fragment, style).map { piece ->
-                Part(piece.text, x = x, style = piece.style).also { x += measure(piece.text, piece.style) }
-            }
+            val part = Part(fragment, style = style, formatting = stripped.formatting.clippedTo(start, fragment))
             start += fragment.length
-            Row(parts, style.size * 1.45f)
+            Row(listOf(part), style.size * 1.45f)
         }
     }
 
@@ -408,13 +399,14 @@ internal class PrintRows(
     }
 }
 
-/** A text of a [Row], placed relative to the row's top left corner. */
+/** A text of a [Row], placed relative to the row's top left corner, with the markup [PrintText.formatting] says. */
 internal data class Part(
     val text: String,
     val x: Float = 0f,
     val y: Float = 0f,
     val style: PrintStyle,
     val isSelectable: Boolean = true,
+    val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
 )
 
 /** The unit [PrintLayouter.place] never splits: a lyric line with its chords, a tab system, a row of chord diagrams. */

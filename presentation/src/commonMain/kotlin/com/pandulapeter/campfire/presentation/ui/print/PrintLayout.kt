@@ -144,7 +144,7 @@ private class PrintLayouter(
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
             val x = margin + column * (columnWidth + gutter)
-            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable)) }
+            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             y += row.height

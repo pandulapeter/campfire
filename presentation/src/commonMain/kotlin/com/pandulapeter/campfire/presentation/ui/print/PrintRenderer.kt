@@ -18,9 +18,12 @@ import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -30,6 +33,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
+import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
@@ -46,7 +50,7 @@ internal class PrintRenderer(
     private val textFontFamily: FontFamily = FontFamily.Default,
 ) {
     /** The laid out texts of the pages drawn last, one for each of a page's [PrintPage.texts]. */
-    private val layouts = PrintPageCache { page -> page.texts.map { text(it.text, it.style) } }
+    private val layouts = PrintPageCache { page -> page.texts.map { text(it.text, it.style, it.formatting) } }
 
     private fun PrintStyle.toTextStyle() = TextStyle(
         color = Color(gray, gray, gray),
@@ -54,12 +58,11 @@ internal class PrintRenderer(
         fontSize = size.sp,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
-        textDecoration = if (underline) TextDecoration.Underline else null,
         fontFeatureSettings = "liga=0",
     )
 
-    private fun text(value: String, style: PrintStyle) = measurer.measure(
-        text = value,
+    private fun text(value: String, style: PrintStyle, formatting: List<Formatting> = emptyList()) = measurer.measure(
+        text = if (formatting.isEmpty()) AnnotatedString(value) else value.withSpans(formatting),
         style = style.toTextStyle(),
         softWrap = false,
         density = Density(1f, 1f),
@@ -170,6 +173,18 @@ internal class PrintRenderer(
             yield()
         }
         return writer.finish()
+    }
+}
+
+private fun String.withSpans(formatting: List<Formatting>) = buildAnnotatedString {
+    append(this@withSpans)
+    formatting.forEach { range ->
+        val span = when (range.style) {
+            Formatting.Style.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
+            Formatting.Style.ITALIC -> SpanStyle(fontStyle = FontStyle.Italic)
+            Formatting.Style.UNDERLINE -> SpanStyle(textDecoration = TextDecoration.Underline)
+        }
+        addStyle(span, range.start, range.end)
     }
 }
 
