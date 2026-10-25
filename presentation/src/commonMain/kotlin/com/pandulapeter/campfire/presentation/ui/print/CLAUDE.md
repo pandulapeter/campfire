@@ -38,6 +38,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   grapheme cluster.
 - Diagram names and the instrument/tuning line above diagrams (`PrintLabels.chordTuning`, printed where not guitar or
   keyboard, or not standard tuning) and the suggested scales under the diagrams are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
+- Markup's bold is drawn but written into the text layer in the regular weight: read back, a bold word that is a chord
+  name would become a chord.
 - The playing row (`playingDetails`): key, transposition, and non-zero capo with `showKey` (on the keyboard the capo is
   counted into the transposition, as on screen); tempo and time signature with `showTempo`, which also prints later
   changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the

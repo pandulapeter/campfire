@@ -87,6 +87,20 @@ internal class PrintLayoutTest {
         assertEquals(listOf(ChordProLine.Lyrics.Formatting(5, 9, ChordProLine.Lyrics.Formatting.Style.BOLD)), lyric.formatting)
     }
 
+    @Test fun `markup's bold is not written bold, while the title and the chords are`() = runTest {
+        val line = ChordProLine.Lyrics(
+            text = "There is a house",
+            chords = emptyList(),
+            formatting = listOf(ChordProLine.Lyrics.Formatting(9, 10, ChordProLine.Lyrics.Formatting.Style.BOLD)),
+        )
+        val chorded = ChordProLine.Lyrics("In New Orleans", listOf(ChordProLine.Lyrics.Chord(0, "D", false)))
+        val texts = layout(source(song(listOf(line, chorded)))).pages.single().texts
+
+        assertFalse(texts.single { it.text == "There is a house" }.style.bold)
+        assertTrue(texts.single { it.text == "A song" }.style.bold)
+        assertTrue(texts.single { it.text == "D" }.style.bold)
+    }
+
     @Test fun `a comment prints as one text carrying its markup, plain and boxed`() = runTest {
         listOf(CommentStyle.PLAIN, CommentStyle.BOX).forEach { style ->
             val comment = ChordProBlock.Comment("Play <u>slowly</u> here", style)

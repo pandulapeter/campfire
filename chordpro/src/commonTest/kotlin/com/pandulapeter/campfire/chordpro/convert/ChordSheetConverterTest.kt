@@ -311,6 +311,25 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a lyric of Campfire's own export reads back unchanged, a word its markup set in bold included`() {
+        fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
+        )
+        val page = ChordSheet.Page(
+            listOf(
+                glyphs("House of the Rising Sun", 19.0, bold = true),
+                glyphs("Animals", 11.0),
+                glyphs("Verse", 11.0, bold = true),
+                glyphs("There is a house in New Orleans", 12.0),
+            ),
+        )
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
+        assertTrue(result.startsWith("{title: House of the Rising Sun}\n{artist: Animals}\n"), result)
+        assertTrue("\nThere is a house in New Orleans\n" in result, result)
+        assertFalse('[' in result, result)
+    }
+
+    @Test
     fun `derives plain title and expands tabs`() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))
