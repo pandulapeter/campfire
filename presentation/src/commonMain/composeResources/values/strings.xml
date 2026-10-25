@@ -823,6 +823,7 @@
     <string name="song_editor_insert_artist">Artist</string>
     <string name="song_editor_insert_composer">Composer</string>
     <string name="song_editor_insert_lyricist">Lyricist</string>
+    <string name="song_editor_insert_more_details">More details</string>
     <string name="song_editor_insert_album">Album</string>
     <string name="song_editor_insert_cover_art">Cover art</string>
     <string name="song_editor_insert_year">Year</string>

@@ -23,6 +23,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -34,12 +36,15 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param hasMenu Whether the button opens a menu of choices rather than writing something at once, which a chevron
  *   after its label says.
+ * @param icon Drawn in place of the [label], which then names the button for screen readers only. It is as tall as a
+ *   line of the label, so that a row of buttons keeps one height.
  */
 @Composable
 internal fun EditorToolbarButton(
     modifier: Modifier = Modifier,
     label: String,
     hasMenu: Boolean = false,
+    icon: Painter? = null,
     onClick: () -> Unit,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
     Surface(
@@ -51,19 +56,31 @@ internal fun EditorToolbarButton(
     ) {
         Row(
             modifier = Modifier.padding(
-                start = BUTTON_HORIZONTAL_PADDING,
-                end = if (hasMenu) BUTTON_MENU_END_PADDING else BUTTON_HORIZONTAL_PADDING,
+                start = if (icon == null) BUTTON_HORIZONTAL_PADDING else BUTTON_ICON_HORIZONTAL_PADDING,
+                end = when {
+                    hasMenu -> BUTTON_MENU_END_PADDING
+                    icon == null -> BUTTON_HORIZONTAL_PADDING
+                    else -> BUTTON_ICON_HORIZONTAL_PADDING
+                },
                 top = BUTTON_VERTICAL_PADDING,
                 bottom = BUTTON_VERTICAL_PADDING,
             ),
             horizontalArrangement = Arrangement.spacedBy(BUTTON_ICON_GAP),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-            )
+            if (icon == null) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                )
+            } else {
+                Icon(
+                    modifier = Modifier.size(with(LocalDensity.current) { MaterialTheme.typography.labelLarge.lineHeight.toDp() }),
+                    painter = icon,
+                    contentDescription = label,
+                )
+            }
             if (hasMenu) {
                 Icon(
                     modifier = Modifier.size(BUTTON_ICON_SIZE),
@@ -77,6 +94,7 @@ internal fun EditorToolbarButton(
 
 private val BUTTON_HORIZONTAL_PADDING = 12.dp
 private val BUTTON_MENU_END_PADDING = 8.dp
+private val BUTTON_ICON_HORIZONTAL_PADDING = 8.dp
 private val BUTTON_VERTICAL_PADDING = 8.dp
 private val BUTTON_ICON_GAP = 2.dp
 private val BUTTON_ICON_SIZE = 18.dp

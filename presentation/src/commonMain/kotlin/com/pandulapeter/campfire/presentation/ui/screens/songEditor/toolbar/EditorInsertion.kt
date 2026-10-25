@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
+import org.jetbrains.compose.resources.DrawableResource
 
 /**
  * One thing a toolbar button writes around the selection, or around the caret where there is none.
@@ -24,6 +26,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
  *   empty for a button that writes itself.
  * @param formatting The markup a Bold, Italic, or Underline button toggles around the selection (see
  *   `toggleFormatting`), in place of the two halves; null for every other button.
+ * @param icon What the button shows in place of its [label], which then only names it for screen readers: the
+ *   formatting buttons', whose icons every text editor shares and which would otherwise take a word each.
+ * @param chordShapeInstrument The instrument a Chord shape menu entry writes a `{define}` for (see `insertChordShape`),
+ *   in place of the two halves; null for every other entry.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -35,17 +41,29 @@ internal data class EditorInsertion(
     val emptySuffix: String = suffix,
     val choices: List<EditorInsertion> = emptyList(),
     val formatting: Formatting.Style? = null,
+    val icon: DrawableResource? = null,
+    val chordShapeInstrument: ChordInstrument? = null,
 ) {
 
     companion object {
 
         /** Markup around the selection, inside a line of lyrics or a comment, taken off again where it is there. */
-        fun formatting(label: String, style: Formatting.Style) = EditorInsertion(
+        fun formatting(label: String, style: Formatting.Style, icon: DrawableResource) = EditorInsertion(
             label = label,
             prefix = "",
             suffix = "",
             isOwnLine = false,
             formatting = style,
+            icon = icon,
+        )
+
+        /** A `{define}` for the chord at the caret, on [instrument], written into the header. */
+        fun chordShape(label: String, instrument: ChordInstrument) = EditorInsertion(
+            label = label,
+            prefix = "",
+            suffix = "",
+            isOwnLine = true,
+            chordShapeInstrument = instrument,
         )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */

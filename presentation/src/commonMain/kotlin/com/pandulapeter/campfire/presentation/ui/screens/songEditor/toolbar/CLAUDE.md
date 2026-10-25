@@ -13,16 +13,19 @@ The editor's Shortcuts toolbar and its control row.
 
 ### The Shortcuts rows
 
-- **Two Shortcuts rows** (`EditorToolbar.kt`): a button for every directive `ChordProParser` understands and the app
-  shows. First row: what the song *is* (header directives, then Tag, Language, Link, then Chord shape); second: the song
-  body (chords, Bold, Italic, and Underline, sections, Tab and Grid, comments, then Key change, Tempo, and Time
-  signature).
+- **Two Shortcuts rows** (`EditorToolbar.kt`): a button or menu entry for every directive `ChordProParser` understands
+  and the app shows, the two rows about as long as each other. Second row: what goes into nearly every line: Chord,
+  Annotation, Chord shape; Bold, Italic, and Underline as icons (labelled for screen readers); the sections in song
+  order, Repeat chorus after Chorus. First row: what a song needs now and then: Title, Artist, **More details** (the
+  credits, album, year, duration, cover); Key, Capo, Key change, Tempo, Time signature; Tag, Language, Link; Tab, Grid,
+  and a **Comment** menu (plain, italic, boxed). What is reached for less often goes into a menu rather than lengthen
+  its row.
 - Bold, Italic, and Underline toggle markup like their shortcuts, see the editor's own notes.
 
 ### Shortcut rules
 
-- Toolbar buttons and the Tab and Chord shape menus (`EditorToolbarMenuButton`) **take no focus**, or the keyboard
-  closes on every tap and the insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
+- Toolbar buttons and menus (`EditorToolbarMenuButton`) **take no focus**, or the keyboard closes on every tap and the
+  insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
 - Everything in braces goes on a line of its own (the only way ChordPro reads a directive).
 - Deliberately absent: `{new_song}` (one song per editor) and `{new_page}` / `{column_break}` (Campfire flows sections
   into columns itself). `{transpose}` is offered only as **Key change**, written at the caret, never in the header: one
@@ -37,8 +40,8 @@ The editor's Shortcuts toolbar and its control row.
   `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor`: that instrument's strings in standard tuning
   (Any: the player's instrument's, a guitar's for a fretless one), whatever the player's own tuning. With a selection
   it only wraps it (likely a pasted tab).
-- Chord shape (`chordShapeInsertion`) ends the first Shortcuts row and asks which instrument (`chordShapeInstruments`:
-  every one with shapes, no Any, the twelve-string a guitar). It writes a `{define}` for the chord at the caret into the
+- Chord shape (`chordShapeInsertion`) sits with the chords, though it writes into the header, and asks which
+  instrument (`chordShapeInstruments`: every one with shapes, no Any, the twelve-string a guitar). It writes a `{define}` for the chord at the caret into the
   header, **always the standard-tuning shape** (ChordPro gives a definition no tuning): the player's choice for that
   instrument, else the app's first, frets selected; or it moves the caret to an existing line's frets. With the caret in
   no chord it writes a placeholder C, name selected (a line to edit teaches the syntax), or selects a C already defined

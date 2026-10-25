@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- CI issue on iOS: Your account has reached the maximum number of certificates.
 - Onboarding: the circular hero element has some inset handling issues
 - Add 5/4 metronome preset
 - Export -> Export / Share

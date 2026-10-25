@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
 /**
  * A button of the [EditorToolbar] that asks which of several things to write before it writes any of them, as a popup
  * hanging from it: the Tab and Chord shape buttons, whose choices are the instruments a tab or a chord shape can be
- * written for.
+ * written for, and More details and Comment, which keep what is reached for less often out of the rows.
  *
  * The popup takes no focus, and neither do its entries, for the reason the buttons take none: the caret has to stay in
  * the field for the keyboard to stay up and for the choice to be written where it is.

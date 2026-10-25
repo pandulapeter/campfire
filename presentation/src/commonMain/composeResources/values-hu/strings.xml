@@ -822,6 +822,7 @@
     <string name="song_editor_insert_artist">Előadó</string>
     <string name="song_editor_insert_composer">Zeneszerző</string>
     <string name="song_editor_insert_lyricist">Szövegíró</string>
+    <string name="song_editor_insert_more_details">További adatok</string>
     <string name="song_editor_insert_album">Album</string>
     <string name="song_editor_insert_cover_art">Borítókép</string>
     <string name="song_editor_insert_year">Év</string>
