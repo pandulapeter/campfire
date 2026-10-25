@@ -19,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -50,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.print_running_order
 import com.pandulapeter.campfire.presentation.resources.print_section_page
 import com.pandulapeter.campfire.presentation.resources.print_song_sheet
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
+import com.pandulapeter.campfire.presentation.resources.print_tabs
 import com.pandulapeter.campfire.presentation.resources.print_tempo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
@@ -183,7 +186,7 @@ private fun RunningOrderOptions(
 /**
  * The song sheets: their columns, and for several songs whether each starts a page, then what each sheet prints, in the
  * order it prints it: the artist under the title, the key and the tempo, the chord diagrams and the scales, then the
- * song's chords and comments.
+ * song's chords, tablature, and comments.
  */
 @Composable
 private fun SongSheetOptions(
@@ -222,23 +225,19 @@ private fun SongSheetOptions(
             onCheckedChange = { onSettings(settings.copy(showTempo = it)) },
         )
     }
-    // Only where a song has a chord to draw, which none has with the diagrams switched off in the app; and like the chord
-    // spelling in Settings, disabled rather than hidden with the chords, which it fingers.
+    // Only where a song has a chord to draw, which none has with the diagrams switched off in the app.
     if (areChordsEnabled && source.songs.any { it.chords.isNotEmpty() }) {
         CheckboxListItem(
             title = stringResource(Res.string.settings_chord_diagrams),
             isChecked = settings.showChordDiagrams,
-            isEnabled = settings.showChords,
             onCheckedChange = { onSettings(settings.copy(showChordDiagrams = it)) },
         )
     }
-    // Only where a song has a scale to suggest, which none has with the suggestions switched off in the app; disabled with
-    // the chords, as the diagrams are, since the scales are read off them.
+    // Only where a song has a scale to suggest, which none has with the suggestions switched off in the app.
     if (areChordsEnabled && areScaleSuggestionsEnabled && source.songs.any { it.scaleGroups.isNotEmpty() }) {
         CheckboxListItem(
             title = stringResource(Res.string.settings_scale_suggestions),
             isChecked = settings.showScales,
-            isEnabled = settings.showChords,
             onCheckedChange = { onSettings(settings.copy(showScales = it)) },
         )
     }
@@ -249,11 +248,23 @@ private fun SongSheetOptions(
             onCheckedChange = { onSettings(settings.copy(showChords = it)) },
         )
     }
+    // Only where a song has tablature to leave out, like the diagrams and the scales.
+    if (areChordsEnabled && source.hasTabs()) {
+        CheckboxListItem(
+            title = stringResource(Res.string.print_tabs),
+            isChecked = settings.showTabs,
+            onCheckedChange = { onSettings(settings.copy(showTabs = it)) },
+        )
+    }
     CheckboxListItem(
         title = stringResource(Res.string.print_comments),
         isChecked = settings.showComments,
         onCheckedChange = { onSettings(settings.copy(showComments = it)) },
     )
+}
+
+private fun PrintSource.hasTabs() = songs.any { song ->
+    song.song?.blocks.orEmpty().any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Tab } }
 }
 
 /** A section's columns, as a stepper beside its label like the page's text size and margins. */

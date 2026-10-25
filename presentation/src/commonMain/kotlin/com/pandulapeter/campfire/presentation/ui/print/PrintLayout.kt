@@ -27,13 +27,14 @@ import kotlinx.coroutines.yield
  * while it is suspended can the page paint and a newer choice of options cancel a stale layout.
  */
 /**
- * [this] with what the app's own feature switches take away left out too: the chords, their diagrams, their scales, and
- * the key with the Chords switch, the scales with the Scale suggestions one too, the tempo and the time signature with
+ * [this] with what the app's own feature switches take away left out too: the chords, the tablature, their diagrams, their
+ * scales, and the key with the Chords switch, the scales with the Scale suggestions one too, the tempo and the time signature with
  * the Metronome one. The options themselves are kept as they
  * were chosen, since a switch only hides, and switched back on the export prints them again.
  */
 internal fun PrintSettings.withinFeatures(areChordsEnabled: Boolean, areScaleSuggestionsEnabled: Boolean, isMetronomeEnabled: Boolean) = copy(
     showChords = showChords && areChordsEnabled,
+    showTabs = showTabs && areChordsEnabled,
     showChordDiagrams = showChordDiagrams && areChordsEnabled,
     showScales = showScales && areChordsEnabled && areScaleSuggestionsEnabled,
     showKey = showKey && areChordsEnabled,
@@ -258,11 +259,10 @@ private class PrintLayouter(
      * The song's chord diagrams as the song details screen's Chords section has them, in rows of cells each holding the
      * chord's name over its diagram, sized by the text so that they grow with it, a row being one unit [place] keeps
      * together, under the line naming the instrument and the tuning ([PrintLabels.chordTuning]), which is not selectable
-     * for the reason the names are not: the importer would read it back as a line of the song. Only with the chords, since
-     * the diagrams finger chords the page would otherwise not print.
+     * for the reason the names are not: the importer would read it back as a line of the song.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
-        if (!options.showChords || !options.showChordDiagrams || chords.isEmpty()) return emptyList()
+        if (!options.showChordDiagrams || chords.isEmpty()) return emptyList()
         val gap = options.fontSize * DIAGRAM_GAP
         val cells = chords.map { chord ->
             val isFretted = chord.geometry is ChordDiagramGeometry.Fretted
@@ -297,11 +297,10 @@ private class PrintLayouter(
     /**
      * The song's suggested scales as its Scales section has them: under the heading, the home's line first, then a line
      * for each other part and chord worth a scale of its own, titled by it. None of it is selectable, for the reason the
-     * diagrams' names are not: the importer would read the lines back as the song's own. Only with the chords, which the
-     * scales are read off.
+     * diagrams' names are not: the importer would read the lines back as the song's own.
      */
     private fun scaleRows(scales: List<PrintScaleRow>): List<Row> {
-        if (!options.showChords || !options.showScales || scales.isEmpty()) return emptyList()
+        if (!options.showScales || scales.isEmpty()) return emptyList()
         val heading = labels.scales?.let { printRows.wrapped(it, printRows.labelStyle, isSelectable = false) }.orEmpty()
         return heading + scales.flatMap { row ->
             printRows.wrapped(row.title?.let { "$it: ${row.text}" } ?: row.text, printRows.detailStyle, isSelectable = false)

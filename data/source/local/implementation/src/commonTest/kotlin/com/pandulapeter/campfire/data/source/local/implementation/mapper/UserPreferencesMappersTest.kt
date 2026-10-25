@@ -65,7 +65,7 @@ internal class UserPreferencesMappersTest {
     @Test
     fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
-            marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showScales = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
+            marginMm = 20, columns = 4, showChords = false, showTabs = false, showChordDiagrams = false, showScales = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
             showPageNumbers = false, startSongsOnNewPage = false, includeSetlistOverview = false, overviewColumns = 3, showOverviewDetails = false)
         val preferences = UserPreferencesDocument().toModel().copy(printSettings = settings)
         val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
@@ -95,10 +95,19 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `the tablature follows the chords option that printed it until it is chosen`() {
+        fun printSettingsOf(text: String) = UserPreferencesDocumentFormat.decode("""{"printSettings":$text}""").document.toModel().printSettings
+
+        assertEquals(false, printSettingsOf("""{"showChords":false}""").showTabs)
+        assertEquals(true, printSettingsOf("""{"showChords":false,"showTabs":true}""").showTabs)
+        assertEquals(true, printSettingsOf("""{}""").showTabs)
+    }
+
+    @Test
     fun `malformed print sizes and unknown paper fall back without losing other choices`() {
         val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid",
             fontSize = 400, marginMm = -1, columns = 50, overviewColumns = 0, showChords = false)).toModel()
-        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false), preferences.printSettings)
+        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false, showTabs = false), preferences.printSettings)
     }
 
     @Test

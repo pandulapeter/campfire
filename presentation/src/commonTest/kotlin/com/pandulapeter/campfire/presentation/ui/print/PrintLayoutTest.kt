@@ -183,7 +183,7 @@ internal class PrintLayoutTest {
                 ChordProLine.Tab("e|--0--2--|"), ChordProLine.Grid(listOf(GridToken.Chord("D"))),
             )),
         ))
-        val text = layout(source(entry), PrintSettings(showChords = false, showKey = false, showComments = false, showMetadata = false)).pages.flatMap { it.texts }.map { it.text }
+        val text = layout(source(entry), PrintSettings(showChords = false, showTabs = false, showKey = false, showComments = false, showMetadata = false)).pages.flatMap { it.texts }.map { it.text }
         assertTrue("Sung words" in text)
         assertFalse(text.any { it.contains("comment") || it.contains("Capo") || it.contains("Artist") || it == "D" || it.contains("e|") })
     }
@@ -202,22 +202,37 @@ internal class PrintLayoutTest {
         assertTrue(layout(source(entry)).pages.size > 1)
     }
 
-    @Test fun `a tab only section leaves out its label when chords are hidden`() = runTest {
+    @Test fun `a tab only section leaves out its label when tablature is hidden`() = runTest {
         val riff = ChordProBlock.Section(SectionType.Custom("riff"), "Riff", listOf(ChordProLine.Tab("e|--0--2--|"), ChordProLine.Tab("B|--1--3--|", continuesEnvironment = true)))
-        val texts = layout(source(song(emptyList(), listOf(riff))), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        val texts = layout(source(song(emptyList(), listOf(riff))), PrintSettings(showTabs = false)).pages.flatMap { it.texts }.map { it.text }
         assertFalse("Riff" in texts)
         assertTrue("Riff" in layout(source(song(emptyList(), listOf(riff)))).pages.flatMap { it.texts }.map { it.text })
     }
 
-    @Test fun `a bare tab is headed tab and left out with its heading when chords are hidden`() = runTest {
+    @Test fun `a bare tab is headed tab and left out with its heading when tablature is hidden`() = runTest {
         val tab = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Tab("e|---0---|")))))
         val texts = layout(source(tab)).pages.flatMap { it.texts }
         val heading = texts.single { it.text == "Tab" }
         assertTrue(heading.style.bold)
         assertEquals(90, heading.style.gray)
         assertTrue(texts.any { it.text.startsWith("e|") && it.y > heading.y })
-        val hidden = layout(source(tab), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        val hidden = layout(source(tab), PrintSettings(showTabs = false)).pages.flatMap { it.texts }.map { it.text }
         assertFalse("Tab" in hidden || hidden.any { it.startsWith("e|") })
+    }
+
+    @Test fun `tablature is printed or left out apart from the chords, its comments with it`() = runTest {
+        val entry = song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Lyrics("Sung words", listOf(ChordProLine.Lyrics.Chord(0, "D", false))))),
+            ChordProBlock.Comment("Palm muted", CommentStyle.PLAIN, isInTabOrGrid = true, isInTab = true),
+            ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Tab("e|---0---|"))),
+        ))
+        suspend fun printed(settings: PrintSettings) = layout(source(entry), settings).pages.flatMap { it.texts }.map { it.text }
+        val tabsOnly = printed(PrintSettings(showChords = false, showTabs = true))
+        assertTrue(tabsOnly.any { it.startsWith("e|") } && "Palm muted" in tabsOnly && "Sung words" in tabsOnly)
+        assertFalse("D" in tabsOnly)
+        val chordsOnly = printed(PrintSettings(showChords = true, showTabs = false))
+        assertTrue("D" in chordsOnly)
+        assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly || "Tab" in chordsOnly)
     }
 
     @Test fun `a bare grid is headed grid and left out with its heading when chords are hidden`() = runTest {
@@ -673,14 +688,14 @@ internal class PrintLayoutTest {
             ChordProBlock.Section(SectionType.Custom("intro"), "Intro", listOf(ChordProLine.Tab("e|--0--2--|"))),
             ChordProBlock.Break,
             ChordProBlock.Section(SectionType.Custom("intro"), "Intro", lyrics(1, "Sung"), isContinuation = true),
-        ))), PrintSettings(showChords = false, columns = 2))
+        ))), PrintSettings(showTabs = false, columns = 2))
         assertEquals(document.placeOf("Sung 1"), document.placeOf("Intro"))
     }
 
     @Test fun `a recall whose chorus prints only a comment keeps its heading`() = runTest {
         val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Tab("e|--0--2--|")))
         val comment = ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION)
-        val texts = layout(source(song(emptyList(), listOf(chorus, comment, ChordProBlock.ChorusRecall(null, listOf(chorus, comment))))), PrintSettings(showChords = false))
+        val texts = layout(source(song(emptyList(), listOf(chorus, comment, ChordProBlock.ChorusRecall(null, listOf(chorus, comment))))), PrintSettings(showTabs = false))
             .pages.single().texts.map { it.text }
         assertEquals(2, texts.count { it == "Softly" })
         assertEquals(1, texts.count { it == "Chorus" })
@@ -689,10 +704,10 @@ internal class PrintLayoutTest {
 
     private fun guitarChord(name: String) = PrintChord(name, geometry = ChordDiagramGeometry.Fretted(6, 1, 4, List(6) { null }, emptyList(), emptyList()))
 
-    @Test fun `chord diagrams are printed under the heading only when asked for and with the chords`() = runTest {
+    @Test fun `chord diagrams are printed under the heading only when asked for, with or without the chords`() = runTest {
         val entry = song(lyrics(2)).copy(chords = listOf(guitarChord("D"), guitarChord("G")))
         assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = false)).pages.single().diagrams.isEmpty())
-        assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = true, showChords = false)).pages.single().diagrams.isEmpty())
+        assertEquals(2, layout(source(entry), PrintSettings(showChordDiagrams = true, showChords = false)).pages.single().diagrams.size)
         val page = layout(source(entry), PrintSettings(showChordDiagrams = true)).pages.single()
         assertEquals(2, page.diagrams.size)
         val names = page.texts.filter { it.text == "D" || it.text == "G" }
@@ -702,7 +717,7 @@ internal class PrintLayoutTest {
         assertTrue(page.diagrams.all { diagram -> diagram.y + diagram.height <= page.texts.first { it.text == "Line 1" }.y })
     }
 
-    @Test fun `suggested scales are printed under the diagrams only when asked for and with the chords, and are not selectable`() = runTest {
+    @Test fun `suggested scales are printed under the diagrams only when asked for, with or without the chords, and are not selectable`() = runTest {
         val scales = listOf(PrintScaleRow(title = null, text = "D major · B minor"), PrintScaleRow(title = "Over E7", text = "E Mixolydian"))
         val entry = song(lyrics(1)).copy(chords = listOf(guitarChord("D")), scales = scales)
         val scaleLabels = labels.copy(scales = "Scales")
@@ -712,9 +727,8 @@ internal class PrintLayoutTest {
         assertEquals(printed, printed.sortedBy { it.y })
         assertTrue(page.diagrams.single().let { it.y + it.height } < printed.first().y)
         assertTrue(printed.last().y < page.texts.single { it.text == "Line 1" }.y)
-        listOf(PrintSettings(showScales = false), PrintSettings(showScales = true, showChords = false)).forEach { settings ->
-            assertTrue(layoutPrintDocument(source(entry), settings, scaleLabels, ::measure).pages.single().texts.none { it.text == "Scales" })
-        }
+        assertTrue(layoutPrintDocument(source(entry), PrintSettings(showScales = false), scaleLabels, ::measure).pages.single().texts.none { it.text == "Scales" })
+        assertTrue(layoutPrintDocument(source(entry), PrintSettings(showScales = true, showChords = false), scaleLabels, ::measure).pages.single().texts.any { it.text == "Scales" })
     }
 
     @Test fun `the tuning line is printed above the diagrams only with them and is not selectable`() = runTest {
@@ -789,9 +803,9 @@ internal class PrintLayoutTest {
     }
 
     @Test fun `the feature switches leave out what they take away whatever the options say`() {
-        val chosen = PrintSettings(showChords = true, showChordDiagrams = true, showScales = true, showKey = true, showTempo = true)
+        val chosen = PrintSettings(showChords = true, showTabs = true, showChordDiagrams = true, showScales = true, showKey = true, showTempo = true)
         assertEquals(
-            chosen.copy(showChords = false, showChordDiagrams = false, showScales = false, showKey = false),
+            chosen.copy(showChords = false, showTabs = false, showChordDiagrams = false, showScales = false, showKey = false),
             chosen.withinFeatures(areChordsEnabled = false, areScaleSuggestionsEnabled = true, isMetronomeEnabled = true),
         )
         assertEquals(chosen.copy(showScales = false), chosen.withinFeatures(areChordsEnabled = true, areScaleSuggestionsEnabled = false, isMetronomeEnabled = true))

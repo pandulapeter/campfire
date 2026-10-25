@@ -362,6 +362,7 @@ internal fun printSettings(isLandscape: Boolean) = buildJsonObject {
     put("columns", 2)
     listOf(
         "showChords",
+        "showTabs",
         "showChordDiagrams",
         "showKey",
         "showTempo",

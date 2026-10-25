@@ -11,8 +11,10 @@
 - CI issue on iOS: Your account has reached the maximum number of certificates.
 - Onboarding: the circular hero element has some inset handling issues
 - Add 5/4 metronome preset
+- Export -> Export / Share
 - Export screen FAB is not visible enough on large screens
-- Web app pops during scale playback
+- Add ability to only print the running order of a setlist
+- Screenshot generator: bottom sheets seem to cover the bottom window chrome
 - Tab transposition bug: it doesn't compensate for the digit-count changes
 - The Songs / Setlists screens (similarly to other screens in the app) should animate scrolling to the top when their navigation button is reselected. However, at least on the Songs screen (check Setlists too) this animation is not smooth: it animates to a certain sticky header, slows down, then animates to the top. Fix it so that one smooth animation scrolls to the very beginning of the list
 - Fix compile-time warnings on all platforms

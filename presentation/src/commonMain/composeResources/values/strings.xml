@@ -1153,7 +1153,8 @@
     <string name="print_columns">Columns</string>
     <string name="print_columns_decrease">Fewer columns</string>
     <string name="print_columns_increase">More columns</string>
-    <string name="print_chords">Chords, tablature, and grids</string>
+    <string name="print_chords">Chords and grids</string>
+    <string name="print_tabs">Tablature</string>
     <string name="print_comments">Comments</string>
     <string name="print_key">Key, transposition, and capo</string>
     <string name="print_tempo">Tempo and time signature</string>

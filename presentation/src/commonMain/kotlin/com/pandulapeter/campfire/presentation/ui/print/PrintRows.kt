@@ -141,7 +141,7 @@ internal class PrintRows(
     private fun partRows(part: SectionPart, sectionLabel: String?, lineWidth: Float): List<Row> = when (part) {
         is SectionPart.Lines -> part.lines.groupIntoRuns().flatMap { run ->
             when (run.first().foldableKind()) {
-                FoldableKind.TAB -> if (options.showChords) tabRows(run, sectionLabel, lineWidth) else emptyList()
+                FoldableKind.TAB -> if (options.showTabs) tabRows(run, sectionLabel, lineWidth) else emptyList()
                 FoldableKind.GRID -> if (options.showChords) gridRows(run, lineWidth) else emptyList()
                 null -> run.flatMap { line ->
                     when (line) {
@@ -311,7 +311,7 @@ internal class PrintRows(
         tempoDetails(timing.tempo, timing.time).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
-        !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()
+        !options.showComments || (comment.isInTabOrGrid && !(if (comment.isInTab) options.showTabs else options.showChords)) -> emptyList()
         comment.style == CommentStyle.BOX -> boxedRows(comment.text, width)
         else -> formattedRows(comment.text, commentStyle, width)
     }

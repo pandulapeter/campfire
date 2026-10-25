@@ -22,12 +22,15 @@ data class PrintSettings(
     val fontSize: Int = 12,
     val marginMm: Int = 15,
     val columns: Int = 1,
+    /** The chords over the lyrics and the chord grids. */
     val showChords: Boolean = true,
-    /** The diagram of every chord a song plays under its heading, with [showChords] only, since it fingers chords that are printed. */
+    /** The tablature, apart from [showChords]: somebody can play a riff from it with no chord sheet to print, or the other way around. */
+    val showTabs: Boolean = true,
+    /** The diagram of every chord a song plays under its heading, apart from [showChords]: a player can learn the shapes without the sheet. */
     val showChordDiagrams: Boolean = true,
     /**
-     * The scales each part of a song is played over, as its Scales section suggests them, with [showChords] only, since
-     * they are read off the chords. On at first, as everything printed is, until the user's own choice is stored.
+     * The scales each part of a song is played over, as its Scales section suggests them, apart from [showChords] like the
+     * diagrams. On at first, as everything printed is, until the user's own choice is stored.
      */
     val showScales: Boolean = true,
     /** The key, the transposition it is printed in and the capo, on a line of their own under a song's heading. */

@@ -178,7 +178,7 @@ internal fun ExportScreen(
     )
     val printedSource = rememberPrintScales(
         source = titledSource,
-        isShown = printedSettings.showChords && printedSettings.showScales,
+        isShown = printedSettings.showScales,
         notation = (preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation(),
     )
     val laidOut by produceLaidOutDocument(state = state, source = printedSource, settings = printedSettings, labels = labels, renderer = renderer, newRenderer = ::newRenderer)
