@@ -78,7 +78,7 @@ internal fun tabStaffGeometryOf(row: List<TabRowLine>): TabStaffGeometry {
  * which keeps every other character in its column, since the text is monospaced. Any other line is drawn as it is.
  */
 internal val TabRowLine.drawnText
-    get() = if (isStaffLine) String(CharArray(text.length) { index -> text[index].takeUnless { it.isStroke } ?: ' ' }) else text
+    get() = if (isStaffLine) CharArray(text.length) { index -> text[index].takeUnless { it.isStroke } ?: ' ' }.concatToString() else text
 
 private fun TabRowLine.hasBarAt(column: Int) = isStaffLine && text.getOrNull(column) == BAR
 
