@@ -9,8 +9,6 @@
 -->
 # To do
 - Onboarding: the circular hero element has some inset handling issues
-- Initial frame animation glitch: the floating pill is moving (on Android)
-- Fix compile-time warnings on all platforms
 - Document all keyboard shortcuts used in the app
 - Filters bottom sheet tag counter animation glitch (select Romany and see how the counters get updated)
 - Rename master branch to main
