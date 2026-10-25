@@ -44,8 +44,40 @@ private fun installTunerAudio(): Unit = js(
             }
             return tuner.context;
         };
+        tuner.releaseUntil = 0;
         tuner.suspendIfIdle = function () {
-            if (!tuner.stream && !tuner.tone && tuner.context && tuner.context.state === 'running') tuner.context.suspend().catch(function () {});
+            var context = tuner.context;
+            if (tuner.stream || tuner.tone || !context || context.state !== 'running') return;
+            // A fade still to be played, or still in the output's buffer, would be cut by the suspension: a pop.
+            var remaining = tuner.releaseUntil + (context.outputLatency || 0) - context.currentTime;
+            if (remaining > 0) {
+                setTimeout(tuner.suspendIfIdle, remaining * 1000 + 50);
+                return;
+            }
+            context.suspend().catch(function () {});
+        };
+        // The moment a change of the gain is scheduled for. currentTime is what the audio thread had rendered when the
+        // page last heard from it, and it renders a whole device buffer per callback, so by the time a ramp starting at
+        // currentTime reaches it, the ramp can be partly or wholly in the past and is applied as a step. Scheduling at
+        // least a callback's length plus two render quanta ahead keeps every fade whole.
+        tuner.scheduleTime = function () {
+            var context = tuner.context;
+            return context.currentTime + Math.max(context.baseLatency || 0, 0.01) + 256 / context.sampleRate;
+        };
+        tuner.fadeOut = function (tone, at, fadeSeconds) {
+            var gain = tone.gain.gain;
+            // Held where the fade-in has got to at that moment, to the sample. Firefox has no cancelAndHoldAtTime, and
+            // there the ramp is cut at the same point by ending a ramp of its own there: from the fade-in's start while
+            // it is still rising, else level from its end.
+            if (gain.cancelAndHoldAtTime) {
+                gain.cancelAndHoldAtTime(at);
+            } else {
+                gain.cancelScheduledValues(at);
+                gain.linearRampToValueAtTime(Math.min(1, Math.max(0, (at - tone.startAt) / fadeSeconds)), at);
+            }
+            gain.linearRampToValueAtTime(0, at + fadeSeconds);
+            tone.source.stop(at + fadeSeconds * 2);
+            tuner.releaseUntil = Math.max(tuner.releaseUntil, at + fadeSeconds * 2);
         };
         tuner.idleTimeout = 0;
         tuner.onGesture = function () {
@@ -199,20 +231,23 @@ internal fun createTunerToneBuffer(length: Int, sampleRate: Int): Unit = js(
 
 internal fun setTunerToneSample(index: Int, sample: Float): Unit = js("{ window.__campfireTuner.toneChannel[index] = sample; }")
 
+/** Starts the loop in [createTunerToneBuffer], crossfading from the tone playing, if any, at the same moment. */
 internal fun startTunerTone(fadeSeconds: Double): Unit = js(
     """{
         var tuner = window.__campfireTuner;
         var context = tuner.context;
+        var at = tuner.scheduleTime();
+        if (tuner.tone) tuner.fadeOut(tuner.tone, at, fadeSeconds);
         var source = context.createBufferSource();
         source.buffer = tuner.toneBuffer;
         source.loop = true;
         var gain = context.createGain();
-        gain.gain.setValueAtTime(0, context.currentTime);
-        gain.gain.linearRampToValueAtTime(1, context.currentTime + fadeSeconds);
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(1, at + fadeSeconds);
         source.connect(gain);
         gain.connect(context.destination);
-        source.start();
-        tuner.tone = { source: source, gain: gain };
+        source.start(at);
+        tuner.tone = { source: source, gain: gain, startAt: at };
     }"""
 )
 
@@ -222,19 +257,7 @@ internal fun stopTunerTone(fadeSeconds: Double): Unit = js(
         var tone = tuner.tone;
         if (!tone) return;
         tuner.tone = null;
-        var now = tuner.context.currentTime;
-        var gain = tone.gain.gain;
-        // A stop during the fade-in holds the ramp where it is, to the sample. Reading the value instead gives what it was
-        // at the start of the last rendered block, up to a quarter of the fade away, and starting the fade-out from there
-        // is a step. Firefox has no cancelAndHoldAtTime, and only there the value is read.
-        if (gain.cancelAndHoldAtTime) {
-            gain.cancelAndHoldAtTime(now);
-        } else {
-            gain.cancelScheduledValues(now);
-            gain.setValueAtTime(gain.value, now);
-        }
-        gain.linearRampToValueAtTime(0, now + fadeSeconds);
-        tone.source.stop(now + fadeSeconds * 2);
-        setTimeout(function () { tuner.suspendIfIdle(); }, fadeSeconds * 4000);
+        tuner.fadeOut(tone, tuner.scheduleTime(), fadeSeconds);
+        tuner.suspendIfIdle();
     }"""
 )

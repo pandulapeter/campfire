@@ -13,7 +13,9 @@ import org.koin.core.annotation.Single
 
 /**
  * An `AudioBufferSourceNode` looping the tone, through a gain node that ramps it in and out, in the context the input
- * uses too ([WebTunerAudio]). The loop is copied into its buffer a sample at a time, once per tone.
+ * uses too ([WebTunerAudio]). The loop is copied into its buffer a sample at a time, once per tone, before the tone it
+ * replaces is touched: the copy takes long enough that fading the old one out first would leave a gap between the notes
+ * of a scale, so the two crossfade at one scheduled moment instead.
  */
 @Single
 internal class WebToneOutput : ToneOutput {
@@ -21,7 +23,6 @@ internal class WebToneOutput : ToneOutput {
     private var isPlaying = false
 
     override fun play(render: (sampleRate: Int) -> ShortArray, onLost: () -> Unit): Boolean {
-        stop()
         WebTunerAudio.install()
         val sampleRate = tunerSampleRate()
         val loop = render(sampleRate)

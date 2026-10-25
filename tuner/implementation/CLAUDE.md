@@ -82,8 +82,10 @@ only once its fade has been played (the scale sheet replaces a tone every quarte
   then; an opening waits up to 0.5 s for a new context to start running, which it does a few frames late even where
   it may, so the line never flashes. Closing ends the tracks (browser indicator off); a generation counter ends tracks
   of an answer arriving after a close. Nothing calls back into Kotlin, so ended tracks and context state are read every
-  poll. A tone's stop holds its gain ramp with `cancelAndHoldAtTime` (reading `gain.value` only in Firefox), since the
-  read value is a block stale.
+  poll. Every gain change is scheduled a device callback plus two quanta past `currentTime` (a ramp at `currentTime`
+  can arrive in the past and step: pops); a replacement crossfades at that one moment; a stop holds the ramp with
+  `cancelAndHoldAtTime` (Firefox: a ramp ending at the computed value, never `gain.value`, a block stale); the context
+  is suspended only once the fade and the output latency have played.
 
 `RecordedStringsTest` (`desktopTest`) reads every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by its
 note (see its README).
