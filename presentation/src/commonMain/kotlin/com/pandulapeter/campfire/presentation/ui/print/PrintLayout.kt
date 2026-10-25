@@ -259,9 +259,10 @@ private class PrintLayouter(
 
     /**
      * The song's chord diagrams as the song details screen's Chords section has them, in rows of cells each holding the
-     * chord's name over its diagram, sized by the text so that they grow with it, a row being one unit [place] keeps
-     * together, under the line naming the instrument and the tuning ([PrintLabels.chordTuning]), which is not selectable
-     * for the reason the names are not: the importer would read it back as a line of the song.
+     * chord's name, under its second name where it has one, over its diagram, sized by the text so that they grow with
+     * it, a row being one unit [place] keeps together, under the line naming the instrument and the tuning
+     * ([PrintLabels.chordTuning]), which is not selectable for the reason the names are not: the importer would read it
+     * back as a line of the song.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChordDiagrams || chords.isEmpty()) return emptyList()
@@ -270,10 +271,14 @@ private class PrintLayouter(
             val isFretted = chord.geometry is ChordDiagramGeometry.Fretted
             val diagramWidth = options.fontSize * if (isFretted) FRETTED_DIAGRAM_WIDTH else KEYBOARD_DIAGRAM_WIDTH
             val diagramHeight = options.fontSize * if (isFretted) FRETTED_DIAGRAM_HEIGHT else KEYBOARD_DIAGRAM_HEIGHT
-            val nameLines = diagramNameLines(chord)
-            val nameEnd = nameLines.maxOf { line -> line.maxOf { it.x + printRows.measure(it.text, it.style) } }
-            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameEnd).coerceAtMost(columnWidth), nameLines)
+            val secondLines = (chord.letterName ?: chord.degree)?.let { wrappedNameLines(it, printRows.detailStyle) }.orEmpty()
+            val nameLines = wrappedNameLines(chord.name, printRows.chordStyle)
+            val nameEnd = (secondLines + nameLines).maxOf { line -> line.maxOf { printRows.measure(it.text, it.style) } }
+            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameEnd).coerceAtMost(columnWidth), secondLines, nameLines)
         }
+        // As on the screen, every name stands under the room the section keeps for the second names over them, so that a
+        // row's names share a line whichever chords the key counts.
+        val secondHeight = cells.maxOf { cell -> cell.secondLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
         val starts = balancedRowStarts(FloatArray(cells.size) { cells[it].width }, gap, columnWidth)
         val rows = starts.mapIndexed { index, start -> cells.subList(start, starts.getOrNull(index + 1) ?: cells.size) }
         return rows.mapIndexed { index, row ->
@@ -281,11 +286,14 @@ private class PrintLayouter(
             val parts = mutableListOf<Part>()
             val diagrams = mutableListOf<PrintDiagram>()
             // The diagrams of a row stand on one line, under the name of the cell that takes the most lines.
-            val rowNameHeight = row.maxOf { cell -> cell.nameLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
+            val rowNameHeight = secondHeight + row.maxOf { cell -> cell.nameLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
             row.forEach { cell ->
-                var lineTop = 0f
-                cell.nameLines.forEach { line ->
-                    line.forEach { run -> parts += Part(run.text, x = x + run.x, y = lineTop, style = run.style, isSelectable = false) }
+                var lineTop = secondHeight - cell.secondLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat()
+                (cell.secondLines + cell.nameLines).forEach { line ->
+                    line.forEach { run ->
+                        val runX = (cell.width - printRows.measure(run.text, run.style)).coerceAtLeast(0f) / 2
+                        parts += Part(run.text, x = x + runX, y = lineTop, style = run.style, isSelectable = false)
+                    }
                     lineTop += line.lineHeight()
                 }
                 diagrams += PrintDiagram(cell.chord.geometry, x = x + (cell.width - cell.diagramWidth) / 2, y = rowNameHeight, width = cell.diagramWidth, height = cell.diagramHeight)
@@ -316,27 +324,9 @@ private class PrintLayouter(
         else -> this + Row(emptyList(), options.fontSize * DIAGRAM_GAP) + other
     }
 
-    /**
-     * The lines a diagram's name is printed on, each inside the column like every other text of the page: the name with
-     * its second name after it where the two fit side by side, the second name on a line of its own under the name where
-     * they do not, and either broken across lines where it is wider than the column on its own.
-     */
-    private fun diagramNameLines(chord: PrintChord): List<List<DiagramNamePart>> {
-        val nameWidth = printRows.measure(chord.name, printRows.chordStyle)
-        val secondary = chord.letterName
-        if (nameWidth <= columnWidth && (secondary == null || nameWidth + printRows.measure(" $secondary", printRows.detailStyle) <= columnWidth)) {
-            return listOf(
-                listOfNotNull(
-                    DiagramNamePart(chord.name, 0f, printRows.chordStyle),
-                    secondary?.let { DiagramNamePart(" $it", nameWidth, printRows.detailStyle) },
-                ),
-            )
-        }
-        return wrappedNameLines(chord.name, printRows.chordStyle) + secondary?.let { wrappedNameLines(it, printRows.detailStyle) }.orEmpty()
-    }
-
+    /** [text] in [style] broken into the lines of a diagram's name, each inside the column like every other text of the page. */
     private fun wrappedNameLines(text: String, style: PrintStyle) =
-        wrapPrintText(text, columnWidth) { printRows.measure(it, style) }.map { listOf(DiagramNamePart(it, 0f, style)) }
+        wrapPrintText(text, columnWidth) { printRows.measure(it, style) }.map { listOf(DiagramNamePart(it, style)) }
 
     /**
      * How [song] is played, in the key it is printed in: the key, the transposition that took it there and the capo
@@ -373,19 +363,22 @@ private class PrintLayouter(
     }
 }
 
-/** One chord of a row of diagrams, [width] wide: its diagram's, or its name's where that is wider. */
+/**
+ * One chord of a row of diagrams, [width] wide: its diagram's, or its names' where they are wider, its second name
+ * ([PrintChord.letterName] or [PrintChord.degree]) on [secondLines] over the name's [nameLines].
+ */
 private data class DiagramCell(
     val chord: PrintChord,
     val diagramWidth: Float,
     val diagramHeight: Float,
     val width: Float,
+    val secondLines: List<List<DiagramNamePart>>,
     val nameLines: List<List<DiagramNamePart>>,
 )
 
-/** A run of a diagram's name line, [x] from the cell's start. */
+/** A run of a diagram's name line, centered in its cell as the screen centers it. */
 private data class DiagramNamePart(
     val text: String,
-    val x: Float,
     val style: PrintStyle,
 )
 

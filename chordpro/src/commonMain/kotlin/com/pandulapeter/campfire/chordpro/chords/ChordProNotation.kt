@@ -74,6 +74,17 @@ public object ChordProNotation {
     }
 
     /**
+     * [name], a chord in the standard notation, as the step of [key] it stands on, written as [ChordNotation.ROMAN]
+     * writes it on a page in that key (`V7`, `ii`, `bVII`, `V/7`), with the file's `#` and `b` until
+     * [withAccidentalSigns] signs it: what a chord is labelled with beside its own letters, counted from the key's note
+     * whether the key is major or minor, as a numbering counts. Null where [name] is no chord or [key] starts with no note.
+     */
+    public fun romanNumeral(name: String, key: String): String? {
+        if (!ChordProChordNames.isChordName(name)) return null
+        return ChordProNashville.tonicOf(key)?.let { ChordProNashville.number(name, it, isRoman = true) }
+    }
+
+    /**
      * One chord name as a screen or a page shows it, in whatever notation it is already written in: every sharp and
      * flat as the musical sign `♯` or `♭` rather than the `#` and `b` a file holds, so that `Bbm7` reads `B♭m7` and a
      * step `b7` reads `♭7`. Only for showing: a field, a file, the clipboard and an export keep the ASCII signs, which

@@ -11,8 +11,10 @@
 - Document all keyboard shortcuts used in the app
 - Rename master branch to main
 - Comments in setlists (between songs)
-- Fix capo issues
+- Fix capo handling issues / inconsistencies
 - If no key is specified, display the inferred key of the song, with a question mark
+- Reorganize settings, separate feature flags from preferences
+- Support (play this X times), right now it looks like it treats x4 as a lyric and throws it underneath
 - Simplify adding comments / annotations to songs
 - Editor multi-cursor support
 - Streaming zip writer on all platforms
@@ -20,4 +22,4 @@
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - AI skill for exposing direct access to the library folder
 - Add support for abcnotation https://abcnotation.com/
-- Investigate Google Drive integration, maybe self-hosted sync server
+- Investigate Google Drive integration, maybe self-hosted sync server or Nextcloud

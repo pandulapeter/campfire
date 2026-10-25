@@ -148,6 +148,8 @@ internal class PreferencesController(
 
     fun setTunerEnabled(value: Boolean) = changeUserPreferences { copy(isTunerEnabled = value) }
 
+    fun setChordDegreesEnabled(value: Boolean) = changeUserPreferences { copy(areChordDegreesEnabled = value) }
+
     fun setScalesEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value) }
 
     fun setScaleSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScaleSuggestionsEnabled = value) }

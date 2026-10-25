@@ -558,6 +558,16 @@ class SongScaleGroupsTest {
         assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "G", capo = 5)))
 
     @Test
+    fun `the key of the shapes is the capo chart's shapes' key and otherwise the written one`() {
+        fun keyOf(text: String) = SongScaleGroups.keyOfShapes(ChordProParser.parse(text))
+        assertEquals("D", keyOf(song("D G A Bm D G A D", key = "G", capo = 5)))
+        assertEquals("G", keyOf(song("G C D G", key = "G", capo = 5)))
+        assertEquals("D", keyOf(song("D G A Bm D G A D", key = "D", capo = 5)))
+        assertEquals("Am", keyOf(song("Am F C G", key = "Am")))
+        assertEquals(null, keyOf(song("D G A D")))
+    }
+
+    @Test
     fun `the written key keeps its word where it holds the part`() {
         assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "D", capo = 5)))
         assertEquals(listOf("G" to "major"), rootAndFirst(song("G C D G", key = "G", capo = 5)))

@@ -164,8 +164,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   too short for every item: `ui/chrome`.
 - One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, and onboarding:
   `ui/instrument`.
-- A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first:
-  `ui/chords`.
+- A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first,
+  each named with its degree in the song's key: `ui/chords`.
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
   shape picked there applies everywhere: `ui/screens/chords`.
 - The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument

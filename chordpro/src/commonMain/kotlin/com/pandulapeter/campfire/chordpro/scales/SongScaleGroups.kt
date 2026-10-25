@@ -45,6 +45,25 @@ public object SongScaleGroups {
      */
     public fun of(song: ChordProSong): List<ScaleGroup> = playedGroupsOf(song).map { it.group }
 
+    /**
+     * The key the chords of [song], in the standard notation, are written in, as a key name (`D`, `Am`): the key in force
+     * at its first part (`{key}`, or the key a `{transpose}` names), or, for a capo chart whose `{key}` names the sounding
+     * key over shapes in another (`{key: G}{capo: 5}` over D shapes), the key the shapes play, decided as [fitOf] decides
+     * it for a part: only where the written key holds nothing of the song whole and the shapes' key does. What a caller
+     * counts the chords from where [SongScaleSuggestions] finds no home. Null where the song names no key or plays no
+     * chord; the written key unweighed for a song playing more than [MAX_PLAYED_CHORDS] chords.
+     */
+    public fun keyOfShapes(song: ChordProSong): String? {
+        val parts = SongParts.of(song)
+        val harmony = Harmony(parts.ifEmpty { return null })
+        val key = harmony.key ?: return null
+        val shapes = harmony.capoKey?.takeIf {
+            parts.sumOf { part -> part.chords.size } <= MAX_PLAYED_CHORDS &&
+                keyFitOf(harmony, key)?.level != Level.TONAL && keyFitOf(harmony, it)?.level == Level.TONAL
+        }
+        return (shapes ?: key).let { it.root.name + if (it.isMinor) "m" else "" }
+    }
+
     /** [of] with the chords each group plays, for [SongScaleSuggestions] to weigh them by. */
     internal fun playedGroupsOf(song: ChordProSong): List<PlayedGroup> {
         val parts = SongParts.of(song)

@@ -55,6 +55,9 @@ Product side in `ui/metronome/CLAUDE.md`.
 
 - Built off the main thread except the first page on screen and those before it (`buildsModelInPlace`), so a page
   never opens empty.
+- **One scale walk a model** (`songScaleAnalysisOf`): the Scales section and the Chords section's degrees share it,
+  either switch alone enough to run it; never for a songbook. It is in the in-place first model too, so the degrees are
+  right on its first frame. Without a home the degrees count from `SongScaleGroups.keyOfShapes` (the capo chart rule).
 - **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
   line measured on the main thread, and a concatenated songbook froze the app for seconds. The model stops after the
   last section that fits and says so; the file is untouched and the header is built from all of it.

@@ -114,6 +114,7 @@ import org.jetbrains.compose.resources.painterResource
  *   the page being headed for, rather than the one a finger is still dragging past, is what the click follows.
  * @param chordDiagrams What the song's Chords section is drawn with, null where it has none.
  * @param tabs Who the song's tabs are chosen for and moved to, null until the preferences are read.
+ * @param showsDegrees Whether the Chords section labels each diagram with the step of the key its chord stands on.
  */
 @Composable
 internal fun SongDetailsPage(
@@ -150,6 +151,7 @@ internal fun SongDetailsPage(
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
     tabs: TabReading?,
+    showsDegrees: Boolean,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -188,6 +190,7 @@ internal fun SongDetailsPage(
                 chordTuning = chordDiagrams?.tuning,
                 tabs = tabs,
                 suggestsScales = scaleSuggestions != null,
+                showsDegrees = showsDegrees,
             ),
             buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
@@ -202,6 +205,7 @@ internal fun SongDetailsPage(
                 notation = inputs.spelling.notation.toChordNotation(),
                 searchesShapes = searchesShapes,
                 suggestsScales = inputs.suggestsScales,
+                showsDegrees = inputs.showsDegrees,
             )
         }
         if (model == null) {

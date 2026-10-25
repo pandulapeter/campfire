@@ -283,11 +283,14 @@ private fun ChordRowsBlock(
                         val (cellLeft, cellTop) = if (isAnimated) motion.positionOf(cell, target) else target
                         if (cell == pressedCell && pressProgress > 0f) {
                             val inset = layouts.gap / 2f
+                            // The card is the name and the diagram only, the second name standing over it, as the scale
+                            // sheet's numerals stand over its chord cards.
+                            val cardTop = cellTop + layouts.secondLineHeight
                             drawRoundRect(
                                 color = pressColor,
                                 alpha = pressProgress,
-                                topLeft = Offset(cellLeft - inset, cellTop - inset),
-                                size = Size(cellWidth + inset * 2, rowHeight + inset * 2),
+                                topLeft = Offset(cellLeft - inset, cardTop - inset),
+                                size = Size(cellWidth + inset * 2, rowHeight - layouts.secondLineHeight + inset * 2),
                                 cornerRadius = CornerRadius(PRESSED_CORNER_RADIUS.toPx()),
                             )
                         }
@@ -297,7 +300,6 @@ private fun ChordRowsBlock(
                             left = cellLeft.toFloat(),
                             top = cellTop.toFloat(),
                             width = cellWidth,
-                            isRightToLeft = isRightToLeft,
                             paint = paint,
                             fadingOut = shapeCrossfade.fadingOut[cell],
                             fadeProgress = shapeCrossfade.progress.value,
@@ -322,7 +324,6 @@ private fun DrawScope.drawChordCell(
     left: Float,
     top: Float,
     width: Int,
-    isRightToLeft: Boolean,
     paint: ChordCellPaint,
     fadingOut: ChordDiagramGeometry?,
     fadeProgress: Float,
@@ -331,14 +332,12 @@ private fun DrawScope.drawChordCell(
     val name = layouts.names[cell]
     val secondName = layouts.secondNames[cell]
     val nameRowHeight = layouts.nameRowHeights[cell]
-    val nameRowWidth = layouts.nameRowWidths[cell]
     clipRect(left = left, top = top, right = left + width, bottom = top + nameRowHeight) {
-        val rowLeft = left + ((width - nameRowWidth).coerceAtLeast(0) / 2f).roundToInt()
-        val nameLeft = if (isRightToLeft) rowLeft + nameRowWidth - name.size.width else rowLeft
-        drawText(textLayoutResult = name, color = paint.nameColor, topLeft = Offset(nameLeft, top + nameRowHeight - name.size.height))
+        fun leftOf(textWidth: Int) = left + ((width - textWidth).coerceAtLeast(0) / 2f).roundToInt()
+        drawText(textLayoutResult = name, color = paint.nameColor, topLeft = Offset(leftOf(name.size.width), top + nameRowHeight - name.size.height))
         secondName?.let {
-            val secondLeft = if (isRightToLeft) rowLeft else rowLeft + name.size.width + layouts.nameGap
-            drawText(textLayoutResult = it, color = paint.secondNameColor, topLeft = Offset(secondLeft, top + nameRowHeight - it.size.height))
+            // Every second name of the section stands on one line, at the bottom of the room kept for it over the names.
+            drawText(textLayoutResult = it, color = paint.secondNameColor, topLeft = Offset(leftOf(it.size.width), top + layouts.secondLineHeight - it.size.height))
         }
     }
     val diagramSize = layouts.diagramSizes[cell]

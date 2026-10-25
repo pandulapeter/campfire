@@ -22,6 +22,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
+import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
@@ -52,7 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
  * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
  * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - each switch that has no tab of its own
- * right after the one it depends on: the chords before the chord diagrams that are their tab, the scale suggestions
+ * right after the one it depends on: the chords before the chord diagrams that are their tab and the chord degrees that label those, the scale suggestions
  * after the scales. The two switches that let the app reach the network are a group of their own, so that what can
  * make a request is found in one place rather than among the rest.
  */
@@ -119,6 +121,15 @@ private fun PlayingSection(
         isChecked = userPreferences?.areChordDiagramsEnabled != false,
         isEnabled = userPreferences?.areChordsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setChordDiagramsEnabled,
+    )
+    // Disabled rather than hidden with the chords or their diagrams off, as the scale suggestions are with the scales off:
+    // a degree labels a diagram, so without them there is nothing it could name.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_chord_degrees),
+        description = stringResource(Res.string.settings_chord_degrees_description),
+        isChecked = userPreferences?.areChordDegreesEnabled != false,
+        isEnabled = userPreferences?.areChordsEnabled != false && userPreferences?.areChordDiagramsEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setChordDegreesEnabled,
     )
     // Not tied to either chord switch: a scale is played on any instrument, a violin with no chords included.
     SwitchListItem(

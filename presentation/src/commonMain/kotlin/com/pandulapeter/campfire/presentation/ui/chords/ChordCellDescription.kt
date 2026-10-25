@@ -17,15 +17,18 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_degree
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_letters
 import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
- * How a chord is read out: its name, its letters where the page counts it, and its shape as it would be dictated.
+ * How a chord is read out: its name, its letters where the page counts it or else its step of the key, and its shape as
+ * it would be dictated.
  */
 @Composable
 internal fun chordCellDescription(cell: ChordCell): String {
     val name = cell.letterName?.let { textResource(Res.string.song_details_chord_letters, cell.name, it) }
+        ?: cell.degree?.let { textResource(Res.string.song_details_chord_degree, cell.name, it) }
         ?: cell.name
     val shape = cell.selection.shape ?: return textResource(Res.string.song_details_chord_diagram_none, name)
     return textResource(Res.string.song_details_chord_diagram, name, spokenShape(shape))

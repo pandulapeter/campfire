@@ -81,6 +81,7 @@ internal fun SongDetailsAppBar(
 ) {
     val songActions = rememberSongActionHandler(viewModel)
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
+    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
@@ -121,6 +122,8 @@ internal fun SongDetailsAppBar(
                 currentPageScrollState = currentPageScrollState,
                 openCurrentSongInfo = openCurrentSongInfo,
                 coroutineScope = coroutineScope,
+                // Read through a lambda, so that a key arriving recomposes the title alone rather than the whole bar.
+                inferredKeyOf = { fileName -> inferredKeys[fileName] },
             )
         },
         actions = {

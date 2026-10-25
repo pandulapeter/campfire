@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
  * @property letterName The page's chord in letters where the page counts it as a step of the key, which the cell names
  *   after it too: a `6-` says nothing about the shape under it to a player who has not counted the key out yet.
  * @property spelling The chord the notes are spelled from, in the standard notation.
+ * @property degree The step of the song's key the chord stands on, in Roman numerals, which the cell names after it where
+ *   the page names chords by their letters (see [withDegrees]); null where it names none.
  * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, or null while
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
@@ -45,6 +47,7 @@ internal data class SongChord(
     val chord: Chord,
     val letterName: String? = null,
     val spelling: String? = null,
+    val degree: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
     val undrawnDefinition: ChordDefinition? = null,
@@ -110,6 +113,21 @@ internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none 
     this
 } else {
     map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, tuning), isShapePending = false) else it }
+}
+
+/**
+ * [this] with each chord's [SongChord.degree] counted against [key], a key in the standard notation in the frame the
+ * chords are in, the way [ChordNotation.ROMAN] writes it (`V7`, `♭VII`, `V/7`): every chord against the one key, a
+ * chord off the key's scale by its chromatic step rather than as an applied chord, since the label says where a chord
+ * stands, not what it leads to. None where [key] is null or no note, and none in a numbering, whose cells already name
+ * the step first.
+ */
+internal fun List<SongChord>.withDegrees(key: String?, notation: ChordNotation): List<SongChord> {
+    if (key == null || notation.isNumbering) return this
+    return map { chord ->
+        val degree = chord.spelling?.let { ChordProNotation.romanNumeral(it, key) } ?: return@map chord
+        chord.copy(degree = ChordProNotation.withAccidentalSigns(degree))
+    }
 }
 
 /**

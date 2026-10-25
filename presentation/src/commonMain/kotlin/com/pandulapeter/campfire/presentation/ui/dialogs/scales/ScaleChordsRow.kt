@@ -33,7 +33,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordCellMinWidth
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 
 /**
- * One row of a scale's chords under [title]: a cell per degree that stacks into a chord, its numeral over it, drawn with
+ * One row of a scale's chords under [title]: a cell per degree that stacks into a chord, its numeral over it while
+ * [showsDegrees] (the Chord degrees switch, as in a song's Chords section and its PDF), drawn with
  * the shape the songs draw it with, scrolling sideways where the sheet is narrower than seven cells, so that the triads
  * and the sevenths each stay one row the eye can run along.
  */
@@ -44,6 +45,7 @@ internal fun ScaleChordsRow(
     chords: List<ScaleSheetChord>,
     tuning: ChordTuning,
     storedShapes: Map<String, String>,
+    showsDegrees: Boolean,
     onChordClicked: (SongChord) -> Unit,
 ) = Column(
     modifier = modifier.fillMaxWidth(),
@@ -68,12 +70,14 @@ internal fun ScaleChordsRow(
                 modifier = Modifier.width(chordCellMinWidth(tuning.instrument)),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    text = numeral,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (showsDegrees) {
+                    Text(
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        text = numeral,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 ChordLibraryCell(
                     chord = chord,
                     tuning = tuning,

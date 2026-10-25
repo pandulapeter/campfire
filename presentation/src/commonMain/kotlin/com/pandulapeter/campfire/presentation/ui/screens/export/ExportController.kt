@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
+import com.pandulapeter.campfire.presentation.ui.print.printScaleAnalysisOf
 import com.pandulapeter.campfire.presentation.ui.print.printScaleGroupsOf
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
@@ -165,6 +166,8 @@ internal class ExportController(
         // Read whether or not the export asks for them, as the chords are, and only where the song details screen suggests
         // them, which is also where the export offers them.
         val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
+        // The diagrams name their degrees in print wherever they do on the screen.
+        val showsDegrees = FeatureSwitches.of(preferences).areChordDegreesEnabled
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->
@@ -189,13 +192,21 @@ internal class ExportController(
                 }
             } }
             val rendered = transposed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
+            // One walk answers both the scales and the degrees, as on the screen.
+            val analysis = if (transposed != null && (suggestsScales || (chordTuning != null && showsDegrees))) {
+                withContext(Dispatchers.Default) { printScaleAnalysisOf(transposed, sectionLabels) }
+            } else {
+                null
+            }
             val chords = if (transposed != null && chordTuning != null) {
-                withContext(Dispatchers.Default) { printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes) }
+                withContext(Dispatchers.Default) {
+                    printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes, showsDegrees, analysis)
+                }
             } else {
                 emptyList()
             }
             val scaleGroups = if (transposed != null && suggestsScales) {
-                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation()) }
+                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation(), analysis) }
             } else {
                 emptyList()
             }

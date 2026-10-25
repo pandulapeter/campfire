@@ -92,6 +92,7 @@ internal fun SongPages(
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tabs = rememberTabReading(userPreferences)
+    val showsDegrees = chordDiagrams != null && FeatureSwitches.of(userPreferences).areChordDegreesEnabled
     val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
@@ -229,6 +230,7 @@ internal fun SongPages(
                 )
             },
             tabs = tabs,
+            showsDegrees = showsDegrees,
             scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,

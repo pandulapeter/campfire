@@ -240,6 +240,24 @@ class ChordProNashvilleTest {
     }
 
     @Test
+    fun `a chord's numeral beside its letters is the one the roman notation shows`() {
+        assertEquals("I", ChordProNotation.romanNumeral("C", "C"))
+        assertEquals("ii", ChordProNotation.romanNumeral("Dm", "C"))
+        assertEquals("V7", ChordProNotation.romanNumeral("G7", "C"))
+        assertEquals("bVII", ChordProNotation.romanNumeral("Bb", "C"))
+        assertEquals("II7", ChordProNotation.romanNumeral("D7", "C"))
+        assertEquals("V/7", ChordProNotation.romanNumeral("G/B", "C"))
+        assertEquals("♭VII", ChordProNotation.withAccidentalSigns(ChordProNotation.romanNumeral("G", "Am")!!))
+        assertEquals("i", ChordProNotation.romanNumeral("Am", "A minor"))
+    }
+
+    @Test
+    fun `no numeral is given for a word or against a key that is no note`() {
+        assertNull(ChordProNotation.romanNumeral("N.C.", "C"))
+        assertNull(ChordProNotation.romanNumeral("C", "unknown"))
+    }
+
+    @Test
     fun `numbers in a comment are coloured as chords only in a numbering`() {
         assertEquals(1, ChordProHighlighter.chordsOfShownText("Intro: [5] [Verse]", ChordNotation.NASHVILLE).size)
         assertEquals(0, ChordProHighlighter.chordsOfShownText("Intro: [5] [Verse]").size)

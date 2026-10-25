@@ -74,6 +74,9 @@ import org.jetbrains.compose.resources.painterResource
  * key it sounds in. The title and the cover are the heading of the sheet of what the song is, so a tap on them opens it
  * once there is nothing left to scroll back to. The scroll is read here rather than in the screen's own body, so that
  * passing the top recomposes the bar's title alone.
+ *
+ * @param inferredKeyOf The key a song's chords were found to be in, by its file name, for one whose file names none (see
+ *   `InferredSongKeys`).
  */
 @Composable
 internal fun SongDetailsTitle(
@@ -87,6 +90,7 @@ internal fun SongDetailsTitle(
     currentPageScrollState: () -> ScrollState?,
     openCurrentSongInfo: (() -> Unit)?,
     coroutineScope: CoroutineScope,
+    inferredKeyOf: (fileName: String) -> String?,
 ) {
     val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState()?.value ?: 0) == 0 } }
     val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
@@ -122,6 +126,7 @@ internal fun SongDetailsTitle(
             overrides = playingOverrides,
             songRenderer = songRenderer,
             chordSpelling = chordSpelling,
+            inferredKey = song?.let { inferredKeyOf(it.fileName) },
         )
         SongTitleBlock(
             song = song,
@@ -139,6 +144,10 @@ internal fun SongDetailsTitle(
  * to the song's own first section, a line below, which already says it. Worked out for the song the title's content was
  * composed for rather than for the current one, since a crossfade between two songs draws both at once. Lyrics only
  * mode says nothing about the key, as it says nothing in a row.
+ *
+ * A file that names no key is named by its [inferredKey], the key its chords were found in when its text was read
+ * (`InferredSongKeys`), said as plainly as a written one and moved the same way, the file's own `{transpose}` aside,
+ * which the key was found after.
  */
 internal fun headerKeyOf(
     song: Song?,
@@ -147,6 +156,7 @@ internal fun headerKeyOf(
     overrides: PlayingOverridesSnapshot,
     songRenderer: SongRenderer,
     chordSpelling: UserPreferences.ChordSpelling,
+    inferredKey: String?,
 ) = song?.takeIf { shouldShowChords && it.hasChords }?.let {
     val playback = songPlaybackOf(song = it, setlistFileName = setlistFileName, overrides = overrides)
     songRenderer.renderKey(
@@ -154,7 +164,15 @@ internal fun headerKeyOf(
         transposition = playback.transposition,
         capo = playback.capo.fret,
         spelling = chordSpelling,
-    )
+    ) ?: inferredKey?.takeIf { _ -> it.key.isNullOrBlank() }?.let { key ->
+        songRenderer.renderKey(
+            key = key,
+            transpose = 0,
+            transposition = playback.transposition,
+            capo = playback.capo.fret,
+            spelling = chordSpelling,
+        )
+    }
 }
 
 /**

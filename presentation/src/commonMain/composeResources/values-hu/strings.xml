@@ -365,6 +365,8 @@
     <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>
     <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját, az Akkordok fülön pedig minden akkordot, amit az alkalmazás ismer.</string>
+    <string name="settings_chord_degrees">Akkordfokok</string>
+    <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
@@ -1000,6 +1002,7 @@
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: nincs ábra</string>
     <string name="song_details_chord_letters">%1$s, azaz %2$s</string>
+    <string name="song_details_chord_degree">%1$s, fok: %2$s</string>
     <string name="song_details_chord_shape_choose">Akkordfogás kiválasztása - %1$s</string>
     <string name="song_details_chord_defined">A dal határozza meg</string>
     <plurals name="song_details_chord_defined_moved">

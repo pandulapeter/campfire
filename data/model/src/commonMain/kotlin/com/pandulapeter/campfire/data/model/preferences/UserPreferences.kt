@@ -103,6 +103,11 @@ data class UserPreferences(
      */
     val areChordDiagramsEnabled: Boolean = true,
     /**
+     * Whether each diagram of a song's Chords section also names the step of the song's key its chord stands on (`V7`
+     * beside `G7`). Only while [areChordDiagramsEnabled], since it labels the diagrams.
+     */
+    val areChordDegreesEnabled: Boolean = true,
+    /**
      * Whether the app has a scale library: the Scales tab, the scale sheet, and the scales a chord sheet suggests. It
      * follows neither chord switch, since a violinist with no chords still plays scales.
      */

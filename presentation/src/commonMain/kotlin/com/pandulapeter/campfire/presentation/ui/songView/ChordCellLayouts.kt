@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -27,8 +28,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
  * The cells of a Chords section as its slots measure and draw them: every name laid out once, every cell's width and
  * height, and the rows they wrap into at the last few widths the layout asked about ([MAX_CHORD_ROW_WIDTHS], as
  * `TabRows` keeps them), shared by every slot of the section so that a width is broken into rows once. Everything is
- * measured as the composed cell was: the names in [chordStyle] on one line, the second one 4dp after the first, over a
- * diagram growing with [fontScale], the cells [CELL_GAP] apart.
+ * measured as the composed cell was: the name in [chordStyle] under its second name, set smaller in the normal weight
+ * on a line of its own, over a diagram growing with [fontScale], the cells [CELL_GAP] apart.
  *
  * None of this is state: it is filled in by whoever asks first, and the answers never change.
  */
@@ -44,11 +45,14 @@ internal class ChordCellLayouts(
         cells.map { textMeasurer.measure(AnnotatedString(it.name), chordStyle, maxLines = 1, softWrap = false) }
     }
     val secondNames by lazy(LazyThreadSafetyMode.NONE) {
+        // The second name, letters after a step or a degree after letters, only glosses the name, so it is set smaller, in
+        // the normal weight, whichever of the two it is.
+        val secondNameStyle = chordStyle.copy(fontSize = chordStyle.fontSize * SECOND_NAME_SIZE, fontWeight = FontWeight.Normal)
         cells.map { cell ->
-            cell.letterName?.let { textMeasurer.measure(AnnotatedString(it), chordStyle, maxLines = 1, softWrap = false) }
+            (cell.letterName ?: cell.degree)?.let { textMeasurer.measure(AnnotatedString(it), secondNameStyle, maxLines = 1, softWrap = false) }
         }
     }
-    val nameGap = with(density) { NAME_GAP.roundToPx() }
+    private val secondLineGap = with(density) { (SECOND_LINE_GAP * fontScale).roundToPx() }
     val gap = with(density) { (CELL_GAP * fontScale).roundToPx() }
     val diagramSizes = with(density) {
         cells.map { cell ->
@@ -59,15 +63,21 @@ internal class ChordCellLayouts(
         }
     }
 
-    /** How wide the names of each cell are together, the second one after its gap where there is one. */
-    val nameRowWidths by lazy(LazyThreadSafetyMode.NONE) {
-        IntArray(cells.size) { cell -> names[cell].size.width + (secondNames[cell]?.let { nameGap + it.size.width } ?: 0) }
+    /**
+     * How tall the line over the names is, with its gap: the tallest second name's, kept by every cell of a section where
+     * any has one, so that the names of a row stand on one line whichever chords the key counts.
+     */
+    val secondLineHeight by lazy(LazyThreadSafetyMode.NONE) {
+        secondNames.maxOfOrNull { it?.size?.height ?: 0 }?.takeIf { it > 0 }?.let { it + secondLineGap } ?: 0
     }
 
-    /** How tall the names of each cell are, the taller of the two, which share a style. */
-    val nameRowHeights by lazy(LazyThreadSafetyMode.NONE) {
-        IntArray(cells.size) { cell -> maxOf(names[cell].size.height, secondNames[cell]?.size?.height ?: 0) }
+    /** How wide the names of each cell are: the wider of the name and the second name over it. */
+    val nameRowWidths by lazy(LazyThreadSafetyMode.NONE) {
+        IntArray(cells.size) { cell -> maxOf(names[cell].size.width, secondNames[cell]?.size?.width ?: 0) }
     }
+
+    /** How tall the names of each cell are: the name under the section's line of second names. */
+    val nameRowHeights by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> secondLineHeight + names[cell].size.height } }
     val cellWidths by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> maxOf(diagramSizes[cell].width, nameRowWidths[cell]) } }
     val cellHeights by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> nameRowHeights[cell] + diagramSizes[cell].height } }
 
@@ -124,7 +134,10 @@ internal class ChordCellLayouts(
 }
 
 private val CELL_GAP = 6.dp
-private val NAME_GAP = 4.dp
+
+/** A pressed cell's card reaches half a [CELL_GAP] past it, so this leaves as much again between the card and the line over it. */
+private val SECOND_LINE_GAP = 6.dp
+private const val SECOND_NAME_SIZE = 0.75f
 
 private val FRETTED_WIDTH = 56.dp
 private val FRETTED_HEIGHT = 70.dp

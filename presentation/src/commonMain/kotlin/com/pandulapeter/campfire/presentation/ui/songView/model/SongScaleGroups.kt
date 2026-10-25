@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.Scale
+import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.chordpro.scales.SongScaleSuggestions
@@ -65,9 +66,14 @@ internal data class SongScaleGroup(
  * Scales tab has every other one, and [MAX_EXCEPTION_SCALES] scale over each of its chords worth one, the common one
  * first, every chord named as the page shows it in [notation].
  */
-internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels, notation: ChordNotation): List<SongScaleGroup> {
-    val numbered = song.blocks.withNumberedSections(labels)
-    val groups = SongScaleSuggestions.of(song.copy(blocks = numbered))
+internal fun songScaleGroupsOf(
+    song: ChordProSong,
+    labels: DefaultSectionLabels,
+    notation: ChordNotation,
+    analysis: SongScaleAnalysis = songScaleAnalysisOf(song, labels),
+): List<SongScaleGroup> {
+    val numbered = analysis.numbered
+    val groups = analysis.groups
     if (groups.isEmpty()) return emptyList()
     val shownNames = ChordProNotation.shownNames(song, notation)
     val exceptions = groups.map { group ->
@@ -130,6 +136,21 @@ internal fun songScaleGroupsOf(song: ChordProSong, labels: DefaultSectionLabels,
     }
     if (missing.isEmpty()) return rows
     return rows + rowOf(missing, groups.first().rootName, emptyList(), emptyList())
+}
+
+/**
+ * What [SongScaleSuggestions] finds in a song, worked out once for everything a page reads off it: its Scales section
+ * ([songScaleGroupsOf]) and the key its chords are counted against ([homeKeyOf]), since the walk is the slow part of both.
+ *
+ * @property numbered The song's blocks with their sections numbered the way the page numbers them, the very instances
+ *   [groups] hold, which is how a group is told which of the page's sections it is for.
+ */
+internal class SongScaleAnalysis(val numbered: List<ChordProBlock>, val groups: List<ScaleGroup>)
+
+/** The [SongScaleAnalysis] of [song], in the standard notation, its sections numbered as [labels] number them. */
+internal fun songScaleAnalysisOf(song: ChordProSong, labels: DefaultSectionLabels): SongScaleAnalysis {
+    val numbered = song.blocks.withNumberedSections(labels)
+    return SongScaleAnalysis(numbered = numbered, groups = SongScaleSuggestions.of(song.copy(blocks = numbered)))
 }
 
 /** The heading the page gives a section or a recall, null for a continuation, which has none, and any other block. */

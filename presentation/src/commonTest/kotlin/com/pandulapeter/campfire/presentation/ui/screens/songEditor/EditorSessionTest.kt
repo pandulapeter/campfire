@@ -29,7 +29,9 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -73,6 +75,7 @@ class EditorSessionTest {
             getSongContentInvalidations = object : GetSongContentInvalidationsUseCase {
                 override fun invoke() = emptyFlow<Long>()
             },
+            inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
         )
 
         init {

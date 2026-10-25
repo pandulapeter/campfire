@@ -66,6 +66,14 @@ Definitions:
 - **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the row
   its index names at the measured width, the last holding the rest.
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
+- **Each cell names its chord's degree** after it, as a numbering's letters follow its step (`SongChord.degree`,
+  `withDegrees`, tested), in Roman notation's numerals (`ChordProNotation.romanNumeral`: `V7`, `♭VII`), counted against
+  `degreeKeyOf`: the scale suggestions' home key (so a capo chart counts its shapes' key), else the transposed `{key}`
+  by the same capo rule (`SongScaleGroups.keyOfShapes`), else none. One key a song, a chromatic chord by its step
+  (`II7`, never `V/V`); none in a numbering. Either second name stands on a line over the name, as the scale sheet's
+  numerals do (three quarters of its size, normal weight), a line every cell keeps where any has one. Only this
+  section and the PDF's diagrams: lyrics and the chord sheet keep their names. Chord
+  degrees (on by default) takes it.
 - Folded per song (`CHORDS_FOLD_KEY` in `UserPreferences.foldedSections`), read only mode included.
 - **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
   highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap

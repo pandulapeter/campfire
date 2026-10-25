@@ -36,6 +36,11 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   control), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song
   its crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the first
   section says it) and no duration.
+- **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
+  is. `InferredSongKeys` works it out off the main thread as `SongTextStore` reads the text, before handing the text on,
+  and keeps it by file name for the view model's life: a song reopened names it on its first frame; one never read
+  gets it in the frame its lyrics arrive, crossfading in with them. The list cards never parse a file, so they name
+  only a written key.
 - **The title scrolls the song to its top, and at the top opens the About the song sheet** (its only way in). A chevron
   (`ic_expand`) shows while a tap would open it; its room is kept wherever the sheet is offered, so a long title is not
   cut afresh. The touch target (`titleTouchTarget`) is all the bar's free space but reports only the title's room. No

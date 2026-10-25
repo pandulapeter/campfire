@@ -35,6 +35,7 @@ import kotlinx.coroutines.withContext
  * files, and the writes to them.
  *
  * @param editorDraftFileName The file the open editor's draft belongs to, whose text is kept for as long as it is open.
+ * @param inferredKeys Told every text before [songTexts] has it, so that the key it is in is there in the same frame.
  */
 internal class SongTextStore(
     private val scope: CoroutineScope,
@@ -44,6 +45,7 @@ internal class SongTextStore(
     private val getSongContent: GetSongContentUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val getSongContentInvalidations: GetSongContentInvalidationsUseCase,
+    val inferredKeys: InferredSongKeys,
 ) {
 
     /**
@@ -112,6 +114,7 @@ internal class SongTextStore(
         val affected = _songTexts.value.keys
         if (affected.isEmpty()) return
         val results = affected.map { name -> name to getSongContent(name)?.text }
+        inferredKeys.inferFor(results.mapNotNull { (name, text) -> text?.let { name to it } })
         _songTexts.update { texts ->
             results.fold(texts) { updated, (name, text) ->
                 when {
@@ -158,7 +161,10 @@ internal class SongTextStore(
      */
     suspend fun writeSongContent(fileName: String, text: String, expectedText: String? = null) =
         saveSongContent.invoke(content = SongContent(fileName = fileName, text = text), expectedText = expectedText).also { isWritten ->
-            if (isWritten) _songTexts.update { it + (fileName to text) }
+            if (isWritten) {
+                inferredKeys.inferFor(listOf(fileName to text))
+                _songTexts.update { it + (fileName to text) }
+            }
         }
 
     fun loadSongContent(fileName: String) = scope.launch {
@@ -168,6 +174,7 @@ internal class SongTextStore(
         if (content == null) {
             _failedSongFileNames.update { it + fileName }
         } else {
+            inferredKeys.inferFor(listOf(content.fileName to content.text))
             _songTexts.update { it + (content.fileName to content.text) }
         }
     }

@@ -19,9 +19,13 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
+import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleAnalysis
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
+import com.pandulapeter.campfire.presentation.ui.songView.model.degreeKeyOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleAnalysisOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleGroupsOf
 
 /**
@@ -85,11 +89,12 @@ internal data class PrintScaleRow(
 
 /**
  * One chord diagram of a [PrintSong]: the chord as the page names it, its letters where the page counts it
- * ([SongChord.letterName]), and its shape.
+ * ([SongChord.letterName]), else its step of the key ([SongChord.degree]), and its shape.
  */
 internal data class PrintChord(
     val name: String,
     val letterName: String? = null,
+    val degree: String? = null,
     val geometry: ChordDiagramGeometry,
 )
 
@@ -97,36 +102,49 @@ internal data class PrintChord(
  * The chords of [song], transposed as it is printed and still in the standard notation, named in [notation] and drawn
  * the way the song details screen's Chords section draws them
  * in [tuning]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
- * frame for a chord with none, so that the page and the screen finger every chord alike.
+ * frame for a chord with none, so that the page and the screen finger every chord alike. With [showsDegrees], each is
+ * labelled with its step of the key the screen counts it against ([degreeKeyOf], from [analysis]).
  */
 internal fun printChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
     tuning: ChordTuning,
     storedShapes: Map<String, String>,
-): List<PrintChord> = songChordsOf(song, notation, tuning).map { chord ->
+    showsDegrees: Boolean = false,
+    analysis: SongScaleAnalysis? = null,
+): List<PrintChord> = songChordsOf(song, notation, tuning).let { chords ->
+    if (showsDegrees && chords.isNotEmpty()) chords.withDegrees(degreeKeyOf(song, analysis, song.isSongbook), notation) else chords
+}.map { chord ->
     PrintChord(
         name = chord.name,
         letterName = chord.letterName,
+        degree = chord.degree,
         geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root) }
             ?: emptyChordDiagramGeometryOf(tuning.instrument),
     )
 }
 
 /**
+ * The scale walk of [song], transposed as it is printed and still in the standard notation, its sections numbered as
+ * [labels] number them, that the scales and the degrees of the page share as the screen's do; none for a songbook,
+ * which the screen never walks either.
+ */
+internal fun printScaleAnalysisOf(song: ChordProSong, labels: DefaultSectionLabels): SongScaleAnalysis? =
+    if (song.isSongbook) null else songScaleAnalysisOf(song, labels)
+
+/**
  * The scales [song], transposed as it is printed and still in the standard notation, is played over, as the song details
- * screen's Scales section suggests them, its sections named by [labels] and its chords in [notation]; none for a
- * songbook, for which the section suggests none either.
+ * screen's Scales section suggests them from [analysis], its sections named by [labels] and its chords in [notation];
+ * none for a songbook, for which the section suggests none either.
  */
 internal fun printScaleGroupsOf(
     song: ChordProSong,
     labels: DefaultSectionLabels,
     notation: ChordNotation,
-): List<SongScaleGroup> = if (song.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT) {
-    emptyList()
-} else {
-    songScaleGroupsOf(song, labels, notation)
-}
+    analysis: SongScaleAnalysis? = printScaleAnalysisOf(song, labels),
+): List<SongScaleGroup> = analysis?.let { songScaleGroupsOf(song, labels, notation, it) }.orEmpty()
+
+private val ChordProSong.isSongbook get() = blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
 
 /**
  * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up

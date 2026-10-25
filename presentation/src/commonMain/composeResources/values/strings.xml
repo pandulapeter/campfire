@@ -365,6 +365,8 @@
     <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition, and the capo. Off, every song is lyrics only.</string>
     <string name="settings_chord_diagrams">Chord diagrams</string>
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song, and every chord the app knows in the Chords tab.</string>
+    <string name="settings_chord_degrees">Chord degrees</string>
+    <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_scales_description">The Scales tab: every scale and mode the app knows, drawn on your instrument</string>
@@ -1001,6 +1003,7 @@
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: no diagram</string>
     <string name="song_details_chord_letters">%1$s, that is %2$s</string>
+    <string name="song_details_chord_degree">%1$s, degree %2$s</string>
     <string name="song_details_chord_shape_choose">Choose chord shape - %1$s</string>
     <string name="song_details_chord_defined">Defined in this song</string>
     <plurals name="song_details_chord_defined_moved">

@@ -156,7 +156,10 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEdit
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
+import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOf
+import kotlinx.coroutines.Dispatchers
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -428,6 +431,10 @@ class CampfireViewModel(
         getSongContent = getSongContent,
         saveSongContent = saveSongContent,
         getSongContentInvalidations = getSongContentInvalidations,
+        inferredKeys = InferredSongKeys(
+            inferKey = { text -> inferredKeyOf(songRenderer.transposedSong(text = text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)) },
+            dispatcher = Dispatchers.Default,
+        ),
     )
 
     internal val songMetadataEditing: SongMetadataEditing = SongMetadataEditing(

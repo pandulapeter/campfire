@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUse
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -55,5 +56,6 @@ internal class FakeSongFiles(
         getSongContent = this,
         saveSongContent = this,
         getSongContentInvalidations = this,
+        inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
     )
 }

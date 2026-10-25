@@ -47,6 +47,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
             ?: if (isGermanNotationEnabled) UserPreferences.Notation.GERMAN else UserPreferences.Notation.STANDARD,
     ),
     areChordDiagramsEnabled = areChordDiagramsEnabled,
+    areChordDegreesEnabled = areChordDegreesEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
     songCardDetails = UserPreferences.CardDetails(
@@ -103,6 +104,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     accidentals = chordSpelling.accidentals.id,
     notation = chordSpelling.notation.id,
     areChordDiagramsEnabled = areChordDiagramsEnabled,
+    areChordDegreesEnabled = areChordDegreesEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
     isKeyShown = songCardDetails.isKeyShown,

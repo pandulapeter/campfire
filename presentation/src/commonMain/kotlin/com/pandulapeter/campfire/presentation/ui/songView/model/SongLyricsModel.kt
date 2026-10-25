@@ -21,10 +21,12 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
+import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
@@ -94,6 +96,8 @@ internal class SongLyricsModel(
  * section: a walk over every chord, so done here, with the chords on only, and never for a songbook (over
  * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections) or a song playing over `SongScaleGroups.MAX_PLAYED_CHORDS` chords (the
  * `:chordpro` side's gate), where it grows past what the main thread can spare.
+ * @param showsDegrees Whether each chord of the Chords section is labelled with the step of the key it stands on
+ * ([withDegrees]), counted against [degreeKeyOf]'s key, the home the same walk finds first.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -105,13 +109,18 @@ internal fun prepareSongLyrics(
     standardSong: ChordProSong = song,
     searchesShapes: Boolean = true,
     suggestsScales: Boolean = false,
+    showsDegrees: Boolean = false,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
-    val chords = if (shouldShowChords && chordTuning != null) {
+    val collected = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
     } else {
         emptyList()
     }
     val isSongbook = standardSong.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
+    val degreesShown = showsDegrees && collected.isNotEmpty() && !notation.isNumbering
+    // One walk answers both the Scales section and the degrees, so that a page with both on pays for it once.
+    val analysis = if (shouldShowChords && !isSongbook && (suggestsScales || degreesShown)) songScaleAnalysisOf(standardSong, labels) else null
+    val chords = if (degreesShown) collected.withDegrees(degreeKeyOf(standardSong, analysis, isSongbook), notation) else collected
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),
@@ -124,7 +133,7 @@ internal fun prepareSongLyrics(
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
-        scaleGroups = if (shouldShowChords && suggestsScales && !isSongbook) songScaleGroupsOf(standardSong, labels, notation) else emptyList(),
+        scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis) else emptyList(),
     )
 }
 
@@ -191,6 +200,7 @@ internal data class SongLyricsInputs(
     val chordTuning: ChordTuning? = null,
     val tabs: TabReading? = null,
     val suggestsScales: Boolean = false,
+    val showsDegrees: Boolean = false,
 )
 
 /**

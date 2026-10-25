@@ -103,15 +103,24 @@ private fun DrawScope.drawFretted(
     showsFingers: Boolean,
     minimumStroke: Float,
 ) {
-    // The left band is kept whether or not a base fret is named in it, so that every diagram of a row lines up.
-    val left = size.width * SIDE_BAND
-    val right = size.width - size.width * END_BAND
+    // Every diagram's strings span the same width, so that the diagrams of a row are one size, and what is drawn is
+    // centred: the strings alone, or with the base fret named left of them, which the band beside them leaves room for.
+    val gridWidth = size.width * (1f - SIDE_BAND - END_BAND)
     val top = size.height * MARKER_BAND
     val bottom = size.height - size.height * END_BAND
-    val stringGap = (right - left) / (geometry.strings - 1).coerceAtLeast(1)
+    val stringGap = gridWidth / (geometry.strings - 1).coerceAtLeast(1)
     val fretGap = (bottom - top) / geometry.fretCount
     val thin = (min(stringGap, fretGap) * LINE_WIDTH).coerceAtLeast(minimumStroke)
     val radius = min(stringGap * DOT_RADIUS, fretGap * DOT_ROW_RADIUS)
+    val baseFretLabel = if (geometry.baseFret > 1) {
+        textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor, fontFamily = fontFamily), density = this)
+    } else {
+        null
+    }
+    // The dots reach out of the strings by their radius on both sides, so only the label and its gap tip the balance.
+    val labelReach = baseFretLabel?.let { it.size.width + thin * 2 } ?: 0f
+    val left = ((size.width - gridWidth + labelReach) / 2f).coerceAtMost(size.width * SIDE_BAND)
+    val right = left + gridWidth
     fun x(string: Int) = left + string * stringGap
     fun y(row: Int) = top + (row + 0.5f) * fretGap
     (0..geometry.fretCount).forEach { fret ->
@@ -119,8 +128,7 @@ private fun DrawScope.drawFretted(
         drawLine(lineColor, Offset(left, top + fret * fretGap), Offset(right, top + fret * fretGap), strokeWidth = if (isNut) thin * NUT_WIDTH else thin, cap = StrokeCap.Square)
     }
     (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
-    if (geometry.baseFret > 1) {
-        val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor, fontFamily = fontFamily), density = this)
+    baseFretLabel?.let { label ->
         // Right of it the first string's dot reaches out by its radius, a barre's end included.
         drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
     }

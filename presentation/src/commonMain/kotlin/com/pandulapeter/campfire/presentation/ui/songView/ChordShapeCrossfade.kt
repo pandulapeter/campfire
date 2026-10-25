@@ -68,6 +68,7 @@ internal fun changedShapeCells(previous: List<ChordCell>, cells: List<ChordCell>
     before.name == after.name &&
         before.root == after.root &&
         before.letterName == after.letterName &&
+        before.degree == after.degree &&
         before.tuning.instrument == after.tuning.instrument &&
         before.selection.shape != null &&
         (before.selection.shape != after.selection.shape || before.tuning != after.tuning)

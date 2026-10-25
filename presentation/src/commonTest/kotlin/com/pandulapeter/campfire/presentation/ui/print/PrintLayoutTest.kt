@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
@@ -16,6 +19,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
@@ -818,10 +822,24 @@ internal class PrintLayoutTest {
         }
     }
 
-    @Test fun `a name that fits keeps its second name on its line`() = runTest {
-        val document = layout(source(song(lyrics(1)).copy(chords = listOf(guitarChord("5").copy(letterName = "G")))), PrintSettings(showChordDiagrams = true))
-        val texts = document.pages.single().texts
-        assertEquals(texts.single { it.text == "5" }.y, texts.single { it.text == " G" }.y)
+    @Test fun `a second name is printed on a line over its name, the same line for every cell`() = runTest {
+        val chords = listOf(guitarChord("5").copy(letterName = "G"), guitarChord("G7").copy(degree = "V7"), guitarChord("Xyz"))
+        val texts = layout(source(song(lyrics(1)).copy(chords = chords)), PrintSettings(showChordDiagrams = true)).pages.single().texts
+        val names = listOf("5", "G7", "Xyz").map { name -> texts.single { it.text == name } }
+        val seconds = listOf("G", "V7").map { second -> texts.single { it.text == second } }
+        assertEquals(1, names.map { it.y }.distinct().size)
+        assertEquals(1, seconds.map { it.y }.distinct().size)
+        assertTrue(seconds.first().y < names.first().y)
+        seconds.forEach { assertTrue(it.style.size < names.first().style.size && !it.style.bold) }
+    }
+
+    @Test fun `the printed chords name their degrees in the key the screen counts them against`() {
+        val song = ChordProParser.parse("{key: C}\n[C]One [F]two [G7]three [Bb]four")
+        val tuning = ChordTuning.standard(ChordInstrument.GUITAR)
+        val chords = printChordsOf(song, ChordNotation.STANDARD, tuning, emptyMap(), showsDegrees = true, analysis = printScaleAnalysisOf(song, labels.sections))
+        assertEquals(listOf("I", "IV", "V7", "♭VII"), chords.map { it.degree })
+        assertTrue(printChordsOf(song, ChordNotation.STANDARD, tuning, emptyMap()).all { it.degree == null })
+        assertTrue(printChordsOf(song, ChordNotation.ROMAN, tuning, emptyMap(), showsDegrees = true).all { it.degree == null })
     }
 
     @Test fun `a missing song prints no diagrams`() = runTest {

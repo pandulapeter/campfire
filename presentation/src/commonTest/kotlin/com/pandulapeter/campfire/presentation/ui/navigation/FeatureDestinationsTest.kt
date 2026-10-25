@@ -31,6 +31,7 @@ internal class FeatureDestinationsTest {
         isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
         isChordLibraryEnabled = isChordLibraryEnabled,
+        areChordDegreesEnabled = isChordLibraryEnabled,
         areScalesEnabled = areScalesEnabled,
         areScaleSuggestionsEnabled = areScalesEnabled,
     )
@@ -77,6 +78,17 @@ internal class FeatureDestinationsTest {
         assertFalse(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScaleSuggestionsEnabled)
         assertFalse(FeatureSwitches.of(preferences.copy(areScalesEnabled = false)).areScaleSuggestionsEnabled)
         assertTrue(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScalesEnabled)
+    }
+
+    @Test
+    fun `chord degrees go with the chord diagrams they label`() {
+        val preferences = testPreferences()
+        assertTrue(FeatureSwitches.of(preferences).areChordDegreesEnabled)
+        assertTrue(FeatureSwitches.of(null).areChordDegreesEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areChordDegreesEnabled = false)).areChordDegreesEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areChordDiagramsEnabled = false)).areChordDegreesEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(areChordsEnabled = false)).areChordDegreesEnabled)
+        assertTrue(FeatureSwitches.of(preferences.copy(areChordDegreesEnabled = false)).isChordLibraryEnabled)
     }
 
     @Test

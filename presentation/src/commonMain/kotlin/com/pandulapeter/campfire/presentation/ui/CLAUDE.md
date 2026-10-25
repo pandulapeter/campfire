@@ -161,6 +161,8 @@ The view model facade, the composition root, and the product rules every screen 
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
     Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard capo
     rule, tuner).
+  - **Chord degrees** (`areChordDegreesEnabled`): disabled while chords or chord diagrams are off; takes the degree
+    over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet; independent of both chord switches. The
     scale sheet's chord rows follow Chord diagrams.
   - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, as Chord diagrams is
