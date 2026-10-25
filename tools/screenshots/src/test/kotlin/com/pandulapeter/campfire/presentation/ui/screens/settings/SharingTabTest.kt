@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sharing_show_qr
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.share_copy
+import com.pandulapeter.campfire.presentation.resources.share_or_export
 import com.pandulapeter.campfire.presentation.resources.share_qr_code
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_actions
@@ -99,7 +100,7 @@ internal class SharingTabTest {
         // The PDF picked on the song's own export first, since a link is what an export opens on until another is picked.
         openSong()
         tap(hasContentDescription(string(Res.string.songs_actions)))
-        tap(hasText(string(Res.string.songs_share_song)) and hasClickAction())
+        tap(hasText(string(Res.string.share_or_export)) and hasClickAction())
         tap(hasText(string(Res.string.print_format_pdf)) and hasClickAction())
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_section_page))).fetchSemanticsNodes().isNotEmpty() }
         pressBack()
@@ -112,7 +113,7 @@ internal class SharingTabTest {
         tap(hasText(string(Res.string.songs)) and hasClickAction())
         openSong()
         tap(hasContentDescription(string(Res.string.songs_actions)))
-        tap(hasText(string(Res.string.songs_share_song)) and hasClickAction())
+        tap(hasText(string(Res.string.share_or_export)) and hasClickAction())
 
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasText(string(Res.string.print_section_page))).fetchSemanticsNodes().isNotEmpty() }
         onNode(hasContentDescription(string(Res.string.share_qr_code))).assertDoesNotExist()

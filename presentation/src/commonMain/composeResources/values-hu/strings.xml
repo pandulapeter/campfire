@@ -17,6 +17,7 @@
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="duplicate">Megkettőzés</string>
+    <string name="share_or_export">Megosztás vagy exportálás</string>
     <string name="save">Mentés</string>
     <string name="select_all">Mind kijelölése</string>
     <string name="deselect_all">Kijelölés megszüntetése</string>

@@ -9,8 +9,6 @@
 -->
 # To do
 - Onboarding: the circular hero element has some inset handling issues
-- Add 5/4 metronome preset
-- Export -> Export / Share
 - Export screen FAB is not visible enough on large screens
 - Add ability to only print the running order of a setlist
 - Screenshot generator: bottom sheets seem to cover the bottom window chrome

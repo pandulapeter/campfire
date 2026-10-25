@@ -17,6 +17,7 @@
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="duplicate">Duplicate</string>
+    <string name="share_or_export">Share or export</string>
     <string name="save">Save</string>
     <string name="select_all">Select all</string>
     <string name="deselect_all">Deselect all</string>

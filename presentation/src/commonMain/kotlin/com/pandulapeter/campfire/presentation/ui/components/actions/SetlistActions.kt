@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
 import com.pandulapeter.campfire.presentation.resources.setlists_choose_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder
-import com.pandulapeter.campfire.presentation.resources.setlists_share
+import com.pandulapeter.campfire.presentation.resources.share_or_export
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_unarchive
@@ -106,7 +106,7 @@ internal fun SetlistActions(
                 onClick = { actions.setArchived(setlist = setlist, isArchived = !setlist.isArchived) },
             ),
             ActionsMenuItem(
-                title = stringResource(Res.string.setlists_share),
+                title = stringResource(Res.string.share_or_export),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
                 onClick = { actions.export(setlist) },

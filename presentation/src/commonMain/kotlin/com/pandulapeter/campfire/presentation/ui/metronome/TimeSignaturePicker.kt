@@ -136,6 +136,8 @@ private val COMMON_TIME_SIGNATURES = listOf(
     TimeSignature(2, 4),
     TimeSignature(3, 4),
     TimeSignature(4, 4),
+    TimeSignature(5, 4),
+    TimeSignature(7, 4),
     TimeSignature(6, 8),
     TimeSignature(7, 8),
     TimeSignature(12, 8),
