@@ -31,6 +31,8 @@ What every screen shares; each destination's package has its own notes.
   setlists alike). Songs adds Paste from clipboard third.
 - The menu leaves the bar while the empty state, loading indicator, or error is up (`allowsNewItemMenu`); each offers
   its own buttons. Both empty states start with the menu's buttons, same labels, same order.
+- The bar is built afresh (`key`) when its list first leaves the loading placeholder, so the menu arriving with the
+  library is not animated in, still clipped as the launch screen fades.
 
 ## Searching the list screens
 

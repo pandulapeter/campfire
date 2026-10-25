@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,10 +37,12 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
+import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
+import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.animateScrollToTop
@@ -58,6 +61,8 @@ internal fun SetlistsScreen(
     val listState = rememberRetainedLazyGridState(viewModel.setlistsController.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle()
+    val isLoadingPlaceholder = setlistsPlaceholder == Placeholder.LOADING
+    val isAwaitingSetlists = isLoadingPlaceholder && !rememberHasLoadedLibrary(isLoading = isLoadingPlaceholder)
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     // Not saveable: returning to this screen always starts in browsing mode.
@@ -112,35 +117,38 @@ internal fun SetlistsScreen(
             )
         },
     ) {
-        SearchableTopAppBar(
-            contentPadding = contentPadding,
-            appBarReveal = { appBarReveal.value },
-            placeholder = stringResource(Res.string.setlists_search),
-            searchState = viewModel.setlistsController.setlistsSearch,
-            isSearchEnabled = !isReordering,
-            onReachChanged = { appBarReach = it },
-            areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
-            areClosedSearchActionsDetached = true,
-            closedSearchActions = {
-                NewItemMenu(
-                    contentDescription = stringResource(Res.string.setlists_new_setlist),
-                    createLabel = stringResource(Res.string.setlists_create_setlist),
-                    onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSetlist) },
-                    onImport = viewModel.importController::importFiles,
-                    onItemSelected = { viewModel.setlistsController.reorderingSetlistFileName = null },
-                    isEnabled = !isReordering,
-                )
-            },
-            actions = {
-                SetlistSortMenu(
-                    modifier = Modifier.overlappingAction(),
-                    selected = userPreferences?.setlistSortingMode,
-                    onSelected = viewModel.setlistsController::setSetlistSortingMode,
-                    onSortingModeChanged = { viewModel.setlistsController.reorderingSetlistFileName = null },
-                    isEnabled = !isReordering,
-                )
-            },
-        )
+        // Built afresh once the setlists first arrive, for the reason the songs screen gives.
+        key(isAwaitingSetlists) {
+            SearchableTopAppBar(
+                contentPadding = contentPadding,
+                appBarReveal = { appBarReveal.value },
+                placeholder = stringResource(Res.string.setlists_search),
+                searchState = viewModel.setlistsController.setlistsSearch,
+                isSearchEnabled = !isReordering,
+                onReachChanged = { appBarReach = it },
+                areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
+                areClosedSearchActionsDetached = true,
+                closedSearchActions = {
+                    NewItemMenu(
+                        contentDescription = stringResource(Res.string.setlists_new_setlist),
+                        createLabel = stringResource(Res.string.setlists_create_setlist),
+                        onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSetlist) },
+                        onImport = viewModel.importController::importFiles,
+                        onItemSelected = { viewModel.setlistsController.reorderingSetlistFileName = null },
+                        isEnabled = !isReordering,
+                    )
+                },
+                actions = {
+                    SetlistSortMenu(
+                        modifier = Modifier.overlappingAction(),
+                        selected = userPreferences?.setlistSortingMode,
+                        onSelected = viewModel.setlistsController::setSetlistSortingMode,
+                        onSortingModeChanged = { viewModel.setlistsController.reorderingSetlistFileName = null },
+                        isEnabled = !isReordering,
+                    )
+                },
+            )
+        }
     }
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
