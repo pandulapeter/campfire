@@ -730,6 +730,8 @@ class CampfireViewModel(
     internal val launchState: LaunchState = LaunchState(
         scope = viewModelScope,
         screenData = libraryState.screenData,
+        songGroups = songListState.songGroups,
+        listedSetlists = setlistsController.setlistsWithSongs,
         isDemoLibraryPending = firstRunController.isDemoLibraryPending,
         isEditorDraftRecoveryPending = editorSession.isEditorDraftRecoveryPending,
         editorDraftRecovery = editorSession.editorDraftRecovery,

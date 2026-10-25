@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -30,6 +32,8 @@ import kotlinx.coroutines.launch
 /**
  * What the launch screen waits for before it goes, and the place an address asked the app to open on.
  *
+ * @param songGroups The song list as the songs screen shows it, see [hasLibraryToShow].
+ * @param listedSetlists The setlists as the setlists screen shows them, see [hasLibraryToShow].
  * @param isDemoLibraryPending See `FirstRunController.isDemoLibraryPending`.
  * @param isEditorDraftRecoveryPending Whether a draft a previous run left is still being reopened.
  * @param editorDraftRecovery Completed with whether the editor was reopened on a stored draft.
@@ -38,6 +42,8 @@ import kotlinx.coroutines.launch
 internal class LaunchState(
     private val scope: CoroutineScope,
     private val screenData: StateFlow<DataState<ScreenData>>,
+    songGroups: StateFlow<SongGroups>,
+    listedSetlists: StateFlow<ListedSetlists>,
     private val isDemoLibraryPending: StateFlow<Boolean>,
     isEditorDraftRecoveryPending: StateFlow<Boolean>,
     private val editorDraftRecovery: Deferred<Boolean>,
@@ -65,17 +71,27 @@ internal class LaunchState(
      * neither is it while the screen the app was asked to open on is still being looked for ([isLaunchNavigationPending]),
      * nor while a draft a previous run left is being reopened ([isEditorDraftRecoveryPending]).
      *
+     * The two lists are asked as well as the read, since each is put together from the read off the main thread and
+     * lands a few frames after it: uncovered in between, the songs screen would open on its loading placeholder,
+     * without the New button, which then makes its room in the bar and moves the pill aside as the list arrives, and
+     * the setlists screen would say for those frames that every setlist the read found is archived. Neither list holds
+     * a slow read back by more than its first batch: the songs as soon as some are listed, the setlists as soon as
+     * the read has found none yet or they are listed.
+     *
      * Latched like `PreferencesController.arePreferencesLoaded`: a rescan reads the library again and says so, and none
      * of that is a reason to put the launch screen back up over an app the user is already using.
      */
     val hasLibraryToShow = combine(
-        screenData,
+        combine(screenData, songGroups, listedSetlists) { state, songGroups, listedSetlists ->
+            (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true) &&
+                (songGroups.isLibraryRead || songGroups.groups.isNotEmpty()) &&
+                (listedSetlists.isLibraryRead || listedSetlists.setlists.isNotEmpty() || state.data?.setlists.isNullOrEmpty())
+        },
         isDemoLibraryPending,
         _isLaunchNavigationPending,
         isEditorDraftRecoveryPending,
-    ) { state, isDemoLibraryPending, isLaunchNavigationPending, isEditorDraftRecoveryPending ->
-        !isDemoLibraryPending && !isLaunchNavigationPending && !isEditorDraftRecoveryPending &&
-                (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
+    ) { areListsBuilt, isDemoLibraryPending, isLaunchNavigationPending, isEditorDraftRecoveryPending ->
+        !isDemoLibraryPending && !isLaunchNavigationPending && !isEditorDraftRecoveryPending && areListsBuilt
     }
         .runningFold(false) { hasHadSomethingToShow, hasSomethingToShow -> hasHadSomethingToShow || hasSomethingToShow }
         .asState(scope, false)
