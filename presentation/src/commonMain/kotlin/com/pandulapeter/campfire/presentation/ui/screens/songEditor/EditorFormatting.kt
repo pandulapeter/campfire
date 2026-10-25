@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.TextRange
-import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralLines
 import com.pandulapeter.campfire.chordpro.edit.ChordProMarkupLines
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
@@ -38,11 +37,12 @@ internal data class FormattingToggle(
  * around the selection, or the selection starts and ends with them. With nothing selected it writes an empty pair with
  * the caret inside, or takes away the empty pair the caret is in.
  *
- * Markup goes only where the parser reads it, [ChordProMarkupLines.markupRanges]: a lyric line, or a comment's value.
- * ChordPro reads markup within a line only, so a selection of several lines formats each of them, keeping the
- * whitespace at either end outside the tags. A tab, grid, delegated, or other directive line, a Campfire 3 heading,
- * and a `#` comment are left alone. The lines are taken off where every one that is formatted already is, and otherwise
- * only those that are not are formatted.
+ * Markup goes only where the parser reads it, [ChordProMarkupLines.markupRanges]: a lyric line, or a comment's value,
+ * to which a selection on one line is clipped (a whole selected `{c: note}` formats `note`). A tab, grid, delegated, or
+ * other directive line, a Campfire 3 heading, and a `#` comment are left alone. ChordPro reads markup within a line
+ * only, so a selection of several lines formats each of them, keeping the whitespace at either end outside the tags.
+ * The lines are taken off where every one that is formatted already is, and otherwise only those that are not are
+ * formatted.
  */
 internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: Int, tag: String): FormattingToggle {
     val opening = "<$tag>"
@@ -68,8 +68,16 @@ internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: I
         }
         return FormattingToggle(start, end, replaced.toString(), start, start + replaced.length)
     }
-    if (ChordProLiteralLines.isLiteralAt(text, start)) return FormattingToggle(start, end, selected, start, end)
-    val isAroundSelection = start >= opening.length && text.regionMatches(start - opening.length, opening, 0, opening.length, ignoreCase = true) &&
+    val range = touched.singleOrNull() ?: return FormattingToggle(start, end, selected, start, end)
+    return toggleWithin(text, maxOf(start, range.first), minOf(end, range.last + 1), range, opening, closing)
+}
+
+/** The single-line [formattingToggle] of the selection from [start] to [end], which lies within [range]. */
+private fun toggleWithin(text: String, start: Int, end: Int, range: IntRange, opening: String, closing: String): FormattingToggle {
+    val selected = text.substring(start, end)
+    // Only tags inside the range are the selection's: the `{c: ` before a comment's value is not.
+    val isAroundSelection = start - opening.length >= range.first && end + closing.length <= range.last + 1 &&
+        text.regionMatches(start - opening.length, opening, 0, opening.length, ignoreCase = true) &&
         text.regionMatches(end, closing, 0, closing.length, ignoreCase = true)
     return when {
         isAroundSelection -> FormattingToggle(start - opening.length, end + closing.length, selected, start - opening.length, end - opening.length)

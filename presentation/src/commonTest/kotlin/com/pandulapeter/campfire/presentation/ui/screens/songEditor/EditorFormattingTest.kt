@@ -87,4 +87,27 @@ class EditorFormattingTest {
     fun `lines ended by a bare CR are formatted one by one`() {
         assertEquals("|<b>One</b>\r<b>Two</b>|", toggled("|One\rTwo|"))
     }
+
+    @Test
+    fun `a selection inside a directive other than a comment is left alone`() {
+        assertEquals("{title: |Foo|}", toggled("{title: |Foo|}"))
+        assertEquals("{ti||tle: Foo}", toggled("{ti||tle: Foo}"))
+    }
+
+    @Test
+    fun `a whole selected comment line formats only its value, and a selection inside the value toggles as on a lyric`() {
+        assertEquals("{c: <b>|note|</b>}", toggled("|{c: note}|"))
+        assertEquals("{c: <b>|note|</b>}", toggled("{c: |note|}"))
+        assertEquals("{c: |note|}", toggled("{c: <b>|note|</b>}"))
+    }
+
+    @Test
+    fun `a source comment is left alone`() {
+        assertEquals("|# note|", toggled("|# note|"))
+    }
+
+    @Test
+    fun `a caret in an empty comment value writes an empty pair`() {
+        assertEquals("{c: <b>||</b>}", toggled("{c: ||}"))
+    }
 }
