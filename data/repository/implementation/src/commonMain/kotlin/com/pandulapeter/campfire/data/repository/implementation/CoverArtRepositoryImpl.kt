@@ -28,7 +28,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -79,6 +78,16 @@ internal class CoverArtRepositoryImpl(
     /** When each address that failed may be asked again, null for never in this session. */
     private val failures = mutableMapOf<String, ComparableTimeMark?>()
 
+    /** The keys of the addresses the library named at the last prune, null until the library has been read whole. */
+    private var wantedKeys: Set<String>? = null
+
+    /**
+     * Whether a copy no song names was written since the last prune: a search thumbnail, or a download that was still
+     * running when its song was deleted or given another cover. The next finished read prunes even if the library
+     * names the same addresses, so that such a copy does not wait for the next launch.
+     */
+    private var hasStrays = false
+
     /** Counts the writes and prunes of the copies, which is what makes [coverArtCacheSize] list them again. */
     private val cacheChanges = MutableStateFlow(0L)
 
@@ -92,10 +101,20 @@ internal class CoverArtRepositoryImpl(
             songRepository.songs
                 .filterIsInstance<DataState.Idle<List<Song>>>()
                 .map { state -> state.data.mapNotNullTo(mutableSetOf()) { song -> song.coverArtUrl?.let(::keyOf) } }
-                .distinctUntilChanged()
                 .collect { keys ->
-                    coverArtLocalSource.keepOnlyCoverArt(keys)
-                    cacheChanges.update { it + 1 }
+                    val shouldPrune = mutex.withLock {
+                        (keys != wantedKeys || hasStrays).also {
+                            wantedKeys = keys
+                            hasStrays = false
+                            // The memory of addresses that answered with no cover goes with their empty copies, or an
+                            // address given back to a song would stay missing for the rest of the session.
+                            failures.keys.removeAll { url -> keyOf(url) !in keys }
+                        }
+                    }
+                    if (shouldPrune) {
+                        coverArtLocalSource.keepOnlyCoverArt(keys)
+                        cacheChanges.update { it + 1 }
+                    }
                 }
         }
     }
@@ -134,7 +153,10 @@ internal class CoverArtRepositoryImpl(
 
     override suspend fun clearCoverArtCache() {
         coverArtLocalSource.keepOnlyCoverArt(emptySet())
-        mutex.withLock { failures.clear() }
+        mutex.withLock {
+            failures.clear()
+            hasStrays = false
+        }
         cacheChanges.update { it + 1 }
     }
 
@@ -155,17 +177,22 @@ internal class CoverArtRepositoryImpl(
 
     private suspend fun fetch(url: String, key: String) = when (val download = coverArtRemoteSource.downloadCoverArt(url)) {
         is CoverArtDownload.Image -> CoverArtResult.Image(download.bytes).also {
-            coverArtLocalSource.saveCoverArt(key, download.bytes)
+            save(key, download.bytes)
             cacheChanges.update { changes -> changes + 1 }
         }
         CoverArtDownload.Missing -> CoverArtResult.Missing.also {
             mutex.withLock { failures[url] = null }
             // Kept across launches, so an address that never yields a cover is asked once, not on every start.
-            coverArtLocalSource.saveCoverArt(key, ByteArray(0))
+            save(key, ByteArray(0))
         }
         CoverArtDownload.Unreachable -> CoverArtResult.Unreachable.also {
             mutex.withLock { failures[url] = environment.timeSource.markNow() + UNREACHABLE_RETRY_DELAY }
         }
+    }
+
+    private suspend fun save(key: String, bytes: ByteArray) {
+        coverArtLocalSource.saveCoverArt(key, bytes)
+        mutex.withLock { if (wantedKeys?.contains(key) == false) hasStrays = true }
     }
 
     private fun keyOf(url: String) = Sha256.hashToHex(url.encodeToByteArray())

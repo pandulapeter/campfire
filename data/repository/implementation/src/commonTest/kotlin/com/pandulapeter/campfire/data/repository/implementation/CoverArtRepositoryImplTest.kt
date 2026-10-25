@@ -232,6 +232,59 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
+    fun `the copy of a deleted song's cover and of a replaced cover is deleted`() = runTest {
+        val local = FakeCoverArtLocalSource()
+        local.copies[keyOf(URL)] = IMAGE
+        local.copies[keyOf(OTHER_URL)] = IMAGE
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song(URL), song(OTHER_URL))))
+        repository(local = local, songs = songs)
+        runCurrent()
+
+        songs.value = DataState.Idle(listOf(song(URL)))
+        runCurrent()
+        assertEquals(setOf(keyOf(URL)), local.copies.keys)
+
+        songs.value = DataState.Idle(listOf(song(OTHER_URL).copy(fileName = song(URL).fileName)))
+        runCurrent()
+        assertEquals(emptySet(), local.copies.keys)
+    }
+
+    @Test
+    fun `a copy written for an address no song names is deleted on the next read of the library`() = runTest {
+        val local = FakeCoverArtLocalSource()
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song(URL))))
+        val repository = repository(local = local, remote = FakeCoverArtRemoteSource { CoverArtDownload.Image(IMAGE) }, songs = songs)
+        runCurrent()
+
+        // A search thumbnail, or a download still running when its song was deleted, lands after the prune.
+        repository.getCoverArt(URL)
+        repository.getCoverArt(OTHER_URL)
+        assertEquals(setOf(keyOf(URL), keyOf(OTHER_URL)), local.copies.keys)
+
+        // The library still names the same addresses, which alone would not be a reason to prune.
+        songs.value = DataState.Idle(listOf(song(URL), song(null)))
+        runCurrent()
+        assertEquals(setOf(keyOf(URL)), local.copies.keys)
+    }
+
+    @Test
+    fun `an address given back to a song after no song named it is asked again`() = runTest {
+        val remote = FakeCoverArtRemoteSource { CoverArtDownload.Missing }
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song(URL))))
+        val repository = repository(remote = remote, songs = songs)
+        runCurrent()
+
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+        songs.value = DataState.Idle(emptyList())
+        runCurrent()
+        songs.value = DataState.Idle(listOf(song(URL)))
+        runCurrent()
+        assertEquals(CoverArtResult.Missing, repository.getCoverArt(URL))
+
+        assertEquals(2, remote.requestCount)
+    }
+
+    @Test
     fun `the cache size follows the copies being written and pruned`() = runTest {
         val local = FakeCoverArtLocalSource()
         local.copies[keyOf(OTHER_URL)] = byteArrayOf(1, 2, 3, 4, 5)

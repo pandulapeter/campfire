@@ -96,7 +96,9 @@ which is visible once a load has finished:
 - `covers/<sha256 of the address>` is the offline cache on all platforms, outside `library/`, out of device backups.
   `CoverArtRepositoryImpl` watches `SongRepository.songs` and, after each finished read (`Idle` only, never scan
   batches, which would prune covers of songs not read yet) with a changed address set, deletes every copy no song
-  names (search thumbnails included).
+  names (search thumbnails included), and forgets the no-cover answers of those addresses. A copy written since for an
+  address no song names (a thumbnail, a download outliving its song or its old cover) makes the next finished read
+  prune even with the same address set.
 - Downloads run in the repository's own scope (a row scrolled away must not cancel another row's wait); one download
   per address; at most `MAX_CONCURRENT_DOWNLOADS` (4) at once, and one with no callers left by its turn is skipped (a
   fling would otherwise queue a request per row, the HTTP timeout counting the queue). A non-cover answer is kept as an
