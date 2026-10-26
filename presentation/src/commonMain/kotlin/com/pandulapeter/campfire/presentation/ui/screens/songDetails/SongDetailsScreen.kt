@@ -254,7 +254,10 @@ internal fun SongDetailsScreen(
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
                 onEdit = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
-                onSave = importPreview?.takeIf { !it.isWriting }?.actions?.saveShortcutAction?.let { action -> { viewModel.importController.importFromPreview(action) } },
+                onSave = importPreview?.let { preview ->
+                    // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
+                    preview.actions?.takeIf { preview.canImport(primary = it.primary, isAddingToReview = false) }?.saveShortcutAction
+                }?.let { action -> { viewModel.importController.importFromPreview(action) } },
             ),
     ) {
         SongDetailsAppBar(

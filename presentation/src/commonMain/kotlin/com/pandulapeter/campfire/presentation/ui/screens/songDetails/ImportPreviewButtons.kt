@@ -49,6 +49,15 @@ import org.jetbrains.compose.resources.painterResource
 import kotlin.math.max
 
 /**
+ * Whether the preview's buttons, whose first is [primary], may be pressed, and so whether its Ctrl / Cmd + S may: never
+ * while writing, and for the review's Import not while a batch joins it or while it would write nothing.
+ */
+internal fun ImportPreviewState.canImport(primary: ImportPreviewAction, isAddingToReview: Boolean) = !isWriting && when (primary) {
+    ImportPreviewAction.IMPORT_REVIEW -> !isAddingToReview && importReviewSummary(review.plan, review.choices).importCount > 0
+    else -> true
+}
+
+/**
  * The buttons of a preview's card ([ImportPreviewBar]): one for a name that is free, and for a taken one both ways at
  * once, side by side where the card has room for them, one over the other at its end where it has not, travelling from
  * one to the other as the window changes. The primary one is filled, the other outlined. While what a press started is
@@ -72,10 +81,7 @@ internal fun ImportPreviewButtons(
         exit = fadeOut() + scaleOut(),
     ) {
         val actions = last ?: return@AnimatedVisibility
-        val isEnabled = !importPreview.isWriting && when (actions.primary) {
-            ImportPreviewAction.IMPORT_REVIEW -> !isAddingToReview && importReviewSummary(importPreview.review.plan, importPreview.review.choices).importCount > 0
-            else -> true
-        }
+        val isEnabled = importPreview.canImport(primary = actions.primary, isAddingToReview = isAddingToReview)
         val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
         SideBySideOrStacked {
             actions.secondary?.let { action ->
