@@ -35,11 +35,16 @@ object LibraryFiles {
 
     const val ARCHIVE_EXTENSION = ".zip"
 
+    /** ABC notation's tunes, one song per tune; see [FOREIGN_SONG_EXTENSIONS]. */
+    const val ABC_EXTENSION = ".abc"
+
     /**
-     * The song files of other apps that are text of a format of their own: OnSong's `.onsong`. Read with the text limit
-     * and translated into ChordPro by the import, never part of the library or registered as an Open with type.
+     * The song files of other apps that are text of a format of their own: OnSong's `.onsong` and ABC notation's `.abc`.
+     * Read with the text limit and translated into ChordPro by the import, never part of the library. Only `.abc` is
+     * registered as an Open with type, and never as its default handler: it is a format of its own rather than another
+     * app's, and Campfire is no editor of it.
      */
-    val FOREIGN_SONG_EXTENSIONS = listOf(".onsong")
+    val FOREIGN_SONG_EXTENSIONS = listOf(".onsong", ABC_EXTENSION)
 
     /**
      * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library

@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
@@ -795,7 +797,13 @@ internal class ImportController(
         if (isLeaving()) return
         openNewSongEditor(song.text, request.suggestion)
         request.settled.complete(Unit)
-        messageSink.sendMessage(Message.NewSongFromText(isConverted = song.isConverted, hasChords = ChordProParser.summarize(song.text).hasChords))
+        messageSink.sendMessage(
+            Message.NewSongFromText(
+                isConverted = song.isConverted,
+                hasChords = ChordProParser.summarize(song.text).hasChords,
+                hasNotation = ChordProParser.parse(song.text).blocks.any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Verbatim } },
+            ),
+        )
         snapshotFlow { backStack.none { it is CampfireDestination.SongEditor } }.first { it }
     }
 

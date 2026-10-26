@@ -224,6 +224,32 @@ class ImportControllerQueueTest {
     }
 
     @Test
+    fun `a pasted ABC tune opens the editor, and one with no chords is said to keep its notation`() = runTest {
+        val tune = "{title: Lantern Reel}\n\n{start_of_abc}\nX:1\nT:Lantern Reel\nK:G\nGABc|\n{end_of_abc}\n"
+        plannedSongs = listOf(songEntry("new.cho", text = tune, isConverted = true))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        assertEquals(listOf(tune), newSongTexts)
+        assertEquals(
+            listOf<Message>(Message.NewSongFromText(isConverted = true, hasChords = false, hasNotation = true)),
+            messageSink.messageQueue.value.map { it.value },
+        )
+    }
+
+    @Test
+    fun `a pasted song of lyrics alone is not said to keep notation`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "{title: Song}\nHello"))
+        startController()
+        enqueuePaste()
+        runCurrent()
+        assertEquals(
+            listOf<Message>(Message.NewSongFromText(isConverted = false, hasChords = false, hasNotation = false)),
+            messageSink.messageQueue.value.map { it.value },
+        )
+    }
+
+    @Test
     fun `a new song from a share opens the editor with its suggestion`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()

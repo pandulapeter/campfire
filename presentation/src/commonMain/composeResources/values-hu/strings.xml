@@ -194,6 +194,7 @@
     <string name="songs_paste_converted">A dalszöveg fölé írt akkordokat a Campfire a szövegbe illesztette. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
     <string name="songs_paste_chordpro">A szöveg már ChordPro formátumú, így változatlan maradt. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
     <string name="songs_paste_no_chords">Nem található benne akkord, így ez csak a dalszöveg. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
+    <string name="songs_paste_notation_without_chords">Nem található benne akkord, így a kotta úgy marad, ahogy le van írva. Ellenőrizd a címet és az előadót, majd mentsd el.</string>
     <string name="new_song_placeholder_title">Új dal</string>
     <string name="new_song_placeholder_artist">Ismeretlen előadó</string>
     <string name="paste_clipboard_empty">A vágólapon nincs beilleszthető szöveg.</string>

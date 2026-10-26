@@ -145,6 +145,10 @@ batch names through `ForeignSongHeader`. What their KDoc does not say:
 - OnSong (text-like bytes only): a `.cho` of its base name; a first chord row means no header unless it is the file's
   own name, and a third bare line ends the header; the body is cut at its directive lines, each run converted, kept as
   inline ChordPro, or escaped.
+- ABC (`backup/AbcFile`): an `.abc` (text-like bytes only, as `.onsong`) or a sniffed text `AbcText.isAbc` accepts,
+  which `ChordSheetStructure` would otherwise skip, is one `.cho` per tune through `:chordpro`'s `abc` package, named
+  by its title within the batch and titled by the file's name where it has no `T:`. A pasted or shared text never comes
+  here (it is a `.txt`): the import's plain-text branch asks the same sniff.
 
 ## A song is named by its header
 

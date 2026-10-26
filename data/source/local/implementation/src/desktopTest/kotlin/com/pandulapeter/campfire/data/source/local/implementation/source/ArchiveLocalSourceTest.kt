@@ -215,6 +215,30 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `an ABC file inside an archive comes out as one ChordPro song per tune`() = runBlocking {
+        val tunes = "X:1\nT:Lantern Reel\nK:G\n\"G\"GABc|\n\nX:2\nT:Meadow Jig\nK:D\n\"D\"DEF|"
+        val archive = ZipWriter.write(listOf(ZipEntry("folk/tunes.abc", tunes.encodeToByteArray())))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("Lantern Reel.cho", "Meadow Jig.cho"), files.map { it.name })
+        assertTrue(files.all { "{start_of_abc}" in it.bytes.decodeToString() && "{start_of_grid}" in it.bytes.decodeToString() })
+    }
+
+    @Test
+    fun `a loose ABC file is its tunes, by its name or by its content, and a photo renamed abc is left alone`() = runBlocking {
+        val tune = "X:1\nT:Lantern Reel\nK:G\n\"G\"GABc|"
+
+        assertEquals(listOf("Lantern Reel.cho"), archiveLocalSource.songsIn(ImportedFile("tunes.abc", tune.encodeToByteArray()))?.map { it.name })
+        assertEquals(
+            listOf("Lantern Reel.cho"),
+            archiveLocalSource.songsIn(ImportedFile("tunes.abc2", tune.encodeToByteArray(), isPlainTextByContent = true))?.map { it.name },
+        )
+        val png = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte(), 0, 0, 0)
+        assertEquals(null, archiveLocalSource.songsIn(ImportedFile("photo.abc", png)))
+    }
+
+    @Test
     fun `a nested docx is still a document`() = runBlocking {
         val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("folder/sheet.docx", word)))

@@ -12,6 +12,9 @@ package com.pandulapeter.campfire.domain.implementation.importing
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
+import com.pandulapeter.campfire.chordpro.abc.AbcText
+import com.pandulapeter.campfire.chordpro.abc.AbcToChordPro
+import com.pandulapeter.campfire.chordpro.abc.AbcTunes
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
@@ -174,7 +177,13 @@ internal class PrepareImportUseCaseImpl(
                     }
                     ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
                 }
-                file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) || file.isPlainTextByContent -> ChordSheetConverter.convert(ChordSheet.ofPlainText(original!!), String::normalizedToNfc)
+                file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) || file.isPlainTextByContent -> if (AbcText.isAbc(original!!)) {
+                    // Asked first: the chord sheet converter would read ABC's bracketed note groups (`[CEG]`) as chords
+                    // and the rest as prose, where each tune is a song with a chord grid and the tune kept whole.
+                    AbcTunes.split(original).map { tune -> AbcToChordPro.convert(tune).text }
+                } else {
+                    ChordSheetConverter.convert(ChordSheet.ofPlainText(original), String::normalizedToNfc)
+                }
                 else -> listOf(original!!)
             }
             if (converted.sumOf { it.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {

@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
@@ -166,6 +170,40 @@ class PrepareImportUseCaseImplTest {
 
         assertEquals(listOf("Riverlight.cho"), plan.songs.map { it.sourceFileName })
         assertEquals(emptyList(), plan.skippedFileNames)
+    }
+
+    @Test
+    fun `a pasted ABC tune is one converted song with a chord grid and the tune kept`() = runTest {
+        val tune = "X:1\nT:Lantern Reel\nC:Campfire Players\nK:G\n\"G\"GABc \"D\"dedB|\"C\"cBAG|"
+
+        val song = prepare()(listOf(ImportedFile("Pasted.txt", tune.encodeToByteArray()))).songs.single()
+
+        assertTrue(song.isConverted)
+        assertEquals("Lantern Reel", ChordProParser.parseMetadata(song.text).title)
+        val lines = ChordProParser.parse(song.text).blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+        assertEquals(listOf("G", "D", "C"), lines.filterIsInstance<ChordProLine.Grid>().flatMap { it.tokens }.filterIsInstance<GridToken.Chord>().map { it.name })
+        assertTrue(lines.any { it is ChordProLine.Verbatim && it.text == "X:1" })
+    }
+
+    @Test
+    fun `two pasted ABC tunes are two songs`() = runTest {
+        val tunes = "X:1\nT:Lantern Reel\nK:G\nGABc|\n\nX:2\nT:Meadow Jig\nK:D\nDEF|"
+
+        val songs = prepare()(listOf(ImportedFile("Pasted.txt", tunes.encodeToByteArray()))).songs
+
+        assertEquals(listOf("Lantern Reel", "Meadow Jig"), songs.map { ChordProParser.parseMetadata(it.text).title })
+    }
+
+    @Test
+    fun `pasted ChordPro holding an ABC block stays the ChordPro it is`() = runTest {
+        val text = "{title: Lantern Reel}\n\n{start_of_verse}\n[G]Down by the [D]river\n{end_of_verse}\n\n{start_of_abc}\nX:1\nT:Lantern Reel\nK:G\nGABc|\n{end_of_abc}\n"
+
+        val song = prepare()(listOf(ImportedFile("Pasted.txt", text.encodeToByteArray()))).songs.single()
+
+        val sections = ChordProParser.parse(song.text).blocks.filterIsInstance<ChordProBlock.Section>()
+        assertEquals(1, sections.count { section -> section.lines.any { it is ChordProLine.Verbatim } })
+        assertTrue(sections.none { section -> section.lines.any { it is ChordProLine.Grid } })
+        assertTrue("[G]Down by the [D]river" in song.text)
     }
 
     @Test

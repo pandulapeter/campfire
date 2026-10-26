@@ -81,6 +81,15 @@ class PastedSongControllerTest {
     }
 
     @Test
+    fun `an ABC tune is queued as a new song, as a chord sheet is`() = runTest {
+        val tune = "X:1\nT:Lantern Reel\nK:G\n\"G\"GABc|"
+        controller().newSongFromText(tune)
+        val (files, isNewSongFromText) = queued.single()
+        assertEquals(tune, files.single().bytes.decodeToString())
+        assertTrue(isNewSongFromText)
+    }
+
+    @Test
     fun `blank text, links alone and an oversized text are answered without an import`() = runTest {
         val controller = controller()
         controller.newSongFromText("  \n ")

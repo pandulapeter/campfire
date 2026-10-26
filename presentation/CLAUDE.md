@@ -28,8 +28,9 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 - A pasted, dropped, or shared text (`PastedSongController`, `ui/state/importing/`) goes down the import as a `.txt`
   (`isNewSongFromText`). One song the library does not hold (`newSongOf`, a taken name included) opens the editor on
   it, unwritten (`EditorSession.openNewSongEditor`, see `ui/screens/songEditor/CLAUDE.md`), in read only mode too when
-  shared, with a snackbar saying how the text was read; one the library holds is opened; anything else is the ordinary
-  review. The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog,
+  shared, with a snackbar saying how the text was read (chords over the lyrics, ChordPro, lyrics only, or, with no
+  chords, the notation of an ABC tune or block kept); one the library holds is opened; anything else (several ABC
+  tunes pasted at once among them) is the ordinary review. The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog,
   unsaved editor text, and the onboarding, replaces an editor with nothing unsaved, and holds the queue until no editor
   is left, so texts arriving together (an iOS inbox drained at once) open one after another. A share's subject (a page
   title) fills in, selected, the title the text does not declare, and the artist only from `<title> Chords by <artist>`

@@ -57,9 +57,10 @@ sealed interface Message {
 
     /**
      * The editor was opened on a pasted, dropped or shared text as a new song: how the text was read, from chords over
-     * the lyrics ([isConverted]) or as ChordPro, or as lyrics alone where it has no chords.
+     * the lyrics ([isConverted]) or as ChordPro, or, where it has no chords, as lyrics alone or as the notation
+     * ([hasNotation]: an ABC tune with no chord symbols, or a block of another program's notation) it was written in.
      */
-    data class NewSongFromText(val isConverted: Boolean, val hasChords: Boolean) : Message
+    data class NewSongFromText(val isConverted: Boolean, val hasChords: Boolean, val hasNotation: Boolean) : Message
 
     /** Paste from clipboard, or its shortcut, found no text on the clipboard. */
     data object ClipboardEmpty : Message

@@ -12,9 +12,9 @@
 Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI shared by all) for viewing and editing
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
-zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the app,
-opened with it, or shared to it (Android, the iOS share extension). Every module has a `CLAUDE.md` of its own, as does
-every `:presentation` source set and every package with something the code cannot say; read the nearest one before
+ABC tunes, zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the
+app, opened with it, or shared to it (Android, the iOS share extension). Every module has a `CLAUDE.md` of its own, as
+does every `:presentation` source set and every package with something the code cannot say; read the nearest one before
 changing code there.
 
 ## Privacy: what reaches the network
@@ -189,8 +189,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
 - Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordpro/convert`.
-- Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports);
-  backups are read as archives: `domain/implementation`, `data/source/local/implementation`.
+- Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports),
+  and ABC tunes into one song each with a chord grid and the tune kept; backups are read as archives:
+  `domain/implementation`, `data/source/local/implementation`, `chordpro/abc`.
 - Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup, drawn on screen and in the PDF, toggled in the editor
   by its buttons and Ctrl / Cmd + B, I, and U: `chordpro`, `ui/songView`, `ui/print`, `ui/screens/songEditor/toolbar`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):

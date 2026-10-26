@@ -194,6 +194,7 @@
     <string name="songs_paste_converted">Converted from chords written over the lyrics. Check the title and the artist, then save.</string>
     <string name="songs_paste_chordpro">Kept as the ChordPro it is written in. Check the title and the artist, then save.</string>
     <string name="songs_paste_no_chords">No chords were found, so this is a song of lyrics only. Check the title and the artist, then save.</string>
+    <string name="songs_paste_notation_without_chords">No chords were found, so the notation is kept as it is written. Check the title and the artist, then save.</string>
     <string name="new_song_placeholder_title">New song</string>
     <string name="new_song_placeholder_artist">Unknown artist</string>
     <string name="paste_clipboard_empty">There is no text on the clipboard to paste.</string>

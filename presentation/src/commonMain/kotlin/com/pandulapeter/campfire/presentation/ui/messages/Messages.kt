@@ -73,6 +73,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
 import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
 import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
 import com.pandulapeter.campfire.presentation.resources.songs_paste_no_chords
+import com.pandulapeter.campfire.presentation.resources.songs_paste_notation_without_chords
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
@@ -182,6 +183,7 @@ private fun messageText(current: Message?): String? =
         // Lyrics alone may well come through the conversion unchanged, so the chords are asked about first.
         is Message.NewSongFromText -> stringResource(
             when {
+                !current.hasChords && current.hasNotation -> Res.string.songs_paste_notation_without_chords
                 !current.hasChords -> Res.string.songs_paste_no_chords
                 current.isConverted -> Res.string.songs_paste_converted
                 else -> Res.string.songs_paste_chordpro

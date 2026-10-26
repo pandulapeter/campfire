@@ -20,4 +20,7 @@ tune (`AbcToChordPro`); the library stays ChordPro.
 - Grid cells are chords in order, not on beats: placing them needs note lengths, which nothing here reads.
 - A chord symbol is written as spelled, so a mid-tune `K:` changes no name and `{key}` stays the opening key; a mode
   becomes the key of its chords (`Edor` → `Em`), since `{key}` knows only major and minor.
-- Pure and total: whatever text comes in, a song comes out.
+- `AbcTunes` writes the file header into every tune, but leaves out a field the tune's own header has: the tune's
+  overrides the file's (a file `C:` must not become the artist of a tune with its own), as the standard says.
+- Pure and total: whatever text comes in, a song comes out. Callers: the import's archive reader
+  (`data/source/local/implementation`, `.abc` files and sniffed texts) and its plain-text branch (pastes and shares).
