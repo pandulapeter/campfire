@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class AbcGridTest {
 
@@ -87,5 +89,15 @@ class AbcGridTest {
     @Test
     fun `a closing bar line alone on the last line closes the row before it`() {
         assertEquals(listOf("| G | D |."), gridOf("\"G\"GABc|\"D\"dedB|\n|]"))
+    }
+
+    @Test
+    fun `a long line of unclosed grace note braces is read in linear time`() {
+        val start = TimeSource.Monotonic.markNow()
+
+        val grid = gridOf("\"G\"G" + "{ ".repeat(200_000) + "|")
+
+        assertTrue(start.elapsedNow() < 2.seconds, start.elapsedNow().toString())
+        assertEquals(listOf("| G |"), grid)
     }
 }
