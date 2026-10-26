@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -93,9 +94,10 @@ internal fun rememberLinkExport(
             if (isOpenNow) when (action) {
                 LinkAction.CONNECT, LinkAction.CONNECT_AGAIN -> {
                     // A connection made again for the permission to make links is what the failure asked for, so it is
-                    // not shown again once the account is back.
+                    // not shown again once the account is back. It is asked again of the account's own provider.
                     controller.forgetCreation(target)
-                    viewModel.syncController.offeredSyncProvider?.let { viewModel.connectSyncProvider(it, completionPage) }
+                    ((syncState as? SyncState.Connected)?.account?.providerId ?: viewModel.syncController.offeredSyncProvider)
+                        ?.let { viewModel.connectSyncProvider(it, completionPage) }
                 }
                 LinkAction.CANCEL -> viewModel.syncController.cancelSyncConnection()
                 LinkAction.CREATE, LinkAction.TRY_AGAIN -> controller.create(target, title)
