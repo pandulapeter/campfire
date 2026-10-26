@@ -148,6 +148,25 @@ internal class ImportReportState(
     }
 
     /**
+     * Puts the import screen on top for a batch joining the review, since that is where what it adds is listed and read:
+     * a preview over the review is closed, and the preview of one song ([ImportReport.Review.isSongPreview]) becomes the
+     * review of a batch like any other, whose import screen takes its place on the back stack. Otherwise the batch would
+     * land under a screen that shows nothing of it.
+     */
+    fun bringReviewToFront() {
+        val review = _importReport.value as? ImportReport.Review ?: return
+        if (!review.isSongPreview) return closeReviewPreview()
+        _importReport.value = review.copy(isSongPreview = false)
+        val index = backStack.indexOfFirst { it.isSongPreview }
+        if (index >= 0) {
+            updateBackStack {
+                while (size > index + 1) removeAt(lastIndex)
+                set(index, CampfireDestination.ImportReport)
+            }
+        }
+    }
+
+    /**
      * Rewrites the preview of a batch of one song into the screen of [fileName], the song it has been written as, in
      * place: the entry keeps its id, so Navigation 3 takes it for the same screen and nothing slides, and the screen
      * crossfades what changes. Whether it was still there to rewrite.

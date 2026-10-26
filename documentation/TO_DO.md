@@ -10,7 +10,6 @@
 # To do
 - Rename master branch to main
 - Auto-scroll with adjustable speed
-- Importing a song while an import is being previewed should bring the updated Import Review screen to the front
 - Document all keyboard shortcuts used in the app
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs

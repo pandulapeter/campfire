@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.import_retry
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
+import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -90,7 +91,8 @@ internal fun ImportReportButton(
                 containerColor = containerColor,
                 contentColor = contentColor,
                 icon = { Icon(painter = painterResource(Res.drawable.ic_import), contentDescription = null) },
-                text = { Text(label) },
+                // The count changes with every tick, the button growing or shrinking to it as it crossfades.
+                text = { CrossfadedText(text = label) },
             )
         }
 

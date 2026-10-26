@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /** The import screen's state over a plain back stack, moved with runCurrent like [ImportControllerQueueTest]. */
@@ -147,6 +148,19 @@ class ImportReportStateTest {
         assertEquals(1, preview.initialIndex)
         state.closeReviewPreview()
         assertEquals(CampfireDestination.ImportReport, backStack.last())
+        assertTrue(leaves.none { it })
+    }
+
+    @Test
+    fun `a batch joining the review brings the import screen to the front, closing a preview over it`() = runTest {
+        startState()
+        val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false)
+        state.show(review)
+        settle()
+        state.openReviewPreview(songIndices = listOf(0, 1), index = 0)
+        state.bringReviewToFront()
+        assertEquals(CampfireDestination.ImportReport, backStack.last())
+        assertSame(review, state.importReport.value)
         assertTrue(leaves.none { it })
     }
 

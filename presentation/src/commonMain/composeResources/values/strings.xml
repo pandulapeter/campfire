@@ -39,15 +39,42 @@
     <string name="import_status_stopped">Import stopped</string>
     <string name="import_status_partial">The import stopped after a failure. Files already imported are in your library; the remaining files were not processed.</string>
     <string name="import_status_unknown_failure">The import could not finish. Check your library before trying again.</string>
-    <string name="import_status_songs">Songs imported</string>
-    <string name="import_status_setlists">Setlists imported</string>
-    <string name="import_status_duplicates">Already in the library</string>
-    <string name="import_status_left_out">Left out by your choice</string>
-    <string name="import_status_skipped">Unsupported or invalid files</string>
-    <string name="import_status_oversized">Files over the import size limit</string>
-    <string name="import_status_unreadable">Documents without readable text</string>
-    <string name="import_status_failed">Files that could not be imported</string>
-    <string name="import_status_unprocessed">Files not processed</string>
+    <plurals name="import_status_songs">
+        <item quantity="one">%1$d song imported</item>
+        <item quantity="other">%1$d songs imported</item>
+    </plurals>
+    <plurals name="import_status_setlists">
+        <item quantity="one">%1$d setlist imported</item>
+        <item quantity="other">%1$d setlists imported</item>
+    </plurals>
+    <plurals name="import_status_duplicates">
+        <item quantity="one">%1$d file already in the library</item>
+        <item quantity="other">%1$d files already in the library</item>
+    </plurals>
+    <plurals name="import_status_left_out">
+        <item quantity="one">%1$d file left out by your choice</item>
+        <item quantity="other">%1$d files left out by your choice</item>
+    </plurals>
+    <plurals name="import_status_skipped">
+        <item quantity="one">%1$d unsupported or invalid file</item>
+        <item quantity="other">%1$d unsupported or invalid files</item>
+    </plurals>
+    <plurals name="import_status_oversized">
+        <item quantity="one">%1$d file over the import size limit</item>
+        <item quantity="other">%1$d files over the import size limit</item>
+    </plurals>
+    <plurals name="import_status_unreadable">
+        <item quantity="one">%1$d document without readable text</item>
+        <item quantity="other">%1$d documents without readable text</item>
+    </plurals>
+    <plurals name="import_status_failed">
+        <item quantity="one">%1$d file that could not be imported</item>
+        <item quantity="other">%1$d files that could not be imported</item>
+    </plurals>
+    <plurals name="import_status_unprocessed">
+        <item quantity="one">%1$d file not processed</item>
+        <item quantity="other">%1$d files not processed</item>
+    </plurals>
     <string name="import_report_search">Search files</string>
     <string name="import_files_empty">No matching files</string>
     <string name="import_report_clean">Nothing was left out.</string>
@@ -142,31 +169,29 @@
         <item quantity="other">Import %1$d files</item>
     </plurals>
     <string name="import_review_summary_counts">Songs to import: %1$d · Setlists: %2$d</string>
-    <plurals name="import_review_replacing">
-        <item quantity="one">One of them replaces a file of your library</item>
-        <item quantity="other">%1$d of them replace files of your library</item>
-    </plurals>
-    <plurals name="import_review_numbered">
-        <item quantity="one">One of them is numbered next to the file it collides with</item>
-        <item quantity="other">%1$d of them are numbered next to the files they collide with</item>
-    </plurals>
+    <string name="import_review_name_taken_counts">Names taken: Replace %1$d · Keep both %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">One is already in your library and is left alone</item>
         <item quantity="other">%1$d are already in your library and are left alone</item>
     </plurals>
-    <plurals name="import_review_left_out">
-        <item quantity="one">One is left out by you</item>
-        <item quantity="other">%1$d are left out by you</item>
-    </plurals>
+    <string name="import_review_left_out_count">Left out by you: %1$d</string>
     <string name="import_review_tags">Tags for the imported songs</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Added to the one song this import writes</item>
         <item quantity="other">Added to the %1$d songs this import writes</item>
     </plurals>
-    <string name="import_review_conflicts">Names already taken</string>
-    <string name="import_review_songs">Songs</string>
-    <string name="import_review_setlists">Setlists</string>
-    <string name="import_review_for_all">For all of them</string>
+    <plurals name="import_review_conflicts">
+        <item quantity="one">%1$d name already taken</item>
+        <item quantity="other">%1$d names already taken</item>
+    </plurals>
+    <plurals name="import_review_songs">
+        <item quantity="one">%1$d song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+    <plurals name="import_review_setlists">
+        <item quantity="one">%1$d setlist</item>
+        <item quantity="other">%1$d setlists</item>
+    </plurals>
     <string name="import_review_will_be_numbered">Will be numbered next to the one you have</string>
     <string name="import_review_will_replace">Will replace the one you have: %1$s</string>
     <string name="import_review_show_library_song">Show the one you have</string>

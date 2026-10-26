@@ -40,7 +40,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - **Marked plainly**: `ImportPreviewBar`, a secondary container card (as `WarningCard`) floating at the bottom (at most
   720dp wide), says the song is not in the library yet and, for a taken name, that it is. Its buttons
   (`ImportPreviewButtons`, `importPreviewActionsOf`) sit at its end, beside the message where that keeps 140dp, else
-  under it; the pages' bottom padding clears the card (pedal rule). **Import**, or for a taken name both **Import as a
+  under it; the pages' bottom padding clears the card (pedal rule), measured in the same pass as the pages
+  (`PagesAbovePreviewBar`) so the lyrics are never flowed twice as the screen opens. **Import**, or for a taken name both **Import as a
   copy** and **Replace** (confirmed), Replace first for a shared link imported here before; side by side where they fit,
   stacked otherwise. Ctrl / Cmd + S presses the primary one unless it is Replace.
 - **In a short window** (`SHORT_WINDOW_HEIGHT`) the card is one line and its buttons; over the review the page's tick
@@ -48,10 +49,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   them.
 - **One song** (`ImportPreview.singleSong`) stands in for the import screen. Once written, it waits for the text and
   the lookup, then is rewritten in place into the song's screen (`ImportReportState.followImportedSong`, same `id`; the
-  pager keeps the page by `rememberPageKeys`), with `Message.PreviewedSongImported`. A failed write puts it back.
+  pager keeps the page by `rememberPageKeys`), with `Message.PreviewedSongImported`. A failed write puts it back. A
+  batch joining it turns it into the import screen's review (`ImportReportState.bringReviewToFront`).
 - **Over the review** (`isReviewPager`): each page shows its own tick and Keep both / Replace, bound to the row's
-  `ImportChoices`; the button is the review's **Import N files**, which returns to the import screen. A joining batch
-  appends pages (`importPreviewSongIndices`).
+  `ImportChoices`, an unticked one's title saying it is left out (both titles laid out, so a tick moves no box); the
+  button is the review's **Import N files**, which returns to the import screen, as a joining batch
+  does (its songs are listed there); one opened while that batch is read appends its pages (`importPreviewSongIndices`).
 
 ### The steppers
 

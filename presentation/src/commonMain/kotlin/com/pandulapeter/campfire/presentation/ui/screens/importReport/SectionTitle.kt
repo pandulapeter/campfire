@@ -9,41 +9,37 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
-/** A heading of the list, in the color the list screens' section headers are drawn in, with its count at the end. */
+/**
+ * A heading of the list, in the color the list screens' section headers are drawn in, its count written into it. The
+ * count changes under a search and as a batch joins the review, crossfading.
+ */
 @Composable
 internal fun SectionTitle(
     modifier: Modifier = Modifier,
     text: String,
-    count: Int? = null,
-) = Row(
+) = AnimatedContent(
     modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    targetState = text,
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) {
     Text(
-        modifier = Modifier.weight(1f).semantics { heading() },
-        text = text,
+        modifier = Modifier.semantics { heading() },
+        text = it,
         style = MaterialTheme.typography.titleSmall,
         color = LocalSecondAccentColor.current,
     )
-    count?.let {
-        Text(
-            text = it.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
 }

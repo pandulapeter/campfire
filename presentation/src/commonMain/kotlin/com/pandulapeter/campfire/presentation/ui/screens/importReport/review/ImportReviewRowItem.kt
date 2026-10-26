@@ -10,13 +10,20 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -24,8 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
@@ -40,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.import_review_setlist_so
 import com.pandulapeter.campfire.presentation.resources.import_review_setlist_songs_in_import
 import com.pandulapeter.campfire.presentation.resources.import_review_will_be_numbered
 import com.pandulapeter.campfire.presentation.resources.import_review_will_replace
+import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.localization.textResource
 import org.jetbrains.compose.resources.painterResource
@@ -129,6 +139,11 @@ internal fun ImportReviewRowItem(
  * A song's row of the review that opens its preview: the row is the way to read the song, so its box is a control of its
  * own, ticked without opening anything, and the chevron at its end, after the name's choice where it is taken, is what
  * says that the row leads somewhere.
+ *
+ * The box's own target would leave the row's padding around it opening the preview, a few dp from the box, so the box
+ * takes the row's whole height from its start edge up to where the text begins, laid over the row so that the text
+ * stays lined up with the rows that only tick. Its ripple is still the box's own circle, drawn on the box from the
+ * presses of that larger target, since a ripple filling it would be a tall sliver cut off where the text starts.
  */
 @Composable
 private fun ImportReviewSongRow(
@@ -139,19 +154,47 @@ private fun ImportReviewSongRow(
     onChosenChange: (Boolean) -> Unit,
     conflictChoice: (@Composable () -> Unit)?,
     onOpenPreview: () -> Unit,
-) = ListItem(
-    modifier = modifier.clickable(onClickLabel = stringResource(Res.string.import_preview_open), onClick = onOpenPreview),
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(title) },
-    supportingContent = description?.let { { Text(it) } },
-    leadingContent = { Checkbox(checked = isChosen, onCheckedChange = onChosenChange) },
-    trailingContent = {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            conflictChoice?.invoke()
-            PreviewChevron()
-        }
-    },
-)
+) = Box(modifier = modifier) {
+    val boxInteractionSource = remember { MutableInteractionSource() }
+    ListItem(
+        modifier = Modifier.clickable(onClickLabel = stringResource(Res.string.import_preview_open), onClick = onOpenPreview),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(title) },
+        supportingContent = description?.let { { CrossfadedText(text = it) } },
+        leadingContent = {
+            Checkbox(
+                modifier = Modifier.indication(boxInteractionSource, ripple(bounded = false, radius = CHECKBOX_RIPPLE_RADIUS)),
+                checked = isChosen,
+                onCheckedChange = null,
+            )
+        },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                conflictChoice?.invoke()
+                PreviewChevron()
+            }
+        },
+    )
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .wrapContentWidth(Alignment.Start)
+            .width(CHECKBOX_ZONE_WIDTH)
+            .toggleable(
+                value = isChosen,
+                interactionSource = boxInteractionSource,
+                indication = null,
+                role = Role.Checkbox,
+                onValueChange = onChosenChange,
+            ),
+    )
+}
+
+/** The list item's start padding, its checkbox, and the gap after it: everything before the row's text. */
+private val CHECKBOX_ZONE_WIDTH = 56.dp
+
+/** Half of the 40 dp state layer Material draws around a checkbox of its own. */
+private val CHECKBOX_RIPPLE_RADIUS = 20.dp
 
 @Composable
 private fun ImportReviewInfoRow(

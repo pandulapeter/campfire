@@ -16,12 +16,18 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.text
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ReportNote
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -44,7 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.import_status_duplicates
 import com.pandulapeter.campfire.presentation.resources.import_status_oversized
 import com.pandulapeter.campfire.presentation.resources.import_status_skipped
 import com.pandulapeter.campfire.presentation.resources.import_status_unreadable
-import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.PluralStringResource
 
 /**
  * What Import would do, above everything the files hold, so that the counts are read before the list and change in
@@ -65,20 +71,38 @@ internal fun LazyListScope.reviewHeader(
 ) = item(key = "summary", contentType = "summary") {
     val summary by remember(plan) { derivedStateOf { importReviewSummary(plan, choices()) } }
     val tags by remember { derivedStateOf { choices().tags } }
-    Column(
-        modifier = ItemWidth.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        warning?.let { WarningCard(text = it.text()) }
+    // The search field under it keeps the other half of the gap above itself, see searchField.
+    Column(modifier = ItemWidth.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        HeaderBlock(isVisible = warning != null, isFirst = true) {
+            warning?.let { WarningCard(text = it.text()) }
+        }
         ImportReviewSummaryCard(modifier = Modifier.fillMaxWidth(), summary = summary)
-        if (plan.hasSongsToChoose) {
+        // A joining batch can bring the first song, or a shared link's names, to a review that had none.
+        HeaderBlock(isVisible = plan.hasSongsToChoose) {
             ImportReviewTags(tags = tags, onEdit = onEditTags)
         }
-        if (sharedLinkUpdateCount > 0) {
+        HeaderBlock(isVisible = sharedLinkUpdateCount > 0) {
             ReportNote(text = pluralStringResource(Res.plurals.import_review_shared_updates, sharedLinkUpdateCount, sharedLinkUpdateCount))
         }
     }
 }
+
+/** A part of [reviewHeader] that may come or go, its gap to the summary card folding with it so that nothing jumps. */
+@Composable
+private fun HeaderBlock(
+    isVisible: Boolean,
+    isFirst: Boolean = false,
+    content: @Composable () -> Unit,
+) = AnimatedVisibility(
+    visible = isVisible,
+    enter = fadeIn() + expandVertically(),
+    exit = fadeOut() + shrinkVertically(),
+) {
+    Box(modifier = Modifier.padding(top = if (isFirst) 0.dp else HEADER_GAP, bottom = if (isFirst) HEADER_GAP else 0.dp)) { content() }
+}
+
+/** The gap between any two parts of the review above its rows. */
+private val HEADER_GAP = 16.dp
 
 /**
  * Every group of the review with its heading, its box, and its rows. A group's box, and the choice for all of them of
@@ -102,7 +126,7 @@ internal fun LazyListScope.reviewSections(
     if (isFiltered && sections.isEmpty()) {
         item(key = "empty", contentType = "text") {
             ReportNote(
-                modifier = ItemWidth.animateItem().padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = ItemWidth.animateItem().padding(horizontal = 16.dp, vertical = 16.dp),
                 text = stringResource(Res.string.import_files_empty),
             )
         }
@@ -114,9 +138,8 @@ internal fun LazyListScope.reviewSections(
             val boxState by remember(section.rows) { derivedStateOf { groupBoxState(section.rows, choices()) } }
             val resolution by remember(section.rows) { derivedStateOf { groupConflictResolution(section.rows, choices()) } }
             ImportReviewSectionHeader(
-                modifier = ItemWidth.animateItem().padding(top = 16.dp),
-                title = stringResource(section.kind.label),
-                count = section.rows.size,
+                modifier = ItemWidth.animateItem().padding(top = 8.dp),
+                title = pluralStringResource(section.kind.label, section.rows.size, section.rows.size),
                 boxState = boxState.takeIf { keys.isNotEmpty() },
                 onBoxClick = { onEntriesChosenChange(keys, boxState != ToggleableState.On) },
                 isConflicts = isConflicts,
@@ -145,13 +168,13 @@ internal fun LazyListScope.reviewSections(
     }
 }
 
-private val ImportReviewSection.Kind.label: StringResource
+private val ImportReviewSection.Kind.label: PluralStringResource
     get() = when (this) {
-        ImportReviewSection.Kind.CONFLICTS -> Res.string.import_review_conflicts
-        ImportReviewSection.Kind.SONGS -> Res.string.import_review_songs
-        ImportReviewSection.Kind.SETLISTS -> Res.string.import_review_setlists
-        ImportReviewSection.Kind.DUPLICATES -> Res.string.import_status_duplicates
-        ImportReviewSection.Kind.SKIPPED -> Res.string.import_status_skipped
-        ImportReviewSection.Kind.OVERSIZED -> Res.string.import_status_oversized
-        ImportReviewSection.Kind.UNREADABLE -> Res.string.import_status_unreadable
+        ImportReviewSection.Kind.CONFLICTS -> Res.plurals.import_review_conflicts
+        ImportReviewSection.Kind.SONGS -> Res.plurals.import_review_songs
+        ImportReviewSection.Kind.SETLISTS -> Res.plurals.import_review_setlists
+        ImportReviewSection.Kind.DUPLICATES -> Res.plurals.import_status_duplicates
+        ImportReviewSection.Kind.SKIPPED -> Res.plurals.import_status_skipped
+        ImportReviewSection.Kind.OVERSIZED -> Res.plurals.import_status_oversized
+        ImportReviewSection.Kind.UNREADABLE -> Res.plurals.import_status_unreadable
     }

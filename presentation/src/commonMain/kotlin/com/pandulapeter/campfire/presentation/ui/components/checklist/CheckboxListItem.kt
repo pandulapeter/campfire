@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components.checklist
 
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.triStateToggleable
@@ -84,7 +85,7 @@ internal fun CheckboxListItem(
         .padding(horizontal = horizontalInset),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
-    supportingContent = description?.let { { Text(it) } },
+    supportingContent = description?.let { { CrossfadedText(text = it) } },
     leadingContent = { TriStateCheckbox(state = state, enabled = isEnabled, onClick = null) },
     trailingContent = coverArtUrl?.let {
         {

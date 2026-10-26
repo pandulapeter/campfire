@@ -89,6 +89,8 @@ class ImportReviewSectionsTest {
                 skippedCount = 1,
                 oversizedCount = 0,
                 unreadableCount = 0,
+                hasNameTaken = true,
+                hasEntriesToChoose = true,
             ),
             importReviewSummary(PLAN, ImportChoices()),
         )
@@ -120,6 +122,15 @@ class ImportReviewSectionsTest {
         val summary = importReviewSummary(PLAN, choices)
         assertEquals(1, summary.importCount)
         assertEquals(3, summary.leftOutCount)
+    }
+
+    @Test
+    fun `which counts the summary has a line for does not change with the ticks`() {
+        val everything = importReviewSummary(PLAN, ImportChoices())
+        val nothing = importReviewSummary(PLAN, ImportChoices(leftOut = PLAN.songs.indices.map { ImportEntryKey(ImportEntryKey.Kind.SONG, it) }.toSet()))
+
+        assertEquals(everything.hasNameTaken, nothing.hasNameTaken)
+        assertEquals(everything.hasEntriesToChoose, nothing.hasEntriesToChoose)
     }
 
     @Test

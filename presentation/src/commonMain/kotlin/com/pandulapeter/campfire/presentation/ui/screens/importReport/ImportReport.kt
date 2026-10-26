@@ -40,7 +40,7 @@ sealed interface ImportReport {
      * [sharedLinkUpdateCount] is how many of its names already taken started on Replace, being files an earlier import
      * of the same link wrote on this device (see `sharedLinkChoices`), which a line under the counts explains.
      * [isSongPreview] is a batch that is one song and nothing else, shown as the preview of that song in place of the
-     * import screen (`ImportPreview.singleSong`), which no other batch joins. [id] stays the same through every change
+     * import screen (`ImportPreview.singleSong`) until another batch joins it. [id] stays the same through every change
      * made to the review in place (its choices, a batch joining it), so that a preview names the review it was opened
      * over (`ImportPreview.reviewId`) and is not drawn over another one.
      */

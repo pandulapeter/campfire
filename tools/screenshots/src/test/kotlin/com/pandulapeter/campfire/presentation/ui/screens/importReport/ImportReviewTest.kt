@@ -30,8 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.import_files
 import com.pandulapeter.campfire.presentation.resources.import_review_already_there
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
 import com.pandulapeter.campfire.presentation.resources.import_review_conflicts
-import com.pandulapeter.campfire.presentation.resources.import_review_numbered
-import com.pandulapeter.campfire.presentation.resources.import_review_replacing
+import com.pandulapeter.campfire.presentation.resources.import_review_name_taken_counts
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -53,9 +52,9 @@ internal class ImportReviewTest {
     @Test
     fun `the review sorts a new, an identical, and a colliding song into their groups`() = runAppTest(pickedFiles = listOf(archive)) {
         startImport()
-        onNodeWithText(string(Res.string.import_review_conflicts)).assertExists()
+        onNodeWithText(pluralString(Res.plurals.import_review_conflicts, 1)).assertExists()
         onNodeWithText(pluralString(Res.plurals.import_review_already_there, 1)).assertExists()
-        onNodeWithText(pluralString(Res.plurals.import_review_numbered, 1)).assertExists()
+        onNodeWithText(string(Res.string.import_review_name_taken_counts, 0, 1)).assertExists()
         onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).assertExists()
     }
 
@@ -80,7 +79,7 @@ internal class ImportReviewTest {
         startImport()
         onAllNodesWithText(string(Res.string.import_conflicts_keep_both)).onFirst().performClick()
         onNodeWithText(string(Res.string.import_conflicts_replace)).performClick()
-        onNodeWithText(pluralString(Res.plurals.import_review_replacing, 1)).assertExists()
+        onNodeWithText(string(Res.string.import_review_name_taken_counts, 1, 0)).assertExists()
         onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).performClick()
         onNodeWithText(pluralString(Res.plurals.import_replace_title, 1)).assertExists()
         onNode(hasText(string(Res.string.import_conflicts_replace)) and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
@@ -104,7 +103,7 @@ internal class ImportReviewTest {
         onNode(hasText(string(Res.string.cancel)) and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
         onAllNodesWithText(string(Res.string.import_conflicts_replace)).onFirst().performClick()
         onNodeWithText(string(Res.string.import_conflicts_keep_both)).performClick()
-        onNodeWithText(pluralString(Res.plurals.import_review_numbered, 1)).assertExists()
+        onNodeWithText(string(Res.string.import_review_name_taken_counts, 0, 1)).assertExists()
         onNodeWithContentDescription(pluralString(Res.plurals.import_review_confirm, 2)).performClick()
         // Library writes land on IO threads, so only the end state of a second, unquestioned import can show that the
         // first Import wrote nothing: a write before the answer would have replaced the demo song or numbered the new one.

@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -60,7 +64,12 @@ internal fun ConflictResolutionDropdown(
             onClick = open,
             contentPadding = PaddingValues(start = 12.dp, end = 8.dp),
         ) {
-            Text(text = stringResource(resolution?.label ?: Res.string.import_conflicts_mixed), maxLines = 1)
+            AnimatedContent(
+                targetState = resolution?.label ?: Res.string.import_conflicts_mixed,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) {
+                Text(text = stringResource(it), maxLines = 1)
+            }
             Spacer(Modifier.width(4.dp))
             Icon(modifier = Modifier.size(18.dp), painter = painterResource(Res.drawable.ic_expand), contentDescription = null)
         }

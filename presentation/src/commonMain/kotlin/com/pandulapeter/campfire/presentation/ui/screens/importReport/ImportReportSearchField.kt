@@ -203,7 +203,9 @@ internal fun LazyListScope.searchField(
                 }
             }
             .background(backgroundColor)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            // Nothing under it: the rows fade out below it by the gradient, and the gap to the first heading is the
+            // heading's, so that it is the same as between any two parts of the list.
+            .padding(start = 16.dp, top = 8.dp, end = 16.dp),
     ) {
         ImportReportSearchField(
             searchState = searchState,

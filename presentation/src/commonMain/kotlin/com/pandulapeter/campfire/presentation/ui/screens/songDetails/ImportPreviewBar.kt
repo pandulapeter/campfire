@@ -14,6 +14,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -26,11 +27,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -38,25 +40,25 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_preview_already_there
@@ -71,7 +73,6 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAc
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPageChoice
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPageChoiceOf
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.max
 
 /**
@@ -85,8 +86,6 @@ import kotlin.math.max
  *
  * @param importPreview Null once the screen is not a preview any more; the last one is drawn while the card leaves.
  * @param isAddingToReview Whether a batch is being read into the review, whose Import waits for it.
- * @param onHeightChanged The height the card takes from the bottom of the pages, none once it is gone, which the pages
- *   leave free under their last line so that every line can still be read above it.
  */
 @Composable
 internal fun ImportPreviewBar(
@@ -97,15 +96,13 @@ internal fun ImportPreviewBar(
     onAction: (ImportPreviewAction) -> Unit,
     onChosenChange: (ImportEntryKey, Boolean) -> Unit,
     onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
-    onHeightChanged: (Dp) -> Unit,
 ) {
-    val density = LocalDensity.current
     val last = rememberLast(importPreview)
     // A short window leaves the song a slot a few lines tall above the full card, which gives most of it back as one line
     // and its buttons, the page's choices going behind a button of their own.
     val isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     AnimatedVisibility(
-        modifier = modifier.onSizeChanged { onHeightChanged(with(density) { it.height.toDp() }) },
+        modifier = modifier,
         visible = importPreview != null,
         enter = fadeIn() + slideInVertically { it },
         exit = fadeOut() + slideOutVertically { it },
@@ -161,10 +158,8 @@ private fun PreviewMessage(
     currentPage: Int,
     onChosenChange: (ImportEntryKey, Boolean) -> Unit,
     onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
-) = Column(
-    verticalArrangement = Arrangement.spacedBy(4.dp),
-) {
-    MessageTitle()
+) = Column {
+    MessageTitle(isLeftOut = importPreview.pages.getOrNull(currentPage)?.let { isLeftOut(it, importPreview) } == true)
     // The page's own line and choices change with the page, as the title in the bar above does.
     AnimatedContent(
         targetState = importPreview.pages.getOrNull(currentPage),
@@ -182,50 +177,66 @@ private fun PreviewMessage(
     }
 }
 
+/**
+ * The title, saying what Import does with the page's song: that it is not in the library yet, or, its box unticked over
+ * the review, that it is left out. Both are laid out at once, the one not said invisible, so that the card keeps the
+ * height of the taller one: a tick changing it never moves the box just ticked, which a line coming and going would.
+ */
 @Composable
-private fun MessageTitle() = Row(
-    verticalAlignment = Alignment.CenterVertically,
+private fun MessageTitle(isLeftOut: Boolean) = Box(
+    // Polite, so that a screen reader says what became of the song as its tick changes.
+    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
 ) {
-    PreviewIcon()
-    Text(
-        text = stringResource(Res.string.import_preview_title),
-        style = MaterialTheme.typography.titleSmall,
+    val leftOutAlpha by animateFloatAsState(
+        targetValue = if (isLeftOut) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
+    TitleText(modifier = Modifier.graphicsLayer { alpha = 1f - leftOutAlpha }, text = stringResource(Res.string.import_preview_title), isSaid = !isLeftOut)
+    TitleText(modifier = Modifier.graphicsLayer { alpha = leftOutAlpha }, text = stringResource(Res.string.import_preview_left_out), isSaid = isLeftOut)
 }
 
 @Composable
-private fun PreviewIcon() = Icon(
-    modifier = Modifier.padding(end = 8.dp).size(20.dp),
-    painter = painterResource(Res.drawable.ic_import),
-    contentDescription = null,
+private fun TitleText(
+    modifier: Modifier = Modifier,
+    text: String,
+    isSaid: Boolean,
+) = Text(
+    modifier = if (isSaid) modifier else modifier.clearAndSetSemantics {},
+    text = text,
+    style = MaterialTheme.typography.titleSmall,
 )
 
-/** The compact card's message: the icon, and the page's line with, over the review, the button of its choices. */
+/** Whether the page's song is unticked over the review, which the title says in place of its own. */
+private fun isLeftOut(page: ImportPreviewPage, importPreview: ImportPreviewState) = importPreview.preview.isReviewPager &&
+    when (val choice = importPreviewPageChoiceOf(page.entry, page.key, importPreview.review.choices)) {
+        is ImportPreviewPageChoice.New -> !choice.isChosen
+        is ImportPreviewPageChoice.NameTaken -> !choice.isChosen
+        ImportPreviewPageChoice.AlreadyInLibrary -> false
+    }
+
+/**
+ * The compact card's message: the page's line with, over the review, the button of its choices. It has no icon of its
+ * own, the Import button beside it carrying the same one.
+ */
 @Composable
 private fun CompactPreviewMessage(
     importPreview: ImportPreviewState,
     currentPage: Int,
     onChosenChange: (ImportEntryKey, Boolean) -> Unit,
     onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
-) = Row(
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    PreviewIcon()
+) = AnimatedContent(
     // The choices button changes with the page too, so that its menu is bound to the page it was opened on.
-    AnimatedContent(
-        modifier = Modifier.weight(1f),
-        targetState = importPreview.pages.getOrNull(currentPage),
-        contentKey = { it?.index },
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-    ) { page ->
-        if (page != null) {
-            CompactPageChoice(
-                page = page,
-                importPreview = importPreview,
-                onChosenChange = onChosenChange,
-                onResolutionSelected = onResolutionSelected,
-            )
-        }
+    targetState = importPreview.pages.getOrNull(currentPage),
+    contentKey = { it?.index },
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
+) { page ->
+    if (page != null) {
+        CompactPageChoice(
+            page = page,
+            importPreview = importPreview,
+            onChosenChange = onChosenChange,
+            onResolutionSelected = onResolutionSelected,
+        )
     }
 }
 
@@ -339,7 +350,9 @@ private fun MessageBesideOrAboveButtons(
 
 /**
  * The line under the title and, over the review, the tick and the taken name's choice of the page's entry, bound to the
- * choices its row reads. The preview of one song has its choice in its buttons instead, both ways at once.
+ * choices its row reads. The preview of one song has its choice in its buttons instead, both ways at once. Where there
+ * is nothing to say it draws nothing, not even the gap under the title, which would push the title off the centre of
+ * the buttons beside it. Nothing here comes or goes with the tick, which the title says instead ([MessageTitle]).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -348,35 +361,32 @@ private fun PageChoice(
     importPreview: ImportPreviewState,
     onChosenChange: (ImportEntryKey, Boolean) -> Unit,
     onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
-) = Column(
-    // Polite, so that a screen reader says what became of the song as its tick or its choice changes.
-    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-    verticalArrangement = Arrangement.spacedBy(4.dp),
 ) {
-    if (!importPreview.preview.isReviewPager) {
-        if (page.entry.status == ImportPlan.Status.CONFLICTING) {
+    if (!importPreview.preview.isReviewPager && page.entry.status != ImportPlan.Status.CONFLICTING) return
+    Column(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (!importPreview.preview.isReviewPager) {
             MessageLine(stringResource(if (importPreview.review.sharedLinkUpdateCount > 0) Res.string.import_preview_shared_update else Res.string.import_preview_name_taken))
+            return@Column
         }
-        return@Column
-    }
-    when (val choice = importPreviewPageChoiceOf(page.entry, page.key, importPreview.review.choices)) {
-        ImportPreviewPageChoice.AlreadyInLibrary -> MessageLine(stringResource(Res.string.import_preview_already_there))
-        is ImportPreviewPageChoice.New -> {
-            if (!choice.isChosen) MessageLine(stringResource(Res.string.import_preview_left_out))
-            IncludeToggle(isChosen = choice.isChosen, onChosenChange = { onChosenChange(page.key, it) })
-        }
+        when (val choice = importPreviewPageChoiceOf(page.entry, page.key, importPreview.review.choices)) {
+            ImportPreviewPageChoice.AlreadyInLibrary -> MessageLine(stringResource(Res.string.import_preview_already_there))
+            is ImportPreviewPageChoice.New -> IncludeToggle(isChosen = choice.isChosen, onChosenChange = { onChosenChange(page.key, it) })
 
-        is ImportPreviewPageChoice.NameTaken -> {
-            MessageLine(stringResource(if (choice.isChosen) Res.string.import_preview_name_taken else Res.string.import_preview_left_out))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                itemVerticalAlignment = Alignment.CenterVertically,
-            ) {
-                // A row too narrow for both goes onto a second line, and travels there rather than jumping.
-                val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
-                IncludeToggle(modifier = placement, isChosen = choice.isChosen, onChosenChange = { onChosenChange(page.key, it) })
-                ResolutionChoice(modifier = placement, resolution = choice.resolution, onResolutionSelected = { onResolutionSelected(page.key, it) })
+            is ImportPreviewPageChoice.NameTaken -> {
+                MessageLine(stringResource(Res.string.import_preview_name_taken))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // A row too narrow for both goes onto a second line, and travels there rather than jumping.
+                    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
+                    IncludeToggle(modifier = placement, isChosen = choice.isChosen, onChosenChange = { onChosenChange(page.key, it) })
+                    ResolutionChoice(modifier = placement, resolution = choice.resolution, onResolutionSelected = { onResolutionSelected(page.key, it) })
+                }
             }
         }
     }
@@ -388,19 +398,28 @@ private fun MessageLine(text: String) = Text(
     style = MaterialTheme.typography.bodySmall,
 )
 
-/** The page's tick: whether the review's Import writes the song, as the box of its row says. */
+/**
+ * The page's tick: whether the review's Import writes the song, as the box of its row says. The box and its label are one
+ * pill as tall as the Keep both / Replace buttons beside it, pressed and rippling as a whole, reaching out into the card's
+ * padding so that the box itself stays in line with the title above it.
+ */
 @Composable
 private fun IncludeToggle(
     modifier: Modifier = Modifier,
     isChosen: Boolean,
     onChosenChange: (Boolean) -> Unit,
 ) = Row(
-    modifier = modifier.toggleable(value = isChosen, role = Role.Checkbox, onValueChange = onChosenChange),
+    modifier = modifier
+        .offset(x = -INCLUDE_TOGGLE_PADDING)
+        .heightIn(min = 40.dp)
+        .clip(CircleShape)
+        .toggleable(value = isChosen, role = Role.Checkbox, onValueChange = onChosenChange)
+        .padding(start = INCLUDE_TOGGLE_PADDING, end = 16.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     Checkbox(checked = isChosen, onCheckedChange = null)
     Text(
-        modifier = Modifier.padding(start = 8.dp, end = 4.dp),
+        modifier = Modifier.padding(start = 8.dp),
         text = stringResource(Res.string.import_preview_include),
         style = MaterialTheme.typography.labelLarge,
     )
@@ -435,6 +454,9 @@ private fun ResolutionChoice(
 }
 
 private val MESSAGE_GAP = 12.dp
+
+/** The pill's room before the box, which the pill takes out of the card's own padding (16 dp) to keep the box aligned. */
+private val INCLUDE_TOGGLE_PADDING = 12.dp
 
 /**
  * The narrowest the message may be beside the buttons: on a 360 dp phone the lone Import still fits beside it, the

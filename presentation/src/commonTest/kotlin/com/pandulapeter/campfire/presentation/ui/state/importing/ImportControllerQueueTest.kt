@@ -468,20 +468,22 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a batch arriving while a preview is up waits for it rather than joining it`() = runTest {
+    fun `a batch arriving while a preview is up joins it, putting the import screen in its place`() = runTest {
         startController()
         handOver()
         settle()
+        val previewIndex = backStack.lastIndex
         nextPlans += listOf(songEntry("other.cho"))
         val settled = enqueue()
         settle()
-        assertEquals(1, prepareCount)
-        assertEquals(listOf("new.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
-        backStack.removeAt(backStack.lastIndex)
-        controller.onBackStackChanged()
-        settle()
+        val joined = assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertFalse(joined.isSongPreview)
+        assertEquals(listOf("new.cho", "other.cho"), joined.plan.songs.map { it.fileName })
+        assertEquals(previewIndex, backStack.lastIndex)
+        assertEquals(CampfireDestination.ImportReport, backStack.last())
         assertFalse(settled.isCompleted)
-        assertEquals(listOf("other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        leaveImportReport()
+        assertTrue(settled.isCompleted)
     }
 
     @Test

@@ -25,8 +25,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -44,7 +42,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.keepScreenOn
@@ -137,7 +134,6 @@ internal fun SongDetailsScreen(
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
     val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
-    var previewBarHeight by remember { mutableStateOf(0.dp) }
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
     // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
     val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
@@ -287,15 +283,29 @@ internal fun SongDetailsScreen(
             onBack = onBack,
         )
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
-        // padding that is still theirs to apply. A preview's card floats over the bottom of the pages, which leave
-        // it that room under their last line, so that every line is read above it.
-        val previewBarClearance by animateDpAsState(previewBarHeight.takeIf { it > 0.dp }?.plus(PREVIEW_BAR_MARGIN) ?: 0.dp)
-        val pageContentPadding = PaddingValues(
-            start = contentPadding.calculateStartPadding(layoutDirection),
-            end = contentPadding.calculateEndPadding(layoutDirection),
-            bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + previewBarClearance,
-        )
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        // padding that is still theirs to apply.
+        val baseBottom = if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()
+        PagesAbovePreviewBar(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            baseBottom = baseBottom,
+            bar = {
+                ImportPreviewBar(
+                    modifier = Modifier
+                        .padding(
+                            start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
+                            end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
+                            bottom = baseBottom + PREVIEW_BAR_MARGIN,
+                        )
+                        .widthIn(max = PREVIEW_BAR_MAX_WIDTH),
+                    importPreview = importPreview,
+                    currentPage = pagerState.currentPage,
+                    isAddingToReview = isAddingToReview,
+                    onAction = viewModel.importController::importFromPreview,
+                    onChosenChange = { key, isChosen -> viewModel.importReportState.setImportEntriesChosen(listOf(key), isChosen) },
+                    onResolutionSelected = viewModel.importReportState::setImportConflictResolution,
+                )
+            },
+        ) { bottomPadding ->
             SongDetailsPager(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding,
@@ -318,7 +328,11 @@ internal fun SongDetailsScreen(
                 isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
                 canPage = canPage,
                 settledWidth = settledWidth,
-                pageContentPadding = pageContentPadding,
+                pageContentPadding = PaddingValues(
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                    bottom = bottomPadding,
+                ),
                 chordDiagrams = chordDiagrams,
                 isViewportSettled = isViewportSettled,
                 currentPageScrollState = { currentPageScrollState },
@@ -333,23 +347,6 @@ internal fun SongDetailsScreen(
                     currentPageScrollState = scrollState
                     currentPageStepper = stepper
                 },
-            )
-            ImportPreviewBar(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
-                        bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + PREVIEW_BAR_MARGIN,
-                    )
-                    .widthIn(max = PREVIEW_BAR_MAX_WIDTH),
-                importPreview = importPreview,
-                currentPage = pagerState.currentPage,
-                isAddingToReview = isAddingToReview,
-                onAction = viewModel.importController::importFromPreview,
-                onChosenChange = { key, isChosen -> viewModel.importReportState.setImportEntriesChosen(listOf(key), isChosen) },
-                onResolutionSelected = viewModel.importReportState::setImportConflictResolution,
-                onHeightChanged = { previewBarHeight = it },
             )
         }
         if (hasPagerControls) {

@@ -23,12 +23,13 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   see `ui/screens/songDetails/CLAUDE.md`. A single song file is read behind no screen (`isReportedWhileRead`); anything
   else shows Loading here, which a preview then takes the place of.
 - **One review at a time**: a batch arriving while a review is up (dropped, opened with, shared, picked, a shared
-  link) is read on its own and appended to it (`withAdded`), under a progress bar that holds Import back; ticks and
+  link) is read on its own and appended to it (`withAdded`), under a progress bar that holds Import back, with the
+  import screen brought to the front at once (`bringReviewToFront`: a preview over it closes, the preview of one song
+  becomes this screen in its place, so the batch never lands under a screen showing nothing of it); ticks and
   choices made stay. What the review lists already is left out (a song by its text, a setlist by its fields, a skipped
   name), so the same zip twice changes nothing; a taken name stays one question. Joined batches settle with the review.
   One arriving during Loading joins once the review is up. Not joined, waiting in the queue instead: the demo library,
-  a pasted or shared text (it may be the editor's), anything over a Failed or Finished stage, and anything while the
-  preview of one song is up (`Review.isSongPreview`).
+  a pasted or shared text (it may be the editor's), and anything over a Failed or Finished stage.
 
 ## Stages
 
@@ -38,10 +39,11 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   page in its place), is "no longer works" (`toSharedLinkDownload`); only no answer or a 5xx is unreachable.
 - **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. A song's row (one already there
   included) opens the preview of the songs listed, the search's matches while it narrows them, at its own
-  (`openReviewPreview`, `previewSongIndices`); its box ticks it on its own, and a chevron ends the row. Group header
-  boxes and the taken names' group Keep both / Replace choice act on the rows shown, the search's matches only while it
-  narrows them. The
-  button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
+  (`openReviewPreview`, `previewSongIndices`); its box ticks it on its own, from the row's whole height up to where the
+  text begins (never the preview), and a chevron ends the row. A group's heading counts it ("12 songs") and is only a
+  heading; under it a **Select all** row laid out as the rows are (and in the taken names' group ending in the Keep
+  both / Replace choice for all) acts on the rows shown, the search's matches only while it narrows them. The button reads **Import N files**, inert at zero,
+  absent where nothing can be ticked; a Replace is confirmed first
   (`DialogType.ConfirmImportReplace`); a batch arriving while it is open joins only once it is answered, and is
   imported after the review if Replace wrote it. A shared link's review starts on **Replace** only the taken names that an
   earlier import of the same link (by its Dropbox file id, which another link cannot borrow) wrote under its own names
@@ -52,6 +54,12 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   review too) are counted, skipped ones included, never listed by name (`sourceCount`). It steps aside while the keyboard is up. Choices live in the view model's report
   (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
   summary only.
+- **Spacing**: 16 dp between any two parts of the list, measured from their edges (the parts above the rows, the
+  search field, a heading's text and the row before it); the search field has no padding under it, so the first heading
+  sits as far from it as from a row. A part that comes or goes folds with its gap.
+- **The summary card above the rows never changes height with a tick** (`ImportReviewSummaryCard`): a line the ticks
+  move (the taken names' Replace / Keep both counts, those left out) is there at zero too wherever the review has
+  something it counts (`ImportReviewSummary.hasNameTaken`, `hasEntriesToChoose`), so a box ticked never moves.
 - **Tags** (`ImportReviewTags`, under the counts while any song could be written): one set for the whole batch, picked
   in the ordinary tag sheet (`ImportTagsSheet`, Done, not Save) and kept in `ImportChoices.tags`, so it starts empty on
   every import and is gone with it. Written into each song's text as it is written (only added, never removing one the

@@ -188,7 +188,12 @@ internal fun List<ImportReviewSection>.matchingReview(query: String, normalize: 
     }
 }
 
-/** What Import would do with [ImportReport.Review]'s ticks as they stand, which the summary card says. */
+/**
+ * What Import would do with [ImportReport.Review]'s ticks as they stand, which the summary card says.
+ *
+ * [hasNameTaken] and [hasEntriesToChoose] are the review's, not its ticks': they say which of the counts the ticks move
+ * the card has a line for, so that ticking a box never adds or takes away a line above the rows being ticked.
+ */
 internal data class ImportReviewSummary(
     val songCount: Int,
     val setlistCount: Int,
@@ -199,6 +204,8 @@ internal data class ImportReviewSummary(
     val skippedCount: Int,
     val oversizedCount: Int,
     val unreadableCount: Int,
+    val hasNameTaken: Boolean,
+    val hasEntriesToChoose: Boolean,
 ) {
 
     /** How many files Import writes, which its button says. */
@@ -235,6 +242,9 @@ internal fun importReviewSummary(plan: ImportPlan, choices: ImportChoices): Impo
         skippedCount = plan.skippedFileNames.size,
         oversizedCount = plan.oversizedFileNames.size,
         unreadableCount = plan.unreadableDocumentFileNames.size,
+        hasNameTaken = plan.songs.any { it.status == ImportPlan.Status.CONFLICTING } ||
+            plan.setlists.any { it.status == ImportPlan.Status.CONFLICTING },
+        hasEntriesToChoose = plan.hasEntriesToChoose,
     )
 }
 

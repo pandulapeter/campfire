@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_edit
@@ -64,7 +65,7 @@ import com.pandulapeter.campfire.presentation.resources.import_status_unprocesse
 import com.pandulapeter.campfire.presentation.resources.import_status_unreadable
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
-import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.painterResource
 
 /** What the import came to in one sentence, above the files it is about. */
@@ -75,7 +76,7 @@ internal fun LazyListScope.finishedHeader(
     item(key = "summary", contentType = "text") {
         val isError = result == null || result.isFailed
         Column(
-            modifier = ItemWidth.padding(horizontal = 16.dp),
+            modifier = ItemWidth.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             warning?.let { WarningCard(text = it.text()) }
@@ -115,7 +116,7 @@ internal fun LazyListScope.sections(
     if (isFiltered && sections.isEmpty()) {
         item(key = "empty", contentType = "text") {
             ReportNote(
-                modifier = ItemWidth.animateItem().padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = ItemWidth.animateItem().padding(horizontal = 16.dp, vertical = 16.dp),
                 text = stringResource(Res.string.import_files_empty),
             )
         }
@@ -123,9 +124,8 @@ internal fun LazyListScope.sections(
     sections.forEach { section ->
         item(key = "header_${section.kind}", contentType = "header") {
             SectionTitle(
-                modifier = ItemWidth.animateItem().padding(top = 16.dp),
-                text = stringResource(section.kind.label),
-                count = section.rows.size,
+                modifier = ItemWidth.animateItem().padding(top = 8.dp),
+                text = pluralStringResource(section.kind.label, section.rows.size, section.rows.size),
             )
         }
         val songFileNames = section.rows.filter { it.isSong }.map { it.fileName }.distinct()
@@ -193,15 +193,15 @@ private fun ImportReportRowItem(
     },
 )
 
-private val ImportReportSection.Kind.label: StringResource
+private val ImportReportSection.Kind.label: PluralStringResource
     get() = when (this) {
-        ImportReportSection.Kind.FAILED -> Res.string.import_status_failed
-        ImportReportSection.Kind.UNPROCESSED -> Res.string.import_status_unprocessed
-        ImportReportSection.Kind.LEFT_OUT -> Res.string.import_status_left_out
-        ImportReportSection.Kind.SKIPPED -> Res.string.import_status_skipped
-        ImportReportSection.Kind.OVERSIZED -> Res.string.import_status_oversized
-        ImportReportSection.Kind.UNREADABLE -> Res.string.import_status_unreadable
-        ImportReportSection.Kind.SONGS -> Res.string.import_status_songs
-        ImportReportSection.Kind.SETLISTS -> Res.string.import_status_setlists
-        ImportReportSection.Kind.DUPLICATES -> Res.string.import_status_duplicates
+        ImportReportSection.Kind.FAILED -> Res.plurals.import_status_failed
+        ImportReportSection.Kind.UNPROCESSED -> Res.plurals.import_status_unprocessed
+        ImportReportSection.Kind.LEFT_OUT -> Res.plurals.import_status_left_out
+        ImportReportSection.Kind.SKIPPED -> Res.plurals.import_status_skipped
+        ImportReportSection.Kind.OVERSIZED -> Res.plurals.import_status_oversized
+        ImportReportSection.Kind.UNREADABLE -> Res.plurals.import_status_unreadable
+        ImportReportSection.Kind.SONGS -> Res.plurals.import_status_songs
+        ImportReportSection.Kind.SETLISTS -> Res.plurals.import_status_setlists
+        ImportReportSection.Kind.DUPLICATES -> Res.plurals.import_status_duplicates
     }

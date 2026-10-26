@@ -299,12 +299,13 @@ internal class ImportController(
 
     /**
      * Whether [request] is more files for the review on screen rather than an import of its own: not while that review is
-     * being written, is the demo library's, or is the preview of one song, which is about that song alone, and never the
-     * demo library, a text that may be one new song for the editor, or anything once the desktop process is on its way out.
+     * being written or is the demo library's, and never the demo library, a text that may be one new song for the editor,
+     * or anything once the desktop process is on its way out. The preview of one song is joined too, turning into the
+     * review of both, see [ImportReportState.bringReviewToFront].
      */
     private fun canJoinReview(request: ImportRequest): Boolean {
         val review = reportState.report as? ImportReport.Review ?: return false
-        return activeRequest != null && !review.isDemoLibrary && !review.isSongPreview && !request.isDemoLibrary && !request.isNewSongFromText &&
+        return activeRequest != null && !review.isDemoLibrary && !request.isDemoLibrary && !request.isNewSongFromText &&
             request.shouldAnnounceResult && !isLeaving()
     }
 
@@ -316,6 +317,8 @@ internal class ImportController(
      * the review it was to join is still there to answer.
      */
     private suspend fun addToReview(request: ImportRequest) {
+        // At once rather than once the batch is read, so that the progress bar answers what the user just did.
+        reportState.bringReviewToFront()
         isPreparationCancelled = false
         val deferred = scope.async { prepare(request) }
         preparation = deferred
