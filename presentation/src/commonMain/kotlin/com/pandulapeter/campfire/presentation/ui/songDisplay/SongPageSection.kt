@@ -55,12 +55,14 @@ internal fun SongPageSection(
         onCheckedChange = preferencesController::setChordDiagramsEnabled,
     )
     // A degree labels a diagram, a song's or one of the chords a scale sheet lists (which needs both the Scales and the
-    // Chords tab), so it is disabled only where neither is drawn.
+    // Chords tab), so it is disabled only where neither is drawn. A numbering already names a song's chords by their
+    // degrees, so its diagrams carry none, while a scale sheet's chords keep their letters and their numerals.
+    val isNumbering = userPreferences?.chordSpelling?.notation?.isNumbering == true
     SwitchListItem(
         title = stringResource(Res.string.settings_chord_degrees),
         description = stringResource(Res.string.settings_chord_degrees_description),
         isChecked = userPreferences?.areChordDegreesEnabled != false,
-        isEnabled = (areChordsEnabled && areChordDiagramsEnabled) ||
+        isEnabled = (areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
             (userPreferences?.isChordLibraryEnabled != false && userPreferences?.areScalesEnabled != false),
         onCheckedChange = preferencesController::setChordDegreesEnabled,
     )
