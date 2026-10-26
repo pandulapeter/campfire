@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AbcTunesTest {
 
@@ -97,5 +98,16 @@ class AbcTunesTest {
     fun `a text with no X field is one tune`() {
         assertEquals(listOf("T:Only\nK:G\nGAB|"), AbcTunes.split("\nT:Only\nK:G\nGAB|\n"))
         assertEquals(emptyList(), AbcTunes.split(""))
+    }
+
+    @Test
+    fun `a long file header stops being copied into the tunes before they outgrow memory`() {
+        val header = "%" + "x".repeat(1_000_000)
+        val tunes = AbcTunes.split(header + "\n\n" + (1..40).joinToString("") { "X:$it\nK:G\nGABc|\n\n" })
+
+        assertEquals(40, tunes.size)
+        assertTrue(header in tunes.first())
+        assertTrue(header !in tunes.last())
+        assertTrue(tunes.sumOf { it.length } < 20_000_000)
     }
 }

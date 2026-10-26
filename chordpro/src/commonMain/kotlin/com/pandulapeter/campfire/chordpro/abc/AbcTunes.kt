@@ -16,6 +16,13 @@ public object AbcTunes {
     private const val INSTRUCTION = 'I'
 
     /**
+     * The most characters of file header written into the tunes in all: a header copied into every tune multiplies
+     * the text, and a crafted file of a long header over a million one-line tunes would not fit in memory. A real tune
+     * book stays far below it; past it, the remaining tunes are written without the file header.
+     */
+    private const val MAX_COPIED_HEADER_LENGTH = 16_000_000
+
+    /**
      * The tunes of [text], in order. A tune starts at its `X:` field and ends at the first blank line after its `K:`,
      * as the standard has it; a blank line inside the tune header is read past, since text pasted from a web page often
      * doubles its line breaks, and an `X:` ends the tune before it even with no blank line between them. Blank lines are
@@ -26,18 +33,22 @@ public object AbcTunes {
      * file gave them all. A field the tune's own header also has is left out, since the tune's overrides the file's
      * (a reader of the tune would otherwise take the file's `C:` or `T:` first); comments, stylesheet lines, and `I:`
      * instructions, which name their own setting, are always kept. Free text outside the tunes is dropped, as ABC reads
-     * it. A text with no `X:` at all is one tune.
+     * it. A text with no `X:` at all is one tune. The copies are capped (`MAX_COPIED_HEADER_LENGTH`).
      */
     public fun split(text: String): List<String> {
         val lines = text.lines().map { it.trimStart(BYTE_ORDER_MARK) }
         val firstTune = lines.indexOfFirst(::isTuneStart)
         if (firstTune < 0) return listOfNotNull(tuneFrom(lines, start = 0, header = emptyList())?.second)
         val header = fileHeader(lines.subList(0, firstTune))
+        val headerLength = header.sumOf { it.length + 1 }
+        var copiedHeaderLength = 0
         val tunes = mutableListOf<String>()
         var index = firstTune
         while (index < lines.size) {
             if (isTuneStart(lines[index])) {
-                val (end, tune) = tuneFrom(lines, start = index, header = header) ?: break
+                val isHeaderCopied = copiedHeaderLength + headerLength <= MAX_COPIED_HEADER_LENGTH
+                if (isHeaderCopied) copiedHeaderLength += headerLength
+                val (end, tune) = tuneFrom(lines, start = index, header = if (isHeaderCopied) header else emptyList()) ?: break
                 tunes += tune
                 index = end
             } else {
