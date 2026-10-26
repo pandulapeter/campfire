@@ -52,7 +52,7 @@ interface SyncConnection {
      * them too, for the caller to run in the background: the user's part of a disconnect is local, and only that
      * courtesy needs the network. The request may take as long as the network does, never throws but cancellation, and
      * stores nothing - what it needs was captured before the credentials were forgotten. Null when there is nothing to
-     * revoke.
+     * revoke. Like [forgetStoredCredentials], it forgets only what this provider stored.
      */
     suspend fun disconnect(): (suspend () -> Unit)?
 
@@ -60,6 +60,9 @@ interface SyncConnection {
      * Forgets the stored credentials and tells the service nothing. [disconnect] is the user's disconnect, which
      * also revokes the token; this is an installation dropping what a previous one left in a store that outlived
      * it, where there is nobody to revoke on behalf of and no permission to make a request.
+     *
+     * Only this provider's own: its tokens and an authorization it started. Credentials another provider stored stay,
+     * since backing out of connecting one provider must not end the connection another one holds.
      */
     suspend fun forgetStoredCredentials()
 

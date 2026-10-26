@@ -189,4 +189,40 @@ class SyncConnectionManagerForgettingTest {
 
         assertTrue(repository.restore {}.isConnected)
     }
+
+    @Test
+    fun `forgetting the connection has every provider forget its own`() = runTest {
+        val dropbox = FakeSyncProvider(account = TEST_ACCOUNT)
+        val other = FakeSyncProvider(id = OTHER)
+        val repository = syncRepository(provider = dropbox, otherProvider = other)
+
+        repository.forgetStoredConnection()
+
+        assertTrue(dropbox.hasForgottenCredentials)
+        assertTrue(other.hasForgottenCredentials)
+        assertFalse(repository.restore {}.isConnected)
+    }
+
+    @Test
+    fun `an answer for a provider the build does not have keeps nothing from being forgotten`() = runTest {
+        val store = FakePendingAuthorizationStore().apply {
+            pending = PendingAuthorization(OTHER, state = "state", verifier = "verifier", redirectUri = null)
+        }
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT)
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
+            pendingAuthorizationStore = store,
+        )
+
+        repository.forgetStoredConnection()
+
+        assertTrue(provider.hasForgottenCredentials)
+        assertNull(store.pending)
+        assertFalse(repository.restore {}.isConnected)
+    }
+
+    private companion object {
+        val OTHER = SyncProviderId("test-other")
+    }
 }

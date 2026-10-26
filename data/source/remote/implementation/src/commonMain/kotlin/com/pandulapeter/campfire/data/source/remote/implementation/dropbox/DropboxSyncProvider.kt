@@ -144,12 +144,14 @@ internal class DropboxSyncProvider(
         return loadAccount() ?: SyncAccount(providerId = id, id = token.accountId, displayName = token.accountId, email = null)
     }
 
-    override suspend fun forgetStoredCredentials() = credentialsStore.save(null)
+    override suspend fun forgetStoredCredentials() {
+        credentialsStore.forget(id)
+    }
 
     override suspend fun disconnect(): (suspend () -> Unit)? {
         // Captured and forgotten in one step, so that no renewal can land between the read and the forget and store
         // the connection again.
-        val credentials = credentialsStore.update { current -> null to current?.takeIf { it.providerId == id.id } } ?: return null
+        val credentials = credentialsStore.forget(id) ?: return null
         return { revoke(credentials) }
     }
 

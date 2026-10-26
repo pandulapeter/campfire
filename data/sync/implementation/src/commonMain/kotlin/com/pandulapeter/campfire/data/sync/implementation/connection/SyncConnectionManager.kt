@@ -115,7 +115,15 @@ internal class SyncConnectionManager(
         // Android hands a spent one over again when a finished task is reopened from the recents - and must not keep
         // the account that is connected from being restored below.
         val redirectUri = redirectKeptForRestore?.also { redirectKeptForRestore = null } ?: authenticator.consumePendingRedirect()
-        val pending = redirectUri?.let { pendingAuthorizationStore.loadPendingAuthorization() }
+        val pending = redirectUri?.let { pendingAuthorizationStore.loadPendingAuthorization() }?.let { pending ->
+            pending.takeIf { syncProviders.byId(it.providerId) != null } ?: run {
+                // Started by a build with a provider this one lacks, which nothing here can finish, and answered as
+                // nothing: a connection another provider holds is restored below as if no answer had come.
+                environment.logger.log("Dropped the answer to an authorization for ${pending.providerId}, which this build lacks.")
+                cleanUp.discardPendingAuthorization()
+                null
+            }
+        }
         if (redirectUri != null && pending != null) {
             return SyncRepository.RestoreResult(
                 isConnected = finishAuthorizationAtStartUp(redirectUri, pending.providerId, onReturnedFromAuthorization),
@@ -336,7 +344,8 @@ internal class SyncConnectionManager(
             // still look like a first one where the launch before it could not write its preferences, and forgetting
             // here would throw the user's consent away with the previous installation's credentials it is not.
             val redirectUri = authenticator.consumePendingRedirect()
-            if (redirectUri != null && pendingAuthorizationStore.loadPendingAuthorization() != null) {
+            val pending = redirectUri?.let { pendingAuthorizationStore.loadPendingAuthorization() }
+            if (pending != null && syncProviders.byId(pending.providerId) != null) {
                 redirectKeptForRestore = redirectUri
                 return@withLock
             }

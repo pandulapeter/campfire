@@ -148,7 +148,78 @@ class SyncCredentialsStoreTest {
         assertNull(store.storedProviderId())
     }
 
+    @Test
+    fun `forgetting its own credentials leaves nothing behind`() = runTest {
+        val storage = StoredSyncCredentials(CONNECTED)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+
+        assertEquals("refresh", store.forget(SyncProviderId.DROPBOX)?.refreshToken)
+
+        assertNull(storage.credentials)
+    }
+
+    @Test
+    fun `forgetting another provider's credentials keeps the stored ones`() = runTest {
+        val storage = StoredSyncCredentials(CONNECTED)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+
+        assertNull(store.forget(OTHER))
+
+        assertEquals(CONNECTED, storage.credentials)
+        assertEquals(SyncProviderId.DROPBOX, store.storedProviderId())
+    }
+
+    @Test
+    fun `backing out of another provider's authorization keeps the stored tokens`() = runTest {
+        val storage = StoredSyncCredentials(CONNECTED)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+        PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = OTHER, request = REQUEST)
+
+        assertNull(store.forget(OTHER))
+
+        val stored = assertNotNull(storage.document)
+        assertEquals("refresh", stored.refreshToken)
+        assertNull(stored.pending)
+    }
+
+    @Test
+    fun `forgetting its own credentials keeps an authorization another provider started`() = runTest {
+        val storage = StoredSyncCredentials(CONNECTED)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+        PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = OTHER, request = REQUEST)
+
+        store.forget(SyncProviderId.DROPBOX)
+
+        val stored = assertNotNull(storage.document)
+        assertEquals("", stored.refreshToken)
+        assertEquals(OTHER.id, stored.pending?.providerId)
+        assertNull(store.storedProviderId())
+    }
+
+    @Test
+    fun `forgetting its own authorization before any token arrived leaves no document behind`() = runTest {
+        val storage = StoredSyncCredentials()
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+        PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
+
+        store.forget(SyncProviderId.DROPBOX)
+
+        assertNull(storage.credentials)
+    }
+
+    @Test
+    fun `forgetting a document that cannot be parsed removes it`() = runTest {
+        val storage = StoredSyncCredentials("not json")
+        val store = SyncCredentialsStore(storage, Logger.Standard)
+
+        store.forget(SyncProviderId.DROPBOX)
+
+        assertNull(storage.credentials)
+    }
+
     private companion object {
+        val OTHER = SyncProviderId("test-other")
+
         val CONNECTED = connectedCredentials()
 
         val REQUEST = RemoteAuthorizationRequest(

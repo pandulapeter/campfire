@@ -16,17 +16,30 @@ import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
+import com.pandulapeter.campfire.data.sync.implementation.FakePendingAuthorizationStore
+import com.pandulapeter.campfire.data.sync.implementation.FakeSyncAuthenticator
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.RecordingLogger
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
+import com.pandulapeter.campfire.data.sync.implementation.TEST_COMPLETION_PAGE
+import com.pandulapeter.campfire.data.sync.implementation.TEST_REDIRECT
 import com.pandulapeter.campfire.data.sync.implementation.awaitOutcome
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -111,6 +124,71 @@ class SyncConnectionManagerProvidersTest {
         assertEquals(SyncState.Disconnected, repository.syncState.value)
         assertFalse(other.connected)
         assertTrue(dropbox.connected)
+    }
+
+    @Test
+    fun `backing out of connecting the other provider leaves Dropbox's credentials alone`() = runTest {
+        val repository = syncRepository(
+            provider = dropbox,
+            otherProvider = other,
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+            storedProviderId = { SyncProviderId.DROPBOX },
+        )
+        repository.restore {}
+
+        val job = launch { repository.connect(OTHER, TEST_COMPLETION_PAGE) }
+        repository.syncState.first { it is SyncState.Connecting }
+        job.cancelAndJoin()
+
+        assertFalse(dropbox.hasForgottenCredentials)
+        assertTrue(dropbox.connected)
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+    }
+
+    @Test
+    fun `giving up on the other provider's token exchange forgets only what it stored`() = runTest {
+        other.connected = false
+        other.onCompleteAuthorization = {
+            other.connected = true
+            awaitCancellation()
+        }
+        val repository = syncRepository(
+            provider = dropbox,
+            otherProvider = other,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(TEST_REDIRECT)),
+            storedProviderId = { SyncProviderId.DROPBOX },
+        )
+        repository.restore {}
+
+        val job = launch { repository.connect(OTHER, TEST_COMPLETION_PAGE) }
+        runCurrent()
+        job.cancelAndJoin()
+
+        assertTrue(other.hasForgottenCredentials)
+        assertFalse(dropbox.hasForgottenCredentials)
+        assertTrue(dropbox.connected)
+    }
+
+    @Test
+    fun `an answer for a provider the build does not have is dropped and the connection restored`() = runTest {
+        val logger = RecordingLogger()
+        val store = FakePendingAuthorizationStore().apply {
+            pending = PendingAuthorization(OTHER, state = "state", verifier = "verifier", redirectUri = null)
+        }
+        val repository = syncRepository(
+            provider = dropbox,
+            authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
+            pendingAuthorizationStore = store,
+            logger = logger,
+        )
+
+        var returned = false
+        assertTrue(repository.restore { returned = true }.isConnected)
+
+        assertFalse(returned)
+        assertNull(store.pending)
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+        assertTrue(logger.lines.any { "Dropped the answer" in it })
     }
 
     private companion object {

@@ -46,6 +46,26 @@ internal class SyncCredentialsStore(
     suspend fun storedProviderId() = load()?.providerId?.takeIf { it.isNotEmpty() }?.let(::SyncProviderId)
 
     /**
+     * Forgets what [providerId] stored, its tokens and an authorization it started, and leaves what another provider
+     * stored where it is: a provider forgetting its own (an authorization backed out of, a disconnect) must never take
+     * another's working connection with it. A document left with nothing in it goes. Answers the document as it was
+     * when it held [providerId]'s tokens, which a disconnect revokes, and null otherwise.
+     */
+    suspend fun forget(providerId: SyncProviderId) = mutex.withLock {
+        val current = read()
+        val ownsTokens = current?.providerId == providerId.id
+        val pending = current?.pending?.takeIf { it.providerId != providerId.id }
+        val remaining = when {
+            !ownsTokens -> current?.copy(pending = pending)?.takeIf { it.refreshToken.isNotEmpty() || it.pending != null }
+            pending != null -> SyncCredentialsDocument(pending = pending)
+            else -> null
+        }
+        // Written when nothing was read too: a document that cannot be parsed reads as none, and is still one to forget.
+        if (remaining != current || current == null) write(remaining)
+        current?.takeIf { ownsTokens }
+    }
+
+    /**
      * Reads, changes and (where anything changed) writes the document as one step. The whole update runs under the
      * lock, which is what makes a token refresh safe to start from several requests at once.
      */
