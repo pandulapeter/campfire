@@ -42,7 +42,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
-import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.appBar.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.list.animateScrollToTop
@@ -61,8 +60,10 @@ internal fun SetlistsScreen(
     val listState = rememberRetainedLazyGridState(viewModel.setlistsController.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle()
-    val isLoadingPlaceholder = setlistsPlaceholder == Placeholder.LOADING
-    val isAwaitingSetlists = isLoadingPlaceholder && !rememberHasLoadedLibrary(isLoading = isLoadingPlaceholder)
+    val listedSetlists by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
+    // The read rather than the placeholder: an import into a library with no setlists shows the loading placeholder
+    // too, and the bar keyed on that would be built afresh as the import ends, an open search field with it.
+    val isAwaitingSetlists = setlistsPlaceholder == Placeholder.LOADING && !listedSetlists.isLibraryRead
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     // Not saveable: returning to this screen always starts in browsing mode.
