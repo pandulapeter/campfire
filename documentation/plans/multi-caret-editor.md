@@ -48,7 +48,7 @@ wraps, so a column of the text is a column on screen.
 |---------------------------------------|------------------------------------|--------------------------------|
 | Add or remove a caret                 | Alt + Shift + click                | Option + Shift + click         |
 | Add a selection                       | Alt + Shift + drag                 | Option + Shift + drag          |
-| Column selection                      | Alt + drag, middle-button drag     | Option + drag                  |
+| Column selection                      | Alt + drag, middle-button drag     | Option + drag, middle-button drag |
 | Toggle column selection mode          | Alt + Shift + Insert               | Cmd + Shift + 8                |
 | Clone caret above / below             | Ctrl, Ctrl (hold) + Up / Down      | Option, Option (hold) + Up / Down |
 | Add next occurrence                   | Alt + J                            | Ctrl + G                       |
@@ -61,7 +61,8 @@ Character keys with Alt are heard only without Ctrl, since AltGr arrives as Ctrl
 existing shortcuts already require (`editorFormattingShortcuts`). On a Mac, Option + J, G, and Shift + G type
 characters; IntelliJ takes them over there too, and so do we, only while the field has the focus. On the web, Ctrl +
 G (Mac) and Alt + J have no browser binding; Ctrl + Cmd + G has none either. Alt + drag moves windows under several
-Linux window managers, which is why the middle button does column selection too.
+Linux window managers, which is one more reason the middle button does column selection too, in every keymap and in the
+browser as well (step 7).
 
 ## Where it hooks in today
 
@@ -102,7 +103,11 @@ Windows or Linux if at hand) and on the web build in Chrome, Firefox, and Safari
 5. **Modifier key events** (Ctrl down, Ctrl up, Option down) reach `onPreviewKeyEvent` on both platforms, for the
    double-press clone gesture.
 6. **Pointer modifiers**: `PointerEvent.keyboardModifiers` reports Alt and Shift on a press in both, and a consumed
-   Initial-pass press keeps the field from moving its caret. Middle-button presses arrive on the desktop.
+   Initial-pass press keeps the field from moving its caret. Middle-button presses and drags arrive on the desktop
+   and in all three browsers. In the browser: a `mousedown` listener in the web shell that prevents the default of a
+   middle-button press over the canvas while the editor is on top stops Chrome's and Firefox's autoscroll on
+   Windows; and on Linux, the middle button's paste of the primary selection does not land in the field's hidden
+   input (if it does, the same listener also prevents `auxclick` and the `paste` that follows a middle press).
 7. **Undo merging**: how `TextFieldState`'s undo merges consecutive typed characters when each keystroke changes
    several ranges. Several undo steps per word is acceptable; one per keystroke is noted, not fixed.
 
@@ -229,7 +234,10 @@ below over short and blank lines, carets at line ends.
 
 **Column selection** (`ColumnSelection.kt`, pure geometry over `CaretLayout`):
 
-- Alt/Option + drag (and middle-button drag on the desktop): a rectangle from the press to the pointer. Each line
+- Alt/Option + drag, or a drag with the middle button (the scroll wheel held down) on every keymap, in the desktop app
+  and the browser alike: a rectangle from the press to the pointer. A middle-button press without a drag does nothing
+  (no caret placed, no paste), and in the browser the shell keeps the browser's own autoscroll and primary-selection
+  paste from it (spike question 6). Each line
   it spans gets a selection from the offset at the left x to the offset at the right x, clipped to the line, and
   a caret at a short line's end. The anchor side follows the drag direction, and the primary is on the line under the
   pointer.
