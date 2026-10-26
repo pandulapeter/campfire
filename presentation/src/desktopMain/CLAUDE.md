@@ -27,6 +27,15 @@ The desktop shell, called by `:app:desktop`.
   `DesktopSystemBrowser` the sync authorizer opens the consent page with.
 - File picker: a name typed without extension gets the offered one back, unless a file already has that name.
 
+## Warm-up (`ui/SongViewWarmUp.kt`)
+
+- The first song details open of a JVM session costs several times a later one (classes loading, code not yet
+  compiled). Once the library has been read, `CampfireDesktopApp` runs the part needing no composition on
+  `Dispatchers.Default`: the back stack serializer and a demo song's lyrics model. It shares no state with the window
+  and only prints a failure. Desktop only: Android has its Baseline Profile, iOS and the web are compiled ahead of time.
+- Composing the song view offscreen in the background was rejected: its scene has its own font cache, and a few renders
+  stay below the JIT's thresholds, so it warms little of what the window then runs.
+
 ## Keys (`CampfireViewModel.handleKeyEvent`, wired by `:app:desktop`)
 
 - Which keys are shortcuts is one common, tested table for desktop and web (`ui/AppShortcuts.kt`: `appShortcutOf`, then

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -39,6 +40,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.awtClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.clipboardTextOf
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
+import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.share.SharedLink
@@ -46,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.viewmodel.koinViewModel
@@ -72,6 +75,12 @@ fun CampfireDesktopApp(
     LocalFilePicker provides DesktopFilePicker
 ) {
     val scope = rememberCoroutineScope()
+    val sectionLabels = rememberDefaultSectionLabels()
+    // After the library has been read, so that it never competes with the launch's own reads.
+    LaunchedEffect(Unit) {
+        viewModel.libraryState.isLoading.first { !it }
+        warmUpSongView(viewModel.songRenderer, sectionLabels)
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
