@@ -18,7 +18,7 @@
   the player can use straight away.
 
 No dependency, no network request, no file format change. The follow-up, staff notation drawn by
-abc2svg, is sketched in the [README](README.md); this plan writes no engraver and needs none.
+abc2svg, is sketched in the [README](abc-notation/README.md); this plan writes no engraver and needs none.
 
 ## What exists today
 
@@ -63,15 +63,15 @@ abc2svg, is sketched in the [README](README.md); this plan writes no engraver an
   only of them disappears with its heading, as tab-only sections do.
 - **PDF:** `PrintRows` prints a verbatim run as `tabRows` does (preformatted, `tabStyle`), gated on `options.showChords`
   like grids. It isn't selectable text: read back, ABC's `"G"` and `[CEG]` would become chords.
-- Docs: `chordpro/CLAUDE.md` (delegated environments are now their own line kind), `ui/songView/model/CLAUDE.md`
-  (lyrics-only drops verbatim lines too), `ui/songLayout` and `ui/print` `CLAUDE.md` where they list run kinds.
+- Docs: `../../chordpro/CLAUDE.md` (delegated environments are now their own line kind), `ui/songView/model/CLAUDE.md`
+  (lyrics-only drops verbatim lines too), `ui/songLayout` and `ui/print` `../../CLAUDE.md` where they list run kinds.
 - Tests: `LineRunsTest`, `RenderSectionsTest` (lyrics-only drops the section), `PrintLayoutTest`, and a golden in
   `:tools:screenshots` if the song details goldens show a delegated block.
 
 ### A3. ABC reading in `:chordpro` (new package `abc/`)
 
 A sibling of `convert/`, not inside it: `convert/` knows no file format, and this is one. Pure, total (never throws),
-`explicitApi()`, with its own `CLAUDE.md`.
+`explicitApi()`, with its own `../../CLAUDE.md`.
 
 - **`AbcText.isAbc(text)`:** the sniff. True when the first lines that aren't blank or `%` comments are information
   fields, at least one of them `X:` or `T:`, and a `K:` field comes before the first line of music. A ChordPro
@@ -142,10 +142,10 @@ A sibling of `convert/`, not inside it: `convert/` knows no file format, and thi
 
 ### A5. Docs
 
-- Root `CLAUDE.md`: the import format lists (the intro and "Other apps' songs and backups") name ABC.
-- `data/source/local/implementation/CLAUDE.md` "Other apps' libraries" and `domain/implementation/.../importing/CLAUDE.md`:
+- Root `../../CLAUDE.md`: the import format lists (the intro and "Other apps' songs and backups") name ABC.
+- `../../data/source/local/implementation/CLAUDE.md` "Other apps' libraries" and `domain/implementation/.../importing/CLAUDE.md`:
   the `.abc` route and the sniff's place before the chord-sheet converter.
-- The new `chordpro/.../abc/CLAUDE.md`, and `chordpro/CLAUDE.md`'s list of packages.
+- The new `chordpro/.../abc/CLAUDE.md`, and `../../chordpro/CLAUDE.md`'s list of packages.
 - At release time, not as part of this plan: the store listings, the website's format list, and the release notes.
 
 ## Order and size

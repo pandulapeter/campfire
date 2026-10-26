@@ -71,8 +71,8 @@ format, build, and docs.
   - **Web application:** if S3 allows it. Redirects `https://campfire-songbook.com/app/` and `http://localhost:8080/`.
   - **API key**, restricted to the Drive API, for shared-link downloads (D6).
 - Build properties: `campfire.googleDrive.iosClientId`, `.desktopClientId`, `.desktopClientSecret`, `.androidClientId`,
-  `.webClientId`, and `.apiKey`, each defaulting to empty in `gradle.properties`.
-  - `generateRemoteConfiguration` (`data/source/remote/implementation/build.gradle.kts`) writes them beside
+  `.webClientId`, and `.apiKey`, each defaulting to empty in `../../gradle.properties`.
+  - `generateRemoteConfiguration` (`../../data/source/remote/implementation/build.gradle.kts`) writes them beside
     `DROPBOX_APP_KEY`.
   - The provider is left out of `SyncProviders` on a platform whose key is empty, as Dropbox is today.
 
@@ -86,7 +86,7 @@ format, build, and docs.
   - whether the desktop loopback may take any free port (Google allows it; Dropbox needs 53682);
   - the web redirect.
 
-  Add Drive's scheme to `app/android/src/main/AndroidManifest.xml` and `app/ios/iosApp/iosApp/Info.plist`
+  Add Drive's scheme to `../../app/android/src/main/AndroidManifest.xml` and `../../app/ios/iosApp/iosApp/Info.plist`
   (`CFBundleURLSchemes`), checked by a test against the constants so they can't drift. `DesktopSyncAuthenticatorTest`
   gains an any-port case.
 - **iOS:** code + PKCE through `ASWebAuthenticationSession`, with the reversed client id as the callback scheme.
@@ -101,7 +101,7 @@ format, build, and docs.
       whenever the old one expires (silent once granted);
     - only the account is stored;
     - it needs Google Play services, so the provider is hidden on devices without them;
-    - it adds `play-services-auth`, which has to be credited (root `CLAUDE.md`, "Build").
+    - it adds `play-services-auth`, which has to be credited (root `../../CLAUDE.md`, "Build").
 - **Web**, decided by S3: an embedded Web-client secret with the normal code flow, or no Drive on the web. The
   token-only model (hourly popups, no background renewal) isn't worth building.
 - **Account:** `about.get(fields=user)`: `permissionId` as the account id (it never changes), plus `displayName` and
@@ -200,7 +200,7 @@ folder to find by path.
 
 ### D8. Provider docs
 
-- `data/source/remote/implementation/CLAUDE.md`: a Google Drive section like the Dropbox one (folder lookup,
+- `../../data/source/remote/implementation/CLAUDE.md`: a Google Drive section like the Dropbox one (folder lookup,
   duplicates, detect-and-recover, the feed, links, auth per platform).
 
 ## The product around it
@@ -264,10 +264,10 @@ Today's v1 payload is `1.<kind>.<shareId>.<fileId>.<rlkey>.<title>`, and the dow
 
 ### P5. Docs and listings
 
-- Root `CLAUDE.md` privacy section: `www.googleapis.com`, `oauth2.googleapis.com`, and shared-link downloads from
+- Root `../../CLAUDE.md` privacy section: `www.googleapis.com`, `oauth2.googleapis.com`, and shared-link downloads from
   `www.googleapis.com` beside `dl.dropboxusercontent.com`.
-- Root `CLAUDE.md` product rules: a user picks one provider.
-- `data/source/remote/api/CLAUDE.md` (capabilities, redirect specs) and `app/ios/CLAUDE.md` / `app/web/CLAUDE.md`
+- Root `../../CLAUDE.md` product rules: a user picks one provider.
+- `../../data/source/remote/api/CLAUDE.md` (capabilities, redirect specs) and `../../app/ios/CLAUDE.md` / `../../app/web/CLAUDE.md`
   where they name Dropbox's redirects.
 - The store listings (`documentation/store-listings/*`, including the Mac App Store entitlement text), the website's
   privacy and support pages, and the README.
