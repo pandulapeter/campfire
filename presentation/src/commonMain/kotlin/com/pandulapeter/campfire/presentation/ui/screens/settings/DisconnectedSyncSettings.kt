@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -35,8 +34,8 @@ internal fun ColumnScope.DisconnectedSyncSettings(
     ActionListItem(
         title = stringResource(Res.string.settings_sync_connect_dropbox),
         icon = painterResource(Res.drawable.ic_cloud),
-        isEnabled = viewModel.syncController.syncProviders.contains(SyncProviderId.DROPBOX),
-        onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+        isEnabled = viewModel.syncController.offeredSyncProvider != null,
+        onClick = { viewModel.syncController.offeredSyncProvider?.let { viewModel.connectSyncProvider(it, completionPage) } },
     )
     // Under the Connect row rather than above it, so that Connect is the first row of its stage with or without a
     // reason: the first row of the connecting stage is text that takes no taps, where it would otherwise be the Cancel

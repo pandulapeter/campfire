@@ -36,7 +36,6 @@ import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
-import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -130,7 +129,9 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
                         ActionListItem(
                             title = stringResource(Res.string.share_connect_again),
                             icon = painterResource(Res.drawable.ic_cloud),
-                            onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+                            onClick = {
+                                (syncState.value as? SyncState.Connected)?.let { viewModel.connectSyncProvider(it.account.providerId, completionPage) }
+                            },
                         )
                     }
                     SharingStage.NOTHING_SHARED -> SettingsMessage(text = stringResource(Res.string.settings_sharing_nothing_shared))

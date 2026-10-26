@@ -16,10 +16,10 @@ import kotlin.test.assertNull
 class OnboardingStepTest {
 
     private fun steps(
-        canConnectDropbox: Boolean = true,
+        canConnectSync: Boolean = true,
         areChordsEnabled: Boolean = true,
     ) = onboardingSteps(
-        canConnectDropbox = canConnectDropbox,
+        canConnectSync = canConnectSync,
         areChordsEnabled = areChordsEnabled,
     )
 
@@ -30,7 +30,7 @@ class OnboardingStepTest {
 
     @Test
     fun `a build without Dropbox leaves the cloud folder out`() {
-        assertEquals(OnboardingStep.entries - OnboardingStep.SYNC, steps(canConnectDropbox = false))
+        assertEquals(OnboardingStep.entries - OnboardingStep.SYNC, steps(canConnectSync = false))
     }
 
     @Test

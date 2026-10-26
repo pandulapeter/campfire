@@ -50,7 +50,6 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
@@ -364,7 +363,9 @@ private fun OnboardingStepPage(
                 markModifier = markModifier,
                 syncState = syncState,
                 isCompact = isCompact,
-                onConnect = { completionPage -> viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+                onConnect = { completionPage ->
+                    viewModel.syncController.offeredSyncProvider?.let { viewModel.connectSyncProvider(it, completionPage) }
+                },
                 onCancel = viewModel.syncController::cancelSyncConnection,
             )
         }

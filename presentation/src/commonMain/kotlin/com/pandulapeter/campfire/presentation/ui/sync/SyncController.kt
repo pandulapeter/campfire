@@ -66,6 +66,12 @@ internal class SyncController(
     val syncProviders: List<SyncProviderId> = getSyncProviders()
 
     /**
+     * The provider a Connect button connects, null where sync is not configured: a build offers one, the only entry of
+     * [syncProviders]. A connection made again for an account goes to the account's own provider instead.
+     */
+    val offeredSyncProvider = syncProviders.firstOrNull()
+
+    /**
      * Kept so that it can be cancelled: an authorization waits on a browser that may never come back, and the
      * cancellation is what closes the sheet on iOS and releases the desktop's socket. While an attempt is being
      * given up on, this is the job doing that, so that the next attempt waits for it.

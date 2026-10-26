@@ -834,7 +834,7 @@ class CampfireViewModel(
 
     /** The pages the onboarding shows with the features as they are now, see [onboardingSteps]. */
     internal fun onboardingSteps(preferences: UserPreferences?) = onboardingSteps(
-        canConnectDropbox = SyncProviderId.DROPBOX in syncController.syncProviders,
+        canConnectSync = syncController.offeredSyncProvider != null,
         areChordsEnabled = preferences?.areChordsEnabled != false,
     )
 
