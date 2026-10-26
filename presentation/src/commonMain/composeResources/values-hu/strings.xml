@@ -393,7 +393,7 @@
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_group_song_page">Daloldal</string>
-    <string name="settings_group_lists">Listák</string>
+    <string name="settings_group_lists">Listanézet</string>
     <string name="settings_group_chords">Akkordok</string>
     <string name="settings_group_setup">Kezdeti beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
