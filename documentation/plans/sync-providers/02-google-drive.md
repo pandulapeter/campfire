@@ -9,7 +9,26 @@
 -->
 # Plan 02: Google Drive
 
-**Status:** first draft, rewritten 2026-10-26. Nothing implemented. **Builds on plan 01**, which is released first.
+**Status:** first draft, rewritten 2026-10-26. The groundwork (the former plan 01) landed on 2026-10-26
+(5a7253847..f2f6e418a) and ships in v5.1.0 with Dropbox the only provider. Nothing of the Drive work below is
+implemented.
+
+**What the groundwork left in place** (read the code; these are the hooks):
+
+- The stored credentials name the active provider (`SyncProviders.stored()` / `connected()` / `byId`), and a provider
+  forgets only its own (`SyncCredentialsStore.forget(providerId)`). `SyncProviderId` is a data class with a `DROPBOX`
+  value, so Drive adds a second value beside it.
+- `auth/OAuthTokens` (with an optional client secret, for D2's desktop client) and `network/SyncHttpTransport` with a
+  per-provider `SyncHttpErrorMapper` (Dropbox's is `dropbox/DropboxErrors.kt`).
+- `SyncFolder`'s KDoc makes case-insensitive name resolution part of the contract; `FakeSyncProvider`'s
+  `resolvesListedNames` and a `TwoDeviceSyncTest` case already cover a service with exact names.
+- `SharedLinkResult.Created(provider, parts)`. `SharedLinksRepositoryImpl.storedParts()` still accepts only Dropbox's
+  two parts; P3 widens it.
+- The UI connects `SyncController.offeredSyncProvider` (the first in `SyncProviders`) or a connected account's own
+  provider; P2's picker replaces the former. `canConnectSync` replaced `canConnectDropbox`. Strings still name Dropbox.
+- **Not solved, for P2:** the credentials are one document, so a second provider's finished token exchange overwrites
+  the first's tokens. Cancelling B is safe until that exchange; after it, A is gone. Switching as Disconnect, then
+  Connect, never meets this, but a "connect B while A is connected" flow would.
 
 **Goal:** Google Drive as a second sync provider, the user picking Dropbox or Drive. It covers sync, the synced
 preferences, and shared links. It runs on Android, iOS, and desktop, and on the web if spike S3 allows it.
@@ -72,7 +91,7 @@ format, build, and docs.
   gains an any-port case.
 - **iOS:** code + PKCE through `ASWebAuthenticationSession`, with the reversed client id as the callback scheme.
   Refresh tokens stay in the Keychain, as today.
-- **Desktop:** code + PKCE on a free loopback port, plus the bundled secret, through plan 01's `OAuthTokens`.
+- **Desktop:** code + PKCE on a free loopback port, plus the bundled secret, through `OAuthTokens`.
 - **Android**, decided by S5:
   - (a) If custom schemes still work on an Android client: the same browser flow as iOS. One code path, but Google
     discourages it and may switch it off.
@@ -111,7 +130,7 @@ folder to find by path.
 
 - **`list`:** one `files.list` per subfolder, `fields=files(id,name,headRevisionId,sha256Checksum,size,createdTime)`,
   paged.
-  - Names are resolved **case-insensitively** through a name→id map (the contract from plan 01, G4).
+  - Names are resolved **case-insensitively** through a name→id map (`SyncFolder`'s contract).
   - **Duplicate names** (two devices creating the same new song at once): keep the oldest by `createdTime` under the
     name, and rename the others on the service to the next free numbered name, as `FileNames.kt` numbers them. The
     next run then sees them as new files on every device, the same result as the engine's conflict copies, and
@@ -133,7 +152,7 @@ folder to find by path.
 - **Batch deletes:** sequential, with a little parallelism. Measure with a 300-song library; quota is 325,000 units per
   user per minute.
 - **Folder documents** (`downloadDocument` / `uploadDocument`): the same as files, by name in the library folder.
-- **Errors**, through plan 01's `SyncHttpTransport` with a Drive error mapper:
+- **Errors**, through `SyncHttpTransport` with a Drive error mapper:
   - `storageQuotaExceeded` → `SyncRemoteStorageFullException`;
   - `userRateLimitExceeded` / 429 → retry;
   - 401 → refresh, then `SyncAuthorizationException`;
@@ -154,7 +173,7 @@ folder to find by path.
 
 - **The copy:** `shared/<shareId>.zip`, uploaded like a library file.
 - **The link:** `permissions.create(type=anyone, role=reader)`. Creating it again answers the same permission, so a
-  copy keeps one link. The link is the file id: `SharedLinkResult.Created` (made provider-neutral by plan 01, G5)
+  copy keeps one link. The link is the file id: `SharedLinkResult.Created` (already provider-neutral)
   carries the Drive provider and `[fileId]`.
 - **Download address**, built in `:data:model` from the validated id, never taken from a link:
   `https://www.googleapis.com/drive/v3/files/<fileId>?alt=media&key=<API key>`, if S4 confirms it.

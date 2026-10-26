@@ -21,5 +21,5 @@
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - AI skill for exposing direct access to the library folder
 - ABC notation (https://abcnotation.com/): documentation/plans/abc-notation/01-read-and-import.md
-- Google Drive integration: documentation/plans/sync-providers/02-google-drive.md
+- Google Drive integration (groundwork landed for v5.1.0; spikes S1–S5 next): documentation/plans/sync-providers/02-google-drive.md
 - Consider organizing the sync directory in a more user-readable way (subfolders for artists) - make it optional

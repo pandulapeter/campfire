@@ -10,11 +10,13 @@
 # Google Drive as a second sync provider: implementation plans
 
 First draft, 2026-10-26, from a read of the code and of Google's current documentation, plus live probes of its
-endpoints. Nothing is implemented. Claims marked as spikes still need a hands-on test.
+endpoints. Claims marked as spikes still need a hands-on test. The groundwork plan (credentials that know their
+provider, shared OAuth and HTTP plumbing, case-insensitive names as a contract, a provider-neutral link result, and UI
+code that stops naming Dropbox) landed on 2026-10-26 in 5a7253847..f2f6e418a and was removed; plan 02 lists what it
+left in place.
 
 | Plan | What | Ships |
 |---|---|---|
-| [01-groundwork.md](01-groundwork.md) | Credentials that know their provider, OAuth and HTTP plumbing out of `dropbox/`, case-insensitive names as a contract, a provider-neutral link result, and UI code that stops naming Dropbox | The next release, on its own, invisible to users |
 | [02-google-drive.md](02-google-drive.md) | The Drive provider, then the picker, switching, v2 share links, the website, build keys, and docs | A later release, after its spikes |
 
 Considered and dropped:
