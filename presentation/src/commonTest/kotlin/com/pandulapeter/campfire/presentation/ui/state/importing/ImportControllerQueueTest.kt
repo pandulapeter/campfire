@@ -485,7 +485,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a song handed over that the library already holds is opened rather than previewed`() = runTest {
+    fun `a song handed over that the library already holds is opened rather than previewed, and said to be there`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.IDENTICAL))
         startController()
         handOver()
@@ -493,6 +493,7 @@ class ImportControllerQueueTest {
         assertEquals(listOf("new.cho"), openedSongs)
         assertNull(reportState.importReport.value)
         assertTrue(backStack.none { it.isSongPreview })
+        assertEquals(listOf<Message>(Message.SongAlreadyInLibrary), messageSink.messageQueue.value.map { it.value })
     }
 
     @Test

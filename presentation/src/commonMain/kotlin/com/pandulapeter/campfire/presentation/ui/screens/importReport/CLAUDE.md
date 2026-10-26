@@ -19,8 +19,9 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   the onboarding is not (`ImportReportState.show`); reading runs meanwhile.
 - Not reviewed: the demo library (`shouldReview = false`), shown only for a taken name. While the songs are switched on,
   a batch that is one song and nothing else (`isPreviewed`, from any source) is previewed instead, and one the library
-  holds as it is is opened (`librarySong`); see `ui/screens/songDetails/CLAUDE.md`. A single song file is read behind
-  no screen (`isReportedWhileRead`); anything else shows Loading here, which a preview then takes the place of.
+  holds as it is is opened, saying so in one line rather than in counts (`librarySong`, `Message.SongAlreadyInLibrary`);
+  see `ui/screens/songDetails/CLAUDE.md`. A single song file is read behind no screen (`isReportedWhileRead`); anything
+  else shows Loading here, which a preview then takes the place of.
 - **One review at a time**: a batch arriving while a review is up (dropped, opened with, shared, picked, a shared
   link) is read on its own and appended to it (`withAdded`), under a progress bar that holds Import back; ticks and
   choices made stay. What the review lists already is left out (a song by its text, a setlist by its fields, a skipped

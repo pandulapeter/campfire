@@ -707,7 +707,12 @@ internal class ImportController(
                         } ?: return@launch
                         openImportedSong(songToOpen)
                     }
-                    if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFinished(result, hasDetails = false))
+                    if (request.shouldAnnounceResult) {
+                        // A lone song opened from the library wrote nothing, which one sentence says better than counts.
+                        messageSink.sendMessage(
+                            if (opensLoneSong) Message.SongAlreadyInLibrary else Message.ImportFinished(result, hasDetails = false),
+                        )
+                    }
                 }
 
                 isReportShown && result.isClean -> {

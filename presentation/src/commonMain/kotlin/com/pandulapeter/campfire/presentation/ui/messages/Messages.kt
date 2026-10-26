@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.export_song_saved
 import com.pandulapeter.campfire.presentation.resources.export_songs_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_disconnected
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_failed
@@ -49,7 +50,12 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_imported
 import com.pandulapeter.campfire.presentation.resources.import_converted
 import com.pandulapeter.campfire.presentation.resources.import_details
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
-import com.pandulapeter.campfire.presentation.resources.import_result
+import com.pandulapeter.campfire.presentation.resources.import_preview_already_there
+import com.pandulapeter.campfire.presentation.resources.import_result_already_there
+import com.pandulapeter.campfire.presentation.resources.import_result_nothing
+import com.pandulapeter.campfire.presentation.resources.import_result_setlists
+import com.pandulapeter.campfire.presentation.resources.import_result_skipped
+import com.pandulapeter.campfire.presentation.resources.import_result_songs
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_open
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_question
 import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
@@ -144,19 +150,14 @@ private fun messageText(current: Message?): String? =
     when (current) {
         is Message.ImportFinished -> listOfNotNull(
             if (current.result.isFailed) stringResource(Res.string.import_status_stopped) else null,
-            stringResource(
-                Res.string.import_result,
-                current.result.importedSongFileNames.size,
-                current.result.importedSetlistFileNames.size,
-                current.result.duplicateFileNames.size,
-                current.result.skippedFileNames.size,
-            ),
+            importCounts(current.result),
             if (current.result.convertedSongFileNames.isNotEmpty()) stringResource(Res.string.import_converted, current.result.convertedSongFileNames.size) else null,
         ).joinToString("\n")
 
         Message.ImportFailed -> stringResource(Res.string.import_failed)
         Message.ImportInterrupted -> stringResource(Res.string.import_interrupted)
         Message.PreviewedSongImported -> stringResource(Res.string.import_preview_imported)
+        Message.SongAlreadyInLibrary -> stringResource(Res.string.import_preview_already_there)
         Message.ExportFailed -> stringResource(Res.string.export_failed)
         Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
         Message.SongExported -> stringResource(Res.string.export_song_saved)
@@ -235,3 +236,15 @@ private fun messageText(current: Message?): String? =
 
 /** How many of the files an export left out its message names, the rest being counted rather than listed. */
 private const val MAXIMUM_NAMED_FILES = 3
+
+/** The counts of an import that are not zero, so that a batch of new songs is not read out next to a row of nothing. */
+@Composable
+private fun importCounts(result: ImportResult) = listOf(
+    Res.plurals.import_result_songs to result.importedSongFileNames.size,
+    Res.plurals.import_result_setlists to result.importedSetlistFileNames.size,
+    Res.plurals.import_result_already_there to result.duplicateFileNames.size,
+    Res.plurals.import_result_skipped to result.skippedFileNames.size,
+).filter { (_, count) -> count > 0 }
+    .map { (resource, count) -> pluralStringResource(resource, count, count) }
+    .ifEmpty { listOf(stringResource(Res.string.import_result_nothing)) }
+    .joinToString(" · ")

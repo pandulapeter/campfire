@@ -64,7 +64,23 @@
         <item quantity="other">The files in your library are written over. This cannot be undone.</item>
     </plurals>
     <string name="import_files">Import files</string>
-    <string name="import_result">Songs imported: %1$d · Setlists: %2$d · Already there: %3$d · Skipped: %4$d</string>
+    <plurals name="import_result_songs">
+        <item quantity="one">%1$d song imported</item>
+        <item quantity="other">%1$d songs imported</item>
+    </plurals>
+    <plurals name="import_result_setlists">
+        <item quantity="one">%1$d setlist imported</item>
+        <item quantity="other">%1$d setlists imported</item>
+    </plurals>
+    <plurals name="import_result_already_there">
+        <item quantity="one">%1$d already in your library</item>
+        <item quantity="other">%1$d already in your library</item>
+    </plurals>
+    <plurals name="import_result_skipped">
+        <item quantity="one">%1$d skipped</item>
+        <item quantity="other">%1$d skipped</item>
+    </plurals>
+    <string name="import_result_nothing">Nothing was imported</string>
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>
     <plurals name="import_unreadable_documents">
         <item quantity="one">One document has no text Campfire can read (a scan, a protected PDF, or an old Word format).</item>
