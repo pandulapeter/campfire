@@ -21,10 +21,9 @@ internal fun ChordProLine.foldableKind() = when (this) {
 /**
  * How many pieces a run of tablature, grid, or verbatim lines is drawn as, which the section may be cut between: a line
  * of a grid each, and for tablature and verbatim text as many as the rows it could wrap into (see `SongTabBlock`), which
- * are only known once the
- * width is - a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the longest, which no real width
- * wraps it into more rows than, and never more than [MAX_TAB_SLOTS], the last one holding whatever rows are left. A slot
- * with no row at a width has no height there, and nothing is cut in front of it.
+ * are only known once the width is - a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the
+ * longest, which no real width wraps it into more rows than, and never more than [MAX_TAB_SLOTS], the last one holding
+ * whatever rows are left. A slot with no row at a width has no height there, and nothing is cut in front of it.
  */
 internal fun List<ChordProLine>.runSlotCount(kind: FoldableKind) = when (kind) {
     FoldableKind.TAB, FoldableKind.VERBATIM -> (size + maxOf { it.monospaceText?.length ?: 0 } / MIN_TAB_SLOT_COLUMNS).coerceIn(1, MAX_TAB_SLOTS)
@@ -59,8 +58,8 @@ internal val ChordProLine.environmentLabel
  * Splits lines into runs of tablature, runs of grid lines, runs of verbatim lines, and runs of everything else, keeping
  * their order. Each of the first three is folded as one, and tablature and verbatim text are also measured and wrapped
  * as a block, so the lines of a run have to reach the layout together. A delegated environment is a section of its own,
- * so a run of verbatim lines is all of its section and folds as the section. Two environments written one after the other are two runs where they were labelled
- * differently, since each is then folded under its own name.
+ * so a run of verbatim lines is all of its section and folds as the section. Two environments written one after the
+ * other are two runs where they were labelled differently, since each is then folded under its own name.
  */
 internal fun List<ChordProLine>.groupIntoRuns(): List<List<ChordProLine>> {
     val groups = mutableListOf<List<ChordProLine>>()
