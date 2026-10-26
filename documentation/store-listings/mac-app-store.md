@@ -110,7 +110,7 @@ New in 5.1.0, and where to find it:
 - Bold, italic, and underline: the editor's Shortcuts row has a button for each, and Cmd + B, I, and U toggle them.
 - Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or dropping a file onto the window) opens a preview before anything is saved; in a review of several songs, clicking a song's row opens it.
 - ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept as text; the app does not draw sheet music.
-- PDF options: "Export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
+- PDF options: "Share or export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
 ```
 
 ## App Sandbox Information

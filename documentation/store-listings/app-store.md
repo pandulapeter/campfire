@@ -133,7 +133,7 @@ New in 5.1.0, and where to find it:
 - Bold, italic, and underline: the editor's Shortcuts row has a button for each, and with a keyboard, Cmd + B, I, and U toggle them.
 - Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or opening a file with Campfire) opens a preview before anything is saved; in a review of several songs, tapping a song's row opens it.
 - ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept as text; the app does not draw sheet music.
-- PDF options: "Export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
+- PDF options: "Share or export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user taps the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
