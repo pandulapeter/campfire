@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.state.songListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.state.isListBehind
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.song.Tag
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -105,17 +107,28 @@ internal class SongListState(
             orderKey = "$normalizedQuery|${indexed.orderKey}",
             groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
             isLibraryRead = indexed.isLibraryRead,
+            librarySongCount = indexed.search.byFileName.size,
+            filteredSongCount = indexed.search.filtered.size,
         )
-    }.flowOn(Dispatchers.Default).asState(scope, SongGroups(filterKey = "", orderKey = "", groups = emptyList(), isLibraryRead = false))
+    }.flowOn(Dispatchers.Default).asState(
+        scope,
+        SongGroups(filterKey = "", orderKey = "", groups = emptyList(), isLibraryRead = false, librarySongCount = 0, filteredSongCount = 0),
+    )
 
     /**
      * What the song list has to show instead of songs, null while it has songs. A library that is empty because
      * the search matched nothing is told apart from one that is empty because the load has not finished (or has
      * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
+     *
+     * The list carries the counts it was built from, and while it is behind the library ([isListBehind]) the
+     * placeholder keeps the value it had: the list is put together on another dispatcher and lands frames after the
+     * library, and a placeholder answering for the old list in between would say "no songs match" as the first songs
+     * arrive, or that the library is empty as an import into an empty one ends.
      */
-    val songsPlaceholder = combine(screenData, songGroups, isImporting) { screenData, songGroups, isImporting ->
-        songListPlaceholder(screenData = screenData, songGroups = songGroups, isImporting = isImporting)
-    }.asState(scope, Placeholder.LOADING)
+    val songsPlaceholder = combine(screenData, songGroups, isImporting) { screenData, songGroups, isImporting -> Triple(screenData, songGroups, isImporting) }
+        .filterNot { (screenData, songGroups, _) -> isListBehind(screenData = screenData, listedCount = songGroups.librarySongCount) { it.unfilteredSongs.size } }
+        .map { (screenData, songGroups, isImporting) -> songListPlaceholder(screenData = screenData, songGroups = songGroups, isImporting = isImporting) }
+        .asState(scope, Placeholder.LOADING)
 
     /** A selected tag is matched the way the filter itself matches it, by `tagKey`. */
     fun toggleTagFilter(tag: String) = mutableSongFilter.update { filter ->

@@ -18,14 +18,19 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
  * @param filterKey The folded search query the setlists were narrowed by, empty for none: carried with them for the same
  *   reason, since the list arrives frames after the text is typed, and the list scrolls back to the top when the one
  *   built for another query arrives rather than when the text changes.
+ * @param libraryCount The setlists in the library these were listed from, and [unsearchedCount] those of them left
+ *   once the archived ones are filtered out, before the search: counted in the same pass as [setlists], so that the
+ *   placeholder tells its empty states apart by the list alone and never pairs it with a library that is newer.
  */
 data class ListedSetlists(
     val setlists: List<SetlistWithSongs>,
     val isLibraryRead: Boolean,
     val filterKey: String,
+    val libraryCount: Int,
+    val unsearchedCount: Int,
 ) {
 
     companion object {
-        val Empty = ListedSetlists(setlists = emptyList(), isLibraryRead = false, filterKey = "")
+        val Empty = ListedSetlists(setlists = emptyList(), isLibraryRead = false, filterKey = "", libraryCount = 0, unsearchedCount = 0)
     }
 }

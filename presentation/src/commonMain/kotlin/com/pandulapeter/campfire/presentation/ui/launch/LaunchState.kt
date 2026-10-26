@@ -74,7 +74,7 @@ internal class LaunchState(
      * The two lists are asked as well as the read, since each is put together from the read off the main thread and
      * lands a few frames after it: uncovered in between, the songs screen would open on its loading placeholder,
      * without the New button, which then makes its room in the bar and moves the pill aside as the list arrives, and
-     * the setlists screen would say for those frames that every setlist the read found is archived. Neither list holds
+     * the setlists screen would show its loading placeholder for those frames. Neither list holds
      * a slow read back by more than its first batch: the songs as soon as some are listed, the setlists as soon as
      * the read has found none yet or they are listed.
      *

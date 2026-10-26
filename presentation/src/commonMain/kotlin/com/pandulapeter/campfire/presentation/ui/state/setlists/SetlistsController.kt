@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.state.setlistListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.state.isListBehind
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -50,6 +51,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -106,8 +108,8 @@ internal class SetlistsController(
      * [UserPreferences.shouldShowArchivedSetlists].
      *
      * Kept apart from the search below so that the placeholder can tell a setlist list emptied by the archive filter
-     * from one emptied by the search, the way the song list tells its own two empty states apart - and a state
-     * rather than a plain flow because both the placeholder and the search below read it.
+     * from one emptied by the search ([ListedSetlists.unsearchedCount], counted here), the way the song list tells its
+     * own two empty states apart.
      */
     private val visibleSetlists = combine(setlists, indexedSongs, shouldShowArchivedSetlists) { setlists, indexed, shouldShowArchivedSetlists ->
         val songsByFileName = indexed.search.byFileName
@@ -122,7 +124,13 @@ internal class SetlistsController(
                 },
             )
         }
-        ListedSetlists(setlists = visible, isLibraryRead = indexed.isLibraryRead, filterKey = "")
+        ListedSetlists(
+            setlists = visible,
+            isLibraryRead = indexed.isLibraryRead,
+            filterKey = "",
+            libraryCount = setlists.size,
+            unsearchedCount = visible.size,
+        )
     }.flowOn(Dispatchers.Default).asState(scope, ListedSetlists.Empty)
 
     /**
@@ -154,10 +162,16 @@ internal class SetlistsController(
      * archived is told apart from one with no setlists at all, and from one whose setlists the search did not
      * match, for the same reason the song list tells its empty states apart: each of the three is answered by
      * something different, and only one of them by making a setlist.
+     *
+     * The list carries the counts it was built from, and while it is behind the library ([isListBehind]) the
+     * placeholder keeps the value it had: the list is put together on another dispatcher and lands frames after the
+     * library, and a placeholder answering for the old list in between would say every setlist is archived as the
+     * first one arrives, or that there are none as an import into an empty library ends.
      */
-    val setlistsPlaceholder = combine(screenData, setlistsWithSongs, visibleSetlists, isImporting) { screenData, setlistsWithSongs, visibleSetlists, isImporting ->
-        setlistListPlaceholder(screenData = screenData, setlistsWithSongs = setlistsWithSongs.setlists, visibleSetlists = visibleSetlists.setlists, isImporting = isImporting)
-    }.asState(scope, Placeholder.LOADING)
+    val setlistsPlaceholder = combine(screenData, setlistsWithSongs, isImporting) { screenData, listed, isImporting -> Triple(screenData, listed, isImporting) }
+        .filterNot { (screenData, listed, _) -> isListBehind(screenData = screenData, listedCount = listed.libraryCount) { it.setlists.size } }
+        .map { (screenData, listed, isImporting) -> setlistListPlaceholder(screenData = screenData, listed = listed, isImporting = isImporting) }
+        .asState(scope, Placeholder.LOADING)
 
     /**
      * A new setlist is followed by the song picker for it, since a setlist is created to have songs put into it and
