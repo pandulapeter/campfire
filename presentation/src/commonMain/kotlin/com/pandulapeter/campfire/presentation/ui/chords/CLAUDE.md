@@ -28,7 +28,8 @@ file's shape comes back to where it was written under its own capo; under anothe
 moves it down exactly, else (a lower capo, an open shape) it gives way to the player's shape. `ChordDiagramGeometry`
 draws the shape where it is played, frets numbered from the nut, the capo a muted bar across the window's first row
 (`capoRow`) where the shape sits right above it, its open strings ringed on the bar (they ring at the capo) as over the
-nut without one, outside the window where it is higher (the rings then over the window). The keyboard has no capo.
+nut without one, the bar and string clipped out inside each ring so the card (or the PDF's page) shows through, outside
+the window where it is higher (the rings then over the window). The keyboard has no capo.
 
 ## Which shape a chord is drawn with
 

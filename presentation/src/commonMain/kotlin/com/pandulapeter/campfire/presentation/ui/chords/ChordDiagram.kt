@@ -16,11 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.contentDescription
@@ -127,31 +131,43 @@ private fun DrawScope.drawFretted(
         val isNut = fret == 0 && geometry.baseFret == 1
         drawLine(lineColor, Offset(left, top + fret * fretGap), Offset(right, top + fret * fretGap), strokeWidth = if (isNut) thin * NUT_WIDTH else thin, cap = StrokeCap.Square)
     }
-    (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
+    val markerY = top / 2f
+    val markerSize = min(top * 0.32f, stringGap * 0.32f)
+    // A string left open rings at the capo where the window shows it, so its ring sits on the capo's bar, which is left
+    // out inside it with the string, as it stands over the nut without one; a muted string is marked over the window either
+    // way. Leaving them out is a clip rather than a disc of the background painted over them, since a diagram sits on cards
+    // of other colors than the background, and an erase would need a layer the PDF's page does not have.
+    val openY = geometry.capoRow?.let(::y) ?: markerY
+    val rings = geometry.capoRow?.let {
+        geometry.markers
+            .withIndex()
+            .filter { (_, marker) -> marker == ChordDiagramGeometry.Fretted.Marker.OPEN || marker == ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT }
+            .takeIf { it.isNotEmpty() }
+            ?.let { open ->
+                // The middle of the ring's stroke, so that the stroke covers the clip's edge however a platform smooths it.
+                Path().apply { open.forEach { (string) -> addOval(Rect(center = Offset(x(string), openY), radius = markerSize)) } }
+            }
+    }
+    fun drawStringsAndCapo() {
+        (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
+        geometry.capoRow?.let { row ->
+            // Across every string and past the outer ones, flatter than a barre and in the muted color, so that it reads
+            // as the bar the shape is played above rather than as a finger of it.
+            val height = radius * CAPO_HEIGHT
+            drawRoundRect(
+                color = mutedColor,
+                topLeft = Offset(left - radius, y(row) - height / 2f),
+                size = Size(right - left + radius * 2, height),
+                cornerRadius = CornerRadius(height / 2f, height / 2f),
+            )
+        }
+    }
+    if (rings == null) drawStringsAndCapo() else clipPath(rings, ClipOp.Difference) { drawStringsAndCapo() }
     baseFretLabel?.let { label ->
         // Right of it the first string's dot reaches out by its radius, a barre's end included.
         drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
     }
-    geometry.capoRow?.let { row ->
-        // Across every string and past the outer ones, flatter than a barre and in the muted color, so that it reads as
-        // the bar the shape is played above rather than as a finger of it.
-        val height = radius * CAPO_HEIGHT
-        drawRoundRect(
-            color = mutedColor,
-            topLeft = Offset(left - radius, y(row) - height / 2f),
-            size = Size(right - left + radius * 2, height),
-            cornerRadius = CornerRadius(height / 2f, height / 2f),
-        )
-    }
-    val markerY = top / 2f
-    val markerSize = min(top * 0.32f, stringGap * 0.32f)
-    // A string left open rings at the capo where the window shows it, so its ring sits on the capo's bar, cut out of it,
-    // as it stands over the nut without one; a muted string is marked over the window either way.
-    val openY = geometry.capoRow?.let(::y) ?: markerY
-    fun openRing(string: Int, color: Color, width: Float) {
-        if (geometry.capoRow != null) drawCircle(backgroundColor, radius = markerSize + width / 2f, center = Offset(x(string), openY))
-        drawCircle(color, radius = markerSize, center = Offset(x(string), openY), style = Stroke(width))
-    }
+    fun openRing(string: Int, color: Color, width: Float) = drawCircle(color, radius = markerSize, center = Offset(x(string), openY), style = Stroke(width))
     geometry.markers.forEachIndexed { string, marker ->
         when (marker) {
             ChordDiagramGeometry.Fretted.Marker.MUTED -> {

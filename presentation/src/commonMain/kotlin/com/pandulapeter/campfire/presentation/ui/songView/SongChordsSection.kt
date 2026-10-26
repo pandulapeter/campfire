@@ -366,7 +366,7 @@ private fun DrawScope.drawChordCell(
 
 /**
  * Draws [block] at [alpha] as one picture rather than stroke by stroke, since a diagram paints the background over its
- * own lines (under a dot, inside a ring), and those would show through one another at any alpha less than whole. The
+ * own lines (under a dot), and those would show through one another at any alpha less than whole. The
  * layer reaches [LAYER_MARGIN] of the diagram's shorter side past [area] all around, since a stroke on its edge is drawn
  * half outside it, and no stroke of a diagram is that wide; no further, since every fading cell draws two layers a frame.
  * [paint] is read as the layer is saved, so one serves every layer.
