@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import com.pandulapeter.campfire.data.model.song.Song
 
 /**
  * A chord of a song as its Chords section lists it.
@@ -81,7 +82,9 @@ internal data class SongChord(
  *
  * The song is the one that sounds, and every shape is fingered above [capo] (see [SongChord.shapeChord]): a definition is
  * moved down the neck by it as a transposition moves one, so that a file's own shapes come back to where it wrote them
- * under the capo it names, and the app's and the player's shapes are those of the chord moved down by it.
+ * under the capo it names; under any other capo it is kept only where the difference moves it down by exactly that many
+ * frets, so a capo lower than the file's, or an open shape that cannot go down, gives way to the player's shape, and the
+ * app's and the player's shapes are those of the chord moved down by it.
  */
 internal fun songChordsOf(
     song: ChordProSong,
@@ -92,9 +95,32 @@ internal fun songChordsOf(
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
     val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }.map(ChordProDefinitions::sounding)
+    val songCapo = (song.metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
     fun definitionOf(name: String, chord: Chord) =
         (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
-            ?.let { if (capo == 0) it else ChordProDefinitions.transposed(it, -capo) { shapeName -> shapeName } }
+            ?.let { written ->
+                fun movedDown(definition: ChordDefinition, frets: Int) =
+                    if (frets == 0) definition else ChordProDefinitions.transposed(definition, -frets) { shapeName -> shapeName }
+                when {
+                    // The keyboard takes no capo (its `capo` is always 0) and its definition is notes, not a shape.
+                    written.voicing !is ChordVoicing.Fretted -> movedDown(written, capo)
+                    else -> {
+                        // Where the file's own capo is played, its shapes come back to where it wrote them.
+                        val atSongCapo = movedDown(written, songCapo)
+                        val override = capo - songCapo
+                        when {
+                            override == 0 -> atSongCapo
+                            // A capo taken off or lowered plays the chords in other shapes, which are the player's.
+                            override < 0 -> null
+                            // A capo put on or raised takes the shape down the neck by its frets; one with open strings
+                            // cannot go down, and the octave up the move would take instead is the same chord twelve
+                            // frets away.
+                            else -> movedDown(atSongCapo, override)
+                                .takeIf { moved -> moved.movedBy == atSongCapo.movedBy - override.mod(12) }
+                        }
+                    }
+                }
+            }
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
     // One chord written two ways - (G) and G, a and Am, A# and Bb - is one diagram, under the name it is first written
     // with, unless the song defines the two spellings differently.
