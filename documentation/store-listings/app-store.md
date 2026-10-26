@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.0: a Scales tab, a Chords tab, mandolin and banjo chords, and songs and setlists shared as a link or QR code that anyone opens in Campfire.
+New in 5.1: chords named as they sound under a capo, chord degrees, bold, italic, and underlined lyrics, ABC tunes, and a preview of every song you import.
 ```
 
 ## Description (4,000 characters max)
@@ -40,7 +40,7 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, whole zip archives, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, zip archives, even another songbook app's backup.
 
 Reading
 • Turn the page with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
@@ -74,14 +74,14 @@ Setlists
 
 Organizing and editing
 • Search by title, artist, or tag
-• Select several songs at once to add them to setlists, tag them, or export them in one go
+• Select several songs at once to add them to setlists, tag them, or export them
 • Tags and languages stored inside the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
-• A ChordPro editor with syntax highlighting, mistakes marked as you type, and a live preview
+• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
 
 Import, export, share, and sync
 • Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become real chords you can transpose
-• Import ChordPro, text, PDF, and Word files, zip archives, and other songbook apps' backups
+• Import ChordPro, text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 • Print-ready PDF export with your paper size and columns
 • Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
 • Optional sync through your own Dropbox, automatic after every change
@@ -127,10 +127,13 @@ https://campfire-songbook.com/
 ```
 Campfire has no account and nothing to sign in to. Two public-domain demo songs and a setlist are loaded on first launch, so every feature can be reviewed without adding content. The first launch also opens a short onboarding, which can be skipped.
 
-New in 5.0.1, and where to find it:
-- Export screen: "Export" in a song's or setlist's menu now offers Link first, and the PDF options are grouped into Page, Running order, and Song sheets.
-- The app's log: Settings → About has rows to email, share, or save it, each after a dialog saying what it holds; after a crash the next launch offers to send it. Nothing is sent by the app itself.
-- Metronome vibration: the Metronome screen's vibration switch now also covers subdivisions, more lightly than the beats.
+New in 5.1.0, and where to find it:
+- Capo: a song's chords, key, and scales are now named as they sound. The Capo control at the top of a song keeps the pitch and redraws the diagrams as the shapes fingered above the capo. The Chords and Scales tabs have a capo picker after the instrument.
+- Chord degrees: each chord diagram at the top of a song names its degree in the song's key, such as V7 beside G7. The switch is in Settings → Preferences, and under Display settings in the song's three-dot menu.
+- Bold, italic, and underline: the editor's Shortcuts row has a button for each, and with a keyboard, Cmd + B, I, and U toggle them.
+- Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or opening a file with Campfire) opens a preview before anything is saved; in a review of several songs, tapping a song's row opens it.
+- ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept.
+- PDF options: "Export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user taps the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 

@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Reorganize settings, separate feature flags from preferences
 - Rename master branch to main
 - Document all keyboard shortcuts used in the app
 - Comments in setlists (between songs)

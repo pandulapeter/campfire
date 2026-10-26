@@ -32,7 +32,7 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, whole zip archives, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, zip archives, even another songbook app's backup.
 
 Reading
 • Turn the page with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
@@ -65,14 +65,14 @@ Setlists
 
 Organizing and editing
 • Search by title, artist, or tag
-• Select several songs at once to add them to setlists, tag them, or export them in one go
+• Select several songs at once to add them to setlists, tag them, or export them
 • Tags and languages stored inside the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
-• A ChordPro editor with syntax highlighting, mistakes marked as you type, and a live preview
+• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
 
 Import, export, share, and sync
 • Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become real chords you can transpose
-• Import ChordPro, text, PDF, and Word files, zip archives, and other songbook apps' backups
+• Import ChordPro, text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 • Print-ready PDF export with your paper size and columns
 • Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
 • Optional sync through your own Dropbox, automatic after every change

@@ -34,7 +34,7 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, whole zip archives, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, zip archives, even another songbook app's backup.
 
 Reading
 • Turn the page with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
@@ -75,11 +75,11 @@ Organizing
 • Right-click any song or setlist to open its menu
 
 Writing and editing
-• ChordPro editor with syntax highlighting, mistakes marked as you type, a live preview, and one-tap formatting
+• ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
 
 Import, export, share, and sync
 • Paste a chord sheet or drag it onto the window, and it opens in the editor. Chords written above the lyrics become real chords you can transpose
-• Import ChordPro, plain text, PDF, and Word files, whole zip archives, and other songbook apps' backups, reviewed before anything is saved
+• Import ChordPro, plain text, PDF, Word, and ABC files, whole zip archives, and other songbook apps' backups, reviewed before anything is saved
 • Export songs or a setlist as a print-ready PDF with your paper size, columns, and options
 • Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
 • Back up the whole library as a zip
@@ -133,13 +133,13 @@ Select several songs at once to add them to setlists, tag them, set their langua
 Tags and languages that travel inside the song files, and one of 14 colors for every tag
 ```
 ```
-ChordPro editor with syntax highlighting, mistakes marked as you type, and a live preview
+ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
 ```
 ```
 Paste or drop a chord sheet copied from a website, and it opens in the editor with real chords you can transpose
 ```
 ```
-Import ChordPro, plain text, PDF, and Word files, zip archives, and other songbook apps' backups
+Import ChordPro, plain text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 ```
 ```
 Export songs and setlists as print-ready PDFs with your paper size, columns, and options
