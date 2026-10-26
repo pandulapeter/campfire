@@ -9,13 +9,14 @@
 -->
 # To do
 - Rename master branch to main
+- Auto-scroll with adjustable speed
 - Document all keyboard shortcuts used in the app
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Editor multi-cursor support: documentation/plans/multi-caret-editor.md
 - Streaming zip writer on all platforms
 - Fast scroller on the song details screen
-- External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
+- External monitor support: documentation/plans/audience-screen.md
 - ABC notation rendering: documentation/plans/abc-notation.md
 - Google Drive integration (groundwork landed for v5.1.0; spikes S1–S5 next): documentation/plans/google-drive-sync.md
 - Consider organizing the sync directory in a more user-readable way (subfolders for artists), make it optional
