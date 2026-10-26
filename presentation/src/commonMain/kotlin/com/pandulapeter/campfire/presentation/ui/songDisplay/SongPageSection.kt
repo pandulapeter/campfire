@@ -63,7 +63,7 @@ internal fun SongPageSection(
         description = stringResource(Res.string.settings_chord_degrees_description),
         isChecked = userPreferences?.areChordDegreesEnabled != false,
         isEnabled = (areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
-            (userPreferences?.isChordLibraryEnabled != false && userPreferences?.areScalesEnabled != false),
+            (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled),
         onCheckedChange = preferencesController::setChordDegreesEnabled,
     )
     // A suggestion is read off a song's chords and opens a scale's sheet, so it needs both the chords and the scales.

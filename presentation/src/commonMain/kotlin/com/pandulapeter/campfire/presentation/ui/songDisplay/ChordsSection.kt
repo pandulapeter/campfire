@@ -103,5 +103,5 @@ private fun NotationChoice(
 
 /** Whether anything shown names a chord or a key: a song's chords, the Chords tab, or the Scales tab. */
 private val UserPreferences?.namesChords
-    get() = (this?.areSongsEnabled != false && this?.areChordsEnabled != false) || this?.isChordLibraryEnabled != false ||
-        this?.areScalesEnabled != false
+    get() = (this?.areSongsEnabled != false && this?.areChordsEnabled != false) || this.isChordLibraryEnabled ||
+        this.areScalesEnabled
