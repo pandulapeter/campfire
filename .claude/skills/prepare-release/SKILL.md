@@ -53,6 +53,14 @@ them. If a change has no effect a user could notice, it is not in the notes.
    page through a song) adds few strings and is easy to miss. Check which screens and `CLAUDE.md` sections
    changed most, and read those diffs.
 
+   **A cluster is an area of the app a user would describe in one breath, not a commit or a feature flag.**
+   Write the clusters down as a table (cluster, the commits in it, what a user sees, who meets it) before
+   ranking anything, then merge again: two candidate bullets about the same thing — how chords are named and
+   what their diagrams show, two new ways into the import, three PDF export options, a fix to tabs and a new
+   way of drawing them — are one cluster and one bullet. A fix of something released goes into its area's
+   cluster, not into a cluster of fixes. Getting songs in (every importer, the preview, the review) is one
+   area; reading a song (chords, diagrams, tabs, grids) is at most two.
+
 4. **Read the actual diffs — never summarize from commit subjects.** Subjects are lossy and often name
    the mechanism rather than the effect. For each commit:
    ```bash
@@ -93,8 +101,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian).
 
    Write the bullets by **Writing the changelog** below: at most six, each a bold headline and a one-sentence
-   description, sorted by importance. Before writing, list the feature clusters from step 3, rank them, and check
-   that the six (or fewer) that made it are the ones a user would miss most.
+   description, sorted by importance. Before writing, take the cluster table from step 3, rank it by **Writing the
+   changelog**'s three questions, and check that the six (or fewer) that made it are the ones a user would miss
+   most, that no two of them are about the same area, and that none claims more than the app does.
 
    Store each bullet on one line as `• **Headline** Description` (the literal `• `, the headline between `**`
    pairs, then a space and the description), and separate bullets with `\n` in the XML string (for example,
@@ -210,9 +219,22 @@ nowhere. Never pad a small release up to six.
 - Address the user as `you` where it reads naturally; no `we`, no developer vocabulary, no version numbers.
 - Platform-only bullets name the platform (`On Android, …`, `… on the web.`).
 
-**Sort by importance from the user's perspective**, not by commit count or chronology: what changes how
-people read and play songs every day first, then getting songs in and out, then new capabilities, then
-conveniences, then fixes.
+**Never claim more than the app does — say a feature's limits.** Read each headline as a user who has not
+seen the diff: if it makes them expect something the app does not do, the description says what it does not do
+yet, in a clause (`ABC tunes are imported as chord grids with the tune kept as text; sheet music is not drawn
+yet.`). Check every claim against the code, not the commit subject: an importer that keeps a block as text does
+not "support" that notation, a setting only on some platforms names them, an option that only hides does not
+delete. A limit worth stating is one a user would otherwise run into and think a bug.
+
+**Sort by importance from the user's perspective**, never by commit count, diff size, or chronology. Rank
+each cluster by three questions, in order: how many users meet it (everyone who opens a song, or only those
+who use one importer), whether they notice it without looking for it (what every song page shows, versus a
+new switch in Settings), and how much it changes what they do (a different way of working, versus one tap
+saved). What changes how people read and play songs every day comes first, then getting songs in and out,
+then new capabilities, then conveniences. A new button, menu entry, or option ranks below any change to what
+people see on every song, and goes inside its area's bullet rather than taking one of its own; a niche
+format or a narrow option is last, even when it took the most work. Before writing, read the list top to
+bottom and check that no bullet below is one more users would miss than a bullet above it.
 
 Examples of the tone:
 

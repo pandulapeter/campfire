@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.1: chords named as they sound under a capo, chord degrees, bold, italic, and underlined lyrics, ABC tunes, and a preview of every song you import.
+New in 5.1: chords named as they sound under a capo, chord degrees, a preview of every song you import, bold, italic, and underlined lyrics, and ABC tunes as chord grids.
 ```
 
 ## Description (4,000 characters max)
@@ -109,7 +109,7 @@ New in 5.1.0, and where to find it:
 - Chord degrees: each chord diagram at the top of a song names its degree in the song's key, such as V7 beside G7. The switch is in Settings → Preferences, and under Preferences in the song's three-dot menu.
 - Bold, italic, and underline: the editor's Shortcuts row has a button for each, and Cmd + B, I, and U toggle them.
 - Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or dropping a file onto the window) opens a preview before anything is saved; in a review of several songs, clicking a song's row opens it.
-- ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept.
+- ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept as text; the app does not draw sheet music.
 - PDF options: "Export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
 ```
 
