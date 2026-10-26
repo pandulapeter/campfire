@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 
 /**
  * The marks a chord row carries between and after its chords: repeat counts (`x4`, `(2x)`, `×3`), bar lines and repeat
- * signs (`|`, `|:`, `%`, `/`), and a no chord written as text (`N.C.`). ChordPro has no syntax for them, so a line of
+ * signs (`|`, `|:`, `%`, `/`), beat dots (`.`, `...`, `…`), and a no chord written as text (`N.C.`). ChordPro has no syntax for them, so a line of
  * chords ending in `x4` would be a lyric line saying "x4" under its chords; the parser reads them as
  * [ChordProLine.Lyrics.Chord.isMark] chords instead, and the highlighter colours them as it does annotations.
  *
@@ -27,7 +27,7 @@ internal object ChordProRowMarks {
     /** One repeat count, `x2`, `(2x)` or `×2`, as a mark of a chord row and after a heading the converter reads. */
     val repeatCount = Regex("\\(?(?:[0-9]+[x\u00d7]|[x\u00d7][0-9]+)\\)?", RegexOption.IGNORE_CASE)
 
-    private val signs = setOf("|", "||", "|:", ":|", ":|:", "%", "%%", "/", "-", "N.C.", "NC")
+    private val signs = setOf("|", "||", "|:", ":|", ":|:", "%", "%%", "/", "-", "N.C.", "NC", ".", "...", "\u2026")
 
     fun isMark(word: String) = word in signs || repeatCount.matches(word)
 

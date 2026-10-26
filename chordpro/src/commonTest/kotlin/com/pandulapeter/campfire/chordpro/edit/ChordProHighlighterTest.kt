@@ -178,6 +178,17 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the beat dots, bar line, and count of a dotted chord row are annotations`() {
+        val dots = List(3) { TokenType.ANNOTATION to "." }
+
+        assertEquals(
+            listOf(TokenType.CHORD to "[G]") + dots + listOf(TokenType.ANNOTATION to "|", TokenType.CHORD to "[C]") + dots +
+                listOf(TokenType.ANNOTATION to "x2"),
+            spans("[G] . . . | [C] . . . x2"),
+        )
+    }
+
+    @Test
     fun `an empty bracket is not a chord`() {
         assertEquals(listOf(TokenType.CHORD to "[Am]"), spans("[] [ ] [Am]"))
     }

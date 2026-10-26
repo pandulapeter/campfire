@@ -60,6 +60,34 @@ class ChordProParserRowMarksTest {
     }
 
     @Test
+    fun `beat dots are marks between the chords`() {
+        val dotted = line("[G] . . . | [C] . . . x2")
+
+        assertTrue(dotted.text.isBlank())
+        assertEquals(listOf("G", ".", ".", ".", "|", "C", ".", ".", ".", "x2"), dotted.chords.map { it.name })
+        assertTrue(dotted.chords.filter { it.name != "G" && it.name != "C" }.all { it.isMark && it.isAnnotation })
+        assertRoundTrip("[G] . . . | [C] . . . x2")
+
+        val ellipses = line("[G] ... [C] \u2026")
+
+        assertTrue(ellipses.text.isBlank())
+        assertEquals(listOf("G", "...", "C", "\u2026"), ellipses.chords.map { it.name })
+        assertTrue(ellipses.chords.filter { it.name != "G" && it.name != "C" }.all { it.isMark && it.isAnnotation })
+        assertRoundTrip("[G] ... [C] \u2026")
+    }
+
+    @Test
+    fun `a lone chord over dots or an ellipsis is a chord row`() {
+        val dots = line("[Am]. . .")
+
+        assertTrue(dots.text.isBlank())
+        assertEquals(listOf(chord(0, "Am"), mark(0, "."), mark(2, "."), mark(4, ".")), dots.chords)
+        assertRoundTrip("[Am]. . .")
+        assertEquals(listOf(chord(0, "G"), mark(0, "\u2026")), line("[G]\u2026").chords)
+        assertRoundTrip("[G]\u2026")
+    }
+
+    @Test
     fun `a chord row the converter writes from a pasted chart is one row`() {
         val line = line("[am] [H7] | % x2 N.C.")
 
@@ -105,7 +133,19 @@ class ChordProParserRowMarksTest {
 
     @Test
     fun `a sung line, a lone count, a backing line, and a word with a chord inside keep their text`() {
-        listOf("[G]Row, row, [C]row x2", "x4", "[G] [C] (oh yeah)", "[G] [C] x4 la", "[G]x[C]4").forEach { text ->
+        listOf(
+            "[G]Row, row, [C]row x2",
+            "x4",
+            "[G] [C] (oh yeah)",
+            "[G] [C] x4 la",
+            "[G]x[C]4",
+            "[G]Hello . . .",
+            "[G]Oh... [C]yeah...",
+            "[G] [C] (. . .)",
+            "[G]...[C]...",
+            "[G] .... [C] ..",
+            ". . .",
+        ).forEach { text ->
             assertTrue(line(text).chords.none { it.isMark }, text)
             assertTrue(line(text).text.isNotBlank(), text)
         }
