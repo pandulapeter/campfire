@@ -37,9 +37,12 @@ import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.platform.readProcessLog
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
+import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
@@ -175,15 +178,17 @@ internal class ExportController(
             val playedTransposition = transpositions.value[entry.songFileName, setlistFileName]
             // Tempo and capo are printed as the screen shows them, as the key is: the setlist's, else the reader's own,
             // else the file's.
-            val tempo = effectiveTempoOf(entry.songFileName, setlistFileName).takeUnless { it.isDefault }?.bpm
+            val effectiveTempo = effectiveTempoOf(entry.songFileName, setlistFileName)
+            val tempo = effectiveTempo.takeUnless { it.isDefault }?.bpm
             val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
             val capo = effectiveCapo.takeUnless { it.isDefault }?.fret
+            val playback = SongPlayback(transposition = playedTransposition, capo = effectiveCapo, tempo = effectiveTempo)
             // The pages are in the chords that sound, as the screen is, the file's capo counted in; the diagrams are the
             // shapes played above the capo the page prints, none on the keyboard, which prints no capo either.
-            val transposition = soundingTransposition(playedTransposition, effectiveCapo.songFret)
-            val shapeCapo = if (playsWithoutCapo) 0 else capo ?: effectiveCapo.songFret
+            val transposition = playback.soundingTransposition
+            val shapeCapo = playback.shapeCapoFor(preferences)
             // The scales and the degrees read the file's own capo, which says how its key is meant, as on the screen.
-            val transposed = content?.let { withContext(Dispatchers.Default) { songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs, capo = transposition - playedTransposition) } }
+            val transposed = content?.let { withContext(Dispatchers.Default) { songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs, capo = playback.tabCapoFor(preferences)) } }
             val printed = transposed?.withTempo(tempo)?.let { if (playsWithoutCapo) it.withoutCapo() else it.withCapo(capo) }
             val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
             // One walk answers both the scales and the degrees, as on the screen.

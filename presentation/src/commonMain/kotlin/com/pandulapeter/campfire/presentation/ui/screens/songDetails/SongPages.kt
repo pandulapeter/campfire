@@ -52,9 +52,9 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
-import com.pandulapeter.campfire.presentation.ui.playing.soundingCapo
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 
 /**
@@ -169,7 +169,7 @@ internal fun SongPages(
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
             transposition = playback.soundingTransposition,
-            soundingCapo = playback.soundingCapo,
+            tabCapo = playback.tabCapoFor(userPreferences),
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             capoOverride = capo.takeUnless { it.isDefault || playsWithoutCapo }?.fret,
             shapeCapo = shapeCapo,

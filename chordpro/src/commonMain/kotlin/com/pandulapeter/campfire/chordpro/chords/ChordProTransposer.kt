@@ -55,9 +55,10 @@ public object ChordProTransposer {
      * @param tabPlayer Who the tabs are read by, which moves every run of tablature to their strings as well as by the
      *   transposition, in one move, so that it is put on the neck by one decision rather than two (see
      *   [ChordProTabRetuner]). Null moves the frets by the transposition alone, as the text transposition does.
-     * @param capo How many of [semitones] are a capo's: the song's own `{capo}`, counted in to name the chords that sound.
-     *   A tab's frets are counted from the capo, as tablature is, so they move by the rest alone while every chord name,
-     *   a tab's included, moves by all of it.
+     * @param capo How many of [semitones] a tab's frets are not moved by: a capo's, counted in to name the chords that
+     *   sound. A tab's frets are counted from the capo, as tablature is, so they move by the rest alone, which is negative
+     *   where the capo played is higher than the one the chords are named for, while every chord name, a tab's included,
+     *   moves by all of it.
      */
     public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null, capo: Int = 0): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
@@ -71,7 +72,7 @@ public object ChordProTransposer {
     /**
      * Moving by [shift] semitones, spelled for the key the song is in once it has moved that far. No move and no forced
      * spelling leaves the chords exactly as written, as it does for a song with no modulation at all, and the tabs too
-     * where nobody is named to read them.
+     * where nobody is named to read them and the [capo] does not move their frets either.
      */
     private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?, tabPlayer: TabPlayer?, capo: Int): ChordRewrite {
         val isMoved = shift != 0 || preferFlats != null

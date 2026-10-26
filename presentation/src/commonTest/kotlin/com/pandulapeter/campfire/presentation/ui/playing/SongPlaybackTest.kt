@@ -92,6 +92,18 @@ class SongPlaybackTest {
     }
 
     @Test
+    fun `a tab keeps its pitch under a capo override`() {
+        val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
+        val fretMove = { playback: SongPlayback -> playback.soundingTransposition - playback.tabCapoFor(guitar) }
+        assertEquals(0, fretMove(songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot())))
+        assertEquals(2, fretMove(songPlaybackOf(song, setlistFileName = SETLIST, overrides = PlayingOverridesSnapshot(capos = Capos().with(setlist, 0)))))
+        val withoutCapo = song.copy(capo = null)
+        assertEquals(-3, fretMove(songPlaybackOf(withoutCapo, setlistFileName = null, overrides = PlayingOverridesSnapshot(capos = Capos().with(library, 3)))))
+        val transposed = PlayingOverridesSnapshot(transpositions = Transpositions(SongOverrides<Int>().with(library, 5)))
+        assertEquals(5, fretMove(songPlaybackOf(song, setlistFileName = null, overrides = transposed)))
+    }
+
+    @Test
     fun `the keyboard plays the sounding chords whatever the capo`() {
         val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
         val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)

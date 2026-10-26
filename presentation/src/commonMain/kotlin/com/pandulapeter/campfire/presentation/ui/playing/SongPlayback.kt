@@ -45,10 +45,12 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
 internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, capo.songFret)
 
 /**
- * The semitones of [soundingTransposition] that are the file's capo rather than the reader's transposition, the octave
- * the wrap took included: what a tab, whose frets are counted from the capo, is not moved by.
+ * The semitones of [soundingTransposition] a tab's frets are not moved by: a tab is counted from the capo it is played
+ * above, so it moves by the reader's transposition and by the difference between the file's capo and the one played
+ * at ([shapeCapoFor]), which keeps its pitch as a capo override keeps the chords'. The octave the wrap took is counted
+ * in, so that the frets move by the unwrapped amount.
  */
-internal val SongPlayback.soundingCapo get() = soundingTransposition - transposition
+internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTransposition - transposition - capo.songFret + shapeCapoFor(preferences)
 
 /**
  * The fret the shapes the player frets sit above, a chord's sounding name moved down by it naming its shape (a capo of 2

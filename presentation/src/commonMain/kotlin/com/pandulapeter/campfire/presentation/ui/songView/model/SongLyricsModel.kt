@@ -198,7 +198,7 @@ internal data class SongLyricsInputs(
     val spelling: UserPreferences.ChordSpelling,
     val shouldShowChords: Boolean,
     val labels: DefaultSectionLabels,
-    val soundingCapo: Int = 0,
+    val tabCapo: Int = 0,
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val shapeCapo: Int = 0,

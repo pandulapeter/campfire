@@ -69,8 +69,8 @@ class SongRenderer(
      * @param readsKeyOfChords Whether a capo chart's `{key}` is read as the key its chords are in before it is moved
      *   (`SongKeys.withKeyOfChords`), so that a page in the sounding key names the key it sounds in, whichever key the
      *   file wrote. Only the editor's preview, which shows the file as written, reads it as written.
-     * @param capo How many semitones of [transposition] are the file's capo, counted in to name the chords that sound
-     *   (`SongPlayback.soundingCapo`): a tab's frets are counted from the capo, so they move by the rest alone.
+     * @param capo How many semitones of [transposition] a tab's frets are not moved by, see
+     *   `SongPlayback.tabCapoFor`: a tab's frets are counted from the capo played, so they move by the rest alone.
      */
     internal fun transposedSong(
         text: String,
@@ -84,8 +84,8 @@ class SongRenderer(
         val parsed = ChordProParser.parse(text, writtenIn.toChordNotation()).let { if (readsKeyOfChords) SongKeys.withKeyOfChords(it) else it }
         val selected = tabs?.takeIf { it.selects }?.let { ChordProTabs.select(parsed, it.player.selectors) } ?: parsed
         // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
-        // three are the transposition's to apply, and it leaves a song none of them move exactly as it is. The tabs of
-        // an instrument they are hidden from are not worth moving.
+        // three are the transposition's to apply, and it leaves a song none of them and no capo move exactly as it is.
+        // The tabs of an instrument they are hidden from are not worth moving.
         val transposed = ChordProTransposer.transpose(selected, parsed.metadata.transpose + transposition, spelling.accidentals.toPreferFlats(), tabs?.player?.takeUnless { it.hidesTabs }, capo)
         return tabs?.let { ChordProTabs.withNotices(transposed, it.player, it.labels::describe) } ?: transposed
     }

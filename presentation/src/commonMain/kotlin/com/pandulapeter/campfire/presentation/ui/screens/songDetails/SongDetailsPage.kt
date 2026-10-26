@@ -100,7 +100,7 @@ import org.jetbrains.compose.resources.painterResource
  *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
  * @param transposition The semitones the file's chords are moved by to the ones that sound, the file's own capo counted
  *   in (`SongPlayback.soundingTransposition`): the page names what the band hears on every instrument.
- * @param soundingCapo How many of [transposition]'s semitones are the file's capo, which a tab's frets are not moved by.
+ * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the
  *   same way as [tempoOverride].
  * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
@@ -133,7 +133,7 @@ internal fun SongDetailsPage(
     followsViewport: Boolean,
     hasFailed: Boolean,
     transposition: Int,
-    soundingCapo: Int,
+    tabCapo: Int,
     tempoOverride: Int?,
     capoOverride: Int?,
     shapeCapo: Int,
@@ -188,7 +188,7 @@ internal fun SongDetailsPage(
             inputs = SongLyricsInputs(
                 text = songText,
                 transposition = transposition,
-                soundingCapo = soundingCapo,
+                tabCapo = tabCapo,
                 spelling = chordSpelling,
                 shouldShowChords = shouldShowChords,
                 labels = labels,
@@ -205,7 +205,7 @@ internal fun SongDetailsPage(
         ) { inputs, searchesShapes ->
             // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
             // in; the page names the capo it is played at.
-            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.soundingCapo, inputs.spelling, inputs.tabs)
+            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs)
             prepareSongLyrics(
                 song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling),
                 standardSong = transposed,

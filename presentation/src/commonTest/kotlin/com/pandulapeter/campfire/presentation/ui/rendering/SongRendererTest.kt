@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Notation
 import kotlin.test.Test
@@ -38,6 +40,16 @@ class SongRendererTest {
         assertEquals("G", renderer.transposedSong("{key: D}\n{capo: 5}$chords", transposition = 5, spelling = UserPreferences.ChordSpelling.Default).metadata.key)
         assertEquals("G", renderer.renderSong("{key: G}\n{capo: 5}$chords", transposition = 0, spelling = UserPreferences.ChordSpelling.Default).metadata.key)
     }
+
+    @Test
+    fun `a tab is moved by the capo the player puts on, an octave up where it would leave the neck`() {
+        assertEquals(listOf("e|---5---|"), tabLinesOf("{capo: 2}\n{start_of_tab}\ne|---3---|\n{end_of_tab}", transposition = 2, capo = 0))
+        assertEquals(listOf("e|--9--12--|"), tabLinesOf("{start_of_tab}\ne|--0--3--|\n{end_of_tab}", transposition = 0, capo = 3))
+    }
+
+    private fun tabLinesOf(text: String, transposition: Int, capo: Int) = renderer
+        .transposedSong(text, transposition = transposition, spelling = UserPreferences.ChordSpelling.Default, capo = capo)
+        .blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Tab>().map { it.text }
 
     @Test
     fun `a song with no key has no rendered key`() =
