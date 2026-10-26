@@ -16,8 +16,8 @@ Silent failures go to the injected `Logger`.
 
 - The list is the root `CLAUDE.md`'s; add to it before adding a request. Cover copies are kept by
   `:data:repository:implementation`.
-- The import download (`ImportDownloadRemoteSourceImpl`), one GET of an address the user opened, keeping nothing;
-  reached by nothing in the app yet.
+- The import download (`ImportDownloadRemoteSourceImpl`), one GET of an address the user opened (a Campfire
+  shared link's download address), keeping nothing.
 - Coil has no network artifact: it draws what `GetCoverArtUseCase` hands it.
 - `HttpClientHolder` builds the one client lazily on the first request, on `Dispatchers.Default`, so a user who never
   syncs or searches never builds it.
