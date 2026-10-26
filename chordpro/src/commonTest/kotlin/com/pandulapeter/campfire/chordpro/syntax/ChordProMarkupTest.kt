@@ -57,10 +57,40 @@ class ChordProMarkupTest {
 
     @Test
     fun `other text in angle brackets stays lyrics`() {
-        val line = lyrics("<3 <intro> a<b c> <br> <b>")
+        val line = lyrics("<3 <intro> </chorus> a<b c> <span color> <font size=> <b>")
 
-        assertEquals("<3 <intro> a<b c> <br> ", line.text)
+        assertEquals("<3 <intro> </chorus> a<b c> <span color> <font size=> ", line.text)
         assertEquals(emptyList(), line.formatting)
+    }
+
+    @Test
+    fun `tags without a style are hidden and keep their text`() {
+        val line = lyrics("x<SUP>2</SUP> <span foreground=\"red\" size='large'>red</span> a<br/>b<br />c <font color=red>d</font>")
+
+        assertEquals("x2 red abc d", line.text)
+        assertEquals(emptyList(), line.formatting)
+    }
+
+    @Test
+    fun `styled tags may carry attributes and sit inside hidden ones`() {
+        val line = lyrics("<span size=\"large\"><b class=\"x\">[G]loud</b></span> soft")
+
+        assertEquals("loud soft", line.text)
+        assertEquals(listOf(Formatting(0, 4, Style.BOLD)), line.formatting)
+        assertEquals(0, line.chords.single().position)
+    }
+
+    @Test
+    fun `a self-closing styled tag formats nothing`() {
+        val line = lyrics("a<b/>b")
+
+        assertEquals("ab", line.text)
+        assertEquals(emptyList(), line.formatting)
+    }
+
+    @Test
+    fun `comments drop hidden tags when stripped`() {
+        assertEquals("Capo 2 slow", ChordProMarkup.strip("<span weight=\"bold\">Capo 2</span> <small>slow</small>").text)
     }
 
     @Test

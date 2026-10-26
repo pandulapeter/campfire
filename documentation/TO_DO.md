@@ -10,6 +10,7 @@
 # To do
 - Rename master branch to main
 - Auto-scroll with adjustable speed
+- OCR for PDF
 - Document all keyboard shortcuts used in the app
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
