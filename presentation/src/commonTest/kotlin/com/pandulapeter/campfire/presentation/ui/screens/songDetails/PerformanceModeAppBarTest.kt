@@ -21,9 +21,14 @@ class PerformanceModeAppBarTest {
     private val widths = (240..900).map { it.dp }
 
     @Test
-    fun `the smallest supported phone keeps the text size stepper but leaves the cover out of the performance bar`() {
-        assertTrue(showsFontScaleInPerformanceBar(360.dp))
+    fun `the smallest supported phone leaves the text size stepper and the cover out of the performance bar`() {
+        assertFalse(showsFontScaleInPerformanceBar(360.dp))
         assertFalse(showsCoverInPerformanceMode(360.dp))
+    }
+
+    @Test
+    fun `a common phone keeps the text size stepper in the performance bar`() {
+        assertTrue(showsFontScaleInPerformanceBar(412.dp))
     }
 
     @Test

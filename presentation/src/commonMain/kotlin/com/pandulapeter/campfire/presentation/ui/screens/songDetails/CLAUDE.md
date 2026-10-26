@@ -69,8 +69,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - The text size stepper is in the bar where it fits, else at the end of the menu (`MenuStepperRow` as `menuFooter`, the
   menu staying open while pressed). As the bar narrows the text size goes into the menu, then Choose setlists, then the
   cover, each while the title keeps 160dp (`appBarButtons`, from the settled width, for every page at once). Performance
-  mode: the stepper in the bar where the title keeps 160dp (`showsFontScaleInPerformanceBar`), else alone in a menu; the
-  cover only where the title keeps 160dp beside both (`showsCoverInPerformanceMode`).
+  mode: the stepper in the bar where the title keeps 160dp beside it and the overflow button
+  (`showsFontScaleInPerformanceBar`, about 394dp), else at the end of the menu; the cover only where the title keeps
+  160dp beside all three (`showsCoverInPerformanceMode`). **The overflow button is always the bar's last.**
 
 ### The menu's own entries
 

@@ -74,8 +74,8 @@ import kotlinx.coroutines.launch
  * text those four used to be.
  *
  * The text size is the one control that is still the bar's, as a row at the end of its overflow menu
- * ([MenuStepperRow]) - and in performance mode, where it is all that is left, in the bar itself
- * ([showsFontScaleInPerformanceBar]). It can
+ * ([MenuStepperRow]) - and in performance mode, where it is the one control beside that menu, in the bar itself
+ * wherever it fits ([showsFontScaleInPerformanceBar]). It can
  * also be changed with a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the
  * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers (`FontScaleController.zoomSongText`).
  *

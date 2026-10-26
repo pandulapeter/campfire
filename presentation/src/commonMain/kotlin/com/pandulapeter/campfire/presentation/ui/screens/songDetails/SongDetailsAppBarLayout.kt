@@ -17,13 +17,12 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COV
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_SIZE
 
 /**
- * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, where it is
- * the only control the bar holds: wherever it leaves the title [MIN_TITLE_WIDTH], since the title is what tells the
- * player which song is up. Where it does not, the stepper is in a menu of its own. The cover is not counted, since it
- * is the first to leave ([showsCoverInPerformanceMode]).
+ * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, beside the
+ * back and the overflow buttons it always holds ([APP_BAR_FIXED_CONTENT_WIDTH]): wherever it leaves the title
+ * [MIN_TITLE_WIDTH], since the title is what tells the player which song is up. Where it does not, the stepper is at the
+ * end of the menu. The cover is not counted, since it is the first to leave ([showsCoverInPerformanceMode]).
  */
-internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING -
-    FONT_SCALE_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH
+internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
@@ -31,8 +30,7 @@ internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP
  * the title is still left [MIN_TITLE_WIDTH] beside both.
  */
 internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
-    appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - FONT_SCALE_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
-    APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+    appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
 
 /** What the song details app bar has the room for outside read only mode, see [appBarButtons]. */
 internal data class AppBarButtons(
@@ -57,13 +55,6 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
         isFontScaleShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH,
     )
 }
-
-/**
- * What the text size stepper of performance mode leaves after it, the last thing in the bar. The transposition stepper
- * has none: a button always follows it, and that button's touch target already keeps its icon off the pill by as much
- * as two neighboring buttons keep their icons apart.
- */
-internal val APP_BAR_STEPPER_END_PADDING = 8.dp
 
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp

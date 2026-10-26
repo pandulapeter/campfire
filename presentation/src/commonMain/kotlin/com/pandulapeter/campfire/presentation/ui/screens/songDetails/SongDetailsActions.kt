@@ -17,7 +17,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -73,11 +72,9 @@ internal fun RowScope.SongDetailsActions(
         exit = fadeOut() + shrinkHorizontally(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            LiveFontScaleControls(viewModel = viewModel)
+            // The overflow button is the bar's last, after the stepper, as the song's own menu is outside read only mode.
             ActionsMenu(items = if (isPerformanceModeEnabled) performanceItems else emptyList())
-            LiveFontScaleControls(
-                modifier = Modifier.padding(end = if (isReadOnly) APP_BAR_STEPPER_END_PADDING else 0.dp),
-                viewModel = viewModel,
-            )
         }
     }
     // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
