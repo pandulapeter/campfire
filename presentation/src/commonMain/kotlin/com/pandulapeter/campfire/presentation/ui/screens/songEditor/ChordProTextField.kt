@@ -114,9 +114,9 @@ internal fun ChordProTextField(
             secondaryColor = colorScheme.onSurfaceVariant,
             outlineColor = colorScheme.outline,
             errorColor = colorScheme.error,
-            searchMatchColor = colorScheme.tertiaryContainer,
-            currentSearchMatchColor = colorScheme.tertiary,
-            onCurrentSearchMatchColor = colorScheme.onTertiary,
+            searchMatchColor = colorScheme.secondaryContainer,
+            currentSearchMatchColor = colorScheme.primary,
+            onCurrentSearchMatchColor = colorScheme.onPrimary,
             searchHighlights = searchHighlights,
         )
     }
