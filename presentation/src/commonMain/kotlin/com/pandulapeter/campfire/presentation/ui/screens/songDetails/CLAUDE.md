@@ -75,8 +75,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ### The menu's own entries
 
-- Both menus (read only mode's too) hold About the song (where the sheet is offered: never in a preview) and Display
-  settings (`SongDisplaySheet`, the Preferences tab's Chords and Song page sections, written at once so the song
+- Both menus (read only mode's too) hold About the song (where the sheet is offered: never in a preview) and
+  Preferences (`SongDisplaySheet`, the Preferences tab's Chords and Song page sections, written at once so the song
   changes behind it; the notation's sheet stacks over it). Never let out as buttons (`isAlwaysInMenu`).
 
 ### Keeping the display on
