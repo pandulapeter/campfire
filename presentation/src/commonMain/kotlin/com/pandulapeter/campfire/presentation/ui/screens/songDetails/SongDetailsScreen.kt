@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,11 +37,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.Modifier
@@ -50,7 +45,6 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
@@ -326,28 +320,6 @@ internal fun SongDetailsScreen(
 }
 
 /**
- * Reads the text of the song being read, and of the songs beside it: the pages next to the current one are composed
- * ahead of time (beyondViewportPageCount), so their text is read ahead of time too, and a swipe then lands on lyrics
- * rather than on a loading indicator.
- */
-@Composable
-private fun LoadSongTexts(
-    viewModel: CampfireViewModel,
-    songs: List<Song>,
-    currentPage: Int,
-    songTexts: Map<String, String>,
-) {
-    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
-    val currentFileName = songs.getOrNull(currentPage)?.fileName
-    LaunchedEffect(currentFileName) { currentFileName?.let(viewModel.songTextStore::loadSongContent) }
-    LaunchedEffect(currentPage, songs) {
-        listOfNotNull(songs.getOrNull(currentPage - 1), songs.getOrNull(currentPage + 1))
-            .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
-            .forEach { viewModel.songTextStore.loadSongContent(it.fileName) }
-    }
-}
-
-/**
  * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
  * nothing else in it belongs to one song: the instrument, the tuning, and the player's shapes are the same wherever a
  * song is read. Whether the section is folded is each song's own, given by its page. An instrument without shapes still gets one, with no tuning to draw in, so that
@@ -424,53 +396,6 @@ private fun Modifier.songDetailsKeyboardShortcuts(
         null
     },
 )
-
-/**
- * Scrolls a pager created before the library was read to the song that was tapped, and tells the view model where the
- * pager is: the page it has come to rest on and the page it is headed for. Not part of [SongDetailsScreen] itself,
- * which has to stay small enough for HotSpot to compile.
- */
-@Composable
-private fun FollowPager(
-    viewModel: CampfireViewModel,
-    destination: CampfireDestination.SongDetails,
-    songs: List<Song>,
-    pagerState: PagerState,
-    songTimings: SnapshotStateMap<String, SongTiming>,
-) {
-    // The initial page is only read when the pager is created. If the library had not been read by then, the pager
-    // was created with no pages and its first page is page zero: the song that was tapped is scrolled to once the
-    // songs are there, exactly once.
-    var isInitialPageSettled by rememberSaveable { mutableStateOf(songs.isNotEmpty()) }
-    LaunchedEffect(songs.size) {
-        if (!isInitialPageSettled && songs.isNotEmpty()) {
-            isInitialPageSettled = true
-            pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
-        }
-    }
-    // Where the pager has come to rest is where the user is, which the web build's address names. Not before the
-    // initial page has been scrolled to, or the first page of a pager created before the library was read would be
-    // reported on its way to the song that was tapped.
-    val latestSongs by rememberUpdatedState(songs)
-    val latestDestination by rememberUpdatedState(destination)
-    LaunchedEffect(pagerState, isInitialPageSettled) {
-        if (isInitialPageSettled) {
-            snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
-                if (fileName != null) viewModel.navigator.onSongDetailsPageSettled(latestDestination, fileName)
-            }
-        }
-    }
-    // The page being headed for rather than the one settled on, so that a click paged on to the next song has its tempo
-    // while the page is still sliding in, and the stretch of it that page is headed for. A song paged back to is put at
-    // its end first (stepBack), so the click lands on its last stretch rather than on its opening.
-    LaunchedEffect(pagerState, isInitialPageSettled) {
-        if (isInitialPageSettled) {
-            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
-                if (target != null) viewModel.metronomeController.onSongDetailsPageChanged(latestDestination, target.first, target.second)
-            }
-        }
-    }
-}
 
 /**
  * Whether the app bar is at rest: Material's own snap leaves it fully expanded or fully collapsed, and below 1% it does
