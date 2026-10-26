@@ -251,7 +251,7 @@ internal class FakeSyncProvider(
     val sharedFiles = mutableMapOf<String, Pair<ByteArray, String>>()
 
     /** What [createSharedLink] answers for a share id. */
-    var onCreateSharedLink: suspend (String) -> SharedLinkResult = { shareId -> SharedLinkResult.Created(fileId = "id-$shareId", rlkey = "key") }
+    var onCreateSharedLink: suspend (String) -> SharedLinkResult = { shareId -> SharedLinkResult.Created(provider = id, parts = listOf("id-$shareId", "key")) }
 
     /** Runs before a shared copy's upload answers, which is where a test lets another device upload it first. */
     var onUploadSharedFile: suspend (String) -> Unit = {}

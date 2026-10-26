@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
@@ -98,13 +99,17 @@ internal class SharedLinksRepositoryImpl(
                 SharedLinkResult.NotPublic -> return CreateShareResult.Failed(SharingFailure.NOT_PUBLIC)
                 SharedLinkResult.Refused -> return CreateShareResult.Failed(SharingFailure.REFUSED)
             }
+            val (fileId, rlkey) = link.storedParts() ?: run {
+                environment.logger.log("The service answered a link whose parts make no Campfire link.")
+                return CreateShareResult.Failed(SharingFailure.REFUSED)
+            }
             val entry = SharedLinksEntry(
                 shareId = shareId,
                 kind = kind.id,
                 fileName = fileName,
                 title = title,
-                fileId = link.fileId,
-                rlkey = link.rlkey,
+                fileId = fileId,
+                rlkey = rlkey,
                 sharedAt = environment.clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
             )
             if (entry.toShare() == null) {
@@ -373,3 +378,9 @@ internal class SharedLinksRepositoryImpl(
         }
     }
 }
+
+/**
+ * The `fileId` and `rlkey` a shared links entry, and the version 1 link built from it, are written with: a link's parts
+ * in the order Dropbox answers them, and nothing for parts these two fields cannot hold.
+ */
+private fun SharedLinkResult.Created.storedParts() = if (provider == SyncProviderId.DROPBOX && parts.size == 2) parts[0] to parts[1] else null

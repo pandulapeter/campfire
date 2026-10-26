@@ -46,7 +46,8 @@ KDoc of `SyncFolder` and `SyncConnection`.
 - `list` reports them only in `RemoteListing.sharedFiles`, never in `files`, and `changesSince` never reports them, so
   the planner, the deletion guard, and the change feed never see them.
 - `createSharedLink` answers the link a copy already has, so a copy keeps one link; `SharedLinkResult.Created` carries
-  only `fileId` and `rlkey`, from which the app builds every download address itself.
+  the provider and its link parts (Dropbox's `fileId` and `rlkey`), from which the app builds every download address
+  itself. In memory only: the stored list and the links keep their own format.
 - Deleting a copy ends its link for good; "already gone" is success.
 
 ## Authorization

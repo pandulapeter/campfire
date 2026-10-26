@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.http.HttpStatusCode
@@ -72,7 +73,7 @@ class DropboxSharingTest {
             respondLink(visibility = "public")
         }
 
-        assertEquals(SharedLinkResult.Created(fileId = FILE_ID, rlkey = RLKEY), provider.createSharedLink(SHARE_ID))
+        assertEquals(SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf(FILE_ID, RLKEY)), provider.createSharedLink(SHARE_ID))
         assertEquals(JsonPrimitive("/shared/$SHARE_ID.zip"), body?.field("path"))
         val settings = body?.field("settings")
         assertEquals(JsonPrimitive("public"), settings?.field("requested_visibility"))
@@ -96,7 +97,7 @@ class DropboxSharingTest {
             }
         }
 
-        assertEquals(SharedLinkResult.Created(fileId = FILE_ID, rlkey = RLKEY), provider.createSharedLink(SHARE_ID))
+        assertEquals(SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf(FILE_ID, RLKEY)), provider.createSharedLink(SHARE_ID))
         assertEquals(listOf("/2/sharing/create_shared_link_with_settings", "/2/sharing/list_shared_links"), paths)
     }
 
@@ -111,7 +112,7 @@ class DropboxSharingTest {
         val provider = dropboxProvider {
             respondJson("""{"url":"$LINK_URL","link_permissions":{"effective_audience":{".tag":"public"}}}""")
         }
-        assertEquals(SharedLinkResult.Created(fileId = FILE_ID, rlkey = RLKEY), provider.createSharedLink(SHARE_ID))
+        assertEquals(SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf(FILE_ID, RLKEY)), provider.createSharedLink(SHARE_ID))
     }
 
     @Test

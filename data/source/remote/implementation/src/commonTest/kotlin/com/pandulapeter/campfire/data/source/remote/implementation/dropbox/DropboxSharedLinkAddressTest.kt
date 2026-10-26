@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,13 +19,13 @@ class DropboxSharedLinkAddressTest {
 
     @Test
     fun `a link of the measured form gives its file id and its key`() = assertEquals(
-        expected = SharedLinkResult.Created(fileId = "abcdefghij0123456789k", rlkey = "abcdefghijklmnopqrstu1234"),
+        expected = SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf("abcdefghij0123456789k", "abcdefghijklmnopqrstu1234")),
         actual = parseDropboxSharedLink("https://www.dropbox.com/scl/fi/abcdefghij0123456789k/k3jq.zip?rlkey=abcdefghijklmnopqrstu1234&dl=0"),
     )
 
     @Test
     fun `the name and the other parameters are ignored wherever the key stands`() = assertEquals(
-        expected = SharedLinkResult.Created(fileId = "Ab_1-x", rlkey = "Key_2-y"),
+        expected = SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf("Ab_1-x", "Key_2-y")),
         actual = parseDropboxSharedLink("https://dropbox.com/scl/fi/Ab_1-x?st=xyz&rlkey=Key_2-y&dl=0"),
     )
 

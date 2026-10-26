@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync.model
 
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+
 /**
  * What asking for a public link to a shared copy ended in, see
  * [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.createSharedLink].
@@ -16,16 +18,15 @@ package com.pandulapeter.campfire.data.source.remote.api.sync.model
 sealed interface SharedLinkResult {
 
     /**
-     * The copy has a link anyone can open. Its two parts are all a download needs, and they are what a Campfire link
-     * carries: the download address is built by the app from them, never taken from a link.
-     *
-     * @param fileId The service's id of the shared file, the same for every link the file ever has.
-     * @param rlkey The key of this one link: a link removed and made again gets a new one, and the old address stays
-     *   dead.
+     * The copy has a link anyone can open. Its parts are all a download needs, and they are what a Campfire link
+     * carries: the download address is built by the app from them, never taken from a link. Which parts there are, and
+     * in what order, is the [provider]'s own: Dropbox answers the file's id (the same for every link the file ever has)
+     * and then the key of this one link (a link removed and made again gets a new one, and the old address stays dead).
+     * Held in memory only; the shared links list and the links themselves store them in a format of their own.
      */
     data class Created(
-        val fileId: String,
-        val rlkey: String,
+        val provider: SyncProviderId,
+        val parts: List<String>,
     ) : SharedLinkResult
 
     /** A link exists, but the account lets only people signed in to it, or to its team, open it. */

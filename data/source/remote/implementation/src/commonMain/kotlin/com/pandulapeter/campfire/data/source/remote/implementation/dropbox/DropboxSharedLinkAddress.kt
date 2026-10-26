@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 
 /**
@@ -22,7 +23,7 @@ internal fun parseDropboxSharedLink(url: String): SharedLinkResult.Created? {
     val match = SHARED_LINK.matchEntire(url) ?: return null
     val rlkey = match.groupValues[2].split('&').firstOrNull { it.startsWith(RLKEY_PARAMETER) }?.removePrefix(RLKEY_PARAMETER)
     if (rlkey == null || !LINK_PART.matches(rlkey)) return null
-    return SharedLinkResult.Created(fileId = match.groupValues[1], rlkey = rlkey)
+    return SharedLinkResult.Created(provider = SyncProviderId.DROPBOX, parts = listOf(match.groupValues[1], rlkey))
 }
 
 private val LINK_PART = Regex("[A-Za-z0-9_-]{1,64}")
