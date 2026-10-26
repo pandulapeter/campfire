@@ -34,7 +34,9 @@ public object ChordSheetConverter {
     public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
         val pages = sheet.pages.map { page ->
-            ChordSheetMarginLabels.split(page.lines).map { (line, isMarginLabel) -> render(line, normalize).copy(isMarginLabel = isMarginLabel) }
+            ChordSheetMarginLabels.split(ChordSheetHeaderParts.split(page.lines)).map { placed ->
+                render(placed.line, normalize).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
+            }
         }
         val all = pages.flatten()
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
@@ -145,6 +147,7 @@ public object ChordSheetConverter {
         val source: ChordSheet.Line,
         val isFromLabel: Boolean = false,
         val isMarginLabel: Boolean = false,
+        val isHeaderPart: Boolean = false,
     )
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, SECTION, METADATA, CHORD, LYRIC }
@@ -233,24 +236,46 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
      * A row of chords, and the playing note it may end in, `G   D   (let ring)`. The note is kept apart from the
      * tokens, which every rule that judges the row reads, and is written after the line rather than set as a chord.
+     * [notes] are the ones printed before or between the chords, `(x) C D` or `G D (to v:) Em` (a songbook's `[*…]`
+     * annotations), each one word to four in parentheses, set where they stand like the chords.
      */
-    private class ChordRow(val tokens: List<Token>, val annotation: String?)
+    private class ChordRow(val tokens: List<Token>, val annotation: String?, val notes: List<Token>)
 
-    private fun chordRow(line: Rendered): ChordRow? {
-        val words = tokens(line.text)
+    private fun chordRow(line: Rendered): ChordRow? = chordRow(line.text)
+
+    /** Whether [text] is a row of chords, the notes a songbook prints among them included. */
+    internal fun isChordRow(text: String) = chordRow(text) != null
+
+    private fun chordRow(text: String): ChordRow? {
+        val words = tokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
         } ?: words.size
-        val row = words.take(start)
+        val row = mutableListOf<Token>()
+        val notes = mutableListOf<Token>()
+        var index = 0
+        while (index < start) {
+            val word = words[index]
+            val end = if (word.text.startsWith('(') && !rowChord(word.text)) {
+                (index until minOf(start, index + 4)).firstOrNull { words[it].text.endsWith(')') }
+                    ?.takeIf { end -> (index..end).none { rowChord(words[it].text) } }
+            } else null
+            if (end == null) { row += word; index++; continue }
+            notes += Token(text.substring(word.index, words[end].index + words[end].text.length), word.index)
+            index = end + 1
+        }
         if (row.none { rowChord(it.text) } || !row.all { rowChord(it.text) || furniture(it.text) }) return null
-        return ChordRow(row, line.text.substring(words.getOrNull(start)?.index ?: line.text.length).trim().ifEmpty { null })
+        return ChordRow(row, text.substring(words.getOrNull(start)?.index ?: text.length).trim().ifEmpty { null }, notes)
     }
+
+    /** A note printed among a row's chords, written as the annotation ChordPro sets over a lyric the way it sets a chord. */
+    private fun note(value: String) = "[$ANNOTATION_MARKER${value.removeSurrounding("(", ")").replace('[', '(').replace(']', ')').trim()}]"
 
     /** A chord of a chord row, where a star marks the one a footnote under the song explains (`C*`). */
     private fun rowChord(value: String) = chord(value.removeSuffix("*").removeSuffix("*"))
@@ -454,8 +479,14 @@ public object ChordSheetConverter {
      * A chord row with no lyric under it. Its playing note is written as an annotation, so that it stands on the row with
      * the chords rather than as a lyric under them; one after a lyric line stays text, since the line has words already.
      */
-    private fun bracketed(row: List<Token>, annotation: String?) = row.joinToString(" ") { if (rowChord(it.text)) "[${rowChordName(it.text)}]" else it.text } +
-        annotation?.let { note ->
+    private fun bracketed(row: List<Token>, chordRow: ChordRow?) = (row + chordRow?.notes.orEmpty()).sortedBy { it.index }.joinToString(" ") {
+        when {
+            it in chordRow?.notes.orEmpty() -> note(it.text)
+            rowChord(it.text) -> "[${rowChordName(it.text)}]"
+            else -> it.text
+        }
+    } +
+        chordRow?.annotation?.let { note ->
             val inner = note.removeSurrounding("(", ")").replace('[', '(').replace(']', ')').trim()
             " " + if (inner.isEmpty()) ChordProLiteralText.escape(note) else "[$ANNOTATION_MARKER$inner]"
         }.orEmpty()
@@ -483,6 +514,7 @@ public object ChordSheetConverter {
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
                 headings[index] || line.isMarginLabel -> Kind.SECTION
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
+                    metadata(line.text)?.first == "copyright" ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 candidate != null && (candidate.count { rowChord(it.text) } > 1 ||
                     candidate.count { rowChord(it.text) } == 1 &&
@@ -533,7 +565,7 @@ public object ChordSheetConverter {
         // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
         var last = first
-        while (kinds.getOrNull(last + 1) == Kind.LYRIC && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
+        while (kinds.getOrNull(last + 1) == Kind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
         val title = (first..last).joinToString(" ") { lines[it].text.trim() }
         val (name, named) = ChordSheetTitles.split(title)
         addTitle(header, name, named)
@@ -544,6 +576,11 @@ public object ChordSheetConverter {
         if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || lines[artist].text.length < title.length &&
                 lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
             header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
+            omitted += artist
+        } else if (kinds.getOrNull(artist) == Kind.LYRIC && (lines[artist].isHeaderPart || isCenteredUnder(lines[artist], lines[first], lines))) {
+            // The part printed beside the title, or the line centred under a centred one, is the subtitle the ChordPro
+            // app sets there.
+            header.add(if (named == null) 1 else 2, "{subtitle: ${headerValue(lines[artist].text.trim())}}")
             omitted += artist
         }
     }
@@ -578,6 +615,17 @@ public object ChordSheetConverter {
             header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[creditAt].text.trim())}}"
             omitted += creditAt
         }
+    }
+
+    /** Whether [line] is centred under a centred [title], which a lyric set against the left margin never is. */
+    private fun isCenteredUnder(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
+        fun ink(rendered: Rendered) = rendered.source.spans.filter { it.text.isNotBlank() }.takeIf { spans -> spans.isNotEmpty() && spans.none { it.isMonospace } }
+        val titleInk = ink(title) ?: return false
+        val lineInk = ink(line) ?: return false
+        val size = titleInk.maxOf { it.size }
+        val margin = lines.mapNotNull { rendered -> rendered.source.spans.firstOrNull { it.text.isNotBlank() }?.start }.minOrNull() ?: return false
+        return titleInk.first().start > margin + size * 2 && lineInk.first().start > margin + size * 2 &&
+            abs((lineInk.first().start + lineInk.last().end) - (titleInk.first().start + titleInk.last().end)) / 2 <= size
     }
 
     private fun addTitle(header: MutableList<String>, title: String, artist: String?) {
@@ -629,7 +677,7 @@ public object ChordSheetConverter {
                     if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         output += merge(line, lines[index + 1], convertParentheses)
                         index++
-                    } else output += bracketed(candidates[index]!!, chordRow(line)?.annotation)
+                    } else output += bracketed(candidates[index]!!, chordRow(line))
                 }
                 Kind.LYRIC -> output += inline(line, convertParentheses)
                 Kind.BLANK -> output += ""
@@ -712,7 +760,26 @@ public object ChordSheetConverter {
         }
     }
 
-    private fun merge(chords: Rendered, lyrics: Rendered, convertParentheses: Boolean): String {
+    /**
+     * The lyric without the dashes the ChordPro app fills a chord's width with where the chord has no syllable of its
+     * own (`tonight[Db][Eb7]` prints as "tonight---" under them): a run of two or more ending the line, under a chord.
+     */
+    private fun withoutChordFill(chords: Rendered, lyrics: Rendered): Rendered {
+        val text = lyrics.text.trimEnd()
+        val start = text.indexOfLast { it != '-' } + 1
+        if (text.length - start < 2 || start > 0 && text[start - 1] == ' ') return lyrics
+        val x = lyrics.positions.getOrNull(start) ?: return lyrics
+        val chordPositions = chordRow(chords)?.tokens.orEmpty().filter { rowChord(it.text) }.mapNotNull { chords.positions.getOrNull(it.index) }
+        if (chordPositions.none { it >= x - 0.01 }) return lyrics
+        return lyrics.copy(
+            text = text.substring(0, start),
+            positions = lyrics.positions.copyOf(start),
+            source = lyrics.source.copy(spans = lyrics.source.spans.filter { it.start < x - 0.01 }),
+        )
+    }
+
+    private fun merge(chords: Rendered, lyricLine: Rendered, convertParentheses: Boolean): String {
+        val lyrics = withoutChordFill(chords, lyricLine)
         val insertions = mutableMapOf<Int, MutableList<String>>()
         val starts = tokens(lyrics.text).map { it.index }
         val positions = lyrics.positions
@@ -727,13 +794,14 @@ public object ChordSheetConverter {
         for (index in spans.indices) prefixMaxEnd[index] = maxOf(spans[index].end, prefixMaxEnd.getOrNull(index - 1) ?: Double.NEGATIVE_INFINITY)
         var previous = 0
         val row = chordRow(chords)
-        for (word in row?.tokens.orEmpty().filter { rowChord(it.text) }) {
+        val notes = row?.notes.orEmpty()
+        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) } + notes).sortedBy { it.index }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             if (lyrics.positions.isEmpty()) at = 0
             else {
                 val lastWidth = lyrics.source.spans.lastOrNull()?.let { (it.end - it.start) / it.text.length.coerceAtLeast(1) } ?: 1.0
-                if (x >= lyrics.positions.last() + lastWidth) at = lyrics.text.length
+                if (x >= lyrics.positions.last() + lastWidth - 0.01) at = lyrics.text.length
                 else {
                     val nearest = if (isMonotone) {
                         val right = firstIndex(starts.size) { positions[starts[it]] >= x }
@@ -756,7 +824,7 @@ public object ChordSheetConverter {
             }
             at = at.coerceAtLeast(previous)
             previous = at
-            insertions.getOrPut(at) { mutableListOf() } += "[${rowChordName(word.text)}]"
+            insertions.getOrPut(at) { mutableListOf() } += if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
         }
         val escaped = ChordProLiteralText.escape(lyrics.text)
         val merged = buildString {

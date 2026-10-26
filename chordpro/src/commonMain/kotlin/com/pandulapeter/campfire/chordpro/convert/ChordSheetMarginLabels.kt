@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.convert.PlacedLine.Companion.text
+
 /**
  * Section labels printed in a column of their own left of the song, the way the ChordPro app prints a section's
  * `label` (`V1`, `Ch1`, `Br`, `A1`) on the first line of the section. A label is short, is no chord, and stands a gap
@@ -37,24 +39,24 @@ internal object ChordSheetMarginLabels {
      * The page's lines with every margin label split off its line into one of its own, flagged true. The label goes
      * above the chord row printed over its line, so that the row still meets the lyric it is set over.
      */
-    fun split(lines: List<ChordSheet.Line>): List<Pair<ChordSheet.Line, Boolean>> {
-        val unchanged = lines.map { it to false }
+    fun split(placed: List<PlacedLine>): List<PlacedLine> {
+        val lines = placed.map { it.line }
         val shaped = lines.map(::label)
         // A line of the body may be shaped like a label too (a chord row opening with "(x)"), so only those starting
         // left of the body are taken, and the body's edge is measured again between the ones that are.
-        val labels = edge(lines, shaped)?.let { edge -> shaped.map { label -> label?.takeIf { it.start < edge } } } ?: return unchanged
-        if (labels.count { it != null } < 2) return unchanged
-        val edge = edge(lines, labels) ?: return unchanged
-        if (labels.any { it != null && (it.end > edge - it.size * 0.5 || it.contentStart < edge - it.size * 0.5) }) return unchanged
-        val result = mutableListOf<Pair<ChordSheet.Line, Boolean>>()
-        lines.forEachIndexed { index, line ->
+        val labels = edge(lines, shaped)?.let { edge -> shaped.map { label -> label?.takeIf { it.start < edge } } } ?: return placed
+        if (labels.count { it != null } < 2) return placed
+        val edge = edge(lines, labels) ?: return placed
+        if (labels.any { it != null && (it.end > edge - it.size * 0.5 || it.contentStart < edge - it.size * 0.5) }) return placed
+        val result = mutableListOf<PlacedLine>()
+        placed.forEachIndexed { index, line ->
             val label = labels[index]
-            if (label == null) { result += line to false; return@forEachIndexed }
-            val heading = ChordSheet.Line(label.spans, isHeading = true) to true
+            if (label == null) { result += line; return@forEachIndexed }
+            val heading = PlacedLine(ChordSheet.Line(label.spans, isHeading = true), isMarginLabel = true)
             val previous = result.lastOrNull()
-            if (previous != null && !previous.second && ChordSheetConverter.isChordLine(text(previous.first.spans))) result.add(result.lastIndex, heading)
+            if (previous != null && !previous.isMarginLabel && ChordSheetConverter.isChordRow(text(previous.line.spans))) result.add(result.lastIndex, heading)
             else result += heading
-            result += ChordSheet.Line(label.rest, line.isHeading) to false
+            result += line.copy(line = ChordSheet.Line(label.rest, line.line.isHeading))
         }
         return result
     }
@@ -86,13 +88,4 @@ internal object ChordSheetMarginLabels {
         if (ChordSheetConverter.isChordLine(text) && ChordSheetConverter.isChordLine(text(rest))) return null
         return Label(spans, rest, ink.first().value.start, lastOfLabel.value.end, ink[boundary + 1].value.start, lastOfLabel.value.size)
     }
-
-    private fun text(spans: List<ChordSheet.Span>) = buildString {
-        var previous: ChordSheet.Span? = null
-        for (span in spans) {
-            if (previous != null && span.start - previous.end > previous.size * 0.1 && lastOrNull() != ' ') append(' ')
-            append(span.text)
-            previous = span
-        }
-    }.trim()
 }

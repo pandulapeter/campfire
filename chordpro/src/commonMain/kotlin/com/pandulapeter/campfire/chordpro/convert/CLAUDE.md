@@ -28,6 +28,11 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   label (`ChordSheetMarginLabels`): only where every other line between a page's first and last label starts right of
   all of them, so a chord row or a lyric set against the left edge keeps its first word. A label no heading word or
   abbreviation names is a verse under its own name.
+- The rest of what the ChordPro app prints is read back too: a header line printed in left, centre, and right parts
+  (`ChordSheetHeaderParts`, a gap of three ems, above the first chord row only) is one line per part, the part beside
+  the title or a line centred under a centred title being its subtitle; a note among a row's chords (`(x)`,
+  `(to v:)`) is an annotation where it stands, one ending the row staying text after the lyric; the dashes it fills
+  a chord's width with at a lyric's end are left out; and a `©` line is the copyright wherever it stands.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
   documented limit, since both orders are common on the web; a title ending in a page word with no credit after it
   (`Three Chords`) loses that word, the same documented limit.

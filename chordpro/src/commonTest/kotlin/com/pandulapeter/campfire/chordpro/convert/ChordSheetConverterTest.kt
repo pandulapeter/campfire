@@ -715,4 +715,54 @@ class ChordSheetConverterTest {
         assertEquals("[G]Amazing [C]grace\n[D]how [G]sweet\n", convert("G         C\n   Amazing grace\nD      G\n   how sweet"))
         assertEquals("Oh     happy day\nwhen Jesus washed\n", convert("Oh     happy day\n       when Jesus washed"))
     }
+
+    @Test
+    fun `a note printed before or between a row's chords is an annotation where it stands`() {
+        assertEquals("[*x]Now my [C]heart [G]cries out\n", convert("(x)    C     G\nNow my heart cries out"))
+        assertEquals("[G]Because [*to v:]of the Lord [D]Jesus\n", convert("G       (to v:)     D\nBecause of the Lord Jesus"))
+        assertEquals("[*x] [C] [G]\n", convert("(x)  C   G"))
+    }
+
+    @Test
+    fun `dashes filling a chord's width at the end of a lyric are left out, sung ones kept`() {
+        assertEquals("[Am]tonight [G]\n", convert("Am       G\ntonight-----"))
+        assertEquals("[Am]Oh [C]tonight-----\n", convert("Am C\nOh tonight-----"))
+        assertEquals("[Am]Ah - - [G]-\n", convert("Am     G\nAh - - -"))
+    }
+
+    @Test
+    fun `a copyright line ends up in the header wherever the page prints it`() {
+        val body = (1..10).joinToString("\n") { "Am      G\nLine $it of the song" }
+        val result = convert("Song\n\n$body\n\u00a9 2024 Someone")
+        assertTrue(result.startsWith("{title: Song}\n{copyright: 2024 Someone}\n"), result)
+        assertFalse("\u00a9" in result, result)
+    }
+
+    @Test
+    fun `the part printed beside the title and the line centred under it are the subtitle`() {
+        fun line(size: Double, vararg parts: Pair<String, Double>, bold: Boolean = false) = ChordSheet.Line(
+            parts.flatMap { (text, x) -> text.mapIndexed { index, c -> span(c.toString(), x + index * size * 0.6, x + (index + 1) * size * 0.6, size, bold) } },
+        )
+        fun convert(vararg lines: ChordSheet.Line) = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines.toList())))).single()
+        val beside = convert(
+            line(18.0, "Because of Jesus" to 235.0, "B29" to 542.0, bold = true),
+            line(12.0, "G" to 61.0, "D" to 140.0),
+            line(12.0, "You made a covenant with me" to 61.0),
+        )
+        assertTrue(beside.startsWith("{title: Because of Jesus}\n{subtitle: B29}\n\n[G]You made a"), beside)
+        val centred = convert(
+            line(20.0, "Santa Baby" to 258.0, bold = true),
+            line(12.0, "Philip Springer, lyrics by Joan Javits" to 181.0),
+            line(12.0, "Db6" to 64.0, "Fm7" to 136.0),
+            line(12.0, "Santa baby, just slip a sable" to 64.0),
+        )
+        assertTrue(centred.startsWith("{title: Santa Baby}\n{subtitle: Philip Springer, lyrics by Joan Javits}\n\n[Db6]Santa"), centred)
+        val flush = convert(
+            line(20.0, "Santa Baby" to 64.0, bold = true),
+            line(12.0, "Philip Springer, lyrics by Joan Javits" to 64.0),
+            line(12.0, "Db6" to 64.0, "Fm7" to 136.0),
+            line(12.0, "Santa baby, just slip a sable" to 64.0),
+        )
+        assertFalse("{subtitle" in flush, flush)
+    }
 }
