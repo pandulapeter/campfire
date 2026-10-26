@@ -12,7 +12,7 @@
 - Document all keyboard shortcuts used in the app
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-- Editor multi-cursor support
+- Editor multi-cursor support: documentation/plans/multi-caret-editor.md
 - Streaming zip writer on all platforms
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
