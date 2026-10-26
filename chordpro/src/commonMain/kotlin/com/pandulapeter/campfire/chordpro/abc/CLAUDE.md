@@ -16,7 +16,8 @@ tune (`AbcToChordPro`); the library stays ChordPro.
 - **The ABC block is the source, the grid and verses a one-off translation**: each tune is kept whole in
   `{start_of_abc}`, and editing it later regenerates nothing.
 - **`AbcBars` reads only what a chord grid needs** (bar lines, voltas, chord symbols, inline fields, continuations,
-  comments). Notation is a renderer's job, never a reason to grow it.
+  comments, voices). Notation is a renderer's job, never a reason to grow it. Only the first voice is read: the others
+  are written under the same bars.
 - Grid cells are chords in order, not on beats: placing them needs note lengths, which nothing here reads.
 - A chord symbol is written as spelled, so a mid-tune `K:` changes no name and `{key}` stays the opening key; a mode
   becomes the key of its chords (`Edor` → `Em`), since `{key}` knows only major and minor.

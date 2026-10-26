@@ -37,12 +37,15 @@ internal object AbcBars {
 
     /**
      * The tokens of each line of music in [body] (the lines after the tune header): field lines, comments, and
-     * `%%begin…`/`%%end…` blocks are left out, and a line ending in a `\` is joined to the next line of music.
+     * `%%begin…`/`%%end…` blocks are left out, and a line ending in a `\` is joined to the next line of music. Only the
+     * first voice is read (`V:`, `[V:…]`): the others are accompaniment written under the same bars, which would
+     * otherwise read as rows of bars of their own.
      */
     fun lines(body: List<String>): List<List<Token>> {
         val lines = mutableListOf<List<Token>>()
         var pending = mutableListOf<Token>()
         var block: String? = null
+        val voices = Voices()
         for (line in body) {
             val openBlock = block
             if (openBlock != null) {
@@ -50,10 +53,12 @@ internal object AbcBars {
                 continue
             }
             block = AbcLines.blockOpenedBy(line)
-            if (block != null || line.isBlank() || AbcLines.isComment(line) || AbcLines.field(line) != null) continue
+            val field = AbcLines.field(line)
+            if (field?.letter == 'V') voices.switchTo(field.value)
+            if (block != null || line.isBlank() || AbcLines.isComment(line) || field != null) continue
             val music = AbcLines.withoutComment(line).trimEnd()
             val isContinued = music.endsWith('\\')
-            tokenize(if (isContinued) music.dropLast(1) else music, pending)
+            tokenize(if (isContinued) music.dropLast(1) else music, pending, voices)
             if (!isContinued) {
                 lines += pending
                 pending = mutableListOf()
@@ -63,14 +68,16 @@ internal object AbcBars {
         return lines
     }
 
-    private fun tokenize(line: String, tokens: MutableList<Token>) {
+    private fun tokenize(line: String, lineTokens: MutableList<Token>, voices: Voices) {
+        val skipped = mutableListOf<Token>()
         var index = 0
         while (index < line.length) {
             val character = line[index]
+            val tokens = if (voices.isFirst) lineTokens else skipped.apply { clear() }
             index = when {
                 character == '"' -> quoted(line, index, tokens)
                 character == '!' || character == '+' || character == '{' -> decorationEnd(line, index)
-                character == '[' -> bracketed(line, index, tokens)
+                character == '[' -> bracketed(line, index, tokens, voices)
                 character in BAR_CHARACTERS -> barLine(line, index, tokens)
                 character in NOTE_LETTERS -> (index + 1).also { tokens += Token.Note }
                 else -> index + 1
@@ -106,13 +113,17 @@ internal object AbcBars {
     }
 
     /** An inline field (`[K:D]`), a volta (`[1`), a `[|` bar line, or a chord of notes (`[CEG]`). */
-    private fun bracketed(line: String, start: Int, tokens: MutableList<Token>): Int {
+    private fun bracketed(line: String, start: Int, tokens: MutableList<Token>, voices: Voices): Int {
         val next = line.getOrNull(start + 1)
         return when {
             next == null -> start + 1
             next == '|' -> barLine(line, start, tokens)
             next.isDigit() -> volta(line, start + 1, tokens)
-            next.isLetter() && line.getOrNull(start + 2) == ':' -> line.indexOf(']', start).let { if (it < 0) line.length else it + 1 }
+            next.isLetter() && line.getOrNull(start + 2) == ':' -> line.indexOf(']', start).let { end ->
+                val fieldEnd = if (end < 0) line.length else end
+                if (next == 'V') voices.switchTo(line.substring(start + 3, fieldEnd))
+                if (end < 0) line.length else end + 1
+            }
             else -> line.indexOf(']', start).let { end ->
                 tokens += Token.Note
                 if (end < 0) line.length else end + 1
@@ -136,5 +147,21 @@ internal object AbcBars {
         while (index < line.length && (line[index].isDigit() || line[index] == ',' || line[index] == '-')) index++
         tokens += Token.Volta(line.substring(start, index).takeWhile { it.isDigit() })
         return index
+    }
+
+    /** The voice the music is in, and the first one the tune names, the only one read. */
+    private class Voices {
+        private var first: String? = null
+        private var current: String? = null
+
+        /** Music before any voice is named is the first voice's, as the standard has it. */
+        val isFirst get() = current == null || current == first
+
+        /** Switches to the voice a `V:` value names by its first word, its clef and name following it. */
+        fun switchTo(value: String) {
+            val id = value.trim().takeWhile { !it.isWhitespace() }
+            if (first == null) first = id
+            current = id
+        }
     }
 }
