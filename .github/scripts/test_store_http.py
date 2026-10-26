@@ -16,8 +16,22 @@ from unittest import mock
 from store_http import request_json, should_retry
 
 
+# Every error made, closed after its test: one left to the garbage collector warns on whichever test's output is captured
+# at the time.
+errors = []
+
+
 def http_error(code, body=b""):
-    return urllib.error.HTTPError("https://example.com", code, "answer", {}, io.BytesIO(body))
+    error = urllib.error.HTTPError("https://example.com", code, "answer", {}, io.BytesIO(body))
+    errors.append(error)
+    return error
+
+
+class ClosesErrors(unittest.TestCase):
+
+    def tearDown(self):
+        while errors:
+            errors.pop().close()
 
 
 class Response:
@@ -35,7 +49,7 @@ class Response:
         return False
 
 
-class ShouldRetryTest(unittest.TestCase):
+class ShouldRetryTest(ClosesErrors):
 
     def test_should_retry_a_get_the_service_or_the_network_failed(self):
         for error in [
@@ -54,7 +68,7 @@ class ShouldRetryTest(unittest.TestCase):
 
 
 @mock.patch("store_http.time.sleep")
-class RequestJsonTest(unittest.TestCase):
+class RequestJsonTest(ClosesErrors):
 
     def call(self, urlopen, *arguments, **keywords):
         token = mock.Mock(return_value="token")

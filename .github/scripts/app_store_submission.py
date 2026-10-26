@@ -36,13 +36,19 @@ Uses the App Store Connect API the way app_store_signing.py does, and the same e
 import sys
 import time
 
-from app_store_signing import awaiting_versions, request
+from app_store_signing import request
 from store_http import fail
 
 # The states in which a version still takes a build, notes and a submission. READY_FOR_REVIEW is a version added to a
 # review submission that has not been submitted yet, which is what "Add for Review" in App Store Connect leaves behind.
 EDITABLE_STATES = {
     "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY",
+}
+# The states of a version that has been submitted and is not on the store yet: the platform takes no other version until
+# it has been decided, and an approved one counts until it is on the store.
+AWAITING_STATES = {
+    "WAITING_FOR_REVIEW", "IN_REVIEW", "WAITING_FOR_EXPORT_COMPLIANCE", "PENDING_CONTRACT", "ACCEPTED",
+    "PROCESSING_FOR_APP_STORE", "PENDING_APPLE_RELEASE", "PENDING_DEVELOPER_RELEASE",
 }
 # The states of a review submission that has not been handed to App Review, or has been handed back with a rejection:
 # the platform has at most one of them, and a new one cannot be started next to it.
@@ -51,6 +57,15 @@ PROCESSING_TIMEOUT_SECONDS = 90 * 60
 POLL_INTERVAL_SECONDS = 60
 # The most App Store Connect takes for "What's New".
 WHATS_NEW_LIMIT = 4000
+
+
+def awaiting_versions(app_id, platform):
+    """The platform's versions that have been submitted and are not on the store yet."""
+    versions = request(
+        "GET", f"/apps/{app_id}/appStoreVersions?filter[platform]={platform}&limit=50"
+        "&fields[appStoreVersions]=versionString,appStoreState",
+    )["data"]
+    return [item for item in versions if item["attributes"]["appStoreState"] in AWAITING_STATES]
 
 
 def find_app(bundle_identifier):
@@ -172,11 +187,7 @@ def main(bundle_identifier, platform, version, build_number, notes_file, prepare
     if len(notes) > WHATS_NEW_LIMIT:
         fail(f"The release notes are {len(notes)} characters long, and App Store Connect takes {WHATS_NEW_LIMIT}.")
     app = find_app(bundle_identifier)
-    # A draft that was added to a review submission counts as waiting for Apple to the signing script, which keeps its
-    # certificate either way, but it has not been submitted and is this release's to take.
-    awaiting = [
-        item for item in awaiting_versions(app["id"], platform) if item["attributes"]["appStoreState"] not in EDITABLE_STATES
-    ]
+    awaiting = awaiting_versions(app["id"], platform)
     if awaiting:
         attributes = awaiting[0]["attributes"]
         awaiting_build = attached_build_number(awaiting[0])
