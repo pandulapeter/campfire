@@ -49,8 +49,8 @@ internal fun LoadSongTexts(
 
 /**
  * Scrolls a pager created before the library was read to the song that was tapped, and tells the view model where the
- * pager is: the page it has come to rest on and the page it is headed for. Not part of [SongDetailsScreen] itself,
- * which has to stay small enough for HotSpot to compile.
+ * pager is: the page it has come to rest on and the page it is headed for. Not part of [SongDetailsScreen] itself, so
+ * that a change of what it reads recomposes only this.
  */
 @Composable
 internal fun FollowPager(

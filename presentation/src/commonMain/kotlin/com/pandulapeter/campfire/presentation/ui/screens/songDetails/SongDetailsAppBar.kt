@@ -45,10 +45,9 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the song's
- * actions and the metronome panel under them. A composable of its own so that [SongDetailsScreen] stays small enough
- * for HotSpot to compile, which it never does for a method of more than 8,000 bytes of bytecode, and that one runs on
- * every page change. What only the bar reads is collected and decided here, so that a change of it recomposes the bar
- * rather than the whole screen.
+ * actions and the metronome panel under them. A composable of its own because [SongDetailsScreen] recomposes on every
+ * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
+ * than the whole screen.
  *
  * @param currentPageScrollState Read where it is used rather than handed down as a value, so that passing the top
  *   recomposes the title alone.

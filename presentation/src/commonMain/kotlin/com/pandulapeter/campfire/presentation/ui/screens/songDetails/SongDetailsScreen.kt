@@ -397,8 +397,8 @@ private fun rememberChordDiagrams(
 /**
  * [songKeyboardShortcuts] as the song details screen sets them up: the arrows scroll the song being read, and Up and
  * Down do whatever the step buttons would do where they are there, so that a pedal pressing them reads the song the way
- * the buttons do; where they are not, the keys scroll. Not part of [SongDetailsScreen] itself, which has to stay small
- * enough for HotSpot to compile.
+ * the buttons do; where they are not, the keys scroll. Not part of [SongDetailsScreen] itself, so that a change of what
+ * it reads recomposes only this.
  *
  * @param hasPreviousSong Whether there is a song before the one being headed for. The target page only decides whether
  *   the key does anything; the step itself is decided at the time of the press.

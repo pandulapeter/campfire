@@ -109,6 +109,9 @@ tasks.matching { it.name.startsWith("createRelease") || it.name.startsWith("pack
 compose.desktop {
     application {
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
+        // Compose turns a composable into one method, and HotSpot never compiles one over 8,000 bytes of bytecode: the
+        // song details screen and the dialog host crossed it and were interpreted on every recomposition for good.
+        jvmArgs("-XX:-DontCompileHugeMethods")
         // The X11 toolkit's app class name is what a Linux desktop matches a window to its launcher by, and it is a
         // private field of a package java.desktop does not export. Only on a Linux host, since jpackage packages for
         // the machine it runs on and an --add-opens naming a package the runtime does not have warns on every start.

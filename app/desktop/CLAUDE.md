@@ -107,6 +107,8 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   language name is English) and `jdk.accessibility` (Windows screen readers). A missing module only shows in an
   installed build — rerun `suggestRuntimeModules` after adding a JVM dependency.
 - After every jlink, `-Xshare:dump` restores the JDK's CDS archive.
+- `-XX:-DontCompileHugeMethods` (`application.jvmArgs`, so `run` and every package): a composable is one method, and
+  HotSpot otherwise never compiles one past 8,000 bytes of bytecode (`SongDetailsScreen` and `CampfireDialog` were).
 - Windows/Linux: `recordClassDataArchive` trains `campfire.jsa` by starting the release image once
   (`-Dcampfire.trainingRun=true` exits itself after the demo library draws; a killed JVM writes no archive). Linux needs
   a display (`xvfb-run` in CI); macOS has none.
