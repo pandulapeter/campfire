@@ -90,6 +90,16 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a string that ends where another one's fret widens gets no dash after its bar`() {
+        val lines = listOf("e|--0--3--|", "B|--1--|")
+
+        val transposed = ChordProTabTransposer.transpose(lines, 9) { it }
+
+        assertEquals(listOf("e|--9---12--|", "B|--10--|"), transposed)
+        assertEquals(lines, ChordProTabTransposer.transpose(transposed, -9) { it })
+    }
+
+    @Test
     fun `a tab transposed up and back down is the tab it was`() {
         val tab = listOf(
             "  Am       C",

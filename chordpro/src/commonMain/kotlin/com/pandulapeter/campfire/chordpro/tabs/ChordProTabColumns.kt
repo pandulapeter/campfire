@@ -88,8 +88,9 @@ internal object ChordProTabColumns {
 
     /**
      * A staff line with every column brought to its new width by dashes added to or taken from its end. A line that
-     * ends inside a column is left as it ends: nothing after it has to line up, and padding it would make it longer than
-     * the move back could tell.
+     * ends inside a column, or with it, is left as it ends: nothing after it has to line up, and padding it would make it
+     * longer than the move back could tell, or put a dash after the bar of a string shorter than the one whose fret
+     * widened the column.
      */
     private fun rewriteStaffLine(line: String, replacements: List<Pair<IntRange, String>>, columns: List<IntRange>, widths: List<Int>) = buildString {
         var consumedUntil = 0
@@ -97,7 +98,7 @@ internal object ChordProTabColumns {
             if (column.first >= line.length) return@forEachIndexed
             append(line, consumedUntil, column.first)
             val content = contentOf(line, column, replacements)
-            if (column.last < line.length) {
+            if (column.last < line.lastIndex) {
                 val width = widths[position]
                 // Never shorter than its own content without the trailing dashes, which the width counts.
                 append(if (content.length >= width) content.take(width) else content.padEnd(width, DASH))
