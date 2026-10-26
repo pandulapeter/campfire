@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
 import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
+import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 
 /**
@@ -148,7 +149,7 @@ internal fun SongSectionContent(
         sectionToggle != null && wholeSectionKind != null -> FoldToggleRow(
             modifier = if (isOnCard) Modifier.padding(start = CARD_PADDING, top = CARD_PADDING, end = CARD_PADDING) else Modifier,
             kind = wholeSectionKind,
-            label = section.firstEnvironmentLabel ?: defaultLabels.labelOf(wholeSectionKind),
+            label = section.firstEnvironmentLabel ?: defaultLabels.labelOf(wholeSectionKind, section.lines),
             toggle = sectionToggle,
             style = headerStyle,
             chevronSize = chevronSize,
@@ -217,15 +218,8 @@ internal fun SongSectionContent(
                         )
                     }
 
-                    is ChordProLine.Verbatim -> Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = line.text,
-                        style = lyricsStyle,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    // Never reached: tablature and grid lines are always part of a run of their own.
-                    is ChordProLine.Tab, is ChordProLine.Grid -> Unit
+                    // Never reached: tablature, grid, and verbatim lines are always part of a run of their own.
+                    is ChordProLine.Tab, is ChordProLine.Grid, is ChordProLine.Verbatim -> Unit
 
                     ChordProLine.Blank -> Text(
                         text = "",
@@ -287,7 +281,7 @@ private fun SectionRun(
     } else {
         if (0 in shownSlots) FoldToggleRow(
             kind = kind,
-            label = run.first().environmentLabel ?: defaultLabels.labelOf(kind),
+            label = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run),
             toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(runFoldKey), onToggled = { foldedRuns.toggle(runFoldKey) }),
             style = headerStyle,
             chevronSize = chevronSize,
@@ -296,10 +290,12 @@ private fun SectionRun(
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
     }
     when (kind) {
-        FoldableKind.TAB -> {
-            val lines = remember(run) { run.map { (it as? ChordProLine.Tab)?.text.orEmpty() } }
-            val rows = remember(lines, monospaceLyricsStyle, textMeasurements) {
-                textMeasurements.tabRows(lines, monospaceLyricsStyle)
+        // Another program's notation is always preformatted text: a tied ABC line full of dashes could pass for a string
+        // of a staff, and be drawn with strokes through it.
+        FoldableKind.TAB, FoldableKind.VERBATIM -> {
+            val lines = remember(run) { run.map { it.monospaceText.orEmpty() } }
+            val rows = remember(lines, monospaceLyricsStyle, textMeasurements, kind) {
+                textMeasurements.tabRows(lines, monospaceLyricsStyle, isPreformatted = kind == FoldableKind.VERBATIM)
             }
             shownSlots.forEach { slot ->
                 SongTabBlock(

@@ -33,6 +33,9 @@ class SongScaleGroupsTest {
         preChorus = "Pre-chorus",
         solo = "Solo",
         outro = "Outro",
+        abc = "ABC notation",
+        lilyPond = "LilyPond",
+        svg = "SVG",
         shouldNumberSections = true,
     )
 

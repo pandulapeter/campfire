@@ -19,7 +19,7 @@ class SectionNumberingTest {
 
     private val labels = DefaultSectionLabels(
         verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus",
-        solo = "Solo", outro = "Outro", shouldNumberSections = true,
+        solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG", shouldNumberSections = true,
     )
 
     private fun headers(text: String, labels: DefaultSectionLabels = this.labels) =

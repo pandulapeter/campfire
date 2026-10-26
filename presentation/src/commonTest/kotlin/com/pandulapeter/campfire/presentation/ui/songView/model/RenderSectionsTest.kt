@@ -45,6 +45,9 @@ class RenderSectionsTest {
         preChorus = "Pre-refrén",
         solo = "Szóló",
         outro = "Levezetés",
+        abc = "ABC-kotta",
+        lilyPond = "LilyPond",
+        svg = "SVG",
     )
 
     /**
@@ -229,6 +232,15 @@ class RenderSectionsTest {
             listOf("Solo: lines, after tab, lines", "comment after riff"),
             shape(text, shouldShowChords = false),
         )
+    }
+
+    @Test
+    fun `an abc, a LilyPond, or an SVG block is headed by its kind unless labelled, and dropped whole in lyrics-only mode`() {
+        val text = "{sov}\n[G]la\n{eov}\n\n{start_of_abc}\nX:1\nK:G\n|:GABc:|\n{end_of_abc}\n\n{start_of_ly: Melody}\nc4 d e\n{end_of_ly}\n\n" +
+            "{start_of_svg}\n<svg/>\n{end_of_svg}\n\n{start_of_textblock}\nwords\n{end_of_textblock}"
+
+        assertEquals(listOf("Versszak: lines", "ABC-kotta: lines", "Melody: lines", "SVG: lines", "Textblock: lines"), shape(text))
+        assertEquals(listOf("Versszak: lines", "Textblock: lines"), shape(text, shouldShowChords = false))
     }
 
     @Test

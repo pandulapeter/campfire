@@ -128,7 +128,8 @@ private fun DrawScope.drawStaff(row: TabRow, top: Float, columnWidth: Float, str
 internal class TabRow(val lines: List<TextLayoutResult>, val staff: TabStaffGeometry)
 
 /**
- * The laid out rows of one run of tablature, per width. A run is measured at every width the column layout tries
+ * The laid out rows of one run of tablature, per width, or of verbatim notation where [isPreformatted]: that is
+ * preformatted text even where a line of it would pass for a string of a staff. A run is measured at every width the column layout tries
  * and drawn at the one that won, so the widths it has been asked about most recently are kept: the same few come
  * back on every pass, and a row's text is laid out once rather than once per measurement. Only the last few
  * ([MAX_TAB_WIDTHS]), since a window being resized asks about a new width on every frame and none of those comes back.
@@ -139,9 +140,10 @@ internal class TabRows(
     private val lines: List<String>,
     private val style: TextStyle,
     private val textMeasurer: TextMeasurer,
+    isPreformatted: Boolean,
 ) {
 
-    private val isTablature = ChordProTabWrapper.isTablature(lines)
+    private val isTablature = !isPreformatted && ChordProTabWrapper.isTablature(lines)
 
     /** The height of a blank line in the tab's own font between the systems of tablature, and nothing elsewhere. */
     val rowGap = if (isTablature) textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), style).size.height else 0

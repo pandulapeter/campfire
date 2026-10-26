@@ -143,12 +143,12 @@ internal class PrintRows(
             when (run.first().foldableKind()) {
                 FoldableKind.TAB -> if (options.showTabs) tabRows(run, sectionLabel, lineWidth) else emptyList()
                 FoldableKind.GRID -> if (options.showChords) gridRows(run, lineWidth) else emptyList()
+                FoldableKind.VERBATIM -> if (options.showChords) verbatimRows(run, lineWidth) else emptyList()
                 null -> run.flatMap { line ->
                     when (line) {
                         is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
-                        is ChordProLine.Verbatim -> lyricsRows(ChordProLine.Lyrics(line.text, chords = emptyList()), lineWidth)
                         ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
-                        is ChordProLine.Tab, is ChordProLine.Grid -> emptyList()
+                        is ChordProLine.Tab, is ChordProLine.Grid, is ChordProLine.Verbatim -> emptyList()
                     }
                 }
             }
@@ -241,27 +241,36 @@ internal class PrintRows(
     /** A run of tab lines (`groupIntoRuns`), wrapped into systems of the column's width. */
     private fun tabRows(lines: List<ChordProLine>, sectionLabel: String?, lineWidth: Float): List<Row> {
         val run = lines.map { (it as ChordProLine.Tab).text }
-        return buildList {
-            (lines.first() as ChordProLine.Tab).label?.takeUnless { it == sectionLabel }?.let { addAll(labelRows(it, lineWidth)) }
-            val characters = (lineWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
-            val isTablature = ChordProTabWrapper.isTablature(run)
-            val systems = if (isTablature) {
-                ChordProTabWrapper.wrap(run, characters)
+        val label = (lines.first() as ChordProLine.Tab).label?.takeUnless { it == sectionLabel }?.let { labelRows(it, lineWidth) }.orEmpty()
+        return label + monospaceRows(run, isTablature = ChordProTabWrapper.isTablature(run), isSelectable = true, lineWidth)
+    }
+
+    /**
+     * A run of verbatim lines (`groupIntoRuns`), always preformatted, as the viewer draws it. Another program's notation
+     * is left out of the selectable text: read back by the importer, ABC's `"G"` and `[CEG]` would become chords.
+     */
+    private fun verbatimRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> =
+        monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isTablature = false, isSelectable = false, lineWidth)
+
+    /** The rows of a run of monospaced lines, wrapped into systems of the column's width. */
+    private fun monospaceRows(run: List<String>, isTablature: Boolean, isSelectable: Boolean, lineWidth: Float): List<Row> = buildList {
+        val characters = (lineWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
+        val systems = if (isTablature) {
+            ChordProTabWrapper.wrap(run, characters)
+        } else {
+            ChordProTabWrapper.wrapPreformatted(run, characters)
+        }
+        systems.forEachIndexed { systemIndex, system ->
+            // Staves without a gap between them read as one staff of twice the strings; a preformatted run (chord names
+            // over lyrics most often) is read like wrapped text, so it gets none.
+            if (isTablature && systemIndex > 0) add(Row(emptyList(), options.fontSize * 0.7f))
+            val rows = system.flatMap { wrapped(it, tabStyle, lineWidth, isSelectable) }
+            val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
+            if (systemHeight <= capacity) {
+                var rowY = 0f
+                add(Row(rows.flatMap { row -> row.parts.map { it.copy(y = rowY) }.also { rowY += row.height } }, systemHeight))
             } else {
-                ChordProTabWrapper.wrapPreformatted(run, characters)
-            }
-            systems.forEachIndexed { systemIndex, system ->
-                // Staves without a gap between them read as one staff of twice the strings; a preformatted run is chord
-                // names over lyrics, read like wrapped text, so it gets none.
-                if (isTablature && systemIndex > 0) add(Row(emptyList(), options.fontSize * 0.7f))
-                val rows = system.flatMap { wrapped(it, tabStyle, lineWidth) }
-                val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
-                if (systemHeight <= capacity) {
-                    var rowY = 0f
-                    add(Row(rows.flatMap { row -> row.parts.map { it.copy(y = rowY) }.also { rowY += row.height } }, systemHeight))
-                } else {
-                    addAll(rows)
-                }
+                addAll(rows)
             }
         }
     }

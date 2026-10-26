@@ -24,6 +24,8 @@ class LineRunsTest {
 
     private fun grid(label: String? = null) = ChordProLine.Grid(tokens = listOf(GridToken.Chord("Am")), label = label)
 
+    private fun abc(text: String = "|:GABc dedB:|") = ChordProLine.Verbatim(text = text, environment = "abc")
+
     @Test
     fun `lines are split into runs of tablature, of grid lines and of everything else, and at a blank line`() {
         val first = tab()
@@ -65,5 +67,29 @@ class LineRunsTest {
         assertEquals(3, listOf(grid(), grid(), grid()).runSlotCount(FoldableKind.GRID))
         assertEquals(1, listOf(tab(text = "")).runSlotCount(FoldableKind.TAB))
         assertEquals(24, List(30) { tab() }.runSlotCount(FoldableKind.TAB))
+    }
+
+    @Test
+    fun `verbatim lines are a run of their own, folded whole as their section, in as many pieces as tablature`() {
+        val first = abc("X:1")
+        val second = abc()
+
+        assertEquals(FoldableKind.VERBATIM, first.foldableKind())
+        assertEquals(listOf(listOf(first, second), listOf(ChordProLine.Blank), listOf(first)), listOf(first, second, ChordProLine.Blank, first).groupIntoRuns())
+        assertEquals(FoldableKind.VERBATIM, listOf(first, ChordProLine.Blank, second).wholeFoldableKind())
+        assertNull(listOf(first, lyrics).wholeFoldableKind())
+        assertEquals(listOf(tab(), tab()).runSlotCount(FoldableKind.TAB), listOf(abc("e|---|"), abc("e|---|")).runSlotCount(FoldableKind.VERBATIM))
+    }
+
+    @Test
+    fun `a verbatim run with no label of its own is named after its environment`() {
+        val labels = DefaultSectionLabels(
+            verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", abc = "ABC notation", lilyPond = "LilyPond",
+            svg = "SVG", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro",
+        )
+
+        assertEquals("ABC notation", labels.labelOf(FoldableKind.VERBATIM, listOf(ChordProLine.Blank, abc())))
+        assertEquals("LilyPond", labels.labelOf(FoldableKind.VERBATIM, listOf(ChordProLine.Verbatim("c4 d e", "ly"))))
+        assertNull(abc().environmentLabel)
     }
 }

@@ -15,9 +15,12 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_section_abc
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
+import com.pandulapeter.campfire.presentation.resources.song_details_section_lilypond
+import com.pandulapeter.campfire.presentation.resources.song_details_section_svg
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_intro
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_outro
@@ -25,10 +28,14 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 
-/** The name of a fold whose environment was given no label, the one a section of nothing but it would be headed by. */
-internal fun DefaultSectionLabels.labelOf(kind: FoldableKind) = when (kind) {
+/**
+ * The name of a fold whose environment was given no label, the one a section of nothing but it would be headed by: for
+ * verbatim lines, the name of the environment the first of [lines] was written in.
+ */
+internal fun DefaultSectionLabels.labelOf(kind: FoldableKind, lines: List<ChordProLine>) = when (kind) {
     FoldableKind.TAB -> tab
     FoldableKind.GRID -> grid
+    FoldableKind.VERBATIM -> labelOf(SectionType.Custom(lines.firstNotNullOfOrNull { (it as? ChordProLine.Verbatim)?.environment }.orEmpty()))
 }
 
 /** The fallback labels of the environments that have one, read here since they are string resources. */
@@ -39,6 +46,9 @@ internal fun rememberDefaultSectionLabels(shouldNumberSections: Boolean = false)
     bridge = stringResource(Res.string.song_details_section_bridge),
     tab = stringResource(Res.string.song_details_section_tab),
     grid = stringResource(Res.string.song_details_section_grid),
+    abc = stringResource(Res.string.song_details_section_abc),
+    lilyPond = stringResource(Res.string.song_details_section_lilypond),
+    svg = stringResource(Res.string.song_details_section_svg),
     intro = stringResource(Res.string.song_editor_section_intro),
     preChorus = stringResource(Res.string.song_editor_section_pre_chorus),
     solo = stringResource(Res.string.song_editor_section_solo),
@@ -56,6 +66,9 @@ internal data class DefaultSectionLabels(
     val bridge: String,
     val tab: String,
     val grid: String,
+    val abc: String,
+    val lilyPond: String,
+    val svg: String,
     val intro: String,
     val preChorus: String,
     val solo: String,
@@ -74,6 +87,9 @@ internal fun DefaultSectionLabels.labelOf(type: SectionType.Custom) = when (type
     "pre-chorus", "prechorus", "pre_chorus" -> preChorus
     "solo" -> solo
     "outro" -> outro
+    "abc" -> abc
+    "ly" -> lilyPond
+    "svg" -> svg
     else -> type.name.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
 }
 

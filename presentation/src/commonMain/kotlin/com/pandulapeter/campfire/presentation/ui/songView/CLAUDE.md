@@ -24,7 +24,9 @@ builds what it draws, `grid/` places it.
   itself unformatted.
 - Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
   block's its lines, so screen readers read the chords.
-- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together.
+- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together. So is each run of
+  `ChordProLine.Verbatim`, always preformatted (`isPreformatted`), since a tied ABC line full of dashes would pass for a
+  staff.
 - A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested): strings run from bar to bar,
   broken by every other character, and a bar joins the strings above and under it that have one in its column. Only
   the screen draws them so far; the PDF prints the characters.

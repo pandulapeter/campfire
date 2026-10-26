@@ -73,9 +73,12 @@ internal class SongTextMeasurements(
     /** The width of a piece of lyrics. Only the number is kept, since nothing is ever drawn from this layout. */
     fun fragmentWidth(fragment: String) = fragmentWidths.bounded().getOrPut(fragment) { measureFragment(fragment) }
 
-    /** The rows of the tab run of [lines] in [style], one for every chunk the run is drawn as. */
-    fun tabRows(lines: List<String>, style: TextStyle) =
-        tabRows.boundedTo(MAX_TAB_RUNS).getOrPut(TabRunKey(lines, style)) { TabRows(lines, style, textMeasurer) }
+    /**
+     * The rows of the tab run of [lines] in [style], one for every chunk the run is drawn as, wrapped as preformatted
+     * text whatever its lines look like where [isPreformatted] (see [TabRows]).
+     */
+    fun tabRows(lines: List<String>, style: TextStyle, isPreformatted: Boolean = false) =
+        tabRows.boundedTo(MAX_TAB_RUNS).getOrPut(TabRunKey(lines, style, isPreformatted)) { TabRows(lines, style, textMeasurer, isPreformatted) }
 
     /** The bars of the grid run [run], aligned once for every chunk the run is drawn as. */
     fun gridBars(run: List<ChordProLine>) = gridBars.boundedTo(MAX_TAB_RUNS).getOrPut(run) {
@@ -94,7 +97,7 @@ internal class SongTextMeasurements(
     private fun <K, V> HashMap<K, V>.boundedTo(max: Int) = also { if (size >= max) clear() }
 
     /** The style is part of the key, since the monospace style a run is drawn in is none of the three this is keyed by. */
-    private data class TabRunKey(val lines: List<String>, val style: TextStyle)
+    private data class TabRunKey(val lines: List<String>, val style: TextStyle, val isPreformatted: Boolean)
 }
 
 internal const val LINE_HEIGHT_SAMPLE = "X"

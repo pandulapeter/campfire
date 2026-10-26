@@ -33,6 +33,9 @@ class SongHomeKeyTest {
         preChorus = "Pre-chorus",
         solo = "Solo",
         outro = "Outro",
+        abc = "ABC notation",
+        lilyPond = "LilyPond",
+        svg = "SVG",
     )
 
     private fun scale(id: String) = Scales.all.first { it.id == id }

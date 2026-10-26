@@ -43,7 +43,7 @@ internal fun FoldChevron(
         when (kind) {
             FoldableKind.TAB -> if (isExpanded) Res.string.song_details_tab_collapse else Res.string.song_details_tab_expand
             FoldableKind.GRID -> if (isExpanded) Res.string.song_details_grid_collapse else Res.string.song_details_grid_expand
-            null -> if (isExpanded) Res.string.song_details_section_collapse else Res.string.song_details_section_expand
+            FoldableKind.VERBATIM, null -> if (isExpanded) Res.string.song_details_section_collapse else Res.string.song_details_section_expand
         }
     ),
     tint = tint,

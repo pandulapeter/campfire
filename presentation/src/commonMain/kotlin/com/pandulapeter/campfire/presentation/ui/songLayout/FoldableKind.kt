@@ -9,8 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
-/** The two ways of writing lines down that can be folded away: neither says anything to somebody who only sings. */
+/**
+ * The ways of writing lines down that can be folded away, none of which says anything to somebody who only sings:
+ * tablature, a chord grid, and the notation of an environment ChordPro hands to another program (`ChordProLine.Verbatim`).
+ */
 internal enum class FoldableKind {
     TAB,
     GRID,
+    VERBATIM,
 }

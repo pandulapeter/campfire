@@ -234,8 +234,11 @@ private fun List<ChordProLine>.prepareForDisplay(shouldShowChords: Boolean): Lis
     }
 }.dropLastWhile { it.isBlank() }
 
-/** Whether a line says nothing at all once the chords are hidden: tablature and a grid are chords and little else. */
-private fun ChordProLine.needsChords() = this is ChordProLine.Tab || this is ChordProLine.Grid
+/**
+ * Whether a line says nothing at all once the chords are hidden: tablature and a grid are chords and little else, and
+ * the notation of an ABC, LilyPond, or SVG block is music for somebody who plays.
+ */
+private fun ChordProLine.needsChords() = this is ChordProLine.Tab || this is ChordProLine.Grid || this is ChordProLine.Verbatim
 
 internal fun ChordProLine.isBlank() = when (this) {
     ChordProLine.Blank -> true

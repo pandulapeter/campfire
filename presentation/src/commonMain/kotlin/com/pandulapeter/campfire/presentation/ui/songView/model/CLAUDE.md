@@ -20,8 +20,9 @@ What a song page draws, built from the parsed song (pure): `SongLyricsModel`, `R
   one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
 - A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
   the sounding key as the Transposition control names it; omitted where the song has no `{key}` or the chords are off.
-- Lyrics-only mode drops tab and grid lines (and comments inside them, `isInTabOrGrid`), a section left empty whole, and
-  the info section's key, capo, tempo, and time line (the section itself where nothing else is, `withMetadataSection`).
+- Lyrics-only mode drops tab, grid, and verbatim lines (ABC, LilyPond, SVG; comments inside a tab or grid,
+  `isInTabOrGrid`, too), a section left empty whole, and the info section's key, capo, tempo, and time line (the
+  section itself where nothing else is, `withMetadataSection`).
 - A comment's bracketed chords are transposed and colored (`ChordProHighlighter.chordsOfShownText`, shared with the
   editor).
 
@@ -48,8 +49,9 @@ Product side in `ui/metronome/CLAUDE.md`.
   `UserPreferences.shouldNumberSections`). Only unlabelled sections and those labelled with the kind's own name are
   numbered. The number is `Section.number`, not part of the label, so saved folds do not move with the setting. An
   unnamed `{chorus}` recall takes the repeated chorus's number.
-- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid"; two back-to-back environments with
-  different labels fold apart; a section that is only one run folds as the section, no second toggle.
+- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid" / the verbatim block's kind ("ABC
+  notation"); two back-to-back environments with different labels fold apart; a section that is only one run folds as
+  the section, no second toggle, which is always so for a verbatim run (a delegated environment is its own section).
 
 ### Building the model, and the budget
 

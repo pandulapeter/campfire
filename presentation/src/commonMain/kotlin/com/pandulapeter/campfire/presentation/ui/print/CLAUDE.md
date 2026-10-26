@@ -29,7 +29,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 
 - `layoutPrintDocument` is **pure**: PDF points, measured by a function it is handed, so tests measure with arithmetic.
   Rows are the unit never split; a heading stays with the first segment that prints anything, a lyric line with its
-  chords, a tab system whole, a grid run aligned into columns as the viewer does.
+  chords, a tab system whole, a grid run aligned into columns as the viewer does. A verbatim run (ABC, LilyPond, SVG)
+  prints preformatted like a tab without a staff, only with `showChords`, and never `isSelectable` (read back, ABC's
+  `"G"` and `[CEG]` would be chords).
 - Sections and runs are grouped by the screen's own `joinCutSections` and `groupIntoRuns` (`ui/songLayout/`):
   a chorus is one unit under one bar, a break the one cut the PDF keeps.
 - Section labels: hidden when the options hide all its lines; an unnamed verse is "Verse", an unnamed paragraph has none.

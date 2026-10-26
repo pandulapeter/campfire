@@ -31,7 +31,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class PrintLayoutTest {
-    private val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
+    private val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG"))
     private fun measure(text: String, style: PrintStyle) = text.count { it != '\u200B' } * style.size * 0.6f
     private suspend fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
@@ -291,6 +291,22 @@ internal class PrintLayoutTest {
         assertTrue(texts.any { it.text.contains("G") && it.style.monospace && it.y > heading.y })
         val hidden = layout(source(grid), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
         assertFalse("Grid" in hidden || hidden.any { it.contains("G |") })
+    }
+
+    @Test fun `an abc block prints preformatted and unselectable under its kind, and is left out when chords are hidden`() = runTest {
+        val tied = "|:G2-G2 A2-A2|B2-B2 c2-c2:|"
+        val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(
+            ChordProLine.Verbatim("X:1", "abc"),
+            ChordProLine.Verbatim("\"G\"[CEG]2 [A2B] |", "abc"),
+            ChordProLine.Verbatim(tied, "abc"),
+        ))))
+        val texts = layout(source(abc), PrintSettings(showTabs = false)).pages.flatMap { it.texts }
+        val heading = texts.single { it.text == "ABC notation" }
+        val notation = texts.filter { it.y > heading.y && it.style.monospace }
+        assertEquals(listOf("X:1", "\"G\"[CEG]2 [A2B] |", tied), notation.map { it.text })
+        assertTrue(notation.all { it.style.monospace && !it.isSelectable })
+        val hidden = layout(source(abc), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        assertFalse("ABC notation" in hidden || "X:1" in hidden)
     }
 
     @Test fun `a section written without lines keeps its label`() = runTest {

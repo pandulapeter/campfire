@@ -19,8 +19,10 @@ import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 internal class SongTextMeasurementsTest {
 
@@ -44,6 +46,15 @@ internal class SongTextMeasurementsTest {
         val rows = measurements.tabRows(staff, monospaceStyle)
         assertNotSame(rows, measurements.tabRows(staff + "D|---2---|", monospaceStyle))
         assertNotSame(rows, measurements.tabRows(staff, monospaceStyle.copy(fontSize = 20.sp)))
+    }
+
+    @Test
+    fun `a run drawn preformatted has no staff even where its lines look like one`() {
+        val preformatted = measurements.tabRows(staff, monospaceStyle, isPreformatted = true)
+
+        assertNotSame(measurements.tabRows(staff, monospaceStyle), preformatted)
+        assertEquals(0, preformatted.rowGap)
+        assertTrue(preformatted.at(1000).all { it.staff.strings.isEmpty() && it.staff.bars.isEmpty() })
     }
 
     @Test

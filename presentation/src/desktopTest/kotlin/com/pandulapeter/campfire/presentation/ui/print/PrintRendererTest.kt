@@ -91,7 +91,7 @@ internal class PrintRendererTest {
             PrintSong("round-trip.cho", "Árvíztűrő dal", "Péter", song = parsed))),
             PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing",
                 DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid",
-                    intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+                    intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         val glyphs = renderer.selectableText(document.pages.single())
         assertTrue(glyphs.any { it.style.bold })
         val lyric = assertNotNull(document.pages.single().texts.firstOrNull { it.text.startsWith("Őrizzük") })
@@ -114,7 +114,7 @@ internal class PrintRendererTest {
         val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
             PrintSong("columns.cho", "Column song", null, song = parsed))), PrintSettings(columns = 2),
             PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
-                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         val page = document.pages.single()
         assertTrue(page.texts.first { it.text.startsWith("Line 01") }.x < document.width / 2)
         assertTrue(page.texts.first { it.text.startsWith("Line 30") }.x > document.width / 2)
@@ -141,7 +141,7 @@ internal class PrintRendererTest {
             val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
                 PrintSong("$name.cho", "Column song", null, song = parsed))), PrintSettings(isLandscape = isLandscape, columns = columns),
                 PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
-                    bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+                    bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
             val page = document.pages.single()
             assertEquals(columns, page.texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, name)
             val bytes = renderer.pdf(document, "Column song")
@@ -159,7 +159,7 @@ internal class PrintRendererTest {
         val document = layoutPrintDocument(PrintSource("Dense", songs = listOf(PrintSong("dense.cho", "Dense", null, song = parsed))),
             PrintSettings(columns = 4, fontSize = 20, marginMm = 10),
             PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
-                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.size > 1)
         val bytes = renderer.pdf(document, "Dense")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
@@ -201,7 +201,7 @@ internal class PrintRendererTest {
         val second = first.copy(fileName = "two.cho", title = "Under the stars", index = 2,
             song = parsed.copy(blocks = parsed.blocks + List(90) { ChordProParser.parse("[D]Another line of music [A7]to keep on the next page.").blocks.single() }))
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", PrintSource.Kind.SETLIST, listOf(first, second)),
-            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.size >= 4)
         val bytes = renderer.pdf(document, "Campfire concert")
         val contents = bytes.decodeToString()
@@ -246,7 +246,7 @@ internal class PrintRendererTest {
             {end_of_tab}
         """.trimIndent())
         val document = layoutPrintDocument(PrintSource("Cut sections", songs = listOf(PrintSong("cut.cho", "Cut sections", null, song = parsed))),
-            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.isNotEmpty())
         val bytes = renderer.pdf(document, "Cut sections")
         // Opt-in output for manual visual QA. Ordinary test runs leave no files behind.
@@ -321,7 +321,7 @@ internal class PrintRendererTest {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
         val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
-            PrintSettings(), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            PrintSettings(), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         val page = document.pages.first()
         val scale = 3f
         val width = ceil(document.width * scale).toInt()
@@ -346,7 +346,7 @@ internal class PrintRendererTest {
     @Test fun `chord diagrams are drawn in their boxes and left out of the selectable text`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Shapes}\n{define: F base-fret 1 frets 1 3 3 2 1 1 fingers 1 3 4 2 1 1}\n[G]Words [C]sung [D]over [F]chords and [Bm]a barre")
-        val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
+        val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG"))
         suspend fun page(chords: List<PrintChord>, settings: PrintSettings) = layoutPrintDocument(
             PrintSource("Shapes", songs = listOf(PrintSong("shapes.cho", "Shapes", "Artist", song = song, chords = chords))), settings, labels, renderer::width,
         ).pages.single()
