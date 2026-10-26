@@ -194,9 +194,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports),
   and ABC tunes into one song each with a chord grid and the tune kept; backups are read as archives:
   `domain/implementation`, `data/source/local/implementation`, `chordpro/abc`.
-- Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup, drawn on screen and in the PDF, toggled in the editor
-  by its buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the file: `chordpro`,
-  `ui/songView`, `ui/print`, `ui/screens/songEditor/toolbar`.
+- Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup (or a `<span>` saying the same), drawn on screen and in
+  the PDF, toggled in the editor by its buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the
+  file: `chordpro`, `ui/songView`, `ui/print`, `ui/screens/songEditor/toolbar`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.

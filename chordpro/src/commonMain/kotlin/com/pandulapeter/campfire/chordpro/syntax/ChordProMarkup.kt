@@ -14,9 +14,11 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 
 /**
  * The markup of a lyrics line or a comment: the subset of ChordPro's Pango markup that sets text in bold (`<b>`, `<strong>`), italic
- * (`<i>`, `<em>`), or underlined (`<u>`), in any letter case. The other tags of Pango and of HTML's inline text (`<span>`,
- * `<sup>`, `<font>`, `<br>`…) are markup too, read and dropped: the file keeps them, the page shows the text they wrap.
- * A tag may carry attributes written `name=value` and close itself (`<br/>`). Anything else in angle brackets is lyrics,
+ * (`<i>`, `<em>`), or underlined (`<u>`), in any letter case, and a `<span>` whose attributes say the same
+ * ([MarkupAttributes.spanStyles]). The other tags of Pango and of HTML's inline text (`<sup>`, `<font>`…) are markup too,
+ * read and dropped: the file keeps them, the page shows the text they wrap (and no `<img>`). A `<br>` is a space, since the words on
+ * either side of it are two. A tag may carry attributes written `name=value` and close itself (`<br/>`). Anything else in
+ * angle brackets is lyrics,
  * so a `<3`, an `<intro>`, or an `a<b c>` written into a line stays as it is: a tag named only by the song's author is
  * far likelier to be a word they meant to show.
  *
@@ -36,7 +38,7 @@ public object ChordProMarkup {
         "u" to Formatting.Style.UNDERLINE,
     )
     private val ignoredTags = setOf(
-        "a", "abbr", "big", "br", "cite", "code", "del", "div", "font", "ins", "kbd", "mark", "p", "q", "s", "samp",
+        "a", "abbr", "big", "br", "cite", "code", "del", "div", "font", "img", "ins", "kbd", "mark", "p", "q", "s", "samp",
         "small", "span", "strike", "sub", "sup", "tt", "var", "wbr",
     )
     private val longestTagName = (tags.keys + ignoredTags).maxOf { it.length }
@@ -63,6 +65,7 @@ public object ChordProMarkup {
         val depths = IntArray(Formatting.Style.entries.size)
         val starts = IntArray(Formatting.Style.entries.size)
         val formatting = mutableListOf<Formatting>()
+        val spans = mutableListOf<Set<Formatting.Style>>()
         var index = 0
         while (index < text.length) {
             val tag = if (text[index] == '<') tagAt(text, index) else null
@@ -72,15 +75,24 @@ public object ChordProMarkup {
                 index++
                 continue
             }
+            if (tag.name == "br" && !tag.isClosing && tag.separatesWords(result, text, index)) result.append(' ')
             for (tagIndex in index until index + tag.length) offsets[tagIndex] = result.length
             index += tag.length
-            val style = tag.style ?: continue
-            val styleIndex = style.ordinal
-            if (tag.isClosing) {
-                // Nested tags of one style (`<b><strong>`) are one range, ending with the outermost.
-                if (depths[styleIndex] > 0 && --depths[styleIndex] == 0) formatting.addRange(starts[styleIndex], result.length, style)
-            } else if (!tag.isSelfClosing && depths[styleIndex]++ == 0) {
-                starts[styleIndex] = result.length
+            val styles = when {
+                tag.name != "span" -> tag.styles
+                // A span closes the innermost one open, whatever styles it set, so it has to remember them.
+                tag.isClosing -> spans.removeLastOrNull() ?: continue
+                tag.isSelfClosing -> continue
+                else -> tag.styles.also { spans.add(it) }
+            }
+            styles.forEach { style ->
+                val styleIndex = style.ordinal
+                if (tag.isClosing) {
+                    // Nested tags of one style (`<b><strong>`) are one range, ending with the outermost.
+                    if (depths[styleIndex] > 0 && --depths[styleIndex] == 0) formatting.addRange(starts[styleIndex], result.length, style)
+                } else if (!tag.isSelfClosing && depths[styleIndex]++ == 0) {
+                    starts[styleIndex] = result.length
+                }
             }
         }
         offsets[text.length] = result.length
@@ -104,8 +116,12 @@ public object ChordProMarkup {
         if (previous >= 0 && this[previous].end == start) this[previous] = this[previous].copy(end = end) else add(Formatting(start, end, style))
     }
 
-    /** A tag read at a `<`; [style] is null for one that is read only to be dropped. */
-    private class Tag(val style: Formatting.Style?, val isClosing: Boolean, val isSelfClosing: Boolean, val length: Int)
+    /** Whether a line break read at [index] stands between words, which a space then keeps apart, rather than beside a space. */
+    private fun Tag.separatesWords(result: StringBuilder, text: String, index: Int) =
+        result.isNotEmpty() && !result.last().isWhitespace() && text.getOrNull(index + length)?.isWhitespace() == false
+
+    /** A tag read at a `<`, with the styles it opens or closes; none for one that is read only to be dropped. */
+    private class Tag(val name: String, val styles: Set<Formatting.Style>, val isClosing: Boolean, val isSelfClosing: Boolean, val length: Int)
 
     private fun tagAt(text: String, start: Int): Tag? {
         var index = start + 1
@@ -117,40 +133,17 @@ public object ChordProMarkup {
         val name = text.substring(nameStart, index).lowercase()
         val style = tags[name]
         if (style == null && name !in ignoredTags) return null
-        if (!isClosing) index = attributesEnd(text, index) ?: return null
+        val attributes = if (isClosing) null else MarkupAttributes.read(text, index) ?: return null
+        if (attributes != null) index = attributes.end
         val isSelfClosing = !isClosing && text.getOrNull(index) == '/'
         if (isSelfClosing) index++
         if (text.getOrNull(index) != '>') return null
-        return Tag(style = style, isClosing = isClosing, isSelfClosing = isSelfClosing, length = index + 1 - start)
+        return Tag(
+            name = name,
+            styles = style?.let(::setOf) ?: if (name == "span" && attributes != null) MarkupAttributes.spanStyles(attributes.attributes) else emptySet(),
+            isClosing = isClosing,
+            isSelfClosing = isSelfClosing,
+            length = index + 1 - start,
+        )
     }
-
-    /**
-     * Where the attributes starting at [start] end, or null where the text there is not attributes: each is a name, an
-     * `=`, and a value, quoted or bare, after whitespace. A bare word (`<b c>`) is not one, since that reads as lyrics, and
-     * a bare value has no slash, which `<br/>` would otherwise lose to it.
-     */
-    private fun attributesEnd(text: String, start: Int): Int? {
-        var index = start
-        while (true) {
-            var next = index
-            while (next < text.length && text[next].isWhitespace()) next++
-            if (next == index || text.getOrNull(next)?.isLetter() != true) return next.takeIf { text.getOrNull(it) == '>' || text.getOrNull(it) == '/' }
-            while (next < text.length && (text[next].isLetterOrDigit() || text[next] == '-' || text[next] == '_' || text[next] == ':')) next++
-            while (next < text.length && text[next].isWhitespace()) next++
-            if (text.getOrNull(next) != '=') return null
-            next++
-            while (next < text.length && text[next].isWhitespace()) next++
-            val quote = text.getOrNull(next)
-            if (quote == '"' || quote == '\'') {
-                next = text.indexOf(quote, next + 1).takeIf { it >= 0 }?.plus(1) ?: return null
-            } else {
-                val valueStart = next
-                while (next < text.length && text[next].isBareValueCharacter()) next++
-                if (next == valueStart) return null
-            }
-            index = next
-        }
-    }
-
-    private fun Char.isBareValueCharacter() = !isWhitespace() && this != '>' && this != '<' && this != '/' && this != '"' && this != '\''
 }

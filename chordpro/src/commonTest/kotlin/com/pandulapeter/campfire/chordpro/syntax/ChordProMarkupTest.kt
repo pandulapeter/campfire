@@ -65,9 +65,9 @@ class ChordProMarkupTest {
 
     @Test
     fun `tags without a style are hidden and keep their text`() {
-        val line = lyrics("x<SUP>2</SUP> <span foreground=\"red\" size='large'>red</span> a<br/>b<br />c <font color=red>d</font>")
+        val line = lyrics("x<SUP>2</SUP> <span foreground=\"red\" size='large'>red</span> <font color=red>d</font>")
 
-        assertEquals("x2 red abc d", line.text)
+        assertEquals("x2 red d", line.text)
         assertEquals(emptyList(), line.formatting)
     }
 
@@ -78,6 +78,53 @@ class ChordProMarkupTest {
         assertEquals("loud soft", line.text)
         assertEquals(listOf(Formatting(0, 4, Style.BOLD)), line.formatting)
         assertEquals(0, line.chords.single().position)
+    }
+
+    @Test
+    fun `images are hidden whatever their address is written as`() {
+        val line = lyrics("a<img src=\"cover.png\"/>b<IMG src=https://example.com/c.png>c<img src=c.png/>d<img alt='x' />e")
+
+        assertEquals("abcde", line.text)
+        assertEquals(emptyList(), line.formatting)
+    }
+
+    @Test
+    fun `a line break is a space between the words it separates`() {
+        val line = lyrics("one<br>two <br/>three<BR /> [C]<br>four")
+
+        assertEquals("one two three four", line.text)
+        assertEquals(14, line.chords.single().position)
+    }
+
+    @Test
+    fun `a span's attributes set the styles they name`() {
+        val line = lyrics(
+            "<span weight=\"bold\">a</span> <span font_style='italic' underline=\"single\">b</span> " +
+                "<span style=\"font-weight: 700; text-decoration: underline\">c</span> <span style=\"oblique\">d</span> " +
+                "<span font_desc=\"Sans Bold 12\">e</span> <span weight=\"normal\" underline=\"none\">f</span>",
+        )
+
+        assertEquals("a b c d e f", line.text)
+        assertEquals(
+            listOf(
+                Formatting(0, 1, Style.BOLD),
+                Formatting(2, 3, Style.ITALIC),
+                Formatting(2, 3, Style.UNDERLINE),
+                Formatting(4, 5, Style.BOLD),
+                Formatting(4, 5, Style.UNDERLINE),
+                Formatting(6, 7, Style.ITALIC),
+                Formatting(8, 9, Style.BOLD),
+            ),
+            line.formatting,
+        )
+    }
+
+    @Test
+    fun `a closing span ends the styles of the innermost span open`() {
+        val line = lyrics("<span weight=\"bold\">a<span color=\"red\">b</span>c</span>d</span><span style=\"italic\">e")
+
+        assertEquals("abcde", line.text)
+        assertEquals(listOf(Formatting(0, 3, Style.BOLD), Formatting(4, 5, Style.ITALIC)), line.formatting)
     }
 
     @Test
