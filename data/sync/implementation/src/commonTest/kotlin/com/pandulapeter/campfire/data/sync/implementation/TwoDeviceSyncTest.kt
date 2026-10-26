@@ -219,6 +219,24 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a song spelled with different case on the two devices settles on one file on a service with exact names`() = runTest {
+        // A service that keeps both spellings apart, through a provider that resolves names as the contract asks.
+        val cloud = FakeSyncProvider(resolvesListedNames = true)
+        val a = Device(shared() + (song("Hallelujah") to ORIGINAL))
+        val b = Device(shared() + (song("hallelujah") to ORIGINAL))
+        a.sync(cloud)
+        b.sync(cloud)
+        b.library.files[song("hallelujah")] = THERE
+        b.sync(cloud)
+        a.sync(cloud)
+
+        assertEquals(sharedContents() + ("Hallelujah.cho" to THERE.decodeToString()), a.contents)
+        assertEquals(sharedContents() + ("hallelujah.cho" to THERE.decodeToString()), b.contents)
+        assertEquals(a.contents, cloud.contents)
+        assertConverges(a, b, cloud)
+    }
+
+    @Test
     fun `a song spelled in two Unicode forms on the two devices settles on one file`() = runTest {
         // Dropbox, which takes the composed and the decomposed spelling for one file. Escaped, so that no editor or
         // formatter folds the two names into one.

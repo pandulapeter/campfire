@@ -26,6 +26,10 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkRes
  * - Revisions and cursors are opaque strings. The engine stores them and hands them back, and never parses one.
  * - Names are unique. A service that allows two files with the same name in a folder (Drive does) has to resolve
  *   that inside its own [list], before the engine ever sees it.
+ * - Names are resolved ignoring case and Unicode form, by `LibraryFiles.identityKey`: a request for `song.cho` reaches
+ *   the file listed as `Song.cho`, and leaves it under that spelling. The engine addresses a remote file by the local
+ *   spelling of its name wherever the two differ only so, since two keys to its planner would be one file to a service
+ *   like Dropbox. A service with exact names does this through its own name to id map, built in [list].
  * - [delete] may be a move to a trash rather than a destruction, and the engine does not care which.
  * - Nothing here throws for an expired token: refreshing is the provider's own business, and only an authorization
  *   that cannot be repaired surfaces, as [SyncAuthorizationException].

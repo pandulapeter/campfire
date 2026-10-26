@@ -20,6 +20,9 @@ KDoc of `SyncFolder` and `SyncConnection`.
   it never connects or re-authorizes.
 - One flat folder addressed by `(LibraryFileKind, name)`. Names must be unique; a service allowing duplicates resolves
   that in its own `list`.
+- Names are resolved ignoring case and Unicode form (`LibraryFiles.identityKey`): a request for `song.cho` reaches the
+  file listed as `Song.cho`, since the engine addresses a remote file by its local spelling. Dropbox does so itself; a
+  service with exact names maps them to ids in its own `list`.
 - Revisions are **opaque strings**, stored and handed back, never parsed.
 - Every run lists the whole folder (correct even after an interrupted run).
 - `download` returns the revision it actually fetched (`RemoteDocument`), which may be newer than the listing's.

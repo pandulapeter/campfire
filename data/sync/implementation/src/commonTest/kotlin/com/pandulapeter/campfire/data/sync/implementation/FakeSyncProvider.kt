@@ -39,7 +39,9 @@ import kotlinx.coroutines.flow.first
  * listing answers, which is where a test makes the whole run fail. [sizes] lets a listing
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what a
  * repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
- * that differ only by case or Unicode form for one file, [listCount] is how many passes a run made, [downloadCounts]
+ * that differ only by case or Unicode form for one file. [resolvesListedNames] makes it a service with exact names
+ * whose provider resolves a request through the spellings its last listing (and its own uploads since) named, as
+ * [SyncProvider] asks of a provider for such a service. [listCount] is how many passes a run made, [downloadCounts]
  * how many times each file was fetched and [deleteCalls] what each deletion request asked for; the names in
  * [refusedDeletions] are answered as refused. A deletion whose expected revision is no longer the file's leaves the
  * file and reports nothing, as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a
@@ -57,7 +59,11 @@ internal class FakeSyncProvider(
     var onUpload: (SyncKey) -> Unit = {},
     private val account: SyncAccount? = null,
     private val ignoresCase: Boolean = false,
+    private val resolvesListedNames: Boolean = false,
 ) : SyncProvider {
+
+    /** The provider's own map from a folded name to the spelling the folder holds, for [resolvesListedNames]. */
+    private val listedSpellings = mutableMapOf<SyncKey, SyncKey>()
 
     var listCount = 0
 
@@ -134,7 +140,7 @@ internal class FakeSyncProvider(
         sharedFiles = sharedFiles.map { (shareId, file) ->
             RemoteSharedFile(shareId = shareId, revision = file.second, contentHash = contentHashOf(file.first), size = file.first.size.toLong())
         },
-        files = files.also { listCount++ }.map { (key, file) ->
+        files = files.also { listCount++ }.also(::rememberListedSpellings).map { (key, file) ->
             remoteFile(key, file.first, file.second)
         },
     )
@@ -148,15 +154,22 @@ internal class FakeSyncProvider(
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)
 
+    private fun rememberListedSpellings(listed: Map<SyncKey, *>) {
+        listedSpellings.clear()
+        listed.keys.forEach { listedSpellings[it.foldedForResolving()] = it }
+    }
+
     /**
      * Where a request lands: on a service that ignores case and Unicode form, the stored spelling of the name, as
-     * Dropbox keeps it.
+     * Dropbox keeps it; through [resolvesListedNames], the spelling the provider last saw for it.
      */
-    private fun stored(key: SyncKey) = if (ignoresCase) {
-        files.keys.firstOrNull { it.kind == key.kind && LibraryFiles.isSameLibraryName(it.name, key.name) } ?: key
-    } else {
-        key
+    private fun stored(key: SyncKey) = when {
+        ignoresCase -> files.keys.firstOrNull { it.kind == key.kind && LibraryFiles.isSameLibraryName(it.name, key.name) } ?: key
+        resolvesListedNames -> listedSpellings[key.foldedForResolving()] ?: key
+        else -> key
     }
+
+    private fun SyncKey.foldedForResolving() = copy(name = LibraryFiles.identityKey(name))
 
     override suspend fun upload(
         kind: LibraryFileKind,
@@ -170,6 +183,7 @@ internal class FakeSyncProvider(
         if (files[target]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[target] = bytes to revision
+        if (resolvesListedNames) listedSpellings[target.foldedForResolving()] = target
         feed.value += target.path
         return RemoteWriteResult.Written(revision)
     }
@@ -182,6 +196,7 @@ internal class FakeSyncProvider(
             val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
             if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) {
                 files -= target
+                listedSpellings -= target.foldedForResolving()
                 feed.value += target.path
             }
         }

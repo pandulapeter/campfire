@@ -14,18 +14,18 @@ import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 
 /**
- * Gives a remote file the local spelling of its name where the two differ only by case.
+ * Gives a remote file the local spelling of its name where the two differ only by case or Unicode form.
  *
- * Dropbox paths are case-insensitive, so `Song.cho` here and `song.cho` there are one file to the service and two
- * keys to [SyncPlanner]: the new-file upload of the local one would be refused as a conflict on every pass, and the
- * file would never move. This is a property of one service surfacing in the engine on purpose - it keeps
- * [SyncProvider]'s contract down to a flat folder of names - and it costs a service with exact names nothing, since it
- * only ever renames a remote key that has no exact local match. Every later request uses the local spelling, which
- * the service resolves to the same file. Two *local* names that differ only by case cannot both exist on such a
- * service; the one it refuses is reported as a file that could not be synced, see `upload`.
+ * Every provider resolves names that way ([SyncFolder]'s contract), so `Song.cho` here and `song.cho` there are one
+ * file to the service and two keys to [SyncPlanner]: the new-file upload of the local one would be refused as a
+ * conflict on every pass, and the file would never move. Folding here keeps [SyncFolder] down to a flat folder of
+ * names, and it costs a listing with no such pair nothing, since it only ever renames a remote key that has no exact
+ * local match. Every later request uses the local spelling, which the provider resolves to the listed file. Two *local*
+ * names that differ only by case cannot both live in such a folder; the one the provider refuses is reported as a file
+ * that could not be synced, see `upload`.
  */
 internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<RemoteFileState>): List<RemoteFileState> {
     val localKeys = local.mapTo(mutableSetOf()) { it.key }
@@ -40,7 +40,7 @@ internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<
  *
  * [foldRemoteNamesOntoLocal] matches the two listings with each other, but the planner looks the index up by exact
  * name as well. A song moved to another spelling of the same name (a file renamed by hand from `Hallelujah.cho`)
- * keeps the old spelling on a service that ignores case, and its entry under whichever spelling the last run saw. Left
+ * keeps the old spelling in the cloud folder, and its entry under whichever spelling the last run saw. Left
  * like that, the planner reads one file as two: an entry whose file is gone from both sides, which it forgets, and a file
  * nobody has seen, which it downloads. A deletion made here then brings the song back, and an edit made elsewhere is
  * taken for a conflict. An entry only moves when its own name is in neither listing and exactly one listed name
@@ -65,7 +65,7 @@ internal fun foldIndexNamesOntoListings(
 }
 
 /**
- * Two spellings a service takes for one file: case, which Dropbox ignores, and Unicode form, which the file systems
- * disagree about - a name an iPhone hands out decomposed is the same file as the composed one the service holds.
+ * Two spellings a provider takes for one file: case, and Unicode form, which the file systems disagree about - a name
+ * an iPhone hands out decomposed is the same file as the composed one the service holds.
  */
 internal fun SyncKey.folded() = copy(name = LibraryFiles.identityKey(name))
