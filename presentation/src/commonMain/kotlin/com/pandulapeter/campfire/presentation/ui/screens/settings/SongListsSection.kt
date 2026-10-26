@@ -21,9 +21,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists
-import com.pandulapeter.campfire.presentation.resources.settings_group_display
-import com.pandulapeter.campfire.presentation.resources.settings_number_sections
-import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_lists
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards_description
 import com.pandulapeter.campfire.presentation.resources.songs
@@ -32,24 +30,17 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.CardDetailsCho
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The second section of the Preferences tab: what the app adds to a song's text and to its cards, only there while the songs
- * are switched on.
+ * The last section of the Preferences tab: what the song lists' cards say, only there while the songs are switched on.
+ * How a song itself is read is SongPageSection's.
  */
 @Composable
-internal fun SongDisplaySection(
+internal fun SongListsSection(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-) = SettingsSection(title = stringResource(Res.string.settings_group_display)) {
-    SwitchListItem(
-        title = stringResource(Res.string.settings_number_sections),
-        description = stringResource(Res.string.settings_number_sections_description),
-        isChecked = userPreferences?.shouldNumberSections == true,
-        onCheckedChange = viewModel.preferencesController::setSectionNumberingEnabled,
-    )
+) = SettingsSection(title = stringResource(Res.string.settings_group_lists)) {
     // One row of chips per list, since a setlist's cards are where a set is timed and the library's where a song is found.
     // The key's chip is gone with the chords, which take it off the cards whatever it says; the tempo's stays with the
     // metronome off, which only decides it until it is picked. The song details screen is not theirs: the top of a song

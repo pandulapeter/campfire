@@ -127,7 +127,7 @@ class NavigatorTest {
             areSongsEnabled = false,
             isMetronomeEnabled = false,
             isTunerEnabled = false,
-            areChordsEnabled = false,
+            isChordLibraryEnabled = false,
             areScalesEnabled = false,
         )
         navigator.followFeatureSwitches(FeatureSwitches.of(allOff))

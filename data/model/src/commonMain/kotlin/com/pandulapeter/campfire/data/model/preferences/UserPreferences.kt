@@ -99,14 +99,20 @@ data class UserPreferences(
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /**
      * Whether a song opens with the diagrams of its chords, in a section of their own after the controls of how it is
-     * played. Only while [areChordsEnabled]: with the chords gone there is nothing to finger.
+     * played. Only while [areChordsEnabled]: with the chords gone there is nothing to finger. The Chords tab is
+     * [isChordLibraryEnabled]'s.
      */
     val areChordDiagramsEnabled: Boolean = true,
     /**
-     * Whether each diagram of a song's Chords section also names the step of the song's key its chord stands on (`V7`
-     * beside `G7`). Only while [areChordDiagramsEnabled], since it labels the diagrams.
+     * Whether each chord diagram also names the step of the key its chord stands on (`V7` beside `G7`): a song's, in
+     * its Chords section, and a scale's, in the scale sheet's chords.
      */
     val areChordDegreesEnabled: Boolean = true,
+    /**
+     * Whether the app has a chord library: the Chords tab, and the chords a scale sheet lists. It follows neither
+     * [areChordsEnabled] nor [areChordDiagramsEnabled], which are about how a song is read.
+     */
+    val isChordLibraryEnabled: Boolean = true,
     /**
      * Whether the app has a scale library: the Scales tab, the scale sheet, and the scales a chord sheet suggests. It
      * follows neither chord switch, since a violinist with no chords still plays scales.

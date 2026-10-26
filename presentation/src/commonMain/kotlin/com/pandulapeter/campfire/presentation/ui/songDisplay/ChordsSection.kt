@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.settings
+package com.pandulapeter.campfire.presentation.ui.songDisplay
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -24,7 +24,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_chords
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
@@ -36,25 +35,26 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The first section of the Preferences tab: how the chords are written. The instrument is not here: it is picked where it is
- * used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
+ * How the chords are written, first in the Preferences tab and in the song display sheet. The instrument is not here: it
+ * is picked where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
  */
 @Composable
 internal fun ChordsSection(
-    viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
+    onNotationClicked: () -> Unit,
+    onAccidentalsSelected: (UserPreferences.Accidentals) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_chords)) {
-    // The notation and the accidentals only decide how a chord is written, so with the chords switched off they have
-    // nothing to say. They stay in the section rather than disappearing from it: what they are set to is still what the
-    // chords will look like as soon as they are shown again. The accidentals stay enabled under a numbering, since they
-    // still spell the key it counts from.
-    val areChordsEnabled = userPreferences?.areChordsEnabled != false
+    // The notation and the accidentals only decide how a chord or a key is written, so with nothing on that names one
+    // they have nothing to say. They stay in the section rather than disappearing from it: what they are set to is still
+    // what the chords will look like as soon as they are shown again. The accidentals stay enabled under a numbering,
+    // since they still spell the key it counts from.
+    val isEnabled = userPreferences.namesChords
     // The examples under the settings below are written in the notation picked here, so they change with it.
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     NotationChoice(
         selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation,
-        isEnabled = areChordsEnabled,
-        onClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
+        isEnabled = isEnabled,
+        onClicked = onNotationClicked,
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),
@@ -63,7 +63,7 @@ internal fun ChordsSection(
             shownChordName("Bb", notation),
             shownChordName("A#", notation),
         ),
-        isEnabled = areChordsEnabled,
+        isEnabled = isEnabled,
     ) {
         SegmentedChoice(
             options = listOf(
@@ -72,8 +72,8 @@ internal fun ChordsSection(
                 UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps),
             ),
             selected = userPreferences?.chordSpelling?.accidentals,
-            isEnabled = areChordsEnabled,
-            onSelected = viewModel.preferencesController::setAccidentals,
+            isEnabled = isEnabled,
+            onSelected = onAccidentalsSelected,
         )
     }
 }
@@ -100,3 +100,8 @@ private fun NotationChoice(
         onClick = onClicked,
     )
 }
+
+/** Whether anything shown names a chord or a key: a song's chords, the Chords tab, or the Scales tab. */
+private val UserPreferences?.namesChords
+    get() = (this?.areSongsEnabled != false && this?.areChordsEnabled != false) || this?.isChordLibraryEnabled != false ||
+        this?.areScalesEnabled != false

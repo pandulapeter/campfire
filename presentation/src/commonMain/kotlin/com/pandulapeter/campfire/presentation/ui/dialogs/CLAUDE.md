@@ -31,8 +31,8 @@ away and uncovers the one under it as it was (its sheet, draft, and scroll posit
   the process.
 - Which dialog stacks over which is `stacksOver` (`DialogStack.kt`, pure and tested): the About the song sheet's
   editors over it, the Remove cover question over the cover sheet, the lookup over the metadata form — each only over
-  the same target — and a scale over a chord sheet, a chord over the scale sheet, one hop each (`showsScales`,
-  `showsChords`), never a dialog over one of its own kind.
+  the same target — a scale over a chord sheet, a chord over the scale sheet, one hop each (`showsScales`,
+  `showsChords`), and the notation's choice over the song display sheet; never a dialog over one of its own kind.
 - Every change goes through `setVisibleDialog`, which derives the stack from the dialog alone
   (`nextUnderlyingDialogs`): one already in the stack goes back to it, one that stacks over the top goes over it,
   anything else replaces the stack. `dismissDialog` uncovers the one under the top.

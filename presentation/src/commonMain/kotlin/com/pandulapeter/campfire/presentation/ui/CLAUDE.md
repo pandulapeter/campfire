@@ -149,30 +149,33 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Features are switched on and off as a whole
 
-- Settings → Features (Read only is in General). Every switch is a `UserPreferences` field, never exported or synced,
-  and **only hides**: nothing is written or deleted. What each takes:
+- **Settings → Features is what the app has** (a switch per tab, and the two that go online); **Settings → Preferences
+  is how a song is read** (`ui/songDisplay`: chords, their diagrams and degrees, scale suggestions, numbered sections),
+  the latter also from the song details menu's Display settings. Read only is in General. Every switch is a
+  `UserPreferences` field, never exported or synced, and **only hides**: nothing is written or deleted. Features:
   - **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song
     and editor screen, and paste (a dropped text too); disables the Setlists, Online song details, and Cover art rows.
     Settings' Import, dropped files, and files or a text opened with or shared to the app are still imported, always
     through the import screen's review and under a warning atop it (as are setlists with the Setlists switch off,
     `ImportFeatureWarning`), but nothing opens a song, no preview or editor starts (`ImportController`'s
     `areSongsEnabled`, the import screen's rows). The app opens on the first tool switched on (`TopLevel.home`).
-  - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
-  - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
-    Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard's
-    missing capo, tuner).
-  - **Chord degrees** (`areChordDegreesEnabled`): disabled while chords or chord diagrams are off; takes the degree
-    over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
-  - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet; independent of both chord switches. The
-    scale sheet's chord rows follow Chord diagrams.
-  - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, as Chord diagrams is
-    with chords, since a suggestion is read off the chords; takes the song's Scales section and the chord sheets' scales.
   - **Metronome**: takes its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
   - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
+  - **Chords** (`isChordLibraryEnabled`): takes the Chords tab and the scale sheet's chord rows, whatever songs show.
+  - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet, and with them the scale suggestions.
   - **Setlists**: takes their tab and every way into one; setlist files still travel through import, export, and sync.
     Off with the songs too (`FeatureSwitches.areSetlistsEnabled`).
   - **Online song details** (`isSongDetailsLookupEnabled`): takes the lookup button.
   - **Cover art** (`isCoverArtEnabled`): cover fetching, drawing, and search.
+- Song preferences, each disabled rather than hidden while another takes what it adds:
+  - **Chords** (`areChordsEnabled`): takes a song's chords, key, transposition, and capo; the chord spelling rows are
+    disabled only once neither songs nor the Chords and Scales tabs name a chord.
+  - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in
+    the PDF too; chosen shapes kept. The instrument pill stays (keyboard's missing capo, tuner).
+  - **Chord degrees** (`areChordDegreesEnabled`): disabled while no diagram is drawn (a song's or the Chords tab's);
+    takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
+  - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion
+    is read off the chords; takes the song's Scales section and the chord sheets' scales.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
   neither named nor reset.
 - A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored

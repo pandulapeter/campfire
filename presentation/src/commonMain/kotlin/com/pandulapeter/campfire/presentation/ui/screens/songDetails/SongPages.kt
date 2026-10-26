@@ -104,7 +104,7 @@ internal fun SongPages(
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
-    val showsDegrees = chordDiagrams != null && FeatureSwitches.of(userPreferences).areChordDegreesEnabled
+    val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled != false
     val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being

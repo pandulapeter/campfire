@@ -292,7 +292,6 @@ class BrowserRoutesTest {
         isMetronomeEnabled = areToolsEnabled,
         isTunerEnabled = areToolsEnabled,
         isChordLibraryEnabled = areToolsEnabled,
-        areChordDegreesEnabled = areToolsEnabled,
         areScalesEnabled = areToolsEnabled,
         areScaleSuggestionsEnabled = areToolsEnabled,
     )

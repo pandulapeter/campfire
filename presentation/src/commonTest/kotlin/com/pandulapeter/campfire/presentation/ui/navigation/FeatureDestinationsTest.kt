@@ -31,7 +31,6 @@ internal class FeatureDestinationsTest {
         isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
         isChordLibraryEnabled = isChordLibraryEnabled,
-        areChordDegreesEnabled = isChordLibraryEnabled,
         areScalesEnabled = areScalesEnabled,
         areScaleSuggestionsEnabled = areScalesEnabled,
     )
@@ -58,12 +57,12 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `the chords tab follows the chord diagrams, which follow the chords`() {
+    fun `the chords tab follows a switch of its own, whatever a song shows`() {
         val preferences = testPreferences()
         assertTrue(FeatureSwitches.of(preferences).isChordLibraryEnabled)
         assertTrue(FeatureSwitches.of(null).isChordLibraryEnabled)
-        assertFalse(FeatureSwitches.of(preferences.copy(areChordDiagramsEnabled = false)).isChordLibraryEnabled)
-        assertFalse(FeatureSwitches.of(preferences.copy(areChordsEnabled = false)).isChordLibraryEnabled)
+        assertFalse(FeatureSwitches.of(preferences.copy(isChordLibraryEnabled = false)).isChordLibraryEnabled)
+        assertTrue(FeatureSwitches.of(preferences.copy(areChordsEnabled = false, areChordDiagramsEnabled = false)).isChordLibraryEnabled)
     }
 
     @Test
@@ -78,17 +77,6 @@ internal class FeatureDestinationsTest {
         assertFalse(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScaleSuggestionsEnabled)
         assertFalse(FeatureSwitches.of(preferences.copy(areScalesEnabled = false)).areScaleSuggestionsEnabled)
         assertTrue(FeatureSwitches.of(preferences.copy(areScaleSuggestionsEnabled = false)).areScalesEnabled)
-    }
-
-    @Test
-    fun `chord degrees go with the chord diagrams they label`() {
-        val preferences = testPreferences()
-        assertTrue(FeatureSwitches.of(preferences).areChordDegreesEnabled)
-        assertTrue(FeatureSwitches.of(null).areChordDegreesEnabled)
-        assertFalse(FeatureSwitches.of(preferences.copy(areChordDegreesEnabled = false)).areChordDegreesEnabled)
-        assertFalse(FeatureSwitches.of(preferences.copy(areChordDiagramsEnabled = false)).areChordDegreesEnabled)
-        assertFalse(FeatureSwitches.of(preferences.copy(areChordsEnabled = false)).areChordDegreesEnabled)
-        assertTrue(FeatureSwitches.of(preferences.copy(areChordDegreesEnabled = false)).isChordLibraryEnabled)
     }
 
     @Test

@@ -18,8 +18,10 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 
 - **General**: Performance (the Read only switch) leads, since General is the tab Settings opens on, and only while
   the songs are on (it fades out with them). Setup ("Set up Campfire again", the onboarding) follows.
-- **Preferences**: how chords are written (they are in the Chords and Scales tabs too), then a Display section about
-  songs alone, which leaves with the Songs switch. No instrument row; the instrument is picked where it is used
+- **Preferences**: how a song is read, where Features is what the app has. How chords are written (they are in the
+  Chords and Scales tabs too, so the rows are disabled only while nothing names a chord), then Song page and Lists,
+  about songs alone, which leave with the Songs switch. The first two are `ui/songDisplay`'s, shared with the song
+  details screen's Display settings sheet. No instrument row; the instrument is picked where it is used
   (`ui/instrument`). Accidentals stay enabled under a numbering notation (they still spell its key). Examples are
   written in the picked notation, never in the language.
 - **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
@@ -30,8 +32,8 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
   fails (`isStaleSharingList`). A row being stopped (every row, for Stop sharing everything) fades, its menu crossfading
   into a progress indicator until it shrinks in place (`sharedLinkRowsOf`), or, where the stop fails, back with a
   snackbar saying why. Stop sharing everything is alone in the last section.
-- **Features**: Playing switches first, in the navigation's tab order (songs, setlists, metronome, tuner, chords, chord
-  diagrams, scales, scale suggestions), then an Online group (song details lookup, cover art) so the two that make
+- **Features**: Playing switches first, one per tab, in the navigation's order (songs, setlists, metronome, tuner,
+  chords, scales), then an Online group (song details lookup, cover art) so the two that make
   requests are found together. Rules in `ui/CLAUDE.md`.
 - `BackgroundWarmthSlider` and `LanguageChoice` are shared with the onboarding's first page.
 

@@ -125,8 +125,15 @@ internal class PreferencesController(
 
     fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
 
-    /** The onboarding's chords card, which stands for the chord diagrams too; one write, so neither change is lost. */
-    fun setChordsWithDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordsEnabled = value, areChordDiagramsEnabled = value) }
+    fun setChordLibraryEnabled(value: Boolean) = changeUserPreferences { copy(isChordLibraryEnabled = value) }
+
+    /**
+     * The onboarding's chords card, which stands for the chord diagrams and the Chords tab too; one write, so no change
+     * is lost.
+     */
+    fun setChordsWithDiagramsEnabled(value: Boolean) = changeUserPreferences {
+        copy(areChordsEnabled = value, areChordDiagramsEnabled = value, isChordLibraryEnabled = value)
+    }
 
     fun setInstrument(value: UserPreferences.Instrument) = changeUserPreferences { withInstrument(value) }
 

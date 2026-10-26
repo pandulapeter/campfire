@@ -166,9 +166,10 @@ internal fun SongDetailsScreen(
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
-    // The sheet of what the song is, opened from the app bar's title. Performance mode edits nothing, so there it is only
-    // offered where it has something in it, and it is read from the song's text, so nowhere before that is at hand.
-    // Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read for it.
+    // The sheet of what the song is, opened from the app bar's title and its menu. Performance mode edits nothing, so
+    // there it is only offered where it has something in it, and it is read from the song's text, so nowhere before that
+    // is at hand. Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read
+    // for it.
     val hasSongInfo = remember(currentSongText, isReadOnly) {
         isReadOnly && currentSongText?.let(viewModel.songMetadataEditing::hasSongInfo) == true
     }

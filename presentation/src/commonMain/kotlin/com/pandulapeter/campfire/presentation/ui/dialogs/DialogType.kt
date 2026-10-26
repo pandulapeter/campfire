@@ -137,8 +137,14 @@ sealed interface DialogType {
     /** The tuning of the instrument in the player's hands, opened from the instrument pill's tuning half. */
     data object Tuning : DialogType
 
-    /** The notation chords are written in, opened from its chip in Settings. */
+    /** The notation chords are written in, opened from its chip in Settings and in the [SongDisplay] sheet. */
     data object Notation : DialogType
+
+    /**
+     * How songs are read on this device (the Preferences tab's Chords and Song page sections), opened from the song
+     * details menu so that a reader changes them while looking at a song.
+     */
+    data object SongDisplay : DialogType
 
     /** The tuner over the song being read, opened from the song's tuner button (or its overflow menu); it listens while it is up. */
     data object Tuner : DialogType

@@ -167,7 +167,7 @@ internal fun ScaleSheet(
             val tuning = userPreferences?.chordTuning()
             if (dialog.showsChords && tuning != null && FeatureSwitches.of(userPreferences).isChordLibraryEnabled && scale.intervals.size == 7) {
                 val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
-                val showsDegrees = FeatureSwitches.of(userPreferences).areChordDegreesEnabled
+                val showsDegrees = userPreferences?.areChordDegreesEnabled != false
                 val onChordClicked = { chord: SongChord ->
                     viewModel.dialogHost.showDialog(DialogType.ChordReference(chord, showsScales = false))
                 }

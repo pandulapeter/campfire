@@ -123,7 +123,8 @@ internal class UserPreferencesMappersTest {
         assertEquals(true, defaults.areScalesEnabled)
         assertEquals(true, defaults.areScaleSuggestionsEnabled)
         assertEquals(true, defaults.areChordDegreesEnabled)
-        val scalesOff = defaults.copy(areScalesEnabled = false, areScaleSuggestionsEnabled = false, areChordDegreesEnabled = false)
+        assertEquals(true, defaults.isChordLibraryEnabled)
+        val scalesOff = defaults.copy(areScalesEnabled = false, areScaleSuggestionsEnabled = false, areChordDegreesEnabled = false, isChordLibraryEnabled = false)
         assertEquals(scalesOff, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(scalesOff.toDocument())).document.toModel())
         val lyricsOnly = UserPreferencesDocumentFormat.decode("""{"isLyricsOnlyModeEnabled":true}""").document
         assertEquals(false, lyricsOnly.toModel().areChordsEnabled)

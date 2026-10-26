@@ -15,14 +15,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.songDisplay.ChordsSection
+import com.pandulapeter.campfire.presentation.ui.songDisplay.SongPageSection
 
 /**
  * One tab of the settings screen: a single column of titled [SettingsSection]s, the same on every tab and at every
@@ -55,14 +59,21 @@ internal fun SettingsTabPage(
             )
             SettingsTab.FEATURES -> FeaturesSections(viewModel = viewModel, userPreferences = userPreferences)
             SettingsTab.PREFERENCES -> {
-                ChordsSection(viewModel = viewModel, userPreferences = userPreferences)
+                ChordsSection(
+                    userPreferences = userPreferences,
+                    onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
+                    onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
+                )
                 // The chords are written the same way in the Chords and Scales tabs, while all of this is about songs.
                 AnimatedVisibility(
                     visible = userPreferences?.areSongsEnabled != false,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
                 ) {
-                    SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences)
+                    Column {
+                        SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
+                        SongListsSection(viewModel = viewModel, userPreferences = userPreferences)
+                    }
                 }
             }
             SettingsTab.LIBRARY -> {

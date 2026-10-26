@@ -55,9 +55,13 @@ internal fun RowScope.SongDetailsActions(
     areSetlistsEnabled: Boolean,
     showsFontScaleInBar: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
+    aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
+    songDisplayAction: ActionsMenuItem,
 ) {
     val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    // Read only mode's menu: nothing in it changes the library.
+    val performanceItems = listOfNotNull(aboutSongAction, tunerAction, songDisplayAction)
     // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
     // performance mode leaves the bar with nothing else in it, and elsewhere it is the first of the bar's
     // controls to go back into the menu as the bar narrows. Both are there, one leaving as the other arrives,
@@ -69,7 +73,7 @@ internal fun RowScope.SongDetailsActions(
         exit = fadeOut() + shrinkHorizontally(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ActionsMenu(items = listOfNotNull(tunerAction?.takeIf { isPerformanceModeEnabled }))
+            ActionsMenu(items = if (isPerformanceModeEnabled) performanceItems else emptyList())
             LiveFontScaleControls(
                 modifier = Modifier.padding(end = if (isReadOnly) APP_BAR_STEPPER_END_PADDING else 0.dp),
                 viewModel = viewModel,
@@ -84,7 +88,7 @@ internal fun RowScope.SongDetailsActions(
         exit = fadeOut() + shrinkHorizontally(),
     ) {
         ActionsMenu(
-            items = listOfNotNull(tunerAction),
+            items = performanceItems,
             menuFooter = {
                 MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                     LiveFontScaleControls(viewModel = viewModel)
@@ -126,6 +130,7 @@ internal fun RowScope.SongDetailsActions(
                     isAfterButton = showsSetlistAssignmentsInBar,
                     leadingItems = {
                         listOfNotNull(
+                            aboutSongAction,
                             if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
                                 null
                             } else {
@@ -137,6 +142,7 @@ internal fun RowScope.SongDetailsActions(
                                 )
                             },
                             tunerAction,
+                            songDisplayAction,
                         )
                     },
                     // The transposition, the capo and the tempo are set in the song's own first section now; what

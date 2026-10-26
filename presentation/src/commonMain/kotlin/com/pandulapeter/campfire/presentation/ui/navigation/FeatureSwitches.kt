@@ -12,18 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.navigation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
- * The Features switches that take a screen out of the app, see [CampfireDestination.isEnabled].
+ * The Features switches that take a screen out of the app, see [CampfireDestination.isEnabled], and the scale suggestions,
+ * which need the Scales one.
  *
  * @property areSongsEnabled Whether the Songs tab is there, and with it every screen a song is read or edited on. Off, the
  *   app opens on the first tool switched on rather than on the songs, see [CampfireDestination.TopLevel.home].
  * @property areSetlistsEnabled Whether the Setlists tab is there, which needs the songs as well: a setlist is a list of
  *   them.
- * @property isChordLibraryEnabled Whether the Chords tab is there, which follows the Chord diagrams switch: the tab is
- *   those diagrams, every one of them, and with the chords switched off there is nothing to finger either.
+ * @property isChordLibraryEnabled Whether the Chords tab is there: a switch of its own, as the Scales one is, since how a
+ *   song is read (its chords and their diagrams, Settings → Preferences) says nothing of whether a player looks chords up.
  * @property areScalesEnabled Whether the Scales tab is there, and with it the scales a chord sheet suggests: a switch of
  *   its own, since a scale is played on any instrument, chords or not.
- * @property areChordDegreesEnabled Whether the diagrams of a song's Chords section name the step of the key their chords
- *   stand on, which follows the Chord degrees switch, disabled by the Chord diagrams switch, whose diagrams they label.
  * @property areScaleSuggestionsEnabled Whether songs and chord sheets suggest scales, which follows the Scale suggestions
  *   switch, disabled by the Scales switch, as the chord diagrams follow theirs.
  */
@@ -33,7 +32,6 @@ internal data class FeatureSwitches(
     val isMetronomeEnabled: Boolean,
     val isTunerEnabled: Boolean,
     val isChordLibraryEnabled: Boolean,
-    val areChordDegreesEnabled: Boolean,
     val areScalesEnabled: Boolean,
     val areScaleSuggestionsEnabled: Boolean,
 ) {
@@ -46,9 +44,7 @@ internal data class FeatureSwitches(
             areSetlistsEnabled = preferences?.areSongsEnabled != false && preferences?.areSetlistsEnabled != false,
             isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
             isTunerEnabled = preferences?.isTunerEnabled != false,
-            isChordLibraryEnabled = preferences?.areChordsEnabled != false && preferences?.areChordDiagramsEnabled != false,
-            areChordDegreesEnabled = preferences?.areChordsEnabled != false && preferences?.areChordDiagramsEnabled != false &&
-                preferences?.areChordDegreesEnabled != false,
+            isChordLibraryEnabled = preferences?.isChordLibraryEnabled != false,
             areScalesEnabled = preferences?.areScalesEnabled != false,
             areScaleSuggestionsEnabled = preferences?.areScalesEnabled != false && preferences?.areScaleSuggestionsEnabled != false,
         )

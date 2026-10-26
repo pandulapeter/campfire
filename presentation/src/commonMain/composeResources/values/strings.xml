@@ -376,12 +376,13 @@
     <string name="settings_chords">Chords</string>
     <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition, and the capo. Off, every song is lyrics only.</string>
     <string name="settings_chord_diagrams">Chord diagrams</string>
-    <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song, and every chord the app knows in the Chords tab.</string>
+    <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song.</string>
     <string name="settings_chord_degrees">Chord degrees</string>
     <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_scales_description">The Scales tab: every scale and mode the app knows, drawn on your instrument</string>
+    <string name="settings_chord_library_description">The Chords tab: every chord the app knows, drawn on your instrument</string>
     <string name="settings_scale_suggestions">Scale suggestions</string>
     <string name="settings_scale_suggestions_description">Show the scales each part of a song can be played over, after its chords, and the scales for a chord in its sheet.</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
@@ -389,7 +390,8 @@
     <string name="settings_song_details_lookup_description">Offer to look up a song\'s artist, album, year, and songwriters on MusicBrainz and iTunes while its details are edited</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
-    <string name="settings_group_display">Display</string>
+    <string name="settings_group_song_page">Song page</string>
+    <string name="settings_group_lists">Lists</string>
     <string name="settings_group_chords">Chords</string>
     <string name="settings_group_setup">Setup</string>
     <string name="settings_group_appearance">Appearance</string>
@@ -956,6 +958,7 @@
     <string name="song_details_tag_color_black">Black</string>
     <string name="song_details_metadata_edit">Edit song details</string>
     <string name="song_details_song_info">About the song</string>
+    <string name="song_details_display_settings">Display settings</string>
     <string name="song_details_info_tags">Tags</string>
     <string name="song_details_info_languages">Languages</string>
     <string name="song_details_info_links">Links</string>

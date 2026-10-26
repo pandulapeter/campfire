@@ -61,9 +61,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   and keeps it by file name for the view model's life: a song reopened names it on its first frame; one never read
   gets it in the frame its lyrics arrive, crossfading in with them. The list cards never parse a file, so they name
   only a written key.
-- **The title scrolls the song to its top, and at the top opens the About the song sheet** (its only way in). A chevron
-  (`ic_expand`) shows while a tap would open it; its room is kept wherever the sheet is offered, so a long title is not
-  cut afresh. The touch target (`titleTouchTarget`) is all the bar's free space but reports only the title's room. No
+- **The title scrolls the song to its top, and at the top opens the About the song sheet**, as the menu's About the
+  song does from anywhere. A chevron (`ic_expand`) shows while a tap would open it; its room is kept wherever the sheet
+  is offered, so a long title is not cut afresh. The touch target (`titleTouchTarget`) is all the bar's free space but reports only the title's room. No
   ripple: a press dims the title, cover, and chevron. The scroll is read inside the title slot, so passing the top
   recomposes only it. Nothing is taken at the top where the sheet is not offered.
 - The text size stepper is in the bar where it fits, else at the end of the menu (`MenuStepperRow` as `menuFooter`, the
@@ -71,6 +71,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   cover, each while the title keeps 160dp (`appBarButtons`, from the settled width, for every page at once). Performance
   mode: the stepper in the bar where the title keeps 160dp (`showsFontScaleInPerformanceBar`), else alone in a menu; the
   cover only where the title keeps 160dp beside both (`showsCoverInPerformanceMode`).
+
+### The menu's own entries
+
+- Both menus (read only mode's too) hold About the song (where the sheet is offered: never in a preview) and Display
+  settings (`SongDisplaySheet`, the Preferences tab's Chords and Song page sections, written at once so the song
+  changes behind it; the notation's sheet stacks over it). Never let out as buttons (`isAlwaysInMenu`).
 
 ### Keeping the display on
 

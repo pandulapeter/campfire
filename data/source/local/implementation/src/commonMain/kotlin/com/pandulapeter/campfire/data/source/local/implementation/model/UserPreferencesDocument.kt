@@ -45,6 +45,7 @@ internal data class UserPreferencesDocument(
     val isGermanNotationEnabled: Boolean = false,
     val areChordDiagramsEnabled: Boolean = true,
     val areChordDegreesEnabled: Boolean = true,
+    val isChordLibraryEnabled: Boolean = true,
     val areScalesEnabled: Boolean = true,
     val areScaleSuggestionsEnabled: Boolean = true,
     // What the cards of the Songs screen show, under the names of the two switches that once decided the song details

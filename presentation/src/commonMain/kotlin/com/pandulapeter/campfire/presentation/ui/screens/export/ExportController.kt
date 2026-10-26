@@ -170,7 +170,7 @@ internal class ExportController(
         // them, which is also where the export offers them.
         val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
         // The diagrams name their degrees in print wherever they do on the screen.
-        val showsDegrees = FeatureSwitches.of(preferences).areChordDegreesEnabled
+        val showsDegrees = preferences?.areChordDegreesEnabled != false
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->

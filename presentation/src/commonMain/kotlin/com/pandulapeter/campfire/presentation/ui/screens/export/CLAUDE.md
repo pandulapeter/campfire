@@ -40,9 +40,9 @@ pipeline is in `ui/print/CLAUDE.md`.
   holds the stored manifest unchanged.
 - `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
   size and folded sections.
-- **The Features switches reach the export**: an option whose feature is off (chords, which take tablature, diagrams,
-  scales, and key; scale suggestions, which take scales; the metronome, which takes tempo) is neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept
-  for when the switch comes back.
+- **The Features switches and the song preferences reach the export**: an option whose switch is off (chords, which
+  take tablature, diagrams, scales, and key; scale suggestions, which take scales; the metronome, which takes tempo) is
+  neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept for when the switch comes back.
 - A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
   entry's key. Missing or unreadable songs keep a visibly marked slot.
 - The PDF's options (`PdfOptions`) are **sections of the document, one heading each**: Page (paper, orientation, text

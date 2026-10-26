@@ -48,6 +48,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     ),
     areChordDiagramsEnabled = areChordDiagramsEnabled,
     areChordDegreesEnabled = areChordDegreesEnabled,
+    isChordLibraryEnabled = isChordLibraryEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
     songCardDetails = UserPreferences.CardDetails(
@@ -107,6 +108,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     notation = chordSpelling.notation.id,
     areChordDiagramsEnabled = areChordDiagramsEnabled,
     areChordDegreesEnabled = areChordDegreesEnabled,
+    isChordLibraryEnabled = isChordLibraryEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
     isKeyShown = songCardDetails.isKeyShown,

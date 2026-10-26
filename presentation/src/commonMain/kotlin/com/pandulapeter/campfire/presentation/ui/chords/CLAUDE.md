@@ -17,7 +17,7 @@ hand-typed table first, a search for the rest).
 ## Which instruments
 
 Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams. Seven- and
-eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning
+eight-string guitars, basses, violin, and Other draw none, as if the Chord diagrams switch were off. The instrument and tuning
 pill heads the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
 be brought back (`RenderSection.Metadata.instrumentPill`).
 

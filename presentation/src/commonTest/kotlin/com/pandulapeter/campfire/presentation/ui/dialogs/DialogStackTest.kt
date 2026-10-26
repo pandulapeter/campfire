@@ -60,6 +60,12 @@ class DialogStackTest {
     }
 
     @Test
+    fun `the notation's choice stacks over the song display sheet, and replaces anything else`() {
+        assertEquals(listOf(DialogType.SongDisplay), nextUnderlyingDialogs(openDialogs = listOf(DialogType.SongDisplay), next = DialogType.Notation))
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = DialogType.Notation))
+    }
+
+    @Test
     fun `a dialog's place hashes the same in every process`() {
         assertEquals("NewSong".hashCode(), DialogType.NewSong.slotKey.hashCode())
         assertEquals(("SongMetadata" to file).hashCode(), form.slotKey.hashCode())

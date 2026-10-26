@@ -376,12 +376,13 @@
     <string name="settings_chords">Akkordok</string>
     <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>
-    <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját, az Akkordok fülön pedig minden akkordot, amit az alkalmazás ismer.</string>
+    <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
     <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
+    <string name="settings_chord_library_description">Az Akkordok fül: minden akkord, amit az app ismer, a hangszereden ábrázolva</string>
     <string name="settings_scale_suggestions">Skálajavaslatok</string>
     <string name="settings_scale_suggestions_description">Megmutatja, milyen skálákon játszhatók a dal egyes részei, az akkordok után, és egy akkord lapján a hozzá illő skálákat.</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
@@ -389,7 +390,8 @@
     <string name="settings_song_details_lookup_description">A daladatok szerkesztésekor felajánlja, hogy a dal előadóját, albumát, évét és szerzőit megkeresd a MusicBrainzen és az iTunesban</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
-    <string name="settings_group_display">Megjelenítés</string>
+    <string name="settings_group_song_page">Daloldal</string>
+    <string name="settings_group_lists">Listák</string>
     <string name="settings_group_chords">Akkordok</string>
     <string name="settings_group_setup">Kezdeti beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
@@ -955,6 +957,7 @@
     <string name="song_details_tag_color_black">Fekete</string>
     <string name="song_details_metadata_edit">Daladatok szerkesztése</string>
     <string name="song_details_song_info">A dalról</string>
+    <string name="song_details_display_settings">Megjelenítési beállítások</string>
     <string name="song_details_info_tags">Címkék</string>
     <string name="song_details_info_languages">Nyelvek</string>
     <string name="song_details_info_links">Hivatkozások</string>

@@ -156,7 +156,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every name is what sounds (chords, keys, scales, the file's capo counted in); a capo put on keeps the pitch, and the
   diagrams are the shapes fingered above it: `ui/playing`, `ui/chords`.
-- Feature switches in Settings → Features only hide, never write or delete: `ui`.
+- Settings → Features switches what the app has (its screens and what goes online), Settings → Preferences how a song
+  is read (chords, their diagrams and degrees, scale suggestions), also from the song details menu; both only hide,
+  never write or delete: `ui`.
 - Songs can be switched off (Settings only), taking the setlists. The app's root is always the first main screen
   switched on, Settings once every one is off (Features then says so, with a wink): `ui`.
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
@@ -171,7 +173,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
   shape picked there applies everywhere: `ui/screens/chords`.
 - The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument
-  included; 12-TET only. Scale suggestions (a switch under Scales, as Chord diagrams is under Chords) add a song's Scales
+  included; 12-TET only. Scale suggestions (a song preference, needing the Scales tab) add a song's Scales
   section, one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
   `ui/screens/scales`, `ui/songView`, `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.

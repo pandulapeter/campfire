@@ -12,7 +12,7 @@
 
 The Chords tab: every chord the app can draw, browsed by instrument, tuning, key, and name. A top level destination
 (`CampfireDestination.Chords`, `/chords` on the web) and one of the tools behind the Tools item (see `ui/chrome/CLAUDE.md`);
-follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disabled by the Chords switch).
+follows `FeatureSwitches.isChordLibraryEnabled`, a Features switch of its own, whatever a song shows.
 
 ## What it shows
 

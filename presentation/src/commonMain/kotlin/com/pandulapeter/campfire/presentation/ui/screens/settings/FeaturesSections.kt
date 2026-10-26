@@ -16,23 +16,17 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
-import com.pandulapeter.campfire.presentation.resources.settings_chords
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
-import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
-import com.pandulapeter.campfire.presentation.resources.settings_chords_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_library_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
 import com.pandulapeter.campfire.presentation.resources.settings_everything_off
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
-import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
-import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions_description
 import com.pandulapeter.campfire.presentation.resources.settings_scales_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup
@@ -53,10 +47,9 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 /**
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
  * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
- * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - each switch that has no tab of its own
- * right after the one it depends on: the chords before the chord diagrams that are their tab and the chord degrees that label those, the scale suggestions
- * after the scales. The two switches that let the app reach the network are a group of their own, so that what can
- * make a request is found in one place rather than among the rest.
+ * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - and how a song is read is
+ * none of theirs: that is the Preferences tab's (SongPageSection). The two switches that let the app reach the network
+ * are a group of their own, so that what can make a request is found in one place rather than among the rest.
  */
 @Composable
 internal fun FeaturesSections(
@@ -85,8 +78,8 @@ private fun PlayingSection(
         isChecked = userPreferences?.areSongsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setSongsEnabled,
     )
-    // Disabled rather than hidden with the songs off, as the chord diagrams are with the chords off: a setlist is a list
-    // of songs, so without them there is nothing it could hold.
+    // Disabled rather than hidden with the songs off: a setlist is a list of songs, so without them there is nothing it
+    // could hold, and what it is set to is still what the app has once the songs are back.
     SwitchListItem(
         title = stringResource(Res.string.setlists),
         description = stringResource(Res.string.settings_setlists_description),
@@ -107,45 +100,19 @@ private fun PlayingSection(
         isChecked = userPreferences?.isTunerEnabled != false,
         onCheckedChange = viewModel.preferencesController::setTunerEnabled,
     )
+    // The tab only: a song's chords and their diagrams are how it is read (SongPageSection), and a singer reading the
+    // lyrics alone can still look a chord up for the band.
     SwitchListItem(
-        title = stringResource(Res.string.settings_chords),
-        description = stringResource(Res.string.settings_chords_description),
-        isChecked = userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setChordsEnabled,
+        title = stringResource(Res.string.chords),
+        description = stringResource(Res.string.settings_chord_library_description),
+        isChecked = userPreferences?.isChordLibraryEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setChordLibraryEnabled,
     )
-    // Disabled rather than hidden with the chords off, like the chord spelling: there is nothing to finger then, and
-    // what it is set to is still what the songs will open with once the chords are back.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_diagrams),
-        description = stringResource(Res.string.settings_chord_diagrams_description),
-        isChecked = userPreferences?.areChordDiagramsEnabled != false,
-        isEnabled = userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setChordDiagramsEnabled,
-    )
-    // Disabled rather than hidden with the chords or their diagrams off, as the scale suggestions are with the scales off:
-    // a degree labels a diagram, so without them there is nothing it could name.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_degrees),
-        description = stringResource(Res.string.settings_chord_degrees_description),
-        isChecked = userPreferences?.areChordDegreesEnabled != false,
-        isEnabled = userPreferences?.areChordsEnabled != false && userPreferences?.areChordDiagramsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setChordDegreesEnabled,
-    )
-    // Not tied to either chord switch: a scale is played on any instrument, a violin with no chords included.
     SwitchListItem(
         title = stringResource(Res.string.scales),
         description = stringResource(Res.string.settings_scales_description),
         isChecked = userPreferences?.areScalesEnabled != false,
         onCheckedChange = viewModel.preferencesController::setScalesEnabled,
-    )
-    // Disabled rather than hidden with the scales or the chords off, as the chord diagrams are with the chords off: a
-    // suggestion is read off a song's chords, so without them there is nothing it could show.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_scale_suggestions),
-        description = stringResource(Res.string.settings_scale_suggestions_description),
-        isChecked = userPreferences?.areScaleSuggestionsEnabled != false,
-        isEnabled = userPreferences?.areScalesEnabled != false && userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setScaleSuggestionsEnabled,
     )
 }
 
