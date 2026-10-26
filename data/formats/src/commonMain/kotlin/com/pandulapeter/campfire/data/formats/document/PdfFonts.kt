@@ -124,6 +124,10 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
         fun string() = (parser.next(references = false) as? PdfString)?.bytes ?: error("Invalid ToUnicode CMap")
         fun insert(source: ByteArray, text: ByteArray) {
             require(source.size in 1..4 && text.size <= 128 && unicode.size < 100_000)
+            // PDF::API2, which the ChordPro app writes with, maps every glyph past the Basic Multilingual Plane to its bare
+            // code point (<10143>) instead of UTF-16, in fonts whose other glyphs are mapped correctly: such an entry
+            // costs only its own glyph, never the font.
+            if (text.size % 2 != 0) return
             file.chargeFontTables(1)
             unicode[Code(code(source, 0, source.size), source.size)] = utf16(text)
             lengths += source.size
