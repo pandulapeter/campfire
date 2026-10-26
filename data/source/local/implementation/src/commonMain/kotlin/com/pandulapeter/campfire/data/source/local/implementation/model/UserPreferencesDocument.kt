@@ -63,6 +63,8 @@ internal data class UserPreferencesDocument(
     val tempoOnSetlistCards: Boolean? = null,
     val instrument: String = "",
     val tunings: Map<String, String> = emptyMap(),
+    val toolCapo: Int = 0,
+    val areScaleNoteNamesShown: Boolean = false,
     // What the chord diagrams were drawn for before the tuner and the diagrams shared one instrument: only read, for a
     // document that has no instrument yet, and never written again.
     val chordInstrument: String = "",

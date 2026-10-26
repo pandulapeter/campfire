@@ -15,13 +15,15 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
+import com.pandulapeter.campfire.presentation.ui.instrument.ToolCapoControls
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * What the Scales tab draws its scales on: the instrument in the player's hands and its tuning, through the chips every
  * screen opens their sheets with and written at once as everywhere. The key steps beside the search under them, and the
- * families follow the search ([ScaleFamilyRow]). It reaches past the page's side padding for the reason
+ * families follow the search ([ScaleFamilyRow]). Right after the pill, the Chords tab's capo ([capo], null where no neck
+ * takes one, see `scaleLibraryCapo`), below which the necks are veiled. It reaches past the page's side padding for the reason
  * `ChordLibraryControls` gives, and is spaced as it is.
  */
 @Composable
@@ -32,6 +34,9 @@ internal fun ScaleLibraryControls(
     notation: ChordNotation,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
+    capo: Int?,
+    onCapoStep: (frets: Int) -> Unit,
+    onCapoReset: () -> Unit,
 ) = ToolInstrumentSetting(
     modifier = modifier.bleedHorizontally(TOOL_PAGE_PADDING),
     instrument = instrument,
@@ -39,4 +44,11 @@ internal fun ScaleLibraryControls(
     notation = notation,
     onInstrumentClicked = onInstrumentClicked,
     onTuningClicked = onTuningClicked,
-)
+    isTrailingAfterPill = true,
+) {
+    ToolCapoControls(
+        capo = capo,
+        onStep = onCapoStep,
+        onReset = onCapoReset,
+    )
+}

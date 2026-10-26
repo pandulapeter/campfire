@@ -20,7 +20,7 @@ One instrument for the whole app.
 - Picked by one `InstrumentPill` of two halves split by a divider (the tuning half only for an instrument with more than
   one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning's name is cut short first, down to
   40% of the pill, then the instrument's: `tuningHalfMaxWidth`; on a tool's line with trailing controls, the Tuner's
-  reference pitch, the pill takes the line to itself where its share could not show an em of the tuning:
+  reference pitch or the tabs' capo, the pill takes the line to itself where its share could not show an em of the tuning:
   `pillSharesLine`), and everywhere drawn exactly `songControlHeight` of its text style, so on a song it matches the
   transposition stepper, and touched 48 dp tall (Compose's minimum touch target). It stands on the song details first
   section (read only included, since it changes a device preference), the Tuner, the Chords, and the Scales tabs, and
@@ -29,6 +29,19 @@ One instrument for the whole app.
 - **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
   shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
   no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
+
+## The tools' capo
+
+- `UserPreferences.toolCapo`: one capo for the Chords and the Scales tabs, a device preference like the instrument
+  (local, never synced or exported), within `Song.CAPO_RANGE`, never touching a song's. Same meaning as a song's: names
+  stay as they sound, shapes are fingered above it, necks veiled below it.
+- `ToolCapoControls`, the song's `CapoControls` after its "Capo" label, is the trailing control of each tab's
+  `ToolInstrumentSetting`, placed right after the pill (`isTrailingAfterPill`; the Tuner's stays at the line's end) and
+  sliding under it, to the line's start, where the line is too narrow (`pillSharesLine`, `toolLineTrailingX`). The line
+  always measures one trailing child (a `Box`), so a hidden capo, which emits nothing, keeps its height; it keeps the
+  room of the bar's height above the pill but none under it (`hasRoomUnder`), as a line without controls. Hidden (faded and
+  folded) where the tab draws nothing it changes: `chordLibraryCapo` (keyboard, no shapes)
+  and `scaleLibraryCapo` (keyboard, Other, violin, no strings), both tested; the value is kept.
 
 ## How a song is played on the keyboard
 

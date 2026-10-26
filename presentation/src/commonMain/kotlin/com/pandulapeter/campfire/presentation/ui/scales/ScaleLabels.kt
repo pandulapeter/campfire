@@ -13,12 +13,16 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.ScaleSpelling
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
-/** What the scale sheet writes in the dots of its neck, picked under it and kept for the session. */
+/** What the scale sheet writes in the dots of its neck, flipped in its header and kept on the device. */
 internal enum class ScaleLabels {
     DEGREES,
     NOTES,
 }
+
+/** The labels these preferences pick for the scale sheet's neck, degrees until they are read. */
+internal val UserPreferences?.scaleLabels get() = if (this?.areScaleNoteNamesShown == true) ScaleLabels.NOTES else ScaleLabels.DEGREES
 
 /** A degree label of the catalogue (`b3`, `#4`, `bb7`) with the accidental signs a reader sees (`♭3`, `♯4`, `♭♭7`). */
 internal fun displayedDegree(degree: String) = degree.replace('b', '♭').replace('#', '♯')

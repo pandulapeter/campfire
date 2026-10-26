@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.withTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -129,6 +131,13 @@ internal class PreferencesController(
     fun setInstrument(value: UserPreferences.Instrument) = changeUserPreferences { withInstrument(value) }
 
     fun setTuning(tuning: InstrumentTuning) = changeUserPreferences { withTuning(tuning) }
+
+    /** Moves the Chords and the Scales tabs' one capo by [frets], held within the neck as a song's capo is. */
+    fun stepToolCapo(frets: Int) = changeUserPreferences { copy(toolCapo = (toolCapo + frets).coerceIn(Song.CAPO_RANGE)) }
+
+    fun resetToolCapo() = changeUserPreferences { copy(toolCapo = 0) }
+
+    fun setScaleLabels(labels: ScaleLabels) = changeUserPreferences { copy(areScaleNoteNamesShown = labels == ScaleLabels.NOTES) }
 
     /**
      * Stores [shape] as the player's own for the chord [chordId] under [voicingKey] (a tuning's

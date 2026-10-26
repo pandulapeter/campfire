@@ -26,7 +26,8 @@ sounding chord (its name, notes, and scales), `shapeChord` the shape played abov
 a shape is looked up, picked, and stored by. A `{define}` is moved down by the capo as a transposition moves one, so a
 file's shape comes back to where it was written under its own capo. `ChordDiagramGeometry` draws the shape where it is
 played, frets numbered from the nut, the capo a muted bar across the window's first row (`capoRow`) where the shape sits
-right above it, outside the window where it is higher. The keyboard has no capo.
+right above it, its open strings ringed on the bar (they ring at the capo) as over the nut without one, outside the
+window where it is higher (the rings then over the window). The keyboard has no capo.
 
 ## Which shape a chord is drawn with
 
@@ -99,7 +100,8 @@ is gone.
 - A chord the song defines shows its definition alone, not pickable.
 - Under a capo the title names the sounding chord, a line under it the shape and the capo (`G shape, capo 2`, the capo
   alone in a numbering), and every shape is drawn above the capo; a pick is the player's shape for the shape's chord.
-  Its scales open the scale sheet with the capo.
+  Its scales open the scale sheet with the capo. The Chords tab's sheet (`ChordReferenceSheet`) does the same under the
+  tabs' capo (`capoLine`, shared).
 - Both chord sheets end in the scales built on the chord's root that hold its tones (`ScaleChipRow`), root
   as the chord spells it, while Scales is on; a chip opens the scale sheet over the chord's.
   **One hop only**: a chord sheet opened from a scale sheet offers no scales (`ChordReference.showsScales`), and a scale

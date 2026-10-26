@@ -140,6 +140,17 @@ data class UserPreferences(
      */
     val tunings: Map<String, String> = emptyMap(),
     /**
+     * The fret the Chords and the Scales tabs are capoed at, one for both, within `Song.CAPO_RANGE`: what they name stays
+     * what sounds, and the shapes and the neck are the ones played above it. Never a song's, whose capo is its own (see
+     * [capos]), and kept on the device like [instrument], since it is the capo on one player's neck.
+     */
+    val toolCapo: Int = 0,
+    /**
+     * Whether the scale sheet writes the note names in the dots of its neck rather than the degrees, flipped from the
+     * sheet's header wherever it is opened. Kept on the device like [instrument], since it is how one player reads a neck.
+     */
+    val areScaleNoteNamesShown: Boolean = false,
+    /**
      * The shape the player has chosen for a chord, by the instrument's id and then by the chord's id (its notes, the
      * same for every spelling of it), the value the shape as `ChordVoicings.write` writes it. One choice per chord for
      * the whole library, since which F somebody plays is a habit of their hands rather than a reading of one song; a

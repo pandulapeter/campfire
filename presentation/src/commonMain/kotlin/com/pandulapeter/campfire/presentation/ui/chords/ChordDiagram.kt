@@ -38,7 +38,7 @@ import kotlin.math.min
 
 /**
  * A chord diagram: a fretted shape as strings and frets with a dot on every stopped string, and the capo it is played
- * above as a bar across them, or a keyboard with the pressed keys filled. The root is in the second accent color, the color the chords are written in. It is drawn
+ * above as a bar across them, its open strings ringed on the bar as they are over the nut without one, or a keyboard with the pressed keys filled. The root is in the second accent color, the color the chords are written in. It is drawn
  * rather than composed, at whatever size [modifier] gives it, and it takes no press: a tap on it is a tap on the song.
  *
  * @param showsFingers Whether the dots carry the finger that holds them, where the shape says: legible at the chord
@@ -145,14 +145,21 @@ private fun DrawScope.drawFretted(
     }
     val markerY = top / 2f
     val markerSize = min(top * 0.32f, stringGap * 0.32f)
+    // A string left open rings at the capo where the window shows it, so its ring sits on the capo's bar, cut out of it,
+    // as it stands over the nut without one; a muted string is marked over the window either way.
+    val openY = geometry.capoRow?.let(::y) ?: markerY
+    fun openRing(string: Int, color: Color, width: Float) {
+        if (geometry.capoRow != null) drawCircle(backgroundColor, radius = markerSize + width / 2f, center = Offset(x(string), openY))
+        drawCircle(color, radius = markerSize, center = Offset(x(string), openY), style = Stroke(width))
+    }
     geometry.markers.forEachIndexed { string, marker ->
         when (marker) {
             ChordDiagramGeometry.Fretted.Marker.MUTED -> {
                 drawLine(mutedColor, Offset(x(string) - markerSize, markerY - markerSize), Offset(x(string) + markerSize, markerY + markerSize), strokeWidth = thin)
                 drawLine(mutedColor, Offset(x(string) - markerSize, markerY + markerSize), Offset(x(string) + markerSize, markerY - markerSize), strokeWidth = thin)
             }
-            ChordDiagramGeometry.Fretted.Marker.OPEN -> drawCircle(lineColor, radius = markerSize, center = Offset(x(string), markerY), style = Stroke(thin))
-            ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT -> drawCircle(rootColor, radius = markerSize, center = Offset(x(string), markerY), style = Stroke(thin * ROOT_RING_WIDTH))
+            ChordDiagramGeometry.Fretted.Marker.OPEN -> openRing(string, lineColor, thin)
+            ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT -> openRing(string, rootColor, thin * ROOT_RING_WIDTH)
             null -> Unit
         }
     }

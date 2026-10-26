@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
@@ -77,6 +78,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazy
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.scaleLibraryCapo
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.scales.label
 import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
@@ -90,7 +92,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * the top change for the whole app, as on the Chords tab. Unlike chord shapes, a scale needs nothing of an instrument but
  * its open strings, so every stringed instrument draws its scales, and Other draws them on a keyboard with a line saying
  * so. Under the search, with the key beside it, the families, and a cell per scale of the one picked
- * ([scaleLibraryScales]), each opening the scale sheet ([DialogType.Scale]).
+ * ([scaleLibraryScales]), each opening the scale sheet ([DialogType.Scale]). Beside the instrument, the capo the Scales and
+ * the Chords tabs share ([scaleLibraryCapo]): the scales keep the names they sound by, and the frets below it are veiled,
+ * on the cells and in the sheet, as under a song's capo.
  *
  * The search under the controls, pinned once the cells pass under it, finds scales by name and other names across
  * every family ([scaleLibraryResults]), and a search that starts with a note finds them on that note, whatever the key;
@@ -111,6 +115,8 @@ internal fun ScalesScreen(
     val keys = remember(spelling.accidentals) { libraryKeys(spelling.accidentals) }
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
     val instrumentTuning = userPreferences?.instrumentTuning
+    val shownCapo = userPreferences?.scaleLibraryCapo()
+    val capo = shownCapo ?: 0
     val keyName = keys[state.keyIndex.coerceIn(keys.indices)]
     val query = state.query
     val results = rememberScaleLibraryResults(state.familyIndex, query, keyName, notation)
@@ -155,15 +161,7 @@ internal fun ScalesScreen(
             horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
             verticalArrangement = Arrangement.spacedBy(CELL_GAP),
         ) {
-            item(key = CONTROLS_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = CONTROLS_KEY) {
-                ScaleLibraryControls(
-                    instrument = instrument,
-                    instrumentTuning = instrumentTuning,
-                    notation = notation,
-                    onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
-                )
-            }
+            controlsItem(viewModel = viewModel, instrument = instrument, instrumentTuning = instrumentTuning, notation = notation, capo = shownCapo)
             pinnedSearchField(
                 modifier = searchFocus,
                 gridState = gridState,
@@ -209,13 +207,34 @@ internal fun ScalesScreen(
                     notation = notation,
                     instrument = instrument,
                     instrumentTuning = instrumentTuning,
-                    onClick = { viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scale.id, rootName = rootName)) },
+                    capo = capo,
+                    onClick = { viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scale.id, rootName = rootName, capo = capo)) },
                 )
             }
         }
     }
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     QueryBackHandler(query = query, isDialogShown = visibleDialog != null, onCleared = { state.query = "" })
+}
+
+/** The controls' item, the instrument and the capo, each opening its sheet or written at once as the app-wide preference. */
+private fun LazyGridScope.controlsItem(
+    viewModel: CampfireViewModel,
+    instrument: UserPreferences.Instrument,
+    instrumentTuning: InstrumentTuning?,
+    notation: ChordNotation,
+    capo: Int?,
+) = item(key = CONTROLS_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = CONTROLS_KEY) {
+    ScaleLibraryControls(
+        instrument = instrument,
+        instrumentTuning = instrumentTuning,
+        notation = notation,
+        onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
+        onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
+        capo = capo,
+        onCapoStep = viewModel.preferencesController::stepToolCapo,
+        onCapoReset = viewModel.preferencesController::resetToolCapo,
+    )
 }
 
 /** [scaleLibraryResults] for the names and other names of the scales in the app's language. */
@@ -238,12 +257,13 @@ private fun ScaleLibraryItem(
     notation: ChordNotation,
     instrument: UserPreferences.Instrument,
     instrumentTuning: InstrumentTuning?,
+    capo: Int,
     onClick: () -> Unit,
 ) {
     // Remembered for the reason ChordsScreen remembers its shapes: the item is composed again as every scroll starts and
     // ends, and the placement animation goes on a box of its own for the same reason.
-    val geometry = remember(scale, root, instrumentTuning, instrument) {
-        scaleDiagramGeometryOf(scale, root, instrumentTuning?.strings, instrument)
+    val geometry = remember(scale, root, instrumentTuning, instrument, capo) {
+        scaleDiagramGeometryOf(scale, root, instrumentTuning?.strings, instrument, capo)
     }
     Box(modifier = modifier) {
         ScaleLibraryCell(

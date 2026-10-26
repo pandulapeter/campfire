@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
  * One chord of the Chords tab, and of the scale sheet's chords: its name in the chords' accent color over its diagram,
- * drawn with [selection], the shape the songs draw it with (above the capo of a song's scale, see [SongChord.capo]), on a card that opens all of its shapes. A shape chosen in
+ * drawn with [selection], the shape the songs draw it with (above the capo of a song's scale or of the tab, see [SongChord.capo]), on a card that opens all of its shapes. A shape chosen in
  * that sheet crossfades in as the sheet settles on it, as the song details screen's cells do.
  */
 @Composable
@@ -69,15 +69,16 @@ internal fun ChordLibraryCell(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            // Each shape is drawn on the strings it was found for, so the outgoing one never lands on the next tuning's.
+            // Each shape is drawn on the strings and above the capo it was found for, so the outgoing one never lands on the
+            // next tuning's, and a capo moved crossfades the chord into the shape it is played as there.
             Crossfade(
-                targetState = selection.shape to tuning,
+                targetState = Triple(selection.shape, tuning, chord.capo),
                 label = "chordLibraryShape",
-            ) { (shape, shapeTuning) ->
+            ) { (shape, shapeTuning, shapeCapo) ->
                 ChordDiagram(
                     modifier = Modifier.size(width = shapeTuning.instrument.diagramWidth, height = shapeTuning.instrument.diagramHeight),
-                    geometry = remember(shape, shapeTuning, chord.chord.root, chord.capo) {
-                        shape?.let { chordDiagramGeometryOf(it, shapeTuning, chord.chord.root, chord.capo) } ?: emptyChordDiagramGeometryOf(shapeTuning.instrument)
+                    geometry = remember(shape, shapeTuning, chord.chord.root, shapeCapo) {
+                        shape?.let { chordDiagramGeometryOf(it, shapeTuning, chord.chord.root, shapeCapo) } ?: emptyChordDiagramGeometryOf(shapeTuning.instrument)
                     },
                     description = description,
                 )

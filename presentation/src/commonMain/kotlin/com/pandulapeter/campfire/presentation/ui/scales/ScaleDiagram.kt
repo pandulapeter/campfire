@@ -16,9 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,6 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.math.min
@@ -65,11 +71,14 @@ internal fun ScaleDiagram(
     Spacer(
         modifier = modifier
             .semantics { contentDescription = description }
+            // Drawn into a layer of its own, so that what the capo veils and a ring stands clear of can be erased down to
+            // whatever lies behind the diagram: a card, a sheet, or the screen, each a different surface in the dark themes.
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawBehind {
                 when (geometry) {
                     is ScaleDiagramGeometry.Fretboard -> {
-                        drawFretboard(geometry, labels, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily)
-                        drawBelowCapo(geometry, capo, backgroundColor)
+                        drawFretboard(geometry, capo, labels, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily)
+                        drawBelowCapo(geometry, capo)
                     }
                     is ScaleDiagramGeometry.Keyboard -> drawChordDiagram(
                         geometry = geometry.keyboard,
@@ -89,12 +98,15 @@ internal fun ScaleDiagram(
 /**
  * The neck: a column of open notes left of the nut, as a chord diagram marks its open strings above it, then the frets,
  * the strings across them a little thicker the lower they sound, and faint inlays behind them. A note is a filled dot,
- * an open string's a ring, so that what is played without a finger reads apart. The labels are measured once per text and
+ * an open string's a ring, so that what is played without a finger reads apart. Under a [capo] (where it is while it
+ * slides) a muted bar lies across the strings at its fret, and the notes it stops are rings on it, as the open notes
+ * are at the nut ([scaleNoteOpenness]), each ring hiding the bar and the string inside it as the open ones stand clear. The labels are measured once per text and
  * size rather than once per dot, since a label of a scale is on every string, and share the size at which the widest of
  * them fits its dot.
  */
 private fun DrawScope.drawFretboard(
     geometry: ScaleDiagramGeometry.Fretboard,
+    capo: Float,
     labels: List<String>?,
     lineColor: Color,
     mutedColor: Color,
@@ -148,6 +160,17 @@ private fun DrawScope.drawFretboard(
             strokeWidth = thin * (1f + geometry.stringWeights[row] * STRING_WEIGHT),
         )
     }
+    if (capo > 0f) {
+        // On the capo's fret, where its notes are drawn, coming in from the open notes' column as it first goes on.
+        val capoX = if (capo <= 1f) lerp(center(0), center(1), capo) else fretLine(0) + (capo - 0.5f) * fretGap
+        val width = radius * CAPO_WIDTH
+        drawRoundRect(
+            color = mutedColor.copy(alpha = mutedColor.alpha * capo.coerceAtMost(1f)),
+            topLeft = Offset(capoX - width / 2f, top - radius),
+            size = Size(width, bottom - top + radius * 2),
+            cornerRadius = CornerRadius(width / 2f, width / 2f),
+        )
+    }
     // Measured with a style of its own rather than through label(), whose cache would keep it at this first size.
     val widestLabel = labels.orEmpty().distinct().maxOfOrNull { text ->
         val style = TextStyle(fontSize = (radius * LABEL_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, fontFamily = fontFamily)
@@ -168,14 +191,15 @@ private fun DrawScope.drawFretboard(
     geometry.notes.forEach { note ->
         val dotCenter = Offset(center(note.fret), y(note.row))
         val color = if (note.isRoot) rootColor else lineColor
-        val isOpen = note.fret == geometry.stringStarts[note.row]
-        if (isOpen) {
-            drawCircle(color, radius = radius - thin / 2f, center = dotCenter, style = Stroke(thin * RING_WIDTH))
-        } else {
-            drawCircle(color, radius = radius, center = dotCenter)
+        val openness = scaleNoteOpenness(note.fret, geometry.stringStarts[note.row], capo)
+        if (openness < 1f) drawCircle(color.copy(alpha = color.alpha * (1f - openness)), radius = radius, center = dotCenter)
+        if (openness > 0f) {
+            drawCircle(Color.Black.copy(alpha = openness), radius = radius, center = dotCenter, blendMode = BlendMode.DstOut)
+            drawCircle(color.copy(alpha = color.alpha * openness), radius = radius - thin / 2f, center = dotCenter, style = Stroke(thin * RING_WIDTH))
         }
         labels?.getOrNull(note.degree)?.let { text ->
-            val layout = label(text, if (isOpen) color else backgroundColor)
+            // A ring's label is in the ring's color and a dot's cut out of it, so a note the capo slides onto turns between the two.
+            val layout = label(text, lerp(backgroundColor, color, openness))
             drawText(layout, topLeft = Offset(dotCenter.x - layout.size.width / 2f, dotCenter.y - layout.size.height / 2f))
         }
     }
@@ -188,16 +212,16 @@ private fun DrawScope.drawFretboard(
 }
 
 /**
- * The frets below [capo], which may be between two while it moves, veiled in [backgroundColor], their numbers too: the
+ * The frets below [capo], which may be between two while it moves, faded out of the diagram, their numbers too: the
  * column of open notes for a capo on the first fret, and every fret up to the one under the capo further up, whose notes
  * are the strings ringing at the capo and stay clear.
  */
-private fun DrawScope.drawBelowCapo(geometry: ScaleDiagramGeometry.Fretboard, capo: Float, backgroundColor: Color) {
+private fun DrawScope.drawBelowCapo(geometry: ScaleDiagramGeometry.Fretboard, capo: Float) {
     if (capo <= 0f) return
     val fretGap = size.width / (geometry.fretCount + OPEN_COLUMN)
     val nut = fretGap * OPEN_COLUMN
     val end = if (capo <= 1f) nut * capo else nut + (capo - 1f) * fretGap
-    drawRect(backgroundColor.copy(alpha = BELOW_CAPO_VEIL), size = Size(end, size.height))
+    drawRect(Color.Black.copy(alpha = BELOW_CAPO_VEIL), size = Size(end, size.height), blendMode = BlendMode.DstOut)
 }
 
 /** How wide the column of open notes left of the nut is, in frets: room for a ring, and no more. */
@@ -214,3 +238,4 @@ private const val DOT_ROW_RADIUS = 0.46f
 private const val INLAY_RADIUS = 0.3f
 private const val INLAY_ALPHA = 0.18f
 private const val BELOW_CAPO_VEIL = 0.7f
+private const val CAPO_WIDTH = 1.1f

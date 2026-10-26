@@ -16,8 +16,10 @@
   it.
 - **Opened from a capoed song** (its Scales section or its chord sheet, `DialogType.Scale.capo`) the scale is the
   sounding one on the real neck, the frets below the capo veiled (`ScaleDiagramGeometry.Fretboard.capo`, sliding as it
-  changes), and the chord rows draw the shapes fingered above the capo; the Scales tab opens it with none.
-- The neck's dots carry degrees or note names (`ScaleLibraryState.labels`, session-wide), flipped by one icon toggle
+  changes), the notes the capo stops drawn as rings on a muted bar at its fret as the open notes are at the nut
+  (`scaleNoteOpenness`, turning between dot and ring as the capo slides), and the chord rows draw the shapes fingered above the capo; the Scales tab opens it with
+  the tabs' own capo (`scaleLibraryCapo`).
+- The neck's dots carry degrees or note names (`UserPreferences.areScaleNoteNamesShown`, kept on the device), flipped by one icon toggle
   in the header, showing the mode it is in; the keyboard carries none, and its header has no toggle. The title
   wraps to two lines (`titleMaxLines`), so a long scale's name is never cut short.
 - The chord rows (seven-note scales only), their numerals following Chord degrees, follow Chord diagrams and need an instrument with shapes; shapes come from the

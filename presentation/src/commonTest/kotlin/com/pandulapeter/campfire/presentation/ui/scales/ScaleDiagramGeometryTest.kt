@@ -30,6 +30,18 @@ class ScaleDiagramGeometryTest {
         assertEquals(0, violin.capo)
     }
 
+    @Test
+    fun `the notes a capo stops ring open as the nut's do, and turn between the two as it slides`() {
+        assertEquals(1f, scaleNoteOpenness(fret = 0, start = 0, capo = 0f))
+        assertEquals(0f, scaleNoteOpenness(fret = 2, start = 0, capo = 0f))
+        assertEquals(1f, scaleNoteOpenness(fret = 2, start = 0, capo = 2f))
+        assertEquals(0f, scaleNoteOpenness(fret = 3, start = 0, capo = 2f))
+        assertEquals(0.5f, scaleNoteOpenness(fret = 3, start = 0, capo = 2.5f))
+        // The banjo's drone, starting at the fifth fret, rings open there whatever the capo below it, and has no fret under.
+        assertEquals(1f, scaleNoteOpenness(fret = 5, start = 5, capo = 2f))
+        assertEquals(0f, scaleNoteOpenness(fret = 4, start = 5, capo = 4f))
+    }
+
     private fun fretboard(strings: List<Int>, instrument: UserPreferences.Instrument = UserPreferences.Instrument.GUITAR, root: Int = 0) =
         assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(major, root, strings, instrument))
 

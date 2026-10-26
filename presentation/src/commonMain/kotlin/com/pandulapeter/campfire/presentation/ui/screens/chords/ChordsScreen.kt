@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.chordLibraryCapo
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
@@ -87,6 +88,9 @@ import kotlinx.coroutines.withContext
  * ([chordLibraryResults]). A tap on a cell opens every shape of that chord ([DialogType.ChordReference]), the one
  * settled on becoming the player's for that chord in every song.
  *
+ * Beside the instrument, the capo the Chords and the Scales tabs share ([chordLibraryCapo]): every chord keeps the name
+ * it sounds by, and is drawn as the shape fingered above the capo, the one a pick in its sheet is stored for.
+ *
  * The instrument scrolls with the chords rather than staying pinned, so that a phone on its side still has room for a
  * row of diagrams under the keyboard; only the search line stays, which is the way to any chord the key leaves out.
  */
@@ -104,6 +108,8 @@ internal fun ChordsScreen(
     val keys = remember(spelling.accidentals) { libraryKeys(spelling.accidentals) }
     val tuning = userPreferences?.chordTuning()
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
+    val shownCapo = userPreferences?.chordLibraryCapo()
+    val capo = shownCapo ?: 0
     val keyIndex = state.keyIndex
     val query = state.query
     // What the tables answer alone is there from the first frame; a chord only the search finds keeps the chords that
@@ -114,19 +120,19 @@ internal fun ChordsScreen(
     var shown by remember {
         mutableStateOf(
             tuning?.let {
-                initialChordLibraryShown(state.shown, ChordLibraryInputs(keys, keyIndex, query, notation, it)) {
-                    chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
+                initialChordLibraryShown(state.shown, ChordLibraryInputs(keys, keyIndex, query, notation, it, capo)) {
+                    chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false, capo = capo)
                 }
             },
         )
     }
     SideEffect { state.shown = shown }
-    LaunchedEffect(keys, keyIndex, query, notation, tuning) {
+    LaunchedEffect(keys, keyIndex, query, notation, tuning, capo) {
         shown = tuning?.let {
             ChordLibraryShown(
-                inputs = ChordLibraryInputs(keys, keyIndex, query, notation, it),
-                results = chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
-                    ?: withContext(Dispatchers.Default) { chordLibraryResults(keys, keyIndex, query, notation, it) },
+                inputs = ChordLibraryInputs(keys, keyIndex, query, notation, it, capo),
+                results = chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false, capo = capo)
+                    ?: withContext(Dispatchers.Default) { chordLibraryResults(keys, keyIndex, query, notation, it, capo = capo) },
             )
         }
     }
@@ -177,6 +183,9 @@ internal fun ChordsScreen(
                     notation = notation,
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
+                    capo = shownCapo,
+                    onCapoStep = viewModel.preferencesController::stepToolCapo,
+                    onCapoReset = viewModel.preferencesController::resetToolCapo,
                 )
             }
             pinnedSearchField(
@@ -221,8 +230,8 @@ internal fun ChordsScreen(
                     is ChordLibraryResults.Chords -> {
                         val heldTuning = held.tuning
                         val storedShapes = userPreferences?.storedChordShapes(heldTuning).orEmpty()
-                        // Cells held from another tuning are on their way out: their chords name that tuning's shapes.
-                        val isCurrent = heldTuning == tuning
+                        // Cells held from another tuning or capo are on their way out: their chords name that tuning's shapes.
+                        val isCurrent = heldTuning == tuning && held.inputs.capo == capo
                         val cell: @Composable LazyGridItemScope.(SongChord) -> Unit = { chord ->
                             // The item is composed again as every scroll starts and ends (listItemAnimation), so the shape is
                             // remembered and the placement animation goes on a box of its own: on the cell, it would be a new

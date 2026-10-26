@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
+import com.pandulapeter.campfire.presentation.ui.instrument.ToolCapoControls
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
@@ -22,7 +23,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * What the Chords tab lists the chords for: the instrument in the player's hands and its tuning, through the chips every
  * screen opens their sheets with; the key steps before the search under them (`pinnedSearchField`), which stays on
  * screen. The instrument is the app's one, which the songs' diagrams are drawn for too, so a pick here is written at
- * once and changes them as well.
+ * once and changes them as well. Right after the pill, the tabs' one capo ([capo], null where the instrument has no shapes
+ * for one to change, see `chordLibraryCapo`), which the shapes are fingered above and the names never follow.
  *
  * It is the tools' shared [ToolInstrumentSetting], the same on the Scales and the Tuner tabs. It stands in the page's
  * grid, inside the page's side padding, while the row pads itself as a sheet's does; so it reaches past that padding by as much ([TOOL_PAGE_PADDING]) and lines its own rows up with it.
@@ -35,6 +37,9 @@ internal fun ChordLibraryControls(
     notation: ChordNotation,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
+    capo: Int?,
+    onCapoStep: (frets: Int) -> Unit,
+    onCapoReset: () -> Unit,
 ) = ToolInstrumentSetting(
     // Nothing under it: the search's own padding and the grid's spacing are the gap to the line under it (TOOL_GROUP_GAP).
     modifier = modifier.bleedHorizontally(TOOL_PAGE_PADDING),
@@ -43,4 +48,11 @@ internal fun ChordLibraryControls(
     notation = notation,
     onInstrumentClicked = onInstrumentClicked,
     onTuningClicked = onTuningClicked,
-)
+    isTrailingAfterPill = true,
+) {
+    ToolCapoControls(
+        capo = capo,
+        onStep = onCapoStep,
+        onReset = onCapoReset,
+    )
+}

@@ -370,7 +370,7 @@ class CampfireViewModel(
     /** Where the Chords tab was left, see [ChordLibraryState]. */
     internal val chordLibrary = ChordLibraryState(keyIndex = libraryKeyIndex)
 
-    /** Where the Scales tab was left, and how the scale sheet labels its notes, see [ScaleLibraryState]. */
+    /** Where the Scales tab was left, see [ScaleLibraryState]. */
     internal val scaleLibrary = ScaleLibraryState(keyIndex = libraryKeyIndex)
 
     internal val fontScaleController: FontScaleController = FontScaleController(

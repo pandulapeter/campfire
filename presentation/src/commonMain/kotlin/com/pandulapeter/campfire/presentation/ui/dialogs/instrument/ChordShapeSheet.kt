@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -42,8 +41,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning_hide
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning_show
-import com.pandulapeter.campfire.presentation.resources.song_details_capo
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -52,7 +49,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
-import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -205,18 +201,6 @@ private fun chordSheetFooter(
 /** Whether a chord's sheet has had shapes to show, after which it stays up whatever comes. */
 private class ShapesArrival {
     var value = false
-}
-
-/**
- * The shape [chord] is fingered as and the capo it is played above, named under the title where there is a capo: the
- * shape by its chord's name in the reader's notation, and the capo alone in a numbering, where a step names no shape.
- */
-@Composable
-private fun capoLine(chord: SongChord, notation: ChordNotation): String? {
-    if (chord.capo == 0) return null
-    val spelling = chord.spelling?.takeUnless { notation.isNumbering } ?: return stringResource(Res.string.song_details_capo, chord.capo)
-    val shapeName = ChordProTransposer.transposeText("[$spelling]", -chord.capo).removeSurrounding("[", "]")
-    return textResource(Res.string.song_details_chord_shape_capo, shownChordName(shapeName, notation), chord.capo.toString())
 }
 
 /** The tuning the shapes are drawn for, named under the title where it is not the standard one. */

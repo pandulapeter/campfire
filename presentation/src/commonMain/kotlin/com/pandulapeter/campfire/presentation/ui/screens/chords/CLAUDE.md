@@ -17,7 +17,7 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
 ## What it shows
 
 - One lazy grid whose first item is the instrument (`ChordLibraryControls`, the tools' shared
-  `ToolInstrumentSetting`: the pill alone, where the Tuner tab's stands, the line ending at its bottom), so it scrolls away and a phone on its side
+  `ToolInstrumentSetting`: the pill where the Tuner tab's stands, the capo right after it, the line ending at its bottom), so it scrolls away and a phone on its side
   keeps a row of diagrams above the keyboard. The search under it is a sticky item (`pinnedSearchField`, shared with the
   Scales tab), with the key before it as the editor's transposing pill (`LibraryKeyStepper`, the twelve keys going
   round): the way to every chord the key leaves out, so it stays reachable. The instrument, the key and search line, the
@@ -27,7 +27,10 @@ follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disa
   focus. Escape and Back empty a filled query before leaving the tab (the screen's back handler; the desktop's window
   handler through `ScreenSearches.closeCurrentSearch`).
 - **The instrument and tuning pill is the app-wide preference** (the one the songs' diagrams and the tuner follow),
-  written at once. The key, search, last results, and scroll position are session state (`ChordLibraryState`, in the
+  written at once, and so is the capo right after it, one with the Scales tab's (`ui/instrument`, "The tools' capo").
+  Under it every chord keeps the name it sounds by and is drawn as the shape fingered above it (key A at capo 2: A, Bm,
+  D… as G, Am, C shapes; a search's `D/F#` as a C/E shape), crossfading as the capo moves (`chordLibraryResults`'
+  `capo`, tested); its sheet names `G shape, capo 2` and a pick there is stored for the shape's chord. The key, search, last results, and scroll position are session state (`ChordLibraryState`, in the
   view model, since the tab leaves the back stack whenever another is picked); the key is one state with the Scales
   tab's, so the player stays in their key moving between the two.
 - Keys follow the reader's accidentals preference (`libraryKeys`) and notation (a numbering by its letters). A key

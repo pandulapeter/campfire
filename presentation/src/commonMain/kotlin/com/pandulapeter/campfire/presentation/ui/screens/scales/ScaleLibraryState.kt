@@ -19,12 +19,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.ToolSearch
-import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 
 /**
- * Where the Scales tab was left: the key, the family, the search, the scroll positions, and how the scale sheet labels its notes,
- * held by the view model for the session for the reason [ScrollPosition] gives. Nothing here is saved: the instrument and
- * its tuning, the one thing about scales a player sets once, are the preferences'.
+ * Where the Scales tab was left: the key, the family, the search, and the scroll positions, held by the view model for
+ * the session for the reason [ScrollPosition] gives. Nothing here is saved: the instrument, its tuning, and how the scale
+ * sheet labels its notes, what a player sets once, are the preferences'.
  */
 internal class ScaleLibraryState(
     keyIndex: MutableIntState,
@@ -55,9 +54,6 @@ internal class ScaleLibraryState(
     override fun focusSearch() {
         _searchFocusRequests.tryEmit(Unit)
     }
-
-    /** What the scale sheet writes in its dots, wherever it is opened from. */
-    var labels by mutableStateOf(ScaleLabels.DEGREES)
 
     val scrollPosition = ScrollPosition()
 

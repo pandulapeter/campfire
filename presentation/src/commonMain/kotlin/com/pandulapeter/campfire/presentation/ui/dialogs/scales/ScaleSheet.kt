@@ -79,6 +79,7 @@ import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagram
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 import com.pandulapeter.campfire.presentation.ui.scales.displayedDegree
+import com.pandulapeter.campfire.presentation.ui.scales.scaleLabels
 import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
@@ -112,7 +113,7 @@ internal fun ScaleSheet(
     val rootName = dialog.rootName
     val root = ChordProChords.parse(rootName)?.root ?: 0
     val geometry = remember(scale, root, strings, instrument, dialog.capo) { scaleDiagramGeometryOf(scale, root, strings, instrument, dialog.capo) }
-    val state = viewModel.scaleLibrary
+    val labels = userPreferences.scaleLabels
     val playingScaleNote by viewModel.tunerController.playingScaleNote.collectAsStateWithLifecycle()
     // A scale sounds only while its sheet can be seen, as the tuner's tones do (TunerListeningEffect): out of sight the
     // run would play on, and a hidden web tab stretches each of its notes to a second.
@@ -125,8 +126,8 @@ internal fun ScaleSheet(
         actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
             {
                 ScaleLabelsToggle(
-                    labels = state.labels,
-                    onLabelsSelected = { state.labels = it },
+                    labels = labels,
+                    onLabelsSelected = viewModel.preferencesController::setScaleLabels,
                 )
             }
         } else {
@@ -149,7 +150,7 @@ internal fun ScaleSheet(
                 rootName = rootName,
                 notation = notation,
                 geometry = geometry,
-                labels = state.labels,
+                labels = labels,
             )
             ScaleFormula(
                 scale = scale,

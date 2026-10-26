@@ -13,6 +13,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -48,11 +49,14 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 /**
  * The instrument at the top of a tool's page (the Chords, the Scales, and the Tuner tabs), the same on all three: the
  * [InstrumentPill] at the start of a line of the list screens' bar height, with [trailing] at its end where their pill and
- * New button stand (the Tuner's reference pitch). The pill gives up width before it reaches [trailing], cutting its
+ * New button stand (the Tuner's reference pitch), or right after the pill where [isTrailingAfterPill] (the Chords and the
+ * Scales tabs' capo, which belongs to the instrument). The pill gives up width before it reaches [trailing], cutting its
  * tuning short, and where it could no longer show the tuning beside them it keeps the line to itself and [trailing]
- * slides under it, still at the end, the line growing with it (`pillSharesLine`, `toolLinePlaces`). A page with nothing
- * at the end keeps the room above the pill all the same, so that the pill stands at one spot whichever tool is picked,
- * but not the room under it, which only parted it from what comes next by more than the page's other groups are parted.
+ * slides under it, at the end or at the pill's start, the line growing with it (`pillSharesLine`, `toolLinePlaces`,
+ * `toolLineTrailingX`). A [trailing] that emits nothing (the capo hidden) keeps the line's height. A page with nothing
+ * at the end, or with [trailing] after the pill, keeps the room above the pill all the same, so that the pill stands at
+ * one spot whichever tool is picked, but not the room under it, which only parted it from what comes next by more than
+ * the page's other groups are parted.
  */
 @Composable
 internal fun ToolInstrumentSetting(
@@ -63,6 +67,7 @@ internal fun ToolInstrumentSetting(
     isEnabled: Boolean = true,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
+    isTrailingAfterPill: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val pill = @Composable { pillModifier: Modifier ->
@@ -93,6 +98,7 @@ internal fun ToolInstrumentSetting(
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = NEW_ITEM_BUTTON_END_INSET),
             hasTuning = shownTuning(instrument, tuning) != null,
+            isTrailingAfterPill = isTrailingAfterPill,
             pill = { pill(Modifier) },
             trailing = trailing,
         )
@@ -107,6 +113,7 @@ internal fun ToolInstrumentSetting(
 private fun ToolInstrumentLine(
     modifier: Modifier,
     hasTuning: Boolean,
+    isTrailingAfterPill: Boolean,
     pill: @Composable () -> Unit,
     trailing: @Composable () -> Unit,
 ) {
@@ -115,12 +122,13 @@ private fun ToolInstrumentLine(
     val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     val textStyle = MaterialTheme.typography.titleSmall
     val pillHeight = songControlHeight(textStyle)
-    val measurePolicy = remember(motion, scope, spec, hasTuning, pillHeight, textStyle.fontSize) {
+    val measurePolicy = remember(motion, scope, spec, hasTuning, isTrailingAfterPill, pillHeight, textStyle.fontSize) {
         ToolLineMeasurePolicy(
             motion = motion,
             scope = scope,
             spec = spec,
             hasTuning = hasTuning,
+            isTrailingAfterPill = isTrailingAfterPill,
             pillHeight = pillHeight,
             fontSize = textStyle.fontSize,
         )
@@ -129,7 +137,9 @@ private fun ToolInstrumentLine(
         modifier = modifier,
         content = {
             pill()
-            trailing()
+            // One measurable whatever the controls emit: a capo hidden by its AnimatedVisibility emits nothing, and the
+            // policy, which reads the controls as its second child, then measures an empty box, keeping the line's height.
+            Box { trailing() }
         },
         measurePolicy = measurePolicy,
     )
@@ -152,6 +162,7 @@ private class ToolLineMeasurePolicy(
     private val scope: CoroutineScope,
     private val spec: FiniteAnimationSpec<Float>,
     private val hasTuning: Boolean,
+    private val isTrailingAfterPill: Boolean,
     private val pillHeight: Dp,
     private val fontSize: TextUnit,
 ) : MeasurePolicy {
@@ -190,11 +201,22 @@ private class ToolLineMeasurePolicy(
             pillHeight = pillHeight.roundToPx(),
             trailingWidth = trailing.width,
             trailingHeight = trailing.height,
+            // The Tuner's reference pitch stands where the list screens' New button does, centred in a bar's height; the
+            // capo after the pill keeps the pill's own line, which has no room under it.
+            hasRoomUnder = !isTrailingAfterPill,
         )
         val pill = measurables[0].measure(Constraints(maxWidth = places.pillMaxWidth, maxHeight = lineHeight))
         return layout(lineWidth, constraints.constrainHeight(places.height)) {
             pill.placeRelative(0, (lineHeight - pill.height) / 2)
-            trailing.placeRelative(lineWidth - trailing.width, places.trailingY)
+            val trailingX = toolLineTrailingX(
+                progress = progress,
+                lineWidth = lineWidth,
+                pillWidth = pill.width,
+                gap = gap,
+                trailingWidth = trailing.width,
+                isAfterPill = isTrailingAfterPill,
+            )
+            trailing.placeRelative(trailingX, places.trailingY)
         }
     }
 

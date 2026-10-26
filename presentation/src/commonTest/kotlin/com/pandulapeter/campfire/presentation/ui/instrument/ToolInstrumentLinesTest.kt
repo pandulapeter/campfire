@@ -35,7 +35,7 @@ class ToolInstrumentLinesTest {
         minNameWidth = minNameWidth,
     )
 
-    private fun places(progress: Float, lineWidth: Int = 336, trailingWidth: Int = 263) = toolLinePlaces(
+    private fun places(progress: Float, lineWidth: Int = 336, trailingWidth: Int = 263, hasRoomUnder: Boolean = true) = toolLinePlaces(
         progress = progress,
         lineWidth = lineWidth,
         lineHeight = 56,
@@ -43,6 +43,7 @@ class ToolInstrumentLinesTest {
         pillHeight = 52,
         trailingWidth = trailingWidth,
         trailingHeight = 52,
+        hasRoomUnder = hasRoomUnder,
     )
 
     @Test
@@ -90,6 +91,12 @@ class ToolInstrumentLinesTest {
     }
 
     @Test
+    fun `a line with no room under it ends with its pill beside and with its controls under it`() {
+        assertEquals(54, places(0f, hasRoomUnder = false).height)
+        assertEquals(54 + 8 + 52, places(1f, hasRoomUnder = false).height)
+    }
+
+    @Test
     fun `a spring overshooting either end is held at that end`() {
         assertEquals(places(0f), places(-0.2f))
         assertEquals(places(1f), places(1.2f))
@@ -111,6 +118,23 @@ class ToolInstrumentLinesTest {
             if (current.pillMaxWidth > 336 - 263 - 8) assertTrue(current.trailingY >= 54, "The pill reaches under at $step: $current")
             assertTrue(current.trailingY >= previous.trailingY && current.pillMaxWidth >= previous.pillMaxWidth, "Back at $step: $current")
             previous = current
+        }
+    }
+
+    @Test
+    fun `controls after the pill stand a gap after it beside it and at the line's start under it, travelling between`() {
+        fun x(progress: Float) = toolLineTrailingX(progress, lineWidth = 336, pillWidth = 120, gap = 8, trailingWidth = 150, isAfterPill = true)
+        assertEquals(128, x(0f))
+        assertEquals(64, x(0.5f))
+        assertEquals(0, x(1f))
+        assertEquals(0, x(1.2f))
+        assertEquals(128, x(-0.1f))
+    }
+
+    @Test
+    fun `controls at the end stay at the line's end throughout the slide`() {
+        listOf(0f, 0.5f, 1f).forEach { progress ->
+            assertEquals(186, toolLineTrailingX(progress, lineWidth = 336, pillWidth = 120, gap = 8, trailingWidth = 150, isAfterPill = false))
         }
     }
 }

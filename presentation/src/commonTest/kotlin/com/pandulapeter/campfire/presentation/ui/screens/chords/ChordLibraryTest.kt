@@ -51,6 +51,20 @@ internal class ChordLibraryTest {
     }
 
     @Test
+    fun `under a capo a key keeps its names and each chord is the shape fingered above the capo`() {
+        val chords = assertIs<ChordLibraryResults.Chords>(assertNotNull(chordLibraryResults(keys, 9, "", ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2))).chords
+        assertEquals(listOf("A", "Am", "A7"), chords.take(3).map { it.name })
+        assertEquals(ChordProChords.parse("A"), chords.first().chord)
+        assertEquals(ChordProChords.parse("G"), chords.first().shapeChord)
+        assertEquals(2, chords.first().capo)
+        assertEquals(ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR), chords.first().defaultShape)
+        // A searched chord is moved the same way: a D/F# at the second fret is a C/E shape.
+        val slash = assertIs<ChordLibraryResults.Chords>(assertNotNull(chordLibraryResults(keys, 0, "D/F#", ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2)))
+        assertEquals("D/F♯", slash.searched?.name)
+        assertEquals(ChordProChords.parse("C/E"), slash.searched?.shapeChord)
+    }
+
+    @Test
     fun `the chords are named in the reader's notation`() {
         val chords = assertIs<ChordLibraryResults.Chords>(results(keyIndex = 11, notation = ChordNotation.GERMAN)).chords
         assertEquals("H", chords.first().name)

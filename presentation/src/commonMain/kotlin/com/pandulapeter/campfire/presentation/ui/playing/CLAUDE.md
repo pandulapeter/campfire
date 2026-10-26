@@ -47,6 +47,8 @@ The values a song is played with and where each is kept.
   setlist's PDF). Stored in `Setlist.Entry.capo` and `UserPreferences.capos`, since one set plays a song capoed and the
   next in another key without.
 - **Zero is a value, not nothing**: a capo this setlist takes off a song whose file asks for one.
+- The Chords and Scales tabs have one capo of their own (`UserPreferences.toolCapo`, `ui/instrument`), read the same
+  way (names sound, shapes are fingered above it) and never a song's.
 
 ### What sounds and what is fingered
 

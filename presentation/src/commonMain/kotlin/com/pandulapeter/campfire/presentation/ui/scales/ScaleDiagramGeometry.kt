@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
+import kotlin.math.abs
 
 /**
  * What a scale diagram draws, in the diagram's own units: the strings and frets a scale's notes stand on, or the keys
@@ -109,6 +110,18 @@ internal fun scaleDiagramGeometryOf(
         },
         capo = if (instrument == UserPreferences.Instrument.VIOLIN) 0 else capo.coerceIn(0, FRET_COUNT),
     )
+}
+
+/**
+ * How far the note at [fret] of a string starting at [start] is drawn as ringing open, from 0 (a stopped note's dot) to 1
+ * (an open string's ring), under a capo on [capo], which is between two frets while it slides: the string's own open
+ * note always, and under a capo the note at its fret, which the capo stops for the hand, so that the strings ringing at
+ * the capo read as they do at the nut. A note passes from one to the other as the capo slides over its fret.
+ */
+internal fun scaleNoteOpenness(fret: Int, start: Int, capo: Float): Float = when {
+    fret == start -> 1f
+    capo <= 0f || fret < start -> 0f
+    else -> (1f - abs(capo - fret)).coerceIn(0f, 1f)
 }
 
 /**

@@ -14,7 +14,8 @@
   listed in `withSongRenamed` and `withoutSongOverrides` and nowhere else (`UserPreferencesSongMapsTest`).
 - What travels where: `chordVoicings`, `tagColors`, and the per-song transpositions, tempos, capos, and `beatLevels`
   sync through `preferences.json` but are never exported. `tagColors` are never pruned when a tag's last song goes.
-  Local only: `instrument`/`tunings`, `foldedSections` (one reader's choice), `tunerSettings`, `seenWhatsNewVersions`,
+  Local only: `instrument`/`tunings`, `toolCapo` (the Chords and Scales tabs' capo, a neck's like the instrument), `areScaleNoteNamesShown`,
+  `foldedSections` (one reader's choice), `tunerSettings`, `seenWhatsNewVersions`,
   `isOnboardingPending` (default false so old installations are never sent through onboarding), and
   `demoLibraryContentHashes` (sync uses it to prefer the cloud's copy of an untouched demo file). Song filters are never
   stored (`SongFilter` in `:domain:api`).

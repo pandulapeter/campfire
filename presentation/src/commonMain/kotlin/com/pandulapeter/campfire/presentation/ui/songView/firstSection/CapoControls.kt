@@ -30,7 +30,8 @@ import org.jetbrains.compose.resources.painterResource
  * The capo stepper of a song, the tempo's twin: the fret it is played at where it is opened, highlighted while this
  * setlist (or this device) capos it somewhere other than its file says, and one tap on the value puts it back to the
  * file's. Nothing in the song moves with it — a chord chart is written as it is fretted — so this is the number the
- * player reads off the page and not a transposition by another name.
+ * player reads off the page and not a transposition by another name. The Chords and the Scales tabs step their own capo
+ * with it too (`ToolCapoControls`), its value there never a song's.
  */
 @Composable
 internal fun CapoControls(

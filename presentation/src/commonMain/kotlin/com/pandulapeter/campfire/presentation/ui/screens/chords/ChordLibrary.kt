@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.movedBy
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /**
@@ -55,6 +56,7 @@ internal data class ChordLibraryInputs(
     val query: String,
     val notation: ChordNotation,
     val tuning: ChordTuning,
+    val capo: Int = 0,
 ) {
     /** The key the results are the chords of, in the standard notation. */
     val key get() = keys[keyIndex.coerceIn(keys.indices)]
@@ -94,7 +96,10 @@ internal fun initialChordLibraryShown(
  * a song's `D/F#` or `Emaj7` is then found by typing it, since no key lists every bass a chart puts under a chord. Every
  * name is the one the key pill writes, its root in capitals (in title case in the Latin notation), whatever case the
  * search was typed in. A chord with no shape on the instrument is left out, since every cell is there to be played. A
- * numbering names the chords by their letters, as it names a chord with no song around it everywhere.
+ * numbering names the chords by their letters, as it names a chord with no song around it everywhere. Under a [capo] every
+ * chord keeps its name, the one that sounds, and is the shape fingered above it (an A at the second fret a G shape, see
+ * [SongChord.shapeChord]), as a capoed song's Chords section draws it; a chord whose shape the instrument lacks is left
+ * out as before.
  *
  * This looks shapes up, and runs the search for the ones the tables lack, so it is called on the main thread only
  * without [searchesShapes], where it answers null for anything the tables cannot answer alone: what the tab opens on is
@@ -107,6 +112,7 @@ internal fun chordLibraryResults(
     notation: ChordNotation,
     tuning: ChordTuning,
     searchesShapes: Boolean = true,
+    capo: Int = 0,
 ): ChordLibraryResults? {
     val typed = query.trim()
     val key = keys[keyIndex.coerceIn(keys.indices)]
@@ -116,9 +122,10 @@ internal fun chordLibraryResults(
     }
     val found = names.mapNotNull { name ->
         val chord = ChordProChords.parse(name) ?: return@mapNotNull null
-        if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
-        val shape = ChordVoicings.default(chord, tuning) ?: return@mapNotNull null
-        SongChord(name = shownChordName(name, notation), chord = chord, spelling = name, defaultShape = shape)
+        val shapeChord = chord.movedBy(-capo)
+        if (!searchesShapes && ChordVoicings.needsSearch(shapeChord, tuning)) return null
+        val shape = ChordVoicings.default(shapeChord, tuning) ?: return@mapNotNull null
+        SongChord(name = shownChordName(name, notation), chord = chord, shapeChord = shapeChord, capo = capo, spelling = name, defaultShape = shape)
     }
     val searched = found.firstOrNull()?.takeIf { searchedName != null && it.spelling == searchedName }
     val chords = if (searched == null) found else found.drop(1)

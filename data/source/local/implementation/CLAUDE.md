@@ -100,7 +100,7 @@ No document type leaves this module.
   they carry.
 - `UserPreferencesDocumentFormat` falls back to field-by-field reading: a bad entry costs that entry, not the map. Such
   a file is copied to `preferences.json.bad` before anything can save over it. Text size, metronome volume and tempo,
-  tuner reference pitch, and stored tempos and capos are clamped or dropped to range on read.
+  tuner reference pitch, the tools' capo, and stored tempos and capos are clamped or dropped to range on read.
 - A document with no `instrument` key is migrated once from the older tuner and chord keys, which are read, never
   written; a document with an `instrument` key (even an unknown one, read as guitar with its tunings kept) never reads
   them.

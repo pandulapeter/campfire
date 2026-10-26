@@ -20,7 +20,9 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** A value a newer or an older version wrote costs that one setting, never the document it is in. */
 internal class UserPreferencesMappersTest {
@@ -337,6 +339,28 @@ internal class UserPreferencesMappersTest {
         // An older document's isChromatic key is ignored: it is what a dropped switch was left at.
         assertEquals(TunerSettings(), UserPreferencesDocumentFormat.decode("""{"tunerSettings": {"isChromatic": true}}""").document.toModel().tunerSettings)
         assertEquals(466, UserPreferencesDocument(tunerSettings = TunerSettingsDocument(referencePitch = 1_000)).toModel().tunerSettings.referencePitch)
+    }
+
+    @Test
+    fun `the tools' capo survives saving and reloading, defaults to none, and is held within the neck`() {
+        val preferences = UserPreferencesDocument().toModel().copy(toolCapo = 3)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(3, reloaded.toolCapo)
+        assertEquals(0, UserPreferencesDocumentFormat.decode("{}").document.toModel().toolCapo)
+        assertEquals(12, UserPreferencesDocument(toolCapo = 40).toModel().toolCapo)
+        assertEquals(0, UserPreferencesDocument(toolCapo = -2).toModel().toolCapo)
+        // A capo of the wrong shape costs only itself.
+        val model = UserPreferencesDocumentFormat.decode("""{"toolCapo": "two", "instrument": "ukulele"}""").document.toModel()
+        assertEquals(0, model.toolCapo)
+        assertEquals(UserPreferences.Instrument.UKULELE, model.instrument)
+    }
+
+    @Test
+    fun `the scale sheet's note names survive saving and reloading, and degrees are the default`() {
+        val preferences = UserPreferencesDocument().toModel().copy(areScaleNoteNamesShown = true)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertTrue(reloaded.areScaleNoteNamesShown)
+        assertFalse(UserPreferencesDocumentFormat.decode("{}").document.toModel().areScaleNoteNamesShown)
     }
 
     @Test
