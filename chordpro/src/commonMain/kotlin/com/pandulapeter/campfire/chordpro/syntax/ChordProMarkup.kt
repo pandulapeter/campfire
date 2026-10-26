@@ -13,14 +13,15 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 
 /**
- * The markup of a lyrics line or a comment: the subset of ChordPro's Pango markup that sets text in bold (`<b>`, `<strong>`), italic
- * (`<i>`, `<em>`), or underlined (`<u>`), in any letter case, and a `<span>` whose attributes say the same
- * ([MarkupAttributes.spanStyles]). The other tags of Pango and of HTML's inline text (`<sup>`, `<font>`…) are markup too,
- * read and dropped: the file keeps them, the page shows the text they wrap (and no `<img>`). A `<br>` is a space, since the words on
- * either side of it are two. A tag may carry attributes written `name=value` and close itself (`<br/>`). Anything else in
- * angle brackets is lyrics,
- * so a `<3`, an `<intro>`, or an `a<b c>` written into a line stays as it is: a tag named only by the song's author is
- * far likelier to be a word they meant to show.
+ * The markup of a lyrics line or a comment: the subset of ChordPro's Pango markup that sets text in bold (`<b>`,
+ * `<strong>`), italic (`<i>`, `<em>`), or underlined (`<u>`), in any letter case, and a `<span>` whose attributes say the
+ * same ([MarkupAttributes.spanStyles]). The other tags of Pango, of ChordPro (`<strut/>`), and of HTML's inline text
+ * (`<sup>`, `<font>`, `<img>`…) are markup too, read and dropped: the file keeps them, the page shows the text they wrap.
+ * A `<br>` is a space, since the words on either side of it are two, and a `<sym flat/>` its symbol
+ * ([MarkupSymbols.symbolOf]). Character references (`&lt;`, `&amp;`) are read as the characters they name. A tag may
+ * carry attributes written `name=value` and close itself (`<br/>`). Anything else in angle brackets is lyrics, so a
+ * `<3`, an `<intro>`, or an `a<b c>` written into a line stays as it is: a tag named only by the song's author is far
+ * likelier to be a word they meant to show.
  *
  * Markup belongs to one line: a tag left open is closed at the end of it, and a closing tag with nothing open is
  * dropped, since the file is the user's and a stray tag must neither reach the page nor swallow the rest of the song.
@@ -39,7 +40,7 @@ public object ChordProMarkup {
     )
     private val ignoredTags = setOf(
         "a", "abbr", "big", "br", "cite", "code", "del", "div", "font", "img", "ins", "kbd", "mark", "p", "q", "s", "samp",
-        "small", "span", "strike", "sub", "sup", "tt", "var", "wbr",
+        "small", "span", "strike", "strut", "sub", "sup", "sym", "tt", "var", "wbr",
     )
     private val longestTagName = (tags.keys + ignoredTags).maxOf { it.length }
 
@@ -59,7 +60,7 @@ public object ChordProMarkup {
 
     /** [text] without its markup tags, with the ranges they formatted, in the order of [ChordProLine.Lyrics.formatting]. */
     public fun strip(text: String): Stripped {
-        if ('<' !in text) return Stripped(text = text, formatting = emptyList(), offsets = null)
+        if ('<' !in text && '&' !in text) return Stripped(text = text, formatting = emptyList(), offsets = null)
         val result = StringBuilder(text.length)
         val offsets = IntArray(text.length + 1)
         val depths = IntArray(Formatting.Style.entries.size)
@@ -68,6 +69,13 @@ public object ChordProMarkup {
         val spans = mutableListOf<Set<Formatting.Style>>()
         var index = 0
         while (index < text.length) {
+            val entity = if (text[index] == '&') MarkupSymbols.entityAt(text, index) else null
+            if (entity != null) {
+                for (entityIndex in index until index + entity.second) offsets[entityIndex] = result.length
+                result.append(entity.first)
+                index += entity.second
+                continue
+            }
             val tag = if (text[index] == '<') tagAt(text, index) else null
             if (tag == null) {
                 offsets[index] = result.length
@@ -77,6 +85,7 @@ public object ChordProMarkup {
             }
             if (tag.name == "br" && !tag.isClosing && tag.separatesWords(result, text, index)) result.append(' ')
             for (tagIndex in index until index + tag.length) offsets[tagIndex] = result.length
+            tag.symbol?.let(result::append)
             index += tag.length
             val styles = when {
                 tag.name != "span" -> tag.styles
@@ -121,7 +130,14 @@ public object ChordProMarkup {
         result.isNotEmpty() && !result.last().isWhitespace() && text.getOrNull(index + length)?.isWhitespace() == false
 
     /** A tag read at a `<`, with the styles it opens or closes; none for one that is read only to be dropped. */
-    private class Tag(val name: String, val styles: Set<Formatting.Style>, val isClosing: Boolean, val isSelfClosing: Boolean, val length: Int)
+    private class Tag(
+        val name: String,
+        val styles: Set<Formatting.Style>,
+        val isClosing: Boolean,
+        val isSelfClosing: Boolean,
+        val length: Int,
+        val symbol: String? = null,
+    )
 
     private fun tagAt(text: String, start: Int): Tag? {
         var index = start + 1
@@ -133,7 +149,7 @@ public object ChordProMarkup {
         val name = text.substring(nameStart, index).lowercase()
         val style = tags[name]
         if (style == null && name !in ignoredTags) return null
-        val attributes = if (isClosing) null else MarkupAttributes.read(text, index) ?: return null
+        val attributes = if (isClosing) null else MarkupAttributes.read(text, index, allowsBareNames = name == "sym") ?: return null
         if (attributes != null) index = attributes.end
         val isSelfClosing = !isClosing && text.getOrNull(index) == '/'
         if (isSelfClosing) index++
@@ -144,6 +160,7 @@ public object ChordProMarkup {
             isClosing = isClosing,
             isSelfClosing = isSelfClosing,
             length = index + 1 - start,
+            symbol = if (name == "sym") attributes?.attributes?.firstNotNullOfOrNull { (key, value) -> if (value.isEmpty()) MarkupSymbols.symbolOf(key) else null } else null,
         )
     }
 }

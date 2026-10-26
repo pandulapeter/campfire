@@ -56,8 +56,9 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - **Markup** (`ChordProMarkup`): `<b>`/`<strong>`, `<i>`/`<em>`, and `<u>` in a lyrics line are taken out of its text
   into `Lyrics.formatting`, chords moved with it, as is a `<span>` whose Pango attributes or CSS `style` say the same
   (`MarkupAttributes`); the other Pango and HTML inline tags (a fixed list, attributes allowed) are taken out and
-  dropped, the file keeping them, a `<br>` leaving a space between words; tags are read inside one line only, and any
-  other angle bracket (`<intro>`) is lyrics. A comment keeps its markup in its text, since its chords are rewritten there after parsing:
+  dropped, the file keeping them, a `<br>` leaving a space between words and a `<sym>` its symbol (`MarkupSymbols`);
+  character references (`&lt;`) are decoded; a chord's brackets lose their markup, formatting nothing; tags are read
+  inside one line only, and any other angle bracket (`<intro>`) is lyrics. A comment keeps its markup in its text, since its chords are rewritten there after parsing:
   whoever draws it calls `ChordProMarkup.strip`. Delegated environments, tabs, grids, and other directives have no markup.
 - **A chord row's repeat counts, bar lines, and beat dots are marks** (`ChordProRowMarks`): annotations shown with the
   chords, written back as their bare text, the text left blank where they stood; a sung line, and a line of a mark

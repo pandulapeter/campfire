@@ -146,8 +146,28 @@ class ChordProMarkupTest {
     }
 
     @Test
-    fun `a tag inside a chord's brackets is part of the chord name`() {
-        assertEquals("<b>Am</b>", lyrics("[<b>Am</b>]la").chords.single().name)
+    fun `markup inside a chord's brackets leaves the chord's name and formats nothing`() {
+        val line = lyrics("[<b>Am</b>]la [<span color=\"red\">C&#x266F;</span>]li")
+
+        assertEquals(listOf("Am", "C#"), line.chords.map { it.name })
+        assertEquals("la li", line.text)
+        assertEquals(emptyList(), line.formatting)
+    }
+
+    @Test
+    fun `a symbol is the text a chart writes it as`() {
+        val line = lyrics("B<sym flat/> <SYM color=\"red\" arrow-up-with-accent /> <sym circle-A/> <sym repeat-end/> <sym unknown/>x<strut w=\"1em\"/>y")
+
+        assertEquals("B♭ ↑ A :| xy", line.text)
+    }
+
+    @Test
+    fun `character references are read as the characters they name`() {
+        val line = lyrics("&lt;3 &lt;b&gt;not bold&lt;/b&gt; Rock &amp; Roll &#233;&#x1F3B8; [C]&amp;&nbsp;Rock & Roll &bogus; &#0;")
+
+        assertEquals("<3 <b>not bold</b> Rock & Roll é🎸 & Rock & Roll &bogus; &#0;", line.text)
+        assertEquals(emptyList(), line.formatting)
+        assertEquals(35, line.chords.single().position)
     }
 
     @Test

@@ -336,7 +336,8 @@ public object ChordProParser {
         var consumedUntil = 0
         ChordProDirectives.brackets(rawLine).forEach { bracket ->
             text.append(rawLine, consumedUntil, bracket.range.first)
-            val content = bracket.content.trim()
+            // ChordPro formats a chord as a whole, which a chord's name cannot carry, so it keeps only the text.
+            val content = ChordProMarkup.strip(bracket.content).text.trim()
             if (content.isNotEmpty()) {
                 val isAnnotation = content.startsWith(ANNOTATION_MARKER)
                 chords += ChordProLine.Lyrics.Chord(
@@ -348,7 +349,7 @@ public object ChordProParser {
             consumedUntil = bracket.range.last + 1
         }
         text.append(rawLine, consumedUntil, rawLine.length)
-        // Chords first, so that a tag written inside a chord's brackets stays part of its name.
+        // Chords first, so that a tag written inside a chord's brackets formats neither the chord nor the lyrics.
         val stripped = ChordProMarkup.strip(text.toString())
         val placedChords = if (stripped.text.length == text.length) chords else chords.map { it.copy(position = stripped.offsetOf(it.position)) }
         val marks = ChordProRowMarks.marksOf(stripped.text, placedChords.map { it.position })

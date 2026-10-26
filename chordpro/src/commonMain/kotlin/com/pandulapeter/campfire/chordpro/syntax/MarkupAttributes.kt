@@ -20,11 +20,12 @@ internal object MarkupAttributes {
     /**
      * The attributes starting at [start], or null where the text there is not attributes: each is a name, an `=`, and a
      * value, quoted or bare, after whitespace, and the text after them is a `>` or a `/`. A bare word (`<b c>`) is not
-     * one, since that reads as lyrics. A bare value may hold slashes (`src=https://…`) but gives a last one back when a
+     * one, since that reads as lyrics, unless [allowsBareNames] (a `<sym>` names its symbol so), when it is read with an
+     * empty value. A bare value may hold slashes (`src=https://…`) but gives a last one back when a
      * `>` follows it, since that ends a self-closing tag (`<img src=a.png/>`). Names are lowercased; of a name written
      * twice the first wins.
      */
-    fun read(text: String, start: Int): Read? {
+    fun read(text: String, start: Int, allowsBareNames: Boolean): Read? {
         val attributes = mutableMapOf<String, String>()
         var index = start
         while (true) {
@@ -36,8 +37,14 @@ internal object MarkupAttributes {
             val nameStart = next
             while (next < text.length && text[next].isNameCharacter()) next++
             val name = text.substring(nameStart, next).lowercase()
+            val nameEnd = next
             while (next < text.length && text[next].isWhitespace()) next++
-            if (text.getOrNull(next) != '=') return null
+            if (text.getOrNull(next) != '=') {
+                if (!allowsBareNames) return null
+                attributes.getOrPut(name) { "" }
+                index = nameEnd
+                continue
+            }
             next++
             while (next < text.length && text[next].isWhitespace()) next++
             val quote = text.getOrNull(next)
