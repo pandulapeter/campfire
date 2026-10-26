@@ -688,4 +688,31 @@ class ChordSheetConverterTest {
         assertEquals("[Am]Hello   world [C]", ChordSheetConverter.convertFragment("Am\t\t\tC\nHello\tworld"))
         assertEquals("[Am]Hello [C]", ChordSheetConverter.convertFragment("Am            C\nHello"))
     }
+
+    @Test
+    fun `section labels printed in a margin column open the sections they label`() {
+        val sheet = listOf(
+            "        G            C",
+            "V1      Amazing grace how sweet",
+            "        D              G",
+            "        the sound that saved",
+            "        C            G",
+            "Ch1     Oh happy day when Jesus",
+            "        D              G",
+            "        washed my sins away",
+            "A2      Swing low sweet chariot",
+        ).joinToString("\n")
+        assertEquals(
+            "{start_of_verse: V1}\n[G]Amazing grace [C]how sweet\n[D]the sound that [G]saved\n{end_of_verse}\n" +
+                "{start_of_chorus: Ch1}\n[C]Oh happy day [G]when Jesus\n[D]washed my sins [G]away\n{end_of_chorus}\n" +
+                "{start_of_verse: A2}\nSwing low sweet chariot\n{end_of_verse}\n",
+            convert(sheet),
+        )
+    }
+
+    @Test
+    fun `a chord row reaching into the margin and a lone word left of the body stay where they are`() {
+        assertEquals("[G]Amazing [C]grace\n[D]how [G]sweet\n", convert("G         C\n   Amazing grace\nD      G\n   how sweet"))
+        assertEquals("Oh     happy day\nwhen Jesus washed\n", convert("Oh     happy day\n       when Jesus washed"))
+    }
 }

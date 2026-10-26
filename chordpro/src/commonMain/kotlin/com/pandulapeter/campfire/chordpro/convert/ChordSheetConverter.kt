@@ -33,7 +33,9 @@ public object ChordSheetConverter {
      */
     public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
-        val pages = sheet.pages.map { page -> page.lines.map { render(it, normalize) } }
+        val pages = sheet.pages.map { page ->
+            ChordSheetMarginLabels.split(page.lines).map { (line, isMarginLabel) -> render(line, normalize).copy(isMarginLabel = isMarginLabel) }
+        }
         val all = pages.flatten()
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
         if (isChordPro(original)) return listOf(original)
@@ -137,7 +139,13 @@ public object ChordSheetConverter {
     }
 
     /** [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. */
-    private data class Rendered(val text: String, val positions: DoubleArray, val source: ChordSheet.Line, val isFromLabel: Boolean = false)
+    private data class Rendered(
+        val text: String,
+        val positions: DoubleArray,
+        val source: ChordSheet.Line,
+        val isFromLabel: Boolean = false,
+        val isMarginLabel: Boolean = false,
+    )
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, SECTION, METADATA, CHORD, LYRIC }
 
@@ -357,7 +365,7 @@ public object ChordSheetConverter {
     }
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
-        if (line.text.isBlank() || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
+        if (line.text.isBlank() || line.isMarginLabel || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
         val bodySizes = lines.filter { it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
         val median = bodySizes.getOrNull(bodySizes.size / 2) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
         return line.source.isHeading || line.source.spans.any { it.size > median * 1.2 } ||
@@ -473,7 +481,7 @@ public object ChordSheetConverter {
                 line.text.isBlank() -> Kind.BLANK
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
-                headings[index] -> Kind.SECTION
+                headings[index] || line.isMarginLabel -> Kind.SECTION
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 candidate != null && (candidate.count { rowChord(it.text) } > 1 ||
@@ -605,7 +613,7 @@ public object ChordSheetConverter {
                     closeSection()
                     flushChanges()
                     val label = headerValue(headingLabel(line.text))
-                    val type = ChordSheetHeadings.parse(line.text)?.type
+                    val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else ChordSheetHeadings.parse(line.text)?.type
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
                     if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION)) output += "{chorus}"
                     else if (type != null) { output += "{start_of_$type: $label}"; environment = type }

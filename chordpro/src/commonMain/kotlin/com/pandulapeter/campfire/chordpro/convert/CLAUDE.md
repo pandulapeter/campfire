@@ -24,6 +24,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   app's field.
 - The heading vocabulary lives in `ChordSheetHeadings`. A heading word that is also sung (`Hook`, `Tag`, `Coro`, `R`)
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
+- Section labels printed in a margin column (the ChordPro app's `label`, `V1`, `Ch1`, `A1`) open the sections they
+  label (`ChordSheetMarginLabels`): only where every other line between a page's first and last label starts right of
+  all of them, so a chord row or a lyric set against the left edge keeps its first word. A label no heading word or
+  abbreviation names is a verse under its own name.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
   documented limit, since both orders are common on the web; a title ending in a page word with no credit after it
   (`Three Chords`) loses that word, the same documented limit.
