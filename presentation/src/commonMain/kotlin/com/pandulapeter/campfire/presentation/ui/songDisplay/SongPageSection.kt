@@ -54,13 +54,14 @@ internal fun SongPageSection(
         isEnabled = areChordsEnabled,
         onCheckedChange = preferencesController::setChordDiagramsEnabled,
     )
-    // A degree labels a diagram, a song's or one of the chords a scale sheet lists, so it is disabled only where neither
-    // is drawn.
+    // A degree labels a diagram, a song's or one of the chords a scale sheet lists (which needs both the Scales and the
+    // Chords tab), so it is disabled only where neither is drawn.
     SwitchListItem(
         title = stringResource(Res.string.settings_chord_degrees),
         description = stringResource(Res.string.settings_chord_degrees_description),
         isChecked = userPreferences?.areChordDegreesEnabled != false,
-        isEnabled = (areChordsEnabled && areChordDiagramsEnabled) || userPreferences?.isChordLibraryEnabled != false,
+        isEnabled = (areChordsEnabled && areChordDiagramsEnabled) ||
+            (userPreferences?.isChordLibraryEnabled != false && userPreferences?.areScalesEnabled != false),
         onCheckedChange = preferencesController::setChordDegreesEnabled,
     )
     // A suggestion is read off a song's chords and opens a scale's sheet, so it needs both the chords and the scales.
