@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.chordpro.abc
 public object AbcTunes {
 
     private const val BYTE_ORDER_MARK = '﻿'
+    private const val INSTRUCTION = 'I'
 
     /**
      * The tunes of [text], in order. A tune starts at its `X:` field and ends at the first blank line after its `K:`,
@@ -22,8 +23,10 @@ public object AbcTunes {
      *
      * The file header (the fields before the first `X:`, when its first paragraph is made only of fields and comments)
      * is written into every tune right after its `X:` line, so each tune keeps the composer, meter, or stylesheet the
-     * file gave them all, and the tune's own fields, which come later, override it. Free text outside the tunes is
-     * dropped, as ABC reads it. A text with no `X:` at all is one tune.
+     * file gave them all. A field the tune's own header also has is left out, since the tune's overrides the file's
+     * (a reader of the tune would otherwise take the file's `C:` or `T:` first); comments, stylesheet lines, and `I:`
+     * instructions, which name their own setting, are always kept. Free text outside the tunes is dropped, as ABC reads
+     * it. A text with no `X:` at all is one tune.
      */
     public fun split(text: String): List<String> {
         val lines = text.lines().map { it.trimStart(BYTE_ORDER_MARK) }
@@ -58,13 +61,45 @@ public object AbcTunes {
                 index > start && isTuneStart(line) -> break
                 else -> {
                     tune += line
-                    if (tune.size == 1 && isTuneStart(line)) tune += header
                     if (AbcLines.field(line)?.letter == 'K') hasKey = true
                 }
             }
             index++
         }
-        return tune.takeIf { it.isNotEmpty() }?.let { index to it.joinToString("\n") }
+        if (tune.isEmpty()) return null
+        if (isTuneStart(tune.first())) tune.addAll(1, headerNotOverridden(header, ownHeaderLetters(tune)))
+        return index to tune.joinToString("\n")
+    }
+
+    /** The field letters of [tune]'s own header: its lines up to its `K:`, or up to its first line of music. */
+    private fun ownHeaderLetters(tune: List<String>): Set<Char> {
+        val letters = mutableSetOf<Char>()
+        for (line in tune) {
+            val field = AbcLines.field(line)
+            if (field == null) {
+                if (line.isNotBlank() && !AbcLines.isComment(line)) break
+                continue
+            }
+            letters += field.letter
+            if (field.letter == 'K') break
+        }
+        return letters
+    }
+
+    /** [header] without the fields whose letter is in [overridden], a `+:` line going with the field it continues. */
+    private fun headerNotOverridden(header: List<String>, overridden: Set<Char>): List<String> {
+        var isDropping = false
+        return header.filter { line ->
+            val letter = AbcLines.field(line)?.letter
+            when (letter) {
+                null -> true
+                AbcLines.CONTINUATION -> !isDropping
+                else -> {
+                    isDropping = letter != INSTRUCTION && letter in overridden
+                    !isDropping
+                }
+            }
+        }
     }
 
     private fun fileHeader(lines: List<String>): List<String> {

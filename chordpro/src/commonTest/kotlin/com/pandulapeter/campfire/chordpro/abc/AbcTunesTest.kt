@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro.abc
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class AbcTunesTest {
 
@@ -39,6 +41,39 @@ class AbcTunesTest {
 
         assertEquals("X:1\n%%scale 0.8\nC:Campfire Players\nM:6/8\nT:First\nK:G\nGAB|", tunes[0])
         assertEquals("X:2\n%%scale 0.8\nC:Campfire Players\nM:6/8\nT:Second\nK:D\nDEF|", tunes[1])
+    }
+
+    @Test
+    fun `a field the tune's own header has overrides the file header's`() {
+        val text = "%%scale 0.8\nT:Collection\nC:Campfire Players\n+:and friends\nM:6/8\nI:linebreak \$\nR:jig\nQ:1/8=100\n\n" +
+            "X:1\nT:First\nC:Somebody Else\nM:3/4\nI:abc-charset utf-8\nR:waltz\nQ:1/4=90\nK:G\nGAB|"
+
+        assertEquals(
+            "X:1\n%%scale 0.8\nI:linebreak \$\nT:First\nC:Somebody Else\nM:3/4\nI:abc-charset utf-8\nR:waltz\nQ:1/4=90\nK:G\nGAB|",
+            AbcTunes.split(text).single(),
+        )
+    }
+
+    @Test
+    fun `a split tune converts with its own fields where the file header has them too`() {
+        val text = "T:Collection\nC:Campfire Players\nM:6/8\nR:jig\nQ:1/8=100\n\nX:1\nT:First\nC:Somebody Else\nM:3/4\nR:waltz\nQ:90\nK:D\n\"D\"DEF|"
+        val song = AbcToChordPro.convert(AbcTunes.split(text).single())
+        val metadata = ChordProParser.parse(song.text).metadata
+
+        assertEquals("First", metadata.title)
+        assertNull(metadata.subtitle)
+        assertEquals("Somebody Else", metadata.artist)
+        assertEquals("D", metadata.key)
+        assertEquals(listOf("waltz"), metadata.tags)
+        assertEquals("3/4", metadata.time)
+        assertEquals("90", metadata.tempo)
+    }
+
+    @Test
+    fun `a file header field the tune lacks is kept with its continuation`() {
+        val text = "C:Campfire Players\n+:and friends\nM:6/8\n\nX:1\nT:First\nK:G\nGAB|"
+
+        assertEquals("X:1\nC:Campfire Players\n+:and friends\nM:6/8\nT:First\nK:G\nGAB|", AbcTunes.split(text).single())
     }
 
     @Test
