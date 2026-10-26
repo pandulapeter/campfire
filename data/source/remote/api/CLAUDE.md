@@ -56,6 +56,8 @@ KDoc of `SyncFolder` and `SyncConnection`.
   `consumePendingRedirect` picks the answer up at the next start (web always, Android after process death).
   `prepareRedirectUri` exists because the desktop's loopback socket must be opened first.
 - `PendingAuthorizationStore` keeps the PKCE verifier across a full page reload.
+- The implementation's `OAuthTokens` and `SyncHttpTransport` hold the token renewal and retry rules every provider
+  shares; a provider brings its token endpoint and a `SyncHttpErrorMapper`.
 - `SystemBrowser` and `AuthorizationCompletionPage` live in `:data:model` because their only implementer / builder is
   `:presentation`. The completion page is the only Campfire text shown outside the app, so the UI hands its translated
   strings down.

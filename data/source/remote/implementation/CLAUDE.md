@@ -67,15 +67,10 @@ Silent failures go to the injected `Logger`.
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and
   is not atomic. Entries refused as busy are retried with the normal back-off.
-- Timeouts: connect 20 s, inactivity 60 s, no total bound (a large `list_folder` page or a song on 2G takes minutes
-  while data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout; Dropbox calls carry
-  a shorter one of their own there (60 s RPC, 120 s listing pages and downloads, uploads by size).
-- Retries on 408, 429, 5xx, and 409 `too_many_write_operations`, waiting `retry_after` / `Retry-After`, else 2 s
-  doubling to 32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as
-  `SyncNetworkException` instead. Transport failures are retried too, counted apart from the waits: timeouts six times,
-  anything else (a reset, a cut stream, or a failed `fetch`) three, since every call here is safe to resend; the
-  longpoll alone is sent once, and the watcher decides what its failure means. A first sync *will* be rate limited; it
-  must not fail for it.
+- Calls go through `SyncHttpTransport` (below) with `DropboxErrors` as the error mapper: 409
+  `too_many_write_operations` is retried too, and the body's `retry_after` comes before `Retry-After`. In the browser,
+  Dropbox calls carry a bound of their own (60 s RPC, 120 s listing pages and downloads, uploads by size). Every call
+  is safe to resend; the longpoll alone is sent once, and the watcher decides what its failure means.
 - 409 `insufficient_space` → `SyncRemoteStorageFullException` (ends the run); any other 409 fails that one file.
 - Shared copies (`DropboxSharing`, `DropboxSharedLinkAddress.kt`): `/shared/<shareId>.zip`, uploaded like library
   files. `toSharedFiles` is called by `list` only, never through `toRemoteFiles`, which the change feed shares.
@@ -91,30 +86,47 @@ Silent failures go to the injected `Logger`.
     `dl.dropboxusercontent.com` (measured, undocumented): it serves the zip without a redirect, with
     `Access-Control-Allow-Origin: *`, so the web downloads like the rest, and answers a dead link 403/404. The
     `www.dropbox.com` address answers every dead link 200 with HTML, and its redirect has no CORS header.
-- `DropboxTransport` (retries, 401 renewal, failure mapping) and `DropboxTokens` are built by the provider, not Koin.
+- `DropboxTransport` (the RPC call and `ensureSuccessful`'s failure mapping, over `SyncHttpTransport`) and its
+  `OAuthTokens` are built by the provider, not Koin.
 - `DropboxModels`: unknown keys ignored, optional fields defaulted, so a new API field never breaks sync; the fields a
   decision rests on (listing entries, cursor, `has_more`; revisions; the access token; the delete job's tag) are
   required, and an answer without them is the network failing.
 - `toAsciiJsonString`: Dropbox takes arguments in an HTTP header, which is ASCII only, and file names are song titles.
-- The browser engine reports a failed `fetch` as a `kotlin.Error`, so `transport` treats any non-cancellation
-  `Throwable` as unreachable.
+
+## Sync calls (`network/SyncHttpTransport.kt`)
+
+Shared by every provider; what a service says beyond HTTP comes from its `SyncHttpErrorMapper`, and an answer that
+fails one call is a `SyncApiException`, passed through as it is.
+
+- Timeouts: connect 20 s, inactivity 60 s, no total bound (a large listing page or a song on 2G takes minutes while
+  data arrives). The browser has a 10-minute total, since `fetch` has no inactivity timeout; a call may set a shorter
+  one there (`BrowserCallTimeout`).
+- Retries on 408, 429, 5xx, and what the mapper says asks to slow down, waiting the body's wait / `Retry-After`, else
+  2 s doubling to 32 s, six retries, plus up to 0.5 s jitter; a requested wait over 120 s ends the run as
+  `SyncNetworkException` instead. Transport failures are retried too, counted apart from the waits: timeouts six times,
+  anything else (a reset, a cut stream, or a failed `fetch`) three. A first sync *will* be rate limited; it must not
+  fail for it.
+- The browser engine reports a failed `fetch` as a `kotlin.Error`, so `syncTransport` treats any non-cancellation
+  `Throwable` as unreachable; an answer that cannot be decoded (`decodeSyncAnswer`) is the network too.
 
 ## OAuth
 
-- PKCE, no client secret, no server of Campfire's own.
+- PKCE, no server of Campfire's own; Dropbox takes no client secret (`OAuthTokens` sends one only when configured).
+- The next three rules are every provider's, in `OAuthTokens` (`auth/`, configured with the token endpoint, client id,
+  and optional secret) and, for the 401, `SyncHttpTransport`.
 - Tokens renew inside one `SyncCredentialsStore.update`, so concurrent requests share one refresh, bounded at 30 s,
-  and retried like any call when it cannot reach Dropbox. A renewal that could not reach Dropbox is shared too: the
-  callers that waited for it fail with it rather than each trying their own. Keep a new refresh token Dropbox hands out, or the connection
-  ends silently. The store caches only what it saw stored: a refused or cancelled write drops the cache; a refused read
-  (`LibraryStorageException`) is thrown and not cached, so a document without tokens never overwrites tokens
-  unreadable for a moment.
+  and retried like any call when it cannot reach the service. A renewal that could not reach the service is shared
+  too: the callers that waited for it fail with it rather than each trying their own. Keep a new refresh token the
+  service hands out, or the connection ends silently. The store caches only what it saw stored: a refused or cancelled
+  write drops the cache; a refused read (`LibraryStorageException`) is thrown and not cached, so a document without
+  tokens never overwrites tokens unreadable for a moment.
 - Only a 400 or 401 from the token endpoint is a refusal; any other answer (a proxy's 403 or 407, a portal's redirect)
   is the network.
 - A 401 gets one forced refresh (of the refused token only, so simultaneous refusals share it) and a resend before it
   is reported as a refusal; the device clock may be wrong.
 - A 401 whose `error_summary` starts with `missing_scope` (`error.required_scope` names it) is thrown at once as
-  `SyncScopeMissingException`, without a refresh: a renewed token has the same scopes, and reporting it as a refusal
-  would end the run and show the working connection as failed (`DropboxTransportTest`).
+  `SyncScopeMissingException` (`DropboxErrors`), without a refresh: a renewed token has the same scopes, and reporting
+  it as a refusal would end the run and show the working connection as failed (`DropboxTransportTest`).
 - Each platform must notice the user backing out as well as the redirect, or the UI waits for the browser forever.
   `Cancelled` with no message means the user backed out.
   - **iOS**: `ASWebAuthenticationSession`, the only API that reports dismissal (`CanceledLogin` → `Cancelled`; other

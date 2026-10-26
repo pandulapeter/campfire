@@ -23,12 +23,14 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.OAuthTokens
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsDocument
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.Pkce
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.SyncHttpTransport
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
@@ -67,14 +69,20 @@ internal class DropboxSyncProvider(
 
     override val id = SyncProviderId.DROPBOX
 
-    private val tokens = DropboxTokens(
+    private val tokens = OAuthTokens(
         httpClientHolder = httpClientHolder,
         credentialsStore = credentialsStore,
-        appKey = appKey,
         providerId = id,
+        tokenUrl = TOKEN_URL,
+        clientId = appKey,
+        clientSecret = null,
+        errors = DropboxErrors,
     )
 
-    private val requests = DropboxTransport(httpClientHolder = httpClientHolder, tokens = tokens)
+    private val requests = DropboxTransport(
+        httpClientHolder = httpClientHolder,
+        http = SyncHttpTransport(tokens = tokens, errors = DropboxErrors),
+    )
 
     private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests, logger = logger)
 
@@ -357,12 +365,12 @@ internal class DropboxSyncProvider(
                     // Already gone is the outcome that was asked for, and a file that changed since is one the next
                     // run will see and bring back rather than destroy.
                     reason.startsWith("path_lookup/not_found") || reason.startsWith("path_write/conflict") -> Unit
-                    reason.startsWith("too_many_write_operations") && attempt < DropboxTransport.MAXIMUM_RETRIES -> busy += deletion
+                    reason.startsWith("too_many_write_operations") && attempt < SyncHttpTransport.MAXIMUM_RETRIES -> busy += deletion
                     else -> failures[deletion] = reason
                 }
             }
             if (busy.isNotEmpty()) {
-                delay(exponentialBackoffSeconds(attempt) * 1000L + Random.nextLong(DropboxTransport.RETRY_JITTER_MILLIS))
+                delay(exponentialBackoffSeconds(attempt) * 1000L + Random.nextLong(SyncHttpTransport.RETRY_JITTER_MILLIS))
                 attempt++
             }
             pending = busy
@@ -405,6 +413,7 @@ internal class DropboxSyncProvider(
 
     internal companion object {
         const val AUTHORIZE_URL = "https://www.dropbox.com/oauth2/authorize"
+        const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
         const val ACCOUNT_URL = "https://api.dropboxapi.com/2/users/get_current_account"
         const val LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder"
