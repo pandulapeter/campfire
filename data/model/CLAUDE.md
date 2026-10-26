@@ -18,7 +18,8 @@ repository.
 ## Songs and setlists
 
 - `Song` is metadata only, read at scan time: its first `{tempo}`, `{time}`, and readable `{capo}` are there so a
-  metronome paged to the next setlist song has them before its text loads. `canUpdateFileName` is computed once per scan
+  metronome paged to the next setlist song has them before its text loads. `capoChartKey` (`chordsKey`) is a capo
+  chart's `{key}` read as its chords', so lists name the sounding key without the text. `canUpdateFileName` is computed once per scan
   because every row asks.
 - **`Setlist.unknownFields`** (and each entry's) keep members this version does not know, as opaque JSON, so a later
   version's field survives this one's save. Per-entry transposition, tempo, and capo, `isArchived`, and `description`

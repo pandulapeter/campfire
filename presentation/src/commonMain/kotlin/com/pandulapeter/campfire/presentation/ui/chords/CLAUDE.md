@@ -19,12 +19,18 @@ hand-typed table first, a search for the rest).
 Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams. Seven- and
 eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning
 pill heads the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
-be brought back (`RenderSection.Metadata.instrumentPill`). On the keyboard the page is already in the sounding chords
-(see `ui/instrument/CLAUDE.md`), so diagrams count no capo.
+be brought back (`RenderSection.Metadata.instrumentPill`).
+
+**A chord is named as it sounds and drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the
+sounding chord (its name, notes, and scales), `shapeChord` the shape played above `capo` (`songChordsOf`'s `capo`), which
+a shape is looked up, picked, and stored by. A `{define}` is moved down by the capo as a transposition moves one, so a
+file's shape comes back to where it was written under its own capo. `ChordDiagramGeometry` draws the shape where it is
+played, frets numbered from the nut, the capo a muted bar across the window's first row (`capoRow`) where the shape sits
+right above it, outside the window where it is higher. The keyboard has no capo.
 
 ## Which shape a chord is drawn with
 
-`selectShape` (`ChordSelection.kt`, tested), in order:
+`selectShape` (`ChordSelection.kt`, tested), by `shapeChord`, in order:
 
 1. The song's own `{define}` / `{chord}` for that instrument (and tuning, below). 2. The player's choice, **one per
 chord and instrument for the whole library** (a habit of the hands, not a reading of one song):
@@ -68,8 +74,8 @@ Definitions:
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
 - **Each cell names its chord's degree** after it, as a numbering's letters follow its step (`SongChord.degree`,
   `withDegrees`, tested), in Roman notation's numerals (`ChordProNotation.romanNumeral`: `V7`, `♭VII`), counted against
-  `degreeKeyOf`: the scale suggestions' home key (so a capo chart counts its shapes' key), else the transposed `{key}`
-  by the same capo rule (`SongScaleGroups.keyOfShapes`), else none. One key a song, a chromatic chord by its step
+  `degreeKeyOf`: the scale suggestions' home key, else the sounding `{key}` read by the one capo chart rule
+  (`SongKeys.ofChords`), else none. One key a song, a chromatic chord by its step
   (`II7`, never `V/V`); none in a numbering. Either second name stands on a line over the name, as the scale sheet's
   numerals do (three quarters of its size, normal weight), a line every cell keeps where any has one. Only this
   section and the PDF's diagrams: lyrics and the chord sheet keep their names. Chord
@@ -78,7 +84,7 @@ Definitions:
 - **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
   highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
   is consumed so it doesn't also turn the page. A screen reader gets one custom action per cell.
-- A cell whose chord changes shape (picked, retuned) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells` tested);
+- A cell whose chord changes shape (picked, retuned, a capo moved) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells` tested);
   a searched shape arriving into the empty frame, or a cell that is now another chord, does not.
 - `ChordDiagramGeometry` (pure, tested) draws the shape: at least four frets, up to 24; the root in the second accent; a
   keyboard of two to four octaves.
@@ -91,6 +97,9 @@ is gone.
 - Shapes are searched before the sheet opens, so it slides up whole; a stored shape the app doesn't list goes first.
 - A tap writes the player's choice at once; picking the app's first shape removes the entry. No reset button.
 - A chord the song defines shows its definition alone, not pickable.
+- Under a capo the title names the sounding chord, a line under it the shape and the capo (`G shape, capo 2`, the capo
+  alone in a numbering), and every shape is drawn above the capo; a pick is the player's shape for the shape's chord.
+  Its scales open the scale sheet with the capo.
 - Both chord sheets end in the scales built on the chord's root that hold its tones (`ScaleChipRow`), root
   as the chord spells it, while Scales is on; a chip opens the scale sheet over the chord's.
   **One hop only**: a chord sheet opened from a scale sheet offers no scales (`ChordReference.showsScales`), and a scale

@@ -73,22 +73,39 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `the keyboard reads the capo as a transposition, wrapped around the octave`() {
-        val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides).withCapoSounding()
-        assertEquals(-4, playback.transposition)
-        assertEquals(0, playback.capo.fret)
-        assertTrue(playback.capo.isDefault)
-        assertEquals(120, playback.tempo.bpm)
-        assertEquals(2, songPlaybackOf(song, setlistFileName = "other.setlist.json", overrides = overrides).withCapoSounding().transposition)
+    fun `the chords sound at the transposition and the file's capo, wrapped around the octave`() {
+        assertEquals(5, songPlaybackOf(song, setlistFileName = null, overrides = overrides).soundingTransposition)
+        assertEquals(-3, songPlaybackOf(song, setlistFileName = SETLIST, overrides = overrides).soundingTransposition)
+        assertEquals(2, songPlaybackOf(song, setlistFileName = "other.setlist.json", overrides = overrides).soundingTransposition)
     }
 
     @Test
-    fun `only the keyboard reads the capo as a transposition`() {
-        assertTrue(testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD).readsCapoAsTransposition)
+    fun `a capo override keeps the pitch and moves the shapes under it`() {
+        val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
+        val library = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
+        assertEquals(5, library.shapeCapoFor(guitar))
+        // Sounding 2 above the file's chords and played at the fifth fret: the shapes are 3 below the file's.
+        assertEquals(-3, library.soundingTransposition - library.transposition - library.shapeCapoFor(guitar))
+        val takenOff = songPlaybackOf(song, setlistFileName = SETLIST, overrides = PlayingOverridesSnapshot(capos = Capos().with(setlist, 0)))
+        assertEquals(2, takenOff.soundingTransposition)
+        assertEquals(0, takenOff.shapeCapoFor(guitar))
+    }
+
+    @Test
+    fun `the keyboard plays the sounding chords whatever the capo`() {
+        val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
+        val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
+        assertEquals(5, playback.soundingTransposition)
+        assertEquals(0, playback.shapeCapoFor(keyboard))
+    }
+
+    @Test
+    fun `only the keyboard plays without a capo`() {
+        assertTrue(testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD).playsWithoutCapo)
         UserPreferences.Instrument.entries.filter { it != UserPreferences.Instrument.KEYBOARD }.forEach {
-            assertFalse(testPreferences().copy(instrument = it).readsCapoAsTransposition)
+            assertFalse(testPreferences().copy(instrument = it).playsWithoutCapo)
         }
-        assertFalse(null.readsCapoAsTransposition)
+        assertFalse(null.playsWithoutCapo)
     }
 
     private companion object {

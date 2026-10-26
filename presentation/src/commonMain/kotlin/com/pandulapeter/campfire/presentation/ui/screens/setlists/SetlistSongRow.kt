@@ -57,6 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSon
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 
@@ -133,7 +134,7 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // transposition to work out.
     val renderedKey = (entry as? SetlistWithSongs.Entry.Present)?.let { present ->
         val playback = songPlaybackOf(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, overrides = playingOverrides)
-        rememberSongCardKey(viewModel.songRenderer, present.song, playback.transposition, playback.capo.fret, cardOptions.chordSpelling)
+        rememberSongCardKey(viewModel.songRenderer, present.song, playback.soundingTransposition, cardOptions.chordSpelling)
     }
     // ReorderableItem's drag tracking, and the elevation and color it animates while a row is
     // lifted, are only paid for while reorder mode is on. Every row of every setlist is wrapped

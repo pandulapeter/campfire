@@ -47,6 +47,12 @@ class SongDetailsTitleTest {
     }
 
     @Test
+    fun `a capo chart keyed by the sounding key is named by it`() {
+        assertEquals("G", keyOf(song.copy(key = "G", capo = 5, capoChartKey = "D")))
+        assertEquals("C", keyOf(song.copy(key = "G", capo = 5)))
+    }
+
+    @Test
     fun `the header names no key with the chords off or for a song without chords`() {
         assertNull(keyOf(song, shouldShowChords = false))
         assertNull(keyOf(song.copy(hasChords = false)))
@@ -61,7 +67,8 @@ class SongDetailsTitleTest {
 
         assertNull(keyOf(unkeyed))
         assertEquals("D", keyOf(unkeyed, inferredKey = "D"))
-        assertEquals("Em", keyOf(unkeyed, inferredKey = "Dm", overrides = capoed))
+        assertEquals("Dm", keyOf(unkeyed, inferredKey = "Dm", overrides = capoed), "a capo put on keeps the pitch")
+        assertEquals("Em", keyOf(unkeyed.copy(capo = 2), inferredKey = "Dm"), "the file's own capo is pitch")
         assertEquals("Em", keyOf(unkeyed, inferredKey = "Dm", overrides = transposed))
         assertEquals("G", keyOf(song, inferredKey = "D"))
         assertNull(keyOf(unkeyed, inferredKey = "D", shouldShowChords = false))

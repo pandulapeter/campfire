@@ -37,10 +37,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.platform.readProcessLog
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
-import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
-import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
-import com.pandulapeter.campfire.presentation.ui.playing.shownFor
+import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
@@ -162,7 +161,7 @@ internal class ExportController(
         // than reading the songs again; with the feature switched off the export does not offer them at all.
         val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
         val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
-        val readsCapoAsTransposition = preferences.readsCapoAsTransposition
+        val playsWithoutCapo = preferences.playsWithoutCapo
         // Read whether or not the export asks for them, as the chords are, and only where the song details screen suggests
         // them, which is also where the export offers them.
         val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
@@ -178,20 +177,17 @@ internal class ExportController(
             // overrides are one reader's, like the folded sections, so a song exported from the library prints its
             // file's own.
             val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
-            val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
-            // On the keyboard the pages are in the chords that sound, as the screen is: the capo the screen counts into
-            // the transposition is counted in here too, the library's included, and none is printed.
-            val transposition = SongPlayback(
-                transposition = playedTransposition,
-                capo = effectiveCapoOf(entry.songFileName, setlistFileName),
-                tempo = effectiveTempoOf(entry.songFileName, setlistFileName),
-            ).shownFor(preferences).transposition
-            val transposed = content?.let { withContext(Dispatchers.Default) {
-                songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs).withTempo(tempo).let { song ->
-                    if (readsCapoAsTransposition) song.withoutCapo() else song.withCapo(capo)
-                }
-            } }
-            val rendered = transposed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
+            val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
+            val capo = setlistFileName?.let { effectiveCapo.takeUnless { capo -> capo.isDefault }?.fret }
+            // The pages are in the chords that sound, as the screen is, the file's capo counted in; the diagrams are the
+            // shapes played above the capo the page prints (the setlist's, else the file's own), none on the keyboard,
+            // which prints no capo either.
+            val transposition = soundingTransposition(playedTransposition, effectiveCapo.songFret)
+            val shapeCapo = if (playsWithoutCapo) 0 else capo ?: effectiveCapo.songFret
+            // The scales and the degrees read the file's own capo, which says how its key is meant, as on the screen.
+            val transposed = content?.let { withContext(Dispatchers.Default) { songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs, capo = transposition - playedTransposition) } }
+            val printed = transposed?.withTempo(tempo)?.let { if (playsWithoutCapo) it.withoutCapo() else it.withCapo(capo) }
+            val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
             // One walk answers both the scales and the degrees, as on the screen.
             val analysis = if (transposed != null && (suggestsScales || (chordTuning != null && showsDegrees))) {
                 withContext(Dispatchers.Default) { printScaleAnalysisOf(transposed, sectionLabels) }
@@ -200,7 +196,7 @@ internal class ExportController(
             }
             val chords = if (transposed != null && chordTuning != null) {
                 withContext(Dispatchers.Default) {
-                    printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes, showsDegrees, analysis)
+                    printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes, showsDegrees, analysis, shapeCapo)
                 }
             } else {
                 emptyList()
@@ -211,7 +207,7 @@ internal class ExportController(
                 emptyList()
             }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
-                index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords,
+                index = if (setlist == null) null else index + 1, transposition = playedTransposition, song = rendered, text = content?.text, chords = chords,
                 scaleGroups = scaleGroups)
         }
         // Several songs are titled by the screen, which counts them in the app's language.

@@ -92,7 +92,8 @@ import org.jetbrains.compose.resources.painterResource
  * One scale in one key, titled with both and the notes spelled under the title: the scale on the player's instrument,
  * its notes labelled with their degrees or their names, the formula and the steps, what it is a mode of and its other
  * names, and for a seven-note scale the chords it stacks into, each opening that chord's sheet over this one. Beside the
- * formula, a button plays the scale once up through the tuner's reference tones.
+ * formula, a button plays the scale once up through the tuner's reference tones. Opened from a capoed song, the neck dims
+ * the frets below its capo and the chords are the shapes fingered above it ([DialogType.Scale.capo]).
  *
  * The instrument, the tuning and the notation are read from the preferences as it is drawn, never from the screen it was
  * opened over (see [DialogType.Scale]); nothing can change them under the sheet, whose chips are behind it, and if
@@ -110,7 +111,7 @@ internal fun ScaleSheet(
     val strings = userPreferences?.instrumentTuning?.strings
     val rootName = dialog.rootName
     val root = ChordProChords.parse(rootName)?.root ?: 0
-    val geometry = remember(scale, root, strings, instrument) { scaleDiagramGeometryOf(scale, root, strings, instrument) }
+    val geometry = remember(scale, root, strings, instrument, dialog.capo) { scaleDiagramGeometryOf(scale, root, strings, instrument, dialog.capo) }
     val state = viewModel.scaleLibrary
     val playingScaleNote by viewModel.tunerController.playingScaleNote.collectAsStateWithLifecycle()
     // A scale sounds only while its sheet can be seen, as the tuner's tones do (TunerListeningEffect): out of sight the
@@ -172,7 +173,7 @@ internal fun ScaleSheet(
                 ScaleChordsRow(
                     modifier = Modifier.padding(top = 24.dp),
                     title = stringResource(Res.string.scales_chords),
-                    chords = remember(scale, rootName, notation, tuning) { scaleSheetChords(ScaleChords.triads(scale, rootName), notation, tuning) },
+                    chords = remember(scale, rootName, notation, tuning, dialog.capo) { scaleSheetChords(ScaleChords.triads(scale, rootName), notation, tuning, dialog.capo) },
                     tuning = tuning,
                     storedShapes = storedShapes,
                     showsDegrees = showsDegrees,
@@ -181,7 +182,7 @@ internal fun ScaleSheet(
                 ScaleChordsRow(
                     modifier = Modifier.padding(top = 16.dp),
                     title = stringResource(Res.string.scales_sevenths),
-                    chords = remember(scale, rootName, notation, tuning) { scaleSheetChords(ScaleChords.sevenths(scale, rootName), notation, tuning) },
+                    chords = remember(scale, rootName, notation, tuning, dialog.capo) { scaleSheetChords(ScaleChords.sevenths(scale, rootName), notation, tuning, dialog.capo) },
                     tuning = tuning,
                     storedShapes = storedShapes,
                     showsDegrees = showsDegrees,

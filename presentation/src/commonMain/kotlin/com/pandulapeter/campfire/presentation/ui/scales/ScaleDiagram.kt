@@ -9,12 +9,15 @@
  */
 package com.pandulapeter.campfire.presentation.ui.scales
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -48,6 +51,11 @@ internal fun ScaleDiagram(
     labels: List<String>?,
     description: String,
 ) {
+    // A capo moved slides the dimmed frets with it rather than redrawing them, starting where it is on the first frame.
+    val capo by animateFloatAsState(
+        targetValue = (geometry as? ScaleDiagramGeometry.Fretboard)?.capo?.toFloat() ?: 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+    )
     val lineColor = MaterialTheme.colorScheme.onSurface
     val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
     val rootColor = LocalSecondAccentColor.current
@@ -59,7 +67,10 @@ internal fun ScaleDiagram(
             .semantics { contentDescription = description }
             .drawBehind {
                 when (geometry) {
-                    is ScaleDiagramGeometry.Fretboard -> drawFretboard(geometry, labels, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily)
+                    is ScaleDiagramGeometry.Fretboard -> {
+                        drawFretboard(geometry, labels, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily)
+                        drawBelowCapo(geometry, capo, backgroundColor)
+                    }
                     is ScaleDiagramGeometry.Keyboard -> drawChordDiagram(
                         geometry = geometry.keyboard,
                         area = size,
@@ -176,6 +187,19 @@ private fun DrawScope.drawFretboard(
     }
 }
 
+/**
+ * The frets below [capo], which may be between two while it moves, veiled in [backgroundColor], their numbers too: the
+ * column of open notes for a capo on the first fret, and every fret up to the one under the capo further up, whose notes
+ * are the strings ringing at the capo and stay clear.
+ */
+private fun DrawScope.drawBelowCapo(geometry: ScaleDiagramGeometry.Fretboard, capo: Float, backgroundColor: Color) {
+    if (capo <= 0f) return
+    val fretGap = size.width / (geometry.fretCount + OPEN_COLUMN)
+    val nut = fretGap * OPEN_COLUMN
+    val end = if (capo <= 1f) nut * capo else nut + (capo - 1f) * fretGap
+    drawRect(backgroundColor.copy(alpha = BELOW_CAPO_VEIL), size = Size(end, size.height))
+}
+
 /** How wide the column of open notes left of the nut is, in frets: room for a ring, and no more. */
 private const val OPEN_COLUMN = 0.62f
 /** How tall the band of fret numbers under the neck is, in frets. */
@@ -189,3 +213,4 @@ private const val DOT_RADIUS = 0.42f
 private const val DOT_ROW_RADIUS = 0.46f
 private const val INLAY_RADIUS = 0.3f
 private const val INLAY_ALPHA = 0.18f
+private const val BELOW_CAPO_VEIL = 0.7f

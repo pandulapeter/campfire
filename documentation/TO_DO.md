@@ -22,3 +22,4 @@
 - AI skill for exposing direct access to the library folder
 - Add support for abcnotation https://abcnotation.com/
 - Google Drive integration: documentation/plans/sync-providers/02-google-drive.md
+- Consider organizing the sync directory in a more user-readable way (subfolders for artists) - make it optional

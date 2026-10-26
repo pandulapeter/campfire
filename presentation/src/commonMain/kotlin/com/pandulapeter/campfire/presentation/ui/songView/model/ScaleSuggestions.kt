@@ -17,16 +17,19 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
  * suggestions switch, or the chords): whether it is folded, one choice per song ([SCALES_FOLD_KEY]), and what its
  * header and its chips do.
  *
- * @param onScaleClicked Opens the sheet of a scale, by its id and the note it is played on in the standard notation.
- *   Offered in read only mode too: the sheet changes nothing.
+ * @param onScaleClicked Opens the sheet of a scale, by its id, the note it is played on in the standard notation, and
+ *   [capo]. Offered in read only mode too: the sheet changes nothing.
  * @param notation What the scales' roots are named in.
+ * @param capo The fret the song's shapes are played above, which the scale sheet dims the neck below (see
+ *   `SongPlayback.shapeCapoFor`): the scales themselves are named in the key that sounds, whatever the capo.
  */
 @Immutable
 internal data class ScaleSuggestions(
     val isFolded: Boolean = false,
     val onFoldToggled: () -> Unit = {},
-    val onScaleClicked: (scaleId: String, rootName: String) -> Unit,
+    val onScaleClicked: (scaleId: String, rootName: String, capo: Int) -> Unit,
     val notation: ChordNotation,
+    val capo: Int = 0,
 )
 
 /**

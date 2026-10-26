@@ -57,7 +57,8 @@ internal fun rememberChordShapeCrossfade(layouts: ChordCellLayouts): ChordShapeC
 
 /**
  * The indices of [cells] whose shape changed since [previous]: the same chord at the same index on the same instrument,
- * drawn with one shape before and with another now, a shape picked in its sheet or a tuning picked for the instrument.
+ * drawn with one shape before and with another now, a shape picked in its sheet, a tuning picked for the instrument, or a
+ * capo moved, which keeps the chord and plays it as another shape.
  * A cell that was the empty frame is not one, since that is a shape the search found arriving rather than one the player
  * changed (see `SongChord.isShapePending`), and neither is a cell that holds another chord now, a transposed step of a
  * numbering included, whose name or letters change in one frame anyway.
@@ -71,7 +72,7 @@ internal fun changedShapeCells(previous: List<ChordCell>, cells: List<ChordCell>
         before.degree == after.degree &&
         before.tuning.instrument == after.tuning.instrument &&
         before.selection.shape != null &&
-        (before.selection.shape != after.selection.shape || before.tuning != after.tuning)
+        (before.selection.shape != after.selection.shape || before.tuning != after.tuning || before.capo != after.capo)
 }
 
 /** The layouts a Chords block was last composed with, kept outside snapshot state since only the next composition reads it. */

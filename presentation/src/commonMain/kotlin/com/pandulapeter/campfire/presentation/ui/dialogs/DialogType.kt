@@ -115,11 +115,14 @@ sealed interface DialogType {
      *
      * @param showsChords Whether it lists the chords the scale stacks into: not where it was opened from a chord's sheet,
      *   for the reason [ChordReference.showsScales] gives.
+     * @param capo The fret the song it was opened from is played above, whose frets below it the neck dims and whose
+     *   chords are drawn as the shapes fingered above it; 0 for none, as the Scales tab opens it.
      */
     data class Scale(
         val scaleId: String,
         val rootName: String,
         val showsChords: Boolean = true,
+        val capo: Int = 0,
     ) : DialogType
     /**
      * The instrument in the player's hands and its tuning, opened from the instrument chip of every screen that depends on

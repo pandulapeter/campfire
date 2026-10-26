@@ -50,8 +50,10 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.fontScaleGestures
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
-import com.pandulapeter.campfire.presentation.ui.playing.shownFor
+import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
+import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.soundingCapo
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 
@@ -149,10 +151,10 @@ internal fun SongPages(
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
         val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
-        val readsCapoAsTransposition = userPreferences.readsCapoAsTransposition
-        val shownPlayback = playback.shownFor(userPreferences)
+        val playsWithoutCapo = userPreferences.playsWithoutCapo
+        val shapeCapo = playback.shapeCapoFor(userPreferences)
         val tempo = playback.tempo
-        val capo = shownPlayback.capo
+        val capo = playback.capo
         SongDetailsPage(
             // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
             // draws past its end off the page of the next song. The page's own padding holds the cards'
@@ -166,9 +168,11 @@ internal fun SongPages(
             buildsModelInPlace = buildsInPlace,
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
-            transposition = shownPlayback.transposition,
+            transposition = playback.soundingTransposition,
+            soundingCapo = playback.soundingCapo,
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
-            capoOverride = capo.takeUnless { it.isDefault }?.fret,
+            capoOverride = capo.takeUnless { it.isDefault || playsWithoutCapo }?.fret,
+            shapeCapo = shapeCapo,
             // Read only, the four playing values are read rather than set, so the page draws them as the
             // line of text they have always been.
             playingControls = if (isReadOnly) {
@@ -195,7 +199,7 @@ internal fun SongPages(
                 isBeatFlashEnabled = isBeatFlashEnabled,
             ),
             shouldShowChords = shouldShowChords,
-            shouldShowCapo = !readsCapoAsTransposition,
+            shouldShowCapo = !playsWithoutCapo,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
             fontScale = if (isFollowingGesture) {
@@ -212,7 +216,7 @@ internal fun SongPages(
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
             contentPadding = pageContentPadding,
-            transposeSong = { text, transposition, spelling, tabs -> viewModel.songRenderer.transposedSong(text, transposition, spelling, tabs = tabs) },
+            transposeSong = { text, transposition, capo, spelling, tabs -> viewModel.songRenderer.transposedSong(text, transposition, spelling, tabs = tabs, capo = capo) },
             notateSong = viewModel.songRenderer::notatedSong,
             onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
@@ -231,9 +235,10 @@ internal fun SongPages(
             },
             tabs = tabs,
             showsDegrees = showsDegrees,
-            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded) {
+            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,
+                    capo = shapeCapo,
                     onFoldToggled = { viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = SCALES_FOLD_KEY) },
                 )
             },
@@ -256,7 +261,7 @@ private fun rememberScaleSuggestions(
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     return remember(notation) {
         ScaleSuggestions(
-            onScaleClicked = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName)) },
+            onScaleClicked = { scaleId, rootName, capo -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName, capo = capo)) },
             notation = notation,
         )
     }

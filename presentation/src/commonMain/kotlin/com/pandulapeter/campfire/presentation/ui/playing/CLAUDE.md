@@ -47,6 +47,15 @@ The values a song is played with and where each is kept.
   setlist's PDF). Stored in `Setlist.Entry.capo` and `UserPreferences.capos`, since one set plays a song capoed and the
   next in another key without.
 - **Zero is a value, not nothing**: a capo this setlist takes off a song whose file asks for one.
-- On the keyboard (`readsCapoAsTransposition`) the effective capo is read as semitones of transposition
-  (`SongPlayback.withCapoSounding`, `soundingTransposition`), and `withoutCapo` takes the file's capo line off the PDF;
-  see `ui/instrument/CLAUDE.md`.
+
+### What sounds and what is fingered
+
+- **The page names what sounds** (`SongPlayback.soundingTransposition`): the file's chords moved by the transposition and
+  the **file's** `{capo}`, which only says which shapes the file is written in. Chords, comments' chords, the chord
+  sheet, the Transposition control's key, key-change lines, the header, the cards, the scales, and the PDF all read it.
+- **A capo put on keeps the pitch**: the shapes are the sounding chords moved down by the effective capo
+  (`shapeCapoFor`, none on the keyboard, `playsWithoutCapo`). Capo 2 on a song in A draws G shapes; a setlist's capo 0
+  on a `{capo: 2}` G-shape file plays open A shapes. Saved overrides changed meaning with this; nothing was migrated.
+- Tabs stay as written, counted from the capo: `soundingCapo` is held out of their frets (`ChordProTransposer`'s `capo`).
+- The scales read the song with the file's capo, which says how its `{key}` is meant (`SongKeys`); the page's capo line
+  is the effective one (`withCapo`), and `withoutCapo` takes it off the keyboard's PDF.

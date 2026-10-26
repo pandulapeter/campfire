@@ -21,6 +21,15 @@ class ScaleDiagramGeometryTest {
 
     private val major = Scales.fromId("major")!!
 
+    @Test
+    fun `a capo dims the frets under it and leaves the notes where they sound`() {
+        val capoed = assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(major, 9, InstrumentTuning.GUITAR.strings, UserPreferences.Instrument.GUITAR, capo = 2))
+        assertEquals(2, capoed.capo)
+        assertEquals(fretboard(InstrumentTuning.GUITAR.strings, root = 9).notes, capoed.notes)
+        val violin = assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(major, 9, InstrumentTuning.GUITAR.strings, UserPreferences.Instrument.VIOLIN, capo = 2))
+        assertEquals(0, violin.capo)
+    }
+
     private fun fretboard(strings: List<Int>, instrument: UserPreferences.Instrument = UserPreferences.Instrument.GUITAR, root: Int = 0) =
         assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(major, root, strings, instrument))
 

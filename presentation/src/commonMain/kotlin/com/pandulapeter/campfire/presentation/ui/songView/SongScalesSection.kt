@@ -127,7 +127,7 @@ internal fun SongScalesSection(
                         trailingGap = trailingGap,
                         notation = scaleSuggestions.notation,
                         isAnimated = isAnimated,
-                        onScaleSelected = scaleSuggestions.onScaleClicked,
+                        onScaleSelected = { scaleId, rootName -> scaleSuggestions.onScaleClicked(scaleId, rootName, scaleSuggestions.capo) },
                     )
                 }
             }

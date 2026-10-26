@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
+import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.normalizedTags
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
@@ -26,14 +28,15 @@ import com.pandulapeter.campfire.data.source.local.implementation.withoutExtensi
  * A song file becomes a list entry: the directives win, and whatever they leave out falls back on the file name,
  * which is the one thing every file in the library is guaranteed to have.
  */
-internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
+internal fun StoredFileInfo.toSong(summary: ChordProSummary, text: String): Song {
+    val key = summary.metadata.key?.takeIf { it.isNotBlank() }
     val title = summary.metadata.displayTitle(fallback = name.withoutExtension())
     val artist = summary.metadata.artist?.takeIf { it.isNotBlank() }.orEmpty()
     return Song(
         fileName = name,
         title = title,
         artist = artist,
-        key = summary.metadata.key?.takeIf { it.isNotBlank() },
+        key = key,
         transpose = summary.metadata.transpose,
         // Composed, so that a tag written on a Mac and the same tag typed anywhere else are one tag to the filter:
         // the two forms look the same and every comparison above this is by case only. See normalizedToNfc.
@@ -51,5 +54,8 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         tempo = ChordProTempo.parse(summary.metadata.tempo),
         time = summary.metadata.time?.takeIf { it.isNotBlank() },
         capo = summary.metadata.capo,
+        // Only a capo chart's key can mean the chords' or the sounding one, and only its chords tell which, so only such a
+        // file is read whole: the scan of every other file stays the one walk the summary is.
+        capoChartKey = if (key == null || (summary.metadata.capo ?: 0) == 0) null else SongKeys.capoChartKeyOf(ChordProParser.parse(text)),
     )
 }

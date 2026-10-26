@@ -205,6 +205,24 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a capo counted into the move moves every chord name but no tab fret`() {
+        val song = ChordProParser.parse(
+            """
+            {start_of_verse: Solo}
+            [Am]over the solo
+            {start_of_tab}
+            e|---0---|
+            {end_of_tab}
+            {end_of_verse}
+            """.trimIndent()
+        ).let { ChordProTransposer.transpose(it, semitones = 3, capo = 2) }
+
+        val lines = (song.blocks.single() as ChordProBlock.Section).lines
+        assertEquals(listOf("Cm"), song.chordNames())
+        assertEquals("e|---1---|", (lines[1] as ChordProLine.Tab).text)
+    }
+
+    @Test
     fun `a recalled chorus is transposed with the song`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse(CUT_CHORUS_AND_RECALL), semitones = 2)
 

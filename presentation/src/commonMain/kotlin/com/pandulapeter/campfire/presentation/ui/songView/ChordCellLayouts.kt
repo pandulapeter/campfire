@@ -86,7 +86,7 @@ internal class ChordCellLayouts(
     val widestCell by lazy(LazyThreadSafetyMode.NONE) { cellWidths.maxOrNull() ?: 0 }
     val geometries by lazy(LazyThreadSafetyMode.NONE) {
         cells.map { cell ->
-            cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.tuning, cell.root) } ?: emptyChordDiagramGeometryOf(cell.tuning.instrument)
+            cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.tuning, cell.root, cell.capo) } ?: emptyChordDiagramGeometryOf(cell.tuning.instrument)
         }
     }
     private val rowStartsByWidth = mutableMapOf<Int, IntArray>()

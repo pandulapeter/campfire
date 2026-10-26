@@ -37,8 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.math.min
 
 /**
- * A chord diagram: a fretted shape as strings and frets with a dot on every stopped string, or a keyboard with the
- * pressed keys filled. The root is in the second accent color, the color the chords are written in. It is drawn
+ * A chord diagram: a fretted shape as strings and frets with a dot on every stopped string, and the capo it is played
+ * above as a bar across them, or a keyboard with the pressed keys filled. The root is in the second accent color, the color the chords are written in. It is drawn
  * rather than composed, at whatever size [modifier] gives it, and it takes no press: a tap on it is a tap on the song.
  *
  * @param showsFingers Whether the dots carry the finger that holds them, where the shape says: legible at the chord
@@ -131,6 +131,17 @@ private fun DrawScope.drawFretted(
     baseFretLabel?.let { label ->
         // Right of it the first string's dot reaches out by its radius, a barre's end included.
         drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
+    }
+    geometry.capoRow?.let { row ->
+        // Across every string and past the outer ones, flatter than a barre and in the muted color, so that it reads as
+        // the bar the shape is played above rather than as a finger of it.
+        val height = radius * CAPO_HEIGHT
+        drawRoundRect(
+            color = mutedColor,
+            topLeft = Offset(left - radius, y(row) - height / 2f),
+            size = Size(right - left + radius * 2, height),
+            cornerRadius = CornerRadius(height / 2f, height / 2f),
+        )
     }
     val markerY = top / 2f
     val markerSize = min(top * 0.32f, stringGap * 0.32f)
@@ -246,6 +257,7 @@ private const val NUT_WIDTH = 3f
 private const val ROOT_RING_WIDTH = 1.5f
 private const val DOT_RADIUS = 0.46f
 private const val DOT_ROW_RADIUS = 0.36f
+private const val CAPO_HEIGHT = 1.1f
 private const val BASE_FRET_TEXT = 0.7f
 private const val FINGER_TEXT = 1.2f
 private const val BLACK_KEY_HEIGHT = 0.6f

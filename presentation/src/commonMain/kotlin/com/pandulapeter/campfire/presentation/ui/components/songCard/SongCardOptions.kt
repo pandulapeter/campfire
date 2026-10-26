@@ -42,16 +42,16 @@ internal data class SongCardOptions(
 }
 
 /**
- * The key a card writes for [song] played at [transposition] with a capo on [capo]. Remembered, since a row is composed
- * again as every scroll starts and ends and it is a whole transposition to work out again.
+ * The key a card writes for [song] played at [transposition], the one that takes its chords to the ones that sound
+ * (`SongPlayback.soundingTransposition`). Remembered, since a row is composed again as every scroll starts and ends and
+ * it is a whole transposition to work out again.
  */
 @Composable
 internal fun rememberSongCardKey(
     songRenderer: SongRenderer,
     song: Song,
     transposition: Int,
-    capo: Int,
     chordSpelling: UserPreferences.ChordSpelling,
-) = remember(song.key, song.transpose, transposition, capo, chordSpelling) {
-    songRenderer.renderKey(song = song, transposition = transposition, capo = capo, spelling = chordSpelling)
+) = remember(song.chordsKey, song.transpose, transposition, chordSpelling) {
+    songRenderer.renderKey(song = song, transposition = transposition, spelling = chordSpelling)
 }

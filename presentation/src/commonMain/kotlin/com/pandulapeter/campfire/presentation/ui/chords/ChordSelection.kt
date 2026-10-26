@@ -38,8 +38,8 @@ internal data class SelectedShape(
 /**
  * The shape [chord] is drawn with in [tuning]: the song's own definition of it where there is one that is drawn (see
  * [songChordsOf]), the player's stored one for the chord ([storedShapes], the ones stored under the tuning's
- * [ChordTuning.voicingKey], by the chord's id) where it still reads as a shape of that instrument, and otherwise the
- * app's own.
+ * [ChordTuning.voicingKey], by the id of the chord the shape is fingered as, [SongChord.shapeChord]) where it still reads
+ * as a shape of that instrument, and otherwise the app's own.
  */
 internal fun selectShape(
     chord: SongChord,
@@ -47,6 +47,6 @@ internal fun selectShape(
     storedShapes: Map<String, String>,
 ): SelectedShape {
     chord.definition?.let { return SelectedShape(it.voicing, SelectedShape.Source.DEFINED, it.movedBy) }
-    storedShapes[chord.chord.id]?.let { ChordVoicings.read(it, tuning, chord.chord) }?.let { return SelectedShape(it, SelectedShape.Source.PLAYER) }
+    storedShapes[chord.shapeChord.id]?.let { ChordVoicings.read(it, tuning, chord.shapeChord) }?.let { return SelectedShape(it, SelectedShape.Source.PLAYER) }
     return SelectedShape(chord.defaultShape, SelectedShape.Source.DEFAULT)
 }

@@ -30,6 +30,26 @@ class SongChordsTest {
         songChordsOf(ChordProParser.parse(text), notation, tuning)
 
     @Test
+    fun `under a capo a chord is named as it sounds and fingered as the shape above the capo`() {
+        val chord = songChordsOf(ChordProParser.parse("[A]la"), ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2).single()
+        assertEquals("A", chord.name)
+        assertEquals(ChordProChords.parse("A"), chord.chord)
+        assertEquals(ChordProChords.parse("G"), chord.shapeChord)
+        assertEquals(2, chord.capo)
+        assertEquals(ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR), chord.defaultShape)
+    }
+
+    @Test
+    fun `a file's own shape comes back to where it was written under the capo it names`() {
+        val text = "{capo: 2}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n[G]la"
+        val sounding = ChordProTransposer.transpose(ChordProParser.parse(text), 2)
+        val chord = songChordsOf(sounding, ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2).single()
+        assertEquals("A", chord.name)
+        assertEquals(listOf<Int?>(3, 2, 0, 0, 0, 3), (chord.definition?.voicing as ChordVoicing.Fretted).frets)
+        assertEquals(0, chord.definition?.movedBy)
+    }
+
+    @Test
     fun `a banjo definition is drawn with its drone muted where its note is not the chord's, written so or transposed into it`() {
         fun frets(chord: SongChord) = (chord.definition?.voicing as ChordVoicing.Fretted).frets
         val written = songChordsOf(ChordProParser.parse("{define: D frets 0 4 2 3 4}\n[D]la"), ChordNotation.STANDARD, ChordTuning.BANJO)

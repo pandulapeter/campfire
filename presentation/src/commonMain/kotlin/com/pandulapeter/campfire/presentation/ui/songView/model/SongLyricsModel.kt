@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
@@ -89,7 +90,9 @@ internal class SongLyricsModel(
  * @param chordTuning The tuning the song's chords are collected for its Chords section in (see [songChordsOf]),
  * which is the slow part of that section and so belongs here; null where the song has no such section.
  * @param notation The notation [song] is written in.
- * @param standardSong [song] before it was written in [notation], which its chords are read from.
+ * @param standardSong [song] before it was written in [notation], which its chords are read from, and before an override
+ * of its capo: the scales read the file's own, which says how its `{key}` is meant ([SongKeys]).
+ * @param shapeCapo The fret the Chords section's shapes are fingered above, see [songChordsOf]'s `capo`.
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
@@ -110,9 +113,10 @@ internal fun prepareSongLyrics(
     searchesShapes: Boolean = true,
     suggestsScales: Boolean = false,
     showsDegrees: Boolean = false,
+    shapeCapo: Int = 0,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
-        songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
+        songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo)
     } else {
         emptyList()
     }
@@ -194,8 +198,10 @@ internal data class SongLyricsInputs(
     val spelling: UserPreferences.ChordSpelling,
     val shouldShowChords: Boolean,
     val labels: DefaultSectionLabels,
+    val soundingCapo: Int = 0,
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
+    val shapeCapo: Int = 0,
     val showsTiming: Boolean = true,
     val chordTuning: ChordTuning? = null,
     val tabs: TabReading? = null,

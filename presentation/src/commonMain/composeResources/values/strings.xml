@@ -1005,6 +1005,7 @@
     <string name="song_details_chord_letters">%1$s, that is %2$s</string>
     <string name="song_details_chord_degree">%1$s, degree %2$s</string>
     <string name="song_details_chord_shape_choose">Choose chord shape - %1$s</string>
+    <string name="song_details_chord_shape_capo">%1$s shape, capo %2$s</string>
     <string name="song_details_chord_defined">Defined in this song</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Defined in this song, moved by %1$d fret</item>

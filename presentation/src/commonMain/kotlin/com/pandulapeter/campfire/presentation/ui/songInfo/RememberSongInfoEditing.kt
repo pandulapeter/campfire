@@ -20,9 +20,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
-import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
-import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
-import com.pandulapeter.campfire.presentation.ui.playing.shownFor
 
 /**
  * What the tiles of the About the song sheet open: the dialog of each group. Over the editor (a

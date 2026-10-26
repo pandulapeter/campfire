@@ -20,8 +20,8 @@ internal class SongMappersTest {
 
     @Test
     fun `the tags of a song are composed and merged`() {
-        val song = StoredFileInfo(name = "a.cho", size = 0, lastModified = 0)
-            .toSong(ChordProParser.summarize("{title: A}\n{tag: Café}\n{tag: café}"))
+        val text = "{title: A}\n{tag: Café}\n{tag: café}"
+        val song = StoredFileInfo(name = "a.cho", size = 0, lastModified = 0).toSong(ChordProParser.summarize(text), text)
 
         assertEquals(listOf("Café"), song.tags)
     }
@@ -54,6 +54,14 @@ internal class SongMappersTest {
         assertFalse(song.canUpdateFileName)
     }
 
+    @Test
+    fun `a capo chart's key is read as the key its chords are written in`() {
+        assertEquals("D", song(fileName = "a.cho", text = "{key: G}\n{capo: 5}\n[D]a [G]b [A]c [Bm]d [D]e [G]f [A]g [D]h").chordsKey)
+        assertEquals("D", song(fileName = "a.cho", text = "{key: D}\n{capo: 5}\n[D]a [G]b [A]c [Bm]d [D]e [G]f [A]g [D]h").chordsKey)
+        assertEquals("G", song(fileName = "a.cho", text = "{key: G}\n[D]a [G]b [A]c [Bm]d").chordsKey)
+        assertEquals(null, song(fileName = "a.cho", text = "{capo: 5}\n[D]a [G]b").chordsKey)
+    }
+
     private fun song(fileName: String, text: String) = StoredFileInfo(name = fileName, size = 0, lastModified = 0)
-        .toSong(ChordProParser.summarize(text))
+        .toSong(ChordProParser.summarize(text), text)
 }

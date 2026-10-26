@@ -64,6 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.PRESSED_HEADING
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -140,7 +141,7 @@ internal fun SongDetailsTitle(
 
 /**
  * What the song sounds like where it is being read, the way a song card says it: the key with the transposition and the
- * capo applied, so this is the key the band hears rather than the one the chords on the page spell. The tempo is left
+ * file's capo applied (`SongPlayback.soundingTransposition`), the key the band hears and the chords on the page spell. The tempo is left
  * to the song's own first section, a line below, which already says it. Worked out for the song the title's content was
  * composed for rather than for the current one, since a crossfade between two songs draws both at once. Lyrics only
  * mode says nothing about the key, as it says nothing in a row.
@@ -161,15 +162,13 @@ internal fun headerKeyOf(
     val playback = songPlaybackOf(song = it, setlistFileName = setlistFileName, overrides = overrides)
     songRenderer.renderKey(
         song = it,
-        transposition = playback.transposition,
-        capo = playback.capo.fret,
+        transposition = playback.soundingTransposition,
         spelling = chordSpelling,
     ) ?: inferredKey?.takeIf { _ -> it.key.isNullOrBlank() }?.let { key ->
         songRenderer.renderKey(
             key = key,
             transpose = 0,
-            transposition = playback.transposition,
-            capo = playback.capo.fret,
+            transposition = playback.soundingTransposition,
             spelling = chordSpelling,
         )
     }

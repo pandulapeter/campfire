@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -41,6 +42,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning_hide
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_standard_tuning_show
+import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -49,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -56,7 +60,8 @@ import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipRow
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
-import com.pandulapeter.campfire.presentation.ui.playing.shownFor
+import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -68,8 +73,10 @@ import kotlinx.coroutines.withContext
  * page's own steppers write, so the sheet has nothing to save and its close button cancels nothing; the section behind it
  * follows. Its title
  * names the chord with its root in capitals, or in title case in Latin, however the song writes it. It reads the song
- * as the page shows it: transposed (on the keyboard by the capo too, see `withCapoSounding`) and spelled the same way,
- * and finds the chord by the name the page gave it. A tuning other than the standard one is named under the title, so
+ * as the page shows it: in the chords that sound, transposed and spelled the same way, and finds the chord by the name
+ * the page gave it. Under a capo every shape is the one fingered above it, drawn where it is played with the capo across
+ * it, and named under the title (`G shape, capo 2` for an A), and the one picked is the player's choice for that shape's
+ * chord, which every song played as a G draws. A tuning other than the standard one is named under the title, so
  * that a shape is never read for the wrong strings, and a chord the song defines for standard tuning, which such a
  * tuning does not draw, says so and offers to show the definition, named as standard tuning while it is shown. It ends
  * in the scales to play over the chord as it sounds there, each opening the scale sheet over it.
@@ -91,13 +98,17 @@ internal fun ChordShapeSheet(
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
     val text = songTexts[song.fileName]
-    val transposition = songPlaybackOf(
+    val playback = songPlaybackOf(
         song = song,
         setlistFileName = dialog.setlistFileName,
         overrides = PlayingOverridesSnapshot(transpositions = transpositions, capos = capos),
-    ).shownFor(userPreferences).transposition
-    val chords by produceState<List<SongChord>?>(null, text, transposition, spelling, tuning) {
-        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning) } }
+    )
+    val transposition = playback.soundingTransposition
+    val capo = playback.shapeCapoFor(userPreferences)
+    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning) {
+        value = text?.let {
+            withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo) }
+        }
     }
     val chord = chords?.firstOrNull { it.name == dialog.chordName }
     // The page names the chord as the song is played there, so a transposition or an edit synced in while the sheet is up
@@ -105,12 +116,12 @@ internal fun ChordShapeSheet(
     if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
     val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     // Kept per chord, like the grid's own state: a chord that takes this one's place under the open sheet starts over.
-    var showsDefinition by rememberSaveable(chord?.chord?.id, chord?.name) { mutableStateOf(false) }
+    var showsDefinition by rememberSaveable(chord?.shapeChord?.id, chord?.name) { mutableStateOf(false) }
     val definition = chord?.undrawnDefinition?.takeIf { showsDefinition }
     val shownChord = chord?.let { if (definition == null) it else it.copy(definition = definition) }
     val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
     val selection = shownChord?.let { selectShape(it, shownTuning, storedShapes) }
-    val shapes = rememberChordShapes(shownChord?.chord, shownTuning, isDefined = selection?.source == SelectedShape.Source.DEFINED)
+    val shapes = rememberChordShapes(shownChord?.shapeChord, shownTuning, isDefined = selection?.source == SelectedShape.Source.DEFINED)
     // Put up once the song's chords and this one's shapes are worked out (see rememberChordShapes), and kept up after.
     val shapesArrival = remember { ShapesArrival() }
     if (shapes != null) shapesArrival.value = true
@@ -130,7 +141,7 @@ internal fun ChordShapeSheet(
     ) { contentPadding ->
         // The grid's own state (the marked shape, the scroll) is never handed to another chord, nor kept between the
         // tuning's shapes and the song's definition.
-        key(shownChord.chord.id, shownChord.name, showsDefinition) {
+        key(shownChord.shapeChord.id, shownChord.name, showsDefinition) {
             ChordShapeGrid(
                 modifier = Modifier.weight(1f, fill = false),
                 chord = shownChord,
@@ -139,8 +150,9 @@ internal fun ChordShapeSheet(
                 notation = notation,
                 selection = selection,
                 tuningLine = tuningLine(shownTuning, notation),
+                capoLine = capoLine(shownChord, notation),
                 contentPadding = contentPadding,
-                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, shownChord.chord.id, shape?.let(ChordVoicings::write)) },
+                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, shownChord.shapeChord.id, shape?.let(ChordVoicings::write)) },
                 footer = chordSheetFooter(
                     hasUndrawnDefinition = chord.undrawnDefinition != null,
                     isDefinitionShown = showsDefinition,
@@ -148,7 +160,7 @@ internal fun ChordShapeSheet(
                     chord = shownChord,
                     notation = notation,
                     onDefinitionToggled = { showsDefinition = !showsDefinition },
-                    onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false)) },
+                    onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false, capo = capo)) },
                 ),
             )
         }
@@ -193,6 +205,18 @@ private fun chordSheetFooter(
 /** Whether a chord's sheet has had shapes to show, after which it stays up whatever comes. */
 private class ShapesArrival {
     var value = false
+}
+
+/**
+ * The shape [chord] is fingered as and the capo it is played above, named under the title where there is a capo: the
+ * shape by its chord's name in the reader's notation, and the capo alone in a numbering, where a step names no shape.
+ */
+@Composable
+private fun capoLine(chord: SongChord, notation: ChordNotation): String? {
+    if (chord.capo == 0) return null
+    val spelling = chord.spelling?.takeUnless { notation.isNumbering } ?: return stringResource(Res.string.song_details_capo, chord.capo)
+    val shapeName = ChordProTransposer.transposeText("[$spelling]", -chord.capo).removeSurrounding("[", "]")
+    return textResource(Res.string.song_details_chord_shape_capo, shownChordName(shapeName, notation), chord.capo.toString())
 }
 
 /** The tuning the shapes are drawn for, named under the title where it is not the standard one. */

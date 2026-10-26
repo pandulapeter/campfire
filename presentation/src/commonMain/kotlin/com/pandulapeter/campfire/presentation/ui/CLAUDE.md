@@ -118,7 +118,7 @@ The view model facade, the composition root, and the product rules every screen 
 ### How a song is played is set in the song itself
 
 - Transposition, capo, tempo, and time signature are the first section of the song details grid, after the instrument
-  pill (the unlabelled transposition stepper names the written key it takes the chords to; the tempo stepper ends in Tap,
+  pill (the unlabelled transposition stepper names the sounding key it takes the chords to; the tempo stepper ends in Tap,
   followed only by a time signature other than 4/4). Layout: `songView/firstSection`. They scale with the text, hence the floor
   `UserPreferences.MIN_FONT_SCALE`.
 - Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
@@ -159,8 +159,8 @@ The view model facade, the composition root, and the product rules every screen 
     the import screen's rows, the snackbar's Open). The app opens on the first tool switched on (`TopLevel.home`).
   - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
-    Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard capo
-    rule, tuner).
+    Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard's
+    missing capo, tuner).
   - **Chord degrees** (`areChordDegreesEnabled`): disabled while chords or chord diagrams are off; takes the degree
     over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet; independent of both chord switches. The

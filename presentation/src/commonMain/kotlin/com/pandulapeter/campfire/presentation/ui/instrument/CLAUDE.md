@@ -13,7 +13,7 @@
 One instrument for the whole app.
 
 - `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`. Diagrams, tuner, scales, and
-  the keyboard capo rule read it. The scales read `InstrumentTuning.strings` directly (every stringed instrument, not
+  the keyboard's missing capo read it. The scales read `InstrumentTuning.strings` directly (every stringed instrument, not
   only the five with shapes), as the tuner, the tab retuning, and the tuning names do.
 - This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
   every caller goes through it.
@@ -32,7 +32,7 @@ One instrument for the whole app.
 
 ## How a song is played on the keyboard
 
-- On Keyboard the capo is a transposition (`readsCapoAsTransposition`, whatever the Chord diagrams switch says): no capo
-  stepper or capo text; the capo's frets are counted into the transposition (`withCapoSounding`), so chords, diagrams,
-  chord sheet, and the stepper's key are the sounding key. The stepper still steps and resets only the transposition's
-  own override. Capo overrides and the file's `{capo}` are kept for other instruments. The PDF follows the screen.
+- Every instrument reads the sounding chords (see `ui/playing/CLAUDE.md`); the keyboard takes no capo
+  (`playsWithoutCapo`, whatever the Chord diagrams switch says): no capo stepper or capo text, and its diagrams are the
+  sounding chords themselves, since only the file's `{capo}` is pitch and a capo override changes nothing there. Capo
+  overrides are kept for other instruments. The PDF follows the screen.

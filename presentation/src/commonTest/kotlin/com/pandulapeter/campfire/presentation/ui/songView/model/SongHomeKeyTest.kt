@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
 import com.pandulapeter.campfire.chordpro.scales.Scales
+import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -90,6 +91,28 @@ class SongHomeKeyTest {
     fun `a capo chart is numbered in the key of its shapes`() {
         val capoed = model("{key: G}\n{capo: 5}\n[D]la [G]la [A]la [D]la [G]la [A7]la [D]la")
         assertEquals(listOf("I", "IV", "V", "V7"), capoed.chords.map { it.degree })
+    }
+
+    @Test
+    fun `a capo chart sounds and is numbered in its sounding key, whatever capo it is played at`() {
+        val text = "{key: G}\n{capo: 5}\n[D]la [G]la [A]la [D]la [G]la [A7]la [D]la"
+        // Sounding: the file's capo counted into the chords, as the page reads it, its key read as its chords'.
+        val sounding = SongKeys.withKeyOfChords(ChordProParser.parse(text)).let { ChordProTransposer.transpose(it, 5) }
+        listOf(0, 2, 5, 7).forEach { capo ->
+            val played = prepareSongLyrics(
+                song = sounding,
+                shouldShowChords = true,
+                labels = labels,
+                chordTuning = ChordTuning.GUITAR,
+                showsDegrees = true,
+                suggestsScales = true,
+                shapeCapo = capo,
+            )
+            assertEquals("G", sounding.metadata.key)
+            assertEquals(listOf("G", "C", "D", "D7"), played.chords.map { it.name })
+            assertEquals(listOf("I", "IV", "V", "V7"), played.chords.map { it.degree })
+            assertEquals("G", played.scaleGroups.first().rootName, "capo $capo")
+        }
     }
 
     @Test

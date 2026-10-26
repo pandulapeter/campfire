@@ -34,6 +34,8 @@ internal sealed interface ScaleDiagramGeometry {
      * @property notes Every note of the scale on every string, a string's open note at the fret it starts at.
      * @property markers The frets numbered under the neck and, where it has frets, marked with an inlay, the twelfth
      *   with a double one: the guitar's and bass's at 3, 5, 7, 9 and 12, the shorter necks' at 10 rather than 9.
+     * @property capo The fret a song's capo is on, the frets below which are dimmed, since nothing under it can be played:
+     *   the notes stay where they sound, so the scale is the song's own on the whole neck. 0 for none.
      */
     data class Fretboard(
         val strings: Int,
@@ -43,6 +45,7 @@ internal sealed interface ScaleDiagramGeometry {
         val stringWeights: List<Float>,
         val notes: List<Note>,
         val markers: List<Int>,
+        val capo: Int = 0,
     ) : ScaleDiagramGeometry {
 
         /**
@@ -60,13 +63,15 @@ internal sealed interface ScaleDiagramGeometry {
  * The geometry of [scale] played on [root], a pitch class, on [strings], the open strings of the player's tuning as
  * MIDI notes in the tuner's order (`InstrumentTuning.strings`): a neck where there are strings, else a keyboard (the
  * keyboard and Other). Every note within [FRET_COUNT] frets is placed, so that one octave of every string shows each
- * note of the scale at least once wherever the hand is.
+ * note of the scale at least once wherever the hand is. A [capo] dims the frets below it ([ScaleDiagramGeometry.Fretboard.capo]),
+ * on every neck but the fretless one, which takes none.
  */
 internal fun scaleDiagramGeometryOf(
     scale: Scale,
     root: Int,
     strings: List<Int>?,
     instrument: UserPreferences.Instrument,
+    capo: Int = 0,
 ): ScaleDiagramGeometry {
     if (strings.isNullOrEmpty() || instrument == UserPreferences.Instrument.KEYBOARD || instrument == UserPreferences.Instrument.OTHER) {
         val pitchClasses = Scales.pitchClasses(scale, root)
@@ -102,6 +107,7 @@ internal fun scaleDiagramGeometryOf(
             UserPreferences.Instrument.UKULELE, UserPreferences.Instrument.BANJO, UserPreferences.Instrument.MANDOLIN -> SHORT_NECK_MARKERS
             else -> GUITAR_MARKERS
         },
+        capo = if (instrument == UserPreferences.Instrument.VIOLIN) 0 else capo.coerceIn(0, FRET_COUNT),
     )
 }
 

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.scales.ScaleChord
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.movedBy
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /** One chord of the scale sheet's rows: the degree it stands on, over the chord as the Chords tab draws it. */
@@ -31,18 +32,21 @@ internal data class ScaleSheetChord(
  * [notation]. The shape is the tables' only, so that nothing is searched for while the sheet is composed: they hold one
  * for every chord a seven-note scale stacks, in every key and fretted tuning (`ScaleChordsTest` in `:chordpro`), and a
  * chord they lacked would be drawn as the empty frame ([SongChord.isShapePending]). Its own sheet finds every shape it
- * has.
+ * has. Under a song's [capo] each is the shape fingered above it, as the song's Chords section draws it.
  */
-internal fun scaleSheetChords(chords: List<ScaleChord>, notation: ChordNotation, tuning: ChordTuning) = chords.mapNotNull { scaleChord ->
+internal fun scaleSheetChords(chords: List<ScaleChord>, notation: ChordNotation, tuning: ChordTuning, capo: Int = 0) = chords.mapNotNull { scaleChord ->
     val chord = ChordProChords.parse(scaleChord.name) ?: return@mapNotNull null
-    val isShapePending = ChordVoicings.needsSearch(chord, tuning)
+    val shapeChord = chord.movedBy(-capo)
+    val isShapePending = ChordVoicings.needsSearch(shapeChord, tuning)
     ScaleSheetChord(
         numeral = ChordProNotation.withAccidentalSigns(scaleChord.numeral),
         chord = SongChord(
             name = shownChordName(scaleChord.name, notation),
             chord = chord,
+            shapeChord = shapeChord,
+            capo = capo,
             spelling = scaleChord.name,
-            defaultShape = if (isShapePending) null else ChordVoicings.default(chord, tuning),
+            defaultShape = if (isShapePending) null else ChordVoicings.default(shapeChord, tuning),
             isShapePending = isShapePending,
         ),
     )

@@ -559,7 +559,7 @@ class SongScaleGroupsTest {
 
     @Test
     fun `the key of the shapes is the capo chart's shapes' key and otherwise the written one`() {
-        fun keyOf(text: String) = SongScaleGroups.keyOfShapes(ChordProParser.parse(text))
+        fun keyOf(text: String) = SongKeys.ofChords(ChordProParser.parse(text))
         assertEquals("D", keyOf(song("D G A Bm D G A D", key = "G", capo = 5)))
         assertEquals("G", keyOf(song("G C D G", key = "G", capo = 5)))
         assertEquals("D", keyOf(song("D G A Bm D G A D", key = "D", capo = 5)))

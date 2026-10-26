@@ -69,7 +69,7 @@ import kotlin.math.abs
 
 /**
  * The scrolling content of a chord's sheet, whose subtitle names the chord's notes ([chordNoteNames]): [tuningLine] where
- * the tuning is not the standard one, the chord's letters where the page counts it, and under them every shape of it as a
+ * the tuning is not the standard one, [capoLine] where the shapes are played above a capo, the chord's letters where the page counts it, and under them every shape of it as a
  * grid of diagrams, the one the songs draw it with marked. A tap on another marks that one and hands it to [onShapeSelected] at once; the marked shape is never
  * reset, since which shape is the app's first says nothing to a player who only picks the one their hands play. A chord
  * the song defines has its definition alone, and says so under it. [footer] closes the grid. [shapes] are the chord's,
@@ -86,6 +86,7 @@ internal fun ChordShapeGrid(
     selection: SelectedShape?,
     tuningLine: String?,
     contentPadding: PaddingValues,
+    capoLine: String? = null,
     onShapeSelected: (ChordVoicing?) -> Unit,
     footer: (@Composable () -> Unit)? = null,
 ) {
@@ -127,6 +128,7 @@ internal fun ChordShapeGrid(
     ) {
         chordHeader(
             tuningLine = tuningLine,
+            capoLine = capoLine,
             letterName = chord.letterName,
         )
         if (options == null) {
@@ -175,10 +177,16 @@ internal fun ChordShapeGrid(
 /** The lines over the shapes, each spanning the grid, each there only where it says something. */
 private fun LazyGridScope.chordHeader(
     tuningLine: String?,
+    capoLine: String?,
     letterName: String?,
 ) {
     tuningLine?.let {
         item(key = TUNING_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = TUNING_KEY) {
+            HeaderLine(text = it, style = MaterialTheme.typography.titleSmall)
+        }
+    }
+    capoLine?.let {
+        item(key = CAPO_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = CAPO_KEY) {
             HeaderLine(text = it, style = MaterialTheme.typography.titleSmall)
         }
     }
@@ -259,7 +267,7 @@ private fun ChordShapeDiagram(
     shape: ChordVoicing,
 ) = ChordDiagram(
     modifier = Modifier.diagramSize(tuning.instrument),
-    geometry = remember(shape, tuning, chord.chord.root) { chordDiagramGeometryOf(shape, tuning, chord.chord.root) },
+    geometry = remember(shape, tuning, chord.chord.root, chord.capo) { chordDiagramGeometryOf(shape, tuning, chord.chord.root, chord.capo) },
     description = chordCellDescription(
         ChordCell(
             name = chord.name,
@@ -267,6 +275,7 @@ private fun ChordShapeDiagram(
             tuning = tuning,
             root = chord.chord.root,
             selection = SelectedShape(shape, SelectedShape.Source.PLAYER),
+            capo = chord.capo,
         ),
     ),
     showsFingers = true,
@@ -350,6 +359,7 @@ private const val PLACEHOLDER_KEY = "placeholder"
 private const val DEFINED_KEY = "defined"
 private const val FOOTER_KEY = "footer"
 private const val TUNING_KEY = "tuning"
+private const val CAPO_KEY = "capo"
 private const val LETTERS_KEY = "letters"
 private val OPTION_GAP = 8.dp
 private val OPTION_BORDER_WIDTH = 2.dp

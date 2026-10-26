@@ -30,6 +30,8 @@ internal sealed interface ChordDiagramGeometry {
      *   string. An open root is marked like a stopped one, since the root is what a hand finds the chord by.
      * @property dots The stopped strings no barre holds, each on its [Dot.row], 0 being the window's first fret.
      * @property barres The fingers laid across several strings.
+     * @property capoRow The row a capo lies across every string on, null where none is drawn: no capo, or a shape played
+     *   so far above it that its window leaves the capo out. Its strings ring at the capo where [markers] say open.
      */
     data class Fretted(
         val strings: Int,
@@ -38,6 +40,7 @@ internal sealed interface ChordDiagramGeometry {
         val markers: List<Marker?>,
         val dots: List<Dot>,
         val barres: List<Barre>,
+        val capoRow: Int? = null,
     ) : ChordDiagramGeometry {
 
         enum class Marker { MUTED, OPEN, OPEN_ROOT }
@@ -66,6 +69,11 @@ internal sealed interface ChordDiagramGeometry {
  * The geometry of [shape] in [tuning], its root dots and keys marked by the chord's [root] pitch class, read against
  * the tuning's own [ChordTuning.strings], since the shape sounds the chord the page names on them.
  *
+ * Under a [capo] the shape's frets are counted from the capo, as a shape is fingered, and the chord [root] names is the
+ * one that sounds: the shape is drawn where it is played, its frets numbered from the nut, with the capo across every
+ * string on the window's first row where the shape is fingered right above it (a G shape at the second fret is the frets
+ * 2 to 5, the capo on 2), and from the shape's own lowest fret, the capo below the window, where it is played higher.
+ *
  * A fretted shape is drawn in four frets, or as many as it spans, from the nut where it fits there and otherwise from
  * its lowest stopped fret ([ChordVoicings.baseFret], which a written definition agrees with). A barre is a finger
  * the fingering names on several strings at one fret, or, for a shape that names no fingers, the lowest stopped fret
@@ -75,7 +83,28 @@ internal sealed interface ChordDiagramGeometry {
  * Whatever the shape, the diagram is bounded: at most [MAX_FRETS] frets and [MAX_OCTAVES] octaves, a dot or a key past
  * them left out, since every source of a shape meets here and a broken file's is better drawn in part than not at all.
  */
-internal fun chordDiagramGeometryOf(shape: ChordVoicing, tuning: ChordTuning, root: Int): ChordDiagramGeometry = when (shape) {
+internal fun chordDiagramGeometryOf(shape: ChordVoicing, tuning: ChordTuning, root: Int, capo: Int = 0): ChordDiagramGeometry =
+    if (capo <= 0 || shape !is ChordVoicing.Fretted) {
+        nutGeometryOf(shape, tuning, root)
+    } else {
+        // The shape is read as if the capo were the nut, the root moved down with it, and the window then moved up the neck.
+        (nutGeometryOf(shape, tuning, (root - capo).mod(12)) as ChordDiagramGeometry.Fretted).aboveCapo(capo)
+    }
+
+/**
+ * [this], a shape's geometry read from the nut, played above a capo on [capo]: from the capo's own row where the shape
+ * fits from the nut, every row one further down, else at the shape's own lowest fret moved up by the capo.
+ */
+private fun ChordDiagramGeometry.Fretted.aboveCapo(capo: Int): ChordDiagramGeometry.Fretted = if (baseFret == 1) {
+    val dots = dots.map { it.copy(row = it.row + 1) }.filter { it.row < MAX_FRETS }
+    val barres = barres.map { it.copy(row = it.row + 1) }.filter { it.row < MAX_FRETS }
+    val lowestRow = (dots.map { it.row } + barres.map { it.row }).maxOrNull() ?: 0
+    copy(baseFret = capo, fretCount = maxOf(MIN_FRETS, lowestRow + 1), dots = dots, barres = barres, capoRow = 0)
+} else {
+    copy(baseFret = baseFret + capo)
+}
+
+private fun nutGeometryOf(shape: ChordVoicing, tuning: ChordTuning, root: Int): ChordDiagramGeometry = when (shape) {
     is ChordVoicing.Keys -> {
         val octaves = ((listOfNotNull(shape.bass) + shape.notes).maxOrNull() ?: 0).let { it / 12 + 1 }.coerceIn(MIN_OCTAVES, MAX_OCTAVES)
         val range = 0 until octaves * 12

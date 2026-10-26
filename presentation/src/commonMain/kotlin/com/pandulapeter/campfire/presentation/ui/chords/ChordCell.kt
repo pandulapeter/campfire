@@ -15,6 +15,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 /**
  * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the letters
  * [SongChord.letterName] gives it after that, or else the step of the key [SongChord.degree] names.
+ *
+ * @property root The root of the chord that sounds.
+ * @property capo The fret the shape is played above, see [SongChord.capo].
  */
 @Immutable
 internal data class ChordCell(
@@ -24,4 +27,5 @@ internal data class ChordCell(
     val tuning: ChordTuning,
     val root: Int,
     val selection: SelectedShape,
+    val capo: Int = 0,
 )

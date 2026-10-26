@@ -55,13 +55,16 @@ public object ChordProTransposer {
      * @param tabPlayer Who the tabs are read by, which moves every run of tablature to their strings as well as by the
      *   transposition, in one move, so that it is put on the neck by one decision rather than two (see
      *   [ChordProTabRetuner]). Null moves the frets by the transposition alone, as the text transposition does.
+     * @param capo How many of [semitones] are a capo's: the song's own `{capo}`, counted in to name the chords that sound.
+     *   A tab's frets are counted from the capo, as tablature is, so they move by the rest alone while every chord name,
+     *   a tab's included, moves by all of it.
      */
-    public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null): ChordProSong {
+    public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null, capo: Int = 0): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
         if (semitones == 0 && preferFlats == null && !isModulated && tabPlayer == null) return song
         val rewrites = mutableMapOf<Int, ChordRewrite>()
         return rewriteChords(song) { offset ->
-            rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats, tabPlayer) }
+            rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats, tabPlayer, capo) }
         }
     }
 
@@ -70,15 +73,16 @@ public object ChordProTransposer {
      * spelling leaves the chords exactly as written, as it does for a song with no modulation at all, and the tabs too
      * where nobody is named to read them.
      */
-    private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?, tabPlayer: TabPlayer?): ChordRewrite {
+    private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?, tabPlayer: TabPlayer?, capo: Int): ChordRewrite {
         val isMoved = shift != 0 || preferFlats != null
         val flats = if (isMoved) preferFlats ?: prefersFlats(song, shift) else false
         val rename = if (isMoved) { name: String -> transposeChord(name, shift, flats) } else { name: String -> name }
+        val fretShift = shift - capo
         return ChordRewrite(
-            rewriteTabLines = if (isMoved) { lines -> ChordProTabTransposer.transpose(lines, shift, rename) } else { lines -> lines },
+            rewriteTabLines = if (isMoved) { lines -> ChordProTabTransposer.transpose(lines, fretShift, rename) } else { lines -> lines },
             rename = rename,
             rewriteDefinition = if (isMoved) { definition -> ChordProDefinitions.transposed(definition, shift, rename) } else { definition -> definition },
-            rewriteTabRun = tabPlayer?.let { player -> { lines, selector -> ChordProTabRetuner.retune(lines, shift, rename, selector, player) } },
+            rewriteTabRun = tabPlayer?.let { player -> { lines, selector -> ChordProTabRetuner.retune(lines, fretShift, rename, selector, player) } },
         )
     }
 

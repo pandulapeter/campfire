@@ -24,15 +24,24 @@ class SongRendererTest {
     private fun spelling(accidentals: UserPreferences.Accidentals) = UserPreferences.ChordSpelling(accidentals = accidentals, notation = Notation.STANDARD)
 
     @Test
-    fun `a key is moved by the file's transpose, the reader's transposition and the capo, then spelled and drawn with signs`() {
-        assertEquals("A♯", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.SHARPS)))
-        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 0, transposition = 2, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
-        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 1, transposition = 1, capo = 1, spelling = spelling(UserPreferences.Accidentals.FLATS)))
+    fun `a key is moved by the file's transpose and the transposition, then spelled and drawn with signs`() {
+        assertEquals("A♯", renderer.renderKey(key = "G", transpose = 0, transposition = 3, spelling = spelling(UserPreferences.Accidentals.SHARPS)))
+        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 0, transposition = 3, spelling = spelling(UserPreferences.Accidentals.FLATS)))
+        assertEquals("B♭", renderer.renderKey(key = "G", transpose = 1, transposition = 2, spelling = spelling(UserPreferences.Accidentals.FLATS)))
+    }
+
+    @Test
+    fun `a capo chart's sounding key names the key that sounds over its shapes, as its shapes' key does`() {
+        val chords = "\n[D]a [G]b [A]c [Bm]d [D]e [G]f [A]g [D]h"
+        val sounding = renderer.transposedSong("{key: G}\n{capo: 5}$chords", transposition = 5, spelling = UserPreferences.ChordSpelling.Default)
+        assertEquals("G", sounding.metadata.key)
+        assertEquals("G", renderer.transposedSong("{key: D}\n{capo: 5}$chords", transposition = 5, spelling = UserPreferences.ChordSpelling.Default).metadata.key)
+        assertEquals("G", renderer.renderSong("{key: G}\n{capo: 5}$chords", transposition = 0, spelling = UserPreferences.ChordSpelling.Default).metadata.key)
     }
 
     @Test
     fun `a song with no key has no rendered key`() =
-        assertNull(renderer.renderKey(key = null, transpose = 0, transposition = 2, capo = 1, spelling = UserPreferences.ChordSpelling.Default))
+        assertNull(renderer.renderKey(key = null, transpose = 0, transposition = 3, spelling = UserPreferences.ChordSpelling.Default))
 
     @Test
     fun `a file survives the trip into the editor's notation and back`() {

@@ -51,7 +51,8 @@ internal data class PrintSource(
 
 /**
  * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and
- * [transposition] the semitones the viewer moves it by, which [song] is already rendered in.
+ * [transposition] the semitones the reader moves it by, printed beside its key; [song] is already rendered in the chords
+ * that sound, the file's capo counted in as on the screen (`SongPlayback.soundingTransposition`).
  */
 internal data class PrintSong(
     val fileName: String,
@@ -103,7 +104,8 @@ internal data class PrintChord(
  * the way the song details screen's Chords section draws them
  * in [tuning]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
  * frame for a chord with none, so that the page and the screen finger every chord alike. With [showsDegrees], each is
- * labelled with its step of the key the screen counts it against ([degreeKeyOf], from [analysis]).
+ * labelled with its step of the key the screen counts it against ([degreeKeyOf], from [analysis]). Under a [capo] each is
+ * the shape fingered above it, drawn where it is played with the capo across it, as on the screen.
  */
 internal fun printChordsOf(
     song: ChordProSong,
@@ -112,14 +114,15 @@ internal fun printChordsOf(
     storedShapes: Map<String, String>,
     showsDegrees: Boolean = false,
     analysis: SongScaleAnalysis? = null,
-): List<PrintChord> = songChordsOf(song, notation, tuning).let { chords ->
+    capo: Int = 0,
+): List<PrintChord> = songChordsOf(song, notation, tuning, capo = capo).let { chords ->
     if (showsDegrees && chords.isNotEmpty()) chords.withDegrees(degreeKeyOf(song, analysis, song.isSongbook), notation) else chords
 }.map { chord ->
     PrintChord(
         name = chord.name,
         letterName = chord.letterName,
         degree = chord.degree,
-        geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root) }
+        geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root, chord.capo) }
             ?: emptyChordDiagramGeometryOf(tuning.instrument),
     )
 }

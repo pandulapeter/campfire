@@ -81,7 +81,17 @@ data class Song(
      * knows what a reset goes back to before the song's text has been read.
      */
     val capo: Int? = null,
+    /**
+     * The key the chords of a capo chart are written in where its `{key}` names the key that sounds over shapes in
+     * another (`{key: G}` and `{capo: 5}` over D shapes), as only the chords can tell (`SongKeys.capoChartKeyOf`); null
+     * where [key] is the chords' own. Worked out with the rest of the metadata, so that a list never parses a file to
+     * name its key.
+     */
+    val capoChartKey: String? = null,
 ) {
+
+    /** [key] read as the key the file's chords are written in, which is what every list names the sounding key from. */
+    val chordsKey: String? get() = capoChartKey ?: key
 
     companion object {
         /** The frets a capo can be put on, and so the only values a stored override may hold; 0 is no capo. */

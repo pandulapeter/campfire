@@ -46,5 +46,5 @@ internal fun effectiveCapo(song: Song?, setlistFileName: String?, capos: Capos, 
 /** The song with its capo line reading [fret], where there is one: what the page and the PDF show for an override. */
 internal fun ChordProSong.withCapo(fret: Int?) = if (fret == null) this else copy(metadata = metadata.copy(capo = fret))
 
-/** The song with no capo line at all, as an instrument that reads the capo as a transposition shows it, see [withCapoSounding]. */
+/** The song with no capo line at all, as an instrument without a capo shows it, see `playsWithoutCapo`. */
 internal fun ChordProSong.withoutCapo() = copy(metadata = metadata.copy(capo = null))

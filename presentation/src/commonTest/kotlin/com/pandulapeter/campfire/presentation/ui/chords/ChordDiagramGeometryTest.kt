@@ -20,6 +20,28 @@ import kotlin.test.assertTrue
 
 class ChordDiagramGeometryTest {
 
+    @Test
+    fun `a shape under a capo is drawn where it is played, the capo across the window's first row`() {
+        // An A played as a G shape at the second fret: the frets 2 to 5, the capo on 2, numbered from the nut.
+        val capoed = chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3)), ChordTuning.GUITAR, root = 9, capo = 2) as ChordDiagramGeometry.Fretted
+        assertEquals(2, capoed.baseFret)
+        assertEquals(4, capoed.fretCount)
+        assertEquals(0, capoed.capoRow)
+        assertEquals(listOf(0 to 3, 1 to 2, 5 to 3), capoed.dots.map { it.string to it.row })
+        // The G shape's G strings sound the A that is the chord's root.
+        assertEquals(listOf(true, false, true), capoed.dots.map { it.isRoot })
+        assertEquals(ChordDiagramGeometry.Fretted.Marker.OPEN, capoed.markers[2])
+        assertEquals(ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT, capoed.markers[3])
+    }
+
+    @Test
+    fun `a shape played far above the capo leaves the capo out of its window`() {
+        val high = chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(null, 3, 5, 5, 5, 3)), ChordTuning.GUITAR, root = 2, capo = 2) as ChordDiagramGeometry.Fretted
+        assertEquals(5, high.baseFret)
+        assertEquals(null, high.capoRow)
+        assertEquals(null, fretted(listOf(3, 2, 0, 0, 0, 3)).capoRow)
+    }
+
     private fun fretted(frets: List<Int?>, fingers: List<Int>? = null, root: Int = 0) =
         chordDiagramGeometryOf(ChordVoicing.Fretted(frets, fingers), ChordTuning.GUITAR, root) as ChordDiagramGeometry.Fretted
 

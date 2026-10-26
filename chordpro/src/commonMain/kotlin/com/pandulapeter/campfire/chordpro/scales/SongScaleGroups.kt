@@ -46,14 +46,14 @@ public object SongScaleGroups {
     public fun of(song: ChordProSong): List<ScaleGroup> = playedGroupsOf(song).map { it.group }
 
     /**
-     * The key the chords of [song], in the standard notation, are written in, as a key name (`D`, `Am`): the key in force
-     * at its first part (`{key}`, or the key a `{transpose}` names), or, for a capo chart whose `{key}` names the sounding
-     * key over shapes in another (`{key: G}{capo: 5}` over D shapes), the key the shapes play, decided as [fitOf] decides
-     * it for a part: only where the written key holds nothing of the song whole and the shapes' key does. What a caller
-     * counts the chords from where [SongScaleSuggestions] finds no home. Null where the song names no key or plays no
-     * chord; the written key unweighed for a song playing more than [MAX_PLAYED_CHORDS] chords.
+     * The key in force at the first part of [song] (`{key}`, or the key a `{transpose}` names), read as the key its chords
+     * are written in: for a capo chart whose `{key}` names the sounding key over shapes in another (`{key: G}{capo: 5}`
+     * over D shapes), the key the shapes play, decided as [fitOf] decides it for a part: only where the written key holds
+     * nothing of the song whole and the shapes' key does. Null where the song names no key or plays no chord; the written
+     * key unweighed for a song playing more than [MAX_PLAYED_CHORDS] chords. Paired with whether it is the shapes' key
+     * rather than the written one. See [SongKeys].
      */
-    public fun keyOfShapes(song: ChordProSong): String? {
+    internal fun keyOfChordsIn(song: ChordProSong): Pair<SongKey, Boolean>? {
         val parts = SongParts.of(song)
         val harmony = Harmony(parts.ifEmpty { return null })
         val key = harmony.key ?: return null
@@ -61,7 +61,7 @@ public object SongScaleGroups {
             parts.sumOf { part -> part.chords.size } <= MAX_PLAYED_CHORDS &&
                 keyFitOf(harmony, key)?.level != Level.TONAL && keyFitOf(harmony, it)?.level == Level.TONAL
         }
-        return (shapes ?: key).let { it.root.name + if (it.isMinor) "m" else "" }
+        return if (shapes != null) shapes to true else key to false
     }
 
     /** [of] with the chords each group plays, for [SongScaleSuggestions] to weigh them by. */

@@ -19,8 +19,9 @@ tools. What the first section holds is in `ui/CLAUDE.md`.
   `layoutId`. A control whose label and stepper are wider than the line together puts its label above
   (`PlayingControl`), and only its own line grows for it; every line is at least a pill tall.
 - **Kept short, and every line starts with a pill**: `[transposition] Capo [capo]` and `[tempo | Tap] 3/4 [metronome]`,
-  no unit (the stepper says "BPM" aloud), 4/4 left out. The transposition has no label and reads the key alone where
-  the song names one (`transpositionValue`; the semitones are only said aloud), the semitones where it names none.
+  no unit (the stepper says "BPM" aloud), 4/4 left out. The transposition has no label and reads the sounding key alone where
+  the song names one (`transpositionValue`; the semitones are only said aloud), the reader's own semitones where it
+  names none.
 - **One keyline for the pills**: the controls start where the section pills reach out to (`HEADER_HORIZONTAL_PADDING`
   short of the lyrics), so the instrument pill, the transposition, and the tempo line up; a capo with no transposition
   before it starts on the lyrics' keyline, being a label.

@@ -58,6 +58,17 @@ class ChordShapeCrossfadeTest {
     }
 
     @Test
+    fun `a chord a capo moved to another shape fades`() {
+        assertEquals(
+            listOf(0),
+            changedShapeCells(
+                previous = listOf(cell("A", openA)),
+                cells = listOf(cell("A", openG).copy(capo = 2)),
+            ),
+        )
+    }
+
+    @Test
     fun `a cell holding another chord does not fade`() {
         assertEquals(emptyList(), changedShapeCells(previous = listOf(cell("G", openG)), cells = listOf(cell("A", barreG))))
     }

@@ -95,5 +95,9 @@
   (triads and a V7), and over a rock riff), then the other common holders, other seven-note ones (the seven-note ones
   outside those families never lead), hexatonics and smaller, eight-note last. A song's chips drop the eight-note ones
   where anything smaller fits.
+- **`SongKeys` is the one reading of `{key}`** everything naming a song's key goes through (header, lists, Transposition
+  control, degrees, scales): a capo chart's written key is its chords' own unless it holds nothing of the song whole and
+  the capo's shapes' key does (`SongScaleGroups.keyOfChordsIn`, the rule above). Shift-invariant, so the sounding song
+  reads as the file does; `withKeyOfChords` renames the key before a transposition.
 - A chord sheet puts its quality's textbook scales first (`ChordScaleChoices`), and an altered dominant (♭9, ♭5, ♯5) is
   never a blues.

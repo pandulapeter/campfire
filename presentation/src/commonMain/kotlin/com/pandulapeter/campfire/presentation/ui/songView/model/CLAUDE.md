@@ -19,7 +19,7 @@ What a song page draws, built from the parsed song (pure): `SongLyricsModel`, `R
   Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section folds with it;
   one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
 - A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
-  the capo left out as in the Transposition control; omitted where the song has no `{key}` or the chords are off.
+  the sounding key as the Transposition control names it; omitted where the song has no `{key}` or the chords are off.
 - Lyrics-only mode drops tab and grid lines (and comments inside them, `isInTabOrGrid`), a section left empty whole, and
   the info section's key, capo, tempo, and time line (the section itself where nothing else is, `withMetadataSection`).
 - A comment's bracketed chords are transposed and colored (`ChordProHighlighter.chordsOfShownText`, shared with the
@@ -57,7 +57,10 @@ Product side in `ui/metronome/CLAUDE.md`.
   never opens empty.
 - **One scale walk a model** (`songScaleAnalysisOf`): the Scales section and the Chords section's degrees share it,
   either switch alone enough to run it; never for a songbook. It is in the in-place first model too, so the degrees are
-  right on its first frame. Without a home the degrees count from `SongScaleGroups.keyOfShapes` (the capo chart rule).
+  right on its first frame. Without a home the degrees count from `SongKeys.ofChords` (the capo chart rule).
+- **The scales read the sounding song with the file's capo** (`standardSong`, before `withCapo`): the capo only says how
+  a capo chart's `{key}` is meant, so the Scales section names the sounding key whatever capo is put on, and its sheet
+  dims the neck below the effective one (`ScaleSuggestions.capo`, `DialogType.Scale.capo`, `ScaleDiagramGeometry`).
 - **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
   line measured on the main thread, and a concatenated songbook froze the app for seconds. The model stops after the
   last section that fits and says so; the file is untouched and the header is built from all of it.

@@ -122,7 +122,7 @@ internal class SongLocalSourceImpl(
             size = text.encodeToByteArray().size.toLong(),
             lastModified = Clock.System.now().toEpochMilliseconds(),
         )
-        return withContext(Dispatchers.Default) { file.toSong(ChordProParser.summarize(text)) }
+        return withContext(Dispatchers.Default) { file.toSong(ChordProParser.summarize(text), text) }
     }
 
     override suspend fun renameSong(song: Song): Song? {
@@ -166,7 +166,7 @@ internal class SongLocalSourceImpl(
             async {
                 try {
                     when (answer) {
-                        is ScannedFile.Text -> answer.info.toSong(ChordProParser.summarize(answer.text))
+                        is ScannedFile.Text -> answer.info.toSong(ChordProParser.summarize(answer.text), answer.text)
                         is ScannedFile.TooLarge -> {
                             logger.log("Skipped the song \"${entry.name}\": ${answer.info.size} bytes is more than a song file can hold.")
                             null
@@ -190,7 +190,7 @@ internal class SongLocalSourceImpl(
             null
         } else {
             fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
-                toSong(ChordProParser.summarize(text))
+                toSong(ChordProParser.summarize(text), text)
             }
         }
     } catch (exception: CancellationException) {

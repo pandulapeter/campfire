@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSon
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 
 /**
  * One song of the song list: its card, which opens it, or ticks it in the selection mode, and the menu hanging from it.
@@ -81,12 +82,12 @@ internal fun SongListRow(
     // the only values this list knows about: the setlists each hold their own. The key is remembered,
     // since the row is composed again as every scroll starts and ends and it is a whole transposition
     // to work out again.
-    val (transposition, capo, tempo) = songPlaybackOf(song = song, setlistFileName = null, overrides = playingOverrides)
+    val playback = songPlaybackOf(song = song, setlistFileName = null, overrides = playingOverrides)
+    val tempo = playback.tempo
     val key = rememberSongCardKey(
         songRenderer = viewModel.songRenderer,
         song = song,
-        transposition = transposition,
-        capo = capo.fret,
+        transposition = playback.soundingTransposition,
         chordSpelling = cardOptions.chordSpelling,
     )
     SongListItem(

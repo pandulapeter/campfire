@@ -24,18 +24,20 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 /**
  * A chord of a song as its Chords section lists it.
  *
- * @property name The chord as the page names it, transposed and in the reader's notation.
- * @property chord The notes the diagram is of. On the keyboard a capoed song's page is already in the chords that
- *   sound (see `withCapoSounding`), so these are the page's on every instrument.
+ * @property name The chord as the page names it, transposed and in the reader's notation: the chord that sounds.
+ * @property chord The notes the page's name stands for, the chord that sounds, which its sheet's notes and scales are of.
+ * @property shapeChord The chord the diagram's shape is fingered as above the [capo]: [chord] moved down by it (an A
+ *   is a G shape at the second fret), the one a shape is looked up, picked, and stored for.
+ * @property capo The fret the shape is played above, which its diagram draws it at (see `SongPlayback.shapeCapoFor`).
  * @property letterName The page's chord in letters where the page counts it as a step of the key, which the cell names
  *   after it too: a `6-` says nothing about the shape under it to a player who has not counted the key out yet.
  * @property spelling The chord the notes are spelled from, in the standard notation.
  * @property degree The step of the song's key the chord stands on, in Roman numerals, which the cell names after it where
  *   the page names chords by their letters (see [withDegrees]); null where it names none.
- * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, or null while
+ * @property defaultShape The shape [shapeChord] is shown with where nothing else says how it is played, or null while
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
- *   see [songChordsOf].
+ *   moved to be fingered above the [capo], see [songChordsOf].
  * @property undrawnDefinition The shape the song gives the chord where the tuning does not draw it
  *   ([ChordTuning.drawsDefinitions]): a standard tuning shape, which the chord's sheet says is there and offers to show.
  * @property isShapePending The default shape has not been looked for yet, see [songChordsOf]'s `searchesShapes`; drawn
@@ -45,6 +47,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 internal data class SongChord(
     val name: String,
     val chord: Chord,
+    val shapeChord: Chord = chord,
+    val capo: Int = 0,
     val letterName: String? = null,
     val spelling: String? = null,
     val degree: String? = null,
@@ -74,17 +78,23 @@ internal data class SongChord(
  *
  * Without [searchesShapes] a chord whose default shape only the search finds is left [SongChord.isShapePending], for
  * [withSearchedShapes] to fill in away from the main thread: what builds a page in a frame cannot wait for a search.
+ *
+ * The song is the one that sounds, and every shape is fingered above [capo] (see [SongChord.shapeChord]): a definition is
+ * moved down the neck by it as a transposition moves one, so that a file's own shapes come back to where it wrote them
+ * under the capo it names, and the app's and the player's shapes are those of the chord moved down by it.
  */
 internal fun songChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
     tuning: ChordTuning,
     searchesShapes: Boolean = true,
+    capo: Int = 0,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
     val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }.map(ChordProDefinitions::sounding)
     fun definitionOf(name: String, chord: Chord) =
         (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
+            ?.let { if (capo == 0) it else ChordProDefinitions.transposed(it, -capo) { shapeName -> shapeName } }
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
     // One chord written two ways - (G) and G, a and Am, A# and Bb - is one diagram, under the name it is first written
     // with, unless the song defines the two spellings differently.
@@ -94,13 +104,16 @@ internal fun songChordsOf(
     if (entries.size > MAX_SONG_CHORDS) return emptyList()
     return entries.map { (name, chord, written) ->
         val definition = written?.takeIf { tuning.drawsDefinitions }
-        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(chord, tuning)
+        val shapeChord = chord.movedBy(-capo)
+        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(shapeChord, tuning)
         SongChord(
             name = ChordProNotation.withAccidentalSigns(shownNames.getValue(name)),
             chord = chord,
+            shapeChord = shapeChord,
+            capo = capo,
             letterName = name.takeIf { notation.isNumbering && shownNames[name] != name }?.let(ChordProNotation::withAccidentalSigns),
             spelling = name,
-            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(chord, tuning) else null,
+            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(shapeChord, tuning) else null,
             definition = definition,
             undrawnDefinition = written?.takeIf { definition == null },
             isShapePending = isShapePending,
@@ -112,7 +125,14 @@ internal fun songChordsOf(
 internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none { it.isShapePending }) {
     this
 } else {
-    map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, tuning), isShapePending = false) else it }
+    map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.shapeChord, tuning), isShapePending = false) else it }
+}
+
+/** [this] moved by [semitones], its root and bass with it: what a capo makes of a chord's shape. */
+internal fun Chord.movedBy(semitones: Int) = if (semitones.mod(12) == 0) {
+    this
+} else {
+    copy(root = (root + semitones).mod(12), bass = bass?.let { (it + semitones).mod(12) })
 }
 
 /**

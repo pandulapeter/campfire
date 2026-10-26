@@ -85,7 +85,8 @@ Flat files addressed as `(StorageDirectory, name)`, no paths. `JvmFileStorage` (
   key-shaped names (64 lowercase hex), since the directory also holds an in-progress temp file.
 - `SongLocalSourceImpl`: reads the ChordPro family (`LibraryFiles.SONG_EXTENSIONS`, hidden files excluded via
   `isSongFileName`) but writes only `.cho`, `importFileName` included. Metadata comes from one `:chordpro` `summarize`
-  call; the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan publishes in batches
+  call (a file with `{key}` and `{capo}` also parsed whole for `SongKeys.capoChartKeyOf`); the leading `{transpose}`
+  travels with the key; tags are NFC-composed and merged. The scan publishes in batches
   so a large library appears before it is fully read. Unreadable or oversized (`ImportLimits.MAX_TEXT_FILE_SIZE`) files
   are skipped; an unlistable *directory* throws, so an unreachable library never looks empty.
 - `DocumentLocalSourceImpl` / `ArchiveLocalSourceImpl` wrap `:data:formats`. Documents: 16 MiB limit, null for

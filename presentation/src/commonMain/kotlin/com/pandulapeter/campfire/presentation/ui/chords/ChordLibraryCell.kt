@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
  * One chord of the Chords tab, and of the scale sheet's chords: its name in the chords' accent color over its diagram,
- * drawn with [selection], the shape the songs draw it with, on a card that opens all of its shapes. A shape chosen in
+ * drawn with [selection], the shape the songs draw it with (above the capo of a song's scale, see [SongChord.capo]), on a card that opens all of its shapes. A shape chosen in
  * that sheet crossfades in as the sheet settles on it, as the song details screen's cells do.
  */
 @Composable
@@ -46,7 +46,7 @@ internal fun ChordLibraryCell(
     onClick: () -> Unit,
 ) {
     val description = chordCellDescription(
-        ChordCell(name = chord.name, letterName = chord.letterName, tuning = tuning, root = chord.chord.root, selection = selection),
+        ChordCell(name = chord.name, letterName = chord.letterName, tuning = tuning, root = chord.chord.root, selection = selection, capo = chord.capo),
     )
     Surface(
         // The description is set here, without clearing, and the content cleared below: a clearing node here would also clear
@@ -76,8 +76,8 @@ internal fun ChordLibraryCell(
             ) { (shape, shapeTuning) ->
                 ChordDiagram(
                     modifier = Modifier.size(width = shapeTuning.instrument.diagramWidth, height = shapeTuning.instrument.diagramHeight),
-                    geometry = remember(shape, shapeTuning, chord.chord.root) {
-                        shape?.let { chordDiagramGeometryOf(it, shapeTuning, chord.chord.root) } ?: emptyChordDiagramGeometryOf(shapeTuning.instrument)
+                    geometry = remember(shape, shapeTuning, chord.chord.root, chord.capo) {
+                        shape?.let { chordDiagramGeometryOf(it, shapeTuning, chord.chord.root, chord.capo) } ?: emptyChordDiagramGeometryOf(shapeTuning.instrument)
                     },
                     description = description,
                 )

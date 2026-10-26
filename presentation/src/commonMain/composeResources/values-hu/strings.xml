@@ -1004,6 +1004,7 @@
     <string name="song_details_chord_letters">%1$s, azaz %2$s</string>
     <string name="song_details_chord_degree">%1$s, fok: %2$s</string>
     <string name="song_details_chord_shape_choose">Akkordfogás kiválasztása - %1$s</string>
+    <string name="song_details_chord_shape_capo">%1$s fogás, capo %2$s</string>
     <string name="song_details_chord_defined">A dal határozza meg</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">A dal határozza meg, %1$d bunddal eltolva</item>

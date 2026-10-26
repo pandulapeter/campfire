@@ -55,13 +55,13 @@ internal fun ChordReferenceSheet(
     val chord = dialog.chord
     val selection = selectShape(chord, tuning, storedShapes)
     // Put up once its shapes are found, see rememberChordShapes.
-    val shapes = rememberChordShapes(chord.chord, tuning, isDefined = selection.source == SelectedShape.Source.DEFINED) ?: return
+    val shapes = rememberChordShapes(chord.shapeChord, tuning, isDefined = selection.source == SelectedShape.Source.DEFINED) ?: return
     CampfireBottomSheet(
         title = textResource(Res.string.song_details_chord_shape_choose, chord.name),
         subtitle = chordNoteNames(chord, notation),
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
-        key(chord.chord.id, tuning) {
+        key(chord.shapeChord.id, tuning) {
             ChordShapeGrid(
                 modifier = Modifier.weight(1f, fill = false),
                 chord = chord,
@@ -71,13 +71,13 @@ internal fun ChordReferenceSheet(
                 selection = selection,
                 tuningLine = if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
                 contentPadding = contentPadding,
-                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },
+                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, chord.shapeChord.id, shape?.let(ChordVoicings::write)) },
                 footer = if (dialog.showsScales && FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) {
                     {
                         ScaleChipRow(
                             chord = chord,
                             notation = notation,
-                            onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false)) },
+                            onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false, capo = chord.capo)) },
                         )
                     }
                 } else {
