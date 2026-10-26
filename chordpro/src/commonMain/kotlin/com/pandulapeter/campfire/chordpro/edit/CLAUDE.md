@@ -23,6 +23,8 @@
   it. `define` is deliberately not in `metadataOrder`.
 - `ChordProMarkupLines` is where markup is read, line by line, in one walk, by the parser's rule; `isLiteralAt` shares
   its literal-line rule.
+- `ChordProFormattingTags` finds the tags that set a style around a selection by the parser's own reading, and takes
+  the style off keeping every other byte: a span keeps its other attributes, and goes only once it has none.
 
 ### `ChordProHighlighter`
 

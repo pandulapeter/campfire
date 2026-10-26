@@ -129,17 +129,22 @@ public object ChordProMarkup {
     private fun Tag.separatesWords(result: StringBuilder, text: String, index: Int) =
         result.isNotEmpty() && !result.last().isWhitespace() && text.getOrNull(index + length)?.isWhitespace() == false
 
-    /** A tag read at a `<`, with the styles it opens or closes; none for one that is read only to be dropped. */
-    private class Tag(
+    /**
+     * A tag read at a `<`, with the styles it opens or closes; none for one that is read only to be dropped. A closing
+     * tag has no [attributes].
+     */
+    internal class Tag(
         val name: String,
         val styles: Set<Formatting.Style>,
         val isClosing: Boolean,
         val isSelfClosing: Boolean,
         val length: Int,
-        val symbol: String? = null,
+        val attributes: MarkupAttributes.Read?,
+        val symbol: String?,
     )
 
-    private fun tagAt(text: String, start: Int): Tag? {
+    /** The tag starting at [start] of [text], or null where none does. */
+    internal fun tagAt(text: String, start: Int): Tag? {
         var index = start + 1
         val isClosing = text.getOrNull(index) == '/'
         if (isClosing) index++
@@ -160,7 +165,8 @@ public object ChordProMarkup {
             isClosing = isClosing,
             isSelfClosing = isSelfClosing,
             length = index + 1 - start,
-            symbol = if (name == "sym") attributes?.attributes?.firstNotNullOfOrNull { (key, value) -> if (value.isEmpty()) MarkupSymbols.symbolOf(key) else null } else null,
+            attributes = attributes,
+            symbol = if (name == "sym") attributes?.attributes?.firstNotNullOfOrNull { if (it.value.isEmpty()) MarkupSymbols.symbolOf(it.name) else null } else null,
         )
     }
 }

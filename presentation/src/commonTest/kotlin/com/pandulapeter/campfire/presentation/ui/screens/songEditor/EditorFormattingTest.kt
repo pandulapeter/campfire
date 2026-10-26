@@ -9,20 +9,21 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting.Style
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EditorFormattingTest {
 
     /**
-     * The text after toggling [tag] over the part of [text] between the two [marker]s, with the new selection marked the
+     * The text after toggling [style] over the part of [text] between the two [marker]s, with the new selection marked the
      * same way. Tabs and grids are written with `|`, so their tests mark the selection with another character.
      */
-    private fun toggled(text: String, tag: String = "b", marker: Char = '|'): String {
+    private fun toggled(text: String, style: Style = Style.BOLD, marker: Char = '|'): String {
         val start = text.indexOf(marker)
         val end = text.indexOf(marker, start + 1) - 1
         val plain = text.replace(marker.toString(), "")
-        val toggle = formattingToggle(plain, start, end, tag)
+        val toggle = formattingToggle(plain, start, end, style)
         val result = plain.replaceRange(toggle.start, toggle.end, toggle.text)
         return result.substring(0, toggle.selectionStart) + marker + result.substring(toggle.selectionStart, toggle.selectionEnd) + marker +
             result.substring(toggle.selectionEnd)
@@ -40,14 +41,22 @@ class EditorFormattingTest {
     }
 
     @Test
+    fun `the style is taken off whichever way the file sets it, and nothing else is`() {
+        assertEquals("There |is a| house", toggled("There <strong>|is a|</strong> house"))
+        assertEquals("|is a|", toggled("|<span weight=\"bold\">is a</span>|"))
+        assertEquals("<span color=\"red\">|is a|</span>", toggled("<span color=\"red\" weight=\"bold\">|is a|</span>"))
+        assertEquals("|<span style=\"font-style: italic\">a</span>\nb|", toggled("|<span style=\"font-weight: bold; font-style: italic\">a</span>\n<b>b</b>|"))
+    }
+
+    @Test
     fun `with nothing selected the caret lands inside an empty pair, which a second toggle takes away`() {
-        assertEquals("a <i>||</i>b", toggled("a ||b", tag = "i"))
-        assertEquals("a ||b", toggled("a <i>||</i>b", tag = "i"))
+        assertEquals("a <i>||</i>b", toggled("a ||b", style = Style.ITALIC))
+        assertEquals("a ||b", toggled("a <i>||</i>b", style = Style.ITALIC))
     }
 
     @Test
     fun `another style's tags around the selection are left alone`() {
-        assertEquals("<i><u>|word|</u></i>", toggled("<i>|word|</i>", tag = "u"))
+        assertEquals("<i><u>|word|</u></i>", toggled("<i>|word|</i>", style = Style.UNDERLINE))
     }
 
     @Test

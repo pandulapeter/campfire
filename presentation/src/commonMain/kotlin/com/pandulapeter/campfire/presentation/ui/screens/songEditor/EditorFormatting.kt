@@ -11,13 +11,14 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.TextRange
+import com.pandulapeter.campfire.chordpro.edit.ChordProFormattingTags
 import com.pandulapeter.campfire.chordpro.edit.ChordProMarkupLines
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 
 /** Puts the tags of [style] around the selection, or takes them away where they already stand around it. */
 internal fun TextFieldState.toggleFormatting(style: Formatting.Style) = edit {
-    val toggle = formattingToggle(originalText.toString(), selection.min, selection.max, ChordProMarkup.tagOf(style))
+    val toggle = formattingToggle(originalText.toString(), selection.min, selection.max, style)
     replace(toggle.start, toggle.end, toggle.text)
     selection = TextRange(toggle.selectionStart, toggle.selectionEnd)
 }
@@ -32,10 +33,11 @@ internal data class FormattingToggle(
 )
 
 /**
- * The edit that formats the selection from [selectionStart] to [selectionEnd] of [text] with [tag] (`b`), or that takes
- * the formatting off where it is already there, the way a word processor's Bold does: either the tags stand right
- * around the selection, or the selection starts and ends with them. With nothing selected it writes an empty pair with
- * the caret inside, or takes away the empty pair the caret is in.
+ * The edit that formats the selection from [selectionStart] to [selectionEnd] of [text] in [style] (with `<b>`, `<i>`,
+ * or `<u>`), or that takes the style off where it is already there, the way a word processor's Bold does: either tags
+ * setting it stand right around the selection, or the selection starts and ends with them, in any spelling the parser
+ * reads ([ChordProFormattingTags]). With nothing selected it writes an empty pair with the caret inside, or takes away
+ * the empty pair the caret is in.
  *
  * Markup goes only where the parser reads it, [ChordProMarkupLines.markupRanges]: a lyric line, or a comment's value,
  * to which a selection on one line is clipped (a whole selected `{c: note}` formats `note`). A tab, grid, delegated, or
@@ -44,7 +46,8 @@ internal data class FormattingToggle(
  * The lines are taken off where every one that is formatted already is, and otherwise only those that are not are
  * formatted.
  */
-internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: Int, tag: String): FormattingToggle {
+internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: Int, style: Formatting.Style): FormattingToggle {
+    val tag = ChordProMarkup.tagOf(style)
     val opening = "<$tag>"
     val closing = "</$tag>"
     val start = minOf(selectionStart, selectionEnd)
@@ -54,14 +57,16 @@ internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: I
     // A file with bare CR line endings has no \n between its lines, and the editor keeps such a file byte for byte.
     if ('\n' in selected || '\r' in selected || touched.size > 1) {
         val cores = touched.mapNotNull { range -> text.trimmedRange(maxOf(range.first, start), minOf(range.last + 1, end)) }
-        val isFormatted = cores.isNotEmpty() && cores.all { text.substring(it.first, it.last + 1).isEnclosedIn(opening, closing) }
+        val removals = cores.map { ChordProFormattingTags.inside(text, it.first, it.last + 1, style) }
+        val isFormatted = cores.isNotEmpty() && removals.all { it != null }
         val replaced = StringBuilder(selected)
         // From the back, so that the offsets of the cores before each one stay valid.
-        cores.asReversed().forEach { core ->
+        cores.indices.reversed().forEach { index ->
+            val core = cores[index]
             val coreText = text.substring(core.first, core.last + 1)
             val changed = when {
-                isFormatted -> coreText.substring(opening.length, coreText.length - closing.length)
-                coreText.isEnclosedIn(opening, closing) -> coreText
+                isFormatted -> removals[index]?.text ?: coreText
+                removals[index] != null -> coreText
                 else -> opening + coreText + closing
             }
             replaced.setRange(core.first - start, core.last + 1 - start, changed)
@@ -69,23 +74,16 @@ internal fun formattingToggle(text: String, selectionStart: Int, selectionEnd: I
         return FormattingToggle(start, end, replaced.toString(), start, start + replaced.length)
     }
     val range = touched.singleOrNull() ?: return FormattingToggle(start, end, selected, start, end)
-    return toggleWithin(text, maxOf(start, range.first), minOf(end, range.last + 1), range, opening, closing)
-}
-
-/** The single-line [formattingToggle] of the selection from [start] to [end], which lies within [range]. */
-private fun toggleWithin(text: String, start: Int, end: Int, range: IntRange, opening: String, closing: String): FormattingToggle {
-    val selected = text.substring(start, end)
+    val clippedStart = maxOf(start, range.first)
+    val clippedEnd = minOf(end, range.last + 1)
     // Only tags inside the range are the selection's: the `{c: ` before a comment's value is not.
-    val isAroundSelection = start - opening.length >= range.first && end + closing.length <= range.last + 1 &&
-        text.regionMatches(start - opening.length, opening, 0, opening.length, ignoreCase = true) &&
-        text.regionMatches(end, closing, 0, closing.length, ignoreCase = true)
-    return when {
-        isAroundSelection -> FormattingToggle(start - opening.length, end + closing.length, selected, start - opening.length, end - opening.length)
-        selected.isEnclosedIn(opening, closing) -> {
-            val inner = selected.substring(opening.length, selected.length - closing.length)
-            FormattingToggle(start, end, inner, start, start + inner.length)
-        }
-        else -> FormattingToggle(start, end, opening + selected + closing, start + opening.length, start + opening.length + selected.length)
+    val removal = ChordProFormattingTags.around(text, clippedStart, clippedEnd, style, range)
+        ?: ChordProFormattingTags.inside(text, clippedStart, clippedEnd, style)
+    return if (removal != null) {
+        FormattingToggle(removal.start, removal.end, removal.text, removal.contentStart, removal.contentStart + removal.contentLength)
+    } else {
+        val clipped = text.substring(clippedStart, clippedEnd)
+        FormattingToggle(clippedStart, clippedEnd, opening + clipped + closing, clippedStart + opening.length, clippedStart + opening.length + clipped.length)
     }
 }
 
@@ -105,6 +103,3 @@ private fun String.trimmedRange(from: Int, until: Int): IntRange? {
     while (trimmedUntil > trimmedFrom && this[trimmedUntil - 1].isWhitespace()) trimmedUntil--
     return if (trimmedFrom < trimmedUntil) trimmedFrom until trimmedUntil else null
 }
-
-private fun String.isEnclosedIn(opening: String, closing: String) =
-    length >= opening.length + closing.length && startsWith(opening, ignoreCase = true) && endsWith(closing, ignoreCase = true)

@@ -92,11 +92,12 @@ numbers nothing to count from.
 - An editor opened on a selection (a shared song's filled-in title) puts the caret in the field, asks for the keyboard,
   and scrolls to the selection once the keyboard has settled (`TypingRequest`), so the first key typed replaces it.
 - **Bold, Italic, and Underline toggle** (`formattingToggle`, tested), from the Shortcuts row and as Ctrl / Cmd + B, I,
-  and U while the field shows (`editorFormattingShortcuts`): tags around or at the ends of the selection are taken off,
-  else written around it; several lines are formatted line by line, since markup is read within one. Markup goes only
-  where the parser reads it (`ChordProMarkupLines`): a lyric line, or a comment's value; a selection is clipped to that,
-  and a tab, grid, delegated, other directive, Campfire 3 heading (`{c: Verse 1}` with no environment open), or `#` line
-  is left alone.
+  and U while the field shows (`editorFormattingShortcuts`): tags around or at the ends of the selection that set the
+  style in any spelling are taken off (a span only loses what sets it, `ChordProFormattingTags`), else `<b>`, `<i>`, or
+  `<u>` is written around it; several lines are formatted line by line, since markup is read within one. Markup goes
+  only where the parser reads it (`ChordProMarkupLines`): a lyric line, or a comment's value; a selection is clipped to
+  that, and a tab, grid, delegated, other directive, Campfire 3 heading (`{c: Verse 1}` with no environment open), or
+  `#` line is left alone.
 - `ChordProOutputTransformation` colours tokens like the viewer (and draws search matches); unreadable directive values
   (`{time: 5/7}`) are drawn whole in the error colour.
 
