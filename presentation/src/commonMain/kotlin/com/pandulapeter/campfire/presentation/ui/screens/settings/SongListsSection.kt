@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * The last section of the Preferences tab: what the song lists' cards say, only there while the songs are switched on.
+ * The first section of the Preferences tab: what the song lists' cards say, only there while the songs are switched on.
  * How a song itself is read is SongPageSection's.
  */
 @Composable

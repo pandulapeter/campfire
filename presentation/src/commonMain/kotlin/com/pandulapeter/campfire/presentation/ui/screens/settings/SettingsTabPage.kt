@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -59,21 +58,27 @@ internal fun SettingsTabPage(
             )
             SettingsTab.FEATURES -> FeaturesSections(viewModel = viewModel, userPreferences = userPreferences)
             SettingsTab.PREFERENCES -> {
-                ChordsSection(
-                    userPreferences = userPreferences,
-                    onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
-                    onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
-                )
-                // The chords are written the same way in the Chords and Scales tabs, while all of this is about songs.
+                // The lists lead, being the one section found nowhere else: the other two are also the song details
+                // screen's Display settings sheet.
                 AnimatedVisibility(
                     visible = userPreferences?.areSongsEnabled != false,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
                 ) {
-                    Column {
-                        SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
-                        SongListsSection(viewModel = viewModel, userPreferences = userPreferences)
-                    }
+                    SongListsSection(viewModel = viewModel, userPreferences = userPreferences)
+                }
+                ChordsSection(
+                    userPreferences = userPreferences,
+                    onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
+                    onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
+                )
+                // The chords are written the same way in the Chords and Scales tabs, while a song page is about songs.
+                AnimatedVisibility(
+                    visible = userPreferences?.areSongsEnabled != false,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
                 }
             }
             SettingsTab.LIBRARY -> {
