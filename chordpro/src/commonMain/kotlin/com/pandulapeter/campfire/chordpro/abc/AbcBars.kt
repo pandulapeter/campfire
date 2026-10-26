@@ -97,16 +97,17 @@ internal object AbcBars {
     /**
      * Past a decoration (`!trill!`, `+fermata+`) or a group of grace notes (`{g}`). One that reaches across a space or
      * a bar line is no such thing: older tunes mark line breaks with a lone `!`, and skipping to the next one would
-     * swallow the bars between them. The walk stops at the first such character rather than at the closing mark, so a
-     * line of unclosed `{` stays linear.
+     * swallow the bars between them. The walk stops at the first such character, or at a second `{` (grace notes do not
+     * nest), rather than at the closing mark, so a line of unclosed `{` stays linear.
      */
     private fun decorationEnd(line: String, start: Int): Int {
-        val closing = if (line[start] == '{') '}' else line[start]
+        val opening = line[start]
+        val closing = if (opening == '{') '}' else opening
         var index = start + 1
         while (index < line.length) {
             val character = line[index]
             if (character == closing) return index + 1
-            if (character.isWhitespace() || character == '|' || character == '"') break
+            if (character.isWhitespace() || character == '|' || character == '"' || (opening == '{' && character == '{')) break
             index++
         }
         return start + 1

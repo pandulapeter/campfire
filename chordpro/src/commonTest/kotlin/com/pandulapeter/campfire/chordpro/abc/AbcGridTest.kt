@@ -95,10 +95,10 @@ class AbcGridTest {
     fun `a long line of unclosed grace note braces is read in linear time`() {
         val start = TimeSource.Monotonic.markNow()
 
-        val grid = gridOf("\"G\"G" + "{ ".repeat(200_000) + "|")
+        val grids = listOf("{ ", "{", "{!").map { gridOf("\"G\"G" + it.repeat(200_000) + "|") }
 
         assertTrue(start.elapsedNow() < 2.seconds, start.elapsedNow().toString())
-        assertEquals(listOf("| G |"), grid)
+        grids.forEach { assertEquals(listOf("| G |"), it) }
     }
 
     @Test
