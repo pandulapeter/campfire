@@ -61,7 +61,7 @@ public object ChordProTransposer {
      */
     public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null, capo: Int = 0): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
-        if (semitones == 0 && preferFlats == null && !isModulated && tabPlayer == null) return song
+        if (semitones == 0 && capo == 0 && preferFlats == null && !isModulated && tabPlayer == null) return song
         val rewrites = mutableMapOf<Int, ChordRewrite>()
         return rewriteChords(song) { offset ->
             rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats, tabPlayer, capo) }
@@ -79,7 +79,7 @@ public object ChordProTransposer {
         val rename = if (isMoved) { name: String -> transposeChord(name, shift, flats) } else { name: String -> name }
         val fretShift = shift - capo
         return ChordRewrite(
-            rewriteTabLines = if (isMoved) { lines -> ChordProTabTransposer.transpose(lines, fretShift, rename) } else { lines -> lines },
+            rewriteTabLines = if (isMoved || fretShift != 0) { lines -> ChordProTabTransposer.transpose(lines, fretShift, rename) } else { lines -> lines },
             rename = rename,
             rewriteDefinition = if (isMoved) { definition -> ChordProDefinitions.transposed(definition, shift, rename) } else { definition -> definition },
             rewriteTabRun = tabPlayer?.let { player -> { lines, selector -> ChordProTabRetuner.retune(lines, fretShift, rename, selector, player) } },

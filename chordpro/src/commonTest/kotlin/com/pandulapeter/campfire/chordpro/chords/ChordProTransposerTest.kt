@@ -223,6 +223,19 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a capo the transposition cancels still moves the tab frets by the rest`() {
+        val song = ChordProParser.parse(
+            """
+            {start_of_tab}
+            e|---0---|
+            {end_of_tab}
+            """.trimIndent()
+        ).let { ChordProTransposer.transpose(it, semitones = 0, capo = 2) }
+
+        assertEquals("e|---10---|", ((song.blocks.single() as ChordProBlock.Section).lines.single() as ChordProLine.Tab).text)
+    }
+
+    @Test
     fun `a recalled chorus is transposed with the song`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse(CUT_CHORUS_AND_RECALL), semitones = 2)
 
