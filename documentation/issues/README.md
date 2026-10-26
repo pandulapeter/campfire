@@ -132,3 +132,117 @@ Ran on 2026-10-26 against `01e6ff0d5` (codebase-review step 7), one fresh read-o
   (`pageScrollStates[pagerState.targetPage - 1]?.let { … scrollTo(state.maxValue) }`), which a page without a model
   cannot do; deferring it saves one model build (a few ms warm) at the cost of the pedal guarantee, and plan 02 already
   moves that build out of the transition by reading the neighbour's text as the screen is pushed.
+
+---
+
+# 47th review: regression of `9dba25c66..01e6ff0d5`
+
+Reviewed at `01e6ff0d5` on `master` (plans checked against `0521cfe1c`, 2026-10-26). Angle: regression of the commits
+since the last sweep — ABC import; `abc` / `ly` / `svg` blocks; chord row repeat marks; a preview of every imported song
+before anything is written; Settings split into Features and Preferences. This sweep shares the plans folder with the
+46th: its plans are numbered from 05.
+
+## Headlines
+
+- On a phone held on its side, the import preview's card takes about half of what is left for the song (plan 07).
+- A browser Forward can bring back an import preview with no review behind it: an empty screen that never closes, or
+  another import's songs (plan 05).
+- A new import's first preview can show the previous preview's inferred key for a moment (plan 06).
+- A chord row with beat dots (`[G] . . . | [C] . . . x2`) keeps its bar lines and count as lyrics (plan 08).
+
+## Fixed during the review
+
+- `02e8eead0` Read an ABC line full of unclosed grace note braces without slowing down.
+- `d43452e2c` Read only the first voice of an ABC tune into its chord grid, so an accompaniment voice adds no rows of repeat bars.
+- `03f218867` Cap how much of an ABC file's header is copied into its tunes, so a crafted tune book cannot run the app out of memory.
+- `10463648e` Keep Ctrl / Cmd + S from importing an import review's songs from a preview while its Import button is off.
+- `133c4d3c9` Read the chord shapes ahead of time while the Chords tab is on, even with chord diagrams switched off in songs.
+- `470c4f594` Disable the Chord degrees setting while no chord diagram can show a degree.
+- `84161b717` Keep the Tuner in a read only song's menu, so it does not crowd the title beside the text size.
+- `d3138496e` Rewrap the song layout's comments on runs of lines.
+- `b542ace5c` Read an ABC line of braces with no spaces between them without slowing down either.
+- `10b3aa65b` Read an ABC tune's chord grid from the first voice that has chord symbols when the first voice has none.
+- `5b753c781` Call the song menu's Preferences entry by its name in the song details documentation.
+
+The last three came from the regression read of the fixes: `{{{{` stayed quadratic, the first-voice rule dropped the
+grid of a tune whose chords sit only in a later voice, and a doc line kept the menu entry's old name.
+
+(`b7e7e60bc`, `ddaa22ecb`, and `0521cfe1c` in the same range are the release preparation, the 46th's plans, and a
+naming change: not this review's.)
+
+## Index
+
+| # | Plan | Severity | Lane |
+|---|---|---|---|
+| 05 | [Keep an import preview only over the review it was opened on](05-keep-an-import-preview-only-over-the-review-it-was-opened-on.md) | low | P |
+| 06 | [Name an import preview's pages after their review, and forget their inferred keys](06-name-import-preview-pages-per-review-and-forget-their-keys.md) | low | P |
+| 07 | [Shrink the import preview's card to one line and its buttons in a short window](07-shrink-the-import-preview-card-in-a-short-window.md) | medium | P |
+| 08 | [Read beat dots on a chord row as marks](08-read-beat-dots-on-a-chord-row-as-marks.md) | low | R |
+| 09 | [Name the Hungarian lists settings section "Listanézet"](09-name-the-hungarian-lists-settings-section-listanezet.md) | low | P |
+
+## Lanes
+
+| Lane | Area | Plans, in order | Files owned |
+|---|---|---|---|
+| R | `:chordpro` row marks | 08 | `chordpro/src/commonMain/.../syntax/ChordProRowMarks.kt`, `ChordProParserRowMarksTest.kt`, `ChordProHighlighterTest.kt`, `ChordSheetConverterTest.kt` (only a pinned dotted chart), `chordpro/CLAUDE.md` |
+| P | the import preview, presentation | 05, 06, 07, 09 | `ui/screens/importReport/ImportReport.kt`, `ui/navigation/ImportPreview.kt`, `BrowserRoutes.kt`, `ui/navigation/CLAUDE.md`, `wasmJsMain/.../navigation/BrowserHistory.kt`, `ui/state/importing/ImportReportState.kt`, `ImportPreviewing.kt`, `ui/state/songText/InferredSongKeys.kt`, `ui/state/songText/CLAUDE.md`, `ui/screens/songDetails/` (`ImportPreviewState.kt`, `ImportPreviewBar.kt`, a new `ImportPreviewChoicesMenu.kt`, `SongDetailsScreen.kt`, `CLAUDE.md`), both `strings.xml`, their tests (`BrowserRoutesTest`, `NavigatorTest`, `ImportReportStateTest`, `ImportControllerQueueTest`, `ImportPreviewingTest`, a new `InferredSongKeysTest`), `tools/screenshots/.../songDetails/ImportPreviewTest.kt` |
+
+Lane P is one lane because 05 and 06 share the review id (06 builds on it), 05 and 07 both edit
+`screens/songDetails/CLAUDE.md`, and 07 and 09 both edit `values-hu/strings.xml` (so 09, a lane of its own otherwise,
+is folded in last).
+
+**Overlap with the 46th**: its lane A owns `ui/screens/songDetails/` (`SongDetailsScreen.kt`, `SongDetailsAppBar.kt`,
+`SongDetailsPagerEffects.kt`, `CLAUDE.md`), `ui/state/songText/SongTextStore.kt`, and `ui/CampfireViewModel.kt`. Lane P
+edits `SongDetailsScreen.kt` and `screens/songDetails/CLAUDE.md`, so **lane P is cut from the main checkout's `HEAD`
+after the 46th's lane A has merged**, not from `START`, and its cherry-pick range starts at that base. Lane R overlaps
+nothing and is cut from `START`.
+
+**Merge order overall: the 46th's B, then A, then the 47th's R, then P.** `:chordpro` first (it touches nothing shared),
+the most shared UI last.
+
+Shared files between the 47th's lanes: none. `strings.xml` is lane P's alone.
+
+## Decisions (all taken by the user, 2026-10-26)
+
+- **Beat dots count** as row marks (`.`, `...`, `…`); parentheses stay lyrics (plan 08).
+- **The compact card** in a short window: one line plus the buttons, Include and Keep both / Replace behind a dropdown
+  (plan 07).
+- **"Listanézet"** for the Hungarian `settings_group_lists` (plan 09).
+- The plans folder is shared with the 46th; this sweep's plans are 05 onwards.
+
+## Challenge
+
+Run 2026-10-26 on plans 05–09, by two fresh challengers; none dropped.
+
+- **05 amended**: `ImportPreview.reviewId` is required, not defaulted (web history entries live in memory, saved state
+  is the same build, previews are dropped on restore); the self-close skips an `Importing` report, so a preview
+  recomposed mid-write (an Android activity recreated) is not popped; the effect lives in `ImportPreviewState.kt`
+  (`CloseImportPreviewWithoutReview`) so `SongDetailsScreen` does not grow.
+- **06 amended**: forgetting on leaving composition raced with reopening the same review's row while the old preview
+  slid out; a preview now forgets its review's names only once that review is no longer the report, and sweeps other
+  reviews' names on entering (`forget` by predicate, `isImportPreviewFileName`); `state/songText/CLAUDE.md` updated.
+- **07 amended**: the compact line takes up to two lines (one cut the taken-name sentence); the choices button sits in
+  the per-page crossfade; the line's text change crossfades; the test confirms Replace's dialog.
+- **08 amended**: the ellipsis quoted as HEAD spells it; exactly `.`, `...`, `…`; more tests (`[Am]. . .`, `[G]…`, sung
+  dots kept); a dot-only chord row drops in lyrics only mode and a PDF without chords, as `[G] [C] x4` rows do.
+- **09 sound.**
+
+## Checked and found solid
+
+- Nothing is written before Import: every preview and review path reads the plan's text, and Import is the only write
+  (the review's, a preview's buttons, Ctrl / Cmd + S, now also gated while the button is off — `10463648e`).
+- ABC import is wired on Android and iOS as on the desktop and web ("open with", share, and the picker's types).
+- `abc` / `ly` / `svg` blocks stay verbatim: they leak into neither the chord list, transposition, nor scale suggestions.
+- Row marks round trip through the serializer oracle, and draw, print, and pad as annotations.
+- The tab column fix holds.
+- The Settings split: Features and Preferences tabs, preferences decoding (old documents decode), dialog slot keys, and
+  the English / Hungarian strings parity.
+
+## Dropped after verification
+
+- The docs check's claim that `librarySong` does not exist: it does (`state/importing/ImportPreviewing.kt`, `internal val
+  ImportPlan.librarySong`).
+- The preview's Tuner menu entry against `screens/songDetails/CLAUDE.md`'s "no … tuner button": it is a menu entry, not
+  a button, and writes nothing.
+- The Chords tab reappearing on upgrade for users who had chords or chord diagrams off: accepted under the
+  no-migration rule (a tiny user base); the release notes may mention it.
