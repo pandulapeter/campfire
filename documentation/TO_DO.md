@@ -8,11 +8,10 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Document all keyboard shortcuts used in the app
-- Rename master branch to main
-- Comments in setlists (between songs)
-- If no key is specified, display the inferred key of the song, with a question mark
 - Reorganize settings, separate feature flags from preferences
+- Rename master branch to main
+- Document all keyboard shortcuts used in the app
+- Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Editor multi-cursor support
 - Streaming zip writer on all platforms
