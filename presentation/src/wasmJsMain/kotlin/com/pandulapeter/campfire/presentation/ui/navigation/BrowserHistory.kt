@@ -18,6 +18,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import kotlinx.browser.window
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
@@ -198,6 +199,7 @@ private class BrowserHistory(
                     setlists = setlists,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
                     hasImportReport = viewModel.importReportState.importReport.value != null,
+                    reviewId = (viewModel.importReportState.importReport.value as? ImportReport.Review)?.id,
                     openOnboarding = openOnboarding,
                 )
             }

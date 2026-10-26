@@ -354,7 +354,7 @@ class ImportControllerQueueTest {
         settle()
         val review = assertIs<ImportReport.Review>(reportState.importReport.value)
         assertTrue(review.isSongPreview)
-        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+        assertEquals(ImportPreview.singleSong(reviewId = review.id), (backStack.last() as CampfireDestination.SongDetails).importPreview)
         assertFalse(CampfireDestination.ImportReport in backStack)
         assertEquals(0, importCount)
         assertFalse(settled.isCompleted)
@@ -823,7 +823,7 @@ class ImportControllerQueueTest {
     )
 }
 
-private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview == ImportPreview.SingleSong
+private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview?.isReviewPager == false
 
 private fun songEntry(
     fileName: String,

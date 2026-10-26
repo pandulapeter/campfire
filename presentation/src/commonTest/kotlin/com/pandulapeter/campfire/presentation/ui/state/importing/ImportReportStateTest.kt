@@ -106,7 +106,7 @@ class ImportReportStateTest {
         settle()
         state.showInPlace(songPreview)
         assertEquals(0, reportCount)
-        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+        assertEquals(ImportPreview.singleSong(reviewId = songPreview.id), (backStack.last() as CampfireDestination.SongDetails).importPreview)
         assertTrue(state.isOnBackStack)
         assertTrue(leaves.none { it })
     }
@@ -120,7 +120,7 @@ class ImportReportStateTest {
         dialogHost.dismissDialog()
         settle()
         assertEquals(0, reportCount)
-        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+        assertEquals(ImportPreview.singleSong(reviewId = songPreview.id), (backStack.last() as CampfireDestination.SongDetails).importPreview)
     }
 
     @Test
@@ -138,11 +138,12 @@ class ImportReportStateTest {
     @Test
     fun `the review's rows open in a preview over it, which its Import takes off again`() = runTest {
         startState()
-        state.show(ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false))
+        val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false)
+        state.show(review)
         settle()
         state.openReviewPreview(songIndices = listOf(1, 0), index = 1)
         val preview = (backStack.last() as CampfireDestination.SongDetails)
-        assertEquals(ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true), preview.importPreview)
+        assertEquals(ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true, reviewId = review.id), preview.importPreview)
         assertEquals(1, preview.initialIndex)
         state.closeReviewPreview()
         assertEquals(CampfireDestination.ImportReport, backStack.last())
@@ -162,6 +163,18 @@ class ImportReportStateTest {
         val choices = (state.importReport.value as ImportReport.Review).choices
         assertEquals(mapOf(shown to ImportConflictResolution.REPLACE), choices.conflictResolutions)
         assertEquals(ImportChoices().conflictResolution, choices.conflictResolution)
+    }
+
+    @Test
+    fun `a review keeps its id through a change of its choices, and two reviews have different ones`() = runTest {
+        startState()
+        val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry)), choices = ImportChoices(), isDemoLibrary = false)
+        state.report = review
+        state.setImportEntriesChosen(keys = listOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0)), isChosen = false)
+        val changed = state.importReport.value as ImportReport.Review
+        assertTrue(changed.choices != review.choices)
+        assertEquals(review.id, changed.id)
+        assertTrue(review.id != ImportReport.Review(plan = ImportPlan(songs = listOf(entry)), choices = ImportChoices(), isDemoLibrary = false).id)
     }
 
     @Test

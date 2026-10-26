@@ -230,8 +230,10 @@ internal object BrowserRoutes {
      * or its address is opened ([resolve]), and it is cut short too once the song it was on is gone from the setlist.
      * An editor is cut off as well while performance mode is on, which may have been turned on since, and the import
      * screen once there is no import to report on ([hasImportReport]): the one it was about has been left. So is an
-     * onboarding the app is no longer showing ([openOnboarding] is the one on its back stack now, if any), which only a
-     * start up that owes it or Settings opens.
+     * import preview once the review it was opened over is not the one on screen ([reviewId] is the
+     * `ImportReport.Review.id` the import holds now, null for any other report or none), and an onboarding the app is no
+     * longer showing ([openOnboarding] is the one on its back stack now, if any), which only a start up that owes it or
+     * Settings opens.
      */
     fun validate(
         state: NavigationState,
@@ -239,6 +241,7 @@ internal object BrowserRoutes {
         setlists: List<Setlist>,
         isPerformanceModeEnabled: Boolean,
         hasImportReport: Boolean,
+        reviewId: String?,
         openOnboarding: CampfireDestination.Onboarding?,
     ): NavigationState {
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
@@ -247,7 +250,7 @@ internal object BrowserRoutes {
         for (destination in state.backStack) {
             backStack += when (destination) {
                 is CampfireDestination.SongDetails -> if (destination.importPreview != null) {
-                    destination.takeIf { hasImportReport }
+                    destination.takeIf { reviewId != null && it.importPreview?.reviewId == reviewId }
                 } else if (destination.setlistFileName == null) {
                     destination.takeIf { it.songFileNames.any { fileName -> fileName in songFileNames } }
                 } else {

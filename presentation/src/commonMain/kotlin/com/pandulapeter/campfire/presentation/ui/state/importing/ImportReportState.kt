@@ -124,7 +124,7 @@ internal class ImportReportState(
 
     /** The screen [report] is shown on: the import screen, or the preview of the one song of a batch that is nothing else. */
     private fun screenOf(report: ImportReport) = if (report is ImportReport.Review && report.isSongPreview) {
-        CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+        CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.singleSong(reviewId = report.id))
     } else {
         CampfireDestination.ImportReport
     }
@@ -136,7 +136,7 @@ internal class ImportReportState(
     fun openReviewPreview(songIndices: List<Int>, index: Int) {
         val review = _importReport.value as? ImportReport.Review ?: return
         if (backStack.lastOrNull() != CampfireDestination.ImportReport || songIndices.isEmpty()) return
-        val preview = ImportPreview(songIndices = songIndices, planSongCount = review.plan.songs.size, isReviewPager = true)
+        val preview = ImportPreview(songIndices = songIndices, planSongCount = review.plan.songs.size, isReviewPager = true, reviewId = review.id)
         updateBackStack {
             add(CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = index.coerceIn(songIndices.indices), importPreview = preview))
         }

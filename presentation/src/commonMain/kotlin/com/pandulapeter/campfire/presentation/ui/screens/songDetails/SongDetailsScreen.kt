@@ -133,6 +133,7 @@ internal fun SongDetailsScreen(
         // as its exit transition runs, and going back from there would close the screen underneath it too.
         if (!isImportPreview && resolvedSongs?.isEmpty() == true && viewModel.navigator.backStack.lastOrNull() == destination) onBack()
     }
+    CloseImportPreviewWithoutReview(viewModel = viewModel, destination = destination, importPreview = importPreview, onBack = onBack)
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
     val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()

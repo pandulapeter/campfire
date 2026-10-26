@@ -70,7 +70,7 @@ internal fun rememberImportPreviewState(
 ): ImportPreviewState? {
     val report by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
     val lastReview = remember { LastReview() }
-    (report as? ImportReport.Review)?.let { lastReview.review = it }
+    (report as? ImportReport.Review)?.takeIf { it.id == destination.importPreview?.reviewId }?.let { lastReview.review = it }
     val folds = remember { mutableStateMapOf<String, Set<String>>() }
     val songs = remember { mutableMapOf<Int, Pair<String, Song>>() }
     val preview = destination.importPreview ?: return null
@@ -91,6 +91,32 @@ internal fun rememberImportPreviewState(
             isWriting = report == ImportReport.Importing,
             folds = folds,
         )
+    }
+}
+
+/**
+ * Closes [destination] where it is a preview with nothing to show ([importPreview] is null): one gone forward into, or
+ * restored, over a review that is not the one it was opened over, or over none, as a song of the library with no songs
+ * closes itself.
+ */
+@Composable
+internal fun CloseImportPreviewWithoutReview(
+    viewModel: CampfireViewModel,
+    destination: CampfireDestination.SongDetails,
+    importPreview: ImportPreviewState?,
+    onBack: () -> Unit,
+) {
+    val isOrphaned = destination.importPreview != null && importPreview == null
+    LaunchedEffect(isOrphaned) {
+        // A preview of one song composed afresh while it is being written (an Android activity recreated by a change its
+        // configChanges do not cover) has forgotten its review, and stays until followImportedSong rewrites it: popping it
+        // would be taken by applyImportPlan for the import screen being left.
+        if (isOrphaned &&
+            viewModel.importReportState.importReport.value != ImportReport.Importing &&
+            viewModel.navigator.backStack.lastOrNull() == destination
+        ) {
+            onBack()
+        }
     }
 }
 

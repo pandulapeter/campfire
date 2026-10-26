@@ -210,6 +210,7 @@ class BrowserRoutesTest {
             setlists = setlists,
             isPerformanceModeEnabled = false,
             hasImportReport = false,
+            reviewId = null,
             openOnboarding = null,
         ).backStack,
     )
@@ -223,6 +224,7 @@ class BrowserRoutesTest {
             setlists = setlists,
             isPerformanceModeEnabled = false,
             hasImportReport = false,
+            reviewId = null,
             openOnboarding = null,
         ).backStack.last() as CampfireDestination.SongDetails
         assertEquals(listOf("a.cho", "b.cho"), validated.songFileNames)
@@ -232,20 +234,37 @@ class BrowserRoutesTest {
     @Test
     fun `the editor is cut in performance mode and the import screen without a report`() {
         val state = home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"), CampfireDestination.SongEditor(fileName = "a.cho")))
-        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = true, hasImportReport = false, openOnboarding = null).backStack.size)
-        assertEquals(3, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
+        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = true, hasImportReport = false, reviewId = null, openOnboarding = null).backStack.size)
+        assertEquals(3, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, reviewId = null, openOnboarding = null).backStack.size)
         val import = home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.ImportReport))
-        assertEquals(1, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
-        assertEquals(2, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = null).backStack.size)
+        assertEquals(1, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, reviewId = null, openOnboarding = null).backStack.size)
+        assertEquals(2, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, reviewId = null, openOnboarding = null).backStack.size)
     }
 
     @Test
-    fun `a preview is addressed as the import is, and cut without a report`() {
-        val preview = CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+    fun `a preview is addressed as the import is, and kept only over the review it was opened over`() {
+        val preview = CampfireDestination.SongDetails(
+            songFileNames = emptyList(),
+            setlistFileName = null,
+            initialIndex = 0,
+            importPreview = ImportPreview.singleSong(reviewId = "review"),
+        )
         val state = home.copy(backStack = listOf(CampfireDestination.Songs, preview))
         assertEquals(listOf("songs", "import"), BrowserRoutes.paths(inputs(state)))
-        assertEquals(1, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
-        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = null).backStack.size)
+        fun validated(hasImportReport: Boolean, reviewId: String?) = BrowserRoutes.validate(
+            state = state,
+            songs = songs,
+            setlists = setlists,
+            isPerformanceModeEnabled = false,
+            hasImportReport = hasImportReport,
+            reviewId = reviewId,
+            openOnboarding = null,
+        ).backStack.size
+        assertEquals(2, validated(hasImportReport = true, reviewId = "review"))
+        // A finished import (a report, but no review), another import's review, or no import at all cuts it.
+        assertEquals(1, validated(hasImportReport = true, reviewId = null))
+        assertEquals(1, validated(hasImportReport = true, reviewId = "another review"))
+        assertEquals(1, validated(hasImportReport = false, reviewId = null))
     }
 
     @Test
@@ -256,7 +275,7 @@ class BrowserRoutesTest {
         ).forEach { backStack ->
             assertEquals(
                 backStack.dropLast(1),
-                BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack,
+                BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, reviewId = null, openOnboarding = null).backStack,
             )
         }
     }
@@ -267,7 +286,7 @@ class BrowserRoutesTest {
         val backStack = listOf(CampfireDestination.Songs, onboarding, CampfireDestination.ImportReport)
         assertEquals(
             backStack,
-            BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = onboarding).backStack,
+            BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, reviewId = null, openOnboarding = onboarding).backStack,
         )
         // Not the one that is open: cut there, with what is over it.
         assertEquals(
@@ -278,6 +297,7 @@ class BrowserRoutesTest {
                 setlists = setlists,
                 isPerformanceModeEnabled = false,
                 hasImportReport = true,
+                reviewId = null,
                 openOnboarding = CampfireDestination.Onboarding(isOpenedFromSettings = true),
             ).backStack,
         )

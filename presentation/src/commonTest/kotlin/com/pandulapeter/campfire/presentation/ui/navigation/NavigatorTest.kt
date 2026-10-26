@@ -74,7 +74,7 @@ class NavigatorTest {
 
     @Test
     fun `a process restored behind an import comes back on the screen under its screen and its preview`() = runTest {
-        val preview = CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+        val preview = CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.singleSong(reviewId = "review"))
         navigator(backgroundScope).updateBackStack { addAll(listOf(CampfireDestination.Settings, CampfireDestination.ImportReport, preview)) }
         runCurrent()
         assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator(backgroundScope).backStack.toList())

@@ -108,7 +108,7 @@ class SongTextStoreTest {
     @Test
     fun `reading ahead for an import preview reads nothing`() = runTest {
         val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
-        store.readAhead(setlist.copy(importPreview = ImportPreview.SingleSong), currentFileName = "c")
+        store.readAhead(setlist.copy(importPreview = ImportPreview.singleSong(reviewId = "review")), currentFileName = "c")
         runCurrent()
         assertEquals(emptyMap(), store.songTexts.value)
     }

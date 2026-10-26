@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import kotlin.uuid.Uuid
 
 /**
  * What [CampfireDestination.ImportReport] shows, see `ImportReportState.importReport`: the stages of one import the user
@@ -39,7 +40,9 @@ sealed interface ImportReport {
      * [sharedLinkUpdateCount] is how many of its names already taken started on Replace, being files an earlier import
      * of the same link wrote on this device (see `sharedLinkChoices`), which a line under the counts explains.
      * [isSongPreview] is a batch that is one song and nothing else, shown as the preview of that song in place of the
-     * import screen (`ImportPreview.SingleSong`), which no other batch joins.
+     * import screen (`ImportPreview.singleSong`), which no other batch joins. [id] stays the same through every change
+     * made to the review in place (its choices, a batch joining it), so that a preview names the review it was opened
+     * over (`ImportPreview.reviewId`) and is not drawn over another one.
      */
     data class Review(
         val plan: ImportPlan,
@@ -48,6 +51,7 @@ sealed interface ImportReport {
         val sharedLinkTitle: String? = null,
         val sharedLinkUpdateCount: Int = 0,
         val isSongPreview: Boolean = false,
+        val id: String = Uuid.random().toString(),
     ) : ImportReport {
 
         val isSharedLink get() = sharedLinkTitle != null

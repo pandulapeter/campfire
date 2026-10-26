@@ -34,7 +34,7 @@ internal val ImportPlan.isPreviewed get() = newSongOf() != null
 /** The one song [plan] is where the library already holds it as it is, which is opened rather than previewed. */
 internal val ImportPlan.librarySong get() = loneSong?.takeIf { it.status == ImportPlan.Status.IDENTICAL }
 
-/** The entry the preview of a batch of one song is about, see [ImportPreview.SingleSong]. */
+/** The entry the preview of a batch of one song is about, see [ImportPreview.singleSong]. */
 internal val PREVIEWED_SONG_KEY = ImportEntryKey(ImportEntryKey.Kind.SONG, 0)
 
 /**

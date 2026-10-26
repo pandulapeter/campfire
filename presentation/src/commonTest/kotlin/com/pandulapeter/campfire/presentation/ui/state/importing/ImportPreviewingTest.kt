@@ -26,7 +26,7 @@ class ImportPreviewingTest {
     @Test
     fun `a preview over the review pages through the rows it was opened on, then what joined since`() {
         val plan = ImportPlan(songs = listOf(entry("a.cho"), entry("b.cho"), entry("c.cho"), entry("d.cho"), entry("e.cho", repeatedEntryIndex = 3)))
-        val preview = ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true)
+        val preview = ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true, reviewId = "review")
 
         assertEquals(listOf(1, 0, 2, 3), importPreviewSongIndices(preview, plan))
     }
