@@ -188,8 +188,8 @@ internal class ImportController(
     fun importFiles(files: List<ImportedFile>) = enqueueImport(ImportSource.Files(files), shouldOpenSong = true)
 
     /**
-     * A file somebody shared as an address, downloaded once and reviewed like any other. A link to one song opens it,
-     * as a file opened with the app does.
+     * A file somebody shared as an address, downloaded once and reviewed like any other. A link to one song is previewed,
+     * as a file opened with the app is.
      */
     fun importFromAddress(url: String) {
         enqueueImport(ImportSource.Address(url), shouldOpenSong = true)
@@ -198,7 +198,7 @@ internal class ImportController(
     /**
      * A song or setlist shared as a Campfire link, however it arrived: opened from the system, pasted, dropped, or shared
      * as text. It is downloaded and always reviewed, with the names an earlier import of the same link wrote here
-     * defaulting to Replace (see [sharedLinkChoices]); a link to one song opens it once imported. A link from a newer
+     * defaulting to Replace (see [sharedLinkChoices]); a link to one song is previewed rather than listed. A link from a newer
      * version of Campfire is answered with a sentence and queues nothing.
      *
      * @return Completed once the link has settled, see [enqueueImport].
