@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
  *   stepper.
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
+ * @param inferredKey The key the song's chords were found in, see `InferredSongKeys`, for a file that names none.
  * @return Null where both are switched off, which leaves the song nothing to set.
  */
 @Composable
@@ -50,6 +51,7 @@ internal fun rememberSongPlayingControls(
     chordSpelling: UserPreferences.ChordSpelling,
     shouldShowChords: Boolean,
     shouldShowTempo: Boolean,
+    inferredKey: String?,
 ): SongPlayingControls? {
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
@@ -58,12 +60,12 @@ internal fun rememberSongPlayingControls(
     // The key the page's chords sound in, which the file's capo is counted into and a capo override is not: that keeps
     // the pitch and changes the shapes under it. The stepper itself reads the reader's own semitones, which it steps.
     val fileCapo = capo.songFret
-    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.soundingTransposition, spelling = chordSpelling) else null
-    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, fileCapo) {
+    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.soundingTransposition, spelling = chordSpelling, inferredKey = inferredKey) else null
+    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, fileCapo, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, fileCapo), spelling = chordSpelling)
+            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, fileCapo), spelling = chordSpelling, inferredKey = inferredKey)
             transpositionValue(transposition, shownKey)
         }
     }

@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -190,7 +191,17 @@ internal class ExportController(
             // The scales and the degrees read the file's own capo, which says how its key is meant, as on the screen.
             val transposed = content?.let { withContext(Dispatchers.Default) { songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs, capo = playback.tabCapoFor(preferences)) } }
             val printed = transposed?.withTempo(tempo)?.let { if (playsWithoutCapo) it.withoutCapo() else it.withCapo(capo) }
-            val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
+            // A file that names no key is named by the one its chords are in, as on the screen; that key is already in the
+            // reader's notation, so it is set after the notation rather than before.
+            val inferredKey = if (song != null && song.key.isNullOrBlank() && content != null) {
+                val inferred = withContext(Dispatchers.Default) { songRenderer.inferredKeyOfText(content.text) }
+                songRenderer.renderKey(song = song, transposition = transposition, spelling = spelling, inferredKey = inferred)
+            } else {
+                null
+            }
+            val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }?.let { rendered ->
+                inferredKey?.takeIf { rendered.metadata.key.isNullOrBlank() }?.let { rendered.copy(metadata = rendered.metadata.copy(key = it)) } ?: rendered
+            }
             // One walk answers both the scales and the degrees, as on the screen.
             val analysis = if (transposed != null && (suggestsScales || (chordTuning != null && showsDegrees))) {
                 withContext(Dispatchers.Default) { printScaleAnalysisOf(transposed, sectionLabels) }

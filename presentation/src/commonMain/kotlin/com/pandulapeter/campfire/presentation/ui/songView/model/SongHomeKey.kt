@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.chordpro.scales.SongScaleSuggestions
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 
 /**
  * The key of the home [SongScaleSuggestions] finds among [groups] (`ScaleGroup.isHome`), in the standard notation and in
@@ -55,6 +57,9 @@ internal fun inferredKeyOf(song: ChordProSong): String? {
     if (song.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT) return null
     return homeKeyOf(SongScaleSuggestions.of(song))
 }
+
+/** [inferredKeyOf] the song file [text], read as the screen and the PDF both read it, so that they infer one way. */
+internal fun SongRenderer.inferredKeyOfText(text: String) = inferredKeyOf(transposedSong(text = text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default))
 
 private const val MINOR_THIRD = 3
 private const val MAJOR_THIRD = 4

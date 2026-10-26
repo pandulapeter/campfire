@@ -13,6 +13,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Notation
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -50,6 +53,34 @@ class SongRendererTest {
     private fun tabLinesOf(text: String, transposition: Int, capo: Int) = renderer
         .transposedSong(text, transposition = transposition, spelling = UserPreferences.ChordSpelling.Default, capo = capo)
         .blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Tab>().map { it.text }
+
+    @Test
+    fun `a file with no key is named by the key its chords are in`() {
+        val song = Song(
+            fileName = "song.cho",
+            title = "Song",
+            artist = "",
+            key = null,
+            transpose = 0,
+            tags = emptyList(),
+            languages = emptyList(),
+            coverArtUrl = null,
+            hasChords = true,
+            canUpdateFileName = false,
+            lastModified = 0,
+            size = 0,
+        )
+        assertEquals("A", renderer.renderKey(song = song, transposition = 2, spelling = UserPreferences.ChordSpelling.Default, inferredKey = "G"))
+        assertEquals("E", renderer.renderKey(song = song.copy(key = "D"), transposition = 2, spelling = UserPreferences.ChordSpelling.Default, inferredKey = "G"))
+        assertNull(renderer.renderKey(song = song, transposition = 2, spelling = UserPreferences.ChordSpelling.Default, inferredKey = null))
+    }
+
+    @Test
+    fun `a song file's text is inferred to be in the key its parsed song is`() {
+        val text = "[G]one [C]two [D]three [G]four"
+        assertEquals("G", renderer.inferredKeyOfText(text))
+        assertEquals(inferredKeyOf(renderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)), renderer.inferredKeyOfText(text))
+    }
 
     @Test
     fun `a song with no key has no rendered key`() =

@@ -108,9 +108,14 @@ class SongRenderer(
      * startup and its lyrics are not, so a list that had to parse a file to name its key would be reading the whole
      * library a second time to fill in one line of each row. Both steps rewrite the key of whatever song they
      * are handed, so what they are handed here is a song that is nothing but that key.
+     *
+     * @param inferredKey The key the song's chords were found in when its text was read (`InferredSongKeys`), which names
+     *   a file that declares none. It was found after the file's own `{transpose}`, so it is moved by the [transposition]
+     *   alone.
      */
-    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling) =
+    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling, inferredKey: String? = null) =
         renderKey(key = song.chordsKey, transpose = song.transpose, transposition = transposition, spelling = spelling)
+            ?: inferredKey?.takeIf { song.key.isNullOrBlank() }?.let { renderKey(key = it, transpose = 0, transposition = transposition, spelling = spelling) }
 
     /**
      * [renderKey] for a song known only by the two things it depends on: the [key] its chords are written in and the

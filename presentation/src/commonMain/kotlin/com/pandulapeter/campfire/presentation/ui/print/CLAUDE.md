@@ -43,9 +43,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - Markup's bold is drawn but written into the text layer in the regular weight: read back, a bold word that is a chord
   name would become a chord.
 - The playing row (`playingDetails`) **follows the reader's settings as the screen does**: transposition, capo, and
-  tempo are the setlist's, else the reader's own, else the file's. The sounding key, the reader's transposition, and
-  non-zero capo with `showKey` (none on the keyboard, as on screen; diagrams drawn above the printed capo); tempo and
-  time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the
+  tempo are the setlist's, else the reader's own, else the file's. The sounding key (the inferred one where the file
+  names none, as on screen), the reader's transposition, and non-zero capo with `showKey` (none on the keyboard, as on
+  screen; diagrams drawn above the printed capo); tempo and time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the
   song sheets' artist; the running order has its own: `showOverviewDetails` (the setlist's date and description and its
   songs' artists, read as `showMetadata` from a file older than it) and `overviewColumns`, its song list flowing in them
   under a heading that spans the page.

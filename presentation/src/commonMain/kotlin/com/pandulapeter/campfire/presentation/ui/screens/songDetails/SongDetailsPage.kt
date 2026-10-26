@@ -105,6 +105,8 @@ import org.jetbrains.compose.resources.painterResource
  *   same way as [tempoOverride].
  * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
+ * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by the read only line of
+ *   a file that names none; null where the playing controls are drawn, which name it themselves.
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
  *   section, null in read only mode, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons of that section, in read only mode too, see [SongPlayingTools].
@@ -137,6 +139,7 @@ internal fun SongDetailsPage(
     tempoOverride: Int?,
     capoOverride: Int?,
     shapeCapo: Int,
+    inferredKey: String?,
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
     shouldShowChords: Boolean,
@@ -195,6 +198,7 @@ internal fun SongDetailsPage(
                 tempoOverride = tempoOverride,
                 capoOverride = capoOverride,
                 shapeCapo = shapeCapo,
+                inferredKey = inferredKey,
                 showsTiming = shouldShowTempo,
                 chordTuning = chordDiagrams?.tuning,
                 tabs = tabs,
@@ -207,7 +211,9 @@ internal fun SongDetailsPage(
             // in; the page names the capo it is played at.
             val transposed = transposeSong(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs)
             prepareSongLyrics(
-                song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling),
+                song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling).let { song ->
+                    inputs.inferredKey?.takeIf { song.metadata.key.isNullOrBlank() }?.let { song.copy(metadata = song.metadata.copy(key = it)) } ?: song
+                },
                 standardSong = transposed,
                 shapeCapo = inputs.shapeCapo,
                 shouldShowChords = inputs.shouldShowChords,

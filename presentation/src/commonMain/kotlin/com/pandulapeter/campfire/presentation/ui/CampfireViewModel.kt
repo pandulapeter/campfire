@@ -158,7 +158,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
-import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import kotlinx.coroutines.Dispatchers
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlinx.coroutines.CancellationException
@@ -432,7 +432,7 @@ class CampfireViewModel(
         saveSongContent = saveSongContent,
         getSongContentInvalidations = getSongContentInvalidations,
         inferredKeys = InferredSongKeys(
-            inferKey = { text -> inferredKeyOf(songRenderer.transposedSong(text = text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)) },
+            inferKey = songRenderer::inferredKeyOfText,
             dispatcher = Dispatchers.Default,
         ),
     )

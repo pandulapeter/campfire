@@ -91,6 +91,7 @@ internal fun SongPages(
 ) {
     val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
     val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
+    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tabs = rememberTabReading(userPreferences)
@@ -173,6 +174,14 @@ internal fun SongPages(
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             capoOverride = capo.takeUnless { it.isDefault || playsWithoutCapo }?.fret,
             shapeCapo = shapeCapo,
+            // Only the read only line needs it, as the controls name the key otherwise.
+            inferredKey = if (isReadOnly) {
+                inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
+                    viewModel.songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
+                }
+            } else {
+                null
+            },
             // Read only, the four playing values are read rather than set, so the page draws them as the
             // line of text they have always been.
             playingControls = if (isReadOnly) {
@@ -187,6 +196,7 @@ internal fun SongPages(
                     chordSpelling = chordSpelling,
                     shouldShowChords = shouldShowChords,
                     shouldShowTempo = isMetronomeEnabled,
+                    inferredKey = inferredKeys[song.fileName],
                 )
             },
             playingTools = rememberSongPlayingTools(

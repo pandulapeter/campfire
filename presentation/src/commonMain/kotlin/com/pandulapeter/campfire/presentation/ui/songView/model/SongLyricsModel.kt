@@ -202,6 +202,7 @@ internal data class SongLyricsInputs(
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val shapeCapo: Int = 0,
+    val inferredKey: String? = null,
     val showsTiming: Boolean = true,
     val chordTuning: ChordTuning? = null,
     val tabs: TabReading? = null,

@@ -164,14 +164,8 @@ internal fun headerKeyOf(
         song = it,
         transposition = playback.soundingTransposition,
         spelling = chordSpelling,
-    ) ?: inferredKey?.takeIf { _ -> it.key.isNullOrBlank() }?.let { key ->
-        songRenderer.renderKey(
-            key = key,
-            transpose = 0,
-            transposition = playback.soundingTransposition,
-            spelling = chordSpelling,
-        )
-    }
+        inferredKey = inferredKey,
+    )
 }
 
 /**

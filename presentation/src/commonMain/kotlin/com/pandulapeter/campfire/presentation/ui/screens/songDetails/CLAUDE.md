@@ -37,7 +37,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   its crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the first
   section says it) and no duration.
 - **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
-  is. `InferredSongKeys` works it out off the main thread as `SongTextStore` reads the text, before handing the text on,
+  is: in the bar, the Transposition control and its menu, the read only line, and the PDF. `InferredSongKeys` works it out off the main thread as `SongTextStore` reads the text, before handing the text on,
   and keeps it by file name for the view model's life: a song reopened names it on its first frame; one never read
   gets it in the frame its lyrics arrive, crossfading in with them. The list cards never parse a file, so they name
   only a written key.
