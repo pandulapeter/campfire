@@ -30,16 +30,17 @@ Android application entry point. `CampfireAndroidApplication` starts Koin with t
 
 - **Open with**: `content://` only (no storage permission, so `file://` couldn't be read). The ChordPro extensions
   (`.cho`, `.chopro`, `.chordpro`, `.crd`, `.chord`, `.pro`) with a wildcard MIME type, since a `content://` URI has no
-  extension to the resolver without a declared type. Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
+  extension to the resolver without a declared type. Keep in step with `LibraryFiles.SONG_EXTENSIONS`, plus `.abc`
+  (one song per tune; offered, never claimed as the default, since Campfire is no ABC editor).
   - API 31+: `pathSuffix`, lower and upper case.
   - Older: `pathPattern`, whose `.*` never backtracks, so one pattern per number of dots in the path, up to four; lower
     case only. `pathAdvancedPattern` doesn't backtrack either.
-  - A second filter takes `text/plain` and `application/octet-stream` without a path, for URIs with no file name
-    (Downloads' `msf:` ids, attachments). Unrelated files offered this way are reported as skipped (an unknown name is
-    kept only if its bytes are a zip, or text with a song's structure).
+  - A second filter takes `text/plain`, `text/vnd.abc`, and `application/octet-stream` without a path, for URIs with
+    no file name (Downloads' `msf:` ids, attachments). Unrelated files offered this way are reported as skipped (an
+    unknown name is kept only if its bytes are a zip, ABC, or text with a song's structure).
   - No `application/zip` Open with filter.
-- **Share**: `text/plain` (also shared text), `application/octet-stream`, the two zip types, JSON (other apps' song
-  exports), PDF, and `.docx`.
+- **Share**: `text/plain` (also shared text), `text/vnd.abc`, `application/octet-stream`, the two zip types, JSON
+  (other apps' song exports), PDF, and `.docx`.
 - Shared text (`EXTRA_TEXT`, named by `EXTRA_SUBJECT`) reaches `CampfireAndroidApp` as `sharedTexts`; what it becomes
   is `:presentation`'s. A stream wins over text in the same intent (the text is a caption).
 - **The activity declares no intent filter of its own**: since Android 15 an explicit intent from another app (Android

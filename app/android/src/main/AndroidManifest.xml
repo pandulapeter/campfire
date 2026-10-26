@@ -115,8 +115,9 @@
             <!--
               Opening a ChordPro file with Campfire. The pattern has to carry a MIME type to match a content URI at
               all, and there is no registered type for these extensions, so the type is the wildcard and the
-              extension is what actually decides. This filter lists only the ChordPro family; the MIME fallback
-              below covers providers whose URI does not carry the file name.
+              extension is what actually decides. This filter lists the ChordPro family and ABC notation's .abc, which
+              is imported as one song per tune; the MIME fallback below covers providers whose URI does not carry the
+              file name. Campfire is no ABC editor, so it is offered for .abc rather than made its default.
               Only content URIs are claimed: the app holds no storage permission, so a file URI outside its own
               directories cannot be read, and a file manager would offer Campfire for an open that fails.
             -->
@@ -138,12 +139,14 @@
                 <data android:pathSuffix=".crd" />
                 <data android:pathSuffix=".chord" />
                 <data android:pathSuffix=".pro" />
+                <data android:pathSuffix=".abc" />
                 <data android:pathSuffix=".CHO" />
                 <data android:pathSuffix=".CHOPRO" />
                 <data android:pathSuffix=".CHORDPRO" />
                 <data android:pathSuffix=".CRD" />
                 <data android:pathSuffix=".CHORD" />
                 <data android:pathSuffix=".PRO" />
+                <data android:pathSuffix=".ABC" />
                 <!-- Android 9 to 11 have only pathPattern, whose ".*" stops at the first occurrence of the character
                      after it and never backtracks, so a pattern matches a path with exactly as many dots as it has.
                      One pattern per count, up to four dots in the whole path; a path with more is imported from
@@ -172,12 +175,16 @@
                 <data android:pathPattern=".*\\..*\\.pro" />
                 <data android:pathPattern=".*\\..*\\..*\\.pro" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.pro" />
+                <data android:pathPattern=".*\\.abc" />
+                <data android:pathPattern=".*\\..*\\.abc" />
+                <data android:pathPattern=".*\\..*\\..*\\.abc" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.abc" />
             </intent-filter>
 
             <!--
               Some document providers keep the display name out of the content URI, so none of the suffixes above
               can match even when the file is named .cho. A second View filter accepts the two MIME types such files
-              are commonly opened as. It also offers Campfire for other text or generic files; the import reads the
+              are commonly opened as, and ABC notation's own. It also offers Campfire for other text or generic files; the import reads the
               display name after selection and skips unsupported extensions.
             -->
             <intent-filter android:label="@string/campfire">
@@ -188,6 +195,7 @@
 
                 <data android:scheme="content" />
                 <data android:mimeType="text/plain" />
+                <data android:mimeType="text/vnd.abc" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
 
@@ -246,7 +254,8 @@
             <!--
               Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain or, because .cho
               has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
-              senders use application/x-zip-compressed. JSON is another app's export of songs. Shared text arrives as
+              senders use application/x-zip-compressed. JSON is another app's export of songs, and text/vnd.abc a file
+              of ABC tunes. Shared text arrives as
               EXTRA_TEXT (see importSharedTexts). The importer checks the display name and skips unrelated files with
               these types.
             -->
@@ -256,6 +265,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
+                <data android:mimeType="text/vnd.abc" />
                 <data android:mimeType="application/octet-stream" />
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/x-zip-compressed" />
