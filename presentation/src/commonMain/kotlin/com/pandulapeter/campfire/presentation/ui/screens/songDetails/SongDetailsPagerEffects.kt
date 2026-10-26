@@ -28,7 +28,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 /**
  * Reads the text of the song being read, and of the songs beside it: the pages next to the current one are composed
  * ahead of time (beyondViewportPageCount), so their text is read ahead of time too, and a swipe then lands on lyrics
- * rather than on a loading indicator.
+ * rather than on a loading indicator. The screen's first texts were already asked for as it was pushed
+ * (SongTextStore.readAhead); this follows the paging, retries, and a pager created before the library was read.
  */
 @Composable
 internal fun LoadSongTexts(

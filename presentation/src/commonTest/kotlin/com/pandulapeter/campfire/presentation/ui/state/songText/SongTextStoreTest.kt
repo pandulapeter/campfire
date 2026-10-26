@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.state.songText
 
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -75,6 +78,58 @@ class SongTextStoreTest {
         assertNull(store.songTexts.value[FILE])
         assertEquals(emptyList(), sink.messageQueue.value)
     }
+
+    @Test
+    fun `reading ahead holds the current page's text and its neighbours'`() = runTest {
+        val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.readAhead(setlist, currentFileName = "c")
+        runCurrent()
+        assertEquals(setOf("b", "c", "d"), store.songTexts.value.keys)
+    }
+
+    @Test
+    fun `reading ahead centres on the page a pager was paged to since it was opened`() = runTest {
+        val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.readAhead(setlist, currentFileName = "a")
+        runCurrent()
+        assertEquals(setOf("a", "b"), store.songTexts.value.keys)
+    }
+
+    @Test
+    fun `reading ahead with no current page or one the screen does not list centres on where it was opened`() = runTest {
+        listOf(null, "e").forEach { currentFileName ->
+            val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
+            store.readAhead(setlist, currentFileName = currentFileName)
+            runCurrent()
+            assertEquals(setOf("b", "c", "d"), store.songTexts.value.keys)
+        }
+    }
+
+    @Test
+    fun `reading ahead for an import preview reads nothing`() = runTest {
+        val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.readAhead(setlist.copy(importPreview = ImportPreview.SingleSong), currentFileName = "c")
+        runCurrent()
+        assertEquals(emptyMap(), store.songTexts.value)
+    }
+
+    @Test
+    fun `reading ahead leaves a held text alone`() = runTest {
+        val store = setlistFiles.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.updateSongTexts { mapOf("c" to "{title: Held}") }
+        store.readAhead(setlist, currentFileName = "c")
+        runCurrent()
+        assertEquals("{title: Held}", store.songTexts.value["c"])
+        assertEquals("{title: d}", store.songTexts.value["d"])
+    }
+
+    private val setlistFiles get() = FakeSongFiles(listOf("a", "b", "c", "d").associateWith { "{title: $it}" })
+
+    private val setlist = CampfireDestination.SongDetails(
+        songFileNames = listOf("a", "b", "c", "d"),
+        setlistFileName = "s",
+        initialIndex = 2,
+    )
 
     private companion object {
         const val FILE = "song.cho"

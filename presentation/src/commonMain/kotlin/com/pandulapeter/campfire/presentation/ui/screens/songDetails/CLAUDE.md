@@ -24,6 +24,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   page index onto the wrong song over a partial batch.
 - Once every song it names is gone from a read library, the screen closes itself.
 - The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
+- Its first page's text and its neighbours' are asked for as the screen is pushed (`SongTextStore.readAhead`), so a
+  song read before opens with its lyrics in the first frame and its in-place model is built before the transition
+  moves, not during it.
 
 ### The import preview (`ImportPreviewState.kt`, `state/importing/ImportPreviewing.kt`)
 

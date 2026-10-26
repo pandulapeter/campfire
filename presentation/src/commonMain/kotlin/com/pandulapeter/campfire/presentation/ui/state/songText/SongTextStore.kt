@@ -180,6 +180,24 @@ internal class SongTextStore(
     }
 
     /**
+     * Starts reading the texts a song details screen just pushed will show first - its current page and the pages on
+     * either side, which the pager composes too - so that they are usually here for its first frame and the first
+     * page's in-place model is built before the navigation transition starts moving, not in the middle of it. The
+     * current page is [currentFileName], since a pager that comes back on top may have been paged far from where it was
+     * opened, or [CampfireDestination.SongDetails.initialIndex] when that names none of its songs. An import preview's
+     * pages name no file, so it reads nothing.
+     */
+    fun readAhead(destination: CampfireDestination.SongDetails, currentFileName: String?) {
+        if (destination.importPreview != null) return
+        val index = destination.songFileNames.indexOf(currentFileName).takeIf { it >= 0 } ?: destination.initialIndex
+        listOfNotNull(
+            destination.songFileNames.getOrNull(index),
+            destination.songFileNames.getOrNull(index - 1),
+            destination.songFileNames.getOrNull(index + 1),
+        ).filter { it !in _songTexts.value }.forEach(::loadSongContent)
+    }
+
+    /**
      * A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
      * its writes on them: without this, toggling a tag would write the text that was open over the version sync
      * had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes

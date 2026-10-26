@@ -767,6 +767,14 @@ class CampfireViewModel(
             navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)
         }
         songTextStore.startFollowingFiles()
+        // Every way a song screen is pushed passes here, inside the click and before the screen's first frame, and the
+        // pushed destination is on the back stack before pruneSongTexts can run, so a text read ahead is never pruned.
+        navigator.addOnBackStackChanged { previousTop, stack ->
+            val top = stack.lastOrNull()
+            if (top is CampfireDestination.SongDetails && top != previousTop) {
+                songTextStore.readAhead(top, currentFileName = navigator.currentSongFileName(top))
+            }
+        }
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
