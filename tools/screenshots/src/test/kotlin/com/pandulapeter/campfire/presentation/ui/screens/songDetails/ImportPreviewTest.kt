@@ -15,6 +15,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -42,7 +43,7 @@ internal class ImportPreviewTest {
         pickFiles()
         waitForText(string(Res.string.import_preview_title))
         assertEquals(before, songFileNames())
-        onNodeWithContentDescription(string(Res.string.import_preview_import)).performClick()
+        onNodeWithText(string(Res.string.import_preview_import)).performClick()
         waitForLibrary { NEW_SONG in songFileNames() }
         assertEquals(resourceText("songs/$NEW_SONG"), File(songsFolder, NEW_SONG).readText())
         // The preview becomes the song's own screen, which says nothing of a preview any more.
@@ -54,9 +55,9 @@ internal class ImportPreviewTest {
         val original = File(songsFolder, HOUSE_OF_THE_RISING_SUN).readText()
         pickFiles()
         waitForText(string(Res.string.import_preview_name_taken))
-        onNodeWithContentDescription(string(Res.string.import_preview_import_as_copy)).assertExists()
-        onNodeWithContentDescription(string(Res.string.import_conflicts_replace)).assertExists()
-        onNodeWithContentDescription(string(Res.string.import_preview_import_as_copy)).performClick()
+        onNodeWithText(string(Res.string.import_preview_import_as_copy)).assertExists()
+        onNodeWithText(string(Res.string.import_conflicts_replace)).assertExists()
+        onNodeWithText(string(Res.string.import_preview_import_as_copy)).performClick()
         waitForLibrary { NUMBERED_COLLISION in songFileNames() }
         assertEquals(original, File(songsFolder, HOUSE_OF_THE_RISING_SUN).readText())
     }

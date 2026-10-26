@@ -99,6 +99,10 @@ internal fun SongPages(
     val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    // A chord's sheet picks the shape every song is drawn with, which read only mode leaves alone. A preview is read only
+    // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
+    val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
     val showsDegrees = chordDiagrams != null && FeatureSwitches.of(userPreferences).areChordDegreesEnabled
     val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
@@ -243,12 +247,21 @@ internal fun SongPages(
             onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly, isChordSectionFolded, importPreview != null) {
+            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, canPickChordShapes, isChordSectionFolded, text, importPreview != null) {
                 chordDiagrams?.copy(
                     isFolded = isChordSectionFolded,
                     onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
-                    onChordClicked = if (isReadOnly) null else {
-                        { chordName -> viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
+                    onChordClicked = if (!canPickChordShapes) null else {
+                        { chordName ->
+                            viewModel.dialogHost.showDialog(
+                                DialogType.ChordShape(
+                                    song = song,
+                                    setlistFileName = destination.setlistFileName,
+                                    chordName = chordName,
+                                    previewText = text.takeIf { importPreview != null },
+                                ),
+                            )
+                        }
                     },
                     // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
                     onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },

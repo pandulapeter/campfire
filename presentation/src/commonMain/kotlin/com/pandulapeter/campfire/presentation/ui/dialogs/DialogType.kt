@@ -91,8 +91,11 @@ sealed interface DialogType {
      * One chord of a song and the other ways it can be played, opened by tapping its diagram in the Chords section,
      * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it is
      * now, and finds the chord by the name the page shows it with ([chordName]).
+     *
+     * @param previewText The text of a song an import preview shows, which no library file holds, read in place of the
+     *   library's.
      */
-    data class ChordShape(val song: Song, val setlistFileName: String?, val chordName: String) : DialogType
+    data class ChordShape(val song: Song, val setlistFileName: String?, val chordName: String, val previewText: String? = null) : DialogType
 
     /**
      * One chord of the Chords tab and the other ways it can be played, the chord sheet without a song around it: the

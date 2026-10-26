@@ -84,8 +84,8 @@ Definitions:
   section and the PDF's diagrams: lyrics and the chord sheet keep their names. Chord
   degrees (on by default) takes it.
 - Folded per song (`CHORDS_FOLD_KEY` in `UserPreferences.foldedSections`), read only mode included.
-- **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
-  highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
+- **Every cell opens its chord's sheet** outside read only mode, an import preview's too (the sheet reads its text,
+  `DialogType.ChordShape.previewText`), hit-tested by `chordCellAt` (tested). The press highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
   is consumed so it doesn't also turn the page. A screen reader gets one custom action per cell.
 - A cell whose chord changes shape (picked, retuned, a capo moved) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells` tested);
   a searched shape arriving into the empty frame, or a cell that is now another chord, does not.

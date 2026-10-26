@@ -29,6 +29,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TopAppBarDefaults
@@ -135,7 +136,7 @@ internal fun SongDetailsScreen(
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
     val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
-    var previewButtonsHeight by remember { mutableStateOf(0.dp) }
+    var previewBarHeight by remember { mutableStateOf(0.dp) }
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
     // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
     val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
@@ -279,24 +280,15 @@ internal fun SongDetailsScreen(
             contentPadding = contentPadding,
             coroutineScope = coroutineScope,
             onBack = onBack,
-            previewBanner = {
-                ImportPreviewBanner(
-                    importPreview = importPreview,
-                    currentPage = pagerState.currentPage,
-                    contentPadding = contentPadding,
-                    onChosenChange = { key, isChosen -> viewModel.importReportState.setImportEntriesChosen(listOf(key), isChosen) },
-                    onResolutionSelected = viewModel.importReportState::setImportConflictResolution,
-                )
-            },
         )
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
-        // padding that is still theirs to apply. A preview's buttons float over the bottom of the pages, which leave
-        // them that room under their last line, so that every line is read above them.
-        val previewButtonsClearance by animateDpAsState(previewButtonsHeight.takeIf { it > 0.dp }?.plus(PREVIEW_BUTTONS_MARGIN) ?: 0.dp)
+        // padding that is still theirs to apply. A preview's card floats over the bottom of the pages, which leave
+        // it that room under their last line, so that every line is read above it.
+        val previewBarClearance by animateDpAsState(previewBarHeight.takeIf { it > 0.dp }?.plus(PREVIEW_BAR_MARGIN) ?: 0.dp)
         val pageContentPadding = PaddingValues(
             start = contentPadding.calculateStartPadding(layoutDirection),
             end = contentPadding.calculateEndPadding(layoutDirection),
-            bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + previewButtonsClearance,
+            bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + previewBarClearance,
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
             SongDetailsPager(
@@ -337,18 +329,22 @@ internal fun SongDetailsScreen(
                     currentPageStepper = stepper
                 },
             )
-            ImportPreviewButtons(
+            ImportPreviewBar(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BUTTONS_MARGIN,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BUTTONS_MARGIN,
-                        bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + PREVIEW_BUTTONS_MARGIN,
-                    ),
+                        start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
+                        bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + PREVIEW_BAR_MARGIN,
+                    )
+                    .widthIn(max = PREVIEW_BAR_MAX_WIDTH),
                 importPreview = importPreview,
+                currentPage = pagerState.currentPage,
                 isAddingToReview = isAddingToReview,
                 onAction = viewModel.importController::importFromPreview,
-                onHeightChanged = { previewButtonsHeight = it },
+                onChosenChange = { key, isChosen -> viewModel.importReportState.setImportEntriesChosen(listOf(key), isChosen) },
+                onResolutionSelected = viewModel.importReportState::setImportConflictResolution,
+                onHeightChanged = { previewBarHeight = it },
             )
         }
         if (hasPagerControls) {
@@ -466,5 +462,8 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120
 
-/** Between a preview's buttons and the edges around them, and between them and the last line of the song above them. */
-private val PREVIEW_BUTTONS_MARGIN = 16.dp
+/** Between a preview's card and the edges around it, and between it and the last line of the song above it. */
+private val PREVIEW_BAR_MARGIN = 16.dp
+
+/** A preview's card stays a card, centred, rather than a strip across a wide window, whose message would sit far from its buttons. */
+private val PREVIEW_BAR_MAX_WIDTH = 720.dp

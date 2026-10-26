@@ -93,7 +93,7 @@ internal fun ChordShapeSheet(
     val tuning = userPreferences.let { if (it == null) ChordTuning.GUITAR else it.chordTuning() } ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
-    val text = songTexts[song.fileName]
+    val text = dialog.previewText ?: songTexts[song.fileName]
     val playback = songPlaybackOf(
         song = song,
         setlistFileName = dialog.setlistFileName,

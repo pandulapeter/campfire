@@ -11,31 +11,26 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumExtendedFloatingActionButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -48,44 +43,37 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_import
 import com.pandulapeter.campfire.presentation.resources.import_preview_import_as_copy
 import com.pandulapeter.campfire.presentation.resources.import_preview_importing
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.importReviewSummary
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.max
 
 /**
- * The floating buttons of a preview, at the bottom of the pages, centred so that they keep clear of the step buttons at
- * the end edge: one for a name that is free, and for a taken one both ways side by side where the width has room for
- * them, one over the other where it has not, travelling from one to the other as the window changes. The primary one is
- * the larger, but in a short window, which has no height to spare for it. While what a press started is being written
- * the primary one shows it and nothing takes a press. They leave, scaling away, once the preview has been imported.
+ * The buttons of a preview's card ([ImportPreviewBar]): one for a name that is free, and for a taken one both ways at
+ * once, side by side where the card has room for them, one over the other at its end where it has not, travelling from
+ * one to the other as the window changes. The primary one is filled, the other outlined. While what a press started is
+ * being written the primary one shows it and nothing takes a press. They leave, scaling away, where the preview has
+ * nothing to import.
  *
  * @param isAddingToReview Whether a batch is being read into the review, whose Import waits for it.
- * @param onHeightChanged The height the buttons take from the bottom of the pages, none once they are gone, which the
- *   pages leave free under their last line so that every line can still be read above them.
  */
 @Composable
 internal fun ImportPreviewButtons(
     modifier: Modifier = Modifier,
-    importPreview: ImportPreviewState?,
+    importPreview: ImportPreviewState,
     isAddingToReview: Boolean,
     onAction: (ImportPreviewAction) -> Unit,
-    onHeightChanged: (Dp) -> Unit,
 ) {
-    val density = LocalDensity.current
-    val last = rememberLast(importPreview?.takeIf { it.actions != null })
+    val last = rememberLast(importPreview.actions)
     AnimatedVisibility(
-        modifier = modifier.onSizeChanged { onHeightChanged(with(density) { it.height.toDp() }) },
-        visible = importPreview?.actions != null,
+        modifier = modifier,
+        visible = importPreview.actions != null,
         enter = fadeIn() + scaleIn(),
         exit = fadeOut() + scaleOut(),
     ) {
-        val shown = last ?: return@AnimatedVisibility
-        val actions = shown.actions ?: return@AnimatedVisibility
-        val isShort = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
-        val isEnabled = !shown.isWriting && when (actions.primary) {
-            ImportPreviewAction.IMPORT_REVIEW -> !isAddingToReview && importReviewSummary(shown.review.plan, shown.review.choices).importCount > 0
+        val actions = last ?: return@AnimatedVisibility
+        val isEnabled = !importPreview.isWriting && when (actions.primary) {
+            ImportPreviewAction.IMPORT_REVIEW -> !isAddingToReview && importReviewSummary(importPreview.review.plan, importPreview.review.choices).importCount > 0
             else -> true
         }
         val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
@@ -94,9 +82,8 @@ internal fun ImportPreviewButtons(
                 PreviewButton(
                     modifier = placement,
                     action = action,
-                    importPreview = shown,
+                    importPreview = importPreview,
                     isPrimary = false,
-                    isLarge = false,
                     isEnabled = isEnabled,
                     onClick = { onAction(action) },
                 )
@@ -104,9 +91,8 @@ internal fun ImportPreviewButtons(
             PreviewButton(
                 modifier = placement,
                 action = actions.primary,
-                importPreview = shown,
+                importPreview = importPreview,
                 isPrimary = true,
-                isLarge = !isShort,
                 isEnabled = isEnabled,
                 onClick = { onAction(actions.primary) },
             )
@@ -114,18 +100,13 @@ internal fun ImportPreviewButtons(
     }
 }
 
-/**
- * One of the buttons. A floating button has no disabled state of its own, so it is drawn and announced as one and
- * ignores presses, as the import screen's Import is; each is described by its own label, since Material's extended
- * floating button clears the semantics of the text it draws.
- */
+/** One of the buttons, described by what it does, or while it writes by that, since its label stays as it was. */
 @Composable
 private fun PreviewButton(
     modifier: Modifier = Modifier,
     action: ImportPreviewAction,
     importPreview: ImportPreviewState,
     isPrimary: Boolean,
-    isLarge: Boolean,
     isEnabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -138,41 +119,32 @@ private fun PreviewButton(
         }
     }
     val isWriting = isPrimary && importPreview.isWriting
-    val description = if (isWriting) stringResource(Res.string.import_preview_importing) else label
-    val enabledContainer = if (isPrimary) FloatingActionButtonDefaults.containerColor else MaterialTheme.colorScheme.secondaryContainer
-    val enabledContent = if (isPrimary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-    val containerColor by animateColorAsState(if (isEnabled || isWriting) enabledContainer else MaterialTheme.colorScheme.surfaceContainerHighest)
-    val contentColor by animateColorAsState(if (isEnabled || isWriting) enabledContent else MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_CONTENT_ALPHA))
-    val buttonModifier = modifier.semantics {
-        contentDescription = description
-        if (!isEnabled) disabled()
-    }
-    val icon: @Composable () -> Unit = {
+    val writingDescription = stringResource(Res.string.import_preview_importing)
+    val buttonModifier = if (isWriting) modifier.semantics { contentDescription = writingDescription } else modifier
+    val content: @Composable RowScope.() -> Unit = {
         if (isWriting) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = LocalContentColor.current, strokeWidth = 3.dp)
+            CircularProgressIndicator(modifier = Modifier.size(ButtonDefaults.IconSize), color = LocalContentColor.current, strokeWidth = 2.dp)
         } else {
-            Icon(painter = painterResource(action.icon), contentDescription = null)
+            Icon(modifier = Modifier.size(ButtonDefaults.IconSize), painter = painterResource(action.icon), contentDescription = null)
         }
+        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+        Text(label, maxLines = 1)
     }
-    val text: @Composable () -> Unit = { Text(label, maxLines = 1) }
-    if (isLarge) {
-        MediumExtendedFloatingActionButton(
+    if (isPrimary) {
+        Button(
             modifier = buttonModifier,
-            text = text,
-            icon = icon,
-            onClick = { if (isEnabled) onClick() },
-            containerColor = containerColor,
-            contentColor = contentColor,
+            onClick = onClick,
+            enabled = isEnabled,
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+            content = content,
         )
     } else {
-        ExtendedFloatingActionButton(
+        OutlinedButton(
             modifier = buttonModifier,
-            text = text,
-            icon = icon,
-            onClick = { if (isEnabled) onClick() },
-            containerColor = containerColor,
-            contentColor = contentColor,
-            elevation = if (isPrimary) FloatingActionButtonDefaults.elevation() else FloatingActionButtonDefaults.loweredElevation(),
+            onClick = onClick,
+            enabled = isEnabled,
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+            content = content,
         )
     }
 }
@@ -185,9 +157,9 @@ private val ImportPreviewAction.icon
     }
 
 /**
- * Its children in a row, bottoms aligned and centred, where the width has room for all of them, and otherwise in a
- * column, centred, the last at the bottom: what decides it is the width they take, so a window resized across it moves
- * them, and their placement animation is what makes that a journey rather than a jump.
+ * Its children in a row, centred on each other, where the width has room for all of them, and otherwise in a column at
+ * the end, the last at the bottom: what decides it is the width they take, so a window resized across it moves them,
+ * and their placement animation is what makes that a journey rather than a jump.
  */
 @Composable
 private fun SideBySideOrStacked(content: @Composable () -> Unit) = Layout(content = content) { measurables, constraints ->
@@ -202,15 +174,14 @@ private fun SideBySideOrStacked(content: @Composable () -> Unit) = Layout(conten
         var y = 0
         placeables.forEach { placeable ->
             if (isRow) {
-                placeable.place(x, height - placeable.height)
+                placeable.placeRelative(x, (height - placeable.height) / 2)
                 x += placeable.width + gap
             } else {
-                placeable.place((width - placeable.width) / 2, y)
+                placeable.placeRelative(width - placeable.width, y)
                 y += placeable.height + gap
             }
         }
     }
 }
 
-private val BUTTON_GAP = 12.dp
-private const val DISABLED_CONTENT_ALPHA = 0.38f
+private val BUTTON_GAP = 8.dp
