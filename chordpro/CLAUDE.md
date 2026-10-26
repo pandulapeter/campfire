@@ -9,11 +9,11 @@
 -->
 # :chordpro
 
-The [ChordPro](https://www.chordpro.org) format and the conversion of positioned chord sheets into it. **No dependencies
-at all**, not even Koin: stateless `object`s called directly by `:presentation`, `:domain:*`, `:data:formats`, and
-`:data:source:local:implementation`. Explicit API mode. Everything is pure and tested in `commonTest`; rules pinned by a
+The [ChordPro](https://www.chordpro.org) format, the conversion of positioned chord sheets into it, and the reading of
+ABC tunes into it (`abc`). **No dependencies at all**, not even Koin: stateless `object`s called directly by
+`:presentation`, `:domain:*`, `:data:formats`, and `:data:source:local:implementation`. Explicit API mode. Everything is pure and tested in `commonTest`; rules pinned by a
 test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`chords`, `voicings`, `scales`, `tabs`, `edit`,
-`convert`).
+`convert`, `abc`).
 
 ## Rules that span the module
 
