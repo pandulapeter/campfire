@@ -31,7 +31,6 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizatio
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
-import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
@@ -91,6 +90,8 @@ internal class SyncConnectionManager(
     private val accountRefresh = SyncAccountRefresh(scope = scope, stateHolder = stateHolder, logger = environment.logger)
 
     private val connectionBefore = ConnectionBeforeConnecting(stateHolder, scheduler)
+
+    private val cleanUp = ConnectionCleanUp(pendingAuthorizationStore, environment.logger)
 
     /** A consent page's answer [forgetStoredConnection] took up and left for [restoreConnection] to finish. */
     private var redirectKeptForRestore: String? = null
@@ -252,7 +253,7 @@ internal class SyncConnectionManager(
                 SyncAuthenticator.AuthorizationOutcome.Redirected -> false
                 is SyncAuthenticator.AuthorizationOutcome.Cancelled -> {
                     environment.logger.log("The authorization was cancelled: ${outcome.message}")
-                    discardPendingAuthorization()
+                    cleanUp.discardPendingAuthorization()
                     // A message is the authenticator saying something went wrong on the way; without one, the user
                     // simply closed the page, which needs no explaining.
                     if (outcome.message == null) {
@@ -268,13 +269,13 @@ internal class SyncConnectionManager(
             // The user gave up, which the UI offers while an authorization is waiting. The clean up still has to
             // happen, so it runs outside the cancellation before the exception carries on unswallowed.
             withContext(NonCancellable) {
-                discardPendingAuthorization()
+                cleanUp.discardPendingAuthorization()
                 connectionBefore.backOut()
             }
             throw exception
         } catch (exception: Exception) {
             environment.logger.log("Could not connect to $providerId: ${exception.message}")
-            discardPendingAuthorization()
+            cleanUp.discardPendingAuthorization()
             stateHolder.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
             false
         }
@@ -284,7 +285,7 @@ internal class SyncConnectionManager(
         if (stateHolder.value !is SyncState.Connecting) return
         // An exchange cancelled before it started never cleared the pending authorization, which the line below does.
         restoreExchange?.cancelAndJoin()
-        discardPendingAuthorization()
+        cleanUp.discardPendingAuthorization()
         connectionBefore.backOut()
     }
 
@@ -355,7 +356,7 @@ internal class SyncConnectionManager(
             ) { provider.forgetStoredCredentials() }
         }
         // A build with no provider at all still has to lose an authorization written down by one that had one.
-        discardPendingAuthorization()
+        cleanUp.discardPendingAuthorization()
         // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
         // this installation has never looked at.
         quietly("clear the sync index") { indexStore.clear() }
@@ -381,19 +382,6 @@ internal class SyncConnectionManager(
     /** For the clean-ups whose failure is worth a line in the log and nothing more. */
     private inline fun quietly(action: String, block: () -> Unit) =
         environment.logger.recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
-
-    /**
-     * Forgets the authorization that was started, for the ways out that have already decided how they end. Clearing
-     * writes the credentials document, and a storage that refuses that write must not replace the ending with an
-     * exception of its own: [connect] runs in a launched coroutine with nobody to throw to, and the state has to
-     * leave [SyncState.Connecting] whatever the storage says. What stays behind is a verifier nothing asks for
-     * again, and the next authorization writes over it.
-     */
-    private suspend fun discardPendingAuthorization() = environment.logger.recovering(
-        // Only the kind of failure: the message of one that came from the credentials document may quote it.
-        describe = { "Could not clear the pending authorization: ${it::class.simpleName}" },
-        fallback = {},
-    ) { pendingAuthorizationStore.clearPendingAuthorization() }
 
     /**
      * Turns a redirect into a connection. Shared by the platforms that come back to a running app and the one that
@@ -461,7 +449,7 @@ internal class SyncConnectionManager(
                 // to Disconnected, which it can only do if this arrives there as a cancellation. The tokens may be
                 // stored by now - a provider writes them before it asks whose they are - and left there, the next
                 // launch would find itself connected to an account the screen said was not, and sync it.
-                withContext(NonCancellable) { forgetCredentialsOf(provider) }
+                withContext(NonCancellable) { cleanUp.forgetCredentialsOf(provider) }
                 throw exception
             } catch (exception: Exception) {
                 // A network or authorization failure comes from the exchange, before anything was stored (see
@@ -471,7 +459,7 @@ internal class SyncConnectionManager(
                     connectionBefore.backOut()
                     return false
                 }
-                withContext(NonCancellable) { forgetCredentialsOf(provider) }
+                withContext(NonCancellable) { cleanUp.forgetCredentialsOf(provider) }
                 stateHolder.fail(
                     providerId = pending.providerId,
                     reason = exception.toFailureReason(),
@@ -480,16 +468,6 @@ internal class SyncConnectionManager(
             }
         }
     }
-
-    /**
-     * Drops whatever [provider] stored for an authorization that did not end connected, without telling the service:
-     * there is nothing to revoke on the user's behalf for a connection they never saw made. A failure is only logged,
-     * since the outcome the caller is on its way to report is the one that matters.
-     */
-    private suspend fun forgetCredentialsOf(provider: SyncProvider) = environment.logger.recovering(
-        describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
-        fallback = {},
-    ) { provider.forgetStoredCredentials() }
 
     private companion object {
         val disconnectedResult = SyncRepository.RestoreResult(
