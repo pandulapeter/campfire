@@ -19,14 +19,12 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.model.UnitKey
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.LookaheadScope
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -44,15 +42,12 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
  * parameter here is remembered by [SongLyrics] or its callers, so it keeps its identity over those frames and this
  * skips; a lambda or an object built in [SongLyrics]' body would make it compose again on every one of them.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-internal fun LookaheadScope.SongSectionChildren(
+internal fun SongSectionChildren(
     sections: List<RenderSection>,
     units: SongUnits,
     unitKeys: List<UnitKey>,
     cardKeys: List<CardKey>,
-    animations: List<SectionAnimation>,
-    sectionGlides: SectionGlides?,
     sectionMotion: SectionMotion,
     isResizing: Boolean,
     isTextScaling: Boolean,
@@ -76,28 +71,29 @@ internal fun LookaheadScope.SongSectionChildren(
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
 ) {
-    // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps coming or a
-    // navigation transition, not where it is too tall for it (see maxAnimatedSectionHeight), and not while it is still
-    // gliding from a change that kept coming, since the spring would start at the place the glide has not reached yet.
-    fun Modifier.movedBy(key: Any, animation: SectionAnimation): Modifier {
-        val isGliding = sectionGlides?.isGliding(key) == true
-        val isHeldStill = sectionMotion != SectionMotion.SPRING || isResizing
-        return if (isHeldStill || animation.isTooTallToAnimate || isGliding) {
-            this
-        } else {
-            animateBounds(this@SongSectionChildren).layoutId(AnimatedSectionLayoutId)
-        }
-    }
+    val composition = remember { ChildrenComposition() }
+    SideEffect { composition.isFirst = false }
+    val change = LocalSongChange.current
+    val leaving = change.leaving
     units.itemRanges.forEachIndexed { unit, items ->
         val section = sections[units.unitSections[unit]]
         key(unitKeys[unit]) {
+            // A chunk that comes with a staged change of how the song is shown arrives with it, once the rest has moved; one
+            // that comes with any other single change (a fold, a line edited) fades in where it lands while the others glide
+            // around it. Never on the page's first frame, nor while a change keeps coming, which composes chunks on every step.
+            val isArrivingWithChange = remember { change.isUnderWay }
+            val isFadingIn = remember { !isArrivingWithChange && !composition.isFirst && sectionMotion == SectionMotion.SPRING && !isResizing }
             // Each chunk is read as a whole and in the order the song declares, whatever column it was put in: the reading
             // order is otherwise worked out from the geometry, line by line across the page, which with two columns reads
             // the first line of each, then the second line of each.
-            val unitModifier = Modifier.movedBy(unitKeys[unit], animations[unit]).semantics {
-                isTraversalGroup = true
-                traversalIndex = unit.toFloat()
-            }
+            val unitModifier = Modifier
+                .semantics {
+                    isTraversalGroup = true
+                    traversalIndex = unit.toFloat()
+                }
+                .fadingIn(isFadingIn = isFadingIn)
+                .arrivingWith(change, isArrivingWithChange)
+                .leavingWith(change, leaving != null && section.leavesWith(leaving, items))
             SongSectionItem(
                 modifier = unitModifier,
                 section = section,
@@ -127,5 +123,8 @@ internal fun LookaheadScope.SongSectionChildren(
     }
     // The cards the pieces of the sections on a card are drawn on, as many as each could be cut into; the ones a layout
     // has no piece for stay unmeasured.
-    SectionCards(cardKeys = cardKeys) { card, cardKey -> Modifier.movedBy(cardKey, animations[units.unitSections.size + card]) }
+    SectionCards(cardKeys = cardKeys)
 }
+
+/** Whether [SongSectionChildren] is composing for the first time, read when each chunk is first composed. Not a state. */
+private class ChildrenComposition(var isFirst: Boolean = true)

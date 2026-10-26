@@ -20,18 +20,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
-/** The cards [cardKeys] name, each placed by the modifier [cardModifier] gives the card at its index. */
+/** The cards [cardKeys] name. */
 @Composable
 internal fun SectionCards(
     cardKeys: List<CardKey>,
-    cardModifier: (card: Int, cardKey: CardKey) -> Modifier,
 ) {
     val cardShape = MaterialTheme.shapes.large
     val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    cardKeys.forEachIndexed { card, cardKey ->
+    cardKeys.forEach { cardKey ->
         key(cardKey) {
             Box(
-                modifier = cardModifier(card, cardKey)
+                modifier = Modifier
                     .graphicsLayer {
                         shadowElevation = CARD_ELEVATION.toPx()
                         shape = cardShape

@@ -9,7 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
+import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
 import com.pandulapeter.campfire.presentation.ui.songView.PlacementMotion
+import com.pandulapeter.campfire.presentation.ui.songView.SongChange
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -26,6 +31,8 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * The items of [groups] in lines, a group kept whole on one line wherever it fits on one: the instrument and tuning pill,
@@ -42,7 +49,7 @@ import androidx.compose.ui.unit.IntOffset
  * Where [isAnimated], an item the lines move — a stepper that widened, the text grown a step, the lines rearranged —
  * springs from where it was to its new place, on the spring the song's sections move on, so the controls travel together
  * with the section that holds them. An item is followed by its `layoutId` where it has one, so that one appearing or
- * going does not send the others flying from each other's places; one that appears is simply placed.
+ * going does not send the others flying from each other's places; one that appears fades in where it lands.
  */
 @Composable
 internal fun GroupedRows(
@@ -55,10 +62,20 @@ internal fun GroupedRows(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val motion = remember(coroutineScope) { PlacementMotion(coroutineScope) }
+    val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val change = LocalSongChange.current
+    val arrivals = remember(coroutineScope, fadeSpec, change) { ArrivalFades(coroutineScope, fadeSpec, change) }
     Layout(
         contents = groups,
         modifier = modifier,
-        measurePolicy = GroupedRowsMeasurePolicy(gap = gap, groupGap = groupGap, minRowHeight = minRowHeight, motion = motion, isAnimated = isAnimated),
+        measurePolicy = GroupedRowsMeasurePolicy(
+            gap = gap,
+            groupGap = groupGap,
+            minRowHeight = minRowHeight,
+            motion = motion,
+            arrivals = arrivals,
+            isAnimated = isAnimated,
+        ),
     )
 }
 
@@ -82,6 +99,7 @@ private class GroupedRowsMeasurePolicy(
     private val groupGap: Dp,
     private val minRowHeight: Dp,
     private val motion: PlacementMotion,
+    private val arrivals: ArrivalFades,
     private val isAnimated: Boolean,
 ) : MultiContentMeasurePolicy {
 
@@ -103,6 +121,7 @@ private class GroupedRowsMeasurePolicy(
         val animatedMotion = motion.takeIf { isAnimated && !isLookingAhead }
         val keys = measurables.mapIndexed { group, items -> items.mapIndexed { index, item -> item.layoutId ?: GroupedItem(group, index) } }
         if (!isAnimated) motion.clear() else if (!isLookingAhead) motion.retain(keys.flatten().toSet())
+        if (!isLookingAhead) arrivals.follow(keys = keys.flatten().toSet(), fadesIn = isAnimated)
         return layout(width, height) {
             var y = 0
             lines.forEachIndexed { lineIndex, line ->
@@ -111,10 +130,12 @@ private class GroupedRowsMeasurePolicy(
                     if (position > 0) x += if (line[position - 1].group == item.group) gapPx else groupGapPx
                     val placeable = placeables[item.group][item.index]
                     val target = IntOffset(x, y + (lineHeights[lineIndex] - placeable.height) / 2)
-                    if (animatedMotion == null) {
-                        placeable.placeRelative(target)
-                    } else with(animatedMotion) {
-                        place(placeable = placeable, key = keys[item.group][item.index], target = target)
+                    val key = keys[item.group][item.index]
+                    val position = animatedMotion?.positionOf(key, target) ?: target
+                    if (arrivals.isArriving(key)) {
+                        placeable.placeRelativeWithLayer(position) { alpha = arrivals.alphaOf(key) }
+                    } else {
+                        placeable.placeRelative(position)
                     }
                     x += placeable.width
                 }
@@ -224,3 +245,46 @@ private fun lineWidth(line: List<GroupedItem>, groupWidths: List<List<Int>>, gap
             else -> groupGap
         }
     }
+
+/**
+ * Fades in an item of [GroupedRows] that was not among the ones placed before (the transposition and the capo, as the
+ * chords are switched on), so that it does not stand in its place from the first frame while the others travel around
+ * it: with the [change] of how the song is shown that brought it, where one is under way, otherwise on its own. Nothing
+ * fades on the first placement, nor where the lines are not animated.
+ */
+private class ArrivalFades(
+    private val scope: CoroutineScope,
+    private val spec: AnimationSpec<Float>,
+    private val change: SongChange,
+) {
+
+    private var placedKeys: Set<Any>? = null
+    private val alphas = mutableMapOf<Any, Animatable<Float, *>>()
+    private val arrivedWithChange = mutableSetOf<Any>()
+
+    fun follow(keys: Set<Any>, fadesIn: Boolean) {
+        val placed = placedKeys
+        arrivedWithChange.retainAll { it in keys && change.isUnderWay }
+        if (fadesIn && placed != null) {
+            keys.forEach { key ->
+                if (key !in placed && change.isUnderWay) {
+                    arrivedWithChange += key
+                } else if (key !in placed) {
+                    val alpha = Animatable(0f)
+                    alphas[key] = alpha
+                    scope.launch {
+                        alpha.animateTo(1f, spec)
+                        if (alphas[key] === alpha) alphas.remove(key)
+                    }
+                }
+            }
+        }
+        alphas.keys.retainAll(keys)
+        placedKeys = keys
+    }
+
+    fun isArriving(key: Any) = key in alphas || key in arrivedWithChange
+
+    /** How opaque the item of [key] is drawn, which is state: reading it in a layer's block redraws only that layer. */
+    fun alphaOf(key: Any) = if (key in arrivedWithChange) change.arrivingAlpha.value else alphas[key]?.value ?: 1f
+}

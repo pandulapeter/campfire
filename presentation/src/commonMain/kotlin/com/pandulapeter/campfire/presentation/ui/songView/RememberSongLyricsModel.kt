@@ -32,7 +32,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * The model [prepare] builds of [inputs], null until there is one. Where [buildsInPlace] (see [buildsModelInPlace]) the
+ * The model [prepare] builds of [inputs] and the inputs it was built of, which are the ones before while a new one is
+ * built, null until there is one. Where [buildsInPlace] (see [buildsModelInPlace]) the
  * first one is built right here - for the page being read, headed for or stepped back to, so that it never opens on an
  * empty frame - but without the chord shapes only the search finds, which follow from [Dispatchers.Default] right after
  * (see [SongLyricsModel.withSearchedShapes]). The page beside it on the other side builds its first one on
@@ -47,7 +48,7 @@ internal fun rememberSongLyricsModel(
     inputs: SongLyricsInputs,
     buildsInPlace: Boolean,
     prepare: (inputs: SongLyricsInputs, searchesShapes: Boolean) -> SongLyricsModel,
-): SongLyricsModel? {
+): Pair<SongLyricsInputs, SongLyricsModel>? {
     val latestPrepare by rememberUpdatedState(prepare)
     val state = remember { mutableStateOf(if (buildsInPlace) inputs to prepare(inputs, false) else null) }
     // Not snapshot state: it is written while composing, and only ever read in the same composition that wrote it.
@@ -65,7 +66,7 @@ internal fun rememberSongLyricsModel(
             else -> return@LaunchedEffect
         }
     }
-    return state.value?.second ?: inPlace.built?.second
+    return state.value ?: inPlace.built
 }
 
 /** The model a page built in place while its first one was still being built in the background. */

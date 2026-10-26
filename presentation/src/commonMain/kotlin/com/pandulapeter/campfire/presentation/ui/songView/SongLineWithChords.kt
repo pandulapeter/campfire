@@ -57,6 +57,7 @@ internal fun SongLineWithChords(
     val density = LocalDensity.current
     val chordColor = LocalSecondAccentColor.current
     val annotationColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val change = LocalSongChange.current
     val chordLayouts = remember(line, textMeasurements) { line.chords.map(textMeasurements::chordLayout) }
     val paddedLine = remember(line, textMeasurements, density) {
         line.padLyricsToFitChords(
@@ -94,6 +95,9 @@ internal fun SongLineWithChords(
                 val layout = lyricsLayout ?: return@drawBehind
                 val textLength = layout.layoutInput.text.length
                 val gap = CHORD_GAP.toPx()
+                // Read here rather than in composition, so that the chords fading with a change draw this line again
+                // rather than compose it.
+                val chordAlpha = change.chordAlpha()
                 // Each chord is drawn at its row's top, inside the line's height, so the clip only cuts what reaches past
                 // the end edge: a chord or an annotation wider than the line, which is clipped rather than wrapped, since a
                 // second line of it would land on the lyrics under it. The content description keeps its whole text.
@@ -133,6 +137,7 @@ internal fun SongLineWithChords(
                             textLayoutResult = chordLayout,
                             color = if (chord.isAnnotation) annotationColor else chordColor,
                             topLeft = Offset(x, layout.getLineTop(lineIndex)),
+                            alpha = chordAlpha,
                         )
                         previousChordEdge = if (isRightToLeft) x - gap else x + chordWidth + gap
                     }

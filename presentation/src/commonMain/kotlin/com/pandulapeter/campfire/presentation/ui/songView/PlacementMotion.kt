@@ -39,7 +39,7 @@ internal class PlacementMotion(private val coroutineScope: CoroutineScope) {
             coroutineScope.launch {
                 offset.animateTo(
                     targetValue = target,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold),
+                    animationSpec = SongMotionSpec,
                 )
             }
         }
@@ -57,3 +57,9 @@ internal class PlacementMotion(private val coroutineScope: CoroutineScope) {
      */
     fun clear() = offsets.clear()
 }
+
+/**
+ * The one spring everything on a song page moves on: the sections, and the controls, diagrams, and chips inside them.
+ * On the same spring, what a section holds travels with it rather than drifting apart from it on the way.
+ */
+internal val SongMotionSpec = spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold)

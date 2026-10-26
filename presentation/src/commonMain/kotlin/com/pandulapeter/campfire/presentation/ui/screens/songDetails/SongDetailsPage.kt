@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Re
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.timingIndexAt
+import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
+import com.pandulapeter.campfire.presentation.ui.songView.SongChange
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -39,6 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -187,24 +190,25 @@ internal fun SongDetailsPage(
     } else {
         val layoutDirection = LocalLayoutDirection.current
         val labels = rememberDefaultSectionLabels(shouldNumberSections)
-        val model = rememberSongLyricsModel(
-            inputs = SongLyricsInputs(
-                text = songText,
-                transposition = transposition,
-                tabCapo = tabCapo,
-                spelling = chordSpelling,
-                shouldShowChords = shouldShowChords,
-                labels = labels,
-                tempoOverride = tempoOverride,
-                capoOverride = capoOverride,
-                shapeCapo = shapeCapo,
-                inferredKey = inferredKey,
-                showsTiming = shouldShowTempo,
-                chordTuning = chordDiagrams?.tuning,
-                tabs = tabs,
-                suggestsScales = scaleSuggestions != null,
-                showsDegrees = showsDegrees,
-            ),
+        val lyricsInputs = SongLyricsInputs(
+            text = songText,
+            transposition = transposition,
+            tabCapo = tabCapo,
+            spelling = chordSpelling,
+            shouldShowChords = shouldShowChords,
+            labels = labels,
+            tempoOverride = tempoOverride,
+            capoOverride = capoOverride,
+            shapeCapo = shapeCapo,
+            inferredKey = inferredKey,
+            showsTiming = shouldShowTempo,
+            chordTuning = chordDiagrams?.tuning,
+            tabs = tabs,
+            suggestsScales = scaleSuggestions != null,
+            showsDegrees = showsDegrees,
+        )
+        val built = rememberSongLyricsModel(
+            inputs = lyricsInputs,
             buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
             // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
@@ -226,7 +230,7 @@ internal fun SongDetailsPage(
                 showsDegrees = inputs.showsDegrees,
             )
         }
-        if (model == null) {
+        if (built == null) {
             // A page beside the one being read whose first rendering is still being built in the background. Nobody is
             // looking at it, so it appears in one frame once it is there, the way data arriving does.
             Box(
@@ -237,6 +241,28 @@ internal fun SongDetailsPage(
             }
             return@AnimatedContent
         }
+        val songChange = remember { SongChange() }
+        val frame = rememberStagedSongFrame(
+            frame = SongFrame(
+                model = built.second,
+                playingControls = playingControls,
+                chordDiagrams = chordDiagrams,
+                scaleSuggestions = scaleSuggestions,
+                shouldShowTempo = shouldShowTempo,
+            ),
+            look = SongLook(
+                shouldShowChords = shouldShowChords,
+                hasChordDiagrams = chordDiagrams != null,
+                hasScaleSuggestions = scaleSuggestions != null,
+                showsDegrees = showsDegrees,
+                chordSpelling = chordSpelling,
+                shouldNumberSections = shouldNumberSections,
+                shouldShowTempo = shouldShowTempo,
+            ),
+            isModelBuilt = built.first == lyricsInputs,
+            change = songChange,
+        )
+        val model = frame.model
         if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
             Box(
@@ -308,55 +334,57 @@ internal fun SongDetailsPage(
                 )
             }
             SideEffect { flingBehavior.readingWindow = readingWindow }
-            SongLyrics(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .fadingTopEdge(
-                        scrolled = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
-                        backgroundColor = MaterialTheme.colorScheme.background,
-                    )
-                    .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
-                    .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
-                        top = topPadding,
-                        bottom = bottomPadding,
-                    ),
-                model = model,
-                availableHeight = settled.height - topPadding - bottomPadding,
-                // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
-                extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
-                sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
-                isTextScaling = isTextScaling,
-                fontScale = currentFontScale,
-                foldedSections = foldedSections,
-                onFoldToggled = onFoldToggled,
-                playingControls = playingControls,
-                playingTools = playingTools,
-                // Read only, the page is the one place left that says how the song is played, so a capo of none and the
-                // tempo and the time the click starts at are said rather than left to be guessed from nothing.
-                readsDefaults = playingControls == null,
-                shouldShowCapo = shouldShowCapo,
-                shouldShowTempo = shouldShowTempo,
-                // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
-                // its position plus the padding above it - all but the first, which is read at the top of the song.
-                onRowsPlaced = { rows ->
-                    flingBehavior.onRowsPlaced(
-                        placedRows = rows.belowPadding(topPaddingPx),
-                        viewport = latestViewport,
-                    )
-                },
-                rowViewportHeight = { liveViewportHeight },
-                rowViewportTopPadding = topPadding,
-                rowViewportBottomPadding = bottomPadding,
-                // The buttons are as far from the end of the screen as the text is, so the text only has to leave
-                // them their own width and a gap.
-                stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-                keepsStepButtonInset = keepsStepButtonInset,
-                canCutSections = true,
-                chordDiagrams = chordDiagrams,
-                scaleSuggestions = scaleSuggestions,
-            )
+            CompositionLocalProvider(LocalSongChange provides songChange) {
+                SongLyrics(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .fadingTopEdge(
+                            scrolled = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
+                            backgroundColor = MaterialTheme.colorScheme.background,
+                        )
+                        .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
+                        .padding(
+                            start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+                            end = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+                            top = topPadding,
+                            bottom = bottomPadding,
+                        ),
+                    model = model,
+                    availableHeight = settled.height - topPadding - bottomPadding,
+                    // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
+                    extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
+                    sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
+                    isTextScaling = isTextScaling,
+                    fontScale = currentFontScale,
+                    foldedSections = foldedSections,
+                    onFoldToggled = onFoldToggled,
+                    playingControls = frame.playingControls,
+                    playingTools = playingTools,
+                    // Read only, the page is the one place left that says how the song is played, so a capo of none and the
+                    // tempo and the time the click starts at are said rather than left to be guessed from nothing.
+                    readsDefaults = frame.playingControls == null,
+                    shouldShowCapo = shouldShowCapo,
+                    shouldShowTempo = frame.shouldShowTempo,
+                    // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
+                    // its position plus the padding above it - all but the first, which is read at the top of the song.
+                    onRowsPlaced = { rows ->
+                        flingBehavior.onRowsPlaced(
+                            placedRows = rows.belowPadding(topPaddingPx),
+                            viewport = latestViewport,
+                        )
+                    },
+                    rowViewportHeight = { liveViewportHeight },
+                    rowViewportTopPadding = topPadding,
+                    rowViewportBottomPadding = bottomPadding,
+                    // The buttons are as far from the end of the screen as the text is, so the text only has to leave
+                    // them their own width and a gap.
+                    stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                    keepsStepButtonInset = keepsStepButtonInset,
+                    canCutSections = true,
+                    chordDiagrams = frame.chordDiagrams,
+                    scaleSuggestions = frame.scaleSuggestions,
+                )
+            }
         }
     }
 }

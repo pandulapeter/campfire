@@ -15,9 +15,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.layout.offset
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,16 +24,17 @@ import kotlinx.coroutines.launch
 internal enum class SectionMotion {
 
     /**
-     * A change that comes on its own - a window maximised, a step of the text size - is narrated: every section springs
-     * to its new place and size (`animateBounds`), and one too tall for that glides like [GLIDE].
+     * A change that comes on its own - a window maximised, a step of the text size, a preference switched - is narrated:
+     * every section springs from where it was to its new place ([SectionGlides]). Only the place is animated, never the
+     * size: a section is laid out at its new size at once, so its lines, controls, and chips are arranged once and travel
+     * with it, rather than being arranged again at every size it passes through on the way.
      */
     SPRING,
 
     /**
      * A change that keeps coming - a pinch, a window edge being dragged - is followed as it comes, and only the jump a
-     * section makes where the grid changes is glided over. A spring restarted on every frame would trail behind the
-     * change, and `animateBounds` measures every section at its animated size and at its target size in every frame,
-     * while a line of text keeps only one of those layouts, so each would be laid out twice a frame.
+     * section makes where the grid changes is glided over: a spring restarted on every frame would trail behind the
+     * change.
      */
     GLIDE,
 
@@ -48,17 +46,7 @@ internal enum class SectionMotion {
 }
 
 /**
- * Whether a section can be animated to its place inside [SongSectionsLayout]. The layout is the only one that knows
- * how tall a section is, which decides that (see [maxAnimatedSectionHeight]), so it is handed back to the section
- * through this.
- */
-internal class SectionAnimation {
-
-    var isTooTallToAnimate by mutableStateOf(false)
-}
-
-/**
- * The glide of every section across a change of the grid, see [SongSectionsLayout]. The positions are followed in the
+ * The glide of every section to a new place, see [SongSectionsLayout] and [SectionMotion]. The positions are followed in the
  * lookahead pass and the offsets read in the approach pass, both by the key of each section, so a section that is
  * added or edited has no position to glide from.
  */
@@ -71,17 +59,14 @@ internal class SectionGlides(
     private var lastKeys: List<Any>? = null
     private var lastGrid: DecidedGrid? = null
 
-    /** Whether the chunk or the card of [key] is still on its way to its place, which is state. */
-    fun isGliding(key: Any) = glides[key]?.isGliding == true
-
     /** How far from its place the chunk or the card of [key] is drawn, which is state. */
     fun offsetOf(key: Any) = glides[key]?.offset ?: IntOffset.Zero
 
     /**
      * Takes the [positions] the sections of [keys] are placed at in [grid], and starts a glide for every one whose
-     * position moved because the grid changed, unless it [isCarriedByBounds], which animates its own.
+     * position moved: every one where [glidesEveryMove], otherwise only where the grid changed (see [SectionMotion]).
      */
-    fun follow(keys: List<Any>, grid: DecidedGrid, positions: Array<IntOffset>, isCarriedByBounds: (Int) -> Boolean) {
+    fun follow(keys: List<Any>, grid: DecidedGrid, positions: Array<IntOffset>, glidesEveryMove: Boolean) {
         if (keys !== lastKeys) {
             val current = keys.toHashSet()
             glides.entries.removeAll { (key, glide) -> (key !in current).also { if (it) glide.stop() } }
@@ -93,7 +78,7 @@ internal class SectionGlides(
             val glide = glides.getOrPut(key) { SectionGlide() }
             val previous = glide.target
             glide.target = positions[index]
-            if (isNewGrid && previous != null && previous != positions[index] && !isCarriedByBounds(index)) {
+            if ((glidesEveryMove || isNewGrid) && previous != null && previous != positions[index]) {
                 glide.start(jump = previous - positions[index], scope = scope, spec = spec)
             }
         }
@@ -108,8 +93,6 @@ internal class SectionGlides(
 private class SectionGlide {
 
     var target: IntOffset? = null
-    var isGliding by mutableStateOf(false)
-        private set
     private val animatable = Animatable(IntOffset.Zero, IntOffset.VectorConverter)
     private var pendingJump = IntOffset.Zero
     private var job: Job? = null
@@ -118,14 +101,12 @@ private class SectionGlide {
 
     fun start(jump: IntOffset, scope: CoroutineScope, spec: AnimationSpec<IntOffset>) {
         pendingJump += jump
-        isGliding = true
         job?.cancel()
         job = scope.launch {
             val velocity = animatable.velocity
             animatable.snapTo(animatable.value + pendingJump)
             pendingJump = IntOffset.Zero
             animatable.animateTo(targetValue = IntOffset.Zero, animationSpec = spec, initialVelocity = velocity)
-            isGliding = false
         }
     }
 
@@ -133,10 +114,3 @@ private class SectionGlide {
         job?.cancel()
     }
 }
-
-/**
- * The layout id of a section that carries `animateBounds`. It is part of the same modifier chain, so what
- * [SongSectionsLayout] reads can never disagree with what is actually attached, not even for the one frame
- * between a measurement and the composition that answers it.
- */
-internal object AnimatedSectionLayoutId

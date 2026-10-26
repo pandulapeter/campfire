@@ -34,9 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -69,10 +70,12 @@ import kotlin.math.roundToInt
  * out in the width that is available right now, so that a layout that is still being resized keeps its sections
  * where they are and only lets them grow into the space as it arrives.
  *
- * A section that is not carried by `animateBounds` glides across a change of the grid ([sectionGlides]): where it was
- * placed before and where the new grid places it are measured in the lookahead pass, and the approach pass places it
- * that far from its new place, the distance running down to nothing. Only the grid changing moves a section by more
- * than the frame's own change, so everything else is followed as it comes.
+ * A section glides to a new place ([sectionGlides]), followed by its first line of text: where it was placed before and
+ * where it is placed now are measured in the lookahead pass, and the approach pass places it that far from its new place, the distance running
+ * down to nothing, its size and content already the new ones. A single change glides every section that moved
+ * ([glidesEveryMove]); a change that keeps coming only glides where the grid changes, since only that moves a section by
+ * more than the frame's own change, and everything else is followed as it comes. The dividers between the rows glide
+ * with them.
  *
  * The layout is measured on every frame of a navigation transition and of a window being resized, so what the search
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
@@ -118,11 +121,11 @@ internal fun SongSectionsLayout(
     units: SongUnits,
     unitKeys: List<UnitKey>,
     cardKeys: List<CardKey>,
-    animations: List<SectionAnimation>,
     cardPadding: Dp,
     canCutSections: Boolean,
     isSingleColumn: Boolean,
     sectionGlides: SectionGlides?,
+    glidesEveryMove: Boolean,
     sectionMeasurements: SectionMeasurements,
     lyricsLineHeight: Int,
     centeringHold: ColumnCenteringHold?,
@@ -140,11 +143,12 @@ internal fun SongSectionsLayout(
             drawContent()
             val thickness = DividerDefaults.Thickness.toPx()
             val dividerHeight = DividerDefaults.Thickness.roundToPx()
-            dividerTops.value.forEach { top ->
+            dividerTops.value.forEachIndexed { index, top ->
                 // Through the middle of a divider of the rounded thickness centred on the top. It spans the whole width
                 // rather than the rows, which are as wide as the text size makes the columns, and is never scaled with them:
                 // a divider that grew and shrank with a pinch would read as part of the song rather than as the page's own.
-                val y = top - dividerHeight / 2 + thickness / 2
+                val glide = sectionGlides?.offsetOf(DividerKey(index))?.y ?: 0
+                val y = top + glide - dividerHeight / 2 + thickness / 2
                 drawLine(color = dividerColor, start = Offset(0f, y), end = Offset(size.width, y), strokeWidth = thickness)
             }
         },
@@ -193,15 +197,7 @@ internal fun SongSectionsLayout(
         val widths = search.sectionWidthsOf(decidedGrid, layoutWidth)
         val placeables = measurables.mapIndexed { index, measurable ->
             val unitWidth = widths.unitWidths[index]
-            val heightLimit = maxAnimatedSectionHeight(unitWidth)
-            // Only a section that is being animated is held to the limit. One that reaches it is cut short for the one
-            // frame it takes the composition to take the animation off it, which happens far below the screen.
-            val maxHeight = if (measurable.layoutId === AnimatedSectionLayoutId) minOf(constraints.maxHeight, heightLimit) else constraints.maxHeight
-            val placeable = measurable.measure(Constraints(minWidth = unitWidth, maxWidth = unitWidth, maxHeight = maxHeight))
-            // The approach pass of an animated section reports the size the animation is at, which says nothing about
-            // the size it is going to: only the lookahead pass measures that.
-            if (isLookingAhead) animations[index].isTooTallToAnimate = placeable.height >= heightLimit
-            placeable
+            measurable.measure(Constraints(minWidth = unitWidth, maxWidth = unitWidth, maxHeight = constraints.maxHeight))
         }
         val unitHeights = IntArray(placeables.size) { placeables[it].height }
         // The height a divider takes between the rows, which decides the room of the last row and where a scroll rests.
@@ -238,8 +234,8 @@ internal fun SongSectionsLayout(
             centeringHold.columnCounts = grid.columnCounts
             centeringHold.joinsPrevious = grid.joinsPrevious
         }
-        // The approach pass places the rows where their sections' animations have got to, which is not where a scroll
-        // comes to rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
+        // The approach pass places the sections where their glides have got to, which is not where a scroll comes to
+        // rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
         // What is reported is the bottom edge of each divider, so a scroll resting there has the divider just above it.
         if (isLookingAhead) {
             onRowsPlaced(
@@ -255,20 +251,24 @@ internal fun SongSectionsLayout(
             )
         }
         val cardPlaceables = cards.map { (card, bounds) ->
-            val measurable = cardMeasurables[card]
-            val heightLimit = maxAnimatedSectionHeight(bounds.width)
-            val height = if (measurable.layoutId === AnimatedSectionLayoutId) minOf(bounds.height, heightLimit) else bounds.height
-            if (isLookingAhead) animations[unitCount + card].isTooTallToAnimate = bounds.height >= heightLimit
-            measurable.measure(Constraints.fixed(bounds.width, height))
+            cardMeasurables[card].measure(Constraints.fixed(bounds.width, bounds.height))
         }
+        val dividerTopsNow = arrangement.dividerTops.take((grid.pageCount - 1).coerceAtLeast(0))
         if (isLookingAhead && sectionGlides != null) {
             sectionGlides.follow(
-                keys = unitKeys + cards.map { cardKeys[it.first] },
+                keys = unitKeys + cards.map { cardKeys[it.first] } + dividerTopsNow.indices.map(::DividerKey),
                 grid = decidedGrid,
-                positions = Array(unitCount + cards.size) { if (it < unitCount) positions[it] else cards[it - unitCount].second.topLeft },
-                isCarriedByBounds = { index ->
-                    (if (index < unitCount) measurables[index] else cardMeasurables[cards[index - unitCount].first]).layoutId === AnimatedSectionLayoutId
+                // A chunk is followed by its first line of text rather than by its top, so that a line whose chords come
+                // or go, growing or shrinking above its lyrics, glides its words from where they were rather than sending
+                // them a chord's height off first.
+                positions = Array(unitCount + cards.size + dividerTopsNow.size) {
+                    when {
+                        it < unitCount -> positions[it] + IntOffset(0, placeables[it][FirstBaseline].takeIf { baseline -> baseline != AlignmentLine.Unspecified } ?: 0)
+                        it < unitCount + cards.size -> cards[it - unitCount].second.topLeft
+                        else -> IntOffset(0, dividerTopsNow[it - unitCount - cards.size])
+                    }
                 },
+                glidesEveryMove = glidesEveryMove,
             )
         }
         layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
@@ -283,23 +283,11 @@ internal fun SongSectionsLayout(
                 val position = positions[index] + glideOf(unitKeys[index])
                 placeable.place(position)
             }
-            // Only the main pass: the approach measures animated sections at their animated sizes, so its tops are the
-            // ones on screen, while the lookahead's are where they settle.
-            if (!isLookingAhead) dividerTops.value = arrangement.dividerTops.take((grid.pageCount - 1).coerceAtLeast(0))
+            // Where they settle: the drawing adds how far each still has to glide.
+            if (!isLookingAhead) dividerTops.value = dividerTopsNow
         }
     }
 }
 
-/**
- * The tallest a section of [columnWidth] is measured while it carries `animateBounds`, which measures its content
- * with `Constraints.fixed` of the section's own size on every pass. A `Constraints` has 31 bits for a width and a
- * height together: 18 of them are left for the height next to a width of less than [WIDE_SECTION_WIDTH], and 16
- * next to a wider one. Both limits are half of what would fit, since a spring that is turned around on its way
- * can carry the animated size past both of its ends.
- */
-private fun maxAnimatedSectionHeight(columnWidth: Int) =
-    if (columnWidth < WIDE_SECTION_WIDTH) MAX_ANIMATED_SECTION_HEIGHT else MAX_ANIMATED_WIDE_SECTION_HEIGHT
-
-private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
-private const val MAX_ANIMATED_WIDE_SECTION_HEIGHT = 1 shl 15
-private const val WIDE_SECTION_WIDTH = (1 shl 13) - 1
+/** What the divider over the row after the [index]-th one glides by, among the keys of the sections' glides. */
+private data class DividerKey(val index: Int)

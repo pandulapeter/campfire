@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
+import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
+import com.pandulapeter.campfire.presentation.ui.songView.leavingWith
 import com.pandulapeter.campfire.presentation.ui.songView.HEADER_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
@@ -17,6 +19,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.withMetadataSect
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoCard
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -90,11 +94,15 @@ internal fun SongMetadataSection(
     // only once they have gone: one button at a time.
     val isTunerWithPill = pillVisibility.targetState || pillVisibility.currentState
     val toolHeight = songControlHeight(titleStyle)
+    // A change of how the song is shown fades the pill out before the page changes and in after it has moved, so it
+    // comes and goes at once then rather than fading a second time.
+    val change = LocalSongChange.current
     val pillGroup = @Composable { pillModifier: Modifier ->
         AnimatedVisibility(
+            modifier = Modifier.leavingWith(change, change.leaving?.instrumentPill == true),
             visibleState = pillVisibility,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = if (change.isUnderWay) EnterTransition.None else fadeIn(),
+            exit = if (change.isUnderWay) ExitTransition.None else fadeOut(),
         ) {
             InstrumentPillRow(
                 modifier = pillModifier,

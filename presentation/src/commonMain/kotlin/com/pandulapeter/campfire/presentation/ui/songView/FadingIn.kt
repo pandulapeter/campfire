@@ -18,10 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
 /**
- * Fades a run of tablature, a grid or the song's info card in as it is unfolded, while the section around it grows to
- * make room on its own spring (`animateBounds`). Only the opacity is animated, never the size: the column layout decides where every
- * section goes from their intrinsic heights, and a run whose height was still on its way would be measured halfway
- * there.
+ * Fades in what a single change brings onto a song page - a run of tablature, a grid or the song's info card as it is
+ * unfolded, a section that was not there - while the sections around it glide to make room ([SectionMotion.SPRING]).
+ * Only the opacity is animated, never the size: the column layout decides where every section goes from their
+ * intrinsic heights, and a run whose height was still on its way would be measured halfway there.
  */
 @Composable
 internal fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {

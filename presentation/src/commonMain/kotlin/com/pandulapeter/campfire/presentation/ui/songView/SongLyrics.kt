@@ -50,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -204,8 +203,7 @@ internal fun SongLyrics(
         hasMetronome = hasMetronome,
     )
     val glideScope = rememberCoroutineScope()
-    val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-    val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope, glideSpec) { SectionGlides(glideScope, glideSpec) }
+    val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope) { SectionGlides(glideScope, SongMotionSpec) }
     val density = LocalDensity.current
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
@@ -294,8 +292,6 @@ internal fun SongLyrics(
             ),
         )
     }
-    // Whether each chunk, and then each card, is too tall to be animated, which only the layout finds out.
-    val animations = remember(units) { List(units.unitSections.size + units.cardCount) { SectionAnimation() } }
     val sectionKeys = remember(sections) { sectionKeysOf(sections) }
     val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }
     val cardKeys = remember(units, sectionKeys) { cardKeysOf(units, sectionKeys) }
@@ -343,11 +339,11 @@ internal fun SongLyrics(
                 units = units,
                 unitKeys = unitKeys,
                 cardKeys = cardKeys,
-                animations = animations,
                 cardPadding = CARD_PADDING,
                 canCutSections = canCutSections,
                 isSingleColumn = isSingleColumn,
                 sectionGlides = sectionGlides,
+                glidesEveryMove = sectionMotion == SectionMotion.SPRING && !isResizing,
                 sectionMeasurements = sectionMeasurements,
                 lyricsLineHeight = textMeasurements.lyricsLineHeight,
                 centeringHold = centeringHold,
@@ -358,8 +354,6 @@ internal fun SongLyrics(
                     units = units,
                     unitKeys = unitKeys,
                     cardKeys = cardKeys,
-                    animations = animations,
-                    sectionGlides = sectionGlides,
                     sectionMotion = sectionMotion,
                     isResizing = isResizing,
                     isTextScaling = isTextScaling,

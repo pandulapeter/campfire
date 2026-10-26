@@ -191,6 +191,10 @@ internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
             // has to fade its body in rather than compose the whole of it afresh.
             is RenderSection.Chords -> RenderSection.Chords::class
             is RenderSection.Scales -> RenderSection.Scales::class
+            // By what the file calls it, so that the chords switched off or on, a transposition, or a notation is the
+            // same section drawn differently, which springs to its new place: composed afresh, it would be placed there
+            // at once, over the sections still on their way.
+            is RenderSection.Lines -> RenderSection.Lines::class to section.foldKey
             else -> section
         }
         val occurrence = (occurrences[identity] ?: 0) + 1

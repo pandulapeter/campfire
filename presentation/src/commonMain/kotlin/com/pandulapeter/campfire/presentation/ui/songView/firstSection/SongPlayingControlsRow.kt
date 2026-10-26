@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
+import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
+import com.pandulapeter.campfire.presentation.ui.songView.leavingWith
 import com.pandulapeter.campfire.presentation.ui.songView.HEADER_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import androidx.compose.foundation.layout.Arrangement
@@ -126,9 +128,13 @@ private fun ChordControls(
     toolButtons: @Composable (PlayingToolPlace, Modifier) -> Unit,
 ) {
     val groupEnd = Modifier.padding(start = PLAYING_CONTROL_GAP)
+    val change = LocalSongChange.current
+    val isLeaving = change.leaving?.chords == true
     if (key != null) {
         Row(
-            modifier = Modifier.layoutId(PlayingControlId.KEY),
+            modifier = Modifier
+                .layoutId(PlayingControlId.KEY)
+                .leavingWith(change, isLeaving),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TranspositionControls(
@@ -149,6 +155,7 @@ private fun ChordControls(
             // A label starting a line stands on the lyrics' keyline rather than on the pills'.
             modifier = Modifier
                 .layoutId(PlayingControlId.CAPO)
+                .leavingWith(change, isLeaving)
                 .then(if (key == null) Modifier.padding(start = HEADER_HORIZONTAL_PADDING) else Modifier),
             label = stringResource(Res.string.song_editor_insert_capo),
             fontScale = fontScale,
@@ -180,9 +187,13 @@ private fun ClickControls(
     height: Dp,
     toolButtons: @Composable (PlayingToolPlace, Modifier) -> Unit,
 ) {
+    val change = LocalSongChange.current
+    val isLeaving = change.leaving?.timing == true
     if (tempo != null) {
         Row(
-            modifier = Modifier.layoutId(PlayingControlId.TEMPO),
+            modifier = Modifier
+                .layoutId(PlayingControlId.TEMPO)
+                .leavingWith(change, isLeaving),
             horizontalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -200,7 +211,9 @@ private fun ClickControls(
     }
     if (timeSignature != null) {
         Row(
-            modifier = Modifier.layoutId(PlayingControlId.TIME),
+            modifier = Modifier
+                .layoutId(PlayingControlId.TIME)
+                .leavingWith(change, isLeaving),
             horizontalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
             verticalAlignment = Alignment.CenterVertically,
         ) {

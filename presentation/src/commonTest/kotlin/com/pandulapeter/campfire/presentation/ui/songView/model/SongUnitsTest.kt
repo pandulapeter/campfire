@@ -86,6 +86,13 @@ class SongUnitsTest {
     }
 
     @Test
+    fun `a section keeps its key whatever its lines say`() {
+        val before = sectionKeysOf(listOf(verseWithStanzas()))
+        val after = sectionKeysOf(listOf(lines(SectionPart.Lines(listOf(lyrics("Other"))))))
+        assertEquals(before, after)
+    }
+
+    @Test
     fun `a chunk is keyed by its section and its first item`() {
         val sections = listOf(verseWithStanzas())
         val units = SongUnits.of(sections) { true }

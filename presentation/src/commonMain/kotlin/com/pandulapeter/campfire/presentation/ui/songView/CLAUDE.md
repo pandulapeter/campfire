@@ -84,10 +84,19 @@ builds what it draws, `grid/` places it.
   a rest shows one row; only where the song scrolls anyway, never in the preview.
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece. The page dividers
   are drawn by the layout over both, at the main pass's tops, not composed.
-- **Motion** (`SectionMotion`): a single change springs with `animateBounds`; continuous changes (pinch, resize, title
-  row collapse, metronome panel) follow directly, only a new grid's jump glided (`SectionGlides`). The playing controls,
+- **Motion** (`SectionMotion`): a single change glides every section, card, and row divider that moved from its old
+  place to its new one (`SectionGlides`); continuous changes (pinch, resize, title row collapse, metronome panel) follow
+  directly, only a new grid's jump glided. **Only places are animated, never sizes** (no `animateBounds`): a section is
+  laid out at its new size at once, so its content is arranged once rather than at every size on the way, which
+  re-wrapped chips and controls on every frame. Everything moves on one spring (`SongMotionSpec`). The playing controls,
   the chord diagrams, and the scale chips travel to a new arrangement of their rows during those too (`PlacementMotion`),
   except a pinch, which resizes them every frame (`isTextScaling`).
-- `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px: animated sections are measured no
-  taller than half that (`maxAnimatedSectionHeight`).
+- **A section is keyed by what it is, not what it shows** (`sectionKeysOf`: a lines section by its fold key), so it
+  glides rather than being composed afresh; it is followed by its first baseline, so words a chord row grows or shrinks
+  over glide from where they were. A chunk or a first-section control that comes with any other single change fades in
+  where it lands (`fadingIn`, `GroupedRows`).
+- **A change of how the song is shown is staged** (`SongChange`, driven by `songDetails/StagedSongFrame.kt`): what it
+  takes away fades out while the page before it is held (`leavesWith`, the chords drawn over the lyrics, the controls,
+  the pill), then the new page glides into place, then what it brings fades in. Leaving, moving, and arriving at once
+  read as chaos.
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.
