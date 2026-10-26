@@ -32,21 +32,32 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `a page names no library file, and every entry its own`() {
-        assertFalse(importPreviewFileName(0).endsWith(".cho"))
-        assertTrue(importPreviewFileName(0) != importPreviewFileName(1))
+    fun `a page names no library file, and every entry of every review its own`() {
+        val names = listOf(importPreviewFileName("a", 0), importPreviewFileName("a", 1), importPreviewFileName("b", 0))
+        assertTrue(names.none { it.endsWith(".cho") })
+        assertEquals(names.size, names.toSet().size)
+    }
+
+    @Test
+    fun `a page name is told from a library name, and by its review`() {
+        assertTrue(isImportPreviewFileName(importPreviewFileName("a", 0)))
+        assertTrue(isImportPreviewFileName(importPreviewFileName("b", 3)))
+        assertTrue(isImportPreviewFileName(importPreviewFileName("a", 0), reviewId = "a"))
+        assertFalse(isImportPreviewFileName(importPreviewFileName("b", 0), reviewId = "a"))
+        assertFalse(isImportPreviewFileName("a.cho"))
+        assertFalse(isImportPreviewFileName("a.cho", reviewId = "a"))
     }
 
     @Test
     fun `a preview's song is read from its text, titled by the file it came in where the text names no title`() {
-        val song = importPreviewSongOf(entry("untitled.cho", text = "{key: G}\n{tempo: 96}\n[G]Hello", title = "Untitled"), importPreviewFileName(0))
+        val song = importPreviewSongOf(entry("untitled.cho", text = "{key: G}\n{tempo: 96}\n[G]Hello", title = "Untitled"), importPreviewFileName("review", 0))
 
         assertEquals("Untitled", song.title)
         assertEquals("G", song.key)
         assertEquals(96, song.tempo)
         assertTrue(song.hasChords)
         assertNull(song.coverArtUrl)
-        assertEquals(importPreviewFileName(0), song.fileName)
+        assertEquals(importPreviewFileName("review", 0), song.fileName)
     }
 
     @Test

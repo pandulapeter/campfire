@@ -62,9 +62,15 @@ internal fun importPreviewSongIndices(preview: ImportPreview, plan: ImportPlan) 
 
 /**
  * The name a preview's page goes by where the song details screen keys a song by its file name: never one of the
- * library's, since it has no song extension, and one per entry, since names are not unique within a batch.
+ * library's, since it has no song extension, and one per entry of one review ([reviewId], `ImportReport.Review.id`),
+ * since names are not unique within a batch and what is kept by name (an inferred key) must not carry over to the same
+ * place in another import. Within one review an index always names the same entry, as a joining batch only appends.
  */
-internal fun importPreviewFileName(index: Int) = "$IMPORT_PREVIEW_FILE_NAME_PREFIX$index"
+internal fun importPreviewFileName(reviewId: String, index: Int) = "$IMPORT_PREVIEW_FILE_NAME_PREFIX$reviewId:$index"
+
+/** Whether [fileName] is the name of a preview's page ([importPreviewFileName]): of any review's, or only of [reviewId]'s. */
+internal fun isImportPreviewFileName(fileName: String, reviewId: String? = null) =
+    fileName.startsWith(if (reviewId == null) IMPORT_PREVIEW_FILE_NAME_PREFIX else "$IMPORT_PREVIEW_FILE_NAME_PREFIX$reviewId:")
 
 /**
  * What [entry]'s own text says about the song, as the library would read it once written, under [fileName]: the title

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -27,6 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewAc
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewFileName
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewSongIndices
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewSongOf
+import com.pandulapeter.campfire.presentation.ui.state.importing.isImportPreviewFileName
 
 /**
  * What the song details screen shows as a preview of songs an import has not written yet ([CampfireDestination.SongDetails.importPreview]):
@@ -79,7 +81,7 @@ internal fun rememberImportPreviewState(
         importPreviewSongIndices(preview, review.plan).map { index ->
             val entry = review.plan.songs[index]
             val song = songs[index]?.takeIf { it.first == entry.text }?.second
-                ?: importPreviewSongOf(entry, importPreviewFileName(index)).also { songs[index] = entry.text to it }
+                ?: importPreviewSongOf(entry, importPreviewFileName(review.id, index)).also { songs[index] = entry.text to it }
             ImportPreviewPage(index = index, entry = entry, song = song)
         }
     }
@@ -126,17 +128,33 @@ private class LastReview(var review: ImportReport.Review? = null)
 /**
  * Works out the key the chords of the page being read and of those beside it are in, which the read only line names for
  * a song whose text names none, as the library's songs have it worked out as their text is read (`InferredSongKeys`).
+ * Keeps the keys of one review's pages at most, and none once that review is over.
  */
 @Composable
 internal fun InferImportPreviewKeys(
     viewModel: CampfireViewModel,
     importPreview: ImportPreviewState,
     currentPage: Int,
-) = LaunchedEffect(importPreview.pages, currentPage) {
-    viewModel.songTextStore.inferredKeys.inferFor(
-        listOfNotNull(importPreview.pages.getOrNull(currentPage - 1), importPreview.pages.getOrNull(currentPage), importPreview.pages.getOrNull(currentPage + 1))
-            .map { it.pageFileName to it.entry.text },
-    )
+) {
+    val inferredKeys = viewModel.songTextStore.inferredKeys
+    val reviewId = importPreview.review.id
+    // Another review's pages are never shown again, since a preview is only kept over the review it was opened over.
+    LaunchedEffect(reviewId) { inferredKeys.forget { isImportPreviewFileName(it) && !isImportPreviewFileName(it, reviewId) } }
+    DisposableEffect(reviewId) {
+        onDispose {
+            // Only once the review is over: while it is up, a row selected as this preview slides out opens the same pages
+            // again, which find their keys held, and would lose them here.
+            if ((viewModel.importReportState.importReport.value as? ImportReport.Review)?.id != reviewId) {
+                inferredKeys.forget { isImportPreviewFileName(it, reviewId) }
+            }
+        }
+    }
+    LaunchedEffect(importPreview.pages, currentPage) {
+        inferredKeys.inferFor(
+            listOfNotNull(importPreview.pages.getOrNull(currentPage - 1), importPreview.pages.getOrNull(currentPage), importPreview.pages.getOrNull(currentPage + 1))
+                .map { it.pageFileName to it.entry.text },
+        )
+    }
 }
 
 /**

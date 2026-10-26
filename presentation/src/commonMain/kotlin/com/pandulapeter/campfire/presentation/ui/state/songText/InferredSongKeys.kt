@@ -21,7 +21,8 @@ import kotlinx.coroutines.withContext
  * screen's app bar to name. Worked out by [SongTextStore] on [dispatcher] before it hands the text on, so that the key is
  * there in the frame the lyrics are, and kept by file name for as long as the view model lives rather than for as long as
  * the text is held: a song opened again names its key from the first frame, before its text is read again. A file
- * edited elsewhere meanwhile is named by its old key until that read. One short entry per song opened, never pruned.
+ * edited elsewhere meanwhile is named by its old key until that read. One short entry per song opened, never pruned,
+ * but for an import preview's pages ([forget]).
  *
  * @param inferKey The key of a song's text, null where its file names one or none can be told; the scale walk, so never
  *   on the main thread.
@@ -44,5 +45,14 @@ internal class InferredSongKeys(
         val inferred = withContext(dispatcher) { changed.map { (fileName, text) -> Triple(fileName, text, inferKey(text)) } }
         inferred.forEach { (fileName, text, _) -> inferredTexts[fileName] = text }
         _keys.update { keys -> inferred.fold(keys) { updated, (fileName, _, key) -> if (key == null) updated - fileName else updated + (fileName to key) } }
+    }
+
+    /**
+     * Forgets the key and the text of every name [isForgotten] matches, for names that stop meaning anything, as an
+     * import preview's pages do once their review is over; one of them worked out again is walked again.
+     */
+    fun forget(isForgotten: (fileName: String) -> Boolean) {
+        inferredTexts.keys.removeAll(isForgotten)
+        _keys.update { keys -> keys.filterKeys { !isForgotten(it) } }
     }
 }

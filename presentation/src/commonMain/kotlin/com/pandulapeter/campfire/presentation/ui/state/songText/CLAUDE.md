@@ -18,6 +18,7 @@ The texts of the songs on screen (`SongTextStore`) and the edits written into th
   its text, and saving writes it back under its own name (`Message.EditedSongFileGone`). `onEditorClosed` leaves the
   draft alone while the editor is still on the stack, so a configuration change never loses it.
 - **Inferred keys** (`InferredSongKeys`): every text read or written is walked on `Dispatchers.Default` before
-  `songTexts` gets it, keyed by file name and never pruned, so the app bar's key is never a frame behind the lyrics.
+  `songTexts` gets it, keyed by file name and never pruned (but for an import preview's pages, `InferredSongKeys.forget`),
+  so the app bar's key is never a frame behind the lyrics.
 - **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,
   and passes `expectedText`: a file changed before the view model heard of it is re-read and the edit applied to it.

@@ -31,12 +31,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 ### The import preview (`ImportPreviewState.kt`, `state/importing/ImportPreviewing.kt`)
 
 - **Nothing from outside is written before Import.** A `SongDetails` with `importPreview` draws the plan's entries
-  (`ImportReport.Review`) from their text, under page names no library file can have (`importPreviewFileName`). It is
-  read only as performance mode is, with no song actions, About the song, cover, metronome, or tuner button; folds are
-  kept in memory (`ImportPreviewState.folds`); no override is written. Chord diagrams open their sheets, whose pick is a
-  device preference. Never restored, addressed as `/import`. Bound to the review it was opened over
-  (`ImportPreview.reviewId`); without it the screen closes itself (`CloseImportPreviewWithoutReview`), except while
-  the report is `Importing`.
+  (`ImportReport.Review`) from their text, under page names no library file can have, one set per review
+  (`importPreviewFileName`), whose inferred keys are forgotten once the review is over. It is read only as performance
+  mode is, with no song actions, About the song, cover, metronome, or tuner button; folds are kept in memory
+  (`ImportPreviewState.folds`); no override is written. Chord diagrams open their sheets, whose pick is a device
+  preference. Never restored, addressed as `/import`. Bound to the review it was opened over (`ImportPreview.reviewId`);
+  without it the screen closes itself (`CloseImportPreviewWithoutReview`), except while the report is `Importing`.
 - **Marked plainly**: `ImportPreviewBar`, a secondary container card (as `WarningCard`) floating at the bottom (at most
   720dp wide), says the song is not in the library yet and, for a taken name, that it is. Its buttons
   (`ImportPreviewButtons`, `importPreviewActionsOf`) sit at its end, beside the message where that keeps 140dp, else
