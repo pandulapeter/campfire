@@ -89,6 +89,36 @@ baselineProfile {
     dexLayoutOptimization = true
 }
 
+// A step of BaselineProfileGenerator's walk is skipped when its text never appears, which the run cannot report on its
+// own: a failed test would stop Gradle before the profile is copied here. So the written profile is read once it is in
+// place, and every walked screen must have a rule in it; the recording is kept either way, to compare. A new step of
+// the walk adds the class its screen's composable compiles to.
+tasks.matching { it.name == "generateBaselineProfile" }.configureEach {
+    val profile = layout.projectDirectory.file("src/main/generated/baselineProfiles/baseline-prof.txt")
+    val walkedScreens = listOf(
+        "screens/songs/SongsScreenKt",
+        "screens/songDetails/SongDetailsScreenKt",
+        "dialogs/sheet/CampfireBottomSheetKt",
+        "screens/songEditor/LoadedSongEditorKt",
+        "screens/setlists/SetlistsScreenKt",
+        "screens/metronome/MetronomeScreenKt",
+        "screens/tuner/TunerScreenKt",
+        "screens/chords/ChordsScreenKt",
+        "screens/scales/ScalesScreenKt",
+        "screens/settings/SettingsScreenKt",
+    ).map { "Lcom/pandulapeter/campfire/presentation/ui/$it;" }
+    doLast {
+        val rules = profile.asFile.readText()
+        val missingScreens = walkedScreens.filterNot { it in rules }
+        if (missingScreens.isNotEmpty()) {
+            throw GradleException(
+                "The Baseline Profile has no rule for these walked screens, so their steps were skipped:\n" +
+                    missingScreens.joinToString("\n") { "  $it" },
+            )
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(libs.versions.jvmTarget.get().toInt())
 }

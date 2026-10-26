@@ -26,13 +26,14 @@ import org.junit.runners.MethodSorters
 
 /**
  * Records the Baseline Profile and the startup profile of the release build, walking the screens every launch goes
- * through: the start up itself, the song list, a song, a setlist, the tools (Metronome, Tuner, and Chords, behind the
- * Tools item on a phone) and Settings. It is not a test: it asserts nothing, CI
- * never runs it, and it is started by hand on an emulator, see this module's `CLAUDE.md`.
+ * through: the start up itself, the song list and its search, a song with its About the song sheet and its editor, a
+ * setlist, the tools (Metronome, Tuner, Chords, and Scales, behind the Tools item on a phone), and Settings. It is not a
+ * test: it asserts nothing, CI never runs it, and it is started by hand on an emulator, see this module's `CLAUDE.md`.
  *
  * The screens are found by their visible English text, which Compose exposes to UI Automator, so the app carries no test
- * tags for it. Every step waits for its text and is skipped where the text never appears, so that a renamed string
- * costs the profile a step rather than the run.
+ * tags for it. Every step waits for its text and is skipped where the text never appears, so that a renamed string never
+ * stops the recording; `generateBaselineProfile` then fails naming the screen the written profile lacks, from the list of
+ * walked screens in `app/android/build.gradle.kts`, which a new step adds its screen to.
  *
  * The walk is collected for the Baseline Profile only, and the startup profile from a cold start of its own: with dex
  * layout optimization the startup profile decides which classes share the first pages of the DEX, and the screens a
@@ -78,9 +79,35 @@ class BaselineProfileGenerator {
         waitFor(By.textContains("Rising Sun"))?.let { song ->
             song.click()
             device.waitForIdle()
+            // About the song is the bottom sheet of the walk, and the editor is opened from the same menu with nothing
+            // typed, so that their first use is not the one that compiles them. Back leaves an untouched editor at once.
+            songAction("About the song")?.let { about ->
+                about.click()
+                device.waitForIdle()
+                device.pressBack()
+                device.waitForIdle()
+            }
+            songAction("Edit song file")?.let { edit ->
+                edit.click()
+                device.waitForIdle()
+                device.pressBack()
+                waitFor(By.desc("Song actions"))
+            }
             flingScrollable(Direction.DOWN)
             device.pressBack()
             device.waitForIdle()
+        }
+        waitFor(By.desc("Search in songs"))?.let { search ->
+            search.click()
+            waitFor(By.clazz(TEXT_FIELD_CLASS))?.text = "rising"
+            device.waitForIdle()
+            // The first Back may only hide the keyboard, and the second then closes the search.
+            repeat(2) {
+                if (device.findObject(By.clazz(TEXT_FIELD_CLASS)) != null) {
+                    device.pressBack()
+                    device.waitForIdle()
+                }
+            }
         }
         waitFor(By.text("Setlists"))?.let { tab ->
             tab.click()
@@ -123,6 +150,13 @@ class BaselineProfileGenerator {
     /** A tool's button in the group, which names an unselected tool only in its content description, or its rail item. */
     private fun MacrobenchmarkScope.toolButton(label: String): UiObject2? = device.findObject(By.desc(label)) ?: waitFor(By.text(label))
 
+    /** A song action, shown in the bar where it is wide enough and otherwise behind the song's overflow button. */
+    private fun MacrobenchmarkScope.songAction(label: String): UiObject2? = device.findObject(By.desc(label))
+        ?: waitFor(By.desc("Song actions"))?.let { overflow ->
+            overflow.click()
+            waitFor(By.text(label))
+        }
+
     private fun MacrobenchmarkScope.flingScrollable(direction: Direction) {
         device.findObject(By.scrollable(true))?.let { list ->
             // Kept off the system gesture areas, which would take the fling as a back or a home gesture.
@@ -135,3 +169,4 @@ class BaselineProfileGenerator {
 
 private const val PACKAGE_NAME = "com.pandulapeter.campfire"
 private const val STEP_TIMEOUT = 5_000L
+private const val TEXT_FIELD_CLASS = "android.widget.EditText"
