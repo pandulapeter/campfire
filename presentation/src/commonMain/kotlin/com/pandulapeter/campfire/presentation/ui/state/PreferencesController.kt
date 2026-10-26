@@ -109,10 +109,13 @@ internal class PreferencesController(
         // again for each tuning picked later. The first song opened builds its first page during composition, on the
         // main thread, and would otherwise read the table there: thousands of shapes, frames dropped in its opening
         // transition on a slow phone. On the web the default dispatcher is the page's one thread, so there it only
-        // moves the read to while the library is still being read, before any song can be opened.
+        // moves the read to while the library is still being read, before any song can be opened. The Chords tab, a
+        // switch of its own, draws from the same table.
         scope.launch {
             userPreferences
-                .map { preferences -> preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning() }
+                .map { preferences ->
+                    preferences?.takeIf { (it.areChordsEnabled && it.areChordDiagramsEnabled) || it.isChordLibraryEnabled }?.chordTuning()
+                }
                 .filterNotNull()
                 .distinctUntilChanged()
                 .collect { withContext(Dispatchers.Default) { ChordVoicings.prepare(it) } }
