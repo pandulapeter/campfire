@@ -188,6 +188,7 @@ internal fun ImportReportScreen(
                             onConflictResolutionSelected = viewModel.importReportState::setImportConflictResolution,
                             onGroupConflictResolutionSelected = viewModel.importReportState::setImportGroupConflictResolution,
                             onOpenSong = (viewModel.navigator::openReportedSong).takeIf { areSongsEnabled },
+                            onOpenPreview = (viewModel.importReportState::openReviewPreview).takeIf { areSongsEnabled },
                         )
                     }
 

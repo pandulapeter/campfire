@@ -14,10 +14,12 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 
 /**
  * The song an import of [plan] that ended in [result] opens, or null where it opens none: only one asked to open
- * one ([shouldOpenSong]), of a single song that is neither converted from a document nor travelling with a setlist.
+ * one ([shouldOpenSong]), of a single song that is neither converted from a document nor travelling with a setlist. A
+ * batch that is one song and nothing else is previewed rather than opened (`isPreviewed`), unless the library already
+ * holds it, so this opens that library song, or the one song of a reviewed batch that also brought files it could not read.
  *
- * @param isConvertedSongOpened True for a text pasted as a new song, which is converted as a matter of course and was
- *   asked for as the one song it is: one the library already holds is opened, since there is nothing to make.
+ * @param isConvertedSongOpened True where the one song was asked for as the song it is, converted or not: a text pasted
+ *   as a new song, and a batch of one song the library already holds, which is opened since there is nothing to make.
  */
 internal fun songToOpen(
     plan: ImportPlan,

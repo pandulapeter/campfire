@@ -28,6 +28,9 @@ sealed interface Message {
 
     /** A restored process found that the one before it ended behind an import that had not been written yet. */
     data object ImportInterrupted : Message
+
+    /** The song a preview showed has been written into the library, and the preview has become that song's screen. */
+    data object PreviewedSongImported : Message
     data object ExportFailed : Message
     data object PdfSaved : Message
     data object SongExported : Message

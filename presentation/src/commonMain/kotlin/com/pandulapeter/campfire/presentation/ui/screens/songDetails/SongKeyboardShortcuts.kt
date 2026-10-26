@@ -63,6 +63,8 @@ import kotlinx.coroutines.launch
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
  *
  * @param onEdit Opens the editor on the song being read, or null where it cannot be edited; the key is then left alone.
+ * @param onSave Ctrl / Cmd + S, for a preview of songs an import has not written yet to press its button with, as the
+ *   import sheets' and the editor's Save are pressed; null where there is nothing to press, which leaves the key alone.
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
  * @param onNextSong Null when the current song is the last one, the same way.
@@ -87,6 +89,7 @@ internal fun Modifier.songKeyboardShortcuts(
     onStepForward: (() -> Unit)?,
     isUncovered: Boolean,
     onEdit: (() -> Unit)?,
+    onSave: (() -> Unit)?,
 ): Modifier {
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
@@ -116,6 +119,10 @@ internal fun Modifier.songKeyboardShortcuts(
             if (onEdit != null && keyEvent.key == Key.E && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
                 // The key-up is taken too, so that nothing under this sees half a shortcut.
                 if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onEdit()
+                return@onPreviewKeyEvent true
+            }
+            if (onSave != null && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+                if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onSave()
                 return@onPreviewKeyEvent true
             }
             // Key repeats arrive as further KeyDown events, which is what makes a held arrow scroll continuously.

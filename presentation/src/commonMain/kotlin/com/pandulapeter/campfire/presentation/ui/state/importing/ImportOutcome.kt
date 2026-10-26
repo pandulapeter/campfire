@@ -14,17 +14,16 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
- * Whether the batch opens the import screen before anything is written: every one the user started, but the demo
- * library, and but a single song file the system handed over, which is opened rather than reviewed - its name taken
- * is the one thing that still puts the screen up for it. A song picked from the app's own Import files is reviewed,
- * since one row and an Import is what the user asked to see; a document or an archive is reviewed whoever picked it.
- * A text pasted as a new song is not reviewed while it is being read: it is a form once it turns out to be one song, and
- * the import screen comes up only for what it turns out to be otherwise. With the songs switched off nothing is opened
- * and no editor is started, so what skips the review because it would be opened is reviewed after all, under the import
- * screen's warning that it will not be seen; the demo library stays unreviewed whatever the switch.
+ * Whether the batch puts the import screen up while it is read: every one the user started, but the demo library, which
+ * is written as it is, and but a single song file from anywhere and a text pasted as a new song, which are read in a
+ * moment and turn out to be one song as a rule: the preview of that song (see [isPreviewed]) or the editor on it is what
+ * comes up then, and the import screen only for what they turn out to be otherwise. Nothing is written before an Import
+ * either way. With the songs switched off nothing is previewed and no editor is started, so the import screen is up from
+ * the start, with its warning that what is imported will not be seen; the demo library stays unreviewed whatever the
+ * switch.
  */
-internal fun ImportRequest.isReviewed(areSongsEnabled: Boolean) = shouldReview && (
-    !areSongsEnabled || !isNewSongFromText && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
+internal fun ImportRequest.isReportedWhileRead(areSongsEnabled: Boolean) = shouldReview && (
+    !areSongsEnabled || !isNewSongFromText && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } != true
 )
 
 private fun isSingleSong(name: String) = LibraryFiles.isSongFileName(name) && !LibraryFiles.isArchiveFileName(name)

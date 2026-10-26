@@ -279,10 +279,6 @@ internal class ImportFilesUseCaseImpl(
             oversizedFileNames = plan.oversizedFileNames,
             unreadableDocumentFileNames = plan.unreadableDocumentFileNames,
             convertedSongFileNames = convertedSongFileNames,
-            convertedSongToOpen = convertedSongFileNames.singleOrNull()?.takeIf {
-                !isFailed && plan.songs.size == 1 && plan.setlists.isEmpty() && plan.skippedFileNames.isEmpty() &&
-                    plan.oversizedFileNames.isEmpty() && plan.unreadableDocumentFileNames.isEmpty()
-            },
         )
     }
 

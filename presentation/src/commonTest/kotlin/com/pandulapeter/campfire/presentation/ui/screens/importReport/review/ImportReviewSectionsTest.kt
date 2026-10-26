@@ -62,6 +62,14 @@ class ImportReviewSectionsTest {
     }
 
     @Test
+    fun `a preview pages through the songs listed, in their order, the one already there included and no setlist`() {
+        val sections = importReviewSections(PLAN, LIBRARY_SONGS, emptyList())
+
+        assertEquals(listOf(2, 0, 1, 3), sections.previewSongIndices)
+        assertEquals(listOf(1), sections.matchingReview("two") { it.lowercase() }.previewSongIndices)
+    }
+
+    @Test
     fun `every row has a key of its own`() {
         val keys = importReviewSections(PLAN, LIBRARY_SONGS, emptyList()).flatMap { it.rows }.map { it.rowKey }
 

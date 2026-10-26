@@ -58,6 +58,8 @@ internal data class ImportReviewSection(
  * @param repeatCount How many more times the batch brings the same song, each one following this row.
  * @param setlistSongCount For a setlist, how many songs it names.
  * @param setlistSongsInImport For a setlist, how many of those are songs of this import.
+ * @param songIndex For a song, the place of its entry in the plan's songs, which its preview reads; one already in the
+ *   library included, which has no box.
  */
 internal data class ImportReviewRow(
     val key: ImportEntryKey?,
@@ -72,6 +74,7 @@ internal data class ImportReviewRow(
     val repeatCount: Int = 0,
     val setlistSongCount: Int? = null,
     val setlistSongsInImport: Int? = null,
+    val songIndex: Int? = null,
 )
 
 /**
@@ -101,6 +104,7 @@ internal fun importReviewSections(
             libraryFileName = libraryFileName,
             libraryTitle = libraryFileName?.let(songsByFileName::get)?.title,
             repeatCount = repeatCounts[index] ?: 0,
+            songIndex = index,
         )
     }
     fun setlistRow(kind: ImportReviewSection.Kind, index: Int, entry: ImportPlan.SetlistEntry, libraryFileName: String?): ImportReviewRow {
@@ -167,6 +171,9 @@ private fun List<String>.toReviewRows(kind: ImportReviewSection.Kind): List<Impo
         ImportReviewRow(key = null, rowKey = "${kind}_$fileName#$occurrence", fileName = fileName)
     }
 }
+
+/** The songs of the rows listed, in their order, as the places of their entries in the plan's songs: what a preview pages through. */
+internal val List<ImportReviewSection>.previewSongIndices get() = flatMap { section -> section.rows.mapNotNull { it.songIndex } }
 
 /** The sections with only the rows whose file name, title or artist holds [query], as [matching] narrows the result's. */
 internal fun List<ImportReviewSection>.matchingReview(query: String, normalize: (String) -> String): List<ImportReviewSection> {

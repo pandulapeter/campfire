@@ -37,6 +37,4 @@ data class ImportResult(
     val unprocessedFileNames: List<String> = emptyList(),
     /** Stored names of converted songs that were actually written by this import. */
     val convertedSongFileNames: List<String> = emptyList(),
-    /** The only converted song of a selection, eligible for the result's explicit Open action. */
-    val convertedSongToOpen: String? = null,
 )

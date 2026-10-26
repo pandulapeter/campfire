@@ -45,9 +45,9 @@ import com.pandulapeter.campfire.presentation.resources.metronome_stopped_refuse
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_silent
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_interrupted
+import com.pandulapeter.campfire.presentation.resources.import_preview_imported
 import com.pandulapeter.campfire.presentation.resources.import_converted
 import com.pandulapeter.campfire.presentation.resources.import_details
-import com.pandulapeter.campfire.presentation.resources.import_open
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_open
@@ -105,11 +105,8 @@ internal fun Messages(
     val head = queue.firstOrNull()
     val text = messageText(head?.value)
     val importFinished = head?.value as? Message.ImportFinished
-    val areSongsEnabled by viewModel.preferencesController.areSongsEnabled.collectAsStateWithLifecycle()
-    val songToOpen = importFinished?.result?.convertedSongToOpen?.takeIf { areSongsEnabled }
     val isClipboardLinkOffer = head?.value == Message.ClipboardLinkOffered
     val actionLabel = when {
-        songToOpen != null -> stringResource(Res.string.import_open)
         importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
         isClipboardLinkOffer -> stringResource(Res.string.onboarding_clipboard_link_open)
         else -> null
@@ -123,7 +120,6 @@ internal fun Messages(
             )
             if (result == SnackbarResult.ActionPerformed) {
                 when {
-                    songToOpen != null -> viewModel.navigator.openImportedSong(songToOpen)
                     importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
                     isClipboardLinkOffer -> viewModel.firstRunController.openClipboardLink()
                 }
@@ -160,6 +156,7 @@ private fun messageText(current: Message?): String? =
 
         Message.ImportFailed -> stringResource(Res.string.import_failed)
         Message.ImportInterrupted -> stringResource(Res.string.import_interrupted)
+        Message.PreviewedSongImported -> stringResource(Res.string.import_preview_imported)
         Message.ExportFailed -> stringResource(Res.string.export_failed)
         Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
         Message.SongExported -> stringResource(Res.string.export_song_saved)

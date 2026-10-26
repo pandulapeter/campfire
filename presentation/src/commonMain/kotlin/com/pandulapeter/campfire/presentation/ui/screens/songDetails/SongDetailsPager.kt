@@ -80,6 +80,8 @@ internal fun SongDetailsPager(
     contentPadding: PaddingValues,
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongDetails,
+    importPreview: ImportPreviewState?,
+    pageKey: (Song) -> String,
     songs: List<Song>,
     pagerState: PagerState,
     pageStepper: PageStepper,
@@ -108,8 +110,9 @@ internal fun SongDetailsPager(
     stepForward: (from: Int?) -> Unit,
     onCurrentPage: (ScrollState, SongStepper) -> Unit,
 ) = if (songs.isEmpty()) {
-    // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen), so there is nothing to
-    // page through; a pager with no pages would leave the screen blank under an app bar with no title in it.
+    // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen, or a preview's import
+    // is being written under an activity created again), so there is nothing to page through; a pager with no pages
+    // would leave the screen blank under an app bar with no title in it.
     Box(
         modifier = modifier.padding(contentPadding),
         contentAlignment = Alignment.Center,
@@ -133,6 +136,8 @@ internal fun SongDetailsPager(
     SongPages(
         viewModel = viewModel,
         destination = destination,
+        importPreview = importPreview,
+        pageKey = pageKey,
         songs = songs,
         pagerState = pagerState,
         pageScrollStates = pageScrollStates,

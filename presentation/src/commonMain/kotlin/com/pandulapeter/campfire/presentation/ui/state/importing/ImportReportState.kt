@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
@@ -75,7 +76,10 @@ internal class ImportReportState(
             _importReport.value = value
         }
 
-    /** Whether the last change to [backStack] left [CampfireDestination.ImportReport] on it, see [onBackStackChanged]. */
+    /**
+     * Whether the last change to [backStack] left the import's screen on it, see [onBackStackChanged]: the import screen,
+     * or the preview that stands in for it where the batch is one song ([ImportReport.Review.isSongPreview]).
+     */
     var isOnBackStack = false
         private set
 
@@ -98,10 +102,62 @@ internal class ImportReportState(
         _importReport.value = report
         scope.launch {
             awaitNothingInTheWay()
-            if (this@ImportReportState.request == request && _importReport.value != null && !isOnBackStack) {
-                updateBackStack { add(CampfireDestination.ImportReport) }
+            val shown = _importReport.value
+            if (this@ImportReportState.request == request && shown != null && !isOnBackStack) {
+                updateBackStack { add(screenOf(shown)) }
             }
         }
+    }
+
+    /**
+     * Puts [review] where the report under way is, the import screen included: the preview of a batch of one song
+     * ([ImportReport.Review.isSongPreview]) takes the place of the import screen that showed it being read, rather than
+     * going over it, since Back from the preview leaves the import. Where [show] is still waiting for the screen to go up,
+     * it puts up the preview instead.
+     */
+    fun showInPlace(review: ImportReport.Review) {
+        _importReport.value = review
+        if (!review.isSongPreview) return
+        val index = backStack.indexOf(CampfireDestination.ImportReport)
+        if (index >= 0) updateBackStack { set(index, screenOf(review)) }
+    }
+
+    /** The screen [report] is shown on: the import screen, or the preview of the one song of a batch that is nothing else. */
+    private fun screenOf(report: ImportReport) = if (report is ImportReport.Review && report.isSongPreview) {
+        CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+    } else {
+        CampfireDestination.ImportReport
+    }
+
+    /**
+     * Opens the songs of the review's rows ([songIndices], the places of their entries in the plan's songs, in the order
+     * the rows are listed) in a preview over the import screen, on the one at [index], see [ImportPreview.isReviewPager].
+     */
+    fun openReviewPreview(songIndices: List<Int>, index: Int) {
+        val review = _importReport.value as? ImportReport.Review ?: return
+        if (backStack.lastOrNull() != CampfireDestination.ImportReport || songIndices.isEmpty()) return
+        val preview = ImportPreview(songIndices = songIndices, planSongCount = review.plan.songs.size, isReviewPager = true)
+        updateBackStack {
+            add(CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = index.coerceIn(songIndices.indices), importPreview = preview))
+        }
+    }
+
+    /** Takes a preview over the review off the back stack, which the review's Import pressed in it does: the import screen shows the rest. */
+    fun closeReviewPreview() {
+        if (backStack.any { it.isReviewPreview }) updateBackStack { removeAll { it.isReviewPreview } }
+    }
+
+    /**
+     * Rewrites the preview of a batch of one song into the screen of [fileName], the song it has been written as, in
+     * place: the entry keeps its id, so Navigation 3 takes it for the same screen and nothing slides, and the screen
+     * crossfades what changes. Whether it was still there to rewrite.
+     */
+    fun followImportedSong(fileName: String): Boolean {
+        val index = backStack.indexOfFirst { it.isSongPreview }
+        if (index < 0) return false
+        val preview = backStack[index] as CampfireDestination.SongDetails
+        updateBackStack { set(index, preview.copy(songFileNames = listOf(fileName), initialIndex = 0, importPreview = null)) }
+        return true
     }
 
     /**
@@ -115,9 +171,9 @@ internal class ImportReportState(
         }.first { it }
     }
 
-    /** Takes the import screen off the back stack, with whatever is on top of it, see `ImportController.onImportReportLeft`. */
+    /** Takes the import's screen off the back stack, with whatever is on top of it, see `ImportController.onImportReportLeft`. */
     fun close() {
-        val index = backStack.indexOf(CampfireDestination.ImportReport)
+        val index = backStack.indexOfFirst { it == CampfireDestination.ImportReport || it.isSongPreview }
         if (index >= 0) updateBackStack { while (size > index) removeAt(lastIndex) }
     }
 
@@ -173,9 +229,15 @@ internal class ImportReportState(
      */
     fun onBackStackChanged(): Boolean {
         val wasOnBackStack = isOnBackStack
-        isOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
+        isOnBackStack = backStack.any { it == CampfireDestination.ImportReport || it.isSongPreview }
         val hasLeft = wasOnBackStack && !isOnBackStack
         if (hasLeft) search.textFieldState.clearText()
         return hasLeft
     }
 }
+
+/** Whether this is the preview that stands in for the import screen, see [ImportReport.Review.isSongPreview]. */
+private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview?.isReviewPager == false
+
+/** Whether this is a preview paging through the review's rows, over the import screen. */
+private val CampfireDestination.isReviewPreview get() = this is CampfireDestination.SongDetails && importPreview?.isReviewPager == true

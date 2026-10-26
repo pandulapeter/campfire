@@ -197,8 +197,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
-- Imports are reviewed before writing (a lone song file opened, shared, or dropped only when its name is taken);
-  existing files are skipped, collisions numbered or replaced after confirmation: `domain/implementation`.
+- Nothing from outside is written before Import, and every song can be read first: a batch that is one song (from any
+  source) opens its preview, anything more the review, whose song rows open the same preview; existing files are
+  skipped, collisions numbered or replaced after confirmation: `ui/screens/songDetails`, `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
   included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
   Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.

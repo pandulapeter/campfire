@@ -25,6 +25,24 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Once every song it names is gone from a read library, the screen closes itself.
 - The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
 
+### The import preview (`ImportPreviewState.kt`, `state/importing/ImportPreviewing.kt`)
+
+- **Nothing from outside is written before Import.** A `SongDetails` with `importPreview` draws the plan's entries
+  (`ImportReport.Review`) from their text, under page names no library file can have (`importPreviewFileName`). It is
+  read only as performance mode is, with no song actions, About the song, cover, metronome, or tuner button; folds are
+  kept in memory (`ImportPreviewState.folds`); no override is written. Never restored, addressed as `/import`.
+- **Marked plainly**: `ImportPreviewBanner`, a tertiary container card under the app bar, says the song is not in the
+  library yet and, for a taken name, that it is. Its floating buttons (`ImportPreviewButtons`, `importPreviewActionsOf`)
+  sit centred above the pages, whose bottom padding clears them (pedal rule): **Import**, or for a taken name both
+  **Import as a copy** and **Replace** (confirmed), Replace first for a shared link imported here before; side by side
+  where they fit, stacked otherwise. Ctrl / Cmd + S presses the primary one unless it is Replace.
+- **One song** (`ImportPreview.SingleSong`) stands in for the import screen. Once written, it waits for the text and
+  the lookup, then is rewritten in place into the song's screen (`ImportReportState.followImportedSong`, same `id`; the
+  pager keeps the page by `rememberPageKeys`), with `Message.PreviewedSongImported`. A failed write puts it back.
+- **Over the review** (`isReviewPager`): each page shows its own tick and Keep both / Replace, bound to the row's
+  `ImportChoices`; the button is the review's **Import N files**, which returns to the import screen. A joining batch
+  appends pages (`importPreviewSongIndices`).
+
 ### The steppers
 
 - Steppers are shorter than Material buttons and lower `LocalMinimumInteractiveComponentSize` to match (touch still gets

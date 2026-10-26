@@ -129,6 +129,9 @@ sealed interface CampfireDestination : NavKey {
      *   that: renaming a song from this screen rewrites them in place, and an entry keyed on them would be a new
      *   screen sliding in over itself with its scroll position gone. Always written into the saved back stack, since
      *   a default that is left out would be generated anew on the way back in and orphan the entry's saved state.
+     * @param importPreview Set for a preview of songs an import has not written yet, which names no file
+     *   ([songFileNames] is empty) and is never restored, like [ImportReport]. A preview of one song is rewritten in place
+     *   into that song's own screen once it is imported, which the [id] it keeps is what lets it do without a transition.
      */
     @Serializable
     data class SongDetails(
@@ -138,6 +141,7 @@ sealed interface CampfireDestination : NavKey {
         @OptIn(ExperimentalSerializationApi::class)
         @EncodeDefault
         val id: String = Uuid.random().toString(),
+        val importPreview: ImportPreview? = null,
     ) : CampfireDestination {
 
         override val contentKey get() = "songDetails|$id"

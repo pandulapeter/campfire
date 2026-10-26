@@ -41,7 +41,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.test.assertNull
 
 /**
  * Applying a plan is the one place anything in the library is overwritten, so what it replaces is pinned here as well
@@ -102,7 +101,6 @@ class ImportFilesUseCaseImplTest {
         assertTrue(plan.songs.single().isConverted)
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(plan, ImportChoices())
         assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
-        assertEquals("sheet.cho", result.convertedSongToOpen)
         assertEquals(ImportPlan.Status.IDENTICAL, prepare(listOf(plain)).songs.single().status)
         val chordPro = ImportedFile("sheet.cho", "Am     C\nHello world".encodeToByteArray())
         assertEquals("Am     C\nHello world\n", prepare(listOf(chordPro)).songs.single().text)
@@ -131,7 +129,6 @@ class ImportFilesUseCaseImplTest {
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(plan, ImportChoices())
         assertEquals(listOf("title.cho"), result.convertedSongFileNames)
         assertEquals(plan.unreadableDocumentFileNames, result.unreadableDocumentFileNames)
-        assertNull(result.convertedSongToOpen)
         assertEquals(listOf("oversized.pdf"), prepare(songs, source)(listOf(ImportedFile.unread("oversized.pdf", isTooLarge = true))).oversizedFileNames)
     }
 
@@ -147,7 +144,6 @@ class ImportFilesUseCaseImplTest {
         assertEquals(listOf("scan.docx"), plan.unreadableDocumentFileNames)
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(plan, plan.leavingOutConflicts())
         assertTrue(result.convertedSongFileNames.isEmpty())
-        assertNull(result.convertedSongToOpen)
     }
 
     @Test
@@ -203,12 +199,10 @@ class ImportFilesUseCaseImplTest {
         val prepare = prepare(songs)
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
         assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
-        assertEquals("sheet.cho", result.convertedSongToOpen)
         assertEquals("[Am]Hello [C]world\n", songs.files["sheet.cho"])
         val repeated = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
         assertEquals(listOf("sheet.cho"), repeated.duplicateFileNames)
         assertTrue(repeated.convertedSongFileNames.isEmpty())
-        assertNull(repeated.convertedSongToOpen)
     }
 
     @Test
@@ -228,7 +222,6 @@ class ImportFilesUseCaseImplTest {
         assertTrue(plan.songs.all { it.sourceFileName == null && it.isConverted })
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard).invoke(plan, ImportChoices())
         assertEquals(listOf("first.cho", "second.cho"), result.convertedSongFileNames)
-        assertNull(result.convertedSongToOpen)
     }
 
     private fun prepare(
@@ -612,7 +605,6 @@ class ImportFilesUseCaseImplTest {
         assertEquals(listOf("source2.txt"), result.failedFileNames)
         assertEquals(listOf("source3.txt", "source4.txt", "source.json"), result.unprocessedFileNames)
         assertTrue(setlists.files.isEmpty())
-        assertNull(result.convertedSongToOpen)
     }
 
     @Test

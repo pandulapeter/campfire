@@ -32,7 +32,8 @@ internal fun EditShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         // code, as Compose goes by it (Key.E is the physical key); key for a virtual keyboard, which has none.
         val isEdit = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && (keyEvent.code == "KeyE" || keyEvent.key.lowercase() == "e")
-        if (isEdit && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails &&
+        val top = viewModel.navigator.backStack.lastOrNull()
+        if (isEdit && top is CampfireDestination.SongDetails && top.importPreview == null &&
             !viewModel.preferencesController.isPerformanceModeEnabled.value
         ) {
             keyEvent.preventDefault()

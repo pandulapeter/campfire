@@ -240,6 +240,15 @@ class BrowserRoutesTest {
     }
 
     @Test
+    fun `a preview is addressed as the import is, and cut without a report`() {
+        val preview = CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+        val state = home.copy(backStack = listOf(CampfireDestination.Songs, preview))
+        assertEquals(listOf("songs", "import"), BrowserRoutes.paths(inputs(state)))
+        assertEquals(1, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
+        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = null).backStack.size)
+    }
+
+    @Test
     fun `a finished onboarding is not gone forward into again`() {
         listOf(
             listOf(CampfireDestination.Songs, CampfireDestination.Onboarding(isOpenedFromSettings = false)),

@@ -43,8 +43,8 @@ canvas listener — and most dialogs open with a field focused.
   `openCurrentSearch` and prevents the find bar only if that opened something. In the editor, F and R are
   always prevented (its Find / Find and replace; R would reload), and B, I, and U without Shift (its formatting; U
   would show the page source), so Ctrl + Shift + I still opens the developer tools.
-- **Ctrl/Cmd + E** (`EditShortcutEffect`): prevented on song details outside performance mode, where it opens the
-  editor; Chrome would focus its address bar.
+- **Ctrl/Cmd + E** (`EditShortcutEffect`): prevented on song details outside performance mode and an import preview,
+  where it opens the editor; Chrome would focus its address bar.
 - **Ctrl/Cmd + V** (`PasteShortcutEffect`): the `paste` event, not the key, since it carries the text with no permission
   asked; a paste into an editable target is left alone, and only `isNewSongPasteAvailable` takes one.
 - **Zoom** (`SongTextZoomEffect`, song details only): Ctrl/Cmd + plus/minus/zero go to `zoomSongText`, matched by `key`

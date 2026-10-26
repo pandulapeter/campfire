@@ -92,57 +92,66 @@ internal fun RowScope.SongDetailsActions(
             },
         )
     }
-    currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
-        val isInSetlist = song.fileName in songFileNamesInSetlists
-        AnimatedVisibility(
-            visible = showsSetlistAssignmentsInBar,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            SetlistAssignmentsButton(
-                actions = songActions,
-                song = song,
-                isInSetlist = isInSetlist,
-                setlistFileName = setlistFileName,
-            )
-        }
-        // The overflow button reaches into the button before it, and only into a button: the stepper's pill and
-        // the title are kept clear of its touch target.
-        val overflowOverlap by animateDpAsState(if (showsSetlistAssignmentsInBar) ACTION_BUTTON_OVERLAP else 0.dp)
-        SongActions(
-            modifier = Modifier.overlappingAction(start = overflowOverlap, end = 0.dp),
-            actions = songActions,
-            song = song,
-            isDeletable = setlistFileName == null,
-            isEditAndExportOnly = isReadOnly,
-            setlistFileName = setlistFileName,
-            isAfterButton = showsSetlistAssignmentsInBar,
-            leadingItems = {
-                listOfNotNull(
-                    if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
-                        null
-                    } else {
-                        setlistAssignmentsAction(
-                            actions = songActions,
-                            song = song,
-                            isInSetlist = isInSetlist,
-                            setlistFileName = setlistFileName,
+    // Animated, since a preview that has been imported turns into its song's screen in place, and gains the song's actions.
+    AnimatedVisibility(
+        visible = !isPerformanceModeEnabled,
+        enter = fadeIn() + expandHorizontally(),
+        exit = fadeOut() + shrinkHorizontally(),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            currentSong?.let { song ->
+                val isInSetlist = song.fileName in songFileNamesInSetlists
+                AnimatedVisibility(
+                    visible = showsSetlistAssignmentsInBar,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    SetlistAssignmentsButton(
+                        actions = songActions,
+                        song = song,
+                        isInSetlist = isInSetlist,
+                        setlistFileName = setlistFileName,
+                    )
+                }
+                // The overflow button reaches into the button before it, and only into a button: the stepper's pill and
+                // the title are kept clear of its touch target.
+                val overflowOverlap by animateDpAsState(if (showsSetlistAssignmentsInBar) ACTION_BUTTON_OVERLAP else 0.dp)
+                SongActions(
+                    modifier = Modifier.overlappingAction(start = overflowOverlap, end = 0.dp),
+                    actions = songActions,
+                    song = song,
+                    isDeletable = setlistFileName == null,
+                    isEditAndExportOnly = isReadOnly,
+                    setlistFileName = setlistFileName,
+                    isAfterButton = showsSetlistAssignmentsInBar,
+                    leadingItems = {
+                        listOfNotNull(
+                            if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
+                                null
+                            } else {
+                                setlistAssignmentsAction(
+                                    actions = songActions,
+                                    song = song,
+                                    isInSetlist = isInSetlist,
+                                    setlistFileName = setlistFileName,
+                                )
+                            },
+                            tunerAction,
                         )
                     },
-                    tunerAction,
+                    // The transposition, the capo and the tempo are set in the song's own first section now; what
+                    // is left for the menu is the text size, which belongs to the reader rather than to the song.
+                    menuFooter = if (showsFontScaleInBar) {
+                        null
+                    } else {
+                        {
+                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                LiveFontScaleControls(viewModel = viewModel)
+                            }
+                        }
+                    },
                 )
-            },
-            // The transposition, the capo and the tempo are set in the song's own first section now; what
-            // is left for the menu is the text size, which belongs to the reader rather than to the song.
-            menuFooter = if (showsFontScaleInBar) {
-                null
-            } else {
-                {
-                    MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                        LiveFontScaleControls(viewModel = viewModel)
-                    }
-                }
-            },
-        )
+            }
+        }
     }
 }

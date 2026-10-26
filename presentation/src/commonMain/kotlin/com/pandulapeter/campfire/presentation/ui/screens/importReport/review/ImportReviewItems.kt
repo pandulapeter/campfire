@@ -84,6 +84,9 @@ internal fun LazyListScope.reviewHeader(
  * Every group of the review with its heading, its box, and its rows. A group's box, and the choice for all of them of
  * the names already taken, act on the rows it shows, which is only the matching ones while the search narrows them, so
  * that unticking a group under a search for "live" leaves the rest of it alone.
+ *
+ * @param onOpenPreview Opens the songs of the rows listed in a preview, on the one at the index of its row among them;
+ *   null while the songs are switched off.
  */
 internal fun LazyListScope.reviewSections(
     sections: List<ImportReviewSection>,
@@ -93,7 +96,9 @@ internal fun LazyListScope.reviewSections(
     onConflictResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
     onGroupConflictResolutionSelected: (keys: Collection<ImportEntryKey>, isFiltered: Boolean, ImportConflictResolution) -> Unit,
     onOpenSong: ((songFileNames: List<String>, index: Int) -> Unit)?,
+    onOpenPreview: ((songIndices: List<Int>, index: Int) -> Unit)?,
 ) {
+    val previewSongIndices = sections.previewSongIndices
     if (isFiltered && sections.isEmpty()) {
         item(key = "empty", contentType = "text") {
             ReportNote(
@@ -134,6 +139,7 @@ internal fun LazyListScope.reviewSections(
                 onChosenChange = { key, isChosen -> onEntriesChosenChange(listOf(key), isChosen) },
                 onResolutionSelected = onConflictResolutionSelected,
                 onOpenLibrarySong = onOpenSong?.let { open -> { fileName -> open(librarySongFileNames, librarySongFileNames.indexOf(fileName).coerceAtLeast(0)) } },
+                onOpenPreview = onOpenPreview?.let { open -> { open(previewSongIndices, previewSongIndices.indexOf(row.songIndex).coerceAtLeast(0)) } },
             )
         }
     }

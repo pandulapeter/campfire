@@ -17,15 +17,17 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 
 - The view model puts it on the back stack only once no dialog is up, no editor with unsaved text is on the stack, and
   the onboarding is not (`ImportReportState.show`); reading runs meanwhile.
-- Not reviewed: the demo library (`shouldReview = false`) and, while the songs are switched on, a single song file
-  opened with, shared to, or dropped on the app, which is written and opened directly. Each shows the screen only for a taken name, as a one-row review. A
-  song picked from the app's own Import files *is* reviewed.
+- Not reviewed: the demo library (`shouldReview = false`), shown only for a taken name. While the songs are switched on,
+  a batch that is one song and nothing else (`isPreviewed`, from any source) is previewed instead, and one the library
+  holds as it is is opened (`librarySong`); see `ui/screens/songDetails/CLAUDE.md`. A single song file is read behind
+  no screen (`isReportedWhileRead`); anything else shows Loading here, which a preview then takes the place of.
 - **One review at a time**: a batch arriving while a review is up (dropped, opened with, shared, picked, a shared
   link) is read on its own and appended to it (`withAdded`), under a progress bar that holds Import back; ticks and
   choices made stay. What the review lists already is left out (a song by its text, a setlist by its fields, a skipped
   name), so the same zip twice changes nothing; a taken name stays one question. Joined batches settle with the review.
   One arriving during Loading joins once the review is up. Not joined, waiting in the queue instead: the demo library,
-  a pasted or shared text (it may be the editor's), and anything over a Failed or Finished stage.
+  a pasted or shared text (it may be the editor's), anything over a Failed or Finished stage, and anything while the
+  preview of one song is up (`Review.isSongPreview`).
 
 ## Stages
 
@@ -33,8 +35,11 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 - **Failed**: one sentence (`ImportFailure`) and **Try again** (`retryImport`: a failed download is downloaded again;
   once downloaded, the same bytes are read again). A shared link has its own wording: a 4xx, or anything but a zip (a
   page in its place), is "no longer works" (`toSharedLinkDownload`); only no answer or a 5xx is unreachable.
-- **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
-  names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
+- **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. A song's row (one already there
+  included) opens the preview of the songs listed, the search's matches while it narrows them, at its own
+  (`openReviewPreview`, `previewSongIndices`); its box ticks it on its own, and a chevron ends the row. Group header
+  boxes and the taken names' group Keep both / Replace choice act on the rows shown, the search's matches only while it
+  narrows them. The
   button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
   (`DialogType.ConfirmImportReplace`); a batch arriving while it is open joins only once it is answered, and is
   imported after the review if Replace wrote it. A shared link's review starts on **Replace** only the taken names that an

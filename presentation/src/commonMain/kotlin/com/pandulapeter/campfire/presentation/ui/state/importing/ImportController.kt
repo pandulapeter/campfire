@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
+import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
@@ -70,7 +71,9 @@ import kotlin.time.Duration.Companion.seconds
  * [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each other
  * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
- * @param openImportedSong Opens the one song the system handed over, see `Navigator.openImportedSong`.
+ * @param openImportedSong Opens the library's own song that a batch of one song turned out to be, see
+ *   `Navigator.openImportedSong`.
+ * @param loadSongText Reads the text of a song just written, which the preview it was imported from becomes the screen of.
  * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
  *   `EditorSession.openNewSongEditor`.
  * @param areSongsEnabled Whether the app has songs to open, which it does not with the Songs switch off: a file or a
@@ -86,6 +89,7 @@ internal class ImportController(
     private val backStack: List<CampfireDestination>,
     private val reportState: ImportReportState,
     private val openImportedSong: (fileName: String) -> Unit,
+    private val loadSongText: suspend (fileName: String) -> Unit,
     private val openNewSongEditor: suspend (text: String, suggestion: SharedTextTitle?) -> Unit,
     private val areSongsEnabled: () -> Boolean,
     private val songLookup: Flow<SongLookup>,
@@ -176,8 +180,8 @@ internal class ImportController(
 
     /**
      * Files the system handed over: opened with Campfire, shared to it, or dropped onto it. Where that turns out to be
-     * one song, the song is what the user was after rather than the library it went into, so it is opened, and while the
-     * songs are switched on a single song file is written without a review unless its name is taken, see [isReviewed].
+     * one song, the song is what the user was after rather than the library it went into: it is previewed, as one from
+     * anywhere is (see [isPreviewed]), and one the library already holds is opened.
      *
      * @return Completed once the batch has settled, see [enqueueImport].
      */
@@ -295,12 +299,12 @@ internal class ImportController(
 
     /**
      * Whether [request] is more files for the review on screen rather than an import of its own: not while that review is
-     * being written or is the demo library's, and never the demo library, a text that may be one new song for the editor,
-     * or anything once the desktop process is on its way out.
+     * being written, is the demo library's, or is the preview of one song, which is about that song alone, and never the
+     * demo library, a text that may be one new song for the editor, or anything once the desktop process is on its way out.
      */
     private fun canJoinReview(request: ImportRequest): Boolean {
         val review = reportState.report as? ImportReport.Review ?: return false
-        return activeRequest != null && !review.isDemoLibrary && !request.isDemoLibrary && !request.isNewSongFromText &&
+        return activeRequest != null && !review.isDemoLibrary && !review.isSongPreview && !request.isDemoLibrary && !request.isNewSongFromText &&
             request.shouldAnnounceResult && !isLeaving()
     }
 
@@ -362,8 +366,8 @@ internal class ImportController(
     }
 
     /**
-     * The first half of an import only works out what it would do. Nothing is written until the user has reviewed it
-     * and pressed Import, or, for a batch that is not reviewed, until the plan turns out to have no name taken - which
+     * The first half of an import only works out what it would do. Nothing is written until the user has reviewed or
+     * previewed it and pressed Import, or, for the demo library, until the plan turns out to have no name taken - which
      * is why the plan is kept here rather than on the screen: the answer can arrive long after the screen that started
      * this was left.
      *
@@ -375,7 +379,7 @@ internal class ImportController(
         // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
         // holds by construction; it is kept so that a second caller could not start an import over a running one.
         if (request.source.isEmpty || _isImporting.value || activeRequest != null) return null
-        val isReviewed = request.isReviewed(areSongsEnabled = areSongsEnabled())
+        val isReviewed = request.isReportedWhileRead(areSongsEnabled = areSongsEnabled())
         if (isReviewed) {
             activeRequest = request
             // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
@@ -385,8 +389,10 @@ internal class ImportController(
     }
 
     /**
-     * Downloads, reads and compares the batch of [request], and hands the plan on to the review or to the writing, or
-     * returns the new song it came to, see [import].
+     * Downloads, reads and compares the batch of [request], and hands the plan on to the preview, the review or the
+     * writing, or returns the new song it came to, see [import].
+     *
+     * @param isReviewed Whether the import screen was put up while the batch was read, see [isReportedWhileRead].
      */
     private suspend fun prepare(request: ImportRequest, isReviewed: Boolean): ImportPlan.SongEntry? {
         _isImporting.update { true }
@@ -434,19 +440,31 @@ internal class ImportController(
             is Preparation.Planned -> {
                 // The plan carries everything the rest of the import needs, while the request lives for as long as the
                 // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing. The
-                // switch is asked again first, since the source is what tells a lone song file apart: one turned off while
-                // the batch was read must not open an editor on a screen the switch removes, and sends it to the review.
-                val isReviewedNow = request.isReviewed(areSongsEnabled = areSongsEnabled())
+                // switch is read again here, since one turned off while the batch was read must not open an editor or a
+                // preview on a screen the switch removes, and sends the batch to the review.
+                val areSongsEnabled = areSongsEnabled()
                 val sharedLink = (request.source as? ImportSource.SharedLink)?.link
                 request.source = ImportSource.Files(emptyList())
                 val plan = outcome.plan
-                val newSong = if (request.isNewSongFromText && !isReviewed && areSongsEnabled()) plan.newSongOf() else null
+                val newSong = if (request.isNewSongFromText && !isReviewed && areSongsEnabled) plan.newSongOf() else null
+                val isPreviewed = request.shouldReview && areSongsEnabled && !request.isNewSongFromText && plan.isPreviewed
                 if (newSong != null) {
                     // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
                     // and it is the queue that opens it, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
                     return newSong
-                } else if (isReviewed || isReviewedNow || plan.hasConflicts || request.isNewSongFromText && plan.loneSong == null) {
+                } else if (request.shouldReview && areSongsEnabled && plan.librarySong != null) {
+                    // The library holds the song as it is, so there is nothing to preview and nothing to write: it is opened.
+                    activeRequest = null
+                    applyImportPlan(
+                        plan = plan,
+                        choices = ImportChoices(),
+                        request = request,
+                        sharedLinkParts = listOfNotNull(request.sharedLinkFileId?.let { SharedLinkPart(it, plan.songs.indices, plan.setlists.indices) }),
+                        isReported = isReviewed,
+                        opensLoneSong = true,
+                    )
+                } else if (request.shouldReview || plan.hasConflicts) {
                     activeRequest = request
                     // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
                     // The report, which is set first, is what keeps the next batch waiting from here on.
@@ -460,11 +478,13 @@ internal class ImportController(
                         isDemoLibrary = request.isDemoLibrary,
                         sharedLinkTitle = sharedLink?.title,
                         sharedLinkUpdateCount = choices.conflictResolutions.size,
+                        isSongPreview = isPreviewed,
                     )
                     sharedLinkParts = listOfNotNull(request.sharedLinkFileId?.let { SharedLinkPart(it, plan.songs.indices, plan.setlists.indices) })
-                    if (isReviewed) reportState.report = review else reportState.show(review)
+                    if (isReviewed) reportState.showInPlace(review) else reportState.show(review)
                     _isImporting.value = false
                 } else {
+                    // Only the demo library, which is asked for by name and known, is written without being asked about.
                     applyImportPlan(
                         plan = plan,
                         choices = ImportChoices(),
@@ -546,6 +566,20 @@ internal class ImportController(
     }
 
     /**
+     * A preview's floating button, see [importPreviewActionsOf]: the preview of one song sets that song's choice to the
+     * button's before it imports, and one over the review imports what the review chose, as the review's own Import does.
+     */
+    fun importFromPreview(action: ImportPreviewAction) {
+        if (reportState.report !is ImportReport.Review) return
+        when (action) {
+            ImportPreviewAction.IMPORT_AS_COPY -> reportState.setImportConflictResolution(PREVIEWED_SONG_KEY, ImportConflictResolution.KEEP_BOTH)
+            ImportPreviewAction.REPLACE -> reportState.setImportConflictResolution(PREVIEWED_SONG_KEY, ImportConflictResolution.REPLACE)
+            ImportPreviewAction.IMPORT, ImportPreviewAction.IMPORT_REVIEW -> Unit
+        }
+        confirmImport()
+    }
+
+    /**
      * The review's Import. Writing over a library file is the one thing an import cannot take back, so where the choices
      * replace any, [DialogType.ConfirmImportReplace] asks first, and its confirmation is what calls [resolveImport].
      */
@@ -559,7 +593,8 @@ internal class ImportController(
 
     /**
      * Writes what the review chose, which is the only thing that ever overwrites a library file. The import screen
-     * stays where it is and shows the import being written, and then what it came to.
+     * stays where it is and shows the import being written, and then what it came to; a preview over it is taken off it
+     * for that, while the preview of a batch of one song shows the song being written itself.
      */
     fun resolveImport() {
         val review = reportState.report as? ImportReport.Review ?: return
@@ -572,8 +607,16 @@ internal class ImportController(
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
         reportState.report = ImportReport.Importing
+        reportState.closeReviewPreview()
         scope.launch {
-            applyImportPlan(plan = review.plan, choices = review.choices, request = request, sharedLinkParts = parts, isReported = true)
+            applyImportPlan(
+                plan = review.plan,
+                choices = review.choices,
+                request = request,
+                sharedLinkParts = parts,
+                isReported = true,
+                preview = review.takeIf { it.isSongPreview },
+            )
         }
     }
 
@@ -585,6 +628,10 @@ internal class ImportController(
      *   where its outcome goes for as long as that screen has not been left, unless it went clean: the user has just
      *   read the list, and reading it again as a result is one tap more than it is worth. Otherwise the outcome is a
      *   snackbar, unless something was left out or went wrong, which is what the import screen is put up for.
+     * @param opensLoneSong Whether the one song of the plan is opened once the import is over whatever the request asked,
+     *   which is what a batch of one song the library already holds is for, converted or not.
+     * @param preview The preview of a batch of one song the import was started from, which becomes the screen of the song
+     *   once it is written, and is put back for the user to try again where nothing could be.
      */
     private suspend fun applyImportPlan(
         plan: ImportPlan,
@@ -592,6 +639,8 @@ internal class ImportController(
         request: ImportRequest,
         sharedLinkParts: List<SharedLinkPart>,
         isReported: Boolean,
+        opensLoneSong: Boolean = false,
+        preview: ImportReport.Review? = null,
     ) {
         try {
             // Not cancellable once it has started writing: the view model going away with the Android activity is no
@@ -623,11 +672,21 @@ internal class ImportController(
             val songToOpen = songToOpen(
                 plan = plan,
                 result = result,
-                shouldOpenSong = (request.shouldOpenSong || request.isNewSongFromText) && areSongsEnabled(),
-                isConvertedSongOpened = request.isNewSongFromText,
+                shouldOpenSong = (request.shouldOpenSong || request.isNewSongFromText || opensLoneSong) && areSongsEnabled(),
+                isConvertedSongOpened = request.isNewSongFromText || opensLoneSong,
             )
             val isReportShown = isReported && reportState.isOnBackStack
+            val previewedSong = result.importedSongFileNames.singleOrNull()?.takeIf { !result.isFailed }
             when {
+                preview != null && isReportShown && previewedSong != null -> showImportedPreview(previewedSong, result, request)
+                preview != null && isReportShown -> restorePreview(preview, request, sharedLinkParts)
+                // Left while it was being written, which is a choice to hear about it the short way rather than to be
+                // taken to the song after all.
+                preview != null -> {
+                    reportState.report = null
+                    messageSink.sendMessage(Message.ImportFinished(result, hasDetails = true))
+                }
+
                 // The one song the system handed over is what the user was after, and the review has been answered:
                 // the import screen gives way to it rather than reporting on one file.
                 songToOpen != null -> {
@@ -673,7 +732,9 @@ internal class ImportController(
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
             _importProgress.value = null
-            if (isReported && reportState.isOnBackStack) {
+            if (preview != null && reportState.isOnBackStack) {
+                restorePreview(preview, request, sharedLinkParts)
+            } else if (isReported && reportState.isOnBackStack) {
                 reportState.report = ImportReport.Finished(null)
             } else {
                 if (isReported) reportState.report = null
@@ -683,6 +744,34 @@ internal class ImportController(
             _importProgress.value = null
             _isImporting.update { false }
         }
+    }
+
+    /**
+     * The preview the song [fileName] was imported from becomes that song's screen, in place, once the library holds the
+     * song and its text has been read, so that the lyrics on screen stay where they are rather than giving way to a loading
+     * indicator, or the screen closing itself over a song the library does not hold yet. Until then the report still says
+     * the song is being written, which the preview's button shows. Left meanwhile, the import is said the short way.
+     */
+    private suspend fun showImportedPreview(fileName: String, result: ImportResult, request: ImportRequest) {
+        withTimeoutOrNull(SONG_LOOKUP_TIMEOUT) {
+            loadSongText(fileName)
+            songLookup.first { fileName in it.songsByFileName }
+        }
+        reportState.report = null
+        val isFollowed = reportState.isOnBackStack && reportState.followImportedSong(fileName)
+        if (!request.shouldAnnounceResult) return
+        messageSink.sendMessage(if (isFollowed) Message.PreviewedSongImported else Message.ImportFinished(result, hasDetails = true))
+    }
+
+    /**
+     * Puts the preview of one song back as it was where its import wrote nothing, so that its button can be pressed again:
+     * the failure is a snackbar, since the preview is still the screen for the song.
+     */
+    private fun restorePreview(preview: ImportReport.Review, request: ImportRequest, parts: List<SharedLinkPart>) {
+        activeRequest = request
+        sharedLinkParts = parts
+        reportState.report = preview
+        if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
     }
 
     /** The snackbar's way into the import screen, for an outcome that did not need it but has more to it than one line. */

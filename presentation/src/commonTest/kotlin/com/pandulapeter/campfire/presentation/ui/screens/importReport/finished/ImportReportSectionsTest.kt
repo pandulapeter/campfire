@@ -82,7 +82,6 @@ class ImportReportSectionsTest {
             skippedFileNames = listOf("deleted.cho"),
             duplicateFileNames = listOf("a.cho"),
             convertedSongFileNames = listOf("a.cho", "deleted.cho"),
-            convertedSongToOpen = "a.cho",
         ).followingLibraryFileNames { fileName ->
             when {
                 fileName.startsWith("deleted") -> null
@@ -96,7 +95,6 @@ class ImportReportSectionsTest {
                 skippedFileNames = listOf("deleted.cho"),
                 duplicateFileNames = listOf("b.cho"),
                 convertedSongFileNames = listOf("b.cho"),
-                convertedSongToOpen = "b.cho",
             ),
             result,
         )

@@ -159,9 +159,10 @@ internal class MetronomeController(
     fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
         val overlayState = dialogHost.overlayState
         if (dialogHost.visibleDialog.value != null || overlayState.isAnyMenuOpen || overlayState.isValueBeingTyped) return false
-        val isAccepted = when (backStack.lastOrNull()) {
+        val isAccepted = when (val top = backStack.lastOrNull()) {
             CampfireDestination.Metronome -> true
-            is CampfireDestination.SongDetails -> !isSpace && userPreferences.value?.isMetronomeEnabled != false
+            // A preview shows no metronome, so nothing would be on screen to stop the click with.
+            is CampfireDestination.SongDetails -> !isSpace && top.importPreview == null && userPreferences.value?.isMetronomeEnabled != false
             else -> false
         }
         if (!isAccepted) return false

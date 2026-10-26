@@ -66,7 +66,6 @@
     <string name="import_files">Import files</string>
     <string name="import_result">Songs imported: %1$d · Setlists: %2$d · Already there: %3$d · Skipped: %4$d</string>
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>
-    <string name="import_open">Open</string>
     <plurals name="import_unreadable_documents">
         <item quantity="one">One document has no text Campfire can read (a scan, a protected PDF, or an old Word format).</item>
         <item quantity="other">%1$d documents have no text Campfire can read (scans, protected PDFs, or an old Word format).</item>
@@ -164,6 +163,18 @@
         <item quantity="one">Appears once in the files</item>
         <item quantity="other">Appears %1$d times in the files</item>
     </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">Preview: not in your library yet</string>
+    <string name="import_preview_name_taken">A different song with this name is already in your library.</string>
+    <string name="import_preview_shared_update">You imported this shared song before. Replace updates it to this version.</string>
+    <string name="import_preview_include">Import this song</string>
+    <string name="import_preview_left_out">Left out of the import</string>
+    <string name="import_preview_already_there">Already in your library, nothing to import</string>
+    <string name="import_preview_import">Import</string>
+    <string name="import_preview_import_as_copy">Import as a copy</string>
+    <string name="import_preview_importing">Importing the song</string>
+    <string name="import_preview_imported">Added to your library</string>
+    <string name="import_preview_open">Read the song</string>
 
     <!-- Errors -->
     <string name="error_no_data">Nothing could be loaded</string>

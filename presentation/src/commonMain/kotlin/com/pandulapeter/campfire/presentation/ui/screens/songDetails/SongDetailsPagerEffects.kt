@@ -78,7 +78,8 @@ internal fun FollowPager(
     LaunchedEffect(pagerState, isInitialPageSettled) {
         if (isInitialPageSettled) {
             snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
-                if (fileName != null) viewModel.navigator.onSongDetailsPageSettled(latestDestination, fileName)
+                // A preview's pages name no file, and its address is the import's.
+                if (fileName != null && latestDestination.importPreview == null) viewModel.navigator.onSongDetailsPageSettled(latestDestination, fileName)
             }
         }
     }
@@ -88,7 +89,10 @@ internal fun FollowPager(
     LaunchedEffect(pagerState, isInitialPageSettled) {
         if (isInitialPageSettled) {
             snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
-                if (target != null) viewModel.metronomeController.onSongDetailsPageChanged(latestDestination, target.first, target.second)
+                // A preview has no metronome, see MetronomeController.toggleMetronomeByKey.
+                if (target != null && latestDestination.importPreview == null) {
+                    viewModel.metronomeController.onSongDetailsPageChanged(latestDestination, target.first, target.second)
+                }
             }
         }
     }

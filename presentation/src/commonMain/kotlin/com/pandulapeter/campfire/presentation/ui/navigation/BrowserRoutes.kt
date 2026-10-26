@@ -86,7 +86,10 @@ internal object BrowserRoutes {
                     add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
                     if (inputs.settingsTab != SettingsTab.GENERAL) add("$SETTINGS/${inputs.settingsTab.pathSegment}")
                 }
-                is CampfireDestination.SongDetails -> {
+                // A preview names no file, and is the import's, as the import screen is.
+                is CampfireDestination.SongDetails -> if (destination.importPreview != null) {
+                    add(IMPORT)
+                } else {
                     val song = inputs.currentSongFileNames[destination.id]?.let(::songPathSegment).orEmpty()
                     add(destination.setlistFileName?.let { "$SETLIST/${setlistPathSegment(it)}/$song" } ?: "$SONG/$song")
                 }
@@ -243,7 +246,9 @@ internal object BrowserRoutes {
         val backStack = mutableListOf<CampfireDestination>()
         for (destination in state.backStack) {
             backStack += when (destination) {
-                is CampfireDestination.SongDetails -> if (destination.setlistFileName == null) {
+                is CampfireDestination.SongDetails -> if (destination.importPreview != null) {
+                    destination.takeIf { hasImportReport }
+                } else if (destination.setlistFileName == null) {
                     destination.takeIf { it.songFileNames.any { fileName -> fileName in songFileNames } }
                 } else {
                     val pages = setlistsByFileName[destination.setlistFileName]?.entries?.map { it.songFileName }?.filter { it in songFileNames }.orEmpty()

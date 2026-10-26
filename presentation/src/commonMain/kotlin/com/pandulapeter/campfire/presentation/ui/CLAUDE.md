@@ -155,8 +155,8 @@ The view model facade, the composition root, and the product rules every screen 
     and editor screen, and paste (a dropped text too); disables the Setlists, Online song details, and Cover art rows.
     Settings' Import, dropped files, and files or a text opened with or shared to the app are still imported, always
     through the import screen's review and under a warning atop it (as are setlists with the Setlists switch off,
-    `ImportFeatureWarning`), but nothing opens a song and no editor starts (`ImportController`'s `areSongsEnabled`,
-    the import screen's rows, the snackbar's Open). The app opens on the first tool switched on (`TopLevel.home`).
+    `ImportFeatureWarning`), but nothing opens a song, no preview or editor starts (`ImportController`'s
+    `areSongsEnabled`, the import screen's rows). The app opens on the first tool switched on (`TopLevel.home`).
   - **Chords** (`areChordsEnabled`): takes chords, key, transposition, and capo; disables the chord spelling rows.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes the Chords section and the
     Chords tab (`FeatureSwitches.isChordLibraryEnabled`); chosen shapes kept. The instrument pill stays (keyboard's

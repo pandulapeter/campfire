@@ -71,11 +71,11 @@ internal class Navigator(
 
     /** Written into [savedStateStore] on every change, see [persistBackStack], and read back from it here. */
     val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf<CampfireDestination>().apply {
-        // The import screen shows what an import running in this process is doing or did, so a new process has
-        // nothing to put on it and comes back on the screen under it.
+        // The import screen shows what an import running in this process is doing or did, and a preview the songs of an
+        // import not written yet, so a new process has nothing to put on either and comes back on the screen under them.
         addAll(
             savedStateStore.restore<List<CampfireDestination>>(BACK_STACK_KEY)
-                ?.filterNot { it == CampfireDestination.ImportReport }
+                ?.filterNot { it == CampfireDestination.ImportReport || it is CampfireDestination.SongDetails && it.importPreview != null }
                 ?.takeIf { it.isNotEmpty() }
                 ?: listOf(CampfireDestination.Songs),
         )

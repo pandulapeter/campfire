@@ -27,6 +27,8 @@ The destinations and the back stack.
   its file name in place, is not a new editor sliding in.
 - `ImportReport` carries nothing (one import at a time) and is never restored (the report dies with the process);
   `Message.ImportInterrupted` says so where the import had not been written yet (a flag saved beside the back stack).
+  A `SongDetails` with an `importPreview` names no file and is dropped on restore the same way (see
+  `ui/screens/songDetails/CLAUDE.md`).
 - Top level selection resets the stack to `[home, tab?]` (`TopLevel.home`: Songs, or the first tool with the songs
   switched off), so Back always returns there. The tools behind one Tools
   item: see `ui/chrome/CLAUDE.md`. Feature switches: `isEnabled` with `FeatureSwitches`.

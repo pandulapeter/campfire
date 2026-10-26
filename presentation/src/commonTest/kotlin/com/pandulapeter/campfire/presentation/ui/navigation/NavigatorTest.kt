@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
@@ -70,6 +71,14 @@ class NavigatorTest {
         endSongSelection = { isSelecting = false },
         onTransitionEnded = {},
     )
+
+    @Test
+    fun `a process restored behind an import comes back on the screen under its screen and its preview`() = runTest {
+        val preview = CampfireDestination.SongDetails(songFileNames = emptyList(), setlistFileName = null, initialIndex = 0, importPreview = ImportPreview.SingleSong)
+        navigator(backgroundScope).updateBackStack { addAll(listOf(CampfireDestination.Settings, CampfireDestination.ImportReport, preview)) }
+        runCurrent()
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator(backgroundScope).backStack.toList())
+    }
 
     @Test
     fun `listeners hear the previous top and the new stack in the order they were added`() = runTest {

@@ -38,6 +38,8 @@ sealed interface ImportReport {
      * a shared link carried, set only for the import of one, which the subtitle falls back on (see [subtitleName]).
      * [sharedLinkUpdateCount] is how many of its names already taken started on Replace, being files an earlier import
      * of the same link wrote on this device (see `sharedLinkChoices`), which a line under the counts explains.
+     * [isSongPreview] is a batch that is one song and nothing else, shown as the preview of that song in place of the
+     * import screen (`ImportPreview.SingleSong`), which no other batch joins.
      */
     data class Review(
         val plan: ImportPlan,
@@ -45,6 +47,7 @@ sealed interface ImportReport {
         val isDemoLibrary: Boolean,
         val sharedLinkTitle: String? = null,
         val sharedLinkUpdateCount: Int = 0,
+        val isSongPreview: Boolean = false,
     ) : ImportReport {
 
         val isSharedLink get() = sharedLinkTitle != null
@@ -119,5 +122,4 @@ internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String
     importedSetlistFileNames = importedSetlistFileNames.mapNotNull(fileName),
     duplicateFileNames = duplicateFileNames.mapNotNull(fileName),
     convertedSongFileNames = convertedSongFileNames.mapNotNull(fileName),
-    convertedSongToOpen = convertedSongToOpen?.let(fileName),
 )

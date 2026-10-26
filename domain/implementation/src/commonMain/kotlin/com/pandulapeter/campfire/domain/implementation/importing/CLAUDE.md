@@ -52,4 +52,3 @@
   under its arrival name (shown as missing). Identical entries are disregarded whatever the choices say.
 - A write failure stops before any dependent setlist. What was written is adopted in one change (`adoptImported`, also
   after failure or cancellation), from the models built, not by rescanning.
-- `convertedSongToOpen` only for a lone converted song with no other entries or errors.

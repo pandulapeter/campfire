@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -28,6 +29,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** The import screen's state over a plain back stack, moved with runCurrent like [ImportControllerQueueTest]. */
 class ImportReportStateTest {
@@ -96,6 +98,60 @@ class ImportReportStateTest {
         assertEquals(1, leaves.count { it })
         assertEquals("", state.search.textFieldState.text.toString())
     }
+
+    @Test
+    fun `the preview of one song takes the place of the import screen that showed it being read`() = runTest {
+        startState()
+        state.show(ImportReport.Loading(sourceName = "sheet.pdf"))
+        settle()
+        state.showInPlace(songPreview)
+        assertEquals(0, reportCount)
+        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+        assertTrue(state.isOnBackStack)
+        assertTrue(leaves.none { it })
+    }
+
+    @Test
+    fun `a preview waiting for a dialog goes up in place of the import screen`() = runTest {
+        startState()
+        dialogHost.showDialog(DialogType.WhatsNew)
+        state.show(songPreview)
+        settle()
+        dialogHost.dismissDialog()
+        settle()
+        assertEquals(0, reportCount)
+        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+    }
+
+    @Test
+    fun `an imported preview becomes the song's screen in place, which leaves the import`() = runTest {
+        startState()
+        state.show(songPreview)
+        settle()
+        val preview = backStack.last() as CampfireDestination.SongDetails
+        assertTrue(state.followImportedSong("new.cho"))
+        val song = backStack.last() as CampfireDestination.SongDetails
+        assertEquals(preview.copy(songFileNames = listOf("new.cho"), importPreview = null), song)
+        assertEquals(listOf(false, true), leaves)
+    }
+
+    @Test
+    fun `the review's rows open in a preview over it, which its Import takes off again`() = runTest {
+        startState()
+        state.show(ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false))
+        settle()
+        state.openReviewPreview(songIndices = listOf(1, 0), index = 1)
+        val preview = (backStack.last() as CampfireDestination.SongDetails)
+        assertEquals(ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true), preview.importPreview)
+        assertEquals(1, preview.initialIndex)
+        state.closeReviewPreview()
+        assertEquals(CampfireDestination.ImportReport, backStack.last())
+        assertTrue(leaves.none { it })
+    }
+
+    private val entry = ImportPlan.SongEntry(fileName = "new.cho", text = "{title: New}", status = ImportPlan.Status.NEW, sourceFileName = "new.cho")
+
+    private val songPreview = ImportReport.Review(plan = ImportPlan(songs = listOf(entry)), choices = ImportChoices(), isDemoLibrary = false, isSongPreview = true)
 
     @Test
     fun `the review's group choice only touches the rows shown`() = runTest {

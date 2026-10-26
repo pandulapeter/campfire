@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
@@ -65,6 +66,7 @@ class ImportControllerQueueTest {
     private var prepareCount = 0
     private var importCount = 0
     private val openedSongs = mutableListOf<String>()
+    private val loadedSongTexts = mutableListOf<String>()
     private val newSongTexts = mutableListOf<String>()
     private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
@@ -72,6 +74,10 @@ class ImportControllerQueueTest {
     private var areSongsEnabled = true
     private var onPrepare: () -> Unit = {}
     private var plannedSongs = listOf(songEntry("new.cho"))
+
+    /** What the plans leave out, which makes a batch of one song more than that song, and so reviewed rather than previewed. */
+    private var plannedSkipped = emptyList<String>()
+    private var isImportFailing = false
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
     private val downloadedUrls = mutableListOf<String>()
@@ -104,6 +110,7 @@ class ImportControllerQueueTest {
             backStack = backStack,
             reportState = reportState,
             openImportedSong = { openedSongs += it },
+            loadSongText = { loadedSongTexts += it },
             openNewSongEditor = { text, suggestion ->
                 newSongTexts += text
                 newSongSuggestions += suggestion
@@ -122,21 +129,21 @@ class ImportControllerQueueTest {
                     prepareCount++
                     preparedFiles += files
                     onPrepare()
-                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs)
+                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, skippedFileNames = plannedSkipped)
                 }
             },
             importFiles = object : ImportFilesUseCase {
                 override suspend fun invoke(plan: ImportPlan, choices: ImportChoices, onProgress: (ImportProgress) -> Unit): ImportResult {
                     importCount++
-                    if (isLibraryIndexedAtOnce) library.value = library.value.withSongs(plan.songs.map { it.fileName })
+                    if (isImportFailing) error("The disk is full.")
                     // A kept-both conflict lands under a numbered name, as the storage layer writes it.
-                    return ImportResult(
-                        importedSongFileNames = plan.songs.mapIndexed { index, entry ->
-                            val isKeptBoth = entry.status == ImportPlan.Status.CONFLICTING &&
-                                choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, index)) == ImportConflictResolution.KEEP_BOTH
-                            if (isKeptBoth) entry.fileName.replace(".cho", "_2.cho") else entry.fileName
-                        },
-                    )
+                    val written = plan.songs.mapIndexed { index, entry ->
+                        val isKeptBoth = entry.status == ImportPlan.Status.CONFLICTING &&
+                            choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, index)) == ImportConflictResolution.KEEP_BOTH
+                        if (isKeptBoth) entry.fileName.replace(".cho", "_2.cho") else entry.fileName
+                    }
+                    if (isLibraryIndexedAtOnce) library.value = library.value.withSongs(written)
+                    return ImportResult(importedSongFileNames = written)
                 }
             },
             rememberDemoLibraryFiles = object : RememberDemoLibraryFilesUseCase {
@@ -183,6 +190,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a batch queued while a reopened result is on screen waits until the screen is left`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         reopenResult()
         enqueue()
@@ -197,6 +205,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `leaving a reopened result does not settle a batch queued meanwhile`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         reopenResult()
         val settled = enqueue()
@@ -339,43 +348,164 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a written song is opened only once the library lookup holds it`() = runTest {
+    fun `a song handed over is previewed, and nothing is written until it is imported`() = runTest {
+        startController()
+        val settled = handOver()
+        settle()
+        val review = assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(review.isSongPreview)
+        assertEquals(ImportPreview.SingleSong, (backStack.last() as CampfireDestination.SongDetails).importPreview)
+        assertFalse(CampfireDestination.ImportReport in backStack)
+        assertEquals(0, importCount)
+        assertFalse(settled.isCompleted)
+    }
+
+    @Test
+    fun `a song picked from Import files is previewed as well`() = runTest {
+        startController()
+        enqueue()
+        settle()
+        assertTrue(assertIs<ImportReport.Review>(reportState.importReport.value).isSongPreview)
+        assertTrue(backStack.last().isSongPreview)
+    }
+
+    @Test
+    fun `leaving a preview writes nothing and lets the queue go on`() = runTest {
+        startController()
+        val settled = handOver()
+        settle()
+        backStack.removeAt(backStack.lastIndex)
+        controller.onBackStackChanged()
+        settle()
+        assertEquals(0, importCount)
+        assertNull(reportState.importReport.value)
+        assertTrue(settled.isCompleted)
+    }
+
+    @Test
+    fun `an imported preview becomes the song's own screen once the library holds the song`() = runTest {
         isLibraryIndexedAtOnce = false
         startController()
         handOver()
-        runCurrent()
-        Snapshot.sendApplyNotifications()
-        runCurrent()
+        settle()
+        val preview = backStack.last() as CampfireDestination.SongDetails
+        controller.importFromPreview(ImportPreviewAction.IMPORT)
+        settle()
         assertEquals(1, importCount)
+        assertSame(ImportReport.Importing, reportState.importReport.value)
+        assertSame(preview, backStack.last())
+        library.value = library.value.withSongs(listOf("new.cho"))
+        settle()
+        val song = backStack.last() as CampfireDestination.SongDetails
+        assertEquals(listOf("new.cho"), song.songFileNames)
+        assertNull(song.importPreview)
+        assertEquals(preview.id, song.id)
+        assertEquals(listOf("new.cho"), loadedSongTexts)
+        assertNull(reportState.importReport.value)
+        assertTrue(openedSongs.isEmpty())
+        assertEquals(listOf<Message>(Message.PreviewedSongImported), messageSink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a preview left while its song is written is said the short way and opens nothing`() = runTest {
+        isLibraryIndexedAtOnce = false
+        startController()
+        handOver()
+        settle()
+        controller.importFromPreview(ImportPreviewAction.IMPORT)
+        settle()
+        backStack.removeAt(backStack.lastIndex)
+        controller.onBackStackChanged()
+        library.value = library.value.withSongs(listOf("new.cho"))
+        settle()
+        assertTrue(backStack.none { it is CampfireDestination.SongDetails })
+        assertTrue(openedSongs.isEmpty())
+        assertIs<Message.ImportFinished>(messageSink.messageQueue.value.single().value)
+    }
+
+    @Test
+    fun `a preview of a taken name imports as a copy, numbered`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.CONFLICTING))
+        startController()
+        handOver()
+        settle()
+        controller.importFromPreview(ImportPreviewAction.IMPORT_AS_COPY)
+        settle()
+        assertEquals(listOf("new_2.cho"), (backStack.last() as CampfireDestination.SongDetails).songFileNames)
+    }
+
+    @Test
+    fun `a preview of a taken name replaces only once that is confirmed`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.CONFLICTING))
+        startController()
+        handOver()
+        settle()
+        controller.importFromPreview(ImportPreviewAction.REPLACE)
+        settle()
+        assertIs<DialogType.ConfirmImportReplace>(dialogHost.visibleDialog.value)
+        assertEquals(0, importCount)
+        controller.resolveImport()
+        dialogHost.dismissDialog()
+        settle()
+        assertEquals(listOf("new.cho"), (backStack.last() as CampfireDestination.SongDetails).songFileNames)
+    }
+
+    @Test
+    fun `a preview whose song could not be written stays up to be imported again`() = runTest {
+        isImportFailing = true
+        startController()
+        handOver()
+        settle()
+        controller.importFromPreview(ImportPreviewAction.IMPORT)
+        settle()
+        assertTrue(assertIs<ImportReport.Review>(reportState.importReport.value).isSongPreview)
+        assertTrue(backStack.last().isSongPreview)
+        assertEquals(listOf<Message>(Message.ImportFailed), messageSink.messageQueue.value.map { it.value })
+        isImportFailing = false
+        controller.importFromPreview(ImportPreviewAction.IMPORT)
+        settle()
+        assertEquals(listOf("new.cho"), (backStack.last() as CampfireDestination.SongDetails).songFileNames)
+    }
+
+    @Test
+    fun `a batch arriving while a preview is up waits for it rather than joining it`() = runTest {
+        startController()
+        handOver()
+        settle()
+        nextPlans += listOf(songEntry("other.cho"))
+        val settled = enqueue()
+        settle()
+        assertEquals(1, prepareCount)
+        assertEquals(listOf("new.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        backStack.removeAt(backStack.lastIndex)
+        controller.onBackStackChanged()
+        settle()
+        assertFalse(settled.isCompleted)
+        assertEquals(listOf("other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+    }
+
+    @Test
+    fun `a song handed over that the library already holds is opened rather than previewed`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.IDENTICAL))
+        startController()
+        handOver()
+        settle()
+        assertEquals(listOf("new.cho"), openedSongs)
+        assertNull(reportState.importReport.value)
+        assertTrue(backStack.none { it.isSongPreview })
+    }
+
+    @Test
+    fun `a library song is opened only once the library lookup holds it`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.IDENTICAL))
+        isLibraryIndexedAtOnce = false
+        startController()
+        handOver()
+        settle()
         assertTrue(openedSongs.isEmpty())
         library.value = library.value.withSongs(listOf("new.cho"))
         runCurrent()
         assertEquals(listOf("new.cho"), openedSongs)
-    }
-
-    @Test
-    fun `a written song is opened at once while the library is still being read, whose screen waits for it`() = runTest {
-        isLibraryIndexedAtOnce = false
-        library.value = SongLookup(songsByFileName = emptyMap(), isLibraryRead = false)
-        startController()
-        handOver()
-        runCurrent()
-        Snapshot.sendApplyNotifications()
-        runCurrent()
-        assertEquals(listOf("new.cho"), openedSongs)
-    }
-
-    @Test
-    fun `a written song the lookup never holds is not opened`() = runTest {
-        isLibraryIndexedAtOnce = false
-        startController()
-        handOver()
-        runCurrent()
-        Snapshot.sendApplyNotifications()
-        advanceTimeBy(11.seconds)
-        library.value = library.value.withSongs(listOf("new.cho"))
-        runCurrent()
-        assertTrue(openedSongs.isEmpty())
     }
 
     @Test
@@ -566,6 +696,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a batch arriving during a review is added to it rather than waiting for a screen of its own`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
@@ -586,6 +717,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `the same files dropped twice during a review leave it as it was`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
@@ -599,6 +731,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a batch added to a review is written with it`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
@@ -613,10 +746,12 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a pasted song arriving during a review waits for it rather than joining it`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
         nextPlans += listOf(songEntry("pasted.cho", text = "[G]Hello"))
+        plannedSkipped = emptyList()
         enqueuePaste()
         settle()
         assertEquals(1, prepareCount)
@@ -627,6 +762,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a batch arriving while Replace is being confirmed joins the review once the confirmation is cancelled`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
@@ -644,6 +780,7 @@ class ImportControllerQueueTest {
 
     @Test
     fun `a batch arriving while Replace is being confirmed is not written by it, and is imported after it`() = runTest {
+        plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
         settle()
@@ -685,6 +822,8 @@ class ImportControllerQueueTest {
         suggestion = suggestion,
     )
 }
+
+private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview == ImportPreview.SingleSong
 
 private fun songEntry(
     fileName: String,

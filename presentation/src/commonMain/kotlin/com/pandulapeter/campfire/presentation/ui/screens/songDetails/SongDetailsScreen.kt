@@ -25,7 +25,10 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TopAppBarDefaults
@@ -40,7 +43,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
@@ -102,10 +107,14 @@ internal fun SongDetailsScreen(
     // Only what is drawn over the screen, which the keys are then meant for instead.
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
+    // A preview of songs an import has not written yet is read only like performance mode, since nothing of it is the
+    // library's to change: its pages are the plan's, see ImportPreviewState.
+    val importPreview = rememberImportPreviewState(viewModel = viewModel, destination = destination)
+    val isImportPreview = destination.importPreview != null
+    val isReadOnly = isImportPreview || isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
     val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
     val songLookup by viewModel.libraryState.songLookup.collectAsStateWithLifecycle()
-    val resolvedSongs = remember(destination, songLookup, songsBeingRenamed) {
+    val librarySongs = remember(destination, songLookup, songsBeingRenamed) {
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
         // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
         // library does not hold: resolving it to the song as it was keeps the pages - and their count - exactly
@@ -114,15 +123,19 @@ internal fun SongDetailsScreen(
         // be a repeated key and a crash: each song is one page.
         songDetailsSongsOf(destination.songFileNames, songLookup, songsBeingRenamed)
     }
+    val resolvedSongs = if (isImportPreview) importPreview?.songs else librarySongs
     val songs = resolvedSongs.orEmpty()
     LaunchedEffect(resolvedSongs?.isEmpty()) {
         // Every song this screen was opened on is gone from a library that has been read, and indexed: there is
         // nothing left to show, so the screen goes the way it would have if the song had been deleted from here. Only
         // while it is still the screen on top, since one that has just been popped goes on being composed for as long
         // as its exit transition runs, and going back from there would close the screen underneath it too.
-        if (resolvedSongs?.isEmpty() == true && viewModel.navigator.backStack.lastOrNull() == destination) onBack()
+        if (!isImportPreview && resolvedSongs?.isEmpty() == true && viewModel.navigator.backStack.lastOrNull() == destination) onBack()
     }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
+    val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
+    val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
+    var previewButtonsHeight by remember { mutableStateOf(0.dp) }
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
     // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
     val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
@@ -158,7 +171,8 @@ internal fun SongDetailsScreen(
     val hasSongInfo = remember(currentSongText, isReadOnly) {
         isReadOnly && currentSongText?.let(viewModel.songMetadataEditing::hasSongInfo) == true
     }
-    val openCurrentSongInfo = currentSong?.let { song ->
+    // A preview offers none: the sheet reads and writes the library's file, which the preview's song is not yet.
+    val openCurrentSongInfo = currentSong?.takeIf { !isImportPreview }?.let { song ->
         if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.dialogHost.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -208,11 +222,15 @@ internal fun SongDetailsScreen(
     val stepBackAction: (from: Int?) -> Unit = ::stepBack
     val stepForwardAction: (from: Int?) -> Unit = ::stepForward
 
-    LoadSongTexts(viewModel = viewModel, songs = songs, currentPage = pagerState.currentPage, songTexts = songTexts)
+    if (importPreview != null) {
+        InferImportPreviewKeys(viewModel = viewModel, importPreview = importPreview, currentPage = pagerState.currentPage)
+    } else if (!isImportPreview) {
+        LoadSongTexts(viewModel = viewModel, songs = songs, currentPage = pagerState.currentPage, songTexts = songTexts)
+    }
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
-    val isMetronomePanelVisible = isMetronomePanelShown && isMetronomeEnabled
+    val isMetronomePanelVisible = isMetronomePanelShown && isMetronomeEnabled && !isImportPreview
     val metronomePanelState = remember { MutableTransitionState(isMetronomePanelVisible) }
     // The room above the pages changes on every frame the bar collapses or comes back and the panel opens or closes, so
     // the pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
@@ -233,7 +251,8 @@ internal fun SongDetailsScreen(
                 isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
-                onEdit = currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
+                onEdit = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
+                onSave = importPreview?.takeIf { !it.isWriting }?.actions?.saveShortcutAction?.let { action -> { viewModel.importController.importFromPreview(action) } },
             ),
     ) {
         SongDetailsAppBar(
@@ -241,12 +260,14 @@ internal fun SongDetailsScreen(
             destination = destination,
             currentSong = currentSong,
             isReadOnly = isReadOnly,
-            isPerformanceModeEnabled = isPerformanceModeEnabled,
+            // A preview has no song's actions: what it is about is the import, which its buttons answer.
+            isPerformanceModeEnabled = isPerformanceModeEnabled || isImportPreview,
             shouldShowChords = shouldShowChords,
             isMetronomeEnabled = isMetronomeEnabled,
             isTunerEnabled = isTunerEnabled,
             areSetlistsEnabled = areSetlistsEnabled,
-            isCoverArtEnabled = isCoverArtEnabled,
+            // Nothing is fetched for a song that is not in the library.
+            isCoverArtEnabled = isCoverArtEnabled && !isImportPreview,
             chordSpelling = chordSpelling,
             currentPageScrollState = { currentPageScrollState },
             openCurrentSongInfo = openCurrentSongInfo,
@@ -258,53 +279,78 @@ internal fun SongDetailsScreen(
             contentPadding = contentPadding,
             coroutineScope = coroutineScope,
             onBack = onBack,
-        )
-        // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
-        // padding that is still theirs to apply.
-        val pageContentPadding = if (hasPagerControls) {
-            PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                end = contentPadding.calculateEndPadding(layoutDirection),
-            )
-        } else {
-            contentPadding
-        }
-        SongDetailsPager(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = contentPadding,
-            viewModel = viewModel,
-            destination = destination,
-            songs = songs,
-            pagerState = pagerState,
-            pageStepper = pageStepper,
-            pageScrollStates = pageScrollStates,
-            songTimings = songTimings,
-            isReadOnly = isReadOnly,
-            chordSpelling = chordSpelling,
-            shouldShowChords = shouldShowChords,
-            isMetronomeEnabled = isMetronomeEnabled,
-            isTunerEnabled = isTunerEnabled,
-            isTunerSheetShown = visibleDialog is DialogType.Tuner,
-            isMetronomePanelShown = isMetronomePanelShown,
-            isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
-            canPage = canPage,
-            settledWidth = settledWidth,
-            pageContentPadding = pageContentPadding,
-            chordDiagrams = chordDiagrams,
-            isViewportSettled = isViewportSettled,
-            currentPageScrollState = { currentPageScrollState },
-            currentPageStepper = { currentPageStepper },
-            canStepBackInSong = canStepBackInSong,
-            canStepForwardInSong = canStepForwardInSong,
-            hasPreviousSongToStepTo = hasPreviousSongToStepTo,
-            hasNextSongToStepTo = hasNextSongToStepTo,
-            stepBack = stepBackAction,
-            stepForward = stepForwardAction,
-            onCurrentPage = { scrollState, stepper ->
-                currentPageScrollState = scrollState
-                currentPageStepper = stepper
+            previewBanner = {
+                ImportPreviewBanner(
+                    importPreview = importPreview,
+                    currentPage = pagerState.currentPage,
+                    contentPadding = contentPadding,
+                    onChosenChange = { key, isChosen -> viewModel.importReportState.setImportEntriesChosen(listOf(key), isChosen) },
+                    onResolutionSelected = viewModel.importReportState::setImportConflictResolution,
+                )
             },
         )
+        // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
+        // padding that is still theirs to apply. A preview's buttons float over the bottom of the pages, which leave
+        // them that room under their last line, so that every line is read above them.
+        val previewButtonsClearance by animateDpAsState(previewButtonsHeight.takeIf { it > 0.dp }?.plus(PREVIEW_BUTTONS_MARGIN) ?: 0.dp)
+        val pageContentPadding = PaddingValues(
+            start = contentPadding.calculateStartPadding(layoutDirection),
+            end = contentPadding.calculateEndPadding(layoutDirection),
+            bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + previewButtonsClearance,
+        )
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            SongDetailsPager(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding,
+                viewModel = viewModel,
+                destination = destination,
+                importPreview = importPreview,
+                pageKey = pageKey,
+                songs = songs,
+                pagerState = pagerState,
+                pageStepper = pageStepper,
+                pageScrollStates = pageScrollStates,
+                songTimings = songTimings,
+                isReadOnly = isReadOnly,
+                chordSpelling = chordSpelling,
+                shouldShowChords = shouldShowChords,
+                isMetronomeEnabled = isMetronomeEnabled,
+                isTunerEnabled = isTunerEnabled,
+                isTunerSheetShown = visibleDialog is DialogType.Tuner,
+                isMetronomePanelShown = isMetronomePanelShown,
+                isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
+                canPage = canPage,
+                settledWidth = settledWidth,
+                pageContentPadding = pageContentPadding,
+                chordDiagrams = chordDiagrams,
+                isViewportSettled = isViewportSettled,
+                currentPageScrollState = { currentPageScrollState },
+                currentPageStepper = { currentPageStepper },
+                canStepBackInSong = canStepBackInSong,
+                canStepForwardInSong = canStepForwardInSong,
+                hasPreviousSongToStepTo = hasPreviousSongToStepTo,
+                hasNextSongToStepTo = hasNextSongToStepTo,
+                stepBack = stepBackAction,
+                stepForward = stepForwardAction,
+                onCurrentPage = { scrollState, stepper ->
+                    currentPageScrollState = scrollState
+                    currentPageStepper = stepper
+                },
+            )
+            ImportPreviewButtons(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BUTTONS_MARGIN,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BUTTONS_MARGIN,
+                        bottom = (if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()) + PREVIEW_BUTTONS_MARGIN,
+                    ),
+                importPreview = importPreview,
+                isAddingToReview = isAddingToReview,
+                onAction = viewModel.importController::importFromPreview,
+                onHeightChanged = { previewButtonsHeight = it },
+            )
+        }
         if (hasPagerControls) {
             SongPagerControls(
                 setlistTitle = setlistTitle,
@@ -370,6 +416,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
     stepBack: (from: Int?) -> Unit,
     stepForward: (from: Int?) -> Unit,
     onEdit: (() -> Unit)?,
+    onSave: (() -> Unit)?,
 ) = songKeyboardShortcuts(
     onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
     onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
@@ -385,6 +432,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
     },
     isUncovered = isUncovered,
     onEdit = onEdit,
+    onSave = onSave,
     onPreviousSong = if (hasPreviousSong) {
         { pageStepper.step(-1) }
     } else {
@@ -417,3 +465,6 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
 
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120
+
+/** Between a preview's buttons and the edges around them, and between them and the last line of the song above them. */
+private val PREVIEW_BUTTONS_MARGIN = 16.dp

@@ -21,8 +21,8 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
 
 - **Every import the user starts is reviewed before it writes** on its own screen (`CampfireDestination.ImportReport`,
   `:presentation`'s `ui/screens/importReport/`): every entry listed and ticked; names taken by something *different*
-  each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out. A single
-  song file opened with, shared to, or dropped on the app is written and opened directly unless its name is taken.
+  each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out. A batch that
+  is one song is previewed instead, on the song details screen, and written only by its Import.
 - `ImportChoices.tags` go into every song written (new, numbered, or replacing) through `ChordProTags.addTag`, in the
   text it is written with, so a file is written once; identical songs, which are never written, are left untagged.
 - **Replacing is the only overwrite in the app**: a choice on that screen plus a confirmation, and only

@@ -66,7 +66,6 @@
     <string name="import_files">Fájlok importálása</string>
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_converted">Átalakítva: %1$d — érdemes átnézni a szerkesztőben.</string>
-    <string name="import_open">Megnyitás</string>
     <plurals name="import_unreadable_documents">
         <item quantity="one">Egy dokumentumban nincs a Campfire számára olvasható szöveg (szkennelt oldal, védett PDF vagy régi Word-formátum).</item>
         <item quantity="other">%1$d dokumentumban nincs a Campfire számára olvasható szöveg (szkennelt oldalak, védett PDF-ek vagy régi Word-formátum).</item>
@@ -164,6 +163,18 @@
         <item quantity="one">Egyszer szerepel a fájlok között</item>
         <item quantity="other">%1$d alkalommal szerepel a fájlok között</item>
     </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">Előnézet: még nincs a könyvtáradban</string>
+    <string name="import_preview_name_taken">Ezen a néven már van egy másik dal a könyvtáradban.</string>
+    <string name="import_preview_shared_update">Ezt a megosztott dalt korábban már importáltad. A felülírással erre a változatra frissül.</string>
+    <string name="import_preview_include">A dal importálása</string>
+    <string name="import_preview_left_out">Kimarad az importálásból</string>
+    <string name="import_preview_already_there">Már megvan a könyvtáradban, nincs mit importálni</string>
+    <string name="import_preview_import">Importálás</string>
+    <string name="import_preview_import_as_copy">Importálás másolatként</string>
+    <string name="import_preview_importing">A dal importálása folyamatban</string>
+    <string name="import_preview_imported">Bekerült a könyvtáradba</string>
+    <string name="import_preview_open">A dal megtekintése</string>
 
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>

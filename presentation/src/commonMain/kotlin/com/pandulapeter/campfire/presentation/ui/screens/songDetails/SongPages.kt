@@ -61,6 +61,9 @@ import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
  * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
  * time. What only the pages read is collected here, so that it is still read only inside the page that uses it.
  *
+ * @param importPreview Set where the pages are a preview's, whose texts and folds are its own rather than the library's
+ *   and the preferences', and which has no tuner or metronome buttons, since it has no metronome to show.
+ * @param pageKey What the pager keys a song's page by, see [rememberPageKeys].
  * @param pageScrollStates The scroll of every page that is composed, by page, which a step back from the top of a song
  *   puts at the end of the one before it.
  * @param onCurrentPage Handed the scroll and the stepper of the page being read, which the keys and the step buttons
@@ -70,6 +73,8 @@ import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 internal fun SongPages(
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongDetails,
+    importPreview: ImportPreviewState?,
+    pageKey: (Song) -> String,
     songs: List<Song>,
     pagerState: PagerState,
     pageScrollStates: SnapshotStateMap<Int, ScrollState>,
@@ -110,7 +115,7 @@ internal fun SongPages(
                 onFontScaleChanged = viewModel.fontScaleController::setFontScale,
             ),
         state = pagerState,
-        key = { songs[it].fileName },
+        key = { pageKey(songs[it]) },
         beyondViewportPageCount = 1,
     ) { page ->
         val song = songs[page]
@@ -140,7 +145,7 @@ internal fun SongPages(
                 )
             }
         }
-        val text = songTexts[song.fileName]
+        val text = importPreview?.texts?.get(song.fileName) ?: songTexts[song.fileName]
         // The first swap of a page from loading to its lyrics lays the whole song out in one frame, so a page
         // that is neither on screen nor being swiped to is held back from it until the pager has come to rest,
         // or it would land in the middle of the settle animation. A page shows its lyrics once and keeps them,
@@ -148,7 +153,14 @@ internal fun SongPages(
         var hasShownLyrics by remember { mutableStateOf(text != null) }
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
-        val foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty()
+        val foldedSections = (importPreview?.folds?.get(song.fileName) ?: userPreferences?.foldedSections?.get(song.fileName)).orEmpty()
+        val toggleFold = { key: String ->
+            if (importPreview != null) {
+                importPreview.toggleFold(pageFileName = song.fileName, key = key)
+            } else {
+                viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = key)
+            }
+        }
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
         val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
@@ -207,7 +219,7 @@ internal fun SongPages(
                 isTunerSheetShown = isTunerSheetShown,
                 isMetronomePanelShown = isMetronomePanelShown,
                 isBeatFlashEnabled = isBeatFlashEnabled,
-            ),
+            ).takeIf { importPreview == null },
             shouldShowChords = shouldShowChords,
             shouldShowCapo = !playsWithoutCapo,
             shouldShowTempo = isMetronomeEnabled,
@@ -222,7 +234,7 @@ internal fun SongPages(
             // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
             // setlist has the band play it.
             foldedSections = foldedSections,
-            onFoldToggled = { key -> viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = key) },
+            onFoldToggled = toggleFold,
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
             contentPadding = pageContentPadding,
@@ -231,10 +243,10 @@ internal fun SongPages(
             onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly, isChordSectionFolded) {
+            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly, isChordSectionFolded, importPreview != null) {
                 chordDiagrams?.copy(
                     isFolded = isChordSectionFolded,
-                    onFoldToggled = { viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = CHORDS_FOLD_KEY) },
+                    onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
                     onChordClicked = if (isReadOnly) null else {
                         { chordName -> viewModel.dialogHost.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
                     },
@@ -245,11 +257,11 @@ internal fun SongPages(
             },
             tabs = tabs,
             showsDegrees = showsDegrees,
-            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo) {
+            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,
                     capo = shapeCapo,
-                    onFoldToggled = { viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = SCALES_FOLD_KEY) },
+                    onFoldToggled = { toggleFold(SCALES_FOLD_KEY) },
                 )
             },
         )

@@ -15,34 +15,37 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ImportOutcomeTest {
 
     @Test
-    fun `an import the user started is reviewed`() {
-        assertTrue(requestOf("a.cho", "b.cho", shouldOpenSong = false).isReviewed(areSongsEnabled = true))
+    fun `an import the user started is shown on the import screen while it is read`() {
+        assertTrue(requestOf("a.cho", "b.cho", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
     }
 
     @Test
-    fun `a single song file the system handed over is opened rather than reviewed`() {
-        assertFalse(requestOf("a.cho", shouldOpenSong = true).isReviewed(areSongsEnabled = true))
+    fun `a single song file is read behind no screen, wherever it came from`() {
+        assertFalse(requestOf("a.cho", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = true))
+        assertFalse(requestOf("a.cho", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
     }
 
     @Test
-    fun `an archive the system handed over is still reviewed`() {
-        assertTrue(requestOf("library.zip", shouldOpenSong = true).isReviewed(areSongsEnabled = true))
+    fun `an archive or a document is shown on the import screen while it is read`() {
+        assertTrue(requestOf("library.zip", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = true))
+        assertTrue(requestOf("sheet.pdf", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
     }
 
     @Test
-    fun `an import that asks for no review is not reviewed`() {
-        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReviewed(areSongsEnabled = true))
+    fun `an import that asks for no review is not shown while it is read`() {
+        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReportedWhileRead(areSongsEnabled = true))
     }
 
     @Test
-    fun `with the songs switched off a single song file the system handed over is reviewed, the demo library still not`() {
-        assertTrue(requestOf("a.cho", shouldOpenSong = true).isReviewed(areSongsEnabled = false))
-        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReviewed(areSongsEnabled = false))
+    fun `with the songs switched off a single song file is shown on the import screen, the demo library still not`() {
+        assertTrue(requestOf("a.cho", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = false))
+        assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReportedWhileRead(areSongsEnabled = false))
     }
 
     @Test
@@ -69,6 +72,30 @@ class ImportOutcomeTest {
 
         assertEquals(4, plan.entryCount)
     }
+
+    @Test
+    fun `a batch of one new song is previewed, a taken name included`() {
+        assertTrue(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW))).isPreviewed)
+        assertTrue(ImportPlan(songs = listOf(entry(ImportPlan.Status.CONFLICTING))).isPreviewed)
+        assertNull(ImportPlan(songs = listOf(entry(ImportPlan.Status.CONFLICTING))).librarySong)
+    }
+
+    @Test
+    fun `a batch of one song the library holds as it is is opened rather than previewed`() {
+        val plan = ImportPlan(songs = listOf(entry(ImportPlan.Status.IDENTICAL)))
+
+        assertFalse(plan.isPreviewed)
+        assertEquals(plan.songs.single(), plan.librarySong)
+    }
+
+    @Test
+    fun `a batch of one song with anything else in it is reviewed rather than previewed`() {
+        assertFalse(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW), entry(ImportPlan.Status.NEW))).isPreviewed)
+        assertFalse(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW)), skippedFileNames = listOf("a.txt")).isPreviewed)
+        assertNull(ImportPlan(songs = listOf(entry(ImportPlan.Status.IDENTICAL)), unreadableDocumentFileNames = listOf("b.pdf")).librarySong)
+    }
+
+    private fun entry(status: ImportPlan.Status) = ImportPlan.SongEntry(fileName = "a.cho", text = "{title: A}", status = status, sourceFileName = "a.cho")
 
     private fun requestOf(vararg names: String, shouldOpenSong: Boolean, shouldReview: Boolean = true) = ImportRequest(
         source = ImportSource.Files(names.map { ImportedFile(name = it, bytes = ByteArray(0)) }),

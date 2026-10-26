@@ -53,6 +53,8 @@ import org.jetbrains.compose.resources.painterResource
  *   recomposes the title alone.
  * @param metronomePanelState Created by the screen, whose pages read whether the panel is at rest, see
  *   SongDetailsPage's isViewportSettled.
+ * @param previewBanner Under the metronome panel, what says that the songs of a preview are not in the library yet,
+ *   see [ImportPreviewBanner].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +80,7 @@ internal fun SongDetailsAppBar(
     contentPadding: PaddingValues,
     coroutineScope: CoroutineScope,
     onBack: () -> Unit,
+    previewBanner: @Composable () -> Unit,
 ) {
     val songActions = rememberSongActionHandler(viewModel)
     val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
@@ -153,6 +156,7 @@ internal fun SongDetailsAppBar(
                 contentPadding = contentPadding,
                 visibleState = metronomePanelState,
             )
+            previewBanner()
         },
     )
 }
