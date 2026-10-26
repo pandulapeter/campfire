@@ -37,9 +37,9 @@ internal class PendingAuthorizationStoreImpl(
         }
 
     override suspend fun loadPendingAuthorization() = credentialsStore.load()?.pending?.let { pending ->
-        SyncProviderId.fromId(pending.providerId)?.let { providerId ->
+        pending.providerId.takeIf { it.isNotEmpty() }?.let { providerId ->
             PendingAuthorization(
-                providerId = providerId,
+                providerId = SyncProviderId(providerId),
                 state = pending.state,
                 verifier = pending.verifier,
                 redirectUri = pending.redirectUri.takeIf { it.isNotEmpty() },

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import kotlinx.coroutines.CancellationException
@@ -36,6 +37,13 @@ internal class SyncCredentialsStore(
     suspend fun load(): SyncCredentialsDocument? = mutex.withLock { read() }
 
     suspend fun save(document: SyncCredentialsDocument?) = mutex.withLock { write(document) }
+
+    /**
+     * The provider the stored tokens belong to, for `SyncProviders` to pick the connected one by. Every document that
+     * holds tokens has named its provider since sync first shipped; one that names none holds at most an authorization
+     * that was started, which belongs to no provider until its tokens arrive.
+     */
+    suspend fun storedProviderId() = load()?.providerId?.takeIf { it.isNotEmpty() }?.let(::SyncProviderId)
 
     /**
      * Reads, changes and (where anything changed) writes the document as one step. The whole update runs under the

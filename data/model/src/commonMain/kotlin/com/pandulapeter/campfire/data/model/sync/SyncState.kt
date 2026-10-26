@@ -9,12 +9,18 @@
  */
 package com.pandulapeter.campfire.data.model.sync
 
-/** The cloud services the library can be kept in step with. One is connected at a time, see `SyncRepository`. */
-enum class SyncProviderId(val id: String) {
-    DROPBOX("dropbox");
+/**
+ * A cloud service the library can be kept in step with, by the [id] its credentials are stored under, which is why
+ * that never changes. One is connected at a time, see `SyncRepository`.
+ *
+ * A class rather than an enum, so that a test can stand a second provider beside the one the build has.
+ */
+data class SyncProviderId(val id: String) {
+
+    override fun toString() = id
 
     companion object {
-        fun fromId(id: String) = entries.firstOrNull { it.id == id }
+        val DROPBOX = SyncProviderId("dropbox")
     }
 }
 

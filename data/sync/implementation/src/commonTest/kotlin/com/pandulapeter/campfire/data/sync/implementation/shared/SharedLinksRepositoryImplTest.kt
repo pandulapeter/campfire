@@ -835,7 +835,7 @@ class SharedLinksRepositoryImplTest {
     ): SharedLinksRepositoryImpl {
         val environment = testEnvironment()
         return SharedLinksRepositoryImpl(
-            syncProviders = SyncProviders(listOf(provider)),
+            syncProviders = SyncProviders(listOf(provider)) { provider.id },
             stateHolder = stateHolder,
             mirror = mirror,
             registry = registry,

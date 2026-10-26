@@ -46,7 +46,7 @@ import kotlin.time.ExperimentalTime
  */
 @Single
 internal class SharedLinksRepositoryImpl(
-    syncProviders: SyncProviders,
+    private val syncProviders: SyncProviders,
     private val stateHolder: SyncStateHolder,
     private val mirror: SharedLinksMirror,
     private val registry: SharedLinksRegistry,
@@ -54,8 +54,6 @@ internal class SharedLinksRepositoryImpl(
     private val journalApplier: SharedLinksJournalApplier,
     private val environment: SyncEnvironment,
 ) : SharedLinksRepository {
-
-    private val providers = syncProviders.all
 
     override val shares = combine(mirror.mirrored, journal.entries) { mirrored, pending -> pendingApplied(mirrored.document, pending).toShares() }
         .distinctUntilChanged()
@@ -247,7 +245,7 @@ internal class SharedLinksRepositoryImpl(
         is SyncState.ConnectionFailed -> environment.logger.recovering(
             describe = { "Could not tell whether credentials are stored: ${it::class.simpleName}" },
             fallback = { false },
-        ) { providers.firstOrNull { it.id == state.providerId }?.isConnected() == true }
+        ) { syncProviders.byId(state.providerId)?.isConnected() == true }
 
         else -> false
     }
@@ -356,7 +354,7 @@ internal class SharedLinksRepositoryImpl(
     /** The folder of the account on screen; an action never connects, or acts for an account that is failing. */
     private fun connectedFolder(): SyncFolder? {
         val account = (stateHolder.value as? SyncState.Connected)?.account ?: return null
-        return providers.firstOrNull { it.id == account.providerId }
+        return syncProviders.byId(account.providerId)
     }
 
     private suspend fun failureOf(action: String, block: suspend () -> SharingFailure?) = try {

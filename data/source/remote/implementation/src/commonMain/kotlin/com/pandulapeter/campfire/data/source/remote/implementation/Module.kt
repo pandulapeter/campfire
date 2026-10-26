@@ -35,7 +35,7 @@ object DataRemoteSourceModule {
 
     /**
      * A list rather than a single binding: adding a provider is adding one line here, and nothing above this module
-     * learns that there is more than one. Sync itself picks by SyncProviderId, see SyncRepository.
+     * learns that there is more than one. Sync itself picks the one the stored credentials name.
      *
      * A provider the build has no credentials for is left out entirely rather than offered and then failing: the
      * settings screen shows what is in this list, so an unconfigured build says so instead of inviting the user to
@@ -59,6 +59,7 @@ object DataRemoteSourceModule {
                 )
             }
         },
+        loadStoredProviderId = credentialsStore::storedProviderId,
     )
 
     /**

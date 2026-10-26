@@ -47,11 +47,15 @@ internal val TEST_COMPLETION_PAGE = AuthorizationCompletionPage(title = "", mess
 internal const val TEST_REDIRECT = "campfire://sync?code=c&state=state"
 
 /**
- * The repository wired the way `DataSyncModule` wires it, over one [provider] and the in-memory fakes, with every
- * launched job on the test's scheduler (see [testEnvironment]).
+ * The repository wired the way `DataSyncModule` wires it, over [provider] and the in-memory fakes, with every launched
+ * job on the test's scheduler (see [testEnvironment]). [otherProvider] stands beside it where a test needs a second
+ * provider, and [storedProviderId] is the provider the stored credentials name, [provider] unless the test says
+ * otherwise.
  */
 internal fun TestScope.syncRepository(
     provider: FakeSyncProvider,
+    otherProvider: FakeSyncProvider? = null,
+    storedProviderId: suspend () -> SyncProviderId? = { provider.id },
     authenticator: FakeSyncAuthenticator = FakeSyncAuthenticator(),
     pendingAuthorizationStore: FakePendingAuthorizationStore = FakePendingAuthorizationStore(),
     stateLocalSource: FakeSyncIndexLocalSource = FakeSyncIndexLocalSource(),
@@ -64,7 +68,7 @@ internal fun TestScope.syncRepository(
     sharedLinksLocalSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
 ): SyncRepositoryImpl {
     val environment = testEnvironment(logger = logger)
-    val syncProviders = SyncProviders(listOf(provider))
+    val syncProviders = SyncProviders(listOfNotNull(provider, otherProvider), storedProviderId)
     val stateHolder = SyncStateHolder(logger)
     val indexStore = SyncIndexStore(stateLocalSource, environment)
     val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)

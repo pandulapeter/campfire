@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizatio
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteAuthorizationResponse
@@ -61,7 +62,7 @@ import kotlin.concurrent.Volatile
  */
 @Single
 internal class SyncConnectionManager(
-    syncProviders: SyncProviders,
+    private val syncProviders: SyncProviders,
     private val authenticator: SyncAuthenticator,
     private val pendingAuthorizationStore: PendingAuthorizationStore,
     private val syncIndexLocalSource: SyncIndexLocalSource,
@@ -140,14 +141,18 @@ internal class SyncConnectionManager(
                 wasInterrupted = !connected.isSyncing && connected.lastOutcome == SyncOutcome.Interrupted,
             )
         }
+        var stored: SyncProvider? = null
         val connected = try {
-            providers.firstOrNull { it.isConnected() }
+            stored = syncProviders.stored()
+            stored?.takeIf { it.isConnected() }
         } catch (exception: LibraryStorageException) {
             // The credentials are there and could not be read right now. Shown as not connected, the user would
             // connect again and the new authorization would be written over tokens that still work; this says
-            // what happened, starts no run, and the next start - or the next attempt - reads them again.
+            // what happened, starts no run, and the next start - or the next attempt - reads them again. Whose they
+            // are is known only when that much could be read; otherwise they go to the first provider, which in a
+            // build with one is right anyway.
             environment.logger.log("Could not read the stored sync credentials: ${exception.message}")
-            stateHolder.update { SyncState.ConnectionFailed(providers.first().id, SyncFailureReason.STORAGE) }
+            stateHolder.update { SyncState.ConnectionFailed((stored ?: providers.first()).id, SyncFailureReason.STORAGE) }
             return disconnectedResult
         }
         if (connected == null) {
@@ -228,7 +233,7 @@ internal class SyncConnectionManager(
     }
 
     suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
-        val provider = providers.firstOrNull { it.id == providerId } ?: return false
+        val provider = syncProviders.byId(providerId) ?: return false
         // Asked before the pending authorization is written, so that the answer is about the credentials it started from.
         connectionBefore.remember(stateHolder.value, provider)
         // Connecting again from a stored connection (Connect again, for the permission to make links) must not leave a
@@ -303,13 +308,13 @@ internal class SyncConnectionManager(
         // onto an account the user just disconnected.
         scheduler.stopForConnectionChange()
         withContext(NonCancellable) {
-            val pendingRevocations = providers.mapNotNull { provider ->
-                // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
+            // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
+            val pendingRevocations = listOfNotNull(
                 environment.logger.recovering(
-                    describe = { "Could not disconnect from ${provider.id}: ${it.message}" },
+                    describe = { "Could not disconnect: ${it.message}" },
                     fallback = { null },
-                ) { if (provider.isConnected()) provider.disconnect() else null }
-            }
+                ) { syncProviders.connected()?.disconnect() },
+            )
             // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
             // folder's every file as a deletion the next time something connects. Under the run lock, because a run
             // that was stopped a moment ago is not in the scheduler's syncJob any more and may still be writing the index on its way
@@ -395,7 +400,7 @@ internal class SyncConnectionManager(
             return false
         }
         pendingAuthorizationStore.clearPendingAuthorization()
-        val provider = providers.firstOrNull { it.id == pending.providerId }
+        val provider = syncProviders.byId(pending.providerId)
         val parameters = redirectParameters(redirectUri)
         val code = parameters["code"]
         val state = parameters["state"]

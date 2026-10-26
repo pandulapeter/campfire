@@ -455,7 +455,7 @@ class SyncRemoteWatcherTest {
         val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
         val provider = FakeSyncProvider(files = remoteFiles, account = TEST_ACCOUNT, ignoresCase = ignoresCase)
-        val syncProviders = SyncProviders(listOf(provider))
+        val syncProviders = SyncProviders(listOf(provider)) { provider.id }
         val sharedLinks = FakeSharedLinksLocalSource()
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }

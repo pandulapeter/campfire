@@ -28,6 +28,8 @@ KDoc of `SyncFolder` and `SyncConnection`.
 - `download` returns the revision it actually fetched (`RemoteDocument`), which may be newer than the listing's.
 - `upload` takes the expected revision and returns `RemoteWriteResult.Conflict` rather than overwriting.
 - `contentHashOf` hashes in the service's own format, keeping service hashes out of the engine.
+- One provider's credentials are stored at a time, and they name it: `SyncProviders.stored` reads that name without
+  asking any provider, and only the provider named is asked whether it is connected or handed a run.
 - `disconnect` forgets the credentials at once and answers the revocation for the caller to run in the background;
   `forgetStoredCredentials` only drops local storage (no request).
 - `downloadDocument` / `uploadDocument`: folder-level documents by name (`preferences.json` and `shared-links.json`),

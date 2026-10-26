@@ -355,7 +355,7 @@ class SyncRunSchedulerTest {
         val connectivityMonitor = FakeConnectivityMonitor()
         val runs = RunCounter()
         val provider = FakeSyncProvider(files = files, onDownload = onDownload, account = TEST_ACCOUNT)
-        val syncProviders = SyncProviders(listOf(provider))
+        val syncProviders = SyncProviders(listOf(provider)) { provider.id }
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
         }

@@ -9,6 +9,10 @@
 -->
 # data/sync/connection
 
+- The connected provider is the one the stored credentials name (`SyncProviders.connected`), for restoring, runs, and
+  disconnecting alike, never the first provider that says it is connected; credentials naming a provider the build
+  lacks restore nothing. Unreadable credentials are reported against the provider they name when that much could be
+  read, else against the first.
 - `restore` is called once per view model; finding `Connected` it reads nothing (re-reading would make a running run
   look interrupted). It shows the stored account before asking the service, so a slow network never shows
   disconnected. Refused credentials are a `ConnectionFailed` (authorization), nothing deleted and no launch run;

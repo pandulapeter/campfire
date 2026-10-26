@@ -48,7 +48,8 @@ import kotlinx.coroutines.flow.first
  * file "elsewhere". [connected] says whether credentials are stored, and [onDisconnect] is the revocation a disconnect
  * answers once it has cleared them, which the caller runs in the background; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
  * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
- * what finishing an authorization does, which is where a test stores credentials and then gives up or fails.
+ * what finishing an authorization does, which is where a test stores credentials and then gives up or fails. [id] is
+ * Dropbox's unless a test stands a second provider beside it.
  * Every write and deletion goes into a feed of changes, read with [awaitChanges] and [changesSince] from the position a
  * listing's cursor names, and [writeElsewhere] and [deleteElsewhere] are another device's changes reaching the folder.
  */
@@ -60,6 +61,7 @@ internal class FakeSyncProvider(
     private val account: SyncAccount? = null,
     private val ignoresCase: Boolean = false,
     private val resolvesListedNames: Boolean = false,
+    override val id: SyncProviderId = SyncProviderId.DROPBOX,
 ) : SyncProvider {
 
     /** The provider's own map from a folded name to the spelling the folder holds, for [resolvesListedNames]. */
@@ -87,8 +89,6 @@ internal class FakeSyncProvider(
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
-
-    override val id = SyncProviderId.DROPBOX
 
     /** Runs before every question about the stored credentials, which is where a test makes reading them fail. */
     var onIsConnected: suspend () -> Unit = {}

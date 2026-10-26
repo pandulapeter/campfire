@@ -53,7 +53,7 @@ import kotlin.time.TimeMark
  */
 @Single
 internal class SyncRunner(
-    syncProviders: SyncProviders,
+    private val syncProviders: SyncProviders,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
     private val sharedCopySync: SharedCopySync,
@@ -62,8 +62,6 @@ internal class SyncRunner(
     private val stateHolder: SyncStateHolder,
     private val environment: SyncEnvironment,
 ) {
-
-    private val providers = syncProviders.all
 
     /** Nothing launched here may close the app, see [SyncEnvironment.scopeFor]. */
     private val scope = environment.scopeFor("sync")
@@ -102,7 +100,7 @@ internal class SyncRunner(
         // Two runs at once are prevented by syncJob in startRun().
         mutex.withLock {
             val provider = try {
-                providers.firstOrNull { it.isConnected() }
+                syncProviders.connected()
             } catch (exception: LibraryStorageException) {
                 // Outside the run's own try below, so a failure here would reach the scope's handler with nothing on
                 // screen. A successful read is cached, but a failed credentials write clears it for the next one.

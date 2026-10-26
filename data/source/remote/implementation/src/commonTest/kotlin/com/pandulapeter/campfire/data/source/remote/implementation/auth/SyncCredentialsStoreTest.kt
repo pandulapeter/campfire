@@ -133,6 +133,21 @@ class SyncCredentialsStoreTest {
         assertEquals("refresh", store.load()?.refreshToken)
     }
 
+    @Test
+    fun `the stored tokens name their provider`() = runTest {
+        val store = SyncCredentialsStore(StoredSyncCredentials(CONNECTED), Logger.Standard)
+
+        assertEquals(SyncProviderId.DROPBOX, store.storedProviderId())
+    }
+
+    @Test
+    fun `an authorization that was only started names no provider`() = runTest {
+        val store = SyncCredentialsStore(StoredSyncCredentials(), Logger.Standard)
+        PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
+
+        assertNull(store.storedProviderId())
+    }
+
     private companion object {
         val CONNECTED = connectedCredentials()
 
