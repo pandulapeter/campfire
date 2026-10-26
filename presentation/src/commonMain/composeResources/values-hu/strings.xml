@@ -168,6 +168,8 @@
     <string name="import_preview_name_taken">Ezen a néven már van egy másik dal a könyvtáradban.</string>
     <string name="import_preview_shared_update">Ezt a megosztott dalt korábban már importáltad. A felülírással erre a változatra frissül.</string>
     <string name="import_preview_include">A dal importálása</string>
+    <string name="import_preview_choices">A dal importálási beállításai</string>
+    <string name="import_preview_name_taken_choice">A név foglalt: %1$s</string>
     <string name="import_preview_left_out">Kimarad az importálásból</string>
     <string name="import_preview_already_there">Már megvan a könyvtáradban, nincs mit importálni</string>
     <string name="import_preview_import">Importálás</string>

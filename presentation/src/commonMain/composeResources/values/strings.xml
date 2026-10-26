@@ -168,6 +168,8 @@
     <string name="import_preview_name_taken">A different song with this name is already in your library.</string>
     <string name="import_preview_shared_update">You imported this shared song before. Replace updates it to this version.</string>
     <string name="import_preview_include">Import this song</string>
+    <string name="import_preview_choices">Choices for this song</string>
+    <string name="import_preview_name_taken_choice">Name taken: %1$s</string>
     <string name="import_preview_left_out">Left out of the import</string>
     <string name="import_preview_already_there">Already in your library, nothing to import</string>
     <string name="import_preview_import">Import</string>

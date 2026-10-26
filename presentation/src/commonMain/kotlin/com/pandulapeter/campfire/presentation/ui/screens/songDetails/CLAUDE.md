@@ -43,6 +43,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   under it; the pages' bottom padding clears the card (pedal rule). **Import**, or for a taken name both **Import as a
   copy** and **Replace** (confirmed), Replace first for a shared link imported here before; side by side where they fit,
   stacked otherwise. Ctrl / Cmd + S presses the primary one unless it is Replace.
+- **In a short window** (`SHORT_WINDOW_HEIGHT`) the card is one line and its buttons; over the review the page's tick
+  and Keep both / Replace are in a dropdown behind its choices button (`ImportPreviewChoicesMenu`), and the line names
+  them.
 - **One song** (`ImportPreview.singleSong`) stands in for the import screen. Once written, it waits for the text and
   the lookup, then is rewritten in place into the song's screen (`ImportReportState.followImportedSong`, same `id`; the
   pager keeps the page by `rememberPageKeys`), with `Message.PreviewedSongImported`. A failed write puts it back.

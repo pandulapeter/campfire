@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,10 +43,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
@@ -60,8 +63,10 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_already_t
 import com.pandulapeter.campfire.presentation.resources.import_preview_include
 import com.pandulapeter.campfire.presentation.resources.import_preview_left_out
 import com.pandulapeter.campfire.presentation.resources.import_preview_name_taken
+import com.pandulapeter.campfire.presentation.resources.import_preview_name_taken_choice
 import com.pandulapeter.campfire.presentation.resources.import_preview_shared_update
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPageChoice
@@ -75,7 +80,8 @@ import kotlin.math.max
  * over the review the page's own choices (the same ones its row in the review offers), and the buttons that import.
  * The buttons sit at the card's end beside the message where the message keeps a readable width, and under it, still at
  * the end, where it would not. It goes away, sliding down, once the preview of one song has been imported and the screen
- * is the song's own.
+ * is the song's own. In a short window ([SHORT_WINDOW_HEIGHT]) it is compact: one line and the buttons, over the review
+ * with the page's choices in [ImportPreviewChoicesMenu].
  *
  * @param importPreview Null once the screen is not a preview any more; the last one is drawn while the card leaves.
  * @param isAddingToReview Whether a batch is being read into the review, whose Import waits for it.
@@ -95,6 +101,9 @@ internal fun ImportPreviewBar(
 ) {
     val density = LocalDensity.current
     val last = rememberLast(importPreview)
+    // A short window leaves the song a slot a few lines tall above the full card, which gives most of it back as one line
+    // and its buttons, the page's choices going behind a button of their own.
+    val isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     AnimatedVisibility(
         modifier = modifier.onSizeChanged { onHeightChanged(with(density) { it.height.toDp() }) },
         visible = importPreview != null,
@@ -113,12 +122,26 @@ internal fun ImportPreviewBar(
                     .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 message = {
-                    PreviewMessage(
-                        importPreview = shown,
-                        currentPage = currentPage,
-                        onChosenChange = onChosenChange,
-                        onResolutionSelected = onResolutionSelected,
-                    )
+                    AnimatedContent(
+                        targetState = isCompact,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    ) { compact ->
+                        if (compact) {
+                            CompactPreviewMessage(
+                                importPreview = shown,
+                                currentPage = currentPage,
+                                onChosenChange = onChosenChange,
+                                onResolutionSelected = onResolutionSelected,
+                            )
+                        } else {
+                            PreviewMessage(
+                                importPreview = shown,
+                                currentPage = currentPage,
+                                onChosenChange = onChosenChange,
+                                onResolutionSelected = onResolutionSelected,
+                            )
+                        }
+                    }
                 },
                 buttons = {
                     ImportPreviewButtons(
@@ -163,15 +186,114 @@ private fun PreviewMessage(
 private fun MessageTitle() = Row(
     verticalAlignment = Alignment.CenterVertically,
 ) {
-    Icon(
-        modifier = Modifier.padding(end = 8.dp).size(20.dp),
-        painter = painterResource(Res.drawable.ic_import),
-        contentDescription = null,
-    )
+    PreviewIcon()
     Text(
         text = stringResource(Res.string.import_preview_title),
         style = MaterialTheme.typography.titleSmall,
     )
+}
+
+@Composable
+private fun PreviewIcon() = Icon(
+    modifier = Modifier.padding(end = 8.dp).size(20.dp),
+    painter = painterResource(Res.drawable.ic_import),
+    contentDescription = null,
+)
+
+/** The compact card's message: the icon, and the page's line with, over the review, the button of its choices. */
+@Composable
+private fun CompactPreviewMessage(
+    importPreview: ImportPreviewState,
+    currentPage: Int,
+    onChosenChange: (ImportEntryKey, Boolean) -> Unit,
+    onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    PreviewIcon()
+    // The choices button changes with the page too, so that its menu is bound to the page it was opened on.
+    AnimatedContent(
+        modifier = Modifier.weight(1f),
+        targetState = importPreview.pages.getOrNull(currentPage),
+        contentKey = { it?.index },
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+    ) { page ->
+        if (page != null) {
+            CompactPageChoice(
+                page = page,
+                importPreview = importPreview,
+                onChosenChange = onChosenChange,
+                onResolutionSelected = onResolutionSelected,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactPageChoice(
+    page: ImportPreviewPage,
+    importPreview: ImportPreviewState,
+    onChosenChange: (ImportEntryKey, Boolean) -> Unit,
+    onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    val choice = if (importPreview.preview.isReviewPager) importPreviewPageChoiceOf(page.entry, page.key, importPreview.review.choices) else null
+    Crossfade(
+        // Polite, so that a screen reader says what became of the song as its tick or its choice changes.
+        modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },
+        targetState = compactLineOf(page = page, importPreview = importPreview, choice = choice),
+    ) { line ->
+        Text(
+            text = line,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    when (choice) {
+        is ImportPreviewPageChoice.New -> ImportPreviewChoicesMenu(
+            isChosen = choice.isChosen,
+            resolution = null,
+            onChosenChange = { onChosenChange(page.key, it) },
+            onResolutionSelected = { onResolutionSelected(page.key, it) },
+        )
+
+        is ImportPreviewPageChoice.NameTaken -> ImportPreviewChoicesMenu(
+            isChosen = choice.isChosen,
+            resolution = choice.resolution,
+            onChosenChange = { onChosenChange(page.key, it) },
+            onResolutionSelected = { onResolutionSelected(page.key, it) },
+        )
+
+        ImportPreviewPageChoice.AlreadyInLibrary, null -> Unit
+    }
+}
+
+/**
+ * What the compact card's line says, as the full card's message line would: for the preview of one song its taken name
+ * where it has one, else the title; over the review, what the page's choice comes to, a taken name's choice named.
+ */
+@Composable
+private fun compactLineOf(page: ImportPreviewPage, importPreview: ImportPreviewState, choice: ImportPreviewPageChoice?) = when (choice) {
+    null -> stringResource(
+        when {
+            page.entry.status != ImportPlan.Status.CONFLICTING -> Res.string.import_preview_title
+            importPreview.review.sharedLinkUpdateCount > 0 -> Res.string.import_preview_shared_update
+            else -> Res.string.import_preview_name_taken
+        },
+    )
+
+    ImportPreviewPageChoice.AlreadyInLibrary -> stringResource(Res.string.import_preview_already_there)
+    is ImportPreviewPageChoice.New -> stringResource(if (choice.isChosen) Res.string.import_preview_title else Res.string.import_preview_left_out)
+    is ImportPreviewPageChoice.NameTaken -> if (choice.isChosen) {
+        stringResource(
+            Res.string.import_preview_name_taken_choice,
+            stringResource(if (choice.resolution == ImportConflictResolution.REPLACE) Res.string.import_conflicts_replace else Res.string.import_conflicts_keep_both),
+        )
+    } else {
+        stringResource(Res.string.import_preview_left_out)
+    }
 }
 
 /**
