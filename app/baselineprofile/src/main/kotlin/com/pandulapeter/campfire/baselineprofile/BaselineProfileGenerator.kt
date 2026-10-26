@@ -153,7 +153,13 @@ class BaselineProfileGenerator {
     /** A song action, shown in the bar where it is wide enough and otherwise behind the song's overflow button. */
     private fun MacrobenchmarkScope.songAction(label: String): UiObject2? = device.findObject(By.desc(label))
         ?: waitFor(By.desc("Song actions"))?.let { overflow ->
-            overflow.click()
+            // The song's bar is still recomposing just after the song opens, which can leave the button found a moment ago
+            // stale by the time it is clicked; it is then found again.
+            try {
+                overflow.click()
+            } catch (_: StaleObjectException) {
+                waitFor(By.desc("Song actions"))?.click()
+            }
             waitFor(By.text(label))
         }
 
