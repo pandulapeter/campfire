@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_display_settings
+import com.pandulapeter.campfire.presentation.resources.settings_preferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -41,7 +41,7 @@ internal fun SongDisplaySheet(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     CampfireBottomSheet(
-        title = stringResource(Res.string.song_details_display_settings),
+        title = stringResource(Res.string.settings_preferences),
         onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongDisplay) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()

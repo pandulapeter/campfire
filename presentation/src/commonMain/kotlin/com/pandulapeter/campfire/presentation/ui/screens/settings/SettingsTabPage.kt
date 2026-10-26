@@ -59,7 +59,7 @@ internal fun SettingsTabPage(
             SettingsTab.FEATURES -> FeaturesSections(viewModel = viewModel, userPreferences = userPreferences)
             SettingsTab.PREFERENCES -> {
                 // The lists lead, being the one section found nowhere else: the other two are also the song details
-                // screen's Display settings sheet.
+                // screen's Preferences sheet.
                 AnimatedVisibility(
                     visible = userPreferences?.areSongsEnabled != false,
                     enter = fadeIn() + expandVertically(),

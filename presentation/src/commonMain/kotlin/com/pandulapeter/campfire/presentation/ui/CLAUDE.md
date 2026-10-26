@@ -151,7 +151,7 @@ The view model facade, the composition root, and the product rules every screen 
 
 - **Settings → Features is what the app has** (a switch per tab, and the two that go online); **Settings → Preferences
   is how a song is read** (`ui/songDisplay`: chords, their diagrams and degrees, scale suggestions, numbered sections),
-  the latter also from the song details menu's Display settings. Read only is in General. Every switch is a
+  the latter also from the song details menu's Preferences. Read only is in General. Every switch is a
   `UserPreferences` field, never exported or synced, and **only hides**: nothing is written or deleted. Features:
   - **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song
     and editor screen, and paste (a dropped text too); disables the Setlists, Online song details, and Cover art rows.

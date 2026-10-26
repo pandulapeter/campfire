@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_info
 import com.pandulapeter.campfire.presentation.resources.ic_tune
-import com.pandulapeter.campfire.presentation.resources.song_details_display_settings
+import com.pandulapeter.campfire.presentation.resources.settings_preferences
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import org.jetbrains.compose.resources.painterResource
@@ -35,7 +35,7 @@ internal fun aboutSongAction(onClick: () -> Unit) = ActionsMenuItem(
 /** The song display sheet, never let out of the menu: it is changed now and then, not while a song is played. */
 @Composable
 internal fun songDisplayAction(onClick: () -> Unit) = ActionsMenuItem(
-    title = stringResource(Res.string.song_details_display_settings),
+    title = stringResource(Res.string.settings_preferences),
     icon = painterResource(Res.drawable.ic_tune),
     isAlwaysInMenu = true,
     onClick = onClick,

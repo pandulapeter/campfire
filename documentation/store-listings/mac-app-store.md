@@ -106,7 +106,7 @@ Network use is limited to features the user starts: optional sync with the user'
 
 New in 5.1.0, and where to find it:
 - Capo: a song's chords, key, and scales are now named as they sound. The Capo control at the top of a song keeps the pitch and redraws the diagrams as the shapes fingered above the capo. The Chords and Scales tabs have a capo picker after the instrument.
-- Chord degrees: each chord diagram at the top of a song names its degree in the song's key, such as V7 beside G7. The switch is in Settings → Preferences, and under Display settings in the song's three-dot menu.
+- Chord degrees: each chord diagram at the top of a song names its degree in the song's key, such as V7 beside G7. The switch is in Settings → Preferences, and under Preferences in the song's three-dot menu.
 - Bold, italic, and underline: the editor's Shortcuts row has a button for each, and Cmd + B, I, and U toggle them.
 - Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or dropping a file onto the window) opens a preview before anything is saved; in a review of several songs, clicking a song's row opens it.
 - ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept.

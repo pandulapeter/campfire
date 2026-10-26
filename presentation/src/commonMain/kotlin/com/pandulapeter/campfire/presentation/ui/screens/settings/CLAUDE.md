@@ -20,7 +20,7 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
   the songs are on (it fades out with them). Setup ("Set up Campfire again", the onboarding) follows.
 - **Preferences**: how a song is read, where Features is what the app has. Lists first, the one section found nowhere
   else; then how chords are written (they are in the Chords and Scales tabs too, so the rows are disabled only while
-  nothing names a chord) and Song page, both `ui/songDisplay`'s, shared with the song details screen's Display settings
+  nothing names a chord) and Song page, both `ui/songDisplay`'s, shared with the song details screen's Preferences
   sheet. Lists and Song page are about songs alone and leave with the Songs switch. No instrument row; the instrument is picked where it is used
   (`ui/instrument`). Accidentals stay enabled under a numbering notation (they still spell its key). Examples are
   written in the picked notation, never in the language.
