@@ -39,13 +39,20 @@ internal object AbcBars {
      * The tokens of each line of music in [body] (the lines after the tune header): field lines, comments, and
      * `%%begin…`/`%%end…` blocks are left out, and a line ending in a `\` is joined to the next line of music. Only the
      * first voice is read (`V:`, `[V:…]`): the others are accompaniment written under the same bars, which would
-     * otherwise read as rows of bars of their own.
+     * otherwise read as rows of bars of their own. Where the first voice has no chord symbol, the first voice that has
+     * one is read instead, since the chords are then written over it.
      */
     fun lines(body: List<String>): List<List<Token>> {
+        val voices = Voices(read = null)
+        val lines = lines(body, voices)
+        val chordVoice = voices.chordVoice
+        return if (chordVoice == null || lines.any { line -> line.any { it is Token.Chord } }) lines else lines(body, Voices(read = chordVoice))
+    }
+
+    private fun lines(body: List<String>, voices: Voices): List<List<Token>> {
         val lines = mutableListOf<List<Token>>()
         var pending = mutableListOf<Token>()
         var block: String? = null
-        val voices = Voices()
         for (line in body) {
             val openBlock = block
             if (openBlock != null) {
@@ -73,7 +80,8 @@ internal object AbcBars {
         var index = 0
         while (index < line.length) {
             val character = line[index]
-            val tokens = if (voices.isFirst) lineTokens else skipped.apply { clear() }
+            val isRead = voices.isRead
+            val tokens = if (isRead) lineTokens else skipped.apply { clear() }
             index = when {
                 character == '"' -> quoted(line, index, tokens)
                 character == '!' || character == '+' || character == '{' -> decorationEnd(line, index)
@@ -82,6 +90,7 @@ internal object AbcBars {
                 character in NOTE_LETTERS -> (index + 1).also { tokens += Token.Note }
                 else -> index + 1
             }
+            if (!isRead && skipped.any { it is Token.Chord }) voices.skippedChord()
         }
     }
 
@@ -150,19 +159,29 @@ internal object AbcBars {
         return index
     }
 
-    /** The voice the music is in, and the first one the tune names, the only one read. */
-    private class Voices {
+    /**
+     * The voice the music is in, and which one is read: [read], or where that is null the first one the tune names.
+     */
+    private class Voices(private val read: String?) {
         private var first: String? = null
         private var current: String? = null
 
+        /** The first voice not read that holds a chord symbol. */
+        var chordVoice: String? = null
+            private set
+
         /** Music before any voice is named is the first voice's, as the standard has it. */
-        val isFirst get() = current == null || current == first
+        val isRead get() = if (read == null) current == null || current == first else current == read
 
         /** Switches to the voice a `V:` value names by its first word, its clef and name following it. */
         fun switchTo(value: String) {
             val id = value.trim().takeWhile { !it.isWhitespace() }
             if (first == null) first = id
             current = id
+        }
+
+        fun skippedChord() {
+            if (chordVoice == null) chordVoice = current
         }
     }
 }

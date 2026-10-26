@@ -108,4 +108,9 @@ class AbcGridTest {
             gridOf("V:1\n\"G\"G2B2 d2B2|\"C\"c2e2 \"D\"d4|\nV:2 clef=bass\nG,,4 D,4|C,4 D,4|\n[V:1]\"G\"G4|\"D\"D4|\n[V:2]G,4|D,4|"),
         )
     }
+
+    @Test
+    fun `the chords of a later voice are read where the first voice has none`() {
+        assertEquals(listOf("| G | D |"), gridOf("V:1\nGABc|dedB|\nV:2\n\"G\"G,4|\"D\"D,4|"))
+    }
 }
