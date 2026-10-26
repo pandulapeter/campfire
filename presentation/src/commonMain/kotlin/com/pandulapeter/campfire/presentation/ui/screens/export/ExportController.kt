@@ -173,15 +173,13 @@ internal class ExportController(
             val song = songs[entry.songFileName] ?: dialog.songs.firstOrNull { it.fileName == entry.songFileName } ?: dialog.song
             val content = getSongContent(entry.songFileName)
             val playedTransposition = transpositions.value[entry.songFileName, setlistFileName]
-            // A setlist's tempo and capo are printed as its key is, being how the band plays it; the library's
-            // overrides are one reader's, like the folded sections, so a song exported from the library prints its
-            // file's own.
-            val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
+            // Tempo and capo are printed as the screen shows them, as the key is: the setlist's, else the reader's own,
+            // else the file's.
+            val tempo = effectiveTempoOf(entry.songFileName, setlistFileName).takeUnless { it.isDefault }?.bpm
             val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
-            val capo = setlistFileName?.let { effectiveCapo.takeUnless { capo -> capo.isDefault }?.fret }
+            val capo = effectiveCapo.takeUnless { it.isDefault }?.fret
             // The pages are in the chords that sound, as the screen is, the file's capo counted in; the diagrams are the
-            // shapes played above the capo the page prints (the setlist's, else the file's own), none on the keyboard,
-            // which prints no capo either.
+            // shapes played above the capo the page prints, none on the keyboard, which prints no capo either.
             val transposition = soundingTransposition(playedTransposition, effectiveCapo.songFret)
             val shapeCapo = if (playsWithoutCapo) 0 else capo ?: effectiveCapo.songFret
             // The scales and the degrees read the file's own capo, which says how its key is meant, as on the screen.

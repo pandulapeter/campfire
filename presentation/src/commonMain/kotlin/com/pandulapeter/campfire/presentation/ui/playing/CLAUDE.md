@@ -43,8 +43,8 @@ The values a song is played with and where each is kept.
 ## Where a capo lives
 
 - The tempo's twin in every way (`SongCapo.kt`): `Capos`, its own `PendingOverrides`, `effectiveCapo` (entry, override,
-  file's `{capo}`, none; within `Song.CAPO_RANGE`), `stepCapo`, `resetCapo`, and `withCapo` (the page's capo line and a
-  setlist's PDF). Stored in `Setlist.Entry.capo` and `UserPreferences.capos`, since one set plays a song capoed and the
+  file's `{capo}`, none; within `Song.CAPO_RANGE`), `stepCapo`, `resetCapo`, and `withCapo` (the page's capo line and the
+  PDF's). Stored in `Setlist.Entry.capo` and `UserPreferences.capos`, since one set plays a song capoed and the
   next in another key without.
 - **Zero is a value, not nothing**: a capo this setlist takes off a song whose file asks for one.
 - The Chords and Scales tabs have one capo of their own (`UserPreferences.toolCapo`, `ui/instrument`), read the same
