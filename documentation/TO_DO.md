@@ -8,12 +8,12 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Support (play this X times), right now it looks like it treats x4 as a lyric and throws it underneath: documentation/plans/repeat-marks.md
 - Document all keyboard shortcuts used in the app
 - Rename master branch to main
 - Comments in setlists (between songs)
 - If no key is specified, display the inferred key of the song, with a question mark
 - Reorganize settings, separate feature flags from preferences
-- Support (play this X times), right now it looks like it treats x4 as a lyric and throws it underneath
 - Simplify adding comments / annotations to songs
 - Editor multi-cursor support
 - Streaming zip writer on all platforms
