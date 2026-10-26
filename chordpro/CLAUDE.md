@@ -31,8 +31,8 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - **A directive is added after the last of its kind, else into the header in `metadataOrder`**
   (`ChordProHeaderLayout`); adding a line never reorders the others, only Prettify reorders the header. A body
   `{key}`/`{tempo}`/`{time}` is a mid-song change, never the header's.
-- **Delegated environments** (`abc`, `ly`, `svg`, `textblock`) are verbatim chordless lyrics: only their closing
-  `{end_of_…}` and a directive written with a colon are directives inside them.
+- **Delegated environments** (`abc`, `ly`, `svg`, `textblock`) are kept verbatim, with no chords, markup, or
+  definitions: only their closing `{end_of_…}` and a directive written with a colon are directives inside them.
 - **The model is immutable**, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
   collection mutated afterwards. It says what a thing is, never how it looks.
 - The caller supplies NFC normalization and tag folding; this module has none.
@@ -43,6 +43,8 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - **`SectionType` has no `Tab` or `Grid`**: those environments switch the kind of line inside whatever section runs, so
   a solo of chords over tablature is one section. A *run* of tab or grid lines is the unit everywhere (serializer,
   transposer, viewer).
+- **`abc`, `ly`, and `svg` lines are `ChordProLine.Verbatim`**, carrying their environment, which always opens a
+  section of its own (`SectionType.Custom`), so the run is the section; `textblock` is prose and stays `Lyrics`.
 - **Recalls are capped** (`ChorusRecall`): past an allowance proportional to the song, a recall draws as its heading,
   since every later step expands each recall and a tiny file could otherwise become millions of lines.
 - **The parser is total: it never throws or rejects** — the file is the user's and half of it may be under the caret.

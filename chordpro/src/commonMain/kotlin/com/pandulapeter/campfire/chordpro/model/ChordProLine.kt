@@ -88,6 +88,19 @@ public sealed interface ChordProLine {
         val label: String? = null,
     ) : ChordProLine
 
+    /**
+     * One line inside an environment ChordPro hands to another program (`{start_of_abc}`, `{start_of_ly}`,
+     * `{start_of_svg}`), kept exactly as written: that program's notation, which has no chords, markup, or definitions
+     * to this module however much of it looks like them (ABC's `"G"` and `[CEG]`). Such an environment is always a
+     * section of its own, so a run of these lines is the whole section. `{start_of_textblock}` is prose and gives
+     * [Lyrics] instead.
+     */
+    public data class Verbatim(
+        val text: String,
+        /** The environment the line was written in, lowercase: `abc`, `ly`, or `svg`. */
+        val environment: String,
+    ) : ChordProLine
+
     /** An empty line inside an environment. */
     public data object Blank : ChordProLine
 }

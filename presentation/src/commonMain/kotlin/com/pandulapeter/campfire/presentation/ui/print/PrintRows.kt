@@ -146,6 +146,7 @@ internal class PrintRows(
                 null -> run.flatMap { line ->
                     when (line) {
                         is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
+                        is ChordProLine.Verbatim -> lyricsRows(ChordProLine.Lyrics(line.text, chords = emptyList()), lineWidth)
                         ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
                         is ChordProLine.Tab, is ChordProLine.Grid -> emptyList()
                     }

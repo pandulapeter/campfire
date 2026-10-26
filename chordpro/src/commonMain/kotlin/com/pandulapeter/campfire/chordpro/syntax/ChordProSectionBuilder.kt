@@ -287,10 +287,28 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel, selector = lineModeSelector)
                 .also { hasTabLine = true }
             LineMode.GRID -> ChordProLine.Grid(ChordProTokens.parseGridTokens(trimmedLine), label = lineModeLabel)
-            LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
+            LineMode.VERBATIM -> verbatimLine(rawLine)
             null -> ChordProParser.parseLyrics(rawLine)
         }
         hasContentLine = true
+    }
+
+    /**
+     * A line of a delegated environment. The environment always opens a section of its own, named after it, so the
+     * section's type says which one is open, through every cut [addBlock] makes. A text block is prose, the others
+     * another program's notation.
+     */
+    private fun verbatimLine(rawLine: String): ChordProLine {
+        val environment = (type as? SectionType.Custom)?.name
+        return if (environment == null || environment == TEXTBLOCK) {
+            ChordProLine.Lyrics(text = rawLine, chords = emptyList())
+        } else {
+            ChordProLine.Verbatim(text = rawLine, environment = environment)
+        }
+    }
+
+    private companion object {
+        const val TEXTBLOCK = "textblock"
     }
 }
 

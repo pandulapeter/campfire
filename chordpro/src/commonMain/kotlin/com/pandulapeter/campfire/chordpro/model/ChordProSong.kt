@@ -31,7 +31,7 @@ public data class ChordProSong(
                     is ChordProLine.Lyrics -> line.chords.any { !it.isAnnotation }
                     is ChordProLine.Grid -> line.tokens.any { it is GridToken.Chord }
                     is ChordProLine.Tab -> ChordProTokens.isStaffLine(line.text) || ChordProTabTransposer.chordNames(listOf(line.text)).isNotEmpty()
-                    ChordProLine.Blank -> false
+                    is ChordProLine.Verbatim, ChordProLine.Blank -> false
                 }
             }
         }

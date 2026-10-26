@@ -89,7 +89,7 @@ internal object SongParts {
         is ChordProLine.Lyrics -> chords.filter { !it.isAnnotation }.map { it.name }
         is ChordProLine.Grid -> tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
         is ChordProLine.Tab -> ChordProTabTransposer.chordNames(listOf(text))
-        ChordProLine.Blank -> emptyList()
+        is ChordProLine.Verbatim, ChordProLine.Blank -> emptyList()
     }
 
     /**

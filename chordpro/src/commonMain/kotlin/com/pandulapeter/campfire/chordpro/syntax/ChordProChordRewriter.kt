@@ -335,7 +335,7 @@ internal object ChordProChordRewriter {
 
         is ChordProLine.Tab -> line.copy(label = line.label?.let { rewriteLyricsLineChords(it, rename) })
 
-        ChordProLine.Blank -> line
+        is ChordProLine.Verbatim, ChordProLine.Blank -> line
     }
 
     /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */

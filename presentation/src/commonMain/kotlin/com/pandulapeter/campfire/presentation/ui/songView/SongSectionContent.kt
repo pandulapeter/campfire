@@ -217,6 +217,13 @@ internal fun SongSectionContent(
                         )
                     }
 
+                    is ChordProLine.Verbatim -> Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = line.text,
+                        style = lyricsStyle,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+
                     // Never reached: tablature and grid lines are always part of a run of their own.
                     is ChordProLine.Tab, is ChordProLine.Grid -> Unit
 

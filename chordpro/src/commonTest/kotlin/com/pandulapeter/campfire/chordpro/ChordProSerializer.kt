@@ -232,7 +232,7 @@ object ChordProSerializer {
         get() = when (this) {
             is ChordProLine.Tab -> label
             is ChordProLine.Grid -> label
-            is ChordProLine.Lyrics, ChordProLine.Blank -> null
+            is ChordProLine.Lyrics, is ChordProLine.Verbatim, ChordProLine.Blank -> null
         }
 
     private fun environmentName(type: SectionType) = when (type) {
@@ -246,6 +246,8 @@ object ChordProSerializer {
     private fun serializeLine(line: ChordProLine) = when (line) {
         is ChordProLine.Lyrics -> serializeLyrics(line)
         is ChordProLine.Tab -> line.text
+        // Its section is the delegated environment, which is written around it already.
+        is ChordProLine.Verbatim -> line.text
         is ChordProLine.Grid -> line.tokens.joinToString(" ") { serializeGridToken(it) }
         ChordProLine.Blank -> ""
     }

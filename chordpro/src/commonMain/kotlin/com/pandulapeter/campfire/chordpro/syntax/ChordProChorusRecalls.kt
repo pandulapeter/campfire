@@ -82,6 +82,7 @@ internal object ChordProChorusRecalls {
     private fun ChordProLine.recallWeight(): Int = RECALL_PIECE_WEIGHT + when (this) {
         is ChordProLine.Lyrics -> text.length + chords.sumOf { it.name.length }
         is ChordProLine.Tab -> text.length
+        is ChordProLine.Verbatim -> text.length
         is ChordProLine.Grid -> tokens.size
         ChordProLine.Blank -> 0
     }

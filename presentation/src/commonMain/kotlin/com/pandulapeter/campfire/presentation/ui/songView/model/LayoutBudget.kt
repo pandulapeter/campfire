@@ -99,6 +99,7 @@ internal object LayoutBudget {
     private fun ChordProLine.characterCount(): Int = when (this) {
         is ChordProLine.Lyrics -> text.length + chords.sumOf { it.name.length }
         is ChordProLine.Tab -> text.length
+        is ChordProLine.Verbatim -> text.length
         is ChordProLine.Grid -> tokens.sumOf { token ->
             when (token) {
                 is GridToken.Bar -> token.text.length

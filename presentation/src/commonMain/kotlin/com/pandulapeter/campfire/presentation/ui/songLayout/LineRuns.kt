@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 internal fun ChordProLine.foldableKind() = when (this) {
     is ChordProLine.Tab -> FoldableKind.TAB
     is ChordProLine.Grid -> FoldableKind.GRID
-    is ChordProLine.Lyrics, ChordProLine.Blank -> null
+    is ChordProLine.Lyrics, is ChordProLine.Verbatim, ChordProLine.Blank -> null
 }
 
 /**
@@ -41,7 +41,7 @@ internal val ChordProLine.environmentLabel
     get() = when (this) {
         is ChordProLine.Tab -> label
         is ChordProLine.Grid -> label
-        is ChordProLine.Lyrics, ChordProLine.Blank -> null
+        is ChordProLine.Lyrics, is ChordProLine.Verbatim, ChordProLine.Blank -> null
     }
 
 /**

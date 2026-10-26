@@ -241,5 +241,6 @@ internal fun ChordProLine.isBlank() = when (this) {
     ChordProLine.Blank -> true
     is ChordProLine.Lyrics -> text.isBlank() && chords.isEmpty()
     is ChordProLine.Tab -> text.isBlank()
+    is ChordProLine.Verbatim -> text.isBlank()
     is ChordProLine.Grid -> tokens.isEmpty()
 }

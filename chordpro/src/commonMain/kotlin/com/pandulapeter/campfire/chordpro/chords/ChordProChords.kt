@@ -199,7 +199,7 @@ public object ChordProChords {
         is ChordProLine.Lyrics -> chords.filter { !it.isAnnotation }.map { it.name }
         is ChordProLine.Grid -> tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
         is ChordProLine.Tab -> ChordProTabTransposer.chordNames(listOf(text))
-        ChordProLine.Blank -> emptyList()
+        is ChordProLine.Verbatim, ChordProLine.Blank -> emptyList()
     }
 
     /** The pitch class of a note as written: a capital or lowercase letter, `H` as `B`, and an accidental or none. */

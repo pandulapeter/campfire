@@ -674,7 +674,7 @@ class ChordProParserTest {
         val section = ChordProParser.parse("{start_of_ly}\n\\relative c' {\n{ c d e }\n#(set-global-staff-size 20)\n}\n{end_of_ly}").blocks.single() as ChordProBlock.Section
 
         assertEquals(
-            listOf("\\relative c' {", "{ c d e }", "#(set-global-staff-size 20)", "}").map { ChordProLine.Lyrics(it, emptyList()) },
+            listOf("\\relative c' {", "{ c d e }", "#(set-global-staff-size 20)", "}").map { ChordProLine.Verbatim(it, environment = "ly") },
             section.lines,
         )
     }
@@ -1251,10 +1251,39 @@ class ChordProParserTest {
         val section = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}").blocks.single() as ChordProBlock.Section
 
         assertEquals(SectionType.Custom("abc"), section.type)
-        assertEquals(listOf(ChordProLine.Lyrics("X:1", emptyList()), ChordProLine.Lyrics("[CEG]2 [A2B] |", emptyList())), section.lines)
+        assertEquals(listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("[CEG]2 [A2B] |", "abc")), section.lines)
         assertFalse(ChordProParser.summarize("{start_of_ly}\n[c e g]\n{end_of_ly}").hasChords)
         val textBlock = ChordProParser.parse("{start_of_textblock}\nfirst\n{comment: Chorus}\nsecond\n{end_of_textblock}").blocks
         assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN, CommentPlacement.IN_SECTION), textBlock[1])
+    }
+
+    @Test
+    fun `the lines of a LilyPond or an SVG block are verbatim lines of their environment`() {
+        val ly = ChordProParser.parse("{start_of_ly: Melody}\n\\relative c' { c4 d e }\n\n<<\n{end_of_ly}").blocks.single() as ChordProBlock.Section
+        val svg = ChordProParser.parse("{START_OF_SVG}\n<svg width=\"10\">\n</svg>\n{end_of_svg}").blocks.single() as ChordProBlock.Section
+
+        assertEquals("Melody", ly.label)
+        assertEquals(
+            listOf(ChordProLine.Verbatim("\\relative c' { c4 d e }", "ly"), ChordProLine.Blank, ChordProLine.Verbatim("<<", "ly")),
+            ly.lines,
+        )
+        assertEquals(listOf(ChordProLine.Verbatim("<svg width=\"10\">", "svg"), ChordProLine.Verbatim("</svg>", "svg")), svg.lines)
+    }
+
+    @Test
+    fun `the lines of a text block stay chordless lyrics`() {
+        val section = ChordProParser.parse("{start_of_textblock}\n[C]first\n<b>second</b>\n{end_of_textblock}").blocks.single() as ChordProBlock.Section
+
+        assertEquals(SectionType.Custom("textblock"), section.type)
+        assertEquals(listOf(ChordProLine.Lyrics("[C]first", emptyList()), ChordProLine.Lyrics("<b>second</b>", emptyList())), section.lines)
+    }
+
+    @Test
+    fun `an abc block cut by a comment keeps its lines verbatim on both sides`() {
+        val blocks = ChordProParser.parse("{start_of_abc}\nX:1\n{comment: Second part}\n|:GABc:|\n{end_of_abc}").blocks
+
+        assertEquals(listOf(ChordProLine.Verbatim("X:1", "abc")), (blocks[0] as ChordProBlock.Section).lines)
+        assertEquals(listOf(ChordProLine.Verbatim("|:GABc:|", "abc")), (blocks[2] as ChordProBlock.Section).lines)
     }
 
     @Test
