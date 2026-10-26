@@ -97,7 +97,7 @@ internal fun SongDetailsAppBar(
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
-        tunerAction(onClick = viewModel::openTunerSheet)
+        tunerAction(isAlwaysInMenu = isReadOnly, onClick = viewModel::openTunerSheet)
     } else {
         null
     }

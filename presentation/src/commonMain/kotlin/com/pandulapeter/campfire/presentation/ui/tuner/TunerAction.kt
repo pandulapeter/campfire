@@ -20,11 +20,15 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The song details screen's way to the tuner sheet as an entry of its menu, for a song with no first section to hold the
  * [TunerButton]: with both the chords and the metronome switched off there is nothing played left to put it next to.
+ *
+ * @param isAlwaysInMenu Read only mode's, whose bar leaves the title room only for the text size and the overflow
+ *   button (`showsFontScaleInPerformanceBar`), so a tuner button let out beside them would squeeze the title.
  */
 @Composable
-internal fun tunerAction(onClick: () -> Unit) = ActionsMenuItem(
+internal fun tunerAction(isAlwaysInMenu: Boolean, onClick: () -> Unit) = ActionsMenuItem(
     title = stringResource(Res.string.tuner),
     icon = painterResource(Res.drawable.ic_tuner),
+    isAlwaysInMenu = isAlwaysInMenu,
     key = TUNER_ACTION_KEY,
     onClick = onClick,
 )
