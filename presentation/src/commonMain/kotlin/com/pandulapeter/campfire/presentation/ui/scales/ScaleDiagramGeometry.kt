@@ -115,14 +115,21 @@ internal fun scaleDiagramGeometryOf(
 /**
  * How far the note at [fret] of a string starting at [start] is drawn as ringing open, from 0 (a stopped note's dot) to 1
  * (an open string's ring), under a capo on [capo], which is between two frets while it slides: the string's own open
- * note always, and under a capo the note at its fret, which the capo stops for the hand, so that the strings ringing at
- * the capo read as they do at the nut. A note passes from one to the other as the capo slides over its fret.
+ * note with no capo, and under a capo the note at its fret, which the capo stops for the hand, so that the strings ringing
+ * at the capo read as they do at the nut. A string starting up the neck, the banjo's drone, is spiked the capo's frets
+ * above its start, as a player capos it and as the chord diagrams draw it. A note passes from one to the other as the
+ * capo slides over its fret.
  */
 internal fun scaleNoteOpenness(fret: Int, start: Int, capo: Float): Float = when {
-    fret == start -> 1f
-    capo <= 0f || fret < start -> 0f
+    start > 0 -> (1f - abs(start + capo - fret)).coerceIn(0f, 1f)
+    fret == 0 -> 1f
+    capo <= 0f -> 0f
     else -> (1f - abs(capo - fret)).coerceIn(0f, 1f)
 }
+
+/** The rows whose string runs from the nut, which a capo lies across: every row but the banjo's drone. */
+internal val ScaleDiagramGeometry.Fretboard.nutRows: List<Int>
+    get() = stringStarts.indices.filter { row -> stringStarts[row] == 0 }
 
 /**
  * The frets every neck is drawn with: an octave, so every note of a scale is on every string at least once, and the

@@ -78,7 +78,7 @@ internal fun ScaleDiagram(
                 when (geometry) {
                     is ScaleDiagramGeometry.Fretboard -> {
                         drawFretboard(geometry, capo, labels, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, fontFamily)
-                        drawBelowCapo(geometry, capo)
+                        drawBelowCapo(geometry, capo, labels != null)
                     }
                     is ScaleDiagramGeometry.Keyboard -> drawChordDiagram(
                         geometry = geometry.keyboard,
@@ -100,9 +100,11 @@ internal fun ScaleDiagram(
  * the strings across them a little thicker the lower they sound, and faint inlays behind them. A note is a filled dot,
  * an open string's a ring, so that what is played without a finger reads apart. Under a [capo] (where it is while it
  * slides) a muted bar lies across the strings at its fret, and the notes it stops are rings on it, as the open notes
- * are at the nut ([scaleNoteOpenness]), each ring hiding the bar and the string inside it as the open ones stand clear. The labels are measured once per text and
- * size rather than once per dot, since a label of a scale is on every string, and share the size at which the widest of
- * them fits its dot.
+ * are at the nut ([scaleNoteOpenness]), each ring hiding the bar and the string inside it as the open ones stand clear.
+ * The bar lies across the strings from the nut only ([nutRows]): the banjo's drone is spiked the capo's frets above its
+ * fifth fret instead, ringing there as the chord rows play it. The labels are measured once per text and size rather
+ * than once per dot, since a label of a scale is on every string, and share the size at which the widest of them fits
+ * its dot.
  */
 private fun DrawScope.drawFretboard(
     geometry: ScaleDiagramGeometry.Fretboard,
@@ -116,9 +118,7 @@ private fun DrawScope.drawFretboard(
     fontFamily: FontFamily?,
 ) {
     val fretGap = size.width / (geometry.fretCount + OPEN_COLUMN)
-    // The fret numbers are sized from the frets rather than from the height, so that they are as legible on a four
-    // string neck as on an eight string one, and the band they stand in is no taller than they are.
-    val numbersBand = if (labels == null) 0f else fretGap * NUMBERS_BAND
+    val numbersBand = numbersBandOf(fretGap, labels != null)
     val rowGap = (size.height - numbersBand) / geometry.strings
     val nut = fretGap * OPEN_COLUMN
     val thin = (min(rowGap, fretGap) * LINE_WIDTH).coerceAtLeast(1f)
@@ -160,14 +160,16 @@ private fun DrawScope.drawFretboard(
             strokeWidth = thin * (1f + geometry.stringWeights[row] * STRING_WEIGHT),
         )
     }
-    if (capo > 0f) {
+    val nutRows = geometry.nutRows
+    if (capo > 0f && nutRows.isNotEmpty()) {
         // On the capo's fret, where its notes are drawn, coming in from the open notes' column as it first goes on.
         val capoX = if (capo <= 1f) lerp(center(0), center(1), capo) else fretLine(0) + (capo - 0.5f) * fretGap
         val width = radius * CAPO_WIDTH
+        val barTop = y(nutRows.first())
         drawRoundRect(
             color = mutedColor.copy(alpha = mutedColor.alpha * capo.coerceAtMost(1f)),
-            topLeft = Offset(capoX - width / 2f, top - radius),
-            size = Size(width, bottom - top + radius * 2),
+            topLeft = Offset(capoX - width / 2f, barTop - radius),
+            size = Size(width, y(nutRows.last()) - barTop + radius * 2),
             cornerRadius = CornerRadius(width / 2f, width / 2f),
         )
     }
@@ -214,15 +216,36 @@ private fun DrawScope.drawFretboard(
 /**
  * The frets below [capo], which may be between two while it moves, faded out of the diagram, their numbers too: the
  * column of open notes for a capo on the first fret, and every fret up to the one under the capo further up, whose notes
- * are the strings ringing at the capo and stay clear.
+ * are the strings ringing at the capo and stay clear. A string starting up the neck, the banjo's drone, is veiled along
+ * its own row from its first fret up to its spike, the capo's frets above it.
  */
-private fun DrawScope.drawBelowCapo(geometry: ScaleDiagramGeometry.Fretboard, capo: Float) {
+private fun DrawScope.drawBelowCapo(geometry: ScaleDiagramGeometry.Fretboard, capo: Float, hasLabels: Boolean) {
     if (capo <= 0f) return
     val fretGap = size.width / (geometry.fretCount + OPEN_COLUMN)
     val nut = fretGap * OPEN_COLUMN
     val end = if (capo <= 1f) nut * capo else nut + (capo - 1f) * fretGap
     drawRect(Color.Black.copy(alpha = BELOW_CAPO_VEIL), size = Size(end, size.height), blendMode = BlendMode.DstOut)
+    val rowGap = (size.height - numbersBandOf(fretGap, hasLabels)) / geometry.strings
+    geometry.stringStarts.forEachIndexed { row, start ->
+        if (start == 0) return@forEachIndexed
+        // From the drone's first note's whole cell, but never over the veil above, which a second one would fade further
+        // than every other frozen fret; the row's band stays clear of the dots of the row above, each under half a row.
+        val left = maxOf(end, nut + (start - 1) * fretGap)
+        val right = nut + (start + capo - 1f).coerceAtMost(geometry.fretCount.toFloat()) * fretGap
+        if (right > left) drawRect(
+            color = Color.Black.copy(alpha = BELOW_CAPO_VEIL),
+            topLeft = Offset(left, row * rowGap),
+            size = Size(right - left, rowGap),
+            blendMode = BlendMode.DstOut,
+        )
+    }
 }
+
+/**
+ * How tall the band of fret numbers under the neck is: sized from the frets rather than from the height, so that they are
+ * as legible on a four string neck as on an eight string one, and the band they stand in is no taller than they are.
+ */
+private fun numbersBandOf(fretGap: Float, hasLabels: Boolean) = if (hasLabels) fretGap * NUMBERS_BAND else 0f
 
 /** How wide the column of open notes left of the nut is, in frets: room for a ring, and no more. */
 private const val OPEN_COLUMN = 0.62f

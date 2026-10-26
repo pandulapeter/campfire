@@ -37,9 +37,17 @@ class ScaleDiagramGeometryTest {
         assertEquals(1f, scaleNoteOpenness(fret = 2, start = 0, capo = 2f))
         assertEquals(0f, scaleNoteOpenness(fret = 3, start = 0, capo = 2f))
         assertEquals(0.5f, scaleNoteOpenness(fret = 3, start = 0, capo = 2.5f))
-        // The banjo's drone, starting at the fifth fret, rings open there whatever the capo below it, and has no fret under.
-        assertEquals(1f, scaleNoteOpenness(fret = 5, start = 5, capo = 2f))
-        assertEquals(0f, scaleNoteOpenness(fret = 4, start = 5, capo = 4f))
+        // The banjo's drone, starting at the fifth fret, is spiked the capo's frets above it and rings open there.
+        assertEquals(1f, scaleNoteOpenness(fret = 5, start = 5, capo = 0f))
+        assertEquals(1f, scaleNoteOpenness(fret = 7, start = 5, capo = 2f))
+        assertEquals(0f, scaleNoteOpenness(fret = 5, start = 5, capo = 2f))
+        assertEquals(0.5f, scaleNoteOpenness(fret = 6, start = 5, capo = 1.5f))
+    }
+
+    @Test
+    fun `a capo lies across every string from the nut, the banjo's drone left out`() {
+        assertEquals(listOf(0, 1, 2, 3), fretboard(InstrumentTuning.BANJO.strings, UserPreferences.Instrument.BANJO).nutRows)
+        assertEquals((0..5).toList(), fretboard(InstrumentTuning.GUITAR.strings).nutRows)
     }
 
     private fun fretboard(strings: List<Int>, instrument: UserPreferences.Instrument = UserPreferences.Instrument.GUITAR, root: Int = 0) =

@@ -18,7 +18,8 @@
   sounding one on the real neck, the frets below the capo veiled (`ScaleDiagramGeometry.Fretboard.capo`, sliding as it
   changes), the notes the capo stops drawn as rings on a muted bar at its fret as the open notes are at the nut
   (`scaleNoteOpenness`, turning between dot and ring as the capo slides), and the chord rows draw the shapes fingered above the capo; the Scales tab opens it with
-  the tabs' own capo (`scaleLibraryCapo`).
+  the tabs' own capo (`scaleLibraryCapo`). The bar lies across the strings from the nut only (`nutRows`): the banjo's
+  drone is spiked the capo's frets above its fifth fret, ringing there as the chord rows play it.
 - The neck's dots carry degrees or note names (`UserPreferences.areScaleNoteNamesShown`, kept on the device), flipped by one icon toggle
   in the header, showing the mode it is in; the keyboard carries none, and its header has no toggle. The title
   wraps to two lines (`titleMaxLines`), so a long scale's name is never cut short.
