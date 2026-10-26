@@ -18,7 +18,7 @@ builds what it draws, `grid/` places it.
 - Lyrics take their direction from content (`TextDirection.Content`), so chords of an RTL line hang leftwards.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
   (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary, so no chord is pulled
-  back over the one before.
+  back over the one before, and never before a chord row's mark (`x4`, `|`), which would lose what it repeats or ends.
 - A line's markup, and a comment's (stripped into `RenderSection.Comment.formatting`, after the transposition), is drawn
   as spans of its text (`formattedText`); padding under chords moves the ranges with the words and leaves the padding
   itself unformatted.

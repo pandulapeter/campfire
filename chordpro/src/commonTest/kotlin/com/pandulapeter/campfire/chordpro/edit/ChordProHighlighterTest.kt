@@ -165,6 +165,19 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the marks of a chord row are annotations, and the words of a sung line are not`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "[G]", TokenType.ANNOTATION to "|", TokenType.CHORD to "[C]", TokenType.ANNOTATION to "x4"),
+            spans("[G] | [C] x4"),
+        )
+        assertEquals(listOf(TokenType.CHORD to "[D]", TokenType.ANNOTATION to "x4"), spans("[D]x4"))
+        assertEquals(listOf(TokenType.CHORD to "[G]", TokenType.ANNOTATION to "x4"), spans("[G] <i>x4</i>"))
+        assertEquals(listOf(TokenType.CHORD to "[G]", TokenType.CHORD to "[C]"), spans("[G]Row [C]row x2"))
+        assertEquals(listOf(TokenType.CHORD to "[G]", TokenType.CHORD to "[C]"), spans("[G]x[C]4"))
+        assertEquals(emptyList(), spans("x4"))
+    }
+
+    @Test
     fun `an empty bracket is not a chord`() {
         assertEquals(listOf(TokenType.CHORD to "[Am]"), spans("[] [ ] [Am]"))
     }

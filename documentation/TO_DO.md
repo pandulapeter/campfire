@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Support (play this X times), right now it looks like it treats x4 as a lyric and throws it underneath: documentation/plans/repeat-marks.md
 - Document all keyboard shortcuts used in the app
 - Rename master branch to main
 - Comments in setlists (between songs)
@@ -22,4 +21,4 @@
 - AI skill for exposing direct access to the library folder
 - ABC notation (https://abcnotation.com/): documentation/plans/abc-notation.md
 - Google Drive integration (groundwork landed for v5.1.0; spikes S1–S5 next): documentation/plans/google-drive-sync.md
-- Consider organizing the sync directory in a more user-readable way (subfolders for artists) - make it optional
+- Consider organizing the sync directory in a more user-readable way (subfolders for artists), make it optional

@@ -162,7 +162,8 @@ internal class PrintRows(
     }
 
     private fun lyricsRows(line: ChordProLine.Lyrics, lineWidth: Float): List<Row> {
-        val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation) options.showComments else options.showChords })
+        // A chord row's repeat counts and bar lines are read with its chords, so they go with them rather than with the comments.
+        val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation && !it.isMark) options.showComments else options.showChords })
         // Hiding a chord-only line must also remove the empty lyric row beneath it.
         if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isPrintBlank()) return emptyList()
         // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded to a column at

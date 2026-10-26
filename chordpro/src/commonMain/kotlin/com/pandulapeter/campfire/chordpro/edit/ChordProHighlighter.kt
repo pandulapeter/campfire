@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
@@ -215,8 +216,16 @@ public object ChordProHighlighter {
             // brackets at all: its cells are chords as they are, and the transposition renames them.
             scanned.environment == GRID -> tokens += gridChordTokens(line, lineStart)
 
-            !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
-                bracket.token(lineStart)?.let { tokens += it }
+            // A chord row's repeat counts and bar lines are shown with its chords, as annotations; the lines of a tab
+            // that are not its staff are rows of chord names only to the transposition, never to the parser.
+            !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> {
+                val marks = if (scanned.environment == TAB) emptyList() else ChordProRowMarks.marksIn(line)
+                val brackets = ChordProDirectives.brackets(line).mapNotNull { it.token(lineStart) }
+                tokens += if (marks.isEmpty()) {
+                    brackets
+                } else {
+                    (brackets + marks.map { Token(TokenType.ANNOTATION, lineStart + it.first, lineStart + it.last + 1) }).sortedBy { it.start }
+                }
             }
         }
         return if (scanned.environmentAfter == before.environment && saidOnce === before.saidOnce && hasHeaderKey == before.hasHeaderKey) {

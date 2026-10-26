@@ -151,14 +151,17 @@ internal fun SongLineWithChords(
     )
 }
 
-/** The line with each chord written into it in brackets, where it sits: "[Am]There is a [C]house". */
+/**
+ * The line with each chord written into it in brackets, where it sits: "[Am]There is a [C]house". A chord row's mark is
+ * written as the file has it, over the blank it left in the text: "[G] [C] x4".
+ */
 private fun ChordProLine.Lyrics.withChordsInline() = buildString {
     var start = 0
     chords.sortedBy { it.position }.forEach { chord ->
         val position = chord.position.coerceIn(start, text.length)
         append(text, start, position)
-        append('[').append(chord.name).append(']')
-        start = position
+        if (chord.isMark) append(chord.name) else append('[').append(chord.name).append(']')
+        start = if (chord.isMark) minOf(position + chord.name.length, text.length) else position
     }
     append(text, start, text.length)
 }

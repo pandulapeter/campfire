@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -64,6 +66,20 @@ class ChordPaddingTest {
         assertEquals("a", padded.text.substring(padded.formatting[0].start, padded.formatting[0].end))
         assertTrue(padded.text.substring(padded.formatting[1].start, padded.formatting[1].end).endsWith("cd"))
         assertEquals('b', padded.text[padded.formatting[1].start])
+    }
+
+    @Test
+    fun `a chord row breaks before its chords and never before a mark`() {
+        val line = ChordProParser.parse("[C]   | [G] x4").blocks.filterIsInstance<ChordProBlock.Section>().single().lines.single() as ChordProLine.Lyrics
+        listOf(5f, 45f).forEach { chordWidth ->
+            val padded = line.padded(chordWidth = chordWidth)
+
+            padded.chords.zipWithNext().filter { (_, next) -> next.isMark }.forEach { (chord, mark) ->
+                val before = padded.text.substring(chord.position, mark.position)
+                assertFalse(before.any { it == ' ' || it == '\u200B' }, "$chordWidth: ${chord.name} ${mark.name}")
+            }
+            assertEquals('\u200B', padded.text[padded.chords.single { it.name == "G" }.position - 1])
+        }
     }
 
     @Test

@@ -23,7 +23,8 @@ import kotlin.math.ceil
  * word boundary. Without it a chord-only line would be one unbreakable run the layout can only break at an arbitrary
  * character, leaving the chord at the end of a row with no room for it; with it every chord starts whatever row it is
  * sent to. The inner spaces of a piece stay ordinary, so a long piece of lyrics under one chord still wraps between its
- * words.
+ * words. A mark ([ChordProLine.Lyrics.Chord.isMark]) is never a row's start: an `x4` or a bar line sent off on its own
+ * would no longer say what it repeats or ends, so the piece before one is never broken.
  */
 internal fun ChordProLine.Lyrics.padLyricsToFitChords(
     chordWidths: List<Float>,
@@ -40,7 +41,11 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
         val paddedChord = chord.copy(position = paddedLyrics.length)
         pieceStarts[index] = paddedLyrics.length
         val missingWidth = chordWidths[index] + gap - measureWidth(fragment)
-        if (missingWidth > 0 && paddingWidth > 0) {
+        val isBeforeMark = chords.getOrNull(index + 1)?.isMark == true
+        if (isBeforeMark) {
+            fragment.forEach { paddedLyrics.append(if (it.isWhitespace()) PADDING else it) }
+            if (missingWidth > 0 && paddingWidth > 0) repeat(ceil(missingWidth / paddingWidth).toInt()) { paddedLyrics.append(PADDING) }
+        } else if (missingWidth > 0 && paddingWidth > 0) {
             val innerStart = fragment.indexOfFirst { !it.isWhitespace() }.let { if (it < 0) fragment.length else it }
             val innerEnd = fragment.indexOfLast { !it.isWhitespace() } + 1
             repeat(innerStart) { paddedLyrics.append(PADDING) }
@@ -51,7 +56,7 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
             paddedLyrics.append(fragment)
         }
         val isWordBoundary = end == 0 || text.getOrNull(end - 1)?.isWhitespace() == true || text.getOrNull(end)?.isWhitespace() == true
-        if (index < chords.lastIndex && isWordBoundary) paddedLyrics.append(BREAK_OPPORTUNITY)
+        if (index < chords.lastIndex && isWordBoundary && !isBeforeMark) paddedLyrics.append(BREAK_OPPORTUNITY)
         paddedChord
     }
     return ChordProLine.Lyrics(

@@ -55,6 +55,9 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
   into `Lyrics.formatting`, chords moved with it; tags are read inside one line only, and any other angle bracket is
   lyrics. A comment keeps its markup in its text, since its chords are rewritten there after parsing: whoever draws
   it calls `ChordProMarkup.strip`. Delegated environments, tabs, grids, and other directives have no markup.
+- **A chord row's repeat counts and bar lines are marks** (`ChordProRowMarks`): annotations shown with the chords,
+  written back as their bare text, the text left blank where they stood; a sung line, and a line of a mark alone, keep
+  them as lyrics. A word is never one: `twice` is written `[*twice]`.
 - `ChordProSplitter` splits at `{new_song}` outside delegated environments. `comparable` (what an import compares
   against the file on disk) also folds line endings, notation, and directive spellings, which Prettify must not do.
   Both drop a BOM anywhere, or a `{title}` behind it would read as lyrics.

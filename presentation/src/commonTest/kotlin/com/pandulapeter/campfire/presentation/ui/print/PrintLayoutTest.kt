@@ -222,6 +222,17 @@ internal class PrintLayoutTest {
         assertFalse(text.any { it.contains("comment") || it.contains("Capo") || it.contains("Artist") || it == "D" || it.contains("e|") })
     }
 
+    @Test fun `a chord row's repeat mark prints on the chords' row and goes with the chords, not the comments`() = runTest {
+        fun entry(row: String) = song(ChordProParser.parse("$row\nSung words").blocks.filterIsInstance<ChordProBlock.Section>().single().lines)
+        val withoutComments = PrintSettings(showComments = false)
+        val marked = layout(source(entry("[G] [C] x4")), withoutComments).pages.single().texts
+        val plain = layout(source(entry("[G] [C]")), withoutComments).pages.single().texts
+
+        assertEquals(marked.single { it.text == "G" }.y, marked.single { it.text == "x4" }.y)
+        assertEquals(plain.single { it.text == "Sung words" }.y, marked.single { it.text == "Sung words" }.y)
+        assertFalse(layout(source(entry("[G] [C] x4")), PrintSettings(showChords = false)).pages.single().texts.any { it.text == "x4" })
+    }
+
     @Test fun `hidden instrumental chord lines do not reserve space`() = runTest {
         val instrumentalLines = (1..100).map {
             ChordProLine.Lyrics(if (it % 2 == 0) "    " else "", listOf(ChordProLine.Lyrics.Chord(0, "D", false)))

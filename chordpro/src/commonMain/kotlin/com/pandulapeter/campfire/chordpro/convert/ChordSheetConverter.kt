@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.chordpro.convert
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -223,7 +225,7 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordSheetHeadings.repeat.matches(value)
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
@@ -440,8 +442,15 @@ public object ChordSheetConverter {
         return parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
     }
 
+    /**
+     * A chord row with no lyric under it. Its playing note is written as an annotation, so that it stands on the row with
+     * the chords rather than as a lyric under them; one after a lyric line stays text, since the line has words already.
+     */
     private fun bracketed(row: List<Token>, annotation: String?) = row.joinToString(" ") { if (rowChord(it.text)) "[${rowChordName(it.text)}]" else it.text } +
-        annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
+        annotation?.let { note ->
+            val inner = note.removeSurrounding("(", ")").replace('[', '(').replace(']', ')').trim()
+            " " + if (inner.isEmpty()) ChordProLiteralText.escape(note) else "[$ANNOTATION_MARKER$inner]"
+        }.orEmpty()
 
     private fun hasUnambiguousChords(candidates: List<List<Token>?>) = candidates.any { it != null && it.count { word -> rowChord(word.text) } > 1 }
 

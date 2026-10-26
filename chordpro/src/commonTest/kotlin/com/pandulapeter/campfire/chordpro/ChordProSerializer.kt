@@ -255,8 +255,13 @@ object ChordProSerializer {
         line.chords.sortedBy { it.position }.forEach { chord ->
             val position = chord.position.coerceIn(consumedUntil, line.text.length)
             appendFormatted(line, consumedUntil, position)
-            append(if (chord.isAnnotation) "[*${chord.name}]" else "[${chord.name}]")
-            consumedUntil = position
+            when {
+                // A mark stands in the file as its bare text, over the blank the parser left of it in the text.
+                chord.isMark -> append(chord.name)
+                chord.isAnnotation -> append("[*${chord.name}]")
+                else -> append("[${chord.name}]")
+            }
+            consumedUntil = if (chord.isMark) minOf(position + chord.name.length, line.text.length) else position
         }
         appendFormatted(line, consumedUntil, line.text.length)
     }

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import kotlin.random.Random
@@ -533,8 +534,16 @@ class ChordSheetConverterTest {
         assertEquals("[G]I walked alone [D]until the dawn (let ring)\n", convert("G              D               (let ring)\nI walked alone until the dawn"))
         assertEquals("[G]Hello [D]world\n[Am]Hold on (hold)\n", convert("G     D\nHello world\nAm      (hold)\nHold on"))
         assertEquals("[G]One [D]two [Em]three [C]four (palm mute)\n", convert("G   D   Em    C     (palm mute)\nOne two three four"))
-        assertEquals("{comment: Outro}\n[Am] (hold)\n", convert("[Outro]\nAm (hold)"))
-        assertTrue(convert("Verse 1\nC     G\nHello world\n\nOutro\nG (fade out)").endsWith("{comment: Outro}\n[G] (fade out)\n"))
+        assertEquals("{comment: Outro}\n[Am] [*hold]\n", convert("[Outro]\nAm (hold)"))
+        assertTrue(convert("Verse 1\nC     G\nHello world\n\nOutro\nG (fade out)").endsWith("{comment: Outro}\n[G] [*fade out]\n"))
+    }
+
+    @Test
+    fun `the playing note of a chord row over nothing is an annotation on that row`() {
+        assertEquals("[G] [D] [*let ring]\n", convert("G   D   (let ring)"))
+        assertEquals("[G] [D] [*let (ring)]\n", convert("G   D   (let [ring])"))
+        val line = (ChordProParser.parse(convert("G   D   (let ring)")).blocks.single() as ChordProBlock.Section).lines.single() as ChordProLine.Lyrics
+        assertTrue(line.text.isBlank())
     }
 
     @Test

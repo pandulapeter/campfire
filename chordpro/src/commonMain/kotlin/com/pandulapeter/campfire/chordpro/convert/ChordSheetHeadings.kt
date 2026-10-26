@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks.repeatCount
+
 /**
  * The section headings chord and lyrics sites write, in the languages the app's users paste from. A heading is a whole
  * line: optionally wrapped in brackets or parentheses, optionally numbered before (`1. versszak`) or after (`Verse 1`,
@@ -23,9 +25,6 @@ internal object ChordSheetHeadings {
      * likely sung, which only the lines around it can decide.
      */
     data class Heading(val label: String, val type: String?, val isAmbiguous: Boolean)
-
-    /** One repeat mark, `x2`, `(2x)` or `×2`, as a token of a chord row and after a heading. */
-    val repeat = Regex("\\(?(?:[0-9]+[x\u00d7]|[x\u00d7][0-9]+)\\)?", RegexOption.IGNORE_CASE)
 
     fun parse(line: String): Heading? {
         var text = line.trim()
@@ -73,9 +72,9 @@ internal object ChordSheetHeadings {
     /** The longest word is tried first, so that "Instrumental break" is one word rather than "Instrumental" with a tail. */
     private val heading = Regex(
         "^(?:[0-9]+\\. *)?(" + (verse + chorus + bridge + untyped).sortedByDescending { it.length }.joinToString("|") { Regex.escape(it) } + ")" +
-            "(?: *[0-9]+(?: +de +[0-9]+)?)?(?: *(${repeat.pattern}))?(?:(?: *: *| +[-\u2013] +)(.+))?$",
+            "(?: *[0-9]+(?: +de +[0-9]+)?)?(?: *(${repeatCount.pattern}))?(?:(?: *: *| +[-\u2013] +)(.+))?$",
         RegexOption.IGNORE_CASE,
     )
-    private val bracketed = Regex("^\\[([^\\[\\]]+)\\](?: *(${repeat.pattern}))?$", RegexOption.IGNORE_CASE)
-    private val parenthesized = Regex("^\\(([^()]+)\\)(?: *(${repeat.pattern}))?$", RegexOption.IGNORE_CASE)
+    private val bracketed = Regex("^\\[([^\\[\\]]+)\\](?: *(${repeatCount.pattern}))?$", RegexOption.IGNORE_CASE)
+    private val parenthesized = Regex("^\\(([^()]+)\\)(?: *(${repeatCount.pattern}))?$", RegexOption.IGNORE_CASE)
 }

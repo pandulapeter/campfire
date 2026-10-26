@@ -209,6 +209,14 @@ class RenderSectionsTest {
     }
 
     @Test
+    fun `lyrics-only mode keeps the heading of chord rows with repeat marks and shows none of their lines`() {
+        val text = "{sov: Intro}\n[G] [C] [D] x4\n[Am] | [F] | x2\n{eov}"
+
+        assertEquals(listOf("Intro: lines"), shape(text))
+        assertEquals(listOf("Intro: "), shape(text, shouldShowChords = false))
+    }
+
+    @Test
     fun `lyrics-only mode hides the comments written in a tab or a grid with it`() {
         val text = "{sov: Solo}\nla\n{sot}\n{c: in tab}\ne|-0-|\n{eot}\n{c: after tab}\nla\n{eov}\n\n" +
             "{sot: Riff}\ne|-0-|\n{c: in riff}\n{eot}\n{c: after riff}"

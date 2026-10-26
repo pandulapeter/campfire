@@ -30,6 +30,13 @@ public sealed interface ChordProLine {
             val position: Int, // offset into text where the chord sits
             val name: String, // "Am7", "N.C.", ...
             val isAnnotation: Boolean, // [*text] annotations: shown like a chord, never transposed
+            /**
+             * A repeat count or bar line written as text on a chord row (`[G] [C] x4`), see
+             * [com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks]. A mark is always an [isAnnotation] too, so
+             * whatever skips annotations skips it; it differs only in being shown with the chords rather than the
+             * comments, and in standing in the file as its bare text. The [text] it was written in is blank there.
+             */
+            val isMark: Boolean = false,
         )
 
         /**

@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
+import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
@@ -349,11 +350,15 @@ public object ChordProParser {
         text.append(rawLine, consumedUntil, rawLine.length)
         // Chords first, so that a tag written inside a chord's brackets stays part of its name.
         val stripped = ChordProMarkup.strip(text.toString())
-        return ChordProLine.Lyrics(
-            text = stripped.text,
-            chords = if (stripped.text.length == text.length) chords else chords.map { it.copy(position = stripped.offsetOf(it.position)) },
-            formatting = stripped.formatting,
-        )
+        val placedChords = if (stripped.text.length == text.length) chords else chords.map { it.copy(position = stripped.offsetOf(it.position)) }
+        val marks = ChordProRowMarks.marksOf(stripped.text, placedChords.map { it.position })
+        if (marks.isNullOrEmpty()) return ChordProLine.Lyrics(text = stripped.text, chords = placedChords, formatting = stripped.formatting)
+        // The marks leave blanks of their own length behind, so that every chord's offset still names the column it was
+        // written in, and a chord sharing its offset with a mark (`[D]x4`) stays before it: the sort is stable.
+        val blank = StringBuilder(stripped.text)
+        marks.forEach { range -> range.forEach { blank[it] = ' ' } }
+        val markChords = marks.map { ChordProLine.Lyrics.Chord(position = it.first, name = stripped.text.substring(it), isAnnotation = true, isMark = true) }
+        return ChordProLine.Lyrics(text = blank.toString(), chords = (placedChords + markChords).sortedBy { it.position })
     }
 
     private const val VERSE = "verse"
