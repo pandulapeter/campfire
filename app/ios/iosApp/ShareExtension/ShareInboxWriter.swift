@@ -325,7 +325,8 @@ private enum ShareLimits {
     static let maxShareSize: Int64 = 24 << 20
     static let maxWaitingBytes: Int64 = 64 << 20
 
-    /// The types the activation rule in `Info.plist` names besides plain text, and the ChordPro family the app declares.
+    /// The types the activation rule in `Info.plist` names besides plain text, and the ChordPro family and ABC tunes the
+    /// app declares.
     static let fileTypes = [
         "com.adobe.pdf",
         "org.openxmlformats.wordprocessingml.document",
@@ -334,12 +335,13 @@ private enum ShareLimits {
         "com.pandulapeter.campfire.songbookpro-backup",
         "org.chordpro.cho",
         "org.chordpro.chordpro",
+        "org.abcnotation.abc",
     ]
 
     /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for, and without
-    /// `.onsong` and `.osb`, which have no system type the activation rule could name; JSON is read with the text limit,
-    /// as a song is.
-    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "txt", "json"]
+    /// `.onsong` and `.osb`, which have no system type the activation rule could name; JSON and ABC are read with the
+    /// text limit, as a song is.
+    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
 

@@ -104,6 +104,9 @@
 
 	     SongbookPro's backups are declared without a document type: the name is only for the share extension's
 	     activation rule to know the files by, not a claim on them.
+
+	     ABC notation's tunes are declared as plain text, which is what lets the share extension take an .abc, and
+	     opened as an Alternate viewer: each tune is imported as a song, and Campfire is no editor of the format.
 	-->
 	<key>UTImportedTypeDeclarations</key>
 	<array>
@@ -142,6 +145,27 @@
 					<string>crd</string>
 					<string>chord</string>
 					<string>pro</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.abcnotation.abc</string>
+			<key>UTTypeDescription</key>
+			<string>ABC tune</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>abc</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>text/vnd.abc</string>
 				</array>
 			</dict>
 		</dict>
@@ -190,6 +214,18 @@
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>org.chordpro.chordpro</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ABC tune</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.abcnotation.abc</string>
 			</array>
 		</dict>
 	</array>

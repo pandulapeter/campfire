@@ -46,8 +46,9 @@
 		<dict>
 			<!--
 			     Selected text and the files the import reads. A predicate rather than the dictionary form, whose file
-			     key takes any file at all. Plain text covers .txt and the ChordPro family, whose types conform to it;
-			     public.url conforms to none of these, so a page shared by its address alone does not list Campfire,
+			     key takes any file at all. Plain text covers .txt, the ChordPro family, and ABC tunes, whose types
+			     (declared by the app) conform to it; public.url conforms to none of these, so a page shared by its
+			     address alone does not list Campfire,
 			     a Campfire share link included (one sent as text, or as a URL beside a text, still reaches the app).
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document

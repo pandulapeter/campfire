@@ -48,8 +48,8 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 ## Share extension
 
 - `ShareExtension.appex`, embedded in the app: Share → Campfire for selected text and the files the import reads
-  (`NSExtensionActivationRule` in its `Info.plist`; plain text covers `.txt` and the ChordPro family, `public.json` is
-  named, and `ShareLimits` lists the same types; OnSong's `.onsong` and OpenSongApp's `.osb` have no system type to
+  (`NSExtensionActivationRule` in its `Info.plist`; plain text covers `.txt`, the ChordPro family, and `.abc`,
+  `public.json` is named, and `ShareLimits` lists the same types; OnSong's `.onsong` and OpenSongApp's `.osb` have no system type to
   name, so they arrive only through the app's own file picker or a drop). It links no Kotlin: it copies what it was
   given into `ShareInbox/` in the App Group container (`APP_GROUP_ID` in `Config.xcconfig`, both targets' entitlements,
   `CampfireAppGroup` in both `Info.plist`s), says so, and is done.
@@ -87,7 +87,9 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
 - `UTImportedTypeDeclarations` + `CFBundleDocumentTypes`: `.cho` `Default`, the rest `Alternate` (shared extensions).
   No zip, plain text, PDF, or Word, deliberately: the share extension is where those are accepted. Keep in step with
   `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` / `.sbp` are an imported type with no document type, only
-  so that the extension's activation rule can name them.
+  so that the extension's activation rule can name them. ABC's `.abc` (`org.abcnotation.abc`, plain text) is a
+  `Viewer` at `Alternate`: Campfire imports its tunes but is no editor of it; conforming to plain text is what brings
+  it to the share extension.
 - `CFBundleLocalizations` (`en`, `hu`) tells UIKit which languages the app speaks (Compose resources are invisible to
   iOS); without it system UI stays English and Settings offers no per-app language. Keep in step with `:presentation`'s
   `values-*`. Each language also needs `<lang>.lproj/InfoPlist.strings` (the microphone prompt; Hungarian is
