@@ -51,3 +51,19 @@ For [G]all of the [D7]cities so [G]bright
 {end_of_verse}
 
 {chorus: Last chorus, slowing down}
+
+# The melody in ABC notation, which the song details draw as a staff, under the same chords as the lyrics.
+{start_of_abc}
+X:1
+M:3/4
+L:1/4
+K:G
+D|"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
+w:Oh, give me a home where the buf-fa-lo roam, where the deer and the an-te-lope play, _ Where
+"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2||
+w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
+"D7"d3|"G"cB>A|"C"B3-|B z B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
+w:Home, home on the range, _ where the deer and the an-te-lope play, _ Where
+"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2|]
+w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
+{end_of_abc}
