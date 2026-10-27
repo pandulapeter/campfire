@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
+import com.pandulapeter.campfire.presentation.resources.deselect_all
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_files
@@ -37,6 +38,8 @@ import com.pandulapeter.campfire.presentation.resources.import_review_name_taken
 import com.pandulapeter.campfire.presentation.resources.import_review_summary_counts
 import com.pandulapeter.campfire.presentation.resources.import_review_title
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
+import com.pandulapeter.campfire.presentation.resources.import_review_songs
+import com.pandulapeter.campfire.presentation.resources.select_all
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -160,6 +163,33 @@ internal class ImportReviewTest {
         }
     }
 
+    @Test
+    fun `a group's Select all fits beside its heading, in every language`() = APP_LANGUAGES.forEach { language ->
+        listOf(1f, 1.3f).forEach { textScale ->
+            runAppTest(pickedFiles = listOf(newSongsArchive), appearance = TestAppearance(language = language, textScale = textScale)) {
+                val case = "${language.id} at $textScale"
+                startImport()
+                val heading = pluralString(Res.plurals.import_review_songs, 2)
+                onNode(hasScrollToIndexAction()).performScrollToNode(hasText(heading))
+                waitForIdle()
+                // Every box starts ticked, so the button first reads Deselect all; once pressed, Select all.
+                listOf(Res.string.deselect_all, Res.string.select_all).forEach { label ->
+                    val text = string(label)
+                    val button = onNode(hasText(text), useUnmergedTree = true).fetchSemanticsNode()
+                    assertEquals(1, button.textLayout.lineCount, "$case: \"$text\" is broken onto ${button.textLayout.lineCount} lines.")
+                    assertTrue(button.textLayout.isWhole, "$case: \"$text\" is cut short.")
+                    val title = onNode(hasText(heading), useUnmergedTree = true).fetchSemanticsNode()
+                    assertTrue(title.textLayout.isWhole, "$case: \"$heading\" is cut short beside \"$text\".")
+                    assertTrue(title.boundsInRoot.right <= button.boundsInRoot.left, "$case: \"$heading\" runs under \"$text\".")
+                    if (label == Res.string.deselect_all) {
+                        onNode(hasText(text) and hasClickAction()).performClick()
+                        waitForIdle()
+                    }
+                }
+            }
+        }
+    }
+
     /** Picks [archive] from the Songs screen's New menu, and waits for its review. */
     private fun AppTestScope.startImport() {
         onNodeWithContentDescription(string(Res.string.songs_new_song)).performClick()
@@ -180,6 +210,16 @@ internal class ImportReviewTest {
                 "new.cho" to resourceText("songs/$NEW_SONG"),
                 "identical.cho" to demoSongText(HOME_ON_THE_RANGE),
                 "colliding.cho" to resourceText("songs/$COLLISION"),
+            ),
+        )
+
+    /** Two songs no library has, so that their group has a Select all. */
+    private val newSongsArchive
+        get() = ImportedFile(
+            name = "songs.zip",
+            bytes = zipOf(
+                "new.cho" to resourceText("songs/$NEW_SONG"),
+                "long_road.cho" to resourceText("songs/campfire_tests-the_long_road_north.cho"),
             ),
         )
 
