@@ -17,6 +17,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting.Style
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTimedValue
 
 class ChordProMarkupTest {
 
@@ -168,6 +171,15 @@ class ChordProMarkupTest {
         assertEquals("<3 <b>not bold</b> Rock & Roll é🎸 & Rock & Roll &bogus; &#0;", line.text)
         assertEquals(emptyList(), line.formatting)
         assertEquals(35, line.chords.single().position)
+    }
+
+    @Test
+    fun `a line of ampersands without a semicolon costs no more than its length`() {
+        val text = "& ".repeat(100_000) + "&amp;"
+        val (line, duration) = measureTimedValue { lyrics(text) }
+
+        assertTrue(duration < 5.seconds, "took $duration")
+        assertEquals("& ".repeat(100_000) + "&", line.text)
     }
 
     @Test

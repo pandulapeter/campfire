@@ -66,7 +66,8 @@ internal object MarkupSymbols {
      * names and `&nbsp;` are known, and the closing `;` is required, so a lyric's "Rock & Roll" stays as it is.
      */
     fun entityAt(text: String, start: Int): Pair<String, Int>? {
-        val end = text.indexOf(';', start + 1).takeIf { it > start + 1 && it - start <= LONGEST_ENTITY } ?: return null
+        // Looked for only as far as the longest reference reaches, since this runs at every '&' of a line.
+        val end = (start + 1..minOf(text.lastIndex, start + LONGEST_ENTITY)).firstOrNull { text[it] == ';' }?.takeIf { it > start + 1 } ?: return null
         val name = text.substring(start + 1, end)
         val decoded = if (name.startsWith('#')) {
             val codePoint = if (name.startsWith("#x") || name.startsWith("#X")) name.drop(2).toIntOrNull(16) else name.drop(1).toIntOrNull()
