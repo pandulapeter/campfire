@@ -16,13 +16,13 @@ What's planned for Campfire, grouped by area. Nothing here has a date; items wit
 
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)
+- **ABC notation rendering**: ABC tunes drawn as staff notation instead of monospace text. Both spikes passed and
+  the engines are chosen; building it is next. Plan: [abc-notation.md](plans/abc-notation.md)
 
 ## Playing and reading
 
 - **External monitor support**: an audience screen (a projector, a TV, or a monitor) showing the song in big text,
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
-- **ABC notation rendering**: ABC tunes drawn as staff notation instead of monospace text.
-  Plan: [abc-notation.md](plans/abc-notation.md)
 
 ## Editing
 
