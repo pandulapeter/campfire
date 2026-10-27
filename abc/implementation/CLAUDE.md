@@ -24,6 +24,9 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   `campfire-abc-host.js` is our own shim over the core API (`new abc2svg.Abc(user)`, `tosvg`, `img_out`,
   `errmsg`, `read_file`), evaluated before abc2svg; modules are loaded through the host's `hostLoadModule`, only by
   abc2svg's own names.
+- **A tune is untrusted** (shared links, imports, pastes): the host replaces each `Abc` instance's `do_begin_end` so a
+  `%%beginjs` block, which abc2svg would `eval`, is ignored. On the web that script would run in the page, beside OPFS
+  and the sync token.
 - `AbcRendererImpl` puts format lines in front of the tune: the page (`%%pagewidth`, no margins), chord symbols,
   annotations, and lyrics at the page's text size (16 units, as a unit is drawn 1 dp times the reader's text size;
   abc2svg's 12 and 13 read as small print beside the lyrics), chord symbols in bold like the page's and tagged `gch`,

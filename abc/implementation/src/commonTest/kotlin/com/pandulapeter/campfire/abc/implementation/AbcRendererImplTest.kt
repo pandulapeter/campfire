@@ -77,6 +77,19 @@ class AbcRendererImplTest {
         assertEquals(first.systems.size, again.systems.size)
     }
 
+    @Test
+    fun `a script in a tune is not run`() = runTest {
+        val hostile = "X:1\n%%beginjs\ncampfireRender = function () { return \"<svg height=\\\"1px\\\"></svg>\" }\n%%endjs\n${REEL.substringAfter('\n')}"
+        assertIs<AbcRendering.Systems>(renderer.render(hostile, width = 800, transposition = 0))
+        val after = assertIs<AbcRendering.Systems>(renderer.render(REEL, width = 800, transposition = 0))
+        assertTrue(after.systems.first().height > 1f)
+    }
+
+    @Test
+    fun `a tune whose script never ends still renders`() = runTest {
+        assertIs<AbcRendering.Systems>(renderer.render("X:1\n%%beginjs\nwhile (true) {}\n%%endjs\n${REEL.substringAfter('\n')}", width = 800, transposition = 0))
+    }
+
     private companion object {
         val REEL = """
             X:1

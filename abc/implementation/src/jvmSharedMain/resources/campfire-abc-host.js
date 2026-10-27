@@ -36,6 +36,16 @@ function campfireRender() {
 	}
 	// loadjs is synchronous here, so every module the text asks for has been evaluated once this returns.
 	abc2svg.modules.load(source, null, function (message) { errors.push(message) })
-	new abc2svg.Abc(user).tosvg("tune", source)
+	// A tune is untrusted text (a shared link, an import, a paste), and abc2svg evaluates a %%beginjs block's script as
+	// is. Its hook is replaced per instance, since the constructor sets the prototype's methods again on every call.
+	var abc = new abc2svg.Abc(user), doBeginEnd = abc.do_begin_end
+	abc.do_begin_end = function (type) {
+		if (type == "js") {
+			errors.push("%%beginjs is ignored")
+			return
+		}
+		return doBeginEnd.apply(this, arguments)
+	}
+	abc.tosvg("tune", source)
 	return systems.length > 0 ? systems.join("\u0000") : "\u0000" + errors.join("\n")
 }
