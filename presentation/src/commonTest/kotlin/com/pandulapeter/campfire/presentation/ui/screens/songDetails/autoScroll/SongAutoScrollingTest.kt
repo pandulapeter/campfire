@@ -42,6 +42,14 @@ internal class SongAutoScrollingTest {
         assertEquals(130, autoScrolling.speed)
     }
 
+    @Test
+    fun `a drag cut short by playing stopping is written`() {
+        autoScrolling.dragSpeed(150)
+        autoScrolling.pause()
+
+        assertEquals(listOf(SONG to 150), writes)
+    }
+
     private companion object {
         const val SONG = "song.cho"
     }

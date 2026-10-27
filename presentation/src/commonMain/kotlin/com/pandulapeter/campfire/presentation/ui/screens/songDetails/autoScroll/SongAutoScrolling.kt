@@ -57,8 +57,13 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
         isPlaying = !isPlaying && scroller?.canPlay == true
     }
 
+    /**
+     * Stops playing, writing a speed still being dragged to: the slider leaves with playing, and a drag cut short that
+     * way never ends on its own.
+     */
     fun pause() {
         isPlaying = false
+        writeDraggedSpeed()
     }
 
     /** Moves the song a little in [direction], answering false where it is already at that end. */
