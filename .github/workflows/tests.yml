@@ -56,6 +56,9 @@ jobs:
       # A store refuses a listing field past its limit; the pre-commit hook checks every commit the same way.
       - name: Check the store listings' lengths
         run: python3 .github/scripts/check_store_listings.py
+      # Android's ICU refuses a regular expression's bare brace the JVM, and so every test, accepts.
+      - name: Check the regular expressions' braces
+        run: python3 .github/scripts/check_regexes.py
       # A pull request or a push to master pushes no Kotlin file or top-level function past the code-style skill's
       # limits; what was past them already may change. The pre-commit hook judges every commit the same way; this is
       # the backstop. A push is judged against what master was before it, all of its commits together.

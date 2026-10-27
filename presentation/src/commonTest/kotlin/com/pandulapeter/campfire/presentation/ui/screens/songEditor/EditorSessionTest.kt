@@ -109,7 +109,7 @@ class EditorSessionTest {
                 },
                 createSongFromText = object : CreateSongFromTextUseCase {
                     override suspend fun invoke(text: String): Song {
-                        val title = Regex("""\{title: (.*)}""").find(text)?.groupValues?.get(1).orEmpty()
+                        val title = Regex("""\{title: (.*)\}""").find(text)?.groupValues?.get(1).orEmpty()
                         val fileName = title.lowercase().replace(' ', '_') + ".cho"
                         files[fileName] = text
                         return Song(
