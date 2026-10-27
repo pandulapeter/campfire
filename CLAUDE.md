@@ -59,7 +59,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
   tuner:api / :implementation         pitch detection, tones, mic input; depends on nothing of the app's
   tools:screenshots                   store screenshots rendered offscreen from the desktop build
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
-  tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter, which has none
+  tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them
   chordpro                            dependency-free ChordPro parser, serializer, transposer, chords, tabs
 ```
 

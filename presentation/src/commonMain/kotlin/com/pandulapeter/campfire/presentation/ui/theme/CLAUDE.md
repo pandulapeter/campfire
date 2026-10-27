@@ -67,9 +67,10 @@ platform for RTL.
 
 **Bundled on every platform** (`src/commonMain/composeResources/font`, OFL licenses under `files/licenses`): Inter for
 the interface, JetBrains Mono (no-ligatures) for tabs and the editor, so a song looks and breaks the same on a phone, a
-computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, and Cyrillic; Inter's ♭ ♮ ♯ are
-drawn into it by `tools/fonts/accidentals.py` (upstream has none), rerun on any new subset. Others fall back to system
-fonts (Skia's Roboto on the web).
+computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, and Cyrillic; Inter's ♭ ♮ ♯ and
+JetBrains Mono's ♮ are drawn into them by `tools/fonts/accidentals.py` (upstream has none), rerun on any new subset.
+Others fall back to system fonts (Skia's Roboto on the web, which lacks most symbols), so a string uses no character the
+bundled files lack (⌘ is written "Cmd").
 
 - `InterfaceTypography.kt`: Material's type scale in Inter Regular/Medium/Bold, read before the first frame except on
   the web, whose actual returns null until all three weights are fetched; the theme isn't settled until then (no second

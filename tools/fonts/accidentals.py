@@ -7,19 +7,26 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Draws the flat, natural, and sharp signs (U+266D, U+266E, U+266F) into the bundled Inter files, which have none.
+Draws the flat, natural, and sharp signs (U+266D, U+266E, U+266F) into the bundled Inter files, which have none, and
+the natural sign into the bundled JetBrains Mono files, which have the other two.
 
 Inter is the face every chord name is shown in, and without these glyphs a ♭ or ♯ would fall back to whatever font the
 platform has (Skia's Roboto on the web, nothing at all in some PDF viewers), so a chord would look and measure
 differently on every platform. The signs are built from each file's own stem width and cap height, so the three weights
 match the letters around them, and sit raised the way chord symbols set them (`B♭m7`).
 
-Rerunning it replaces the glyphs it drew, so it is run again on any new Inter subset:
+JetBrains Mono sets the editor, tabs, and chord grids, where a ChordPro `natural` symbol becomes a ♮; one drawn from a
+fallback font would be another width and pull the columns after it out of line. A monospaced file (its `post` table
+says so) gets only the natural, on its baseline, at its cap height, measured from its `|`, and centred in its one advance
+width, as its own flat and sharp are.
+
+Rerunning it replaces the glyphs it drew, so it is run again on any new subset of either font:
 
     pip install fonttools skia-pathops
-    python3 tools/fonts/accidentals.py presentation/src/commonMain/composeResources/font/inter_*.ttf
+    python3 tools/fonts/accidentals.py presentation/src/commonMain/composeResources/font/inter_*.ttf \
+        presentation/src/commonMain/composeResources/font/jetbrains_mono_*.ttf
 
-Inter's license reserves no font name, so the modified files keep theirs.
+Neither font's license reserves a font name, so the modified files keep theirs.
 """
 
 import sys
@@ -33,12 +40,15 @@ from fontTools.ttLib import TTFont
 
 FLAT, NATURAL, SHARP = 0x266D, 0x266E, 0x266F
 
+# The shapes below are drawn in Inter's units; a font with another em size has them scaled to it.
+DESIGN_UNITS_PER_EM = 2048
 
-def stem_width(font):
-    """The width of the font's `l`, which every stroke of the signs is measured from."""
+
+def stem_width(font, character):
+    """The width of the font's [character], which every stroke of the signs is measured from."""
     glyphs = font.getGlyphSet()
     pen = BoundsPen(glyphs)
-    glyphs[font.getBestCmap()[ord("l")]].draw(pen)
+    glyphs[font.getBestCmap()[ord(character)]].draw(pen)
     return pen.bounds[2] - pen.bounds[0]
 
 
@@ -142,9 +152,9 @@ def flat(stem, bottom, top):
     return union([polygon([(0, bottom), (vertical, bottom), (vertical, top), (0, top)]), bowl]), right
 
 
-def add_glyph(font, codepoint, name, outline, width, side_bearing):
+def add_glyph(font, codepoint, name, outline, width, side_bearing, scale=1):
     shifted = pathops.Path()
-    outline.draw(TransformPen(shifted.getPen(), (1, 0, 0, 1, side_bearing, 0)))
+    outline.draw(TransformPen(shifted.getPen(), (scale, 0, 0, scale, side_bearing, 0)))
     shifted.simplify()
     pen = TTGlyphPen(None)
     # TrueType outlines run clockwise, the opposite of what Skia's path operations produce.
@@ -154,24 +164,39 @@ def add_glyph(font, codepoint, name, outline, width, side_bearing):
     font["glyf"][name] = glyph
     if name not in font.getGlyphOrder():
         font.setGlyphOrder(font.getGlyphOrder() + [name])
-    font["hmtx"][name] = (round(width + 2 * side_bearing), glyph.xMin)
+    font["hmtx"][name] = (round(width * scale + 2 * side_bearing), glyph.xMin)
     for table in font["cmap"].tables:
         if table.isUnicode():
             table.cmap[codepoint] = name
 
 
+def add_proportional(font):
+    stem = stem_width(font, "l")
+    cap = font["OS/2"].sCapHeight
+    bottom = round(cap * 0.14)
+    for codepoint, (outline, width), side_bearing in (
+        (SHARP, sharp(stem, bottom, cap), 70),
+        (FLAT, flat(stem, bottom, cap + 40), 90),
+        (NATURAL, natural(stem, bottom, cap), 110),
+    ):
+        add_glyph(font, codepoint, "uni%04X" % codepoint, outline, width, side_bearing)
+
+
+def add_monospaced(font):
+    """The natural sign alone: JetBrains Mono draws its own flat and sharp, which stay."""
+    scale = font["head"].unitsPerEm / DESIGN_UNITS_PER_EM
+    advance = font["hmtx"][font.getBestCmap()[ord("l")]][0]
+    outline, width = natural(stem_width(font, "|") / scale, 0, font["OS/2"].sCapHeight / scale)
+    add_glyph(font, NATURAL, "uni%04X" % NATURAL, outline, width, (advance - width * scale) / 2, scale)
+
+
 def main(paths):
     for path in paths:
         font = TTFont(path)
-        stem = stem_width(font)
-        cap = font["OS/2"].sCapHeight
-        bottom = round(cap * 0.14)
-        for codepoint, (outline, width), side_bearing in (
-            (SHARP, sharp(stem, bottom, cap), 70),
-            (FLAT, flat(stem, bottom, cap + 40), 90),
-            (NATURAL, natural(stem, bottom, cap), 110),
-        ):
-            add_glyph(font, codepoint, "uni%04X" % codepoint, outline, width, side_bearing)
+        if font["post"].isFixedPitch:
+            add_monospaced(font)
+        else:
+            add_proportional(font)
         font["maxp"].numGlyphs = len(font.getGlyphOrder())
         font.save(path)
 
