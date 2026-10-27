@@ -39,7 +39,8 @@ val generateAbcScripts = listOf("iosMain", "wasmJsMain").associateWith { sourceS
                             character == '\n' -> append("\\n")
                             character == '\r' -> append("\\r")
                             character == '\t' -> append("\\t")
-                            character.code < 0x20 -> append("\\u%04x".format(character.code))
+                            // Escaped, a pair split across two pieces still joins into its character.
+                            character.code < 0x20 || character.isSurrogate() -> append("\\u%04x".format(character.code))
                             else -> append(character)
                         }
                     }
