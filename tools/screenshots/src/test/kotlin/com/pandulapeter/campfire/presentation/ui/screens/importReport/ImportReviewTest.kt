@@ -37,7 +37,6 @@ import com.pandulapeter.campfire.presentation.resources.import_review_name_taken
 import com.pandulapeter.campfire.presentation.resources.import_review_summary_counts
 import com.pandulapeter.campfire.presentation.resources.import_review_title
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
-import com.pandulapeter.campfire.presentation.resources.select_all
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -148,28 +147,16 @@ internal class ImportReviewTest {
                 if (textScale > 1f && language in LONG_TITLE_LANGUAGES) {
                     assertTrue(textLayout(hasText(string(Res.string.import_review_title))).isWhole, "$case: the review's title is cut short.")
                 }
-                assertSelectAllWhole(case)
                 // The row, its choice included, is the review's last, below the bottom of a phone at a large text size.
                 onNode(hasScrollToIndexAction()).performScrollToNode(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
                 waitForIdle()
                 // The colliding song's headline is the only text of the review naming it; the identical song is another.
                 val headline = onNode(hasText(RISING_SUN_TITLE, substring = true), useUnmergedTree = true).fetchSemanticsNode()
                 assertFalse(headline.textLayout.breaksAWord, "$case: \"${headline.textLayout.layoutInput.text}\" breaks a word.")
-                // The upper of the two choices is Select all's, for the whole group.
-                val choice = onAllNodes(hasText(string(Res.string.import_conflicts_keep_both)) and hasClickAction()).fetchSemanticsNodes()
-                    .maxBy { it.boundsInRoot.top }
+                // The row's choice is the only one: a group of one taken name has none for all of them.
+                val choice = onAllNodes(hasText(string(Res.string.import_conflicts_keep_both)) and hasClickAction()).fetchSemanticsNodes().single()
                 assertTrue(choice.boundsInRoot.top >= headline.boundsInRoot.bottom, "$case: the choice (${choice.boundsInRoot}) is beside the title (${headline.boundsInRoot}).")
-                assertSelectAllWhole(case)
             }
-        }
-    }
-
-    /** Checks every Select all row on screen, which before and after scrolling to the last row covers each group's. */
-    private fun AppTestScope.assertSelectAllWhole(case: String) {
-        val selectAll = string(Res.string.select_all)
-        onAllNodes(hasText(selectAll), useUnmergedTree = true).fetchSemanticsNodes().forEach {
-            assertEquals(1, it.textLayout.lineCount, "$case: \"$selectAll\" is broken onto ${it.textLayout.lineCount} lines.")
-            assertTrue(it.textLayout.isWhole, "$case: \"$selectAll\" is cut short.")
         }
     }
 
