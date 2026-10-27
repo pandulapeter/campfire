@@ -168,13 +168,13 @@
         <item quantity="one">Importă %1$d fișier</item>
         <item quantity="other">Importă %1$d fișiere</item>
     </plurals>
-    <string name="import_review_summary_counts">Cântece de importat: %1$d · Liste: %2$d</string>
-    <string name="import_review_name_taken_counts">Nume ocupate: Înlocuiește %1$d · Păstrează ambele %2$d</string>
+    <string name="import_review_summary_counts">Cântece de importat: %1$d · Liste: %2$d</string>
+    <string name="import_review_name_taken_counts">Nume ocupate: Înlocuiește %1$d · Păstrează ambele %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">Unul este deja în bibliotecă și rămâne neatins</item>
         <item quantity="other">%1$d sunt deja în bibliotecă și rămân neatinse</item>
     </plurals>
-    <string name="import_review_left_out_count">Omise de tine: %1$d</string>
+    <string name="import_review_left_out_count">Omise de tine: %1$d</string>
     <string name="import_review_tags">Etichete pentru cântecele importate</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Adăugate singurului cântec scris de acest import</item>

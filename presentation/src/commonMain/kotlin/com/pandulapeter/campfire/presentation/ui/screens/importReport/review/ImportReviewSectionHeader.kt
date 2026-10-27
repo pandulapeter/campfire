@@ -15,6 +15,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
@@ -42,7 +43,8 @@ import com.pandulapeter.campfire.presentation.resources.select_all
  * The heading of a group of the review, its count written into it, and where the group has boxes, a Select all row
  * under it ticking or unticking every row the group shows. That row is laid out as the rows are, its box in the column
  * of theirs, so that it reads as one more row acting for all of them while the heading stays a heading; in the group of
- * the names already taken it also ends in the choice for all of them, where the rows have theirs.
+ * the names already taken it also has the choice for all of them under its label, where the rows have theirs under their
+ * text.
  *
  * @param boxState Null for a group without boxes.
  * @param isConflicts Whether this is the group of names already taken, which has the choice for all of them.
@@ -71,7 +73,7 @@ internal fun ImportReviewSectionHeader(
         SelectAllRow(
             state = shownState,
             onClick = onBoxClick,
-            trailingContent = if (isConflicts) {
+            choice = if (isConflicts) {
                 {
                     ConflictResolutionDropdown(
                         resolution = resolution,
@@ -85,28 +87,37 @@ internal fun ImportReviewSectionHeader(
     }
 }
 
-/** The box, the text, and the end of the row at the places of a `CheckboxListItem`'s, in the height of a touch target. */
+/**
+ * The box and the text at the places of a `CheckboxListItem`'s, on a line of the height of a touch target, and the
+ * [choice] for every row on a line under it, starting where the text does, so that the label keeps the line's whole
+ * width. The whole row, both lines, ticks the box; the choice takes its own taps.
+ */
 @Composable
 private fun SelectAllRow(
     state: ToggleableState,
     onClick: () -> Unit,
-    trailingContent: (@Composable () -> Unit)?,
-) = Row(
-    modifier = Modifier
-        .heightIn(min = 48.dp)
-        .triStateToggleable(state = state, role = Role.Checkbox, onClick = onClick)
-        .padding(horizontal = 16.dp),
-    verticalAlignment = Alignment.CenterVertically,
+    choice: (@Composable () -> Unit)?,
+) = Column(
+    modifier = Modifier.triStateToggleable(state = state, role = Role.Checkbox, onClick = onClick),
 ) {
-    TriStateCheckbox(
-        state = state,
-        onClick = null,
-    )
-    Text(
-        modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
-        text = stringResource(Res.string.select_all),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    trailingContent?.invoke()
+    Row(
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TriStateCheckbox(
+            state = state,
+            onClick = null,
+        )
+        Text(
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            text = stringResource(Res.string.select_all),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    choice?.let {
+        Box(modifier = Modifier.padding(start = CHECKBOX_ZONE_WIDTH, end = 16.dp)) { it() }
+    }
 }

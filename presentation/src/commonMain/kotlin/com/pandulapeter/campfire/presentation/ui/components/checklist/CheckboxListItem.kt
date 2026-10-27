@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.checklist
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.triStateToggleable
@@ -66,6 +67,9 @@ internal fun CheckboxListItem(
  *
  * @param trailingContent A control of its own at the end of the row, which takes its own taps rather than ticking the
  *   box: the tag sheet's color of each tag. Not drawn where the row has a cover, which takes that place.
+ * @param supportingControl A control of its own under the row's description, at the start of its text, which takes its
+ *   own taps rather than ticking the box: the import review's choice for a name already taken, which leaves the title
+ *   the row's whole width that a control at its end would take.
  */
 @Composable
 internal fun CheckboxListItem(
@@ -77,6 +81,7 @@ internal fun CheckboxListItem(
     horizontalInset: Dp = 0.dp,
     coverArtUrl: String? = null,
     trailingContent: (@Composable () -> Unit)? = null,
+    supportingControl: (@Composable () -> Unit)? = null,
     onClick: () -> Unit,
 ) = ListItem(
     modifier = modifier
@@ -85,7 +90,16 @@ internal fun CheckboxListItem(
         .padding(horizontal = horizontalInset),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
-    supportingContent = description?.let { { CrossfadedText(text = it) } },
+    supportingContent = if (description != null || supportingControl != null) {
+        {
+            Column {
+                description?.let { CrossfadedText(text = it) }
+                supportingControl?.invoke()
+            }
+        }
+    } else {
+        null
+    },
     leadingContent = { TriStateCheckbox(state = state, enabled = isEnabled, onClick = null) },
     trailingContent = coverArtUrl?.let {
         {

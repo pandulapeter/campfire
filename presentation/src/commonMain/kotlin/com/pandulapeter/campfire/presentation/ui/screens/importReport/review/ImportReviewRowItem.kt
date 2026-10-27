@@ -13,7 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.toggleable
@@ -56,7 +56,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * One entry of the review. A row with a box is ticked or unticked by a tap anywhere on it, and a name already taken
- * carries its own choice at its end; a row without one (already in the library, or a file that cannot be imported) is
+ * carries its own choice under its text; a row without one (already in the library, or a file that cannot be imported) is
  * only read. A song's row opens its preview instead where there is one ([onOpenPreview]), its box then ticking it on its
  * own, and a chevron at its end says so; without one, a row naming the library's song opens that.
  *
@@ -129,7 +129,7 @@ internal fun ImportReviewRowItem(
             title = row.headline,
             description = description,
             state = ToggleableState(isChosen),
-            trailingContent = conflictChoice,
+            supportingControl = conflictChoice,
             onClick = { onChosenChange(key, !isChosen) },
         )
     }
@@ -137,8 +137,8 @@ internal fun ImportReviewRowItem(
 
 /**
  * A song's row of the review that opens its preview: the row is the way to read the song, so its box is a control of its
- * own, ticked without opening anything, and the chevron at its end, after the name's choice where it is taken, is what
- * says that the row leads somewhere.
+ * own, ticked without opening anything, and the chevron alone at its end is what says that the row leads somewhere. A
+ * name's choice where it is taken stands under the text, so that the title keeps the row's width.
  *
  * The box's own target would leave the row's padding around it opening the preview, a few dp from the box, so the box
  * takes the row's whole height from its start edge up to where the text begins, laid over the row so that the text
@@ -160,7 +160,16 @@ private fun ImportReviewSongRow(
         modifier = Modifier.clickable(onClickLabel = stringResource(Res.string.import_preview_open), onClick = onOpenPreview),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = { Text(title) },
-        supportingContent = description?.let { { CrossfadedText(text = it) } },
+        supportingContent = if (description != null || conflictChoice != null) {
+            {
+                Column {
+                    description?.let { CrossfadedText(text = it) }
+                    conflictChoice?.invoke()
+                }
+            }
+        } else {
+            null
+        },
         leadingContent = {
             Checkbox(
                 modifier = Modifier.indication(boxInteractionSource, ripple(bounded = false, radius = CHECKBOX_RIPPLE_RADIUS)),
@@ -168,12 +177,7 @@ private fun ImportReviewSongRow(
                 onCheckedChange = null,
             )
         },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                conflictChoice?.invoke()
-                PreviewChevron()
-            }
-        },
+        trailingContent = { PreviewChevron() },
     )
     Box(
         modifier = Modifier
@@ -191,7 +195,7 @@ private fun ImportReviewSongRow(
 }
 
 /** The list item's start padding, its checkbox, and the gap after it: everything before the row's text. */
-private val CHECKBOX_ZONE_WIDTH = 56.dp
+internal val CHECKBOX_ZONE_WIDTH = 56.dp
 
 /** Half of the 40 dp state layer Material draws around a checkbox of its own. */
 private val CHECKBOX_RIPPLE_RADIUS = 20.dp

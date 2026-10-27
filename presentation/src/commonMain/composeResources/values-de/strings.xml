@@ -168,13 +168,13 @@
         <item quantity="one">%1$d Datei importieren</item>
         <item quantity="other">%1$d Dateien importieren</item>
     </plurals>
-    <string name="import_review_summary_counts">Zu importierende Songs: %1$d · Setlists: %2$d</string>
-    <string name="import_review_name_taken_counts">Namen vergeben: Ersetzen %1$d · Beide behalten %2$d</string>
+    <string name="import_review_summary_counts">Zu importierende Songs: %1$d · Setlists: %2$d</string>
+    <string name="import_review_name_taken_counts">Namen vergeben: Ersetzen %1$d · Beide behalten %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">Eine ist schon in deiner Bibliothek und bleibt unverändert</item>
         <item quantity="other">%1$d sind schon in deiner Bibliothek und bleiben unverändert</item>
     </plurals>
-    <string name="import_review_left_out_count">Von dir ausgelassen: %1$d</string>
+    <string name="import_review_left_out_count">Von dir ausgelassen: %1$d</string>
     <string name="import_review_tags">Tags für die importierten Songs</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Wird dem einen Song hinzugefügt, den dieser Import schreibt</item>

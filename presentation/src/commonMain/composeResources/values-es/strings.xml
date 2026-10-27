@@ -150,7 +150,7 @@
     <string name="import_failed_link_unreachable">No se pudo descargar «%1$s». Comprueba la conexión a internet y vuelve a intentarlo.</string>
     <string name="import_failed_link_unreachable_untitled">No se pudo descargar lo que comparte el enlace. Comprueba la conexión a internet y vuelve a intentarlo.</string>
     <string name="import_retry">Reintentar</string>
-    <string name="import_review_title">Revisar la importación</string>
+    <string name="import_review_title">Revisar importación</string>
     <string name="import_review_title_empty">Nada que importar</string>
     <plurals name="import_review_from_files">
         <item quantity="one">De %1$d archivo</item>
@@ -168,13 +168,13 @@
         <item quantity="one">Importar %1$d archivo</item>
         <item quantity="other">Importar %1$d archivos</item>
     </plurals>
-    <string name="import_review_summary_counts">Canciones para importar: %1$d · Repertorios: %2$d</string>
-    <string name="import_review_name_taken_counts">Nombres en uso: Reemplazar %1$d · Conservar ambos %2$d</string>
+    <string name="import_review_summary_counts">Canciones para importar: %1$d · Repertorios: %2$d</string>
+    <string name="import_review_name_taken_counts">Nombres en uso: Reemplazar %1$d · Conservar ambos %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">Uno ya está en tu biblioteca y no se toca</item>
         <item quantity="other">%1$d ya están en tu biblioteca y no se tocan</item>
     </plurals>
-    <string name="import_review_left_out_count">Excluidos por ti: %1$d</string>
+    <string name="import_review_left_out_count">Excluidos por ti: %1$d</string>
     <string name="import_review_tags">Etiquetas para las canciones importadas</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Se añaden a la única canción que escribe esta importación</item>

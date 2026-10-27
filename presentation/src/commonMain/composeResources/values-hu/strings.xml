@@ -150,7 +150,7 @@
     <string name="import_failed_link_unreachable">Nem sikerült letölteni: „%1$s”. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_failed_link_unreachable_untitled">Nem sikerült letölteni, amit a link megoszt. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_retry">Újrapróbálás</string>
-    <string name="import_review_title">Importálás áttekintése</string>
+    <string name="import_review_title">Import áttekintése</string>
     <string name="import_review_title_empty">Nincs mit importálni</string>
     <plurals name="import_review_from_files">
         <item quantity="one">Forrás: %1$d fájl</item>
@@ -168,13 +168,13 @@
         <item quantity="one">%1$d fájl importálása</item>
         <item quantity="other">%1$d fájl importálása</item>
     </plurals>
-    <string name="import_review_summary_counts">Importálandó dalok: %1$d · Listák: %2$d</string>
-    <string name="import_review_name_taken_counts">Foglalt nevek: felülírás %1$d · mindkettő marad %2$d</string>
+    <string name="import_review_summary_counts">Importálandó dalok: %1$d · Listák: %2$d</string>
+    <string name="import_review_name_taken_counts">Foglalt nevek: felülírás %1$d · mindkettő marad %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">Egy már megvan a könyvtáradban, és változatlan marad</item>
         <item quantity="other">%1$d már megvan a könyvtáradban, és változatlan marad</item>
     </plurals>
-    <string name="import_review_left_out_count">Általad kihagyva: %1$d</string>
+    <string name="import_review_left_out_count">Általad kihagyva: %1$d</string>
     <string name="import_review_tags">Címkék az importált dalokra</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Az importált dalra kerülnek</item>

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.importReport
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isPopup
@@ -21,7 +22,9 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
@@ -31,20 +34,31 @@ import com.pandulapeter.campfire.presentation.resources.import_review_already_th
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
 import com.pandulapeter.campfire.presentation.resources.import_review_conflicts
 import com.pandulapeter.campfire.presentation.resources.import_review_name_taken_counts
+import com.pandulapeter.campfire.presentation.resources.import_review_summary_counts
+import com.pandulapeter.campfire.presentation.resources.import_review_title
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
+import com.pandulapeter.campfire.presentation.resources.select_all
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOME_ON_THE_RANGE
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
+import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
+import com.pandulapeter.campfire.screenshots.TestAppearance
+import com.pandulapeter.campfire.screenshots.breaksAWord
 import com.pandulapeter.campfire.screenshots.demoSongText
+import com.pandulapeter.campfire.screenshots.isWhole
 import com.pandulapeter.campfire.screenshots.resourceText
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.textLayout
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 internal class ImportReviewTest {
@@ -117,6 +131,48 @@ internal class ImportReviewTest {
         )
     }
 
+    @Test
+    fun `a taken name's title gets the row's width, with its choice under it, in every language`() = APP_LANGUAGES.forEach { language ->
+        listOf(1f, 1.3f).forEach { textScale ->
+            runAppTest(pickedFiles = listOf(archive), appearance = TestAppearance(language = language, textScale = textScale)) {
+                val case = "${language.id} at $textScale"
+                startImport()
+                // The summary leads the list, which the row's search below scrolls away.
+                listOf(string(Res.string.import_review_summary_counts, 2, 0), string(Res.string.import_review_name_taken_counts, 0, 1)).forEach { counts ->
+                    val layout = textLayout(hasText(counts))
+                    (0 until layout.lineCount).forEach { line ->
+                        val text = counts.substring(layout.getLineStart(line), layout.getLineEnd(line))
+                        assertFalse(text.all { it.isDigit() || it.isWhitespace() || it == '\u00A0' }, "$case: a count stands alone on a line of \"$counts\".")
+                    }
+                }
+                if (textScale > 1f && language in LONG_TITLE_LANGUAGES) {
+                    assertTrue(textLayout(hasText(string(Res.string.import_review_title))).isWhole, "$case: the review's title is cut short.")
+                }
+                assertSelectAllWhole(case)
+                // The row, its choice included, is the review's last, below the bottom of a phone at a large text size.
+                onNode(hasScrollToIndexAction()).performScrollToNode(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
+                waitForIdle()
+                // The colliding song's headline is the only text of the review naming it; the identical song is another.
+                val headline = onNode(hasText(RISING_SUN_TITLE, substring = true), useUnmergedTree = true).fetchSemanticsNode()
+                assertFalse(headline.textLayout.breaksAWord, "$case: \"${headline.textLayout.layoutInput.text}\" breaks a word.")
+                // The upper of the two choices is Select all's, for the whole group.
+                val choice = onAllNodes(hasText(string(Res.string.import_conflicts_keep_both)) and hasClickAction()).fetchSemanticsNodes()
+                    .maxBy { it.boundsInRoot.top }
+                assertTrue(choice.boundsInRoot.top >= headline.boundsInRoot.bottom, "$case: the choice (${choice.boundsInRoot}) is beside the title (${headline.boundsInRoot}).")
+                assertSelectAllWhole(case)
+            }
+        }
+    }
+
+    /** Checks every Select all row on screen, which before and after scrolling to the last row covers each group's. */
+    private fun AppTestScope.assertSelectAllWhole(case: String) {
+        val selectAll = string(Res.string.select_all)
+        onAllNodes(hasText(selectAll), useUnmergedTree = true).fetchSemanticsNodes().forEach {
+            assertEquals(1, it.textLayout.lineCount, "$case: \"$selectAll\" is broken onto ${it.textLayout.lineCount} lines.")
+            assertTrue(it.textLayout.isWhole, "$case: \"$selectAll\" is cut short.")
+        }
+    }
+
     /** Picks [archive] from the Songs screen's New menu, and waits for its review. */
     private fun AppTestScope.startImport() {
         onNodeWithContentDescription(string(Res.string.songs_new_song)).performClick()
@@ -158,3 +214,6 @@ private const val NEW_SONG = "campfire_tests-a_new_song.cho"
 private const val COLLISION = "house_of_the_rising_sun_rewritten.cho"
 private val NUMBERED_COLLISION = File(HOUSE_OF_THE_RISING_SUN).nameWithoutExtension + "_2.cho"
 private const val REVIEW_TIMEOUT_MILLIS = 10_000L
+
+/** The languages whose title for the review was cut short at a large text size, shortened since. */
+private val LONG_TITLE_LANGUAGES = setOf(AppLanguage.SPANISH, AppLanguage.HUNGARIAN, AppLanguage.ITALIAN)
