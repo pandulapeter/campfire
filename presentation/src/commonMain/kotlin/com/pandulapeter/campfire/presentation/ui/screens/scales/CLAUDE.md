@@ -37,6 +37,7 @@ own Features switch (`areScalesEnabled`), not the chord ones. Offered in read on
   **Aliases are translated** (`scale_aliases_<id>`, one comma-separated string per scale, read by `scaleAliases`); the
   catalogue's English ones stay as search terms. Ctrl / Cmd + F, Escape, and Back work as on the Chords tab
   (`ToolSearch`).
-- **The name strings hold the form a title uses** ("C major", "D Dorian", "C-dúr", the Hungarian title hyphenated), and
-  a name standing alone is capitalized in code (`standaloneScaleName`). Hungarian steps are "1 1 ½", not letters that
-  read as notes.
+- **The name strings hold the form a title uses** ("C major", "D Dorian", "C-dúr", the Hungarian title hyphenated);
+  German names start with a capital, the noun first where an adjective qualifies it (`A-Moll harmonisch`), and a name
+  standing alone is capitalized in code (`standaloneScaleName`). Hungarian steps are "1 1 ½", not letters that read as
+  notes.
