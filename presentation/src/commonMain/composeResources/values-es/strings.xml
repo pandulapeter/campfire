@@ -888,6 +888,7 @@
     <string name="song_editor_section_tab">Tablatura</string>
     <string name="song_editor_tab_any_instrument">Cualquier instrumento</string>
     <string name="song_editor_section_grid">Cuadrícula</string>
+    <string name="song_editor_section_abc">Partitura</string>
     <string name="song_editor_insert_chorus_recall">Repetir estribillo</string>
     <string name="song_editor_insert_comment">Comentario</string>
     <string name="song_editor_insert_comment_italic">Comentario en cursiva</string>
@@ -992,7 +993,7 @@
     <string name="song_details_section_bridge">Puente</string>
     <string name="song_details_section_tab">Tablatura</string>
     <string name="song_details_section_grid">Cuadrícula</string>
-    <string name="song_details_section_abc">Melodía</string>
+    <string name="song_details_section_abc">Partitura</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Mostrar la tablatura</string>

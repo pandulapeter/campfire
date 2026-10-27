@@ -888,6 +888,7 @@
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_tab_any_instrument">Beliebiges Instrument</string>
     <string name="song_editor_section_grid">Raster</string>
+    <string name="song_editor_section_abc">Noten</string>
     <string name="song_editor_insert_chorus_recall">Refrain wiederholen</string>
     <string name="song_editor_insert_comment">Kommentar</string>
     <string name="song_editor_insert_comment_italic">Kursiver Kommentar</string>
@@ -992,7 +993,7 @@
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Raster</string>
-    <string name="song_details_section_abc">Melodie</string>
+    <string name="song_details_section_abc">Noten</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Tabulatur einblenden</string>

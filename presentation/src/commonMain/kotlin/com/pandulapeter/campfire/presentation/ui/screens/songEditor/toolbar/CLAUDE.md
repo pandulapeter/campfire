@@ -18,8 +18,8 @@ The editor's Shortcuts toolbar and its control row.
   Annotation, Chord shape; Bold, Italic, and Underline as icons (labelled for screen readers); the sections in song
   order, Repeat chorus after Chorus. First row: what a song needs now and then: Title, Artist, **More details** (the
   credits, album, year, duration, cover); Key, Capo, Key change, Tempo, Time signature; Tag, Language, Link; Tab, Grid,
-  and a **Comment** menu (plain, italic, boxed). What is reached for less often goes into a menu rather than lengthen
-  its row.
+  **Sheet music** (an `abc` block, named like the reader's section, not for its notation), and a **Comment** menu (plain,
+  italic, boxed). What is reached for less often goes into a menu rather than lengthen its row.
 - Bold, Italic, and Underline toggle markup like their shortcuts, see the editor's own notes.
 
 ### Shortcut rules

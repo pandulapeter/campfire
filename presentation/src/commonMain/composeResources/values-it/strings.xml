@@ -888,6 +888,7 @@
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_tab_any_instrument">Qualsiasi strumento</string>
     <string name="song_editor_section_grid">Griglia</string>
+    <string name="song_editor_section_abc">Spartito</string>
     <string name="song_editor_insert_chorus_recall">Ripeti ritornello</string>
     <string name="song_editor_insert_comment">Commento</string>
     <string name="song_editor_insert_comment_italic">Commento in corsivo</string>
@@ -992,7 +993,7 @@
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Griglia</string>
-    <string name="song_details_section_abc">Melodia</string>
+    <string name="song_details_section_abc">Spartito</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Mostra l\'intavolatura</string>

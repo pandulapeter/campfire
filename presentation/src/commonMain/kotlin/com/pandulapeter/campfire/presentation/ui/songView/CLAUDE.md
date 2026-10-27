@@ -28,10 +28,11 @@ builds what it draws, `grid/` places it.
   `ChordProLine.Verbatim`, always preformatted (`isPreformatted`), since a tied ABC line full of dashes would pass for a
   staff.
 - An `abc` run is engraved once its rendering arrives (`SongNotationBlock`, see `ui/notation`), and is the text above
-  until then or if it fails. It is headed "Melody", on screen and in the PDF: ABC is how a tune is written, which a
-  reader need not know. It keeps the text's slots: slot *n* draws staff system *n*, the last one the rest, so the
-  section is cut between systems; each slot answers its height for any width at once (the systems at the text size's
-  unit, scaled down to a narrower column), and the sizes pool is renewed when a rendering arrives.
+  until then or if it fails. It is headed "Sheet music", on screen and in the PDF: ABC is how it is written, which a
+  reader need not know, and it may hold chords and several voices (a piano part), not only a melody. It keeps the
+  text's slots: slot *n* draws staff system *n*, the last one the rest, so the section is cut between systems; each
+  slot answers its height for any width at once (the systems at the text size's unit, scaled down to a narrower
+  column), and the sizes pool is renewed when a rendering arrives.
 - A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested): strings run from bar to bar,
   broken by every other character, and a bar joins the strings above and under it that have one in its column. Only
   the screen draws them so far; the PDF prints the characters.

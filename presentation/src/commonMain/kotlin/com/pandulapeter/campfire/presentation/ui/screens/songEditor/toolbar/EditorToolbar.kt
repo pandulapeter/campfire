@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_abc
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_grid
@@ -87,9 +88,9 @@ import org.jetbrains.compose.resources.painterResource
  * There are two of them because the two halves are reached for at different moments: the second holds what goes into
  * nearly every line (its chords, the words' formatting, its sections), and the first everything a song needs now and
  * then: what it *is* and how it is played (its title, its key and tempo and the changes of them further down, its
- * tags), then the tabs, grids, and comments a song holds a few of at most. The two are kept about as long as each
- * other, so that neither is the one always scrolled through, and what is reached for less often waits behind a menu
- * rather than lengthening its row.
+ * tags), then the tabs, grids, sheet music, and comments a song holds a few of at most. The two are kept about as long
+ * as each other, so that neither is the one always scrolled through, and what is reached for less often waits behind a
+ * menu rather than lengthening its row.
  *
  * Each row scrolls horizontally rather than wrapping, because the alternative on a phone is four rows of buttons
  * over an editor that is two lines tall. The buttons take no focus ([Modifier.focusProperties]): a toolbar that
@@ -282,12 +283,14 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
 )
 
 /**
- * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: tablature
- * and grids, and the three kinds of comment as one menu, a plain comment being the one usually wanted.
+ * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: tablature,
+ * grids, and sheet music (an `abc` block, labelled as the reader's section is, for what it holds rather than for
+ * the notation it is written in), and the three kinds of comment as one menu, a plain comment being the one usually
+ * wanted.
  *
- * Tablature and grids are a group of their own rather than two more sections, because that is what they are: a
- * `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without breaking
- * it in two, see [SectionType][com.pandulapeter.campfire.chordpro.model.SectionType].
+ * Tablature, grids, and sheet music are a group of their own rather than more sections, because that is what they
+ * are: a `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without
+ * breaking it in two, see [SectionType][com.pandulapeter.campfire.chordpro.model.SectionType].
  *
  * The Tab button first asks what the tab is for: any instrument, which writes a plain `{start_of_tab}`, or one of the
  * instruments with frets ([tabInstruments]), whose id becomes its selector (`{start_of_tab-ukulele}`), so that of the
@@ -306,6 +309,7 @@ private fun lineKindInsertions(tabStaff: (UserPreferences.Instrument?) -> List<S
                 tabInstruments.map { instrument -> EditorInsertion.tab(instrumentLabel(instrument), selector = instrument.id, staff = tabStaff(instrument)) },
         ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_abc), name = "abc"),
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(
