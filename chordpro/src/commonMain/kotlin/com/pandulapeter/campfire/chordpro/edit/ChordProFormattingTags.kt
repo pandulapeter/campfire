@@ -41,7 +41,7 @@ public object ChordProFormattingTags {
         val openingStart = openingStartEndingAt(text, start, range.first, style) ?: return null
         val opening = ChordProMarkup.tagAt(text, openingStart) ?: return null
         val closing = ChordProMarkup.tagAt(text, end)?.takeIf { it.isClosing && it.name == opening.name } ?: return null
-        if (end + closing.length > range.last + 1) return null
+        if (end + closing.length > range.last + 1 || !isPair(text, start, end, opening.name)) return null
         return removal(text, openingStart, opening, end, closing, style)
     }
 
@@ -56,7 +56,8 @@ public object ChordProFormattingTags {
         while (closingStart >= contentStart) {
             val closing = ChordProMarkup.tagAt(text, closingStart)
             if (closing != null && closingStart + closing.length == end) {
-                return if (closing.isClosing && closing.name == opening.name) removal(text, start, opening, closingStart, closing, style) else null
+                val isPair = closing.isClosing && closing.name == opening.name && isPair(text, contentStart, closingStart, opening.name)
+                return if (isPair) removal(text, start, opening, closingStart, closing, style) else null
             }
             closingStart = text.lastIndexOf('<', closingStart - 1)
         }
@@ -64,6 +65,24 @@ public object ChordProFormattingTags {
     }
 
     private fun ChordProMarkup.Tag.opens(style: Formatting.Style) = !isClosing && !isSelfClosing && style in styles
+
+    /**
+     * Whether a tag named [name] that ends at [contentStart] and one closing it at [closingStart] are a pair: every tag of
+     * that name between them closed again in between, as [ChordProMarkup] nests them. Two spans side by side are no pair,
+     * and taking the style off their outer ends would leave the first one's closing tag and the second one's opening.
+     */
+    private fun isPair(text: String, contentStart: Int, closingStart: Int, name: String): Boolean {
+        var depth = 0
+        var index = text.indexOf('<', contentStart)
+        while (index in contentStart until closingStart) {
+            val tag = ChordProMarkup.tagAt(text, index)
+            if (tag != null && tag.name == name && !tag.isSelfClosing) {
+                if (!tag.isClosing) depth++ else if (depth-- == 0) return false
+            }
+            index = text.indexOf('<', index + 1)
+        }
+        return depth == 0
+    }
 
     private fun openingStartEndingAt(text: String, end: Int, from: Int, style: Formatting.Style): Int? {
         var index = text.lastIndexOf('<', end - 1)

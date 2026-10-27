@@ -66,4 +66,12 @@ class ChordProFormattingTagsTest {
         assertNull(inside("|<b>b</b> c|"))
         assertNull(around("<b>a |b|</b>"))
     }
+
+    @Test
+    fun `tags side by side are not a pair, and nested ones of one name are`() {
+        assertNull(inside("|<span weight=\"bold\">a</span> <span color=\"red\">b</span>|"))
+        assertNull(inside("|<b>a</b> <b>b</b>|"))
+        assertNull(around("<b>|a</b> <b>b|</b>"))
+        assertEquals("|a <span color=\"red\">b</span> c|", inside("|<span weight=\"bold\">a <span color=\"red\">b</span> c</span>|"))
+    }
 }
