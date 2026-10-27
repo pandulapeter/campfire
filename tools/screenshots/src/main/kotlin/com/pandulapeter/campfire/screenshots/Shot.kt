@@ -18,10 +18,12 @@ import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.localization.StringsDefault
 import com.pandulapeter.campfire.presentation.localization.StringsHu
+import com.pandulapeter.campfire.presentation.localization.StringsRo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -55,7 +57,7 @@ import org.koin.mp.KoinPlatform
 internal class Shot(
     val id: String,
     val uiMode: UserPreferences.UiMode,
-    val language: UserPreferences.Language = UserPreferences.Language.ENGLISH,
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val preferences: (Device) -> Map<String, JsonElement> = { emptyMap() },
     val prepare: suspend PrepareScope.() -> Unit = {},
     val drive: suspend ShotScope.() -> Unit = {},
@@ -78,7 +80,7 @@ internal class Shot(
 internal open class PrepareScope(
     val viewModel: CampfireViewModel,
     val device: Device,
-    val language: UserPreferences.Language,
+    val language: AppLanguage,
     private val settle: suspend (milliseconds: Long) -> Unit,
 ) {
 
@@ -88,8 +90,9 @@ internal open class PrepareScope(
     /** The text of the string resource called [key] in the shot's language, for finding what a screen shows. */
     fun string(key: String) = checkNotNull(
         when (language) {
-            UserPreferences.Language.HUNGARIAN -> StringsHu.strings[key]
-            UserPreferences.Language.ENGLISH, UserPreferences.Language.SYSTEM_DEFAULT -> StringsDefault.strings[key]
+            AppLanguage.HUNGARIAN -> StringsHu.strings[key]
+            AppLanguage.ROMANIAN -> StringsRo.strings[key]
+            AppLanguage.ENGLISH, AppLanguage.SYSTEM_DEFAULT -> StringsDefault.strings[key]
         } ?: StringsDefault.strings[key],
     ) { "There is no string resource called $key." }
 
@@ -130,7 +133,7 @@ internal open class PrepareScope(
 internal class ShotScope(
     viewModel: CampfireViewModel,
     device: Device,
-    language: UserPreferences.Language,
+    language: AppLanguage,
     settle: suspend (milliseconds: Long) -> Unit,
     private val scene: ImageComposeScene,
     private val windowTop: Float,

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -297,7 +298,7 @@ internal fun defaultUserPreferences(
     isAppIconThemed = true,
     isCoverArtEnabled = true,
     shouldNumberSections = true,
-    language = UserPreferences.Language.SYSTEM_DEFAULT,
+    language = AppLanguage.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling.Default,
     transpositions = transpositions,
     tempos = tempos,

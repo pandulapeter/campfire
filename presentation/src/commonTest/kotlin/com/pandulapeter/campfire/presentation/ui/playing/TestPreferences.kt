@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** Preferences with every feature on and nothing set, for the tests of this package to copy what they are about into. */
@@ -26,7 +27,7 @@ internal fun testPreferences() = UserPreferences(
     isAppIconThemed = true,
     isCoverArtEnabled = true,
     shouldNumberSections = true,
-    language = UserPreferences.Language.SYSTEM_DEFAULT,
+    language = AppLanguage.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling.Default,
     transpositions = emptyMap(),
     foldedSections = emptyMap(),

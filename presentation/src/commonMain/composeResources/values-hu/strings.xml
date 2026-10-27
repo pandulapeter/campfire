@@ -532,6 +532,7 @@
     <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
     <string name="settings_user_interface_language_english">Angol</string>
     <string name="settings_user_interface_language_hungarian">Magyar</string>
+    <string name="settings_user_interface_language_romanian">Román</string>
     <string name="settings_user_interface_language_more_coming">Hamarosan további nyelvek is elérhetők lesznek</string>
     <string name="settings_distributions_all">A Campfire összes változata</string>
     <string name="settings_distributions_all_description">A campfire-songbook.com oldalon</string>

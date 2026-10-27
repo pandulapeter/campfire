@@ -487,11 +487,20 @@
                 alreadyOpen: 'A Campfire már meg van nyitva egy másik lapon. Előbb zárd be azt a lapot, vagy folytasd ott.',
                 sentToOtherTab: 'Átküldve a másik lapon megnyitott Campfire-nek.',
                 retry: 'Újra'
+            },
+            ro: {
+                loadFailed: 'Campfire nu s-a putut încărca. Verifică conexiunea și încearcă din nou.',
+                loadFailedFirstVisit: 'Campfire nu s-a putut încărca. Prima dată când e deschis în acest browser are nevoie de conexiune, așa că verifică conexiunea și încearcă din nou.',
+                unsupported: 'Acest browser nu poate rula Campfire. Are nevoie de Chrome sau Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) sau o versiune mai nouă.',
+                alreadyOpen: 'Campfire e deja deschis în altă filă. Închide mai întâi fila aceea sau continuă acolo.',
+                sentToOtherTab: 'Trimis către Campfire din cealaltă filă.',
+                retry: 'Încearcă din nou'
             }
         };
-        var text = /^hu\b/i.test(navigator.language || '') ? TEXTS.hu : TEXTS.en;
-        if (text === TEXTS.hu) {
-            document.documentElement.lang = 'hu';
+        var language = (/^(hu|ro)\b/i.exec(navigator.language || '') || [])[1];
+        var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
+        if (language) {
+            document.documentElement.lang = language.toLowerCase();
         }
         retry.textContent = text.retry;
 

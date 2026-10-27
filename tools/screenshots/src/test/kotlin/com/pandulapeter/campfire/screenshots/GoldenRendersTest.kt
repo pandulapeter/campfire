@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.screenshots
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ExperimentalTestApi
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
@@ -88,12 +88,12 @@ internal class GoldenRendersTest {
         GoldenCase(
             name = "song-details-hungarian-130",
             reason = "Labels broken in the middle of a word at a large text size, as the chips and the steppers were.",
-            appearance = TestAppearance(language = UserPreferences.Language.HUNGARIAN, textScale = 1.3f),
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 1.3f),
         ) { openSong() },
         GoldenCase(
             name = "song-details-hungarian-200",
             reason = "Steppers that no longer fit their labels at the largest text size, in the longer Hungarian words.",
-            appearance = TestAppearance(language = UserPreferences.Language.HUNGARIAN, textScale = 2f),
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 2f),
         ) { openSong() },
         GoldenCase(
             name = "editor",
@@ -116,12 +116,12 @@ internal class GoldenRendersTest {
         GoldenCase(
             name = "new-song-keyboard-hungarian-130",
             reason = "The header's Create pushed off the sheet by a longer title at a large text size.",
-            appearance = TestAppearance(language = UserPreferences.Language.HUNGARIAN, textScale = 1.3f),
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 1.3f),
         ) { openNewSong() },
         GoldenCase(
             name = "new-song-keyboard-hungarian-200",
             reason = "A pinned header taller than the room the keyboard leaves at the largest text size.",
-            appearance = TestAppearance(language = UserPreferences.Language.HUNGARIAN, textScale = 2f),
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 2f),
         ) { openNewSong() },
         GoldenCase(
             name = "song-metadata-keyboard",

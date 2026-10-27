@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.advanceTimeBy
@@ -136,7 +137,7 @@ class DebouncedPreferenceTest {
             isAppIconThemed = true,
             isCoverArtEnabled = true,
             shouldNumberSections = true,
-            language = UserPreferences.Language.SYSTEM_DEFAULT,
+            language = AppLanguage.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),
             foldedSections = emptyMap(),

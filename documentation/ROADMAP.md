@@ -36,7 +36,7 @@ What's planned for Campfire, grouped by area. Nothing here has a date; items wit
 
 ## UI
 
-- **More languages**: Hebrew (RTL + font), Spanish, Italian, German, French, and Romanian
+- **More languages**: Hebrew (RTL + font), Spanish, Italian, German, and French
 - **Documentation of every keyboard shortcut** used in the app
 
 ## Sync

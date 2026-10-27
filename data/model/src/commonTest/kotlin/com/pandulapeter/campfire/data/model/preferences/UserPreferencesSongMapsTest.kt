@@ -79,7 +79,7 @@ class UserPreferencesSongMapsTest {
         isAppIconThemed = true,
         isCoverArtEnabled = true,
         shouldNumberSections = true,
-        language = UserPreferences.Language.SYSTEM_DEFAULT,
+        language = AppLanguage.SYSTEM_DEFAULT,
         chordSpelling = UserPreferences.ChordSpelling.Default,
         transpositions = mapOf(fileName to 2),
         tempos = mapOf(fileName to 92),

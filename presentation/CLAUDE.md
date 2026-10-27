@@ -42,8 +42,9 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   words staying text. Links the system opens the app with arrive as `CampfireApp`'s `shareLinks`; every way ends in
   `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is downloaded from the address
   `SharedLink.Readable.downloadUrl` builds (never one the text names) and always reviewed.
-- Summaries report unreadable documents separately and append the number of converted songs actually written (English
-  and Hungarian). A document that is one song is previewed like any batch of one song (`ui/screens/songDetails/`).
+- Summaries report unreadable documents separately and append the number of converted songs actually written (English,
+  Hungarian, and Romanian). A document that is one song is previewed like any batch of one song
+  (`ui/screens/songDetails/`).
 
 ## Strings
 

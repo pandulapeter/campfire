@@ -281,6 +281,60 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a page opening with a bold chorus continues a song whose title is set larger`() {
+        val title = ChordSheet.Line(listOf(span("Song", 0.0, 8.0, size = 2.0)))
+        val sheet = ChordSheet(
+            listOf(
+                ChordSheet.Page(listOf(title) + ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines),
+                ChordSheet.Page(bold(ChordSheet.ofPlainText("Sing the chorus\nAm    C\nSing it again").pages.single().lines)),
+            ),
+        )
+        val result = ChordSheetConverter.convert(sheet).single()
+        assertTrue(result.startsWith("{title: Song}"))
+        assertTrue(result.contains("Sing the chorus"))
+    }
+
+    @Test
+    fun `bold titles of the body's size split a songbook but a page opening with a bold chorus does not`() {
+        fun page(lead: String, words: String, isChorus: Boolean) = ChordSheet.Page(
+            bold(ChordSheet.ofPlainText(lead).pages.single().lines) +
+                ChordSheet.ofPlainText("Am    C\n$words").pages.single().lines.let { if (isChorus) bold(it) else it },
+        )
+        val sheet = ChordSheet(
+            listOf(
+                page("First", "First words", isChorus = false),
+                page("Sing along", "Sing it again", isChorus = true),
+                page("Second", "Other words", isChorus = false),
+            ),
+        )
+        val result = ChordSheetConverter.convert(sheet)
+        assertEquals(2, result.size)
+        assertTrue(result[0].startsWith("{title: First}"))
+        assertTrue(result[0].contains("Sing along"))
+        assertTrue(result[1].startsWith("{title: Second}"))
+    }
+
+    @Test
+    fun `a page repeating the song's title continues the song and leaves the repetition out`() {
+        fun sheet(header: ChordSheet.Line) = ChordSheet(
+            listOf(
+                ChordSheet.Page(
+                    listOf(ChordSheet.Line(listOf(span("Let It Be", 0.0, 18.0, size = 2.0)))) +
+                        ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines,
+                ),
+                ChordSheet.Page(listOf(header) + ChordSheet.ofPlainText("G     F\nMore words").pages.single().lines),
+            ),
+        )
+        val marked = ChordSheetConverter.convert(sheet(ChordSheet.Line(listOf(span("Let It Be (cont.)", 0.0, 17.0, size = 1.0))))).single()
+        assertFalse(marked.contains("cont"))
+        assertTrue(marked.contains("[G]More [F]words"), marked)
+        val repeated = ChordSheetConverter.convert(sheet(ChordSheet.Line(listOf(span("Let It Be", 0.0, 18.0, size = 2.0))))).single()
+        assertEquals(1, Regex("Let It Be").findAll(repeated).count())
+        val sung = ChordSheetConverter.convert(sheet(ChordSheet.Line(listOf(span("Let it be", 0.0, 9.0, size = 1.0))))).single()
+        assertTrue(sung.contains("\nLet it be\n"), sung)
+    }
+
+    @Test
     fun `a title wrapped over several lines of its type is one title and the smaller line under it its artist`() {
         val lines = listOf("A song with", "a long title").map { ChordSheet.Line(listOf(span(it, 0.0, 24.0, size = 2.0, bold = true))) } +
             ChordSheet.Line(listOf(span("Someone", 0.0, 7.0, size = 1.0))) +
@@ -338,6 +392,11 @@ class ChordSheetConverterTest {
 
     private fun span(text: String, start: Double, end: Double, size: Double = 10.0, bold: Boolean = false) =
         ChordSheet.Span(text, start, end, size, isBold = bold)
+
+    /** The [lines] with every line that is not a chord row set in bold, the way many sheets set a chorus. */
+    private fun bold(lines: List<ChordSheet.Line>) = lines.map { line ->
+        if (ChordSheetConverter.isChordLine(line.spans.joinToString(" ") { it.text })) line else line.copy(spans = line.spans.map { it.copy(isBold = true) })
+    }
 
     @Test
     fun `a bracketed heading with a singer after its colon is the section it names`() {

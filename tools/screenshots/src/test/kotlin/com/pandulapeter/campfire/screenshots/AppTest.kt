@@ -30,6 +30,7 @@ import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
@@ -64,7 +65,7 @@ internal class TestWindow(val width: Dp, val height: Dp) {
 
 /** How the app is drawn for a test: in [language], in the dark theme or the light one, with the system's text size at [textScale]. */
 internal data class TestAppearance(
-    val language: UserPreferences.Language = UserPreferences.Language.ENGLISH,
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val isDark: Boolean = false,
     val textScale: Float = 1f,
 )

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
@@ -230,7 +231,7 @@ internal class PreferencesController(
         copy(autoScrollSpeeds = if (clamped == SongLayout.DEFAULT_AUTO_SCROLL_SPEED) autoScrollSpeeds - songFileName else autoScrollSpeeds + (songFileName to clamped))
     }
 
-    fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }
+    fun setLanguage(value: AppLanguage) = changeUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
 

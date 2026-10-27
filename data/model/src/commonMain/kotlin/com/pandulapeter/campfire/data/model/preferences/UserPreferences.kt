@@ -99,7 +99,7 @@ data class UserPreferences(
      * plain name of their kind.
      */
     val shouldNumberSections: Boolean,
-    val language: Language,
+    val language: AppLanguage,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /**
      * Whether a song opens with the diagrams of its chords, in a section of their own after the controls of how it is
@@ -490,11 +490,5 @@ data class UserPreferences(
                 .filter { tuningId == it.id || tuningId.startsWith(it.id + "_") }
                 .maxByOrNull { it.id.length }
         }
-    }
-
-    enum class Language(val id: String) {
-        ENGLISH("en"),
-        HUNGARIAN("hu"),
-        SYSTEM_DEFAULT("system_default"),
     }
 }

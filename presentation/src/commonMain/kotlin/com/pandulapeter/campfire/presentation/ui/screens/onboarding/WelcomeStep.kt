@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_language
@@ -48,7 +48,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun WelcomeStep(
     modifier: Modifier = Modifier,
     markModifier: Modifier,
-    language: UserPreferences.Language?,
+    language: AppLanguage?,
     isCompact: Boolean,
     onLanguageClicked: () -> Unit,
 ) = OnboardingPage(
@@ -73,7 +73,7 @@ internal fun WelcomeStep(
             )
             Text(
                 modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
-                text = stringResource(Res.string.onboarding_language, appLanguageName(language ?: UserPreferences.Language.SYSTEM_DEFAULT)),
+                text = stringResource(Res.string.onboarding_language, appLanguageName(language ?: AppLanguage.SYSTEM_DEFAULT)),
             )
         }
     }

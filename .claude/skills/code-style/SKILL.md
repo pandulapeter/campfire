@@ -171,9 +171,9 @@ wrong or undo it".
   dialog and notification text all come from `composeResources/values/strings.xml`.
 - Read them with `com.pandulapeter.campfire.presentation.localization.stringResource(Res.string.x)`.
   **Never** the `org.jetbrains.compose.resources` overload: it ignores the in-app language.
-- **Add every new key to both `values/strings.xml` and `values-hu/strings.xml`**, in the same
-  commented group in both files, and translate the Hungarian properly. A missing key is a build-time
-  hole that shows up as "???".
+- **Add every new key to `values/strings.xml`, `values-hu/strings.xml`, and `values-ro/strings.xml`**, in the
+  same commented group in each file, and translate the Hungarian and the Romanian properly. A missing key
+  is a build-time hole that shows up as "???".
 - Formatted strings are always called with their arguments (`%1$s`, `%1$d`); never concatenate a literal
   with a value. A sentence that takes text somebody else wrote — a title, a tag, a header value, a file
   or account name — is read with `textResource(Res.string.x, text)` (`:presentation`'s

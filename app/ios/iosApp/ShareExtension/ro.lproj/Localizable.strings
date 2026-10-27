@@ -1,0 +1,24 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The share extension's Romanian strings. Keep in step with en.lproj. */
+"share_saving" = "Se salvează pentru Campfire…";
+"share_saved" = "Salvat pentru Campfire";
+"share_saved_detail" = "Deschide Campfire ca să-l adaugi în bibliotecă.";
+"share_link" = "Campfire nu deschide pagini web.";
+"share_link_detail" = "Selectează textul foii cu acorduri și partajează-l pe acela.";
+"share_unsupported" = "Campfire nu poate importa asta.";
+"share_unsupported_detail" = "Importă cântece, text simplu, documente PDF și Word și arhive zip.";
+"share_too_large" = "E prea mare pentru import.";
+"share_too_large_detail" = "Campfire importă cel mult 24 MB odată, 16 MB dintr-un document și 8 MB dintr-un fișier text sau de cântec.";
+"share_inbox_full" = "Unele partajări încă așteaptă.";
+"share_inbox_full_detail" = "Deschide întâi Campfire ca să le termine.";
+"share_failed" = "Nu s-a putut salva pentru Campfire.";
+"share_done" = "Gata";

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
@@ -43,7 +44,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     shouldNumberSections = shouldNumberSections,
     songLayout = SongLayout.entries.firstOrNull { it.id == songLayout } ?: SongLayout.PAGES,
     isSongLayoutChosen = isSongLayoutChosen,
-    language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
+    language = AppLanguage.entries.firstOrNull { it.id == language } ?: AppLanguage.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
         notation = UserPreferences.Notation.entries.firstOrNull { it.id == notation }

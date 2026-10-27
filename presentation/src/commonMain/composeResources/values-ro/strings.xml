@@ -1,0 +1,1325 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Shared -->
+    <string name="back">Înapoi</string>
+    <string name="close">Închide</string>
+    <string name="cancel">Anulează</string>
+    <string name="done">Gata</string>
+    <string name="delete">Șterge</string>
+    <string name="create">Creează</string>
+    <string name="duplicate">Duplică</string>
+    <string name="share_or_export">Partajează sau exportă</string>
+    <string name="save">Salvează</string>
+    <string name="select_all">Selectează tot</string>
+    <string name="deselect_all">Deselectează tot</string>
+    <string name="retry">Reîncearcă</string>
+    <string name="add_demo_library">Adaugă biblioteca demonstrativă</string>
+    <string name="confirm_exit_title">Închizi Campfire?</string>
+    <string name="confirm_exit_message">Sigur vrei să ieși din aplicație?</string>
+
+    <!-- Import and export -->
+    <string name="import_progress_title">Se importă fișierele</string>
+    <string name="import_progress_unpacking">Se deschid fișierele și arhivele selectate</string>
+    <string name="import_progress_reading">Se citesc și se convertesc cântecele</string>
+    <string name="import_progress_comparing">Se caută duplicate și conflicte</string>
+    <string name="import_progress_importing">Se adaugă fișierele în bibliotecă</string>
+    <string name="import_progress_finishing">Se actualizează biblioteca</string>
+    <string name="import_progress_count">%1$d din %2$d procesate</string>
+    <string name="import_progress_wait">Ține Campfire deschis până se termină importul.</string>
+    <string name="import_status_title">Import finalizat</string>
+    <string name="import_status_stopped">Import oprit</string>
+    <string name="import_status_partial">Importul s-a oprit după o eroare. Fișierele deja importate sunt în bibliotecă; celelalte nu au fost procesate.</string>
+    <string name="import_status_unknown_failure">Importul nu s-a putut încheia. Verifică biblioteca înainte să încerci din nou.</string>
+    <plurals name="import_status_songs">
+        <item quantity="one">%1$d cântec importat</item>
+        <item quantity="other">%1$d cântece importate</item>
+    </plurals>
+    <plurals name="import_status_setlists">
+        <item quantity="one">%1$d listă importată</item>
+        <item quantity="other">%1$d liste importate</item>
+    </plurals>
+    <plurals name="import_status_duplicates">
+        <item quantity="one">%1$d fișier deja în bibliotecă</item>
+        <item quantity="other">%1$d fișiere deja în bibliotecă</item>
+    </plurals>
+    <plurals name="import_status_left_out">
+        <item quantity="one">%1$d fișier omis la alegerea ta</item>
+        <item quantity="other">%1$d fișiere omise la alegerea ta</item>
+    </plurals>
+    <plurals name="import_status_skipped">
+        <item quantity="one">%1$d fișier neacceptat sau nevalid</item>
+        <item quantity="other">%1$d fișiere neacceptate sau nevalide</item>
+    </plurals>
+    <plurals name="import_status_oversized">
+        <item quantity="one">%1$d fișier peste limita de mărime a importului</item>
+        <item quantity="other">%1$d fișiere peste limita de mărime a importului</item>
+    </plurals>
+    <plurals name="import_status_unreadable">
+        <item quantity="one">%1$d document fără text lizibil</item>
+        <item quantity="other">%1$d documente fără text lizibil</item>
+    </plurals>
+    <plurals name="import_status_failed">
+        <item quantity="one">%1$d fișier care nu a putut fi importat</item>
+        <item quantity="other">%1$d fișiere care nu au putut fi importate</item>
+    </plurals>
+    <plurals name="import_status_unprocessed">
+        <item quantity="one">%1$d fișier neprocesat</item>
+        <item quantity="other">%1$d fișiere neprocesate</item>
+    </plurals>
+    <string name="import_report_search">Caută fișiere</string>
+    <string name="import_files_empty">Niciun fișier potrivit</string>
+    <string name="import_report_clean">Nu a fost omis nimic.</string>
+    <string name="import_report_left_out">Unele fișiere nu au fost importate. Fiecare apare mai jos, sub motivul său.</string>
+    <string name="import_report_converted">Convertite, merită o privire în editor</string>
+    <string name="import_report_edit">Deschide în editor</string>
+    <string name="import_details">Detalii</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">Înlocuiești %1$d fișier?</item>
+        <item quantity="other">Înlocuiești %1$d fișiere?</item>
+    </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">Fișierul din bibliotecă va fi suprascris. Acțiunea nu poate fi anulată.</item>
+        <item quantity="other">Fișierele din bibliotecă vor fi suprascrise. Acțiunea nu poate fi anulată.</item>
+    </plurals>
+    <string name="import_files">Importă fișiere</string>
+    <plurals name="import_result_songs">
+        <item quantity="one">%1$d cântec importat</item>
+        <item quantity="other">%1$d cântece importate</item>
+    </plurals>
+    <plurals name="import_result_setlists">
+        <item quantity="one">%1$d listă importată</item>
+        <item quantity="other">%1$d liste importate</item>
+    </plurals>
+    <plurals name="import_result_already_there">
+        <item quantity="one">%1$d deja în bibliotecă</item>
+        <item quantity="other">%1$d deja în bibliotecă</item>
+    </plurals>
+    <plurals name="import_result_skipped">
+        <item quantity="one">%1$d omis</item>
+        <item quantity="other">%1$d omise</item>
+    </plurals>
+    <string name="import_result_nothing">Nu s-a importat nimic</string>
+    <string name="import_converted">Convertite: %1$d — merită o privire în editor.</string>
+    <plurals name="import_unreadable_documents">
+        <item quantity="one">Un document nu are text pe care Campfire să-l poată citi (o scanare, un PDF protejat sau un format Word vechi).</item>
+        <item quantity="other">%1$d documente nu au text pe care Campfire să-l poată citi (scanări, PDF-uri protejate sau un format Word vechi).</item>
+    </plurals>
+    <string name="import_failed">Importul a eșuat</string>
+    <string name="import_interrupted">Importul a fost întrerupt. Deschide din nou fișierele pentru a le importa.</string>
+    <string name="export_failed">Nu s-a putut salva sau partaja</string>
+    <string name="export_pdf_saved">PDF salvat</string>
+    <string name="export_song_saved">Cântec salvat</string>
+    <string name="export_setlist_saved">Listă salvată</string>
+    <string name="export_songs_saved">Cântece salvate</string>
+    <string name="export_library_saved">Bibliotecă exportată</string>
+    <string name="export_log_saved">Jurnal salvat</string>
+    <string name="export_too_large_to_import">Arhiva depășește cei 24 MB pe care Campfire îi poate importa deodată. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă cântecele câteva mii o dată.</string>
+    <plurals name="export_skipped_files">
+        <item quantity="one">Un fișier nu a putut fi citit și nu este în arhivă: %2$s</item>
+        <item quantity="other">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
+    </plurals>
+    <plurals name="import_review_skipped">
+        <item quantity="one">Un fișier nu este nici cântec, nici listă și nu poate fi importat.</item>
+        <item quantity="other">%1$d fișiere nu sunt nici cântece, nici liste și nu pot fi importate.</item>
+    </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">Un fișier este prea mare și nu poate fi importat.</item>
+        <item quantity="other">%1$d fișiere sunt prea mari și nu pot fi importate.</item>
+    </plurals>
+    <string name="import_conflicts_keep_both">Păstrează ambele</string>
+    <string name="import_conflicts_keep_both_description">Importă-le lângă fișierele cu care se suprapun, numerotate „_2”</string>
+    <string name="import_conflicts_replace">Înlocuiește</string>
+    <string name="import_conflicts_replace_description">Suprascrie ce ai în bibliotecă. Fișierele înlocuite se pierd.</string>
+    <string name="import_conflicts_mixed">Mixt</string>
+    <string name="import_loading_title">Se citesc fișierele</string>
+    <string name="import_progress_downloading">Se descarcă fișierul</string>
+    <string name="import_failed_unreachable">%1$s nu a putut fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
+    <string name="import_failed_not_found">Nu există nimic de descărcat la această adresă. Linkul poate să fi expirat sau să fi fost eliminat.</string>
+    <string name="import_failed_too_large">Fișierul depășește cei 24 MB pe care Campfire îi poate importa deodată.</string>
+    <string name="import_failed_unreadable">Fișierele nu au putut fi citite. Nu s-a importat nimic.</string>
+    <string name="import_failed_link_gone">Linkul nu mai funcționează. Persoana care l-a partajat poate să fi oprit partajarea.</string>
+    <string name="import_failed_link_unreachable">Nu s-a putut descărca „%1$s”. Verifică conexiunea la internet și încearcă din nou.</string>
+    <string name="import_failed_link_unreachable_untitled">Nu s-a putut descărca ce partajează linkul. Verifică conexiunea la internet și încearcă din nou.</string>
+    <string name="import_retry">Încearcă din nou</string>
+    <string name="import_review_title">Verifică importul</string>
+    <string name="import_review_title_empty">Nimic de importat</string>
+    <plurals name="import_review_from_files">
+        <item quantity="one">Din %1$d fișier</item>
+        <item quantity="other">Din %1$d fișiere</item>
+    </plurals>
+    <string name="import_review_from">Din %1$s</string>
+    <string name="import_warning_songs_off">Cântecele sunt dezactivate în Setări, așa că nimic din ce imporți aici nu va apărea până nu le reactivezi.</string>
+    <string name="import_warning_setlists_off">Listele sunt dezactivate în Setări, așa că listele importate aici nu vor apărea până nu le reactivezi.</string>
+    <string name="import_review_demo_library">Bibliotecă demonstrativă</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">Un fișier importat anterior din acest link este actualizat la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
+        <item quantity="other">%1$d fișiere importate anterior din acest link sunt actualizate la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
+    </plurals>
+    <plurals name="import_review_confirm">
+        <item quantity="one">Importă %1$d fișier</item>
+        <item quantity="other">Importă %1$d fișiere</item>
+    </plurals>
+    <string name="import_review_summary_counts">Cântece de importat: %1$d · Liste: %2$d</string>
+    <string name="import_review_name_taken_counts">Nume ocupate: Înlocuiește %1$d · Păstrează ambele %2$d</string>
+    <plurals name="import_review_already_there">
+        <item quantity="one">Unul este deja în bibliotecă și rămâne neatins</item>
+        <item quantity="other">%1$d sunt deja în bibliotecă și rămân neatinse</item>
+    </plurals>
+    <string name="import_review_left_out_count">Omise de tine: %1$d</string>
+    <string name="import_review_tags">Etichete pentru cântecele importate</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">Adăugate singurului cântec scris de acest import</item>
+        <item quantity="other">Adăugate celor %1$d cântece scrise de acest import</item>
+    </plurals>
+    <plurals name="import_review_conflicts">
+        <item quantity="one">%1$d nume deja ocupat</item>
+        <item quantity="other">%1$d nume deja ocupate</item>
+    </plurals>
+    <plurals name="import_review_songs">
+        <item quantity="one">%1$d cântec</item>
+        <item quantity="other">%1$d cântece</item>
+    </plurals>
+    <plurals name="import_review_setlists">
+        <item quantity="one">%1$d listă</item>
+        <item quantity="other">%1$d liste</item>
+    </plurals>
+    <string name="import_review_will_be_numbered">Va fi numerotat lângă cel pe care îl ai</string>
+    <string name="import_review_will_replace">Îl va înlocui pe cel pe care îl ai: %1$s</string>
+    <string name="import_review_show_library_song">Arată-l pe cel pe care îl ai</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">Un cântec</item>
+        <item quantity="other">%1$d cântece</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">%1$d dintre ele în acest import</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">Apare o dată în fișiere</item>
+        <item quantity="other">Apare de %1$d ori în fișiere</item>
+    </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">Previzualizare: încă nu e în bibliotecă</string>
+    <string name="import_preview_name_taken">Un alt cântec cu acest nume există deja în bibliotecă.</string>
+    <string name="import_preview_shared_update">Ai importat deja acest cântec partajat. Înlocuiește îl actualizează la această versiune.</string>
+    <string name="import_preview_include">Importă acest cântec</string>
+    <string name="import_preview_choices">Opțiuni pentru acest cântec</string>
+    <string name="import_preview_name_taken_choice">Nume ocupat: %1$s</string>
+    <string name="import_preview_left_out">Omis din import</string>
+    <string name="import_preview_already_there">Deja în bibliotecă, nimic de importat</string>
+    <string name="import_preview_import">Importă</string>
+    <string name="import_preview_import_as_copy">Importă ca o copie</string>
+    <string name="import_preview_importing">Se importă cântecul</string>
+    <string name="import_preview_imported">Adăugat în bibliotecă</string>
+    <string name="import_preview_open">Citește cântecul</string>
+
+    <!-- Errors -->
+    <string name="error_no_data">Nu s-a putut încărca nimic</string>
+    <string name="error_no_data_hint">Biblioteca nu a putut fi citită.</string>
+    <string name="error_operation_failed">Ceva nu a mers bine</string>
+    <string name="error_link_not_opened">Nu s-a putut deschide %1$s</string>
+
+    <!-- Songs screen -->
+    <string name="songs">Cântece</string>
+    <string name="songs_search">Caută în cântece</string>
+    <string name="songs_clear">Golește</string>
+    <string name="songs_sort">Sortează cântecele</string>
+    <string name="songs_filter">Filtrează cântecele</string>
+    <string name="songs_filter_active">Filtrează cântecele, filtrele sunt active</string>
+    <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_unknown_artist">Artist necunoscut</string>
+    <string name="songs_sorting_mode_by_artist">Artist</string>
+    <string name="songs_sorting_mode_by_title">Titlu</string>
+    <string name="songs_empty_title">Biblioteca ta este goală</string>
+    <string name="songs_empty_hint">Creează un cântec, lipește unul din clipboard, importă cântece, documente PDF sau Word și arhive zip ori adaugă biblioteca demonstrativă.</string>
+    <string name="songs_create_song">Creează un cântec</string>
+    <string name="songs_paste_from_clipboard">Lipește din clipboard</string>
+    <string name="add_songs_hint_title">Adaugă propriile cântece</string>
+    <string name="add_songs_tip_paste_title">Copiază un cântec de pe orice site</string>
+    <string name="add_songs_tip_paste_hint">Copiază versurile și acordurile unui cântec de pe orice pagină web, oricât de dezordonate, și lipește-le aici. Campfire le aranjează într-un cântec pe care îl poți salva.</string>
+    <string name="add_songs_tip_import_title">Adu-ți cântecele din altă aplicație</string>
+    <string name="add_songs_tip_import_hint">Exportă cântecele din altă aplicație de cântece, ideal ca arhivă zip sau backup, și importă-le aici. Merg și fișierele ChordPro, PDF, Word și text.</string>
+    <string name="songs_paste_converted">Convertit din acorduri scrise deasupra versurilor. Verifică titlul și artistul, apoi salvează.</string>
+    <string name="songs_paste_chordpro">Păstrat în formatul ChordPro în care e scris. Verifică titlul și artistul, apoi salvează.</string>
+    <string name="songs_paste_no_chords">Nu s-au găsit acorduri, așa că acesta e un cântec doar cu versuri. Verifică titlul și artistul, apoi salvează.</string>
+    <string name="songs_paste_notation_without_chords">Nu s-au găsit acorduri, așa că notația e păstrată așa cum e scrisă. Verifică titlul și artistul, apoi salvează.</string>
+    <string name="new_song_placeholder_title">Cântec nou</string>
+    <string name="new_song_placeholder_artist">Artist necunoscut</string>
+    <string name="paste_clipboard_empty">Nu există text în clipboard de lipit.</string>
+    <string name="paste_only_links">Un link nu este un cântec, iar Campfire nu deschide pagini. Copiază chiar acordurile și versurile.</string>
+    <string name="paste_too_large">Textul depășește cei 8 MB pe care îi poate prelua un import.</string>
+    <string name="shared_link_not_imported">Campfire nu deschide pagini web. Selectează textul foii cu acorduri și partajează-l pe acela.</string>
+    <string name="shared_link_from_newer_version">Acest link a fost creat de o versiune mai nouă de Campfire. Actualizează Campfire ca să-l deschizi.</string>
+    <string name="clipboard_not_campfire_link">Acesta nu este un link Campfire.</string>
+    <string name="paste_refused_ios">Campfire nu a avut voie să lipească. Asta decide opțiunea „Lipire din alte aplicații”, la Campfire în aplicația Configurări.</string>
+    <string name="paste_refused_web">Browserul nu a permis Campfire să citească clipboardul. Apasă Ctrl+V (⌘V pe Mac) în lista de cântece.</string>
+    <string name="songs_new_song">Cântec nou</string>
+    <string name="optional_field_label">%1$s (opțional)</string>
+    <string name="songs_new_song_title">Titlu</string>
+    <string name="songs_new_song_artist">Artist</string>
+    <string name="songs_artist_and_title">%1$s - %2$s</string>
+    <string name="songs_actions">Acțiuni pentru cântec</string>
+    <string name="songs_edit_song">Editează fișierul cântecului</string>
+    <string name="songs_choose_setlists">Alege listele</string>
+    <string name="songs_update_file_name">Actualizează numele fișierului</string>
+    <string name="songs_duplicate_song">Duplică cântecul</string>
+    <string name="songs_update_file_name_partly">Fișierul a fost redenumit, dar o listă sau transpunerea salvată încă indică numele vechi</string>
+    <string name="songs_delete_song_partly">Cântecul a fost șters, dar o listă sau transpunerea salvată încă îl menționează</string>
+    <string name="songs_delete_song">Șterge cântecul</string>
+    <string name="songs_share_song">Partajează cântecul</string>
+    <string name="songs_delete_song_confirmation">Ștergi „%1$s”? Fișierul este eliminat din bibliotecă și din toate listele.</string>
+    <string name="songs_delete_song_confirmation_shared">Ștergi „%1$s”? Fișierul este eliminat din bibliotecă și din toate listele, iar linkul său partajat nu va mai funcționa.</string>
+    <string name="songs_select_multiple">Selectează mai multe</string>
+    <string name="songs_selection_actions">Acțiuni pentru selecție</string>
+    <string name="songs_share_songs">Partajează cântecele</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">Gata, %1$d cântec selectat</item>
+        <item quantity="other">Gata, %1$d cântece selectate</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">%1$d cântec</item>
+        <item quantity="other">%1$d cântece</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">%1$d cântec actualizat</item>
+        <item quantity="other">%1$d cântece actualizate</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">%1$d cântec nu a putut fi actualizat</item>
+        <item quantity="other">%1$d cântece nu au putut fi actualizate</item>
+    </plurals>
+    <string name="songs_all_hidden">Toate cântecele sunt ascunse</string>
+    <string name="songs_all_hidden_hint">Filtrele ascund întreaga bibliotecă.</string>
+    <string name="songs_no_search_results">Niciun cântec potrivit</string>
+    <string name="songs_no_search_results_hint">Nimic din bibliotecă nu se potrivește căutării.</string>
+    <string name="songs_lyrics_only">Doar versuri</string>
+    <string name="songs_key">Tonalitate: %1$s</string>
+    <!-- A song card's tempo and the time signature it is counted in, which the metronome mark in front of them stands for. -->
+    <string name="songs_tempo_and_time">%1$s BPM %2$s</string>
+    <string name="songs_tags">Etichete</string>
+    <string name="songs_filters_show_all">Arată toate cele %1$d</string>
+    <string name="songs_filters_show_less">Arată mai puține</string>
+    <string name="songs_tags_search">Caută o etichetă</string>
+    <string name="songs_tags_no_search_results">Nicio etichetă nu se potrivește căutării.</string>
+    <string name="songs_tags_clear">Golește selecția</string>
+    <string name="songs_tags_match_mode">Cântecul trebuie să aibă</string>
+    <string name="songs_tags_match_mode_any">Oricare etichetă</string>
+    <string name="songs_tags_match_mode_all">Toate etichetele</string>
+    <string name="songs_languages">Limbi</string>
+    <string name="songs_languages_unknown">Necunoscută</string>
+    <string name="songs_languages_search">Caută o limbă</string>
+    <string name="songs_languages_no_search_results">Nicio limbă nu se potrivește căutării.</string>
+    <string name="songs_languages_clear">Golește selecția</string>
+    <string name="songs_languages_match_mode">Cântecul trebuie să fie în</string>
+    <string name="songs_languages_match_mode_any">Oricare limbă</string>
+    <string name="songs_languages_match_mode_all">Toate limbile</string>
+    <string name="songs_labels_sorted_by_usage">Sortate după utilizare</string>
+    <string name="songs_labels_sorted_alphabetically">Sortate alfabetic</string>
+    <string name="songs_filters_reset">Resetează</string>
+
+    <!-- Setlists screen -->
+    <string name="setlists">Liste</string>
+    <string name="setlists_no_data">Nicio listă încă</string>
+    <string name="setlists_no_data_hint">Creează o listă și alege cântecele care intră în ea sau importă liste din fișiere.</string>
+    <string name="setlists_create_setlist">Creează o listă</string>
+    <string name="setlists_new_setlist">Listă nouă</string>
+    <string name="setlists_new_setlist_title">Titlul listei</string>
+    <string name="setlists_remove_song">Elimină din listă</string>
+    <string name="setlists_remove_song_confirmation">Elimini „%1$s” din această listă? Cântecul rămâne în bibliotecă și în celelalte liste.</string>
+    <string name="setlists_reorder">Reordonează cântecele</string>
+    <string name="setlists_done_reordering">Gata cu reordonarea</string>
+    <string name="setlists_move_up">Mută în sus</string>
+    <string name="setlists_move_down">Mută în jos</string>
+    <string name="setlists_actions">Acțiuni pentru listă</string>
+    <string name="setlists_edit_details">Editează lista</string>
+    <string name="setlists_choose_songs">Alege cântecele</string>
+    <string name="checklist_selected">%1$d selectate</string>
+    <string name="setlists_description">Descriere (opțional)</string>
+    <string name="setlists_date">Dată</string>
+    <string name="setlists_date_value">%3$s.%2$s.%1$s</string>
+    <string name="setlists_pick_date">Alege o dată</string>
+    <string name="setlists_countdown">Numărătoare inversă</string>
+    <string name="setlists_countdown_today">Astăzi</string>
+    <string name="setlists_countdown_tomorrow">Mâine</string>
+    <string name="setlists_countdown_yesterday">Ieri</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">Peste %1$d zi</item>
+        <item quantity="other">Peste %1$d zile</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">Acum %1$d zi</item>
+        <item quantity="other">Acum %1$d zile</item>
+    </plurals>
+    <!-- A setlist's total duration, as a show's length is named: how long its songs take to play. -->
+    <string name="setlists_total_duration">Durată totală: %1$s</string>
+    <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
+    <string name="setlists_total_duration_minimum">%1$s+</string>
+    <string name="setlists_duplicate_setlist">Duplică lista</string>
+    <string name="setlists_duplicate_title">%1$s (copie)</string>
+    <string name="setlists_archive">Arhivează lista</string>
+    <string name="setlists_unarchive">Dezarhivează lista</string>
+    <string name="setlists_archived">Arhivate</string>
+    <string name="setlists_share">Partajează lista</string>
+    <string name="setlists_missing_song">Fișier negăsit</string>
+    <string name="setlists_delete_setlist">Șterge lista</string>
+    <string name="setlists_delete_setlist_confirmation">Ștergi lista „%1$s”? Cântecele rămân în bibliotecă.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">Ștergi lista „%1$s”? Cântecele rămân în bibliotecă. Linkul ei partajat nu va mai funcționa.</string>
+    <string name="setlists_search">Caută în liste</string>
+    <string name="setlists_no_search_results">Nicio listă potrivită</string>
+    <string name="setlists_no_search_results_hint">Nicio listă nu se potrivește căutării, nici după nume, nici după cântecele din ea.</string>
+    <string name="setlists_sort">Sortează listele</string>
+    <string name="setlists_sorting_mode_by_date">Dată</string>
+    <string name="setlists_sorting_mode_by_title">Titlu</string>
+    <string name="setlists_show_archived">Arată listele arhivate</string>
+    <string name="setlists_all_hidden">Toate listele sunt arhivate</string>
+    <string name="setlists_all_hidden_hint">Activează „Arată listele arhivate” ca să le vezi.</string>
+
+    <!-- Settings screen -->
+    <string name="settings">Setări</string>
+    <string name="settings_library">Bibliotecă</string>
+    <string name="settings_library_summary">Cântece: %1$d · Liste: %2$d</string>
+    <string name="settings_library_size">%1$s pe disc</string>
+    <string name="settings_library_size_bytes">%1$s B</string>
+    <string name="settings_library_size_kilobytes">%1$s KB</string>
+    <string name="settings_library_size_megabytes">%1$s MB</string>
+    <string name="settings_library_size_gigabytes">%1$s GB</string>
+    <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_cover_art_cache">Memoria cache a copertelor</string>
+    <string name="settings_library_cover_art_cache_clear">Golește cache-ul copertelor</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">Copertele păstrate pe acest dispozitiv vor fi șterse. Fiecare se descarcă din nou data viitoare când este afișată.</string>
+    <string name="settings_library_cover_art_cache_clear_action">Golește</string>
+    <string name="settings_library_delete">Șterge biblioteca</string>
+    <string name="settings_library_delete_confirmation">Toate cântecele și listele de pe acest dispozitiv vor fi șterse. Acțiunea nu poate fi anulată.</string>
+    <string name="settings_library_delete_confirmation_shared">Niciun link partajat nu va mai funcționa.</string>
+    <string name="settings_library_delete_confirmation_sync">Sincronizarea Dropbox pornește imediat după ștergere și le șterge și din dosarul tău Dropbox și de pe toate dispozitivele sincronizate cu el.</string>
+    <string name="settings_library_delete_prompt">Scrie %1$s pentru confirmare</string>
+    <string name="settings_library_storage">Stocare</string>
+    <string name="settings_library_storage_granted">Browserul tău a acceptat să păstreze biblioteca până când ștergi datele acestui site.</string>
+    <string name="settings_library_storage_best_effort">Browserul tău păstrează biblioteca, dar nu a promis încă să o păstreze dacă dispozitivul rămâne fără spațiu. De obicei, un marcaj pentru această pagină sau folosirea ei regulată aduce această promisiune; până atunci, un export sau sincronizarea păstrează o copie în altă parte.</string>
+    <string name="settings_library_storage_offline_granted">Campfire se deschide în acest browser și fără conexiune. Browserul tău a acceptat să păstreze aplicația și biblioteca până când ștergi datele acestui site.</string>
+    <string name="settings_library_storage_offline_best_effort">Campfire se deschide în acest browser și fără conexiune. Browserul tău păstrează aplicația și biblioteca, dar nu a promis încă să le păstreze dacă dispozitivul rămâne fără spațiu. De obicei, un marcaj pentru această pagină sau folosirea ei regulată aduce această promisiune; până atunci, un export sau sincronizarea păstrează o copie a bibliotecii în altă parte.</string>
+    <string name="settings_library_storage_online_only">Campfire nu a putut fi salvat în acest browser, așa că are nevoie de conexiune pentru a se deschide.</string>
+    <string name="settings_import">Importă cântece, documente sau arhive zip…</string>
+    <string name="settings_export_all">Exportă biblioteca ca zip</string>
+    <string name="settings_preferences">Preferințe</string>
+    <string name="settings_features">Funcții</string>
+    <string name="settings_group_performance">Concert</string>
+    <string name="settings_read_only_mode">Doar citire</string>
+    <string name="settings_read_only_mode_description">Blochează aplicația cât cânți: editarea, ștergerea, reordonarea și transpunerea sunt ascunse, ca nimic să nu se schimbe din greșeală</string>
+    <string name="settings_read_only_mode_description_without_setlists">Blochează aplicația cât cânți: editarea, ștergerea și transpunerea sunt ascunse, ca nimic să nu se schimbe din greșeală</string>
+    <string name="settings_songs_description">Filele Cântece și Liste. Dezactivează-le ca să folosești Campfire doar ca metronom, acordor și ghid de acorduri și game: cântecele tale sunt doar ascunse, niciunul nu este șters.</string>
+    <string name="settings_songs_description_without_setlists">Fila Cântece. Dezactiveaz-o ca să folosești Campfire doar ca metronom, acordor și ghid de acorduri și game: cântecele tale sunt doar ascunse, niciunul nu este șters.</string>
+    <string name="settings_everything_off">Totul este dezactivat, așa că Campfire e acum o aplicație pentru schimbarea setărilor lui Campfire. Activează ceva la loc ca să fie din nou util.</string>
+    <string name="settings_chords">Acorduri</string>
+    <string name="settings_chords_description">Arată acordurile deasupra versurilor, împreună cu tonalitatea, transpunerea și capodastrul. Dezactivat, fiecare cântec are doar versuri.</string>
+    <string name="settings_chord_diagrams">Diagrame de acorduri</string>
+    <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al unui cântec, la începutul cântecului.</string>
+    <string name="settings_chord_degrees">Treptele acordurilor</string>
+    <string name="settings_chord_degrees_description">Numește treapta din tonalitatea cântecului pe care stă fiecare diagramă de acord, de exemplu V7 lângă G7.</string>
+    <string name="settings_metronome_description">Fila Metronom și clicul de pe ecranul unui cântec, împreună cu tempoul și măsura fiecărui cântec</string>
+    <string name="settings_tuner_description">Fila Acordor și microfonul prin care ascultă</string>
+    <string name="settings_scales_description">Fila Game: toate gamele și modurile cunoscute de aplicație, desenate pe instrumentul tău</string>
+    <string name="settings_chord_library_description">Fila Acorduri: toate acordurile cunoscute de aplicație, desenate pe instrumentul tău</string>
+    <string name="settings_scale_suggestions">Sugestii de game</string>
+    <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a unui cântec, după acordurile lui, și gamele unui acord în fișa lui.</string>
+    <string name="settings_setlists_description">Fila Liste și adăugarea cântecelor în liste. Dezactivate, listele sunt doar ascunse: niciuna nu este ștearsă.</string>
+    <string name="settings_song_details_lookup">Detalii online ale cântecelor</string>
+    <string name="settings_song_details_lookup_description">Oferă căutarea artistului, albumului, anului și autorilor unui cântec pe MusicBrainz și iTunes cât timp îi editezi detaliile</string>
+    <string name="settings_cover_art">Coperte</string>
+    <string name="settings_cover_art_description">Arată lângă cântec coperta de album pe care o indică, descărcând-o o singură dată și păstrând o copie pe acest dispozitiv</string>
+    <string name="settings_group_song_page">Pagina cântecului</string>
+    <string name="settings_group_lists">Liste</string>
+    <string name="settings_group_chords">Acorduri</string>
+    <string name="settings_group_setup">Configurare</string>
+    <string name="settings_group_appearance">Aspect</string>
+    <string name="settings_group_playing">Cântat</string>
+    <string name="settings_group_online">Online</string>
+    <string name="settings_group_sync">Sincronizare</string>
+    <string name="settings_group_import_export">Import și export</string>
+    <string name="settings_group_on_this_device">Pe acest dispozitiv</string>
+    <string name="settings_group_campfire">Campfire</string>
+    <string name="settings_group_help">Ajutor</string>
+    <string name="settings_group_legal">Informații legale</string>
+    <string name="settings_number_sections">Numerotează secțiunile</string>
+    <string name="settings_number_sections_description">Deosebește secțiunile repetate care nu au un nume propriu, de exemplu Strofa 1 și Strofa 2</string>
+    <string name="settings_song_layout">Aspect</string>
+    <string name="settings_song_layout_description">Paginile încap cât mai mult din cântec pe ecran deodată. Continuu înseamnă o singură coloană care se poate derula singură în ritmul cântecului.</string>
+    <string name="settings_song_cards">Cardurile cântecelor</string>
+    <string name="settings_song_cards_description">Ce arată fiecare cântec sub artist în liste.</string>
+    <string name="card_detail_key">Tonalitate</string>
+    <string name="card_detail_tempo">Tempo</string>
+    <string name="card_detail_duration">Durată</string>
+    <string name="settings_notation">Notația acordurilor</string>
+    <string name="settings_notation_description">Cum sunt scrise acordurile cât citești și editezi cântece. Cântecele sunt salvate mereu în notația standard, ca să arate la fel în orice aplicație.</string>
+    <string name="settings_notation_choose">Alege notația</string>
+    <string name="settings_notation_standard">Standard</string>
+    <string name="settings_notation_standard_description">C D E F G A B</string>
+    <string name="settings_notation_german">Germană</string>
+    <string name="settings_notation_german_description">H pentru B și B pentru B bemol, ca în fișele de acorduri din Europa Centrală și Scandinavia</string>
+    <string name="settings_notation_latin">Latină</string>
+    <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, ca în fișele de acorduri din Europa de Sud și America Latină</string>
+    <string name="settings_notation_nashville">Numere Nashville</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, numărate de la tonalitatea cântecului, un cântec minor de la propria tonică. Un cântec fără tonalitate își păstrează literele, iar editorul folosește mereu litere.</string>
+    <string name="settings_notation_roman">Cifre romane</string>
+    <string name="settings_notation_roman_description">I IV V vi, numărate de la tonalitatea cântecului: majuscule pentru acordurile majore, litere mici pentru cele minore. Un cântec fără tonalitate își păstrează literele, iar editorul folosește mereu litere.</string>
+    <string name="settings_accidentals">Alterații</string>
+    <string name="settings_accidentals_description">Dacă un acord pe o clapă neagră se scrie cu bemol (%1$s) sau cu diez (%2$s). Lăsat ca în original, Campfire alege varianta potrivită tonalității cântecului.</string>
+    <string name="settings_accidentals_original">Ca în original</string>
+    <string name="settings_accidentals_flats">Bemoli (♭)</string>
+    <string name="settings_accidentals_sharps">Diezi (♯)</string>
+    <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
+    <string name="instrument_choose">Alege instrumentul</string>
+    <string name="instrument_tuning_standard">Standard</string>
+    <string name="instrument_tuning_choose">Alege acordajul</string>
+    <string name="instrument_guitar">Chitară</string>
+    <string name="instrument_guitar_strings">Chitară cu %1$d corzi</string>
+    <string name="instrument_bass">Bas</string>
+    <string name="instrument_bass_strings">Bas cu %1$d corzi</string>
+    <string name="instrument_ukulele">Ukulele</string>
+    <string name="instrument_banjo">Banjo</string>
+    <string name="instrument_mandolin">Mandolină</string>
+    <string name="instrument_violin">Vioară</string>
+    <string name="instrument_keyboard">Claviatură</string>
+    <string name="instrument_other">Altul</string>
+    <string name="instrument_strings_four">Patru corzi</string>
+    <string name="instrument_strings_five">Cinci corzi</string>
+    <string name="instrument_strings_banjo">Cinci corzi, una dintre ele scurtă</string>
+    <string name="instrument_strings_six">Șase corzi</string>
+    <string name="instrument_strings_seven">Șapte corzi</string>
+    <string name="instrument_strings_eight">Opt corzi</string>
+    <string name="instrument_strings_pairs">Patru perechi de corzi</string>
+    <string name="instrument_strings_six_pairs">Șase perechi de corzi</string>
+    <string name="instrument_no_chord_diagrams">%1$s · Fără diagrame de acorduri</string>
+    <string name="instrument_keyboard_description">Notele fiecărui acord, cu capodastrul inclus în transpunere</string>
+    <string name="instrument_other_description">Fără corzi, fără diagrame de acorduri</string>
+    <string name="settings_general">General</string>
+    <string name="settings_onboarding">Configurează Campfire din nou</string>
+    <string name="settings_onboarding_description">Alege din nou aspectul, instrumentul și funcțiile, pas cu pas</string>
+    <string name="settings_user_interface_theme">Temă</string>
+    <string name="settings_user_interface_theme_system_default">Sistem</string>
+    <string name="settings_user_interface_theme_dark">Întunecată</string>
+    <string name="settings_user_interface_theme_light">Luminoasă</string>
+    <string name="settings_user_interface_theme_color">Culoare</string>
+    <string name="settings_background_warmth">Sepia</string>
+    <string name="settings_background_warmth_description">Duce fundalul spre culoarea caldă a hârtiei vechi, care poate fi mai odihnitoare pentru ochi. Contrastul rămâne același la fiecare treaptă.</string>
+    <string name="settings_app_icon_launcher">Colorează pictograma din launcher</string>
+    <string name="settings_app_icon_launcher_description">Pictograma de pe ecranul de pornire preia culoarea de mai sus. Prima schimbare are efect după ce ieși din Campfire, iar unele launchere scot pictograma de pe ecranul de pornire când se schimbă.</string>
+    <string name="settings_app_icon_home_screen">Colorează pictograma aplicației</string>
+    <string name="settings_app_icon_home_screen_description">Pictograma de pe ecranul de pornire preia culoarea de mai sus. iOS confirmă fiecare schimbare printr-un mesaj.</string>
+    <string name="settings_app_icon_window">Colorează pictograma ferestrei</string>
+    <string name="settings_app_icon_window_description">Pictograma ferestrei preia culoarea de mai sus cât timp Campfire este deschis</string>
+    <string name="settings_app_icon_browser_tab">Colorează pictograma filei</string>
+    <string name="settings_app_icon_browser_tab_description">Pictograma filei din browser preia culoarea de mai sus</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">Gri</string>
+    <string name="settings_user_interface_theme_color_system">Sistem</string>
+    <string name="settings_user_interface_theme_color_red">Roșu</string>
+    <string name="settings_user_interface_theme_color_orange">Portocaliu</string>
+    <string name="settings_user_interface_theme_color_yellow">Galben</string>
+    <string name="settings_user_interface_theme_color_green">Verde</string>
+    <string name="settings_user_interface_theme_color_teal">Turcoaz</string>
+    <string name="settings_user_interface_theme_color_blue">Albastru</string>
+    <string name="settings_user_interface_theme_color_purple">Mov</string>
+    <string name="settings_user_interface_theme_color_pink">Roz</string>
+    <string name="settings_user_interface_language">Limbă</string>
+    <string name="settings_user_interface_language_system_default">Sistem</string>
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
+    <string name="settings_user_interface_language_english">Engleză</string>
+    <string name="settings_user_interface_language_hungarian">Maghiară</string>
+    <string name="settings_user_interface_language_romanian">Română</string>
+    <string name="settings_user_interface_language_more_coming">Mai multe limbi în curând</string>
+    <string name="settings_distributions_all">Toate versiunile Campfire</string>
+    <string name="settings_distributions_all_description">Pe campfire-songbook.com</string>
+    <string name="settings_distribution_play_store">Google Play</string>
+    <string name="settings_distribution_app_store">App Store</string>
+    <string name="settings_distribution_mac_app_store">Mac App Store</string>
+    <string name="settings_distribution_microsoft_store">Microsoft Store</string>
+    <string name="settings_rate">Evaluează Campfire</string>
+    <string name="settings_rate_description">Lasă o recenzie pe %1$s</string>
+    <string name="settings_about">Despre</string>
+    <string name="settings_git_hub">Campfire pe GitHub</string>
+    <string name="settings_git_hub_description">Codul sursă și urmărirea problemelor</string>
+    <string name="settings_log_email">Trimite jurnalul aplicației pe email</string>
+    <string name="settings_log_share">Partajează jurnalul aplicației</string>
+    <string name="settings_log_save">Salvează jurnalul aplicației</string>
+    <string name="settings_log_description">Îl ajută pe dezvoltator să afle ce nu a mers</string>
+    <string name="log_dialog_text">Jurnalul arată ce a făcut Campfire în ultima vreme: ecranele pe care le-ai deschis, numele cântecelor tale și eventualele erori. Nu conține nimic altceva despre tine și îl poate citi doar cel căruia i-l trimiți.</string>
+    <string name="log_dialog_send_to">Te rog să-l trimiți la %1$s.</string>
+    <string name="log_dialog_email">Email</string>
+    <string name="log_dialog_share">Partajează</string>
+    <string name="log_dialog_copy_address">Copiază adresa</string>
+    <string name="log_dialog_address_copied">Adresa a fost copiată</string>
+    <string name="crash_report_title">Campfire s-a închis neașteptat</string>
+    <string name="crash_report_text">Campfire s-a oprit ultima dată când l-ai folosit. Dacă îi trimiți jurnalul dezvoltatorului, ajuți la remedierea problemei.</string>
+    <string name="crash_report_not_now">Nu acum</string>
+    <string name="settings_help">Ajutor și asistență</string>
+    <string name="settings_help_description">Întrebări frecvente și cum raportezi o problemă</string>
+    <string name="settings_privacy_policy">Politica de confidențialitate</string>
+    <string name="settings_privacy_policy_description">Ce face aplicația cu datele tale</string>
+    <string name="settings_open_source_licenses">Licențe open source</string>
+    <string name="settings_open_source_licenses_description">Bibliotecile, fonturile și formele de acorduri pe care se bazează Campfire și licențele lor</string>
+    <string name="open_source_licenses_intro">Campfire este open source și se bazează pe munca altora. Selectează o intrare ca să-i citești licența.</string>
+    <string name="open_source_licenses_show">Arată licența</string>
+    <string name="open_source_licenses_hide">Ascunde licența</string>
+    <string name="open_source_licenses_project">Pagina proiectului</string>
+    <string name="open_source_licenses_license">Licență</string>
+    <string name="settings_support">Cumpără-mi o cafea</string>
+    <string name="settings_support_description">Susține dezvoltarea aplicației</string>
+    <string name="settings_version">Versiunea %1$s</string>
+    <string name="settings_created_by">Creat de Péter Pandula</string>
+
+    <!-- Metronome screen -->
+    <string name="metronome">Metronom</string>
+    <string name="metronome_start">Pornește</string>
+    <string name="metronome_stop">Oprește</string>
+    <string name="metronome_tempo_slider">Tempo în bătăi pe minut</string>
+    <string name="metronome_tap_description">Bate tempoul</string>
+    <string name="metronome_group_rhythm">Ritm</string>
+    <string name="metronome_group_playback">Redare</string>
+    <string name="metronome_time_signature">Măsură</string>
+    <string name="metronome_accent_hint">Selectează o bătaie din măsura de mai sus ca s-o accentuezi sau s-o amuțești.</string>
+    <string name="metronome_beats_decrease">Mai puține bătăi</string>
+    <string name="metronome_beats_increase">Mai multe bătăi</string>
+    <string name="metronome_beat_unit_decrease">Notă mai lungă</string>
+    <string name="metronome_beat_unit_increase">Notă mai scurtă</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">Bătaia %1$d</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">Schimbă accentul</string>
+    <string name="metronome_level_accent">accentuată</string>
+    <string name="metronome_level_normal">simplă</string>
+    <string name="metronome_level_muted">amuțită</string>
+    <string name="metronome_subdivision">Subdiviziune</string>
+    <string name="metronome_subdivision_description">Clicuri pe bătaie</string>
+    <string name="metronome_sound">Sunet</string>
+    <string name="metronome_sound_click">Clic</string>
+    <string name="metronome_sound_woodblock">Woodblock</string>
+    <string name="metronome_sound_beep">Bip</string>
+    <string name="metronome_sound_hi_hat">Hi-hat</string>
+    <string name="metronome_sound_cowbell">Talăngă</string>
+    <string name="metronome_volume">Volum</string>
+    <string name="metronome_animate">Animație pe bătaie</string>
+    <string name="metronome_vibrate">Vibrație pe bătaie</string>
+    <string name="metronome_audio_unavailable">Nu există ieșire audio, așa că bătaia doar se vede.</string>
+    <string name="metronome_audio_waiting">Selectează orice de pe pagină sau apasă o tastă ca browserul să poată reda sunetul.</string>
+    <string name="metronome_stopped_refused">Metronomul nu poate reda sunet acum, poate din cauza unui apel.</string>
+    <string name="metronome_stopped_interrupted">Metronomul s-a oprit din cauza unui apel sau a altei aplicații.</string>
+    <string name="metronome_stopped_disconnected">Metronomul s-a oprit pentru că dispozitivul audio a fost deconectat.</string>
+    <string name="metronome_stopped_failed">Metronomul s-a oprit pentru că ieșirea audio a dat eroare.</string>
+    <string name="metronome_stopped_silent">Metronomul s-a oprit când Campfire a trecut în fundal, pentru că, cu volumul la zero sau cu toate bătăile amuțite, nu era nimic de auzit.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">Metronom</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">Acordor</string>
+    <string name="tuner_play_a_note">Cântă o notă</string>
+    <string name="tuner_reference_tone">Ton de referință</string>
+    <!-- The display as a screen reader reads it while a reference tone sounds, e.g. "Reference tone, A4". -->
+    <string name="tuner_reading_tone">Ton de referință, %1$s</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">Țintă: %1$s Hz</string>
+    <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
+    <plurals name="tuner_cents">
+        <item quantity="one">%1$s cent</item>
+        <item quantity="other">%1$s cenți</item>
+    </plurals>
+    <string name="tuner_in_tune">Acordat</string>
+    <string name="tuner_flat">Prea jos</string>
+    <string name="tuner_sharp">Prea sus</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, cu %2$d cent prea jos</item>
+        <item quantity="other">%1$s, cu %2$d cenți prea jos</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, cu %2$d cent prea sus</item>
+        <item quantity="other">%1$s, cu %2$d cenți prea sus</item>
+    </plurals>
+    <string name="tuner_reading_in_tune">%1$s, acordat</string>
+    <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
+    <string name="tuner_reading_far_flat">%1$s, mult prea jos</string>
+    <string name="tuner_reading_coarse_flat">%1$s, prea jos</string>
+    <string name="tuner_reading_coarse_sharp">%1$s, prea sus</string>
+    <string name="tuner_reading_far_sharp">%1$s, mult prea sus</string>
+    <string name="tuner_tuning_standard">Standard</string>
+    <string name="tuner_tuning_half_step_down">Cu un semiton mai jos</string>
+    <string name="tuner_tuning_full_step_down">Cu un ton mai jos</string>
+    <string name="tuner_tuning_baritone">Bariton</string>
+    <string name="tuner_tuning_drop">Drop %1$s</string>
+    <string name="tuner_tuning_double_drop">Double drop %1$s</string>
+    <string name="tuner_tuning_open">Open %1$s</string>
+    <string name="tuner_tuning_high">%1$s înalt</string>
+    <string name="tuner_tuning_low">%1$s grav</string>
+    <string name="tuner_tuning_double">%1$s dublu</string>
+    <string name="tuner_tuning_key">Acordaj în %1$s</string>
+    <string name="tuner_tuning_modal">%1$s modal</string>
+    <string name="tuner_strings">Corzi</string>
+    <string name="tuner_mode_chromatic">Cromatic</string>
+    <string name="tuner_strings_description">Selectează o coardă ca să-i auzi nota, și încă o dată ca s-o oprești.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">Coarda %1$d, %2$s</string>
+    <string name="tuner_string_pair">Perechea corzii %1$d, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$s diez</string>
+    <string name="tuner_note_sharp_syllable">%1$s diez</string>
+    <!-- How a screen reader reads the unlabeled reference pitch pill, e.g. "Reference pitch (A4), 440 Hz". -->
+    <string name="tuner_reference_pitch">Diapazon (%1$s), %2$d Hz</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">Coboară diapazonul</string>
+    <string name="tuner_reference_pitch_increase">Urcă diapazonul</string>
+    <string name="tuner_reference_pitch_reset">Readu diapazonul la 440 Hz</string>
+    <string name="tuner_play_reference">Redă nota de referință %1$s</string>
+    <string name="tuner_notice_not_asked">Campfire ascultă prin microfon ca să audă instrumentul. Sunetul e analizat pe acest dispozitiv și nu e niciodată înregistrat sau trimis nicăieri.</string>
+    <string name="tuner_notice_refused">Microfonul este dezactivat pentru Campfire. Tonurile de mai jos pot fi redate în continuare.</string>
+    <string name="tuner_notice_refused_web">Microfonul este dezactivat pentru Campfire. Îl poți permite din setările site-ului în browser, lângă adresă. Tonurile de mai jos pot fi redate în continuare.</string>
+    <string name="tuner_notice_refused_no_strings">Microfonul este dezactivat pentru Campfire.</string>
+    <string name="tuner_notice_refused_web_no_strings">Microfonul este dezactivat pentru Campfire. Îl poți permite din setările site-ului în browser, lângă adresă.</string>
+    <string name="tuner_notice_no_microphone">Nu s-a găsit niciun microfon.</string>
+    <string name="tuner_notice_busy">Microfonul este folosit de un apel sau de altă aplicație.</string>
+    <string name="tuner_notice_not_supported">Acest browser nu permite unei pagini să folosească microfonul.</string>
+    <string name="tuner_notice_failed">Microfonul nu a putut fi deschis.</string>
+    <string name="tuner_notice_silent">Încă nu se aude nimic. Dacă sună o coardă, verifică dacă microfonul nu e amuțit sau dat complet la minimum și dacă Campfire are voie să-l folosească.</string>
+    <string name="tuner_notice_waiting">Selectează orice de pe pagină sau apasă o tastă ca browserul să poată asculta.</string>
+    <string name="tuner_use_microphone">Folosește microfonul</string>
+    <string name="tuner_notice_silent_enhancements">Verifică dacă microfonul nu e amuțit și dacă Campfire are voie să-l folosească. Windows poate elimina o notă ținută ca zgomot: dezactivează Îmbunătățiri audio pentru acest microfon în setările de sunet.</string>
+    <string name="tuner_open_settings">Deschide setările</string>
+    <string name="tuner_open_sound_settings">Deschide setările de sunet</string>
+    <string name="tuner_ask_again">Întreabă din nou</string>
+    <string name="tuner_try_again">Reîncearcă</string>
+
+    <!-- Chords screen, and the Tools item of a navigation bar with no room for every screen, which holds it with the
+         Metronome and the Tuner -->
+    <string name="chords">Acorduri</string>
+    <string name="tools">Unelte</string>
+    <!-- The two buttons of the pill beside the search stepping the key the chords and scales are listed in. -->
+    <string name="library_key_down">Tonalitatea cu un semiton mai jos</string>
+    <string name="library_key_up">Tonalitatea cu un semiton mai sus</string>
+    <string name="chords_search">Caută orice acord</string>
+    <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
+    <string name="chords_common">Acorduri uzuale în %1$s</string>
+    <!-- Over the chords of the picked key a search found, e.g. "Chords matching “m7” in C". -->
+    <string name="chords_search_heading">Acorduri pentru „%1$s” în %2$s</string>
+    <string name="chords_instrument_other">Alege un instrument ca să vezi cum se cântă acordurile pe el.</string>
+    <string name="chords_instrument_without_diagrams">%1$s: fără diagrame de acord. Alege alt instrument ca să vezi cum se cântă acordurile pe el.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">Niciun acord din această tonalitate nu se potrivește cu „%1$s”.</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">Game</string>
+    <string name="scales_instrument_other">Afișate pe o claviatură. Alege un instrument ca să vezi gamele pe corzile lui.</string>
+    <string name="scales_search">Caută o gamă sau un mod</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">Game pentru „%1$s” în %2$s</string>
+    <string name="scales_search_no_scale">Nicio gamă nu se potrivește cu „%1$s”.</string>
+    <string name="scale_family_common">Uzuale</string>
+    <string name="scale_family_major_modes">Modurile gamei majore</string>
+    <string name="scale_family_harmonic_minor_modes">Modurile minorului armonic</string>
+    <string name="scale_family_melodic_minor_modes">Modurile minorului melodic</string>
+    <string name="scale_family_minor_and_harmonic">Alte game armonice</string>
+    <string name="scale_family_pentatonic">Pentatonice</string>
+    <string name="scale_family_blues_and_hexatonic">Blues și hexatonice</string>
+    <string name="scale_family_symmetric">Simetrice</string>
+    <string name="scale_family_bebop">Bebop</string>
+    <string name="scale_family_world">Din lume</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">Trepte</string>
+    <string name="scales_labels_notes">Note</string>
+    <string name="scales_labels_show_notes">Arată numele notelor</string>
+    <string name="scales_labels_show_degrees">Arată treptele</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
+    <string name="scales_steps_whole">T</string>
+    <string name="scales_steps_half">S</string>
+    <string name="scales_steps_augmented">3S</string>
+    <string name="scales_play">Redă gama</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
+    <string name="scales_mode_of">Modul %1$s din %2$s</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">Numită și %1$s</string>
+    <string name="scales_relative_minor">Relativa minoră: %1$s</string>
+    <string name="scales_chords">Acordurile gamei</string>
+    <string name="scales_sevenths">Acorduri de septimă</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">Game pentru acest acord</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">Restul cântecului</string>
+    <!-- Over the scales of the parts of a song without a heading, where several such groups are told apart by the first words they sing. -->
+    <string name="song_details_scales_from">De la „%1$s”</string>
+    <!-- Over the scales of one named part of a song that also hold its parts without a heading, e.g. "Chorus and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed">%1$s și părțile fără titlu</string>
+    <!-- The same over a list of several named parts, e.g. "Verse, Chorus, and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed_several">%1$s și părțile fără titlu</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">Pe %1$s</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">Pe %1$s și %2$s</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">Pe %1$s și %2$s</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">Nicio gamă de mai sus nu cuprinde aceste acorduri</string>
+    <string name="scale_major">major</string>
+    <string name="scale_dorian">doric</string>
+    <string name="scale_phrygian">frigic</string>
+    <string name="scale_lydian">lidic</string>
+    <string name="scale_mixolydian">mixolidic</string>
+    <string name="scale_natural_minor">minor natural</string>
+    <string name="scale_locrian">locrian</string>
+    <string name="scale_harmonic_minor">minor armonic</string>
+    <string name="scale_locrian_natural_6">locrian ♮6</string>
+    <string name="scale_ionian_sharp_5">ionian ♯5</string>
+    <string name="scale_dorian_sharp_4">doric ♯4</string>
+    <string name="scale_phrygian_dominant">frigic dominant</string>
+    <string name="scale_lydian_sharp_2">lidic ♯2</string>
+    <string name="scale_ultralocrian">ultralocrian</string>
+    <string name="scale_melodic_minor">minor melodic</string>
+    <string name="scale_dorian_flat_2">doric ♭2</string>
+    <string name="scale_lydian_augmented">lidic mărit</string>
+    <string name="scale_lydian_dominant">lidic dominant</string>
+    <string name="scale_mixolydian_flat_6">mixolidic ♭6</string>
+    <string name="scale_locrian_natural_2">locrian ♮2</string>
+    <string name="scale_altered">alterat</string>
+    <string name="scale_harmonic_major">major armonic</string>
+    <string name="scale_double_harmonic">dublu armonic</string>
+    <string name="scale_hungarian_minor">minor maghiar</string>
+    <string name="scale_hungarian_major">major maghiar</string>
+    <string name="scale_neapolitan_major">major napolitan</string>
+    <string name="scale_neapolitan_minor">minor napolitan</string>
+    <string name="scale_major_pentatonic">pentatonic major</string>
+    <string name="scale_minor_pentatonic">pentatonic minor</string>
+    <string name="scale_minor_6_pentatonic">pentatonic minor 6</string>
+    <string name="scale_dominant_pentatonic">pentatonic dominant</string>
+    <string name="scale_egyptian">egiptean</string>
+    <string name="scale_man_gong">Man Gong</string>
+    <string name="scale_ritusen">Ritusen</string>
+    <string name="scale_hirajoshi">Hirajoshi</string>
+    <string name="scale_in">In</string>
+    <string name="scale_insen">Insen</string>
+    <string name="scale_iwato">Iwato</string>
+    <string name="scale_kumoi">Kumoi</string>
+    <string name="scale_chinese">chinezesc</string>
+    <string name="scale_blues">blues</string>
+    <string name="scale_major_blues">blues major</string>
+    <string name="scale_major_hexatonic">hexatonic major</string>
+    <string name="scale_minor_hexatonic">hexatonic minor</string>
+    <string name="scale_prometheus">Prometeu</string>
+    <string name="scale_tritone">tritonic</string>
+    <string name="scale_whole_tone">hexatonal (tonuri întregi)</string>
+    <string name="scale_augmented">mărit</string>
+    <string name="scale_diminished">micșorat (ton–semiton)</string>
+    <string name="scale_dominant_diminished">dominant micșorat (semiton–ton)</string>
+    <string name="scale_chromatic">cromatic</string>
+    <string name="scale_bebop_dominant">bebop dominant</string>
+    <string name="scale_bebop_major">bebop major</string>
+    <string name="scale_bebop_dorian">bebop doric</string>
+    <string name="scale_bebop_melodic_minor">bebop minor melodic</string>
+    <string name="scale_bebop_harmonic_minor">bebop minor armonic</string>
+    <string name="scale_persian">persan</string>
+    <string name="scale_enigmatic">enigmatic</string>
+    <string name="scale_oriental">oriental</string>
+    <string name="scale_major_locrian">locrian major</string>
+    <string name="scale_lydian_minor">lidic minor</string>
+    <string name="scale_leading_whole_tone">cu sensibilă în tonuri întregi</string>
+    <string name="scale_flamenco">flamenco</string>
+    <string name="scale_spanish_eight_tone">spaniol cu opt sunete</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">Ionian</string>
+    <string name="scale_aliases_mixolydian">Gamă dominantă</string>
+    <string name="scale_aliases_natural_minor">Eolian</string>
+    <string name="scale_aliases_ionian_sharp_5">Major mărit</string>
+    <string name="scale_aliases_dorian_sharp_4">Minor românesc, Doric ucrainean</string>
+    <string name="scale_aliases_phrygian_dominant">Frigic spaniol, Frigic major, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_ultralocrian">Superlocrian ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">Minor jazz</string>
+    <string name="scale_aliases_dorian_flat_2">Frigic ♮6</string>
+    <string name="scale_aliases_lydian_dominant">Acustic, Overtone, Lidic ♭7, Mixolidic ♯4</string>
+    <string name="scale_aliases_mixolydian_flat_6">Eolian dominant, Hindus</string>
+    <string name="scale_aliases_locrian_natural_2">Semimicșorat</string>
+    <string name="scale_aliases_altered">Superlocrian, Ton întreg micșorat</string>
+    <string name="scale_aliases_double_harmonic">Bizantin, Hijaz Kar, Arab, Major țigănesc</string>
+    <string name="scale_aliases_hungarian_minor">Minor țigănesc, Minor dublu armonic</string>
+    <string name="scale_aliases_egyptian">Pentatonic suspendat</string>
+    <string name="scale_aliases_man_gong">Pentatonic blues minor</string>
+    <string name="scale_aliases_minor_6_pentatonic">Pentatonic minor cu sextă, Pentatonic doric</string>
+    <string name="scale_aliases_dominant_pentatonic">Pentatonic mixolidic, Pentatonic de septimă dominantă</string>
+    <string name="scale_aliases_ritusen">Yo, Pentatonic blues major</string>
+    <string name="scale_aliases_in">Sakura</string>
+    <string name="scale_aliases_blues">Blues minor</string>
+    <string name="scale_aliases_prometheus">Mistic</string>
+    <string name="scale_aliases_tritone">Petrușka, Petrushka</string>
+    <string name="scale_aliases_augmented">Hexatonic</string>
+    <string name="scale_aliases_diminished">Octatonic</string>
+
+    <!-- Song editor screen -->
+    <string name="song_editor_edit">Editare</string>
+    <string name="song_editor_preview">Previzualizare</string>
+    <string name="song_editor_split">Împărțit</string>
+    <string name="song_editor_undo">Anulează</string>
+    <string name="song_editor_redo">Refă</string>
+    <string name="song_editor_shortcuts">Comenzi rapide</string>
+    <string name="song_editor_show_shortcuts">Arată comenzile rapide</string>
+    <string name="song_editor_hide_shortcuts">Ascunde comenzile rapide</string>
+    <string name="song_editor_insert_chord">Acord</string>
+    <string name="song_editor_insert_annotation">Adnotare</string>
+    <string name="song_editor_format_bold">Aldin</string>
+    <string name="song_editor_format_italic">Cursiv</string>
+    <string name="song_editor_format_underline">Subliniat</string>
+    <string name="song_editor_section_intro">Intro</string>
+    <string name="song_editor_section_verse">Strofă</string>
+    <string name="song_editor_section_pre_chorus">Pre-refren</string>
+    <string name="song_editor_section_chorus">Refren</string>
+    <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_solo">Solo</string>
+    <string name="song_editor_section_outro">Outro</string>
+    <string name="song_editor_section_tab">Tabulatură</string>
+    <string name="song_editor_tab_any_instrument">Orice instrument</string>
+    <string name="song_editor_section_grid">Grilă</string>
+    <string name="song_editor_insert_chorus_recall">Repetă refrenul</string>
+    <string name="song_editor_insert_comment">Comentariu</string>
+    <string name="song_editor_insert_comment_italic">Comentariu cursiv</string>
+    <string name="song_editor_insert_comment_box">Comentariu încadrat</string>
+    <string name="song_editor_insert_key_change">Schimbare de tonalitate</string>
+    <string name="song_editor_insert_title">Titlu</string>
+    <string name="song_editor_insert_subtitle">Subtitlu</string>
+    <string name="song_editor_insert_artist">Artist</string>
+    <string name="song_editor_insert_composer">Compozitor</string>
+    <string name="song_editor_insert_lyricist">Textier</string>
+    <string name="song_editor_insert_more_details">Mai multe detalii</string>
+    <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_cover_art">Copertă</string>
+    <string name="song_editor_insert_year">An</string>
+    <string name="song_editor_insert_key">Tonalitate</string>
+    <string name="song_editor_insert_capo">Capodastru</string>
+    <string name="song_editor_insert_tempo">Tempo</string>
+    <string name="song_editor_insert_time">Măsură</string>
+    <string name="song_editor_insert_duration">Durată</string>
+    <string name="song_editor_insert_tag">Etichetă</string>
+    <string name="song_editor_insert_language">Limbă</string>
+    <string name="song_editor_insert_link">Link</string>
+    <string name="song_editor_insert_chord_shape">Poziție de acord</string>
+    <string name="song_editor_transpose_text_up">Transpune textul în sus</string>
+    <string name="song_editor_transpose_text_down">Transpune textul în jos</string>
+    <string name="song_editor_prettify">Formatează ChordPro</string>
+    <string name="song_editor_revert">Renunță la toate modificările</string>
+    <string name="song_editor_chordpro_reference">Referință ChordPro</string>
+    <string name="song_editor_find">Caută</string>
+    <string name="song_editor_find_and_replace">Caută și înlocuiește</string>
+    <string name="song_editor_find_query">Text de căutat</string>
+    <string name="song_editor_find_replacement">Înlocuiește cu</string>
+    <string name="song_editor_find_match_count">%1$d din %2$d</string>
+    <string name="song_editor_find_no_matches">Niciun rezultat</string>
+    <string name="song_editor_find_match_case">Ține cont de majuscule</string>
+    <string name="song_editor_find_previous">Rezultatul anterior</string>
+    <string name="song_editor_find_next">Rezultatul următor</string>
+    <string name="song_editor_replace">Înlocuiește</string>
+    <string name="song_editor_replace_all">Înlocuiește tot</string>
+    <string name="song_editor_revert_confirmation">Vrei să revii la ultima versiune salvată a acestui cântec? Tot ce ai scris de atunci se va pierde.</string>
+    <string name="song_editor_unsaved_changes">Modificări nesalvate</string>
+    <string name="song_editor_unsaved_changes_confirmation">Vrei să salvezi ce ai scris înainte să ieși din editor?</string>
+    <string name="song_editor_discard">Renunță</string>
+    <string name="song_editor_save_failed">Cântecul nu a putut fi salvat</string>
+    <string name="song_editor_draft_lost">Modificările nesalvate nu au putut fi restaurate</string>
+    <string name="song_editor_draft_restored">Modificările nesalvate au fost restaurate</string>
+    <string name="song_editor_file_gone">Fișierul acestui cântec nu mai este în bibliotecă. Salvează pentru a-l readuce.</string>
+    <string name="song_editor_untitled">Dă-i cântecului un titlu ca să-l poți salva</string>
+
+    <!-- Song details screen -->
+    <string name="song_details_previous_song">Cântecul anterior</string>
+    <string name="song_details_next_song">Cântecul următor</string>
+    <string name="song_details_previous_page">Pagina anterioară</string>
+    <string name="song_details_next_page">Pagina următoare</string>
+    <string name="song_details_previous_section">Secțiunea anterioară</string>
+    <string name="song_details_next_section">Secțiunea următoare</string>
+    <string name="song_details_step_progress_page">Pagina %1$d din %2$d</string>
+    <string name="song_details_step_progress_section">Secțiunea %1$d din %2$d</string>
+    <string name="song_details_scroll_up">Derulează în sus</string>
+    <string name="song_details_scroll_down">Derulează în jos</string>
+    <string name="song_details_auto_scroll_play">Pornește derularea</string>
+    <string name="song_details_auto_scroll_pause">Oprește derularea</string>
+    <string name="song_details_auto_scroll_speed">Viteza derulării</string>
+    <string name="song_layout_title">Cum citești cântecele?</string>
+    <string name="song_layout_message">Poți schimba oricând asta din Preferințele unui cântec.</string>
+    <string name="song_layout_pages">Pagini</string>
+    <string name="song_layout_pages_description">Cât mai mult din cântec pe ecran deodată, în coloane, întors pagină cu pagină</string>
+    <string name="song_layout_continuous">Continuu</string>
+    <string name="song_layout_continuous_description">O singură coloană care se derulează singură în ritmul cântecului, cu o viteză pe care o setezi pentru fiecare cântec</string>
+    <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_transposition">Transpunere</string>
+    <string name="song_details_transpose_up">Transpune în sus</string>
+    <string name="song_details_transpose_down">Transpune în jos</string>
+    <string name="song_details_transpose_reset">Resetează transpunerea</string>
+    <string name="song_details_tempo_decrease">Mai lent</string>
+    <string name="song_details_tempo_increase">Mai rapid</string>
+    <string name="song_details_tempo_reset">Resetează tempoul</string>
+    <string name="song_details_capo_decrease">Capodastru mai jos</string>
+    <string name="song_details_capo_increase">Capodastru mai sus</string>
+    <string name="song_details_capo_reset">Resetează capodastrul</string>
+    <string name="song_details_playing_edit">Editează valorile implicite ale cântecului</string>
+    <string name="song_details_playing_description_setlist">Salvate în fișierul cântecului, acestea sunt valorile de la care pornește cântecul peste tot. Comenzile de pe cântec le ajustează doar pentru această listă, fără să modifice fișierul. Lasă un câmp gol pentru a folosi valoarea implicită.</string>
+    <string name="song_details_playing_description_library">Salvate în fișierul cântecului, acestea sunt valorile de la care pornește cântecul peste tot. Comenzile de pe cântec le ajustează când este deschis din bibliotecă, fără să modifice fișierul sau vreo listă. Lasă un câmp gol pentru a folosi valoarea implicită.</string>
+    <string name="song_details_playing_override_setlist">Ajustat pentru această listă</string>
+    <string name="song_details_playing_override_library">Ajustat în bibliotecă</string>
+    <string name="song_details_playing_override_transposition">Transpunere %1$s</string>
+    <string name="song_details_playing_override_reset">Resetează</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s semiton când cântecul este afișat.</item>
+        <item quantity="other">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s semitonuri când cântecul este afișat.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">Tempo (BPM)</string>
+    <string name="song_details_playing_range">de la %1$d la %2$d</string>
+    <string name="song_details_metronome_show">Arată metronomul</string>
+    <string name="song_details_metronome_hide">Ascunde metronomul</string>
+    <string name="song_details_scroll_to_top">Derulează la început</string>
+    <string name="song_details_text_size_increase">Mărește textul</string>
+    <string name="song_details_text_size_decrease">Micșorează textul</string>
+    <string name="song_details_text_size_reset">Resetează dimensiunea textului</string>
+    <string name="song_details_text_size">Dimensiunea textului</string>
+    <string name="song_details_section_chorus">Refren</string>
+    <string name="song_details_section_bridge">Bridge</string>
+    <string name="song_details_section_tab">Tabulatură</string>
+    <string name="song_details_section_grid">Grilă</string>
+    <string name="song_details_section_abc">Notație ABC</string>
+    <string name="song_details_section_lilypond">LilyPond</string>
+    <string name="song_details_section_svg">SVG</string>
+    <string name="song_details_tab_expand">Arată tabulatura</string>
+    <string name="song_details_tab_collapse">Ascunde tabulatura</string>
+    <string name="song_details_grid_expand">Arată grila</string>
+    <string name="song_details_grid_collapse">Ascunde grila</string>
+    <string name="song_details_section_expand">Arată secțiunea</string>
+    <string name="song_details_section_collapse">Ascunde secțiunea</string>
+    <string name="song_details_section_expand_starting">Arată secțiunea care începe cu „%1$s”</string>
+    <string name="song_details_section_collapse_starting">Ascunde secțiunea care începe cu „%1$s”</string>
+    <string name="song_details_tags_manage">Gestionează etichetele</string>
+    <string name="song_details_tags_add">Adaugă etichete</string>
+    <string name="song_details_tags_search">Caută sau creează o etichetă</string>
+    <string name="song_details_tag_create">Creează eticheta „%1$s”</string>
+    <string name="song_details_tag_color">Culoarea etichetei „%1$s”</string>
+    <string name="song_details_tag_color_none">Fără culoare</string>
+    <string name="song_details_tag_color_lime">Lime</string>
+    <string name="song_details_tag_color_cyan">Cyan</string>
+    <string name="song_details_tag_color_indigo">Indigo</string>
+    <string name="song_details_tag_color_brown">Maro</string>
+    <string name="song_details_tag_color_black">Negru</string>
+    <string name="song_details_metadata_edit">Editează detaliile cântecului</string>
+    <string name="song_details_song_info">Despre cântec</string>
+    <string name="song_details_info_tags">Etichete</string>
+    <string name="song_details_info_languages">Limbi</string>
+    <string name="song_details_info_links">Linkuri</string>
+    <string name="song_details_links_edit">Gestionează linkurile</string>
+    <string name="song_details_links_add">Adaugă linkuri</string>
+    <string name="song_details_link_name">Nume (opțional)</string>
+    <string name="song_details_link_duplicate">Această adresă este deja în listă</string>
+    <string name="song_details_languages_edit">Gestionează limbile</string>
+    <string name="song_details_languages_add">Adaugă limbi</string>
+    <string name="song_details_remove_cover_art_confirmation">Elimini coperta pentru %1$s?</string>
+    <string name="song_details_link_add">Adaugă link</string>
+    <string name="song_details_link_remove">Elimină linkul către %1$s</string>
+    <string name="song_details_link_move_up">Mută în sus linkul către %1$s</string>
+    <string name="song_details_link_move_down">Mută în jos linkul către %1$s</string>
+    <string name="song_details_link_address">Adresă web</string>
+    <string name="song_details_link_address_hint">Un videoclip, o înregistrare, o tabulatură sau orice altă pagină despre cântec</string>
+    <string name="song_details_language_search">Caută o limbă</string>
+    <string name="song_details_language_no_search_results">Nicio limbă nu corespunde căutării. Codul ei din două sau trei litere o găsește chiar și acolo unde nu are un nume.</string>
+    <string name="song_details_set_cover_art">Setează coperta</string>
+    <string name="song_details_change_cover_art">Schimbă coperta</string>
+    <string name="cover_art_search">Caută</string>
+    <string name="cover_art_search_hint">Scrie numele albumului, sau doar al cântecului, ca să găsești discurile pe care a apărut</string>
+    <string name="cover_art_search_loading">Se caută în MusicBrainz și iTunes…</string>
+    <string name="cover_art_search_busy">MusicBrainz este ocupat, se reîncearcă imediat…</string>
+    <string name="cover_art_search_no_results">Nu s-a găsit niciun disc cu copertă. Încearcă numele albumului sau mai puține cuvinte.</string>
+    <string name="cover_art_search_failed">Căutarea nu a putut fi finalizată.</string>
+    <string name="cover_art_search_remove">Elimină coperta</string>
+    <string name="cover_art_search_attribution">Discuri de la MusicBrainz și iTunes, coperte de la Cover Art Archive și Apple</string>
+    <string name="cover_art_address_mode">Adresă web</string>
+    <string name="cover_art_address">Adresa imaginii</string>
+    <string name="cover_art_address_hint">Lipește adresa unei imagini de pe web</string>
+    <string name="cover_art_address_failed">Nu s-a putut încărca nicio imagine de la această adresă</string>
+    <string name="song_details_lookup">Caută detaliile cântecului online</string>
+    <string name="song_details_lookup_fill_in">Completează</string>
+    <string name="song_details_lookup_hint">Scrie numele cântecului și, dacă îl știi, artistul, ca să găsești înregistrările care se potrivesc</string>
+    <string name="song_details_lookup_no_results">Nu s-a găsit nicio înregistrare a acestui cântec. Încearcă mai puține cuvinte sau lasă albumul deoparte.</string>
+    <string name="song_details_lookup_now">Acum: %1$s</string>
+    <string name="song_details_lookup_credits_loading">Se cer autorii de la MusicBrainz…</string>
+    <string name="song_details_lookup_credits_none">MusicBrainz nu numește niciun autor pentru această înregistrare</string>
+    <string name="song_details_lookup_credits_failed">Autorii nu au putut fi căutați</string>
+    <string name="song_details_lookup_nothing_new">Această înregistrare nu spune nimic ce formularul nu spune deja</string>
+    <string name="song_details_lookup_attribution">Date de la MusicBrainz și iTunes.</string>
+    <string name="song_details_capo">Capodastru %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_time_signature">Măsură: %1$s</string>
+    <string name="song_details_key_change">Tonalitate: %1$s</string>
+    <string name="tab_notice_octave_up">Mutată cu o octavă mai sus ca să rămână pe grif</string>
+    <string name="tab_notice_octave_down">Mutată cu o octavă mai jos ca să rămână pe grif</string>
+    <string name="tab_notice_other_instrument">Tabulatură pentru %1$s, mutată pe instrumentul tău</string>
+    <string name="tab_notice_not_moved">Afișată așa cum e scrisă: nu poate fi mutată pe acordajul tău</string>
+    <string name="tab_notice_not_moved_instrument">Tabulatură pentru %1$s, afișată așa cum e scrisă: nu poate fi mutată pe instrumentul tău</string>
+    <string name="tab_notice_hidden">Tabulatură ascunsă</string>
+    <string name="tab_notice_hidden_instrument">Tabulatură pentru %1$s ascunsă</string>
+    <string name="song_details_chords">Acorduri</string>
+    <string name="song_details_chord_tuning">Acordaj: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">Definit în acest cântec pentru acordajul standard</string>
+    <string name="song_details_chord_defined_standard_tuning_show">Arată poziția din cântec</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">Arată pozițiile pentru acordajul tău</string>
+    <string name="song_details_chord_diagram">%1$s: %2$s</string>
+    <string name="song_details_chord_diagram_none">%1$s: fără diagramă</string>
+    <string name="song_details_chord_letters">%1$s, adică %2$s</string>
+    <string name="song_details_chord_degree">%1$s, treapta %2$s</string>
+    <string name="song_details_chord_shape_choose">Alege poziția acordului - %1$s</string>
+    <string name="song_details_chord_shape_capo">Poziție %1$s, capodastru %2$s</string>
+    <string name="song_details_chord_defined">Definit în acest cântec</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">Definit în acest cântec, mutat cu %1$d tastă</item>
+        <item quantity="other">Definit în acest cântec, mutat cu %1$d taste</item>
+    </plurals>
+    <string name="song_details_timing">De aici: %1$s</string>
+    <string name="song_details_composer">Compozitor</string>
+    <string name="song_details_lyricist">Textier</string>
+    <string name="song_details_album">Album</string>
+    <string name="song_details_year">An</string>
+    <string name="song_details_duration">Durată</string>
+    <string name="song_details_empty">Acest fișier nu are încă niciun conținut.</string>
+    <string name="song_details_cut">Acest cântec este prea lung pentru a fi afișat întreg aici, așa că se oprește în acest punct. Fișierul în sine este complet, iar editorul îl arată în întregime.</string>
+    <string name="song_details_no_data">Acest cântec nu a putut fi încărcat</string>
+    <string name="song_details_no_data_hint">Fișierul nu a putut fi citit.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync_unavailable">Această versiune de Campfire a fost creată fără date de acces pentru sincronizare, așa că nu ai la ce să te conectezi.</string>
+    <string name="settings_sync_description">Păstrează aceeași bibliotecă pe toate dispozitivele printr-un dosar în cloud care îți aparține, împreună cu felul în care transpui fiecare cântec, unde pui capodastrul și în ce tempo îl cânți. Campfire nu are server: fișierele circulă direct între dispozitivele tale și spațiul tău de stocare.</string>
+    <string name="settings_sync_connect_dropbox">Conectează Dropbox</string>
+    <string name="settings_sync_connecting">Se conectează…</string>
+    <string name="settings_sync_connection_failed_network">Serviciul nu poate fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
+    <string name="settings_sync_connection_failed_authorization">Dropbox a refuzat conexiunea.</string>
+    <string name="settings_sync_connection_failed_unknown">Conectarea nu a reușit.</string>
+    <string name="settings_sync_connection_failed_storage">Campfire nu a putut citi sau salva conexiunea pe acest dispozitiv. Va încerca din nou la următoarea pornire.</string>
+    <string name="settings_sync_connected_as">Conectat ca %1$s</string>
+    <string name="settings_sync_disconnect">Deconectează</string>
+    <string name="settings_sync_disconnect_confirmation">Deconectezi %1$s? Campfire uită contul și oprește sincronizarea. Nu se șterge nimic nici din bibliotecă, nici din dosarul din cloud.</string>
+    <string name="settings_sync_now">Sincronizează acum</string>
+    <string name="settings_sync_never">Nesincronizat încă</string>
+    <string name="settings_sync_last_synced_moments_ago">Ultima sincronizare reușită: acum câteva clipe</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">Ultima sincronizare reușită: acum un minut</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d minute</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">Ultima sincronizare reușită: acum o oră</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d ore</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">Ultima sincronizare reușită: ieri</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">Ultima sincronizare reușită: acum %1$d zi</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d zile</item>
+    </plurals>
+    <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
+    <string name="settings_sync_failed_network">Serviciul nu poate fi accesat. Campfire va încerca din nou data viitoare.</string>
+    <string name="settings_sync_failed_authorization">Conexiunea a fost refuzată. Conectează din nou contul.</string>
+    <string name="settings_sync_failed_storage">Biblioteca nu a putut fi citită sau scrisă.</string>
+    <string name="settings_sync_failed_unknown">Sincronizarea nu s-a încheiat.</string>
+    <string name="settings_sync_failed_remote_full">Dosarul din cloud este plin, așa că nu se mai poate încărca nimic. Eliberează spațiu acolo și sincronizează din nou.</string>
+    <plurals name="settings_sync_files_failed">
+        <item quantity="one">Un fișier nu a putut fi sincronizat: %2$s</item>
+        <item quantity="other">%1$d fișiere nu au putut fi sincronizate. Printre ele: %2$s</item>
+    </plurals>
+    <string name="settings_sync_preferences_failed">Setările cântecelor (transpunere, capodastru și tempo) nu au putut fi sincronizate. Campfire va încerca din nou data viitoare.</string>
+    <plurals name="settings_sync_conflicts">
+        <item quantity="one">Au fost păstrate ambele versiuni ale unui fișier modificat în două locuri: %2$s</item>
+        <item quantity="other">Au fost păstrate ambele versiuni pentru %1$d fișiere modificate în două locuri. Printre ele: %2$s</item>
+    </plurals>
+
+    <string name="settings_sync_cancel">Oprește sincronizarea</string>
+    <string name="settings_sync_progress">Se sincronizează {completed} din {total}…</string>
+    <string name="settings_sync_preparing">Se caută modificări…</string>
+    <string name="settings_sync_interrupted">Ultima sincronizare a fost oprită înainte să se încheie. Tot ce fusese deja transferat a fost păstrat.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">Fișierul sincronizat a dispărut din dosarul din cloud. Îl ștergi și de aici sau îl păstrezi și îl încarci din nou?</item>
+        <item quantity="other">%1$d din cele %2$d fișiere sincronizate au dispărut din dosarul din cloud. Le ștergi și de aici sau le păstrezi și le încarci din nou?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">Șterge-le și de aici</string>
+    <string name="settings_sync_keep_and_upload">Păstrează și încarcă</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">Fișierul sincronizat a dispărut de pe acest dispozitiv. Îl ștergi și din dosarul din cloud sau îl păstrezi și îl descarci din nou?</item>
+        <item quantity="other">%1$d din cele %2$d fișiere sincronizate au dispărut de pe acest dispozitiv. Le ștergi și din dosarul din cloud sau le păstrezi și le descarci din nou?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">Șterge-le și din cloud</string>
+    <string name="settings_sync_keep_and_download">Păstrează și descarcă</string>
+    <string name="settings_sync_notification_channel">Sincronizare</string>
+    <string name="settings_sync_notification_title">Se sincronizează biblioteca</string>
+    <string name="settings_sync_redirect_page_title">Înapoi la Campfire</string>
+    <string name="settings_sync_redirect_page_message">Poți închide această filă și te poți întoarce în aplicație.</string>
+
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">Noutăți în Campfire %1$s</string>
+    <string name="whats_new_message">• **Acordurile, așa cum sună** Cu capodastrul luat în calcul, acordurile, tonalitățile, gamele și tabulaturile poartă numele sunetului real, iar fiecare diagramă arată poziția de apăsat și treapta acordului.\n• **Previzualizează cântecele înainte de import** Citește fiecare cântec adus de un import înainte să se salveze ceva, din previzualizare sau din rândul lui din listă, și pune etichete tuturor cântecelor importate deodată.\n• **Tabulaturi și grile de acorduri redesenate** Tabulaturile au corzile desenate continuu și rămân aliniate la transpunere, iar grilele de acorduri arată numărul de repetări, de exemplu x4, lângă acorduri.\n• **Aldin, cursiv și subliniat** Versurile și comentariile pot avea cuvinte îngroșate, cursive și subliniate, din butoanele editorului sau cu Ctrl / Cmd + B, I și U.\n• **Mai mult control asupra PDF-ului** Exportul PDF poate omite tabulaturile, tipărește capodastrul și tempoul setate și poate reduce PDF-ul unei liste doar la ordinea cântecelor.\n• **Importă melodii ABC** Fișierele ABC și textul ABC lipit devin cântece cu grilă de acorduri; melodia se păstrează ca text, deoarece partitura nu este încă desenată.</string>
+
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">Omite</string>
+    <string name="onboarding_next">Înainte</string>
+    <string name="onboarding_start_playing">Hai să cântăm</string>
+    <string name="onboarding_welcome_title">Bine ai venit în Campfire!</string>
+    <string name="onboarding_welcome_message">Câteva întrebări rapide ca aplicația să fie a ta.\nMai întâi, asigură-te că le citești în limba ta.</string>
+    <string name="onboarding_language">Limbă: %1$s</string>
+    <string name="onboarding_settings_note">Orice alegere faci în acești pași poate fi schimbată mai târziu din Setări.</string>
+    <string name="onboarding_look_title">Alege un aspect</string>
+    <string name="onboarding_look_message">O temă întunecată nu te orbește pe o scenă slab luminată, iar o pagină mai caldă e mai blândă cu ochii pe parcursul unui concert lung.</string>
+    <string name="onboarding_features_title">De ce ai nevoie?</string>
+    <string name="onboarding_features_message">Păstrează doar ce vei folosi, ca aplicația să rămână aerisită și potrivită felului în care cânți.</string>
+    <string name="onboarding_chord_diagram_description">Cum se cântă %1$s</string>
+    <string name="onboarding_progress">Pasul %1$d din %2$d</string>
+    <string name="onboarding_instrument_title">La ce cânți?</string>
+    <string name="onboarding_instrument_message">Diagramele de acorduri și acordorul se adaptează la ce alegi.</string>
+    <string name="onboarding_instrument_strings">Acordorul va asculta corzile %1$s</string>
+    <string name="onboarding_notation_title">Cum scrii acordurile?</string>
+    <string name="onboarding_notation_message">Alege cum se afișează acordurile. Cântecele se salvează mereu în forma standard, ca să arate la fel în orice aplicație.</string>
+    <string name="onboarding_song_layout_message">Dă paginile singur sau lasă cântecul să se deruleze în ritmul lui cât timp cânți.</string>
+    <string name="onboarding_feature_chords_description">Acorduri deasupra versurilor, în orice tonalitate, cu diagrame desenate pentru instrumentul tău. Doar cânți vocal? Debifează pentru versuri simple.</string>
+    <string name="onboarding_feature_metronome_description">Ține ritmul în tempoul fiecărui cântec, în cântece și pe un ecran separat</string>
+    <string name="onboarding_feature_tuner_description">Îți acordează instrumentul prin microfon, în cântece și pe un ecran separat</string>
+    <string name="onboarding_feature_scales_description">Toate gamele și modurile desenate pentru instrumentul tău și cele care se potrivesc fiecărui cântec</string>
+    <string name="onboarding_sync_title">Cântecele tale, oriunde</string>
+    <string name="onboarding_sync_message">Conectează Dropbox ca să ai aceeași bibliotecă pe toate dispozitivele. Nu există niciun server intermediar: fișierele ajung direct în spațiul tău de stocare.</string>
+    <string name="onboarding_clipboard_link_question">Ți-a trimis cineva un cântec sau o listă?</string>
+    <string name="onboarding_clipboard_link_open">Deschide</string>
+    <string name="welcome_get_started">Să începem</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">Actualizare disponibilă</string>
+    <string name="app_update_available_hint">O versiune mai nouă de Campfire poate fi descărcată. Se descarcă în fundal, așa că poți continua între timp.</string>
+    <string name="app_update_update">Actualizează</string>
+    <string name="app_update_continue_offline">Continuă offline</string>
+    <string name="app_update_later">Mai târziu</string>
+    <string name="app_update_downloaded">Actualizare descărcată</string>
+    <string name="app_update_downloaded_hint">Campfire trebuie să repornească pentru a termina instalarea.</string>
+    <string name="app_update_restart">Repornește</string>
+    <string name="app_update_required">Actualizare necesară</string>
+    <string name="app_update_required_hint">Această versiune de Campfire nu mai poate fi folosită. Biblioteca ta rămâne exact unde este. Pentru actualizare ai nevoie de o conexiune la internet.</string>
+
+    <!-- Export -->
+    <string name="print_save">Salvează</string>
+    <string name="print_share">Partajează</string>
+    <string name="print_format">Partajează ca</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">Zip</string>
+    <string name="print_format_pdf_description">Ideal pentru tipărire și pentru cei fără o aplicație de cântece</string>
+    <string name="print_format_chordpro_description">Format standard de fișier, compatibil cu majoritatea aplicațiilor de cântece</string>
+    <string name="print_format_zip_description">Fișiere ChordPro într-o singură arhivă, pentru majoritatea aplicațiilor de cântece</string>
+    <string name="print_files_song_description">Versuri și acorduri ca text simplu, care rămâne editabil și transpozabil, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</string>
+    <plurals name="print_files_setlist_description">
+        <item quantity="one">Singurul cântec al listei ca fișier ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
+        <item quantity="other">Cele %1$d cântece ale listei ca fișiere ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
+    </plurals>
+    <plurals name="print_files_songs_description">
+        <item quantity="one">%1$d cântec ca fișier ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
+        <item quantity="other">%1$d cântece ca fișiere ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
+    </plurals>
+    <plurals name="print_files_missing">
+        <item quantity="one">%1$d cântec lipsește sau nu poate fi citit și este omis.</item>
+        <item quantity="other">%1$d cântece lipsesc sau nu pot fi citite și sunt omise.</item>
+    </plurals>
+    <string name="print_section_page">Pagină</string>
+    <string name="print_a4">A4</string>
+    <string name="print_letter">Letter</string>
+    <string name="print_portrait">Portret</string>
+    <string name="print_landscape">Peisaj</string>
+    <string name="print_font_size">%1$d pt</string>
+    <string name="print_margins">Margini</string>
+    <string name="print_margin">%1$d mm</string>
+    <string name="print_margin_decrease">Micșorează marginile</string>
+    <string name="print_margin_increase">Mărește marginile</string>
+    <string name="print_columns">Coloane</string>
+    <string name="print_columns_decrease">Mai puține coloane</string>
+    <string name="print_columns_increase">Mai multe coloane</string>
+    <string name="print_chords">Acorduri și grile</string>
+    <string name="print_tabs">Tabulaturi</string>
+    <string name="print_comments">Comentarii</string>
+    <string name="print_key">Tonalitate, transpunere și capodastru</string>
+    <string name="print_tempo">Tempo și măsură</string>
+    <string name="print_metadata">Artist</string>
+    <string name="print_page_numbers">Numere de pagină</string>
+    <string name="print_overview">Include ordinea cântecelor</string>
+    <string name="print_overview_details">Dată, descriere și artiști</string>
+    <string name="print_running_order">Ordinea cântecelor</string>
+    <string name="print_song_sheets">Cântece</string>
+    <string name="print_song_sheets_include">Include cântecele</string>
+    <string name="print_song_sheet">Cântec</string>
+    <string name="print_new_page">Fiecare cântec pe o pagină nouă</string>
+    <string name="print_missing">Fișierul cântecului lipsește sau nu poate fi citit</string>
+    <string name="print_load_failed">PDF-ul nu a putut fi pregătit.</string>
+    <string name="print_setlist_empty">Această listă nu are încă niciun cântec.</string>
+    <string name="print_page">Pagina %1$d din %2$d</string>
+    <string name="print_previous">Anterioara</string>
+    <string name="print_next">Următoarea</string>
+    <string name="print_time">Măsură</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">Link</string>
+    <string name="print_format_link_description">Recomandat pentru utilizatorii Campfire de acum și de mai târziu</string>
+    <string name="share_not_connected">Partajează un link care se deschide direct în Campfire sau într-un browser, fără nimic de instalat. Linkurile se creează în propriul tău Dropbox, așa că mai întâi conectează-l; astfel, întreaga bibliotecă rămâne sincronizată și pe toate dispozitivele tale.</string>
+    <string name="share_connect_again">Reconectează</string>
+    <string name="share_create">Creează link</string>
+    <string name="share_try_again">Încearcă din nou</string>
+    <string name="share_copy">Copiază linkul</string>
+    <string name="share_send">Trimite linkul</string>
+    <string name="share_not_shared_song">Oricine are linkul poate deschide acest cântec direct în Campfire sau într-un browser, fără nimic de instalat. Linkul urmează modificările tale: deschis din nou, aduce cea mai recentă versiune, iar copiile deja importate rămân neschimbate.</string>
+    <string name="share_not_shared_setlist">Oricine are linkul poate deschide această listă și cântecele ei direct în Campfire sau într-un browser, fără nimic de instalat. Linkul urmează modificările tale: deschis din nou, aduce cea mai recentă versiune, iar copiile deja importate rămân neschimbate.</string>
+    <string name="share_shared_on">Partajat pe %1$s</string>
+    <string name="share_too_large_to_update">Cea mai recentă versiune este prea mare pentru partajare; linkul oferă ultima versiune care a încăput.</string>
+    <string name="share_scope_missing">Conectează din nou Dropbox ca să-i permiți lui Campfire să creeze linkuri.</string>
+    <string name="share_authorization">Dropbox nu mai acceptă conexiunea. Conectează-te din nou pentru a crea linkuri.</string>
+    <string name="share_too_large">Prea mare pentru a fi partajat ca link (peste %1$d MB).</string>
+    <string name="share_not_public">Contul tău Dropbox nu permite linkuri publice.</string>
+    <string name="share_network">Dropbox nu a putut fi accesat. Verifică conexiunea și încearcă din nou.</string>
+    <string name="share_remote_full">Dropboxul tău este plin.</string>
+    <string name="share_newer_version">O versiune mai nouă de Campfire a modificat ultima oară linkurile acestui cont Dropbox. Actualizează Campfire ca să poți partaja de aici.</string>
+    <string name="share_missing">Acest element nu mai este în biblioteca ta.</string>
+    <string name="share_copy_missing">Acest link nu mai funcționează: copia sa a fost eliminată din Dropboxul tău. Creează un link nou ca să-l partajezi din nou.</string>
+    <string name="share_failed">Linkul nu a putut fi creat. Încearcă din nou peste puțin timp.</string>
+    <string name="share_qr_code">Codul QR al linkului</string>
+    <string name="share_save_qr_code">Salvează codul QR</string>
+    <string name="share_stop">Oprește partajarea</string>
+    <string name="share_stop_confirmation">Oprești partajarea pentru „%1$s”? Linkul nu va mai funcționa pentru nimeni. Copiile deja importate rămân ale celor care le-au importat.</string>
+    <string name="share_link_copied">Link copiat</string>
+    <string name="share_qr_code_saved">Cod QR salvat</string>
+    <string name="share_stop_failed">Partajarea nu a putut fi oprită. Linkul funcționează în continuare.</string>
+    <string name="share_stop_failed_network">Pentru a opri o partajare e nevoie de o conexiune la Dropbox. Linkul funcționează în continuare.</string>
+
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">Se creează linkul…</string>
+    <string name="share_stopping">Se oprește partajarea…</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">Partajare</string>
+    <string name="settings_group_shared_links">Linkuri partajate</string>
+    <string name="settings_group_all_links">Toate linkurile</string>
+    <string name="settings_sharing_description">Partajează un cântec sau o listă ca link pe care îl poate deschide oricine, creat din Dropboxul tău. Conectarea Dropbox îți păstrează și întreaga bibliotecă sincronizată cu el pe toate dispozitivele.</string>
+    <string name="settings_sharing_nothing_shared">Nimic partajat încă. Alege Link când partajezi un cântec sau o listă.</string>
+    <string name="settings_sharing_stale">Linkurile nu au putut fi citite din Dropbox. Această listă arată ce a văzut ultima dată acest dispozitiv.</string>
+    <string name="settings_sharing_orphaned">Nu mai este în biblioteca ta</string>
+    <string name="settings_sharing_copy_missing">Linkul nu mai funcționează</string>
+    <string name="settings_sharing_too_large">Prea mare pentru actualizare</string>
+    <string name="settings_sharing_actions">Acțiuni de partajare</string>
+    <string name="settings_sharing_show_qr_code">Arată codul QR</string>
+    <string name="settings_sharing_stop_all">Oprește toate partajările</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">Oprești partajarea pentru %1$d element? Linkul lui nu va mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
+        <item quantity="other">Oprești partajarea pentru toate cele %1$d elemente? Linkurile lor nu vor mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
+    </plurals>
+    <string name="share_stop_all_failed">Nu toate partajările au putut fi oprite. Linkurile încă afișate funcționează în continuare.</string>
+    <string name="share_stop_all_failed_network">Pentru a opri partajările e nevoie de o conexiune la Dropbox. Linkurile încă afișate funcționează în continuare.</string>
+    <string name="settings_sync_disconnect_shared_links">Linkurile partajate funcționează în continuare. Conectează din nou același cont ca să le gestionezi.</string>
+    <string name="settings_sync_disconnect_pending_stops">Unele cântece sau liste șterse pe acest dispozitiv nu au fost încă sincronizate. Dacă vreunul dintre ele este partajat, linkul lui funcționează în continuare, dacă nu sincronizezi înainte de deconectare.</string>
+    <!-- Settings screen: sync, a reconnect that did not go through -->
+    <string name="settings_sync_reconnect_failed">Dropbox nu a putut fi reconectat. Conexiunea pe care o aveai funcționează în continuare.</string>
+</resources>

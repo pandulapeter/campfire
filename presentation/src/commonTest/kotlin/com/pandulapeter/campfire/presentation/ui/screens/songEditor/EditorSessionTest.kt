@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
@@ -356,7 +357,7 @@ class EditorSessionTest {
         isAppIconThemed = true,
         isCoverArtEnabled = true,
         shouldNumberSections = true,
-        language = UserPreferences.Language.SYSTEM_DEFAULT,
+        language = AppLanguage.SYSTEM_DEFAULT,
         chordSpelling = UserPreferences.ChordSpelling(accidentals = UserPreferences.Accidentals.ORIGINAL, notation = notation),
         transpositions = emptyMap(),
         foldedSections = emptyMap(),

@@ -41,13 +41,13 @@ public object ChordSheetConverter {
         val all = pages.flatten()
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
         if (isChordPro(original)) return listOf(original)
-        val starts = pages.map { page -> page.indexOfFirst { it.text.isNotBlank() }.let { index ->
-            index >= 0 && isTitle(page[index], page)
-        } }
+        val sizes = all.flatMap { line -> line.source.spans.filter { it.text.isNotBlank() }.map { it.size } }.sorted()
+        val starts = ChordSheetPageSplit.starts(pages.map(::lead), sizes.getOrNull(sizes.size / 2) ?: 1.0)
         val groups = mutableListOf<MutableList<Rendered>>()
         pages.forEachIndexed { index, page ->
-            if (groups.isEmpty() || starts.count { it } >= 2 && starts[index]) groups += mutableListOf<Rendered>()
-            groups.last().addAll(page)
+            if (starts[index] == ChordSheetPageSplit.Start.SONG) groups += mutableListOf<Rendered>()
+            val lead = page.indexOfFirst { it.text.isNotBlank() }
+            groups.last().addAll(if (starts[index] == ChordSheetPageSplit.Start.CONTINUATION) page.drop(lead + 1) else page)
         }
         return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))), guessesTitle)) }.filter { it.isNotBlank() }
     }
@@ -387,6 +387,18 @@ public object ChordSheetConverter {
         val after = if (end == colon) colon + 1 else end
         val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size), isFromLabel = true)
         if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, end), positions = line.positions.copyOf(end)), rest) else listOf(line)
+    }
+
+    private fun lead(page: List<Rendered>): ChordSheetPageSplit.Lead? {
+        val index = page.indexOfFirst { it.text.isNotBlank() }.takeIf { it >= 0 } ?: return null
+        val line = page[index]
+        val next = page.drop(index + 1).firstOrNull { it.text.isNotBlank() && chordTokens(it) == null }
+        return ChordSheetPageSplit.Lead(
+            text = line.text.trim(),
+            line = line.source,
+            isTitle = isTitle(line, page),
+            isFollowedByBold = next?.source?.spans?.filter { it.text.isNotBlank() }?.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } == true,
+        )
     }
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {

@@ -15,6 +15,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - **No recognized song structure means escaped prose, not a guessed song** (`ChordProLiteralText`), and a line that is
   as likely sung (a single chord, `La La La`, "Time after time") is a chord or a field only with corroborating evidence.
 - It reads back Campfire's own PDF export (the heading row, wrapped chord lines, narrow-column titles).
+- A document is cut into songs by `ChordSheetPageSplit`: a later page opens a song only with a title in the type of
+  the document's first one (a bold title of the body's size not followed by more bold lyrics, which is a chorus), and
+  a page repeating the current song's title continues it, the repetition left out where it is marked (`(cont.)`, a
+  page number) or set in the title's type.
 - `convertFragment` converts what is pasted into the editor: the body as `convert` writes it (chords set, headings as
   sections, prose escaped), but no title or credit guessed and metadata lines kept as text, since the song it goes into
   has its own header. Only a paste with a chord row or a bracketed heading

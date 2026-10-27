@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -30,17 +30,18 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 @Composable
 internal fun LanguageChoice(
     modifier: Modifier = Modifier,
-    selected: UserPreferences.Language?,
-    onSelected: (UserPreferences.Language) -> Unit,
+    selected: AppLanguage?,
+    onSelected: (AppLanguage) -> Unit,
 ) = Column(modifier = modifier.selectableGroup()) {
     listOf(
-        UserPreferences.Language.SYSTEM_DEFAULT,
-        UserPreferences.Language.ENGLISH,
-        UserPreferences.Language.HUNGARIAN,
+        AppLanguage.SYSTEM_DEFAULT,
+        AppLanguage.ENGLISH,
+        AppLanguage.HUNGARIAN,
+        AppLanguage.ROMANIAN,
     ).forEach { language ->
         val isSelected = selected == language
         val localName = appLanguageName(language)
-        val ownName = if (language == UserPreferences.Language.SYSTEM_DEFAULT) {
+        val ownName = if (language == AppLanguage.SYSTEM_DEFAULT) {
             localName
         } else {
             LocalizedStrings.get(language.nameResource, locale = AppLocale.findByCode(language.id))

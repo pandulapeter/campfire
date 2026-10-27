@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.datetime.LocalDate
 
@@ -68,7 +69,7 @@ internal val TEST_PREFERENCES = UserPreferences(
     isAppIconThemed = true,
     isCoverArtEnabled = true,
     shouldNumberSections = true,
-    language = UserPreferences.Language.SYSTEM_DEFAULT,
+    language = AppLanguage.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling.Default,
     transpositions = emptyMap(),
     foldedSections = emptyMap(),
