@@ -79,8 +79,42 @@ class NotationDrawingParserTest {
     }
 
     @Test
+    fun `circles and ellipses are shapes like paths`() {
+        val shapes = parseNotationDrawing(listOf(HEADER, system("""<circle cx="4" cy="5" r="1.5"/><ellipse class="slW" rx="2.5" ry="2"/>""")))!!.systems.single().shapes
+        assertEquals("M2.5 5.0a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0z", shapes[0].path)
+        assertNull(shapes[0].stroke)
+        assertEquals(NotationStroke(width = 0.7f, dashes = null), shapes[1].stroke)
+    }
+
+    @Test
+    fun `words placed a character at a time become a text each`() {
+        val texts = parseNotationDrawing(listOf(HEADER, system("""<style>.fng {font:6px sans-serif}</style><text x="-4,0,4" y="-26" class="fng">x 2</text>""")))!!
+            .systems.single().texts
+        assertEquals(listOf("x" to -4f, "2" to 4f), texts.map { (it.runs.single() as NotationTextRun.Words).text to it.x })
+    }
+
+    @Test
+    fun `a class may set a text's anchor, its box, and a superscript's size and raised baseline`() {
+        val text = parseNotationDrawing(
+            listOf(
+                HEADER,
+                system(
+                    """<style>.f3{font:12.0px sans-serif}.mid {text-anchor:middle}.box{outline:1px solid black;outline-offset:1px}.jc8{baseline-shift:25%;font-size:75%}</style>""" +
+                        """<text class="f3 gch box mid" x="10" y="20">D<tspan class="jc8">7</tspan></text>""",
+                ),
+            ),
+        )!!.systems.single().texts.single()
+        assertEquals(NotationAnchor.MIDDLE, text.anchor)
+        assertTrue(text.isBoxed)
+        val superscript = text.runs[1] as NotationTextRun.Words
+        assertEquals(9f, superscript.font.size)
+        assertEquals(-3f, superscript.dy)
+        assertEquals(0f, text.runs[0].dy)
+    }
+
+    @Test
     fun `anything the drawing does not know gives no drawing`() {
-        assertNull(parseNotationDrawing(listOf(HEADER, system("""<circle r="2"/>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<image href="x.png"/>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="rotate(45)"><path d="M0 0h1"/></g>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<text x="1" y="1">&#xF8FF;</text>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<use x="0" y="0" xlink:href="#missing"/>"""))))

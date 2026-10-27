@@ -23,6 +23,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
  * [notation].
  */
 internal data class NotationChordSpelling(val semitones: Int, val preferFlats: Boolean?, val notation: ChordNotation) {
+
+    /** This spelling moved [offset] semitones further, for a tune under a key change ([abcTuneOffsets]). */
+    fun movedBy(offset: Int) = if (offset == 0) this else copy(semitones = semitones + offset)
+
     companion object {
         val AS_WRITTEN = NotationChordSpelling(semitones = 0, preferFlats = null, notation = ChordNotation.STANDARD)
     }
@@ -57,14 +61,17 @@ internal fun abcChordNames(tune: String, symbols: List<String>, spelling: Notati
 
 /**
  * [this] with its chord symbols named [names] in place of the names the renderer wrote, which it transposed by
- * [semitones] from [symbols]. They are matched in order, so only where every one the drawing holds is what the renderer
- * makes of the symbol at its place (the same chord, its root moved by [semitones]); anything else (a chord the renderer
- * dropped, voices drawn in another order than written) keeps the renderer's names, which are still the right chords.
+ * [semitones] from [symbols] (`names[i]` being `symbols[i]`'s). Each drawn chord takes the name of the symbols it is a
+ * transposition of (the same chord, its root moved by [semitones]), whatever order the renderer drew them in, voice by
+ * voice or system by system; one that matches none, or symbols named differently (`C#` and `Db` both drawn as `D`
+ * under a numbering), keeps the renderer's name, which is still the right chord. A chord drawn as several runs (a jazz
+ * chord's superscript) is read whole, and renamed, it is one run in its first one's font.
  */
 internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<String>, semitones: Int): NotationDrawing {
-    var index = 0
-    val drawn = systems.flatMap { system -> system.texts.flatMap { text -> text.runs.filterIsInstance<NotationTextRun.Words>().filter { it.role == NotationTextRole.CHORD } } }
-    if (drawn.size != symbols.size || drawn.indices.any { !isTransposedChord(symbols[it], drawn[it].text, semitones) }) return this
+    val namesByDrawn = HashMap<String, String?>()
+    fun nameOf(drawn: String) = namesByDrawn.getOrPut(drawn) {
+        symbols.indices.filter { isTransposedChord(symbols[it], drawn, semitones) }.map { names[it] }.distinct().singleOrNull()
+    }
     return NotationDrawing(
         systems.map { system ->
             NotationSystem(
@@ -73,12 +80,14 @@ internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<S
                 shapes = system.shapes,
                 glyphs = system.glyphs,
                 texts = system.texts.map { text ->
-                    NotationText(
-                        x = text.x,
-                        y = text.y,
-                        anchor = text.anchor,
-                        runs = text.runs.map { run -> if (run is NotationTextRun.Words && run.role == NotationTextRole.CHORD) run.copy(text = names[index++]) else run },
-                    )
+                    val chordRuns = text.runs.filterIsInstance<NotationTextRun.Words>().filter { it.role == NotationTextRole.CHORD }
+                    val drawn = chordRuns.joinToString(separator = "") { it.text }
+                    val name = chordRuns.firstOrNull()?.let { nameOf(drawn) }
+                    if (name == null || name == drawn) {
+                        text
+                    } else {
+                        NotationText(x = text.x, y = text.y, anchor = text.anchor, runs = listOf(chordRuns.first().copy(text = name)), isBoxed = text.isBoxed)
+                    }
                 },
             )
         },

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Matrix
 import com.pandulapeter.campfire.abc.api.AbcSystem
 import androidx.compose.ui.graphics.Path
@@ -80,6 +81,18 @@ internal class NotationPainter(
                 NotationAnchor.MIDDLE -> widths.sum() / 2
                 NotationAnchor.END -> widths.sum()
             }
+            val firstWords = layouts.firstNotNullOfOrNull { it }
+            if (text.isBoxed && firstWords != null) {
+                // abc2svg's box is a CSS outline, 1 unit wide and 1 unit off the text, around the words as measured.
+                val top = text.y - firstWords.firstBaseline / unitSize - BOX_GAP
+                strokes += NotationStrokePaint(
+                    path = Path().apply {
+                        addRect(Rect(left = x - BOX_GAP, top = top, right = x + widths.sum() + BOX_GAP, bottom = top + firstWords.size.height / unitSize + 2 * BOX_GAP))
+                    },
+                    width = BOX_STROKE,
+                    dashes = null,
+                )
+            }
             text.runs.forEachIndexed { index, run ->
                 when (run) {
                     is NotationTextRun.Words -> texts += NotationTextPaint(
@@ -118,6 +131,10 @@ internal class NotationPainter(
 
     private companion object {
         const val MAX_PAINTED_DRAWINGS = 8
+        const val BOX_STROKE = 1f
+
+        /** The outline's offset plus half its stroke, which is drawn centred on the rectangle's edge. */
+        const val BOX_GAP = 1.5f
     }
 
     private fun parse(pathData: String) = pathParser.parsePathString(pathData).toPath().also { pathParser.clear() }

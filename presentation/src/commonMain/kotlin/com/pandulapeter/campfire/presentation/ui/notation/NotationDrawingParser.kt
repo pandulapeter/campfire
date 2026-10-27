@@ -40,6 +40,9 @@ private data class NotationContext(
 
 private class NotationUnsupportedException : Exception()
 
+/** One piece of a text's words: what it says, in what font, and how far its own baseline is moved (down). */
+private class TextPiece(val text: String, val font: NotationFont, val shift: Float)
+
 private class NotationSystemReader {
 
     private val classes = HashMap<String, NotationCssRule>()
@@ -85,6 +88,7 @@ private class NotationSystemReader {
             }
 
             "path" -> readPath(element, contextOf(element, parent))
+            "circle", "ellipse" -> readEllipse(element, contextOf(element, parent))
             "text" -> readText(element, contextOf(element, parent))
             else -> throw NotationUnsupportedException()
         }
@@ -113,21 +117,30 @@ private class NotationSystemReader {
             transform = transform,
             font = classesOf(element).firstNotNullOfOrNull { it.font } ?: parent.font,
             strokeWidth = element.attributes["stroke-width"]?.let(::parseSvgLength) ?: parent.strokeWidth,
-            anchor = when (element.attributes["text-anchor"]) {
-                null -> parent.anchor
-                "middle" -> NotationAnchor.MIDDLE
-                "end" -> NotationAnchor.END
-                else -> NotationAnchor.START
-            },
+            anchor = element.attributes["text-anchor"]?.let { parseTextAnchor(it) ?: NotationAnchor.START }
+                ?: classesOf(element).firstNotNullOfOrNull { it.anchor }
+                ?: parent.anchor,
         )
     }
 
     private fun classesOf(element: SvgElement) = element.classNames.mapNotNull { classes[it] }
 
-    private fun readPath(element: SvgElement, context: NotationContext) {
+    private fun readPath(element: SvgElement, context: NotationContext) =
+        addShape(element, context, path = element.attributes["d"] ?: throw NotationUnsupportedException())
+
+    /** A circle or an ellipse (a chord diagram's dots, a Clairnote note head) as the path of its two halves. */
+    private fun readEllipse(element: SvgElement, context: NotationContext) {
+        val radiusX = element.attributes["rx"]?.let(::parseSvgLength) ?: element.attributes["r"]?.let(::parseSvgLength) ?: throw NotationUnsupportedException()
+        val radiusY = element.attributes["ry"]?.let(::parseSvgLength) ?: radiusX
+        val left = element.number("cx") - radiusX
+        val centerY = element.number("cy")
+        addShape(element, context, path = "M$left ${centerY}a$radiusX $radiusY 0 1 0 ${2 * radiusX} 0a$radiusX $radiusY 0 1 0 ${-2 * radiusX} 0z")
+    }
+
+    private fun addShape(element: SvgElement, context: NotationContext, path: String) {
         val rule = classesOf(element).firstOrNull { it.isStroke }
         shapes += NotationShape(
-            path = element.attributes["d"] ?: throw NotationUnsupportedException(),
+            path = path,
             transform = context.transform,
             stroke = rule?.let {
                 NotationStroke(
@@ -140,7 +153,9 @@ private class NotationSystemReader {
     }
 
     private fun readText(element: SvgElement, context: NotationContext) {
-        val font = context.font ?: throw NotationUnsupportedException()
+        val font = (context.font ?: throw NotationUnsupportedException()).let { inherited ->
+            element.attributes["font-size"]?.let(::parseSvgLength)?.let { inherited.copy(size = it) } ?: inherited
+        }
         val role = when {
             AbcSystem.CHORD_SYMBOL_CLASS in element.classNames -> NotationTextRole.CHORD
             AbcSystem.LYRICS_CLASS in element.classNames -> NotationTextRole.LYRIC
@@ -168,35 +183,69 @@ private class NotationSystemReader {
             }
             return
         }
-        if (xs.size > 1 || ys.size > 1) throw NotationUnsupportedException()
+        if (xs.size > 1 || ys.size > 1) {
+            // Words placed a character at a time (a chord diagram's fingerings over its strings), each its own text.
+            if (element.children.any { it is SvgElement }) throw NotationUnsupportedException()
+            element.text.textContent().forEachIndexed { index, character ->
+                if (character == ' ') return@forEachIndexed
+                texts += NotationText(
+                    x = transform.mapX(xs.getOrElse(index) { xs.last() }),
+                    y = transform.mapY(ys.getOrElse(index) { ys.last() }),
+                    anchor = context.anchor,
+                    runs = listOf(NotationTextRun.Words(text = character.toString(), font = font.scaled(transform.scale), role = role, dy = 0f)),
+                )
+            }
+            return
+        }
         val runs = mutableListOf<NotationTextRun>()
         var dy = 0f
         element.children.forEach { child ->
-            val (text, runFont) = when (child) {
-                is SvgText -> child.text to font
+            val piece = when (child) {
+                is SvgText -> TextPiece(child.text, font, shift = 0f)
                 is SvgElement -> {
                     if (child.name != "tspan" || child.children.any { it is SvgElement }) throw NotationUnsupportedException()
                     child.attributes["dy"]?.let { dy += parseSvgLength(it) ?: throw NotationUnsupportedException() }
-                    val classFont = classesOf(child).firstNotNullOfOrNull { it.font } ?: font
-                    val size = child.attributes["style"]?.let { FONT_SIZE.find(it)?.groupValues?.get(1)?.toFloatOrNull() }
-                    child.text to (size?.let { classFont.copy(size = it) } ?: classFont)
+                    tspanPiece(child, font)
                 }
             }
-            val content = text.textContent()
+            val content = piece.text.textContent()
             if (content.isEmpty()) return@forEach
-            runs += if (runFont.isMusic) {
+            val runDy = (dy + piece.shift) * transform.scale
+            runs += if (piece.font.isMusic) {
                 NotationTextRun.Glyphs(
                     glyphs = content.codePointList().filter { it != ' '.code }.map { abcMusicGlyphs[it] ?: throw NotationUnsupportedException() },
-                    size = runFont.size * transform.scale,
-                    dy = dy * transform.scale,
+                    size = piece.font.size * transform.scale,
+                    dy = runDy,
                 )
             } else {
-                NotationTextRun.Words(text = content, font = runFont.scaled(transform.scale), role = role, dy = dy * transform.scale)
+                NotationTextRun.Words(text = content, font = piece.font.scaled(transform.scale), role = role, dy = runDy)
             }
         }
         if (runs.isNotEmpty()) {
-            texts += NotationText(x = transform.mapX(xs.firstOrNull() ?: 0f), y = transform.mapY(ys.firstOrNull() ?: 0f), anchor = context.anchor, runs = runs)
+            texts += NotationText(
+                x = transform.mapX(xs.firstOrNull() ?: 0f),
+                y = transform.mapY(ys.firstOrNull() ?: 0f),
+                anchor = context.anchor,
+                runs = runs,
+                isBoxed = classesOf(element).any { it.isOutlined },
+            )
         }
+    }
+
+    /**
+     * A `<tspan>`'s text in the font it sets: its class's or the text's, at the size its style or attribute gives or its
+     * class's proportion of the text's (a jazz chord's superscript), its baseline raised by its class's shift, which
+     * holds for its own text alone, unlike a `dy`.
+     */
+    private fun tspanPiece(tspan: SvgElement, font: NotationFont): TextPiece {
+        val rules = classesOf(tspan)
+        val classFont = rules.firstNotNullOfOrNull { it.font } ?: font
+        val size = tspan.attributes["style"]?.let { FONT_SIZE.find(it)?.groupValues?.get(1)?.toFloatOrNull() }
+            ?: tspan.attributes["font-size"]?.let(::parseSvgLength)
+            ?: rules.firstNotNullOfOrNull { it.relativeSize }?.let { classFont.size * it }
+            ?: classFont.size
+        val shift = rules.firstNotNullOfOrNull { it.baselineShift }?.let { -it * font.size } ?: 0f
+        return TextPiece(tspan.text, classFont.copy(size = size), shift)
     }
 
     private companion object {

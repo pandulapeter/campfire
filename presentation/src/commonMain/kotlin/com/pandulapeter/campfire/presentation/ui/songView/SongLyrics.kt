@@ -53,8 +53,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableIntStateOf
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
 import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
-import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
-import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItem
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -283,7 +281,7 @@ internal fun SongLyrics(
     }
     val notationUnit = NOTATION_UNIT * fontScale
     val notations = rememberSongNotations(
-        runs = remember(sections) { sections.verbatimRuns() },
+        blocks = model.song.blocks,
         width = if (songWidth == 0) null else with(density) { ((minOf(songWidth.toDp(), MAX_COLUMN_WIDTH * fontScale) - CARD_PADDING * 2) / notationUnit).toInt() },
         unitSize = with(density) { notationUnit.toPx() },
         chords = model.notationChords,
@@ -447,11 +445,6 @@ private val MAX_COLUMN_WIDTH = 560.dp
 
 /** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */
 private val NOTATION_UNIT = 1.dp
-
-/** Every run of verbatim lines in [this], each as the lines it holds, which is what an ABC tune is looked up by. */
-private fun List<RenderSection>.verbatimRuns() = filterIsInstance<RenderSection.Lines>().flatMap { section ->
-    section.sectionItems.mapNotNull { item -> (item as? SectionItem.RunSlot)?.takeIf { it.slot == 0 && it.kind == FoldableKind.VERBATIM }?.run }
-}
 private val COLUMN_GAP = 16.dp
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp

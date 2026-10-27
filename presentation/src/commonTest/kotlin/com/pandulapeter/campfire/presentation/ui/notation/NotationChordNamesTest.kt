@@ -67,12 +67,28 @@ class NotationChordNamesTest {
     }
 
     @Test
-    fun `chord names replace the renderer's only where every chord drawn is the symbol at its place`() {
-        val drawing = drawingWithChords("E", "B7")
-        val renamed = drawing.withChordNames(symbols = listOf("D", "A7"), names = listOf("Re", "La7"), semitones = 2)
-        assertEquals(listOf("Re", "La7"), renamed.chordTexts())
-        assertSame(drawing, drawing.withChordNames(symbols = listOf("A7", "D"), names = listOf("La7", "Re"), semitones = 2))
-        assertSame(drawing, drawing.withChordNames(symbols = listOf("D"), names = listOf("Re"), semitones = 2))
+    fun `each drawn chord takes the name of the symbol it is moved from, in any order`() {
+        val renamed = drawingWithChords("B7", "E", "F  (capo: 2)").withChordNames(symbols = listOf("D", "A7"), names = listOf("Re", "La7"), semitones = 2)
+        assertEquals(listOf("La7", "Re", "F  (capo: 2)"), renamed.chordTexts())
+    }
+
+    @Test
+    fun `a chord two symbols name differently keeps the renderer's name`() {
+        val drawing = drawingWithChords("D♯")
+        assertEquals(listOf("D♯"), drawing.withChordNames(symbols = listOf("C#", "Db"), names = listOf("2♯", "3♭"), semitones = 2).chordTexts())
+    }
+
+    @Test
+    fun `a jazz chord's superscript is read with its chord and renamed as one`() {
+        val jazz = NotationText(
+            x = 0f,
+            y = 0f,
+            anchor = NotationAnchor.START,
+            runs = listOf(NotationTextRun.Words("E", FONT, NotationTextRole.CHORD, dy = 0f), NotationTextRun.Words("7", FONT.scaled(0.75f), NotationTextRole.CHORD, dy = -3f)),
+        )
+        val drawing = NotationDrawing(listOf(NotationSystem(width = 100f, height = 50f, shapes = emptyList(), glyphs = emptyList(), texts = listOf(jazz))))
+        assertEquals(listOf("Re7"), drawing.withChordNames(symbols = listOf("D7"), names = listOf("Re7"), semitones = 2).chordTexts())
+        assertSame(drawing.systems.single().texts.single(), drawing.withChordNames(symbols = listOf("D7"), names = listOf("E7"), semitones = 2).systems.single().texts.single())
     }
 
     private fun drawingWithChords(vararg names: String) = NotationDrawing(

@@ -13,8 +13,9 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
 
 ### The script
 
-- `src/jvmSharedMain/resources/abc2svg/`: `abc2svg-1.js` and the modules a tune may ask for (`chordnames-1.js`,
-  `roman-1.js`), **bundled unmodified**, built from the v1.23.6 tag of the author's repository
+- `src/jvmSharedMain/resources/abc2svg/`: `abc2svg-1.js` and every module that changes how a tune is drawn, loaded
+  when a tune asks for it (chord names and numerals, diagrams, grids, tablature, jazz chords, capo, Clairnote, jianpu,
+  and the rest; not the playback and page modules), **bundled unmodified**, built from the v1.23.6 tag of the author's repository
   (https://chiselapp.com/user/moinejf/repository/abc2svg; npm and the GitHub mirror are stale). Its tarball endpoint
   fails, so the sources are fetched through the "raw" links at the tag and concatenated and minified as its
   build.ninja says (its jsmin.js runs under node with the three QuickJS globals it uses provided). The license

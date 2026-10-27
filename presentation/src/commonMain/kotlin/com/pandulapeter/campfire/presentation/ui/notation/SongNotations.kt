@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -65,11 +66,12 @@ internal class SongNotations(
 internal class NotationRun(val systems: List<NotationSystemPaint>, val measuredUnitSize: Float, val unitSize: Float, val isRerendered: Boolean)
 
 /**
- * What [rememberSongNotations] renders for: every tune of the song, the page and unit it is laid out at, its chords,
- * and the song's title, which a tune named the same leaves to the page.
+ * What [rememberSongNotations] renders for: every tune of the song with the key change it stands under
+ * ([abcTuneOffsets]), the page and unit it is laid out at, its chords, and the song's title, which a tune named the
+ * same leaves to the page.
  */
 internal data class NotationRequest(
-    val tunes: List<String>,
+    val tunes: Map<String, Int>,
     val width: Int,
     val unitSize: Float,
     val chords: NotationChordSpelling,
@@ -91,7 +93,7 @@ internal class RenderedNotations(
 }
 
 /**
- * Renders every `abc` run in [runs] for a page [width] SVG units wide, each unit [unitSize] pixels, with its chords
+ * Renders every `abc` run of the song's [blocks] for a page [width] SVG units wide, each unit [unitSize] pixels, with its chords
  * named as [chords] says and the title it repeats of [songTitle] left out, once the width is known, and again whenever
  * one of those changes. Until the first rendering, and for a tune that fails, the runs stay text, which is what the
  * first frame shows: the notation replaces the text when it arrives rather than animating in over a wrong first frame.
@@ -102,7 +104,7 @@ internal class RenderedNotations(
  */
 @Composable
 internal fun rememberSongNotations(
-    runs: List<List<ChordProLine>>,
+    blocks: List<ChordProBlock>,
     width: Int?,
     unitSize: Float,
     chords: NotationChordSpelling,
@@ -110,7 +112,7 @@ internal fun rememberSongNotations(
     painter: NotationPainter,
 ): SongNotations {
     val renderer = LocalAbcRenderer.current
-    val tunes = remember(runs) { runs.mapNotNull { it.abcTune() }.distinct() }
+    val tunes = remember(blocks) { abcTuneOffsets(blocks) }
     var rendered by remember(renderer) { mutableStateOf(RenderedNotations.NONE) }
     val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle)
     LaunchedEffect(renderer, request) {
@@ -118,7 +120,7 @@ internal fun rememberSongNotations(
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
         if (isOnlyResized) delay(RERENDER_DELAY_MILLIS)
-        val renderings = request.tunes.mapNotNull { tune -> render(renderer, tune, request)?.let { tune to it } }.toMap()
+        val renderings = request.tunes.mapNotNull { (tune, offset) -> render(renderer, tune, offset, request)?.let { tune to it } }.toMap()
         // A tune whose text alone changed (an edit) is new rather than re-rendered, and arrives the way the edit does.
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
         rendered = RenderedNotations(
@@ -130,8 +132,8 @@ internal fun rememberSongNotations(
     return remember(rendered, painter, unitSize) { if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, painter, unitSize) }
 }
 
-private suspend fun render(renderer: AbcRenderer, tune: String, request: NotationRequest): NotationRendering? =
-    renderNotationDrawing(renderer, tune, request.width, request.chords, request.songTitle)?.let { NotationRendering(it, request.unitSize) }
+private suspend fun render(renderer: AbcRenderer, tune: String, offset: Int, request: NotationRequest): NotationRendering? =
+    renderNotationDrawing(renderer, tune, request.width, request.chords.movedBy(offset), request.songTitle)?.let { NotationRendering(it, request.unitSize) }
 
 /**
  * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as
