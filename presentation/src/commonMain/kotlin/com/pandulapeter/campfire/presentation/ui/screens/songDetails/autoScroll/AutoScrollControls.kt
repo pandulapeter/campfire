@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderState
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -192,7 +193,9 @@ private fun Countdown(remainingSeconds: () -> Int?) = Text(
 
 /**
  * The speed on a slider standing upright, faster downwards, on the logarithmic scale of [autoScrollSpeedAt]. It follows
- * [speed] whenever that changes while it is not being dragged: another song's, or the stored one arriving.
+ * [speed] whenever that changes while it is not being dragged: another song's, or the stored one arriving. Both halves
+ * of its track look the same, with no stop indicator at the end: a speed has no amount to fill up to, and its middle, the
+ * song's own pace, is no less than either end.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -217,9 +220,22 @@ private fun SpeedSlider(
         if (!state.isDragging && autoScrollSpeedAt(state.value) != speed) state.value = autoScrollSpeedFraction(speed)
     }
     val speedDescription = stringResource(Res.string.song_details_auto_scroll_speed)
+    val trackColor = MaterialTheme.colorScheme.secondaryContainer
+    val colors = SliderDefaults.colors(
+        activeTrackColor = trackColor,
+        inactiveTrackColor = trackColor,
+    )
     VerticalSlider(
         modifier = modifier.semantics { contentDescription = speedDescription },
         state = state,
+        colors = colors,
+        track = { sliderState ->
+            SliderDefaults.Track(
+                sliderState = sliderState,
+                colors = colors,
+                drawStopIndicator = null,
+            )
+        },
     )
 }
 
