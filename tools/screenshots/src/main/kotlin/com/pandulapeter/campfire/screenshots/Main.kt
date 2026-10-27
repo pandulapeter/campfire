@@ -64,25 +64,32 @@ fun main(args: Array<String>) {
         exitProcess(renderInParallel(options = options, output = output, shard = shard, processes = processes.coerceAtMost(renders.size)))
     }
     var failures = 0
-    runBlocking(Dispatchers.Main) {
-        renders.forEachIndexed { index, job ->
-            val file = File(output, "${job.folder}/${job.name}.png")
-            print("[${index + 1}/${renders.size}] ${job.folder} / ${job.name}… ")
-            try {
-                render(
-                    device = job.device,
-                    shot = job.shot,
-                    environment = environment,
-                    output = file,
-                    frames = if (job.isClip) File(output, "${job.folder}/${job.name}") else null,
-                )
-                println("done")
-            } catch (exception: Exception) {
-                failures++
-                println("failed: ${exception.message}")
-                exception.printStackTrace()
+    try {
+        runBlocking(Dispatchers.Main) {
+            renders.forEachIndexed { index, job ->
+                val file = File(output, "${job.folder}/${job.name}.png")
+                print("[${index + 1}/${renders.size}] ${job.folder} / ${job.name}… ")
+                try {
+                    render(
+                        device = job.device,
+                        shot = job.shot,
+                        environment = environment,
+                        output = file,
+                        frames = if (job.isClip) File(output, "${job.folder}/${job.name}") else null,
+                    )
+                    println("done")
+                } catch (exception: Exception) {
+                    failures++
+                    println("failed: ${exception.message}")
+                    exception.printStackTrace()
+                }
             }
         }
+    } catch (error: Throwable) {
+        // An Error (a class the build rewrote under the run, memory running out) ends the run here: the Swing event thread
+        // would keep the process alive past it, and a parallel run's parent waits for every part to exit.
+        error.printStackTrace()
+        exitProcess(1)
     }
     println("${renders.size - failures} of ${renders.size} screenshots written to $output")
     // The app's singletons leave coroutines and the Swing event thread running, which would keep the process alive.
