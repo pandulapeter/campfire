@@ -534,6 +534,7 @@
     <string name="settings_user_interface_language_hungarian">Hungarian</string>
     <string name="settings_user_interface_language_romanian">Romanian</string>
     <string name="settings_user_interface_language_german">German</string>
+    <string name="settings_user_interface_language_spanish">Spanish</string>
     <string name="settings_user_interface_language_more_coming">More languages coming soon</string>
     <string name="settings_distributions_all">Every version of Campfire</string>
     <string name="settings_distributions_all_description">On campfire-songbook.com</string>

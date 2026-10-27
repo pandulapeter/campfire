@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_german
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_romanian
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_spanish
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_system_default
 
 /** What [language] is called in the language the app is set to. */
@@ -31,4 +32,5 @@ internal val AppLanguage.nameResource
         AppLanguage.HUNGARIAN -> Res.string.settings_user_interface_language_hungarian
         AppLanguage.ROMANIAN -> Res.string.settings_user_interface_language_romanian
         AppLanguage.GERMAN -> Res.string.settings_user_interface_language_german
+        AppLanguage.SPANISH -> Res.string.settings_user_interface_language_spanish
     }

@@ -59,6 +59,7 @@
 		C4F2000A2E8000000000000F /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C4F2000A2E80000000000040 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C4F2000A2E80000000000041 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C4F2000A2E80000000000042 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C4F2000A2E80000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C4F2000A2E80000000000012 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		C4F2000A2E80000000000013 /* set-version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "set-version.sh"; sourceTree = "<group>"; };
@@ -74,6 +75,7 @@
 		C4F1000A2E80000000000005 /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C4F1000A2E80000000000006 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C4F1000A2E80000000000007 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C4F1000A2E80000000000008 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -244,6 +246,7 @@
 				hu,
 				ro,
 				de,
+				es,
 			);
 			mainGroup = 7555FF72242A565900829871;
 			packageReferences = (
@@ -379,6 +382,7 @@
 				C4F1000A2E80000000000005 /* hu */,
 				C4F1000A2E80000000000006 /* ro */,
 				C4F1000A2E80000000000007 /* de */,
+				C4F1000A2E80000000000008 /* es */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -390,6 +394,7 @@
 				C4F2000A2E8000000000000F /* hu */,
 				C4F2000A2E80000000000040 /* ro */,
 				C4F2000A2E80000000000041 /* de */,
+				C4F2000A2E80000000000042 /* es */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
