@@ -13,8 +13,10 @@ package com.pandulapeter.campfire.abc.api
  * Engraves ABC notation as staff systems, each one SVG image, by a renderer bundled with the app: nothing is fetched,
  * and nothing rendered is kept beyond what the caller keeps.
  *
- * Calls may come from any thread and are run one at a time, on a thread of the renderer's own. **A call never throws**
- * (cancellation aside): a tune the renderer cannot read or a renderer that could not start returns [AbcRendering.Failed], and the caller keeps showing the ABC text as it is.
+ * Calls may come from any thread and are run one at a time, on a thread of the renderer's own where the platform has
+ * threads (on the web, on the main thread, which a long tune holds for its whole render). **A call never throws**
+ * (cancellation aside): a tune the renderer cannot read or a renderer that could not start returns
+ * [AbcRendering.Failed], and the caller keeps showing the ABC text as it is.
  */
 public interface AbcRenderer {
 
