@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.domain.api.library
 interface DeleteLibraryUseCase {
 
     /**
-     * Deletes every song and every setlist file of the library, and what the preferences remember about the songs by
-     * their file names (the transpositions, the tempos, the capos and the folded sections). Nothing else is touched: the preferences, the
+     * Deletes every song and every setlist file of the library, and what the preferences keep for each song by its file
+     * name ([com.pandulapeter.campfire.data.model.preferences.UserPreferences.withoutSongOverrides]). Nothing else is touched: the preferences, the
      * sync connection and the covers stay. Where an account is connected a sync run then starts at once with the
      * deletions allowed ([com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy.DELETE_REMOTELY]): the
      * confirmation the user typed is the answer the run's guard would otherwise stop to ask for, so the cloud folder,
