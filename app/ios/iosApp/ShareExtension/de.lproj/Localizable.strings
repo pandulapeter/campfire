@@ -1,0 +1,24 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The share extension's German strings. Keep in step with en.lproj. */
+"share_saving" = "Wird in Campfire gespeichert…";
+"share_saved" = "In Campfire gespeichert";
+"share_saved_detail" = "Öffne Campfire, um es deiner Bibliothek hinzuzufügen.";
+"share_link" = "Campfire öffnet keine Webseiten.";
+"share_link_detail" = "Wähle den Text des Akkordblatts aus und teile stattdessen diesen.";
+"share_unsupported" = "Campfire kann das nicht importieren.";
+"share_unsupported_detail" = "Campfire importiert Songs, reinen Text, PDF- und Word-Dokumente sowie Zip-Archive.";
+"share_too_large" = "Das ist zu groß zum Importieren.";
+"share_too_large_detail" = "Campfire importiert bis zu 24 MB auf einmal, 16 MB für ein Dokument und 8 MB für eine Text- oder Songdatei.";
+"share_inbox_full" = "Einige geteilte Inhalte warten noch.";
+"share_inbox_full_detail" = "Öffne Campfire, um sie zuerst abzuschließen.";
+"share_failed" = "Das konnte nicht für Campfire gespeichert werden.";
+"share_done" = "Fertig";

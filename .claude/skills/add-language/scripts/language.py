@@ -249,7 +249,6 @@ def check_wiring(code, english_name):
         ("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{"),
         ("app/web/src/wasmJsMain/resources/index.html", rf"/\^\([a-z|]*\b{code}\b[a-z|]*\)\\b/i"),
         ("CLAUDE.md", rf"values\[[^\]]*-{code}\b[^\]]*\]/strings\.xml"),
-        (".claude/skills/code-style/SKILL.md", rf"`values-{code}/strings\.xml`"),
         (".claude/skills/prepare-release/SKILL.md", rf"`presentation/src/commonMain/composeResources/values-{code}/strings\.xml` \({english_name}\)"),
         ("presentation/CLAUDE.md", english_name),
         ("app/web/CLAUDE.md", rf"navigator\.language` \([^)]*{english_name}"),

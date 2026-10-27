@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.getOrNull
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
+import com.pandulapeter.campfire.presentation.localization.StringsDe
 import com.pandulapeter.campfire.presentation.localization.StringsDefault
 import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.localization.StringsRo
@@ -92,6 +93,7 @@ internal open class PrepareScope(
         when (language) {
             AppLanguage.HUNGARIAN -> StringsHu.strings[key]
             AppLanguage.ROMANIAN -> StringsRo.strings[key]
+            AppLanguage.GERMAN -> StringsDe.strings[key]
             AppLanguage.ENGLISH, AppLanguage.SYSTEM_DEFAULT -> StringsDefault.strings[key]
         } ?: StringsDefault.strings[key],
     ) { "There is no string resource called $key." }

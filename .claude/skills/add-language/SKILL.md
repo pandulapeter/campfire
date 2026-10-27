@@ -91,8 +91,6 @@ already carries every locale (`jdk.localedata`), and the stores stay English (on
 Add the language to each list, in the house style (Oxford comma, the language last):
 
 - root `CLAUDE.md` → Strings: `values[-hu|-ro|-<code>]/strings.xml`.
-- `.claude/skills/code-style/SKILL.md`: the "Add every new key to …" bullet names every `values-*/strings.xml` and asks
-  for each language to be translated properly.
 - `.claude/skills/prepare-release/SKILL.md`: step 7 lists every file `whats_new_message` is set in (and counts them:
   "all three" becomes "all four"), and asks for the bullets in every language.
 - `presentation/CLAUDE.md`: the summaries bullet's "(English, Hungarian, …)".

@@ -38,6 +38,7 @@ internal fun LanguageChoice(
         AppLanguage.ENGLISH,
         AppLanguage.HUNGARIAN,
         AppLanguage.ROMANIAN,
+        AppLanguage.GERMAN,
     ).forEach { language ->
         val isSelected = selected == language
         val localName = appLanguageName(language)

@@ -14,5 +14,6 @@ enum class AppLanguage(val id: String) {
     ENGLISH("en"),
     HUNGARIAN("hu"),
     ROMANIAN("ro"),
+    GERMAN("de"),
     SYSTEM_DEFAULT("system_default"),
 }

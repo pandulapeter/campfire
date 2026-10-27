@@ -80,7 +80,7 @@ Import, export, share, and sync
 Make it yours
 • Light and dark themes, a sepia slider, and ten color schemes, or your wallpaper's colors
 • Switch off any feature you never use
-• English, Hungarian, and Romanian, switchable inside the app
+• English, Hungarian, Romanian, and German, switchable inside the app
 
 Your songs are yours
 Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images and song details. You can export everything at any time.

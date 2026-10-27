@@ -495,9 +495,17 @@
                 alreadyOpen: 'Campfire e deja deschis în altă filă. Închide mai întâi fila aceea sau continuă acolo.',
                 sentToOtherTab: 'Trimis către Campfire din cealaltă filă.',
                 retry: 'Încearcă din nou'
+            },
+            de: {
+                loadFailed: 'Campfire konnte nicht geladen werden. Prüfe die Verbindung und versuche es erneut.',
+                loadFailedFirstVisit: 'Campfire konnte nicht geladen werden. Beim ersten Öffnen in diesem Browser braucht es eine Verbindung, also prüfe die Verbindung und versuche es erneut.',
+                unsupported: 'Dieser Browser kann Campfire nicht ausführen. Es braucht Chrome oder Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) oder eine neuere Version.',
+                alreadyOpen: 'Campfire ist bereits in einem anderen Tab geöffnet. Schließe zuerst diesen Tab oder mach dort weiter.',
+                sentToOtherTab: 'An Campfire in deinem anderen Tab gesendet.',
+                retry: 'Erneut versuchen'
             }
         };
-        var language = (/^(hu|ro)\b/i.exec(navigator.language || '') || [])[1];
+        var language = (/^(hu|ro|de)\b/i.exec(navigator.language || '') || [])[1];
         var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
         if (language) {
             document.documentElement.lang = language.toLowerCase();

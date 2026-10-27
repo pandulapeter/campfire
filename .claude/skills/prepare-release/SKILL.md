@@ -96,10 +96,11 @@ them. If a change has no effect a user could notice, it is not in the notes.
    `<platform>Main` source set usually needs one.
 
 7. **Always update the in-app message.** Follow `.claude/skills/code-style/SKILL.md` before editing resources.
-   Set `whats_new_message` in all three:
+   Set `whats_new_message` in all four:
    - `presentation/src/commonMain/composeResources/values/strings.xml` (English);
    - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian);
-   - `presentation/src/commonMain/composeResources/values-ro/strings.xml` (Romanian).
+   - `presentation/src/commonMain/composeResources/values-ro/strings.xml` (Romanian);
+   - `presentation/src/commonMain/composeResources/values-de/strings.xml` (German).
 
    Write the bullets by **Writing the changelog** below: at most six, each a bold headline and a one-sentence
    description, sorted by importance. Before writing, take the cluster table from step 3, rank it by **Writing the
@@ -112,7 +113,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    headline bold on its own line with the description under it, as spaced rows in a scrollable area with fades at
    the top and bottom; its title and **Get started** button stay visible. No other Markdown,
    links, emoji, introductory paragraph or version number in the body.
-   Translate the same bullets into natural Hungarian and Romanian and escape XML correctly. Keep
+   Translate the same bullets into natural Hungarian, Romanian, and German, and escape XML correctly. Keep
    `whats_new_title` as the localized title with its `%1$s` version placeholder. Replace the previous message rather than
    appending history.
    **Empty notes are valid:** when the user wants no notes for a very small release, or there is no user-facing

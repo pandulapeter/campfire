@@ -42,7 +42,8 @@ The worker `OpfsFileStorage` writes through where there is no `createWritable()`
 ### Loading screen
 
 - Icon, name, and a **determinate** progress bar on the first frame's background (`CampfireColorScheme`'s light/dark by
-  `prefers-color-scheme`); the binaries are ~16 MB. Texts follow `navigator.language` (English, Hungarian, or Romanian).
+  `prefers-color-scheme`); the binaries are ~16 MB. Texts follow `navigator.language` (English, Hungarian, Romanian,
+  or German).
 - Without a kept build, an inline script wraps `fetch` and counts `.wasm` bodies on a clone of each response — **the
   response itself must stay untouched**, since its URL and HTTP cache entry let `instantiateStreaming` compile while
   downloading and let Chromium cache the compiled code.
