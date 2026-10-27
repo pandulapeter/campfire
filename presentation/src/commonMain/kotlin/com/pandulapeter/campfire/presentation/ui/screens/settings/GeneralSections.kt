@@ -37,7 +37,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_more_coming
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -49,7 +48,6 @@ import com.pandulapeter.campfire.presentation.ui.components.preferences.ThemeCol
 import com.pandulapeter.campfire.presentation.ui.components.preferences.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
@@ -165,7 +163,6 @@ private fun LanguageSection(
         selected = userPreferences?.language,
         onSelected = viewModel.preferencesController::setLanguage,
     )
-    SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
 }
 
 /** What the icon the theme color can reach is called on this platform. */

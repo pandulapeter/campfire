@@ -537,7 +537,6 @@
     <string name="settings_user_interface_language_spanish">Spanish</string>
     <string name="settings_user_interface_language_french">French</string>
     <string name="settings_user_interface_language_italian">Italian</string>
-    <string name="settings_user_interface_language_more_coming">More languages coming soon</string>
     <string name="settings_distributions_all">Every version of Campfire</string>
     <string name="settings_distributions_all_description">On campfire-songbook.com</string>
     <string name="settings_distribution_play_store">Google Play</string>
