@@ -9,14 +9,13 @@
 -->
 # Roadmap
 
-What's planned for Campfire, grouped by area. Nothing here has a date; items with a written plan link to it in
-[plans](plans).
+What's planned for Campfire, grouped by area.
 
 ## In progress
 
 - **ABC notation rendering**: ABC tunes drawn as staff notation instead of monospace text. Both spikes passed and
   the engines are chosen; building it is next. Plan: [abc-notation.md](plans/abc-notation.md)
-- **More languages**: Hebrew (RTL + font) and Italian
+- **More languages**: Hebrew (RTL + font)
 
 ## Short-term
 

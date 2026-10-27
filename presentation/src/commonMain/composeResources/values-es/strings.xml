@@ -536,6 +536,7 @@
     <string name="settings_user_interface_language_german">Alemán</string>
     <string name="settings_user_interface_language_spanish">Español</string>
     <string name="settings_user_interface_language_french">Francés</string>
+    <string name="settings_user_interface_language_italian">Italiano</string>
     <string name="settings_user_interface_language_more_coming">Pronto habrá más idiomas</string>
     <string name="settings_distributions_all">Todas las versiones de Campfire</string>
     <string name="settings_distributions_all_description">En campfire-songbook.com</string>

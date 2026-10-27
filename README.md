@@ -52,8 +52,7 @@ Real-time sync between devices is achieved by lifecycle-aware HTTP long polling.
 
 ## Roadmap
 
-What's planned next, from Google Drive sync to an audience screen for projectors, is in
-[documentation/ROADMAP.md](documentation/ROADMAP.md).
+What's currently being worked on and what's planned next, without specific dates is in [documentation/ROADMAP.md](documentation/ROADMAP.md).
 
 ## License
 
