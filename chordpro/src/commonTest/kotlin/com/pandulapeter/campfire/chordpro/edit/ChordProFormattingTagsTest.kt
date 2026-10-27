@@ -72,6 +72,8 @@ class ChordProFormattingTagsTest {
         assertNull(inside("|<span weight=\"bold\">a</span> <span color=\"red\">b</span>|"))
         assertNull(inside("|<b>a</b> <b>b</b>|"))
         assertNull(around("<b>|a</b> <b>b|</b>"))
+        assertNull(inside("|<b>a</strong> <strong>b</b>|"))
+        assertEquals("|a <strong>b</strong> c|", inside("|<b>a <strong>b</strong> c</b>|"))
         assertEquals("|a <span color=\"red\">b</span> c|", inside("|<span weight=\"bold\">a <span color=\"red\">b</span> c</span>|"))
     }
 }

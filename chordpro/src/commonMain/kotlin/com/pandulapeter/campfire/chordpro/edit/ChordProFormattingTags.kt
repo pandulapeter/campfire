@@ -41,7 +41,7 @@ public object ChordProFormattingTags {
         val openingStart = openingStartEndingAt(text, start, range.first, style) ?: return null
         val opening = ChordProMarkup.tagAt(text, openingStart) ?: return null
         val closing = ChordProMarkup.tagAt(text, end)?.takeIf { it.isClosing && it.name == opening.name } ?: return null
-        if (end + closing.length > range.last + 1 || !isPair(text, start, end, opening.name)) return null
+        if (end + closing.length > range.last + 1 || !isPair(text, start, end, opening, style)) return null
         return removal(text, openingStart, opening, end, closing, style)
     }
 
@@ -56,7 +56,7 @@ public object ChordProFormattingTags {
         while (closingStart >= contentStart) {
             val closing = ChordProMarkup.tagAt(text, closingStart)
             if (closing != null && closingStart + closing.length == end) {
-                val isPair = closing.isClosing && closing.name == opening.name && isPair(text, contentStart, closingStart, opening.name)
+                val isPair = closing.isClosing && closing.name == opening.name && isPair(text, contentStart, closingStart, opening, style)
                 return if (isPair) removal(text, start, opening, closingStart, closing, style) else null
             }
             closingStart = text.lastIndexOf('<', closingStart - 1)
@@ -67,16 +67,20 @@ public object ChordProFormattingTags {
     private fun ChordProMarkup.Tag.opens(style: Formatting.Style) = !isClosing && !isSelfClosing && style in styles
 
     /**
-     * Whether a tag named [name] that ends at [contentStart] and one closing it at [closingStart] are a pair: every tag of
-     * that name between them closed again in between, as [ChordProMarkup] nests them. Two spans side by side are no pair,
-     * and taking the style off their outer ends would leave the first one's closing tag and the second one's opening.
+     * Whether an [opening] tag that ends at [contentStart] and one closing it at [closingStart] are a pair: every tag
+     * nesting with it closed again in between, as [ChordProMarkup] nests them - spans by name, since a closing span ends
+     * the innermost one, other tags by the [style] they set, since `</strong>` ends a `<b>` there. Two tags side by side
+     * are no pair, and taking the style off their outer ends would leave the first one's closing tag and the second
+     * one's opening.
      */
-    private fun isPair(text: String, contentStart: Int, closingStart: Int, name: String): Boolean {
+    private fun isPair(text: String, contentStart: Int, closingStart: Int, opening: ChordProMarkup.Tag, style: Formatting.Style): Boolean {
+        val isSpan = opening.name == "span"
         var depth = 0
         var index = text.indexOf('<', contentStart)
         while (index in contentStart until closingStart) {
             val tag = ChordProMarkup.tagAt(text, index)
-            if (tag != null && tag.name == name && !tag.isSelfClosing) {
+            val nests = tag != null && !tag.isSelfClosing && if (isSpan) tag.name == "span" else tag.name != "span" && style in tag.styles
+            if (nests) {
                 if (!tag.isClosing) depth++ else if (depth-- == 0) return false
             }
             index = text.indexOf('<', index + 1)
