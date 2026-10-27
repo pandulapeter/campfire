@@ -24,7 +24,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   chord is played, so one definition would stand for both.
 - A lyric indented under its first chord starts at that chord; two chords or more in the indent keep it.
 - A header labelled with a colon or a semicolon names title (`Song;`), album, and year; a credit ending in a year
-  gives both, and a credit printed twice is written once.
+  gives both, and a credit printed twice is written once; an Artist label's value is a name, kept whole unless a comma
+  sets a year off (`The 1975`).
 - `convertFragment` converts what is pasted into the editor: the body as `convert` writes it (chords set, headings as
   sections, prose escaped), but no title or credit guessed and metadata lines kept as text, since the song it goes into
   has its own header. Only a paste with a chord row or a bracketed heading

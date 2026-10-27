@@ -144,6 +144,20 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `an artist label keeps a name ending in a number whole and takes a year off only after a comma`() {
+        val band = convert("Artist: The 1975\nTitle: Somebody Else\n\nAm     C\nHello world")
+        assertTrue(band.startsWith("{artist: The 1975}"), band)
+        assertFalse("{year:" in band, band)
+        val hungarian = convert("El\u0151ad\u00f3: Valaki 1972\nTitle: Hello\n\nAm     C\nHello world")
+        assertTrue("{artist: Valaki 1972}" in hungarian, hungarian)
+        assertFalse("{year:" in hungarian, hungarian)
+        val comma = convert("Artist: David Bowie, 1972\nTitle: Hello\n\nAm     C\nHello world")
+        assertTrue("{artist: David Bowie}" in comma && "{year: 1972}" in comma, comma)
+        val credit = convert("Title: Hello\nBy: Someone 1972\n\nAm     C\nHello world")
+        assertTrue("{artist: Someone}" in credit && "{year: 1972}" in credit, credit)
+    }
+
+    @Test
     fun `a repeat sign glued to a chord is a mark of its own and a double bar line stays one`() {
         val intro = convert("Intro\n\n||:Am |    | C    :||\n\nVerse 1\nAm   C\nHello world")
         assertTrue("\n||: [Am] | | [C] :||\n" in intro, intro)

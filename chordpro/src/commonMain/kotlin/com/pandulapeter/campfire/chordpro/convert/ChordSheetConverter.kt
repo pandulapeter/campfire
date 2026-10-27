@@ -320,7 +320,8 @@ public object ChordSheetConverter {
                 in capoLabels -> "capo"
                 "temp\u00f3", "bpm" -> "tempo"
                 "\u00fctemmutat\u00f3" -> "time"
-                "el\u0151ad\u00f3", "by", "words and music by" -> "artist"
+                "el\u0151ad\u00f3" -> "artist"
+                "by", "words and music by" -> CREDIT
                 "song" -> "title"
                 else -> label
             }
@@ -567,9 +568,17 @@ public object ChordSheetConverter {
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
-                    name == "artist" && creditYear.matches(value) -> creditYear.matchEntire(value)!!.destructured.let { (artist, year) ->
-                        header += "{artist: ${headerValue(artist)}}"
-                        header += "{year: $year}"
+                    name == CREDIT || name == "artist" -> {
+                        // An artist's name may end in a number (`The 1975`), so only a comma sets a year off it.
+                        val split = (if (name == CREDIT) creditYear else commaYear).matchEntire(value)
+                        if (split == null) {
+                            header += "{artist: ${headerValue(value)}}"
+                        } else {
+                            split.destructured.let { (artist, year) ->
+                                header += "{artist: ${headerValue(artist)}}"
+                                header += "{year: $year}"
+                            }
+                        }
                     }
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
@@ -940,6 +949,8 @@ public object ChordSheetConverter {
     private val credit = Regex("^(?:words (?:and|&) music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
     /** A credit ending in the year of the song, `Words & music by David Bowie 1972`. */
     private val creditYear = Regex("^(.+?),?\\s+((?:1[5-9]|20)[0-9]{2})$")
+    /** An artist's name followed by the year of the song, which only a comma tells apart from a name: `David Bowie, 1972`. */
+    private val commaYear = Regex("^(.+?),\\s+((?:1[5-9]|20)[0-9]{2})$")
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
 
@@ -948,4 +959,7 @@ public object ChordSheetConverter {
 
     /** What [metadata] names a line saying the song is played without a capo, which is the default and is written as nothing. */
     private const val NO_CAPO = "no capo"
+
+    /** What [metadata] names a credit (`By:`, `Words and music by:`), whose value may end in the year of the song. */
+    private const val CREDIT = "credit"
 }
