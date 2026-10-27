@@ -121,7 +121,7 @@ internal fun ScaleSheet(
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
         subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
-        titleMaxLines = 2,
+        titleMaxLines = 3,
         // A keyboard carries no labels, so only a neck has the toggle: the subtitle names a keyboard's notes.
         actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
             {

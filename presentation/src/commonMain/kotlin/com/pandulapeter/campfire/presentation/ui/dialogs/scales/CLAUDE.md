@@ -22,7 +22,7 @@
   drone is spiked the capo's frets above its fifth fret, ringing there as the chord rows play it.
 - The neck's dots carry degrees or note names (`UserPreferences.areScaleNoteNamesShown`, kept on the device), flipped by one icon toggle
   in the header, showing the mode it is in; the keyboard carries none, and its header has no toggle. The title
-  wraps to two lines (`titleMaxLines`), so a long scale's name is never cut short.
+  wraps to three lines (`titleMaxLines`), so a long scale's name is never cut short, even at a large text size.
 - The chord rows (seven-note scales only), their numerals following Chord degrees, follow the Chords tab's switch and need an instrument with shapes; shapes come from the
   tables only, never a search during composition. A chord tap opens its `ChordReference` sheet over this one, without
   scales; opened from a chord sheet, this sheet has no chord rows (`showsChords`), so dialogs never stack deeper than two.

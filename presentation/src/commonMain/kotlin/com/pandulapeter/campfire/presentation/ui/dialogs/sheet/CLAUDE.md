@@ -23,8 +23,8 @@ The bottom sheet every sheet goes through (`CampfireBottomSheet`) and its header
   padding excludes insets the column already consumed.
 - Every sheet has a close button in its `SheetHeader`, tall or not: a picker dragged to full height leaves no scrim to
   tap.
-- A title is one line; a sheet with no text input may wrap it to two (`titleMaxLines`), since no keyboard budget counts
-  its header.
+- A title is one line; a sheet with no text input may wrap it to two or more (`titleMaxLines`), since no keyboard budget
+  counts its header.
 - **Content height changes animate** (`animateSheetContentHeight`), but a change of the room offered (keyboard, window
   resize) is followed in the same frame so the sheet never trails the keyboard. Checklists shift rows by what the sheet
   still has to grow (`followSheetGrowth`) so a ticked row stays under the finger. Content that fills the sheet keeps
