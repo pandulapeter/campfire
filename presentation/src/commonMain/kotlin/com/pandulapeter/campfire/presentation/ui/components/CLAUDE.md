@@ -46,6 +46,11 @@ it (the Link format's "Creating link…") comes and goes with it.
   sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
 - `fadingVerticalEdges`: lists inside a dialog; never a sheet's content.
 
+### `ShrinkToFit.kt`
+
+Auto-sized text with an ellipsis uses `ShrinkToFit`, never `TextAutoSize.StepBased`, which never shrinks on Skiko (its
+paragraphs never report an ellipsized line).
+
 ### `PlacementAnimation.kt`
 
 - `Modifier.animatePlacement`: a child of a wrapping row (chips, color discs) travels to where its parent now places it

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.screenshots
 
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.text.TextLayoutResult
@@ -23,10 +24,11 @@ internal val APP_LANGUAGES = AppLanguage.entries - AppLanguage.SYSTEM_DEFAULT
  * matcher is applied to the unmerged tree.
  */
 @OptIn(ExperimentalTestApi::class)
-internal fun AppTestScope.textLayout(matcher: SemanticsMatcher): TextLayoutResult {
-    val node = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode()
-    return mutableListOf<TextLayoutResult>().also { node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(it) }.single()
-}
+internal fun AppTestScope.textLayout(matcher: SemanticsMatcher) = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode().textLayout
+
+/** The layout of this node's text, as its `Text` reports it. */
+internal val SemanticsNode.textLayout: TextLayoutResult
+    get() = mutableListOf<TextLayoutResult>().also { config[SemanticsActions.GetTextLayoutResult].action?.invoke(it) }.single()
 
 /**
  * Whether the whole text is shown: no line dropped past the maximum (where an ellipsis would cut the last one shown),

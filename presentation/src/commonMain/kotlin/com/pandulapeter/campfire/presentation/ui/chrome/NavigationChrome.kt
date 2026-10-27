@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireScreens
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.NavigationBar
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tools
+import com.pandulapeter.campfire.presentation.ui.components.ShrinkToFit
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.tools
@@ -214,7 +214,7 @@ private fun NavigationItemLabel(text: String) {
         text = text,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        autoSize = TextAutoSize.StepBased(
+        autoSize = ShrinkToFit(
             minFontSize = fontSize * MIN_NAVIGATION_LABEL_SCALE,
             // The style's own size, or the auto size would grow a short label to fill its item.
             maxFontSize = fontSize,
