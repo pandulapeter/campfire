@@ -59,7 +59,8 @@ repository; the user reviews and commits.
 
 1. **Render.** `./gradlew :tools:screenshots:run` (in the background; one app start per image, a few seconds each)
    writes every shot of `Shot.kt` on every listing `Device`, the multi-device rows of `Banners.kt` and the website set of
-   `Website.kt` into `tools/screenshots/renders/<row label>/`. `--args="--only IPHONE,03-metronome-tuner,banners"` renders
+   `Website.kt` into `tools/screenshots/renders/<row label>/`, in up to four processes side by side (`--parallel <n>`
+   sets how many). `--args="--only IPHONE,03-metronome-tuner,banners"` renders
    part of it (device enum names, shot ids, or `listing`, `banners`, `website`, `promo`). A failed render is reported and the
    run goes on. Never rebuild the tool while a render is running.
 2. **Check every image before importing anything**: a contact sheet per shot (PIL), then any device that looks off at

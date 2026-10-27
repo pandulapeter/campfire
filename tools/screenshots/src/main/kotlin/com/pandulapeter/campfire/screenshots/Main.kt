@@ -22,13 +22,18 @@ import kotlin.system.exitProcess
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
- * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. The paths the run needs are passed in by the build as
- * system properties.
+ * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. `--shard <index>/<count>` renders every
+ * count-th image from the index-th (to split a run across machines), and `--parallel <processes>` splits what is left
+ * across that many processes of the tool ([renderInParallel]), by default half the processors and at most four, as each
+ * takes about 1.6 GB. The paths the run needs
+ * are passed in by the build as system properties.
  */
 fun main(args: Array<String>) {
     val options = args.toList().windowed(size = 2, step = 2, partialWindows = false).associate { (key, value) -> key to value }
     val output = options["--out"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders")).apply { deleteRecursively() }
     val only = options["--only"]?.split(',')?.map(String::trim)?.toSet()
+    val shard = options["--shard"]?.let(Shard::parse) ?: Shard(index = 0, count = 1)
+    val processes = options["--parallel"]?.toInt() ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, MAX_DEFAULT_PROCESSES)
     val library = File(requireProperty("campfire.screenshots.library"))
     require(File(library, "library/songs").isDirectory) {
         "There is no library to take the screenshots of in $library: copy a Campfire data folder's library, covers and preferences there."
@@ -54,6 +59,10 @@ fun main(args: Array<String>) {
     val byNameOnly = setOf("promo")
     val renders = (listing + bannerJobs + websiteJobs + promoJobs)
         .filter { if (only == null) it.set !in byNameOnly else it.set in only || (it.set !in byNameOnly && (it.device.name in only || it.shot.id in only)) }
+        .filterIndexed { index, _ -> index % shard.count == shard.index }
+    if (processes > 1 && renders.size > 1) {
+        exitProcess(renderInParallel(options = options, output = output, shard = shard, processes = processes.coerceAtMost(renders.size)))
+    }
     var failures = 0
     runBlocking(Dispatchers.Main) {
         renders.forEachIndexed { index, job ->
@@ -89,5 +98,7 @@ private class Job(
     val shot: Shot,
     val isClip: Boolean = false,
 )
+
+private const val MAX_DEFAULT_PROCESSES = 4
 
 private fun requireProperty(name: String) = requireNotNull(System.getProperty(name)) { "Run the tool through Gradle, which sets $name." }

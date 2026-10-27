@@ -17,6 +17,10 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
   `--args="--out <folder> --only <names>"`. `Website.kt` adds the website's shots, in every language of the app; `Banners.kt` the
   multi-shot rows (README banners, Play feature graphic, website link preview).
+- **A run is split across processes** (`ParallelRun.kt`; `--parallel <n>`, by default half the processors, at most
+  four, as each takes about 1.6 GB), each its own JVM with its own part of the images, since one process holds one app
+  start at a time. A render is mostly waiting for the app to settle, so four take little longer than one.
+  `--shard <index>/<count>` renders every count-th image.
 - **The library is a copy, never committed**: `library/` (gitignored) holds a data folder's `library/`, `covers/`, and
   `preferences/preferences.json`. Every render copies it into its own temporary `user.home` (the desktop file storage
   derives its folder from it when Koin creates it), with the shot's theme and language written in, the current
