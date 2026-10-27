@@ -9,8 +9,8 @@
 -->
 # Plan: draw ABC blocks as staff notation
 
-**Status:** both spikes passed 2026-10-27 and the engines are chosen (see "Spike results"); the App Store exception
-was asked of abc2svg's author on 2026-10-27, no answer yet; steps 2–6 not started.
+**Status:** both spikes passed 2026-10-27 and the engines are chosen (see "Spike results"); abc2svg's author granted the
+App Store exception on 2026-10-27; steps 2–6 not started.
 
 Reading ABC landed on 2026-10-26 (8d9da5565..95d8540cb): an `abc` block is a run of `ChordProLine.Verbatim` lines drawn
 as monospace text, and `.abc` files and pasted tunes import as ChordPro songs with a chord grid, verses, and the tune
@@ -141,7 +141,9 @@ byte-identical to node's, and its SVG draws correctly through a painter of our o
   host shim is our own over the core API (`new abc2svg.Abc(user)`, `tosvg`, `img_out`, `errmsg`, `read_file`). Ship the
   file unmodified and separate, with the LGPL, GPL, and OFL texts. Play, Microsoft Store, and desktop: low risk. App
   Store and Mac App Store: the known LGPL grey area, softened by the script being replaceable data in an open-source
-  app; ask the author for an explicit store exception before shipping there.
+  app; on 2026-10-27 the author, Jean-François Moine, granted by email: "I allow abc2svg to be distributed as part of
+  Campfire through Apple's app stores." Name this permission beside the LGPL in the credits
+  (`documentation/THIRD_PARTY_SOFTWARE.md`, the About dialog's entry).
 - **Engine:** `io.github.dokar3:quickjs-kt:1.0.15` (Apache-2.0, QuickJS 2026-06-04), compiled and ran with Kotlin
   2.4.20 and AGP 9.4.1. Publishes every shipped target: Android arm64-v8a, armeabi-v7a, x86, x86_64; iosArm64,
   iosSimulatorArm64; desktop JNI for macOS arm64/x64, Linux x64/arm64, Windows x64 (no Windows arm64, which isn't
@@ -193,12 +195,12 @@ build. The follow-up asks whether engines the platforms or Mozilla maintain can 
   interpreted runs without it. A `Context` is bound to its thread; a compiled `Script` re-executes in 0.3–2.6 ms, so
   parsing is paid once. Release-build medians, 360 px: desktop 11–21 ms warm, ~200 ms cold; emulator 23–29 ms warm,
   ~0.7 s cold (debuggable builds ~3× slower), so an estimated 100–200 ms per render and 2–4 s cold on a low-end phone.
-- **Choice (decided 2026-10-27):** quickjs-kt stays on Android and desktop: ~5× faster warm and ~20× faster cold than Rhino, about
-  the same download (~0.4 MB compressed per ABI split against Rhino's ~0.35 MB), and on the JVM and Android it ships
-  plain bytecode plus optimized JNI libraries, so the Kotlin/Native upgrade risk left with iOS. Rhino is the tested
-  replacement should quickjs-kt stall.
+- **Choice (decided 2026-10-27):** quickjs-kt stays on Android and desktop: ~5× faster warm and ~20× faster cold than
+  Rhino, about the same download (~0.4 MB compressed per ABI split against Rhino's ~0.35 MB), and on the JVM and Android
+  it ships plain bytecode plus optimized JNI libraries, so the Kotlin/Native upgrade risk left with iOS. Rhino is the
+  tested replacement should quickjs-kt stall.
 
-Open, for step 2 onwards: the author's answer on the App Store exception; the App Store exception; a real low-end
-Android phone and a real iPhone; abc2svg measures text with its own width tables, so lyrics and chords drawn in Inter
-may differ slightly (check long lyric lines for overlaps); hiding the title and composer header (`%%writefields`,
-untested); rarer constructs (multiple voices, tablature, boxes) may need a few more attributes or fall back to text.
+Open, for step 2 onwards: a real low-end Android phone and a real iPhone; abc2svg measures text with its own width
+tables, so lyrics and chords drawn in Inter may differ slightly (check long lyric lines for overlaps); hiding the title
+and composer header (`%%writefields`, untested); rarer constructs (multiple voices, tablature, boxes) may need a few
+more attributes or fall back to text.
