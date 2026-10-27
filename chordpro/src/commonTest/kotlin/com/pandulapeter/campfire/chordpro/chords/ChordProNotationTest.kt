@@ -457,6 +457,14 @@ class ChordProNotationTest {
 
     private fun ChordProSong.tabLines() = lines().filterIsInstance<ChordProLine.Tab>().map { it.text }
 
+    @Test
+    fun `a chord written with markup is converted by its name and keeps its tags`() {
+        val german = ChordProNotation.convertText("[<b>B</b>]a", ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+        assertEquals("[<b>H</b>]a", german)
+        assertEquals("[<b>B</b>]a", ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
     private fun ChordProSong.annotationNames() = lines()
         .filterIsInstance<ChordProLine.Lyrics>()
         .flatMap { line -> line.chords.filter { it.isAnnotation }.map { it.name } }

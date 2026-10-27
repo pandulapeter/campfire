@@ -337,7 +337,7 @@ public object ChordProParser {
         ChordProDirectives.brackets(rawLine).forEach { bracket ->
             text.append(rawLine, consumedUntil, bracket.range.first)
             // ChordPro formats a chord as a whole, which a chord's name cannot carry, so it keeps only the text.
-            val content = ChordProMarkup.strip(bracket.content).text.trim()
+            val content = ChordProMarkup.bracketText(bracket.content)
             if (content.isNotEmpty()) {
                 val isAnnotation = content.startsWith(ANNOTATION_MARKER)
                 chords += ChordProLine.Lyrics.Chord(

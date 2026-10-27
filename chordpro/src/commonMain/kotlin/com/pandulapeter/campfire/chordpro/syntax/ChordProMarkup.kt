@@ -49,6 +49,7 @@ public object ChordProMarkup {
         public val text: String,
         public val formatting: List<Formatting>,
         private val offsets: IntArray?,
+        private val sources: IntArray?,
     ) {
 
         /**
@@ -56,13 +57,31 @@ public object ChordProMarkup {
          * after it, so a chord written before a tag stays with the word the tag formats.
          */
         internal fun offsetOf(original: Int) = offsets?.let { it[original.coerceIn(0, it.lastIndex)] } ?: original
+
+        /**
+         * The range of the text before [strip] that the characters from [start] until [end] of [text] were copied from, one
+         * by one and with nothing between them, or null where a tag stands among them or one of them was decoded.
+         */
+        internal fun sourceRangeOf(start: Int, end: Int): IntRange? {
+            val sources = sources ?: return start until end
+            if (start >= end) return null
+            for (index in start until end) {
+                if (sources[index] < 0 || (index > start && sources[index] != sources[index - 1] + 1)) return null
+            }
+            return sources[start]..sources[end - 1]
+        }
     }
+
+    /** The text a chord's brackets hold as the parser reads it: without markup, trimmed. */
+    internal fun bracketText(content: String): String = strip(content).text.trim()
 
     /** [text] without its markup tags, with the ranges they formatted, in the order of [ChordProLine.Lyrics.formatting]. */
     public fun strip(text: String): Stripped {
-        if ('<' !in text && '&' !in text) return Stripped(text = text, formatting = emptyList(), offsets = null)
+        if ('<' !in text && '&' !in text) return Stripped(text = text, formatting = emptyList(), offsets = null, sources = null)
         val result = StringBuilder(text.length)
         val offsets = IntArray(text.length + 1)
+        // A decoded or produced character is never longer than what it was read from, so the text's length is enough.
+        val sources = IntArray(text.length)
         val depths = IntArray(Formatting.Style.entries.size)
         val starts = IntArray(Formatting.Style.entries.size)
         val formatting = mutableListOf<Formatting>()
@@ -72,6 +91,7 @@ public object ChordProMarkup {
             val entity = if (text[index] == '&') MarkupSymbols.entityAt(text, index) else null
             if (entity != null) {
                 for (entityIndex in index until index + entity.second) offsets[entityIndex] = result.length
+                for (decodedIndex in result.length until result.length + entity.first.length) sources[decodedIndex] = -1
                 result.append(entity.first)
                 index += entity.second
                 continue
@@ -79,13 +99,20 @@ public object ChordProMarkup {
             val tag = if (text[index] == '<') tagAt(text, index) else null
             if (tag == null) {
                 offsets[index] = result.length
+                sources[result.length] = index
                 result.append(text[index])
                 index++
                 continue
             }
-            if (tag.name == "br" && !tag.isClosing && tag.separatesWords(result, text, index)) result.append(' ')
+            if (tag.name == "br" && !tag.isClosing && tag.separatesWords(result, text, index)) {
+                sources[result.length] = -1
+                result.append(' ')
+            }
             for (tagIndex in index until index + tag.length) offsets[tagIndex] = result.length
-            tag.symbol?.let(result::append)
+            tag.symbol?.let { symbol ->
+                for (symbolIndex in result.length until result.length + symbol.length) sources[symbolIndex] = -1
+                result.append(symbol)
+            }
             index += tag.length
             val styles = when {
                 tag.name != "span" -> tag.styles
@@ -108,7 +135,7 @@ public object ChordProMarkup {
         Formatting.Style.entries.forEach { style ->
             if (depths[style.ordinal] > 0) formatting.addRange(starts[style.ordinal], result.length, style)
         }
-        return Stripped(text = result.toString(), formatting = formatting.sortedWith(compareBy({ it.start }, { it.style })), offsets = offsets)
+        return Stripped(text = result.toString(), formatting = formatting.sortedWith(compareBy({ it.start }, { it.style })), offsets = offsets, sources = sources)
     }
 
     /** The tag that writes [style], without its angle brackets: `b`, `i`, or `u`. */

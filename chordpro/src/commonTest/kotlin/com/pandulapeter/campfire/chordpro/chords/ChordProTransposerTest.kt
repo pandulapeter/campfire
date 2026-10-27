@@ -507,6 +507,22 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a chord written with markup is transposed by its name and keeps its tags`() {
+        assertEquals("[<b>A</b>]la [D]la", ChordProTransposer.transposeText("[<b>G</b>]la [C]la", 2, preferFlats = false))
+        assertEquals("[ <i>A</i> ]la", ChordProTransposer.transposeText("[ <i>G</i> ]la", 2, preferFlats = false))
+        assertEquals("[<b>*softly</b>]la [<b>Chorus x2</b>]", ChordProTransposer.transposeText("[<b>*softly</b>]la [<b>Chorus x2</b>]", 2, preferFlats = false))
+        assertEquals("[D]a", ChordProTransposer.transposeText("[C&#x266F;]a", 1, preferFlats = false))
+    }
+
+    @Test
+    fun `a chord written with markup in a comment is transposed on the model`() {
+        assertEquals(
+            ChordProBlock.Comment("Intro [<b>A</b>]", CommentStyle.PLAIN),
+            ChordProTransposer.transpose(ChordProParser.parse("{c: Intro [<b>G</b>]}\n\n[G]a"), 2, preferFlats = false).blocks.first(),
+        )
+    }
+
+    @Test
     fun `the chords of a comment are transposed on the model`() {
         val song = ChordProParser.parse("{c: Outro: [G] [Em] [*softly] [Chorus x2]}\n\n[G]a")
 

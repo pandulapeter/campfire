@@ -19,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ChordProChordsTest {
 
@@ -305,5 +306,10 @@ class ChordProChordsTest {
         // A modulation names the key it reaches, which the rewrite renames and which is no chord anybody plays.
         val transposeKeys = song.blocks.filterIsInstance<ChordProBlock.Transpose>().mapNotNull { it.key }
         assertEquals(visited + transposeKeys, renamed + ChordProTabTransposer.chordNames(tabLines))
+    }
+
+    @Test
+    fun `a chord written with markup in a comment is named by its text`() {
+        assertTrue("Em" in ChordProChords.namesIn(ChordProParser.parse("{c: Intro [<b>Em</b>]}\n\n[G]a")))
     }
 }

@@ -345,22 +345,33 @@ internal object ChordProChordRewriter {
         return buildString(rawLine.length) {
             var consumedUntil = 0
             brackets.forEach { bracket ->
-                val content = bracket.content.trim()
-                val isChord = content.isNotEmpty() && !content.startsWith(ANNOTATION_MARKER)
+                // The chord is the name the parser reads, without the markup written around or inside it.
+                val stripped = ChordProMarkup.strip(bracket.content)
+                val name = stripped.text.trim()
+                val isChord = name.isNotEmpty() && !name.startsWith(ANNOTATION_MARKER)
                 append(rawLine, consumedUntil, if (isChord) bracket.range.first else bracket.range.last + 1)
-                if (isChord) {
-                    // The spaces a file puts inside its brackets are its own formatting, and the transposition keeps it.
-                    val leading = bracket.content.length - bracket.content.trimStart().length
-                    append(BRACKET_OPEN)
-                        .append(bracket.content, 0, leading)
-                        .append(rename(content))
-                        .append(bracket.content, bracket.content.trimEnd().length, bracket.content.length)
-                        .append(BRACKET_CLOSE)
-                }
+                if (isChord) append(BRACKET_OPEN).append(renamedContent(bracket.content, stripped, name, rename)).append(BRACKET_CLOSE)
                 consumedUntil = bracket.range.last + 1
             }
             append(rawLine, consumedUntil, rawLine.length)
         }
+    }
+
+    /**
+     * What a chord's brackets hold once [name], read from [content] as [stripped], is renamed: the content as it is where
+     * the name stays, the content with only the name's characters replaced where they are one run of the file's own
+     * (`<b>G</b>` becomes `<b>A</b>`), and otherwise the new name between the content's own spaces, since the markup or
+     * character reference inside a name cannot be carried over to another one.
+     */
+    private fun renamedContent(content: String, stripped: ChordProMarkup.Stripped, name: String, rename: (String) -> String): String {
+        val renamed = rename(name)
+        if (renamed == name) return content
+        val nameStart = stripped.text.indexOfFirst { !it.isWhitespace() }
+        val source = stripped.sourceRangeOf(nameStart, nameStart + name.length)
+        if (source != null) return content.replaceRange(source, renamed)
+        // The spaces a file puts inside its brackets are its own formatting, and the rename keeps it.
+        val leading = content.length - content.trimStart().length
+        return content.substring(0, leading) + renamed + content.substring(content.trimEnd().length)
     }
 
     private fun rewriteGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {

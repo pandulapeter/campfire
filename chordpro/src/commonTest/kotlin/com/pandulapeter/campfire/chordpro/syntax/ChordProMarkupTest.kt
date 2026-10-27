@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting.Style
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTimedValue
@@ -146,6 +147,13 @@ class ChordProMarkupTest {
     @Test
     fun `adjacent ranges of one style are one range`() {
         assertEquals(listOf(Formatting(0, 2, Style.BOLD)), lyrics("<b>a</b><b>b</b>").formatting)
+    }
+
+    @Test
+    fun `a stripped text tells where a run of its characters was copied from`() {
+        assertEquals(3..4, ChordProMarkup.strip("<b>Am</b>").sourceRangeOf(0, 2))
+        assertNull(ChordProMarkup.strip("C&#x266F;").sourceRangeOf(0, 2))
+        assertEquals(0..1, ChordProMarkup.strip("Am").sourceRangeOf(0, 2))
     }
 
     @Test

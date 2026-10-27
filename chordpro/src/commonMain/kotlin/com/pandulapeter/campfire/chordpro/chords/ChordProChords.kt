@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
 
@@ -183,7 +184,7 @@ public object ChordProChords {
 
     /** The chord names in the brackets of a comment or a label, where an intro is written down as a row of chords. */
     private fun bracketedNames(text: String) = ChordProDirectives.brackets(text)
-        .map { bracket -> bracket.content.trim() }
+        .map { bracket -> ChordProMarkup.bracketText(bracket.content) }
         .filter { name -> name.isNotEmpty() && !name.startsWith(ChordProVocabulary.ANNOTATION_MARKER) }
 
     /** The label of the tab or grid environment a line stands in, see [ChordProLine.Tab.label]. */
