@@ -24,6 +24,7 @@ class UserPreferencesSongMapsTest {
         assertEquals(mapOf(NEW_SONG to 3), renamed.capos)
         assertEquals(mapOf(NEW_SONG to BEAT_LEVELS), renamed.beatLevels)
         assertEquals(mapOf(NEW_SONG to setOf("chorus")), renamed.foldedSections)
+        assertEquals(mapOf(NEW_SONG to 150), renamed.autoScrollSpeeds)
     }
 
     @Test
@@ -35,6 +36,7 @@ class UserPreferencesSongMapsTest {
         assertEquals(emptyMap(), deleted.capos)
         assertEquals(emptyMap(), deleted.beatLevels)
         assertEquals(emptyMap(), deleted.foldedSections)
+        assertEquals(emptyMap(), deleted.autoScrollSpeeds)
     }
 
     @Test
@@ -60,7 +62,7 @@ class UserPreferencesSongMapsTest {
         )
 
         assertEquals(
-            preferences.copy(transpositions = emptyMap(), tempos = emptyMap(), capos = emptyMap(), beatLevels = emptyMap(), foldedSections = emptyMap()),
+            preferences.copy(transpositions = emptyMap(), tempos = emptyMap(), capos = emptyMap(), beatLevels = emptyMap(), foldedSections = emptyMap(), autoScrollSpeeds = emptyMap()),
             preferences.withoutSongOverrides(),
         )
     }
@@ -86,6 +88,7 @@ class UserPreferencesSongMapsTest {
         capos = mapOf(fileName to 3),
         beatLevels = mapOf(fileName to BEAT_LEVELS),
         foldedSections = mapOf(fileName to setOf("chorus")),
+        autoScrollSpeeds = mapOf(fileName to 150),
         tagMatchMode = UserPreferences.MatchMode.ANY,
         languageMatchMode = UserPreferences.MatchMode.ANY,
         tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
