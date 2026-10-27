@@ -73,7 +73,8 @@ internal fun ImportReportButton(
     onRetry: () -> Unit,
     onDone: () -> Unit,
 ) {
-    val stage = if (isKeyboardVisible || (report is ImportReport.Review && importCount == null)) null else report::class
+    // A stage without a button of its own (loading, importing) hides the control, so that its shadow fades out with it.
+    val stage = if (isKeyboardVisible || (report is ImportReport.Review && importCount == null)) null else report::class.takeIf { it in STAGES_WITH_BUTTON }
     // The last stage is kept while the button leaves, rather than an empty one shrinking away.
     var shownStage by remember { mutableStateOf(stage) }
     if (stage != null) shownStage = stage
@@ -161,6 +162,8 @@ private fun ImportReportStageButton(
         else -> Box(Modifier)
     }
 }
+
+private val STAGES_WITH_BUTTON = setOf(ImportReport.Review::class, ImportReport.Failed::class, ImportReport.Finished::class)
 
 /** The shadow is drawn around the buttons by FloatingControlVisibility, which fades it with them. */
 private val NO_ELEVATION
