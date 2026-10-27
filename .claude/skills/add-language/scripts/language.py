@@ -266,7 +266,7 @@ def check_wiring(code, english_name):
         ("app/ios/CLAUDE.md", rf"`Localizable\.strings` \([^)]*`{code}`"),
         ("app/ios/CLAUDE.md", rf"`CFBundleLocalizations` \([^)]*`{code}`"),
     ]
-    checks += [(f"documentation/store-listings/{p.name}", rf"{english_name}, switchable inside the app")
+    checks += [(f"documentation/store-listings/{p.name}", rf"\b{english_name}\b[^\n]*, switchable inside the app")
                for p in sorted((ROOT / "documentation/store-listings").glob("*.md"))]
     checks += [(str(p.relative_to(ROOT)), rf'<string name="{key}">[^<]+</string>') for p in sorted(RESOURCES.glob("values*/strings.xml"))]
     errors = []
