@@ -469,10 +469,10 @@
     <string name="settings_notation_roman">Números romanos</string>
     <string name="settings_notation_roman_description">I IV V vi, contados desde la tonalidad de la canción: mayúsculas para los acordes mayores y minúsculas para los menores. Una canción sin tonalidad conserva sus letras, y el editor siempre usa letras.</string>
     <string name="settings_accidentals">Alteraciones</string>
-    <string name="settings_accidentals_description">Si un acorde sobre una tecla negra se escribe como bemol (%1$s) o como sostenido (%2$s). Si se deja como está escrito, Campfire elige lo que mejor encaje con la tonalidad de la canción.</string>
-    <string name="settings_accidentals_original">Como está escrito</string>
-    <string name="settings_accidentals_flats">Bemoles (♭)</string>
-    <string name="settings_accidentals_sharps">Sostenidos (♯)</string>
+    <string name="settings_accidentals_description">Si un acorde sobre una tecla negra se escribe como bemol (%1$s) o como sostenido (%2$s). Con «Original», Campfire elige lo que mejor encaje con la tonalidad de la canción.</string>
+    <string name="settings_accidentals_original">Original</string>
+    <string name="settings_accidentals_flats">Bemoles</string>
+    <string name="settings_accidentals_sharps">Sostenidos</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
     <string name="instrument_choose">Elegir instrumento</string>
     <string name="instrument_tuning_standard">Estándar</string>

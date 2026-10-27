@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.controls
 
+import com.pandulapeter.campfire.presentation.ui.components.ShrinkToFit
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -35,7 +37,9 @@ import androidx.compose.ui.unit.dp
  * A single choice between a handful of [options], rendered as a segmented button row. A selected segment carries
  * Material's check mark only where every label of the row would still fit beside it ([hasRoomForCheckMarks]): a row
  * that has no room for one has none at all, its fill alone marking the choice, so that the name of the selected
- * option is never the one cut short and picking another never takes the mark away.
+ * option is never the one cut short and picking another never takes the mark away. A label too long for its segment
+ * shrinks, down to [MIN_LABEL_SCALE] of its size, before it is cut short; the check mark is still decided from the
+ * labels at their full size.
  *
  * Measuring the labels against the row's width makes a row that is not [isInline] a `BoxWithConstraints`, which is a
  * `SubcomposeLayout` and throws where a parent asks for its intrinsic size, so it is not to be put inside an
@@ -123,6 +127,7 @@ private fun <T> SegmentedRow(
             icon = if (showsCheckMarks) ({ SegmentedButtonDefaults.Icon(value == selected) }) else ({}),
             contentPadding = contentPadding,
             label = {
+                val fontSize = LocalTextStyle.current.fontSize
                 Text(
                     // Material measures the label at the whole width of the segment and then places it after the check
                     // mark of a selected one, so a label as wide as the segment ran on under its shape instead of being
@@ -131,6 +136,7 @@ private fun <T> SegmentedRow(
                     text = label,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    autoSize = ShrinkToFit(minFontSize = fontSize * MIN_LABEL_SCALE, maxFontSize = fontSize),
                 )
             },
         )
@@ -169,6 +175,9 @@ private fun Modifier.withoutCheckMarkWidth() = layout { measurable, constraints 
 }
 
 private val CHECK_MARK_SPACING = 8.dp
+
+/** How small a label may shrink before it is cut short, as the navigation labels do. */
+private const val MIN_LABEL_SCALE = 0.75f
 
 /**
  * Inline, the segments share a row with other controls on a phone, and Material's 12dp at each side of the label is

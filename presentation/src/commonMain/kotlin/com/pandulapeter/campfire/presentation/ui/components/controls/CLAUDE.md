@@ -14,7 +14,8 @@ Steppers, choices, chips, and the other small controls the screens and sheets sh
 ### Choices
 
 - `SegmentedChoice` gives a selected label only the width its check mark leaves (Material cuts it off), and drops the
-  mark where labels wouldn't fit beside it; `isInline` for the editor's panes. Constraint: "Keyboard", "Sharps (#)", and
+  mark where labels wouldn't fit beside it (judged at the labels' full size); a label shrinks to 75% before it is cut
+  (`ShrinkToFit`); `isInline` for the editor's panes. Constraint: "Keyboard", "Sharps (#)", and
   "Előnézet" must be whole at 360dp.
 - `ColorChoice`: discs that wrap rather than scroll; app's own first, then system's, then hues, gray last. The selection
   is a ring in its own color, since an icon in the middle would read as the color's identity.

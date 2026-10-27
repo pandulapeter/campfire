@@ -242,7 +242,7 @@
     <string name="songs_empty_title">Ta bibliothèque est vide</string>
     <string name="songs_empty_hint">Crée une chanson, colle-en une depuis le presse-papiers, importe des chansons, des documents PDF ou Word et des archives zip, ou ajoute la bibliothèque de démonstration.</string>
     <string name="songs_create_song">Créer une chanson</string>
-    <string name="songs_paste_from_clipboard">Coller depuis le presse-papiers</string>
+    <string name="songs_paste_from_clipboard">Coller une chanson</string>
     <string name="add_songs_hint_title">Ajoute tes propres chansons</string>
     <string name="add_songs_tip_paste_title">Copie une chanson depuis n\'importe quel site</string>
     <string name="add_songs_tip_paste_hint">Copie les paroles et les accords d\'une chanson depuis n\'importe quelle page web, même en désordre, et colle-les ici. Campfire les met en forme en une chanson que tu peux enregistrer.</string>

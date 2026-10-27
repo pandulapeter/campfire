@@ -239,7 +239,7 @@
     <string name="songs_empty_title">Deine Bibliothek ist leer</string>
     <string name="songs_empty_hint">Erstelle einen Song, füge einen aus der Zwischenablage ein, importiere Songs, PDF- oder Word-Dokumente und Zip-Archive oder füge die Demo-Bibliothek hinzu.</string>
     <string name="songs_create_song">Song erstellen</string>
-    <string name="songs_paste_from_clipboard">Aus Zwischenablage einfügen</string>
+    <string name="songs_paste_from_clipboard">Song einfügen</string>
     <string name="add_songs_hint_title">Füge deine eigenen Songs hinzu</string>
     <string name="add_songs_tip_paste_title">Kopiere einen Song von einer beliebigen Website</string>
     <string name="add_songs_tip_paste_hint">Kopiere Text und Akkorde eines Songs von einer beliebigen Webseite, egal wie unordentlich, und füge sie hier ein. Campfire macht daraus einen sauberen Song, den du speichern kannst.</string>
@@ -469,8 +469,8 @@
     <string name="settings_notation_roman">Römische Ziffern</string>
     <string name="settings_notation_roman_description">I IV V vi, gezählt von der Tonart des Songs: Großbuchstaben für Dur-Akkorde, Kleinbuchstaben für Moll. Ein Song ohne Tonart behält seine Buchstaben, und der Editor zeigt immer Buchstaben.</string>
     <string name="settings_accidentals">Vorzeichen</string>
-    <string name="settings_accidentals_description">Ob ein Akkord auf einer schwarzen Taste mit Be (%1$s) oder mit Kreuz (%2$s) geschrieben wird. Bei „Wie geschrieben“ wählt Campfire, was zur Tonart des Songs passt.</string>
-    <string name="settings_accidentals_original">Wie geschrieben</string>
+    <string name="settings_accidentals_description">Ob ein Akkord auf einer schwarzen Taste mit Be (%1$s) oder mit Kreuz (%2$s) geschrieben wird. Bei „Original“ wählt Campfire, was zur Tonart des Songs passt.</string>
+    <string name="settings_accidentals_original">Original</string>
     <string name="settings_accidentals_flats">Be (♭)</string>
     <string name="settings_accidentals_sharps">Kreuz (♯)</string>
     <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->

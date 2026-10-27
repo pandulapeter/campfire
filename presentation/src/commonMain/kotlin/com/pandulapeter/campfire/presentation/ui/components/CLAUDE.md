@@ -49,7 +49,8 @@ it (the Link format's "Creating link…") comes and goes with it.
 ### `ShrinkToFit.kt`
 
 Auto-sized text with an ellipsis uses `ShrinkToFit`, never `TextAutoSize.StepBased`, which never shrinks on Skiko (its
-paragraphs never report an ellipsized line).
+paragraphs never report an ellipsized line): the navigation labels, and `SegmentedChoice`'s, which shrink before they
+are cut.
 
 ### `PlacementAnimation.kt`
 
