@@ -105,8 +105,8 @@ private fun HeaderBlock(
 private val HEADER_GAP = 16.dp
 
 /**
- * Every group of the review with its heading, its box, and its rows. A group's box, and the choice for all of them of
- * the names already taken, act on the rows it shows, which is only the matching ones while the search narrows them, so
+ * Every group of the review with its heading, its Select all, and its rows. A group's Select all, and the choice for all
+ * of them of the names already taken, act on the rows it shows, which is only the matching ones while the search narrows them, so
  * that unticking a group under a search for "live" leaves the rest of it alone.
  *
  * @param onOpenPreview Opens the songs of the rows listed in a preview, on the one at the index of its row among them;
@@ -140,7 +140,7 @@ internal fun LazyListScope.reviewSections(
             ImportReviewSectionHeader(
                 modifier = ItemWidth.animateItem().padding(top = 8.dp),
                 title = pluralStringResource(section.kind.label, section.rows.size, section.rows.size),
-                boxState = boxState.takeIf { keys.isNotEmpty() },
+                boxState = boxState.takeIf { keys.size > 1 },
                 onBoxClick = { onEntriesChosenChange(keys, boxState != ToggleableState.On) },
                 isConflicts = isConflicts,
                 resolution = resolution,

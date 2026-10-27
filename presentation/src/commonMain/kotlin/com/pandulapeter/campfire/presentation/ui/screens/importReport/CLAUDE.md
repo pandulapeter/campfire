@@ -41,9 +41,10 @@ dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
   included) opens the preview of the songs listed, the search's matches while it narrows them, at its own
   (`openReviewPreview`, `previewSongIndices`); its box ticks it on its own, from the row's whole height up to where the
   text begins (never the preview), and a chevron ends the row. A group's heading counts it ("12 songs") and is only a
-  heading; under it a **Select all** row laid out as the rows are (and in the taken names' group with the Keep
-  both / Replace choice for all under its label, as each taken name's row has its own under its text, so a title keeps
-  the row's width) acts on the rows shown, the search's matches only while it narrows them. The button reads **Import N files**, inert at zero,
+  heading, ending in a **Select all** / **Deselect all** text button (never a row with a box, which reads as one more
+  file); in the taken names' group the Keep both / Replace choice for all sits under the heading, at its text's start.
+  Both act on the rows shown, the search's matches only while it narrows them, and are there only while it shows two or
+  more (one row's own box and choice say the same). The button reads **Import N files**, inert at zero,
   absent where nothing can be ticked; a Replace is confirmed first
   (`DialogType.ConfirmImportReplace`); a batch arriving while it is open joins only once it is answered, and is
   imported after the review if Replace wrote it. A shared link's review starts on **Replace** only the taken names that an
