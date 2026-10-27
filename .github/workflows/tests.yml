@@ -19,8 +19,9 @@ on:
   pull_request:
   push:
     branches: [ master ]
-    # Notes, plans, and the README's images, which nothing here reads. Not on pull requests, whose required check would
-    # wait for a run that never comes.
+    # Notes, plans, the README's images, and the store listings: only the listings' length check reads any of them, and
+    # the pre-commit hook and a release's run check those. Not on pull requests, whose required check would wait for a
+    # run that never comes.
     paths-ignore: [ 'documentation/**' ]
   workflow_call:
   workflow_dispatch:
@@ -52,6 +53,9 @@ jobs:
       # Every source file, script, workflow, XML resource and CLAUDE.md carries the MPL-2.0 header.
       - name: Check the license headers
         run: python3 .github/scripts/check_license_headers.py
+      # A store refuses a listing field past its limit; the pre-commit hook checks every commit the same way.
+      - name: Check the store listings' lengths
+        run: python3 .github/scripts/check_store_listings.py
       # A pull request or a push to master pushes no Kotlin file or top-level function past the code-style skill's
       # limits; what was past them already may change. The pre-commit hook judges every commit the same way; this is
       # the backstop. A push is judged against what master was before it, all of its commits together.

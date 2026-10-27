@@ -23,6 +23,7 @@ error. Standard library only: the bundled fonts' character maps are read directl
 
 import re
 import struct
+import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
@@ -288,6 +289,8 @@ def check_wiring(code, english_name):
     generated = ROOT / f"presentation/build/generated/compose/resourceGenerator/kotlin/commonCustomResClass/com/pandulapeter/campfire/presentation/localization/{strings_object}.kt"
     if not generated.exists():
         errors.append(f"{strings_object}.kt is not generated yet: run ./gradlew :presentation:generateTranslateFile --rerun-tasks")
+    listings = subprocess.run([sys.executable, str(ROOT / ".github/scripts/check_store_listings.py")], capture_output=True, text=True)
+    errors += listings.stdout.splitlines()
     report(errors, [])
 
 

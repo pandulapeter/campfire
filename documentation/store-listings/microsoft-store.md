@@ -38,7 +38,6 @@ Campfire doesn't come with songs of its own. It is a home for yours. Write them 
 
 Reading
 • Turn the page with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
-• Long songs fit on fewer pages, and short ones fill the screen in centered columns
 • Adjustable text size, sections you can fold, and cover art and links to recordings with every song
 • Switch the chords off for the people in the room who only sing
 • Read only mode keeps a stray click from changing a song mid-set

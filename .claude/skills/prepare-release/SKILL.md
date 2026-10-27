@@ -141,7 +141,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
    - **Each store's rules** (the note at the top of its file): its field limits, Apple's no links and no other
      platforms, wording that belongs to that platform only. **Never name a competing app**, even where the code does
      (an importer's name): "other songbook apps". Count every edited field with a real interpreter (Python's `len()`,
-     bytes for Apple's keywords) against the limit in its heading.
+     bytes for Apple's keywords) against the limit in its heading (`.github/scripts/check_store_listings.py` checks
+     every field with a limit in its heading).
 
    Keep the four descriptions saying the same thing in each platform's words. Apple's fields other than the
    promotional text change only with a version submitted for review; the listings are pasted by hand, never by the
