@@ -40,6 +40,7 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   widest column, each unit `NOTATION_UNIT` (1 dp) times the text size, and again when the tunes, the transposition, the
   spelling, the width, or the text size change; a width or a text size alone waits 300 ms for the resize or pinch to
   settle, the systems scaled meanwhile (`SongNotationBlock`: the current unit, or smaller to fit the column). All tunes
-  arrive at once, so the sections are measured again once; a rendering replacing one the reader changed fades in, the
-  first one (replacing the text) does not. Until then, and for a tune that fails, the run is its monospace text. The
+  arrive at once, so the sections are measured again once; a rendering replacing one the reader changed cross-fades
+  with it (fading in from nothing blinked the tune out) while the sections glide, the first one (replacing the text)
+  does not. Until then, and for a tune that fails, the run is its monospace text. The
   renderer comes from `LocalAbcRenderer`, provided by `CampfireApp`.

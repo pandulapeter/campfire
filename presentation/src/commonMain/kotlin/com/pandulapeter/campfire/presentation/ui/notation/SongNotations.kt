@@ -61,7 +61,7 @@ internal class SongNotations(
  * The systems one run is drawn as, their words laid out at [measuredUnitSize] pixels to the SVG unit, and the pixels to
  * the unit the song's text size asks for now ([unitSize]), which differ while a pinch waits for its rendering. [isRerendered]
  * says the run was notation before this rendering too, so it replaces one the reader asked to change (a width, a text
- * size, a transposition) and fades in, where the first rendering, replacing the text, is data arriving.
+ * size, a transposition) and cross-fades with it, where the first rendering, replacing the text, is data arriving.
  */
 internal class NotationRun(val systems: List<NotationSystemPaint>, val measuredUnitSize: Float, val unitSize: Float, val isRerendered: Boolean)
 
