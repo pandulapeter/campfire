@@ -74,10 +74,15 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
         draggedSpeed = fileName to speed
     }
 
-    /** Writes the speed the slider was dragged to on the song on screen, unless that is a preview's page. */
+    /**
+     * Writes the speed the slider was dragged to on the song on screen, unless that is a preview's page. A drag that ends
+     * on the stored speed writes nothing, so nothing would settle it either: it is let go of at once, and a speed synced
+     * from another device later is the one played.
+     */
     fun writeDraggedSpeed() {
         val (fileName, speed) = draggedSpeed?.takeIf { it.first == song?.first } ?: return
-        if (!isImportPreviewFileName(fileName)) writeSpeed(fileName, speed)
+        if (isImportPreviewFileName(fileName)) return
+        if (speed == song?.second) draggedSpeed = null else writeSpeed(fileName, speed)
     }
 
     /**
