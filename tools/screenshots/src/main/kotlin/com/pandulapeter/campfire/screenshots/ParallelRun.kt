@@ -44,7 +44,8 @@ internal data class Shard(
  */
 internal fun renderInParallel(options: Map<String, String>, output: File, shard: Shard, processes: Int): Int {
     val java = ProcessHandle.current().info().command().orElseThrow { IllegalStateException("The path of this JVM is unknown.") }
-    val jvmOptions = ManagementFactory.getRuntimeMXBean().inputArguments
+    // A debugger's agent would make every part bind this process's port and fail before rendering anything.
+    val jvmOptions = ManagementFactory.getRuntimeMXBean().inputArguments.filterNot { it.startsWith("-agentlib:jdwp") || it.startsWith("-Xrunjdwp") }
     val parts = (0 until processes).map { part ->
         val arguments = options + mapOf("--out" to output.absolutePath, "--shard" to shard.split(part, processes).toString(), "--parallel" to "1")
         val command = listOf(java) + jvmOptions + listOf("-cp", System.getProperty("java.class.path"), MAIN_CLASS) +
