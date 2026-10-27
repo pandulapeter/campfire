@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.fadeIn
@@ -180,7 +181,15 @@ internal fun ExportScreen(
         isShown = printedSettings.showScales,
         notation = (preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation(),
     )
-    val laidOut by produceLaidOutDocument(state = state, source = printedSource, settings = printedSettings, labels = labels, renderer = renderer, newRenderer = ::newRenderer)
+    val laidOut by produceLaidOutDocument(
+        state = state,
+        source = printedSource,
+        settings = printedSettings,
+        labels = labels,
+        renderer = renderer,
+        newRenderer = ::newRenderer,
+        abcRenderer = LocalAbcRenderer.current,
+    )
     // Only a document laid out from what the screen shows now may be saved: the producer restarts a frame after an option
     // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
     // since it is remembered and an equality check would walk every song in it.

@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
+import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
+import com.pandulapeter.campfire.presentation.ui.notation.drawNotationSystem
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
@@ -49,6 +51,13 @@ internal class PrintRenderer(
     private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
     private val textFontFamily: FontFamily = FontFamily.Default,
 ) {
+    /** The engraved tunes' outlines and words, laid out in [textFontFamily] in PDF points as the texts are. */
+    private val notationPainter = NotationPainter(
+        textMeasurer = measurer,
+        density = Density(1f, 1f),
+        textStyle = TextStyle(fontFamily = textFontFamily, fontFeatureSettings = "liga=0"),
+    )
+
     /** The laid out texts of the pages drawn last, one for each of a page's [PrintPage.texts]. */
     private val layouts = PrintPageCache { page -> page.texts.map { text(it.text, it.style, it.formatting) } }
 
@@ -100,6 +109,18 @@ internal class PrintRenderer(
                         fontFamily = textFontFamily,
                         // One pixel of the page image rather than one point, which would be three of them.
                         minimumStroke = 1f / scale,
+                    )
+                }
+            }
+            page.notations.forEach { notation ->
+                translate(notation.x, notation.y) {
+                    drawNotationSystem(
+                        system = notationPainter.paintOf(notation.drawing, unitSize = notation.scale)[notation.system],
+                        top = 0f,
+                        scale = notation.scale,
+                        unitSize = notation.scale,
+                        color = Color.Black,
+                        chordColor = Color.Black,
                     )
                 }
             }

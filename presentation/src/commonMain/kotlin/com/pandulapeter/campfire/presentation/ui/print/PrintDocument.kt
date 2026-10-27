@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
+import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -78,6 +80,8 @@ internal data class PrintSong(
     val scaleGroups: List<SongScaleGroup> = emptyList(),
     /** [scaleGroups] in words, which the export screen puts them in only while they are to be printed. */
     val scales: List<PrintScaleRow> = emptyList(),
+    /** How the chords over the lyrics are named, which an engraved ABC tune's staff and chord symbols follow. */
+    val notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
 )
 
 /**
@@ -204,11 +208,24 @@ internal data class PrintDiagram(
     val height: Float,
 )
 
+/**
+ * One staff system of an engraved ABC tune, the [system]-th of [drawing], its top left corner at [x], [y] and [scale]
+ * points to its SVG unit, in PDF points like the texts.
+ */
+internal data class PrintNotation(
+    val drawing: NotationDrawing,
+    val system: Int,
+    val x: Float,
+    val y: Float,
+    val scale: Float,
+)
+
 /** Everything on one page, in PDF points from its top left corner; the rules are drawn under the texts and the diagrams. */
 internal data class PrintPage(
     val texts: List<PrintText>,
     val rules: List<PrintRule> = emptyList(),
     val diagrams: List<PrintDiagram> = emptyList(),
+    val notations: List<PrintNotation> = emptyList(),
 )
 
 /** The pages of one export, all of one size, which is the paper's in PDF points turned for the orientation. */

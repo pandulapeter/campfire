@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
+import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -222,7 +224,12 @@ internal class ExportController(
             }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, transposition = playedTransposition, song = rendered, text = content?.text, chords = chords,
-                scaleGroups = scaleGroups)
+                scaleGroups = scaleGroups,
+                notationChords = NotationChordSpelling(
+                    semitones = (transposed?.metadata?.transpose ?: 0) + transposition,
+                    preferFlats = spelling.accidentals.toPreferFlats(),
+                    notation = spelling.notation.toChordNotation(),
+                ))
         }
         // Several songs are titled by the screen, which counts them in the app's language.
         return PrintSource(

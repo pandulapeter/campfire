@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import com.pandulapeter.campfire.abc.api.AbcRenderer
+import com.pandulapeter.campfire.presentation.ui.print.printNotationsOf
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
@@ -28,7 +30,8 @@ import kotlinx.coroutines.withContext
  * one is laid out, so that a step of an option fades from one page to the next instead of blanking the preview to a
  * spinner each time. Retry is keyed too ([ExportState.attempt]): the source it reads again equals the one that failed
  * to lay out, so without it nothing would. [renderer] is a key alone, the layout measuring with one of [newRenderer]'s
- * of its own off the main thread.
+ * of its own off the main thread. The ABC tunes are engraved for the columns ([abcRenderer]) right before each layout,
+ * which waits for them, so the preview and the file never show a tune as text that would print as a staff.
  */
 @Composable
 internal fun produceLaidOutDocument(
@@ -38,7 +41,8 @@ internal fun produceLaidOutDocument(
     labels: PrintLabels,
     renderer: PrintRenderer,
     newRenderer: () -> PrintRenderer,
-) = produceState<LaidOutDocument?>(null, source, settings, labels, renderer, state.attempt) {
+    abcRenderer: AbcRenderer?,
+) = produceState<LaidOutDocument?>(null, source, settings, labels, renderer, abcRenderer, state.attempt) {
     state.layoutFailed = false
     val input = source
     val inputSettings = settings
@@ -53,6 +57,7 @@ internal fun produceLaidOutDocument(
     // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
     if (value != null) delay(LAYOUT_DEBOUNCE)
     try {
+        val notations = abcRenderer?.let { printNotationsOf(input, inputSettings, it) }.orEmpty()
         val document = withContext(Dispatchers.Default) {
             val measurements = newRenderer()
             layoutPrintDocument(
@@ -60,6 +65,7 @@ internal fun produceLaidOutDocument(
                 settings = inputSettings,
                 labels = labels,
                 measureText = measurements::width,
+                notations = notations,
             )
         }
         value = LaidOutDocument(

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
+import com.pandulapeter.campfire.presentation.ui.notation.NotationSystem
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
@@ -309,6 +311,32 @@ internal class PrintLayoutTest {
         assertFalse("ABC notation" in hidden || "X:1" in hidden)
     }
 
+    @Test fun `an engraved abc block prints a row per staff system, at the size the column allows, under its kind`() = runTest {
+        val tune = listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("K:G", "abc"), ChordProLine.Verbatim("GAB|", "abc"))
+        val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, tune)))
+        val system = NotationSystem(width = 400f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())
+        val drawing = NotationDrawing(listOf(system, system, system))
+        val settings = PrintSettings(showTabs = false)
+        val document = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
+        val notations = document.pages.flatMap { it.notations }
+        val heading = document.pages.flatMap { it.texts }.single { it.text == "ABC notation" }
+        val scale = minOf(printNotationUnit(settings), printColumnWidth(settings) / 400f)
+        assertEquals(listOf(0, 1, 2), notations.map { it.system })
+        assertTrue(notations.all { it.drawing === drawing && it.scale == scale && it.y > heading.y })
+        notations.zipWithNext { above, below -> below.y - above.y }.forEach { pitch -> assertEquals(60f * scale, pitch, 0.001f) }
+        assertTrue(document.pages.flatMap { it.texts }.none { it.text == "GAB|" })
+        val hidden = layoutPrintDocument(source(abc), PrintSettings(showChords = false), labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
+        assertTrue(hidden.pages.all { it.notations.isEmpty() })
+    }
+
+    @Test fun `a staff system wider than the column is printed smaller`() = runTest {
+        val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(ChordProLine.Verbatim("GAB|", "abc")))))
+        val settings = PrintSettings(columns = 2)
+        val wide = NotationDrawing(listOf(NotationSystem(width = 2000f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())))
+        val notation = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("GAB|" to wide))).pages.flatMap { it.notations }.single()
+        assertEquals(printColumnWidth(settings) / 2000f, notation.scale, 0.0001f)
+    }
+
     @Test fun `a section written without lines keeps its label`() = runTest {
         val cue = ChordProBlock.Section(SectionType.Bridge, "Bridge", emptyList())
         assertTrue("Bridge" in layout(source(song(emptyList(), listOf(cue)))).pages.flatMap { it.texts }.map { it.text })
@@ -590,7 +618,7 @@ internal class PrintLayoutTest {
             ChordProLine.Lyrics("Line $line of a short song", chords.mapIndexed { index, chord -> ChordProLine.Lyrics.Chord(index * 5, chord, false) })
         }
         var calls = 0
-        layoutPrintDocument(source(song(lines)), PrintSettings(), labels) { text, style -> calls++; measure(text, style) }
+        layoutPrintDocument(source(song(lines)), PrintSettings(), labels, measureText = { text, style -> calls++; measure(text, style) })
         assertTrue(calls <= 12 * 40, "$calls measurements")
     }
 

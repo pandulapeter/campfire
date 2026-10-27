@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -46,11 +47,29 @@ internal suspend fun layoutPrintDocument(
     settings: PrintSettings,
     labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
+    notations: Map<String, Map<String, NotationDrawing>> = emptyMap(),
 ): PrintDocument = PrintLayouter(
     options = settings.normalized(),
     labels = labels,
     measureText = measureText,
+    notations = notations,
 ).layout(source)
+
+/** How wide a column of the song sheets is, in PDF points: what an engraved tune is rendered for. */
+internal fun printColumnWidth(settings: PrintSettings): Float = settings.normalized().let { options ->
+    val width = if (options.isLandscape) options.paper.height else options.paper.width
+    (width - 2 * options.marginPoints - COLUMN_GUTTER * (options.columns - 1)) / options.columns
+}
+
+/**
+ * The PDF points one SVG unit of an engraved tune is printed at where its column allows: its lyrics, set at abc2svg's
+ * 13 units, then come out as large as the song's own.
+ */
+internal fun printNotationUnit(settings: PrintSettings) = settings.fontSize / ABC_LYRICS_UNITS
+
+private val PrintSettings.marginPoints get() = marginMm * 72f / 25.4f
+private const val COLUMN_GUTTER = 18f
+private const val ABC_LYRICS_UNITS = 13f
 
 /**
  * One layout run: the geometry and the styles the options give, and the cursor ([column] and [y] on the last page) that
@@ -60,11 +79,12 @@ private class PrintLayouter(
     private val options: PrintSettings,
     private val labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
+    private val notations: Map<String, Map<String, NotationDrawing>>,
 ) {
     private val width = if (options.isLandscape) options.paper.height else options.paper.width
     private val height = if (options.isLandscape) options.paper.width else options.paper.height
-    private val margin = options.marginMm * 72f / 25.4f
-    private val gutter = 18f
+    private val margin = options.marginPoints
+    private val gutter = COLUMN_GUTTER
 
     /** The columns being filled: the song sheets' by default, the running order's while it is laid out. */
     private var columns = options.columns
@@ -125,7 +145,7 @@ private class PrintLayouter(
     }
 
     private fun newPage() {
-        if (pages.isNotEmpty() && pages.last().texts.isNotEmpty()) page()
+        if (pages.isNotEmpty() && pages.last().hasContent) page()
     }
 
     private fun space(amount: Float) {
@@ -147,6 +167,7 @@ private class PrintLayouter(
             row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
+            row.notations.forEach { notation -> pages.last().notations.add(notation.copy(x = x + notation.x, y = y + notation.y)) }
             y += row.height
         }
     }
@@ -187,6 +208,7 @@ private class PrintLayouter(
 
     /** One song sheet: its heading, how it is played, its chord diagrams and its scales, then its blocks. */
     private suspend fun song(entry: PrintSong) {
+        printRows.notations = notations[entry.fileName].orEmpty()
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = printRows.wrapped(title, printRows.titleStyle).toMutableList()
         if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += printRows.wrapped(it) }
@@ -359,7 +381,7 @@ private class PrintLayouter(
      * tall), so it never reaches into the margin the user chose, where printers may not print.
      */
     private fun finish(): PrintDocument {
-        val nonempty = pages.filter { it.texts.isNotEmpty() }
+        val nonempty = pages.filter { it.hasContent }
         val style = PrintStyle(size = 9, gray = 90)
         return PrintDocument(
             width = width,
@@ -371,7 +393,7 @@ private class PrintLayouter(
                 } else {
                     page.texts
                 }
-                PrintPage(texts, page.rules, page.diagrams)
+                PrintPage(texts, page.rules, page.diagrams, page.notations)
             },
         )
     }
@@ -404,6 +426,10 @@ private class PageContent {
     val texts = mutableListOf<PrintText>()
     val rules = mutableListOf<PrintRule>()
     val diagrams = mutableListOf<PrintDiagram>()
+    val notations = mutableListOf<PrintNotation>()
+
+    /** Whether anything was put on the page: a staff system alone, a tune running on past a page, is something. */
+    val hasContent get() = texts.isNotEmpty() || notations.isNotEmpty()
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()

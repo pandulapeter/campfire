@@ -131,22 +131,32 @@ internal fun rememberSongNotations(
 }
 
 private suspend fun render(renderer: AbcRenderer, tune: String, request: NotationRequest): NotationRendering? =
-    when (val rendering = renderer.render(tune = abcTuneWithoutSongTitle(tune, request.songTitle), width = request.width, transposition = request.chords.semitones)) {
-        is AbcRendering.Systems -> withContext(Dispatchers.Default) {
-            parseNotationDrawing(rendering.systems)?.let { drawing ->
-                val symbols = abcChordSymbols(tune)
-                NotationRendering(
-                    drawing = drawing.withChordNames(symbols, abcChordNames(tune, symbols, request.chords), request.chords.semitones),
-                    unitSize = request.unitSize,
-                )
-            }
-        }
+    renderNotationDrawing(renderer, tune, request.width, request.chords, request.songTitle)?.let { NotationRendering(it, request.unitSize) }
 
-        is AbcRendering.Failed -> {
-            println("Could not render an ABC tune: ${rendering.message}")
-            null
+/**
+ * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as
+ * [chords] says and the title it repeats of [songTitle] left out; null where it cannot be rendered or drawn, which
+ * leaves it text. What the song page and the PDF both draw.
+ */
+internal suspend fun renderNotationDrawing(
+    renderer: AbcRenderer,
+    tune: String,
+    width: Int,
+    chords: NotationChordSpelling,
+    songTitle: String?,
+): NotationDrawing? = when (val rendering = renderer.render(tune = abcTuneWithoutSongTitle(tune, songTitle), width = width, transposition = chords.semitones)) {
+    is AbcRendering.Systems -> withContext(Dispatchers.Default) {
+        parseNotationDrawing(rendering.systems)?.let { drawing ->
+            val symbols = abcChordSymbols(tune)
+            drawing.withChordNames(symbols, abcChordNames(tune, symbols, chords), chords.semitones)
         }
     }
+
+    is AbcRendering.Failed -> {
+        println("Could not render an ABC tune: ${rendering.message}")
+        null
+    }
+}
 
 /** The ABC text of a run of `{start_of_abc}` lines, or null for any other run. */
 internal fun List<ChordProLine>.abcTune(): String? {

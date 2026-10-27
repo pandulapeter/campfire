@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
+import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -52,6 +54,9 @@ internal class PrintRows(
     private val tabStyle = PrintStyle(size = options.fontSize, monospace = true)
     private val gridStyle = PrintStyle(size = options.fontSize, bold = true, monospace = true)
     private val labelSpace = options.fontSize * 0.3f
+
+    /** The engraved ABC tunes of the song being laid out, by their text; a run with none prints as its text. */
+    var notations: Map<String, NotationDrawing> = emptyMap()
 
     // Chord names, spaces and the other short strings are measured over and over; only they are kept, so that the
     // substrings of lyrics the wrapping tries are not held for the life of a large setlist.
@@ -152,7 +157,7 @@ internal class PrintRows(
                     }
                 }
             }
-        }.takeIf { rows -> rows.any { row -> row.parts.any { !it.text.isPrintBlank() } } }.orEmpty()
+        }.takeIf { rows -> rows.any { row -> row.notations.isNotEmpty() || row.parts.any { !it.text.isPrintBlank() } } }.orEmpty()
         is SectionPart.Comment -> commentRows(part.comment, lineWidth)
         is SectionPart.KeyChange -> keyChangeRows(part.keyChange, lineWidth)
     }
@@ -250,7 +255,21 @@ internal class PrintRows(
      * is left out of the selectable text: read back by the importer, ABC's `"G"` and `[CEG]` would become chords.
      */
     private fun verbatimRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> =
-        monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isTablature = false, isSelectable = false, lineWidth)
+        lines.abcTune()?.let { notations[it] }?.let { notationRows(it, lineWidth) }
+            ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isTablature = false, isSelectable = false, lineWidth)
+
+    /**
+     * An engraved ABC tune, a row per staff system so that a page is never cut through one: at the size that sets its
+     * lyrics as large as the song's ([printNotationUnit]), or smaller in a column narrower than the page it was rendered
+     * for (a chorus is indented). Drawn rather than written, so nothing of it reaches the selectable text.
+     */
+    private fun notationRows(drawing: NotationDrawing, lineWidth: Float): List<Row> {
+        val pageWidth = drawing.systems.maxOfOrNull { it.width } ?: return emptyList()
+        val scale = minOf(printNotationUnit(options), lineWidth / pageWidth)
+        return drawing.systems.mapIndexed { index, system ->
+            Row(parts = emptyList(), height = system.height * scale, notations = listOf(PrintNotation(drawing, index, x = 0f, y = 0f, scale = scale)))
+        }
+    }
 
     /** The rows of a run of monospaced lines, wrapped into systems of the column's width. */
     private fun monospaceRows(run: List<String>, isTablature: Boolean, isSelectable: Boolean, lineWidth: Float): List<Row> = buildList {
@@ -406,6 +425,7 @@ internal class PrintRows(
             height = row.height,
             rules = row.rules.map { it.copy(x = it.x + CHORUS_INDENT) } +
                 PrintRule(x = 0f, y = top, width = CHORUS_BAR_WIDTH, height = row.height - top),
+            notations = row.notations.map { it.copy(x = it.x + CHORUS_INDENT) },
         )
     }
 }
@@ -420,12 +440,16 @@ internal data class Part(
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
 )
 
-/** The unit [PrintLayouter.place] never splits: a lyric line with its chords, a tab system, a row of chord diagrams. */
+/**
+ * The unit [PrintLayouter.place] never splits: a lyric line with its chords, a tab system, a row of chord diagrams, a
+ * staff system.
+ */
 internal data class Row(
     val parts: List<Part>,
     val height: Float,
     val rules: List<PrintRule> = emptyList(),
     val diagrams: List<PrintDiagram> = emptyList(),
+    val notations: List<PrintNotation> = emptyList(),
 )
 
 /**
