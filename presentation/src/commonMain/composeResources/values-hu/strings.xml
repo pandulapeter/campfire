@@ -956,7 +956,7 @@
     <string name="song_layout_pages">Oldalak</string>
     <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
     <string name="song_layout_continuous">Folyamatos</string>
-    <string name="song_layout_continuous_description">Egy hasáb, amely magától görög a dal tempójában, dalonként beállítható sebességgel</string>
+    <string name="song_layout_continuous_description">Egy hasáb, amely magától gördül a dal tempójában, dalonként beállítható sebességgel</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
@@ -1185,7 +1185,7 @@
     <string name="onboarding_instrument_strings">A hangoló ezekre a húrokra figyel: %1$s</string>
     <string name="onboarding_notation_title">Hogyan írod az akkordokat?</string>
     <string name="onboarding_notation_message">Válaszd ki, hogyan jelenjenek meg az akkordok. A dalok mindig a szabványos módon kerülnek mentésre, így minden alkalmazásban ugyanúgy olvashatók.</string>
-    <string name="onboarding_song_layout_message">Lapozz magad, vagy hagyd, hogy a dal a saját tempójában görögjön, amíg játszol.</string>
+    <string name="onboarding_song_layout_message">Lapozz magad, vagy hagyd, hogy a dal a saját tempójában gördüljön, amíg játszol.</string>
     <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, bármelyik hangnemben, a hangszeredre rajzolt fogásokkal. Csak énekelsz? Vedd ki a pipát, és csak a dalszöveg marad.</string>
     <string name="onboarding_feature_metronome_description">Tartja az ütemet a dal tempójában, a dalokban és egy saját képernyőn</string>
     <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül, a dalokban és egy saját képernyőn</string>
