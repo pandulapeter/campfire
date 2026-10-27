@@ -150,8 +150,8 @@ internal fun SongChordsSection(
  *
  * A cell whose chord is drawn with another shape than it was crossfades from the old diagram to the new one (see
  * [rememberChordShapeCrossfade]). Where [isAnimated], a cell a new width sends to another row, or a neighbour grown
- * wider pushes along, travels there ([PlacementMotion]); otherwise, as while a pinch resizes every cell on every
- * frame, each is drawn where it now is.
+ * wider pushes along, travels there ([PlacementMotion]), a key's heading travelling with its row's first diagram;
+ * otherwise, as while a pinch resizes every cell on every frame, each is drawn where it now is.
  *
  * Where [onCellClicked] is given, a press on a cell lights the whole of its row's height behind it, as a button's
  * press would, and a tap that the scroll did not take is answered with the cell's index; a screen reader is offered the
@@ -277,12 +277,7 @@ private fun ChordRowsBlock(
                     motion.retain((starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: layouts.cells.size)).toSet())
                 }
                 for (row in rows) {
-                    layouts.headings[starts[row]]?.let { heading ->
-                        val headingWidth = minOf(heading.size.width, width)
-                        clipRect(right = width.toFloat(), bottom = y + heading.size.height.toFloat()) {
-                            drawText(textLayoutResult = heading, color = paint.headingColor, topLeft = Offset(if (isRightToLeft) (width - headingWidth).toFloat() else 0f, y.toFloat()))
-                        }
-                    }
+                    val heading = layouts.headings[starts[row]]
                     y += layouts.headingHeight(starts, row)
                     var x = 0
                     val rowHeight = layouts.rowHeight(starts, row)
@@ -290,6 +285,15 @@ private fun ChordRowsBlock(
                         val cellWidth = minOf(layouts.cellWidths[cell], width)
                         val target = IntOffset(if (isRightToLeft) width - x - cellWidth else x, y)
                         val (cellLeft, cellTop) = if (isAnimated) motion.positionOf(cell, target) else target
+                        if (heading != null && cell == starts[row]) {
+                            // Over the row's first diagram wherever it is on its way, so that a heading travels with the
+                            // chords it names; that cell always starts its row, so only the heading's top moves.
+                            val headingTop = cellTop - layouts.headingHeight(starts, row)
+                            val headingWidth = minOf(heading.size.width, width)
+                            clipRect(top = headingTop.toFloat(), right = width.toFloat(), bottom = headingTop + heading.size.height.toFloat()) {
+                                drawText(textLayoutResult = heading, color = paint.headingColor, topLeft = Offset(if (isRightToLeft) (width - headingWidth).toFloat() else 0f, headingTop.toFloat()))
+                            }
+                        }
                         if (cell == pressedCell && pressProgress > 0f) {
                             val inset = layouts.gap / 2f
                             // The card is the name and the diagram only, the second name standing over it, as the scale
