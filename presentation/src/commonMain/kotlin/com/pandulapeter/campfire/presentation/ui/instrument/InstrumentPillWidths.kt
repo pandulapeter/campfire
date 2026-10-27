@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.instrument
 
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
@@ -30,9 +29,3 @@ internal val INSTRUMENT_PILL_EDGE_PADDING = 4.dp
 
 /** On either side of each name in an [InstrumentPill]. */
 internal val INSTRUMENT_PILL_HALF_PADDING = 12.dp
-
-/** What the tuning half of an [InstrumentPill] takes besides its name: its padding, the pill's edge, and the divider. */
-internal val INSTRUMENT_PILL_TUNING_ROOM = INSTRUMENT_PILL_HALF_PADDING * 2 + INSTRUMENT_PILL_EDGE_PADDING + DividerDefaults.Thickness
-
-/** What the instrument half of an [InstrumentPill] takes besides its name where it is the only half. */
-internal val INSTRUMENT_PILL_LONE_ROOM = (INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING) * 2

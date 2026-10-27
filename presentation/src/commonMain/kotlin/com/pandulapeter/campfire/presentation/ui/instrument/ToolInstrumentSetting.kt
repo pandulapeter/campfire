@@ -32,12 +32,10 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
@@ -50,9 +48,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * The instrument at the top of a tool's page (the Chords, the Scales, and the Tuner tabs), the same on all three: the
  * [InstrumentPill] at the start of a line of the list screens' bar height, with [trailing] at its end where their pill and
  * New button stand (the Tuner's reference pitch), or right after the pill where [isTrailingAfterPill] (the Chords and the
- * Scales tabs' capo, which belongs to the instrument). The pill gives up width before it reaches [trailing], cutting its
- * tuning short, and where it could no longer show the tuning beside them it keeps the line to itself and [trailing]
- * slides under it, at the end or at the pill's start, the line growing with it (`pillSharesLine`, `toolLinePlaces`,
+ * Scales tabs' capo, which belongs to the instrument). Where the pill does not fit whole beside [trailing], it keeps the
+ * line to itself and [trailing] slides under it, at the end or at the pill's start, the line growing with it (`pillSharesLine`, `toolLinePlaces`,
  * `toolLineTrailingX`). A [trailing] that emits nothing (the capo hidden) keeps the line's height. A page with nothing
  * at the end, or with [trailing] after the pill, keeps the room above the pill all the same, so that the pill stands at
  * one spot whichever tool is picked, but not the room under it, which only parted it from what comes next by more than
@@ -97,7 +94,6 @@ internal fun ToolInstrumentSetting(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = NEW_ITEM_BUTTON_END_INSET),
-            hasTuning = shownTuning(instrument, tuning) != null,
             isTrailingAfterPill = isTrailingAfterPill,
             pill = { pill(Modifier) },
             trailing = trailing,
@@ -106,13 +102,12 @@ internal fun ToolInstrumentSetting(
 }
 
 /**
- * The line of a tool's instrument with [trailing] controls: beside the [pill] while it can still show its tuning there,
+ * The line of a tool's instrument with [trailing] controls: beside the [pill] where it fits whole there,
  * under it otherwise, sliding between the two (see [ToolLineMeasurePolicy]).
  */
 @Composable
 private fun ToolInstrumentLine(
     modifier: Modifier,
-    hasTuning: Boolean,
     isTrailingAfterPill: Boolean,
     pill: @Composable () -> Unit,
     trailing: @Composable () -> Unit,
@@ -120,17 +115,14 @@ private fun ToolInstrumentLine(
     val motion = remember { ToolLineMotion() }
     val scope = rememberCoroutineScope()
     val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-    val textStyle = MaterialTheme.typography.titleSmall
-    val pillHeight = songControlHeight(textStyle)
-    val measurePolicy = remember(motion, scope, spec, hasTuning, isTrailingAfterPill, pillHeight, textStyle.fontSize) {
+    val pillHeight = songControlHeight(MaterialTheme.typography.titleSmall)
+    val measurePolicy = remember(motion, scope, spec, isTrailingAfterPill, pillHeight) {
         ToolLineMeasurePolicy(
             motion = motion,
             scope = scope,
             spec = spec,
-            hasTuning = hasTuning,
             isTrailingAfterPill = isTrailingAfterPill,
             pillHeight = pillHeight,
-            fontSize = textStyle.fontSize,
         )
     }
     Layout(
@@ -161,10 +153,8 @@ private class ToolLineMeasurePolicy(
     private val motion: ToolLineMotion,
     private val scope: CoroutineScope,
     private val spec: FiniteAnimationSpec<Float>,
-    private val hasTuning: Boolean,
     private val isTrailingAfterPill: Boolean,
     private val pillHeight: Dp,
-    private val fontSize: TextUnit,
 ) : MeasurePolicy {
 
     override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
@@ -186,9 +176,6 @@ private class ToolLineMeasurePolicy(
             trailingWidth = trailing.width,
             gap = gap,
             pillWidth = measurables[0].maxIntrinsicWidth(lineHeight),
-            hasTuning = hasTuning,
-            nameRoom = (if (hasTuning) INSTRUMENT_PILL_TUNING_ROOM else INSTRUMENT_PILL_LONE_ROOM).roundToPx(),
-            minNameWidth = (fontSize.toPx() * MIN_SHOWN_NAME_EMS).roundToInt(),
         )
         val target = if (sharesLine) 0f else 1f
         // The lookahead lays the line out where it is headed, as PlacementAnimation does.

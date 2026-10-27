@@ -18,21 +18,11 @@ import kotlin.test.assertTrue
 
 class ToolInstrumentLinesTest {
 
-    private fun shares(
-        lineWidth: Int = 336,
-        trailingWidth: Int = 214,
-        pillWidth: Int,
-        hasTuning: Boolean = true,
-        nameRoom: Int = 29,
-        minNameWidth: Int = 14,
-    ) = pillSharesLine(
+    private fun shares(lineWidth: Int = 336, trailingWidth: Int = 214, pillWidth: Int) = pillSharesLine(
         lineWidth = lineWidth,
         trailingWidth = trailingWidth,
         gap = 8,
         pillWidth = pillWidth,
-        hasTuning = hasTuning,
-        nameRoom = nameRoom,
-        minNameWidth = minNameWidth,
     )
 
     private fun places(progress: Float, lineWidth: Int = 336, trailingWidth: Int = 263, hasRoomUnder: Boolean = true) = toolLinePlaces(
@@ -52,30 +42,14 @@ class ToolInstrumentLinesTest {
     }
 
     @Test
-    fun `a cut pill whose share still shows the tuning shares the line`() {
-        assertTrue(shares(pillWidth = 161))
-    }
-
-    @Test
-    fun `at the largest text size the pill takes a line of its own`() {
-        assertFalse(shares(trailingWidth = 263, pillWidth = 263, minNameWidth = 28))
-    }
-
-    @Test
-    fun `exactly the least of a name shares the line and a pixel less does not`() {
-        assertTrue(shares(pillWidth = 161, minNameWidth = 17))
-        assertFalse(shares(pillWidth = 161, minNameWidth = 18))
-    }
-
-    @Test
-    fun `without a tuning half the instrument's name is the one asked about`() {
-        assertFalse(shares(trailingWidth = 336 - 8 - 60, pillWidth = 300, hasTuning = false, nameRoom = 32, minNameWidth = 42))
-        assertTrue(shares(trailingWidth = 336 - 8 - 100, pillWidth = 300, hasTuning = false, nameRoom = 32, minNameWidth = 42))
+    fun `a pill exactly as wide as its room shares the line and a pixel wider does not`() {
+        assertTrue(shares(pillWidth = 114))
+        assertFalse(shares(pillWidth = 115))
     }
 
     @Test
     fun `an unbounded line is shared`() {
-        assertTrue(shares(lineWidth = Constraints.Infinity, pillWidth = 300, minNameWidth = 28))
+        assertTrue(shares(lineWidth = Constraints.Infinity, pillWidth = 300))
     }
 
     @Test

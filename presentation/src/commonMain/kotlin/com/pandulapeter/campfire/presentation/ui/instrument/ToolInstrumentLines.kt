@@ -10,31 +10,15 @@
 package com.pandulapeter.campfire.presentation.ui.instrument
 
 import androidx.compose.ui.util.lerp
-import kotlin.math.roundToInt
 
 /**
  * Whether a tool's instrument pill, [pillWidth] wide uncut, stands beside its trailing controls ([trailingWidth], parted
- * by [gap]) on a line [lineWidth] wide, rather than on a line of its own over them: where it fits whole, or where cutting
- * it to the room left still shows [minNameWidth] of the name that is cut first. That is the tuning's, at the share
- * `tuningHalfMaxWidth` keeps for it (the least it is given, whatever the instrument's name), past its [nameRoom] of
- * padding and divider, or, with no tuning half ([hasTuning] false), the instrument's past its own. A share showing the
- * tuning leaves the instrument's name more than [minNameWidth] as well (60% of the room against 40%), so the tuning is
- * the one to ask about.
+ * by [gap]) on a line [lineWidth] wide, rather than on a line of its own over them: only where it fits whole. Cut, it
+ * would show too little of either name to read (one em of room past the padding is not one letter and an ellipsis), so
+ * it takes a line of its own and the controls slide under it.
  */
-internal fun pillSharesLine(
-    lineWidth: Int,
-    trailingWidth: Int,
-    gap: Int,
-    pillWidth: Int,
-    hasTuning: Boolean,
-    nameRoom: Int,
-    minNameWidth: Int,
-): Boolean {
-    val room = lineWidth - trailingWidth - gap
-    if (room >= pillWidth) return true
-    val shownName = if (hasTuning) (room * TUNING_SHARE).roundToInt() - nameRoom else room - nameRoom
-    return shownName >= minNameWidth
-}
+internal fun pillSharesLine(lineWidth: Int, trailingWidth: Int, gap: Int, pillWidth: Int) =
+    lineWidth - trailingWidth - gap >= pillWidth
 
 /** Where a tool's instrument line puts its pill and its trailing controls, part of the way to the pill's own line. */
 internal data class ToolLinePlaces(
@@ -91,12 +75,3 @@ internal fun toolLineTrailingX(
     trailingWidth: Int,
     isAfterPill: Boolean,
 ): Int = if (isAfterPill) lerp(pillWidth + gap, 0, progress.coerceIn(0f, 1f)) else lineWidth - trailingWidth
-
-/**
- * The least of a cut name a tool's line keeps beside its trailing controls, in ems of the pill's text. On the Tuner of a
- * 360 dp phone at the default text size, the reference pitch takes 214 dp (its stepper keeps the room of its widest
- * values), which leaves the pill 114 dp and the tuning's share of it about 17 dp of name; a bar of one em (14 dp) keeps
- * that line whole with a little margin, since each line of its own costs pinned height, while large text, where the
- * share leaves the name nothing, still gives the pill a line of its own.
- */
-internal const val MIN_SHOWN_NAME_EMS = 1f
