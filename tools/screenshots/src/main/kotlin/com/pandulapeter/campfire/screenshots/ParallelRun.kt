@@ -63,7 +63,8 @@ internal fun renderInParallel(options: Map<String, String>, output: File, shard:
         printer.join()
         exitCode != 0
     }
-    Runtime.getRuntime().removeShutdownHook(stopParts)
+    // Refused once the run is being stopped, when the hook has already done its work.
+    runCatching { Runtime.getRuntime().removeShutdownHook(stopParts) }
     println(if (failed == 0) "Every part of the run finished." else "$failed of $processes parts of the run had a failed screenshot.")
     return if (failed == 0) 0 else 1
 }
