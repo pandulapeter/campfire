@@ -535,6 +535,7 @@
     <string name="settings_user_interface_language_romanian">Román</string>
     <string name="settings_user_interface_language_german">Német</string>
     <string name="settings_user_interface_language_spanish">Spanyol</string>
+    <string name="settings_user_interface_language_french">Francia</string>
     <string name="settings_user_interface_language_more_coming">Hamarosan további nyelvek is elérhetők lesznek</string>
     <string name="settings_distributions_all">A Campfire összes változata</string>
     <string name="settings_distributions_all_description">A campfire-songbook.com oldalon</string>

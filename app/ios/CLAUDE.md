@@ -71,7 +71,7 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   and 64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values, so its own
   `PrivacyInfo.xcprivacy` declares no required-reason API.
 - `ShareInbox/` is excluded from device backup (by the extension, and again by the app). Its strings are its own
-  `Localizable.strings` (`en`, `hu`, `ro`, `de`, `es`), in the system's language.
+  `Localizable.strings` (`en`, `hu`, `ro`, `de`, `es`, `fr`), in the system's language.
 - Its view sits in the sharing app's sheet, which an extension cannot size or replace (its presentation style is ignored:
   it is hosted in a remote view), so a saved share closes the sheet by itself after two seconds; a refusal waits for
   Done.
@@ -90,7 +90,7 @@ Kotlin/Native module producing the static `ComposeApp` framework for the Xcode p
   so that the extension's activation rule can name them. ABC's `.abc` (`org.abcnotation.abc`, plain text) is a
   `Viewer` at `Alternate`: Campfire imports its tunes but is no editor of it; conforming to plain text is what brings
   it to the share extension.
-- `CFBundleLocalizations` (`en`, `hu`, `ro`, `de`, `es`) tells UIKit which languages the app speaks (Compose resources
+- `CFBundleLocalizations` (`en`, `hu`, `ro`, `de`, `es`, `fr`) tells UIKit which languages the app speaks (Compose resources
   are invisible to iOS); without it system UI stays English and Settings offers no per-app language. Keep in step with
   `:presentation`'s `values-*`. Each language also needs `<lang>.lproj/InfoPlist.strings` (the microphone prompt;
   Hungarian is `iosApp/iosApp/hu.lproj/InfoPlist.strings`, a variant group).

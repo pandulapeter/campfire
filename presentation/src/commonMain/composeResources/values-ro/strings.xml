@@ -535,6 +535,7 @@
     <string name="settings_user_interface_language_romanian">Română</string>
     <string name="settings_user_interface_language_german">Germană</string>
     <string name="settings_user_interface_language_spanish">Spaniolă</string>
+    <string name="settings_user_interface_language_french">Franceză</string>
     <string name="settings_user_interface_language_more_coming">Mai multe limbi în curând</string>
     <string name="settings_distributions_all">Toate versiunile Campfire</string>
     <string name="settings_distributions_all_description">Pe campfire-songbook.com</string>

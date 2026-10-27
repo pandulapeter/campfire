@@ -113,9 +113,10 @@ campfire.log / campfire.log.1          desktop only, here: the process log (Andr
 
 ### Strings
 
-- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es]/strings.xml`, read as the `code-style` skill
+- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es|-fr]/strings.xml`, read as the `code-style` skill
   says.
-- A counted sentence is a `<plurals>` with `one` and `other`, not a second key.
+- A counted sentence is a `<plurals>` with `one` and `other`, not a second key. One that can show 0 also gets a `zero`
+  item in `values-fr`, where 0 takes the singular.
 
 ### UI rules
 

@@ -59,7 +59,8 @@ Each item is checked by `wiring` in step 7.
 
 1. `data/model/.../preferences/AppLanguage.kt`: add `<ENUM>("<code>"),` after the last language, before
    `SYSTEM_DEFAULT`.
-2. `presentation/.../ui/components/preferences/LanguageChoice.kt`: add `AppLanguage.<ENUM>,` at the end of the list.
+2. Nothing in `presentation/.../ui/components/preferences/LanguageChoice.kt`: it lists every `AppLanguage`, sorted by
+   code.
 3. `.../preferences/AppLanguageNames.kt`: import `…presentation.resources.settings_user_interface_language_<suffix>` and
    add `AppLanguage.<ENUM> -> Res.string.settings_user_interface_language_<suffix>` to the `when`.
 4. The name key in **every existing** `composeResources/values*/strings.xml`, right after the last
@@ -91,8 +92,6 @@ already carries every locale (`jdk.localedata`), and the stores stay English (on
 Add the language to each list, in the house style (Oxford comma, the language last):
 
 - root `CLAUDE.md` → Strings: `values[-hu|-ro|-<code>]/strings.xml`.
-- `.claude/skills/prepare-release/SKILL.md`: step 7 lists every file `whats_new_message` is set in (and counts them:
-  "all three" becomes "all four"), and asks for the bullets in every language.
 - `presentation/CLAUDE.md`: the summaries bullet's "(English, Hungarian, …)".
 - `app/web/CLAUDE.md`: "Texts follow `navigator.language` (…)".
 - `app/ios/CLAUDE.md`: the `Localizable.strings` (…) and `CFBundleLocalizations` (…) code lists.
@@ -114,6 +113,8 @@ Rewrap any line pushed past ~120 columns.
 4. Read each agent's list of doubts. Look up how each doubtful key is used (`grep -rn "Res.string.<key>\b"` in
    `presentation/src/commonMain/kotlin`) and fix the ones that are wrong once the file is joined.
 5. Join: `python3 $L join <code> <scratchpad>/<code>` writes `values-<code>/strings.xml`.
+6. If the preflight noted that 0 takes the singular, give each plural that `values-fr` gives a `zero` item one too, on
+   a line of its own after `<plurals>`: the plurals a count of 0 can reach ("Aucune chanson").
 
 ### Glossary to fill in
 

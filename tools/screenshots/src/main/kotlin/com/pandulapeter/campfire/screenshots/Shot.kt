@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.localization.StringsDe
 import com.pandulapeter.campfire.presentation.localization.StringsDefault
 import com.pandulapeter.campfire.presentation.localization.StringsEs
+import com.pandulapeter.campfire.presentation.localization.StringsFr
 import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.localization.StringsRo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -96,6 +97,7 @@ internal open class PrepareScope(
             AppLanguage.ROMANIAN -> StringsRo.strings[key]
             AppLanguage.GERMAN -> StringsDe.strings[key]
             AppLanguage.SPANISH -> StringsEs.strings[key]
+            AppLanguage.FRENCH -> StringsFr.strings[key]
             AppLanguage.ENGLISH, AppLanguage.SYSTEM_DEFAULT -> StringsDefault.strings[key]
         } ?: StringsDefault.strings[key],
     ) { "There is no string resource called $key." }

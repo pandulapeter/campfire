@@ -9,8 +9,8 @@
  */
 
 /* The share extension's own strings: it has no Kotlin to read the app's Compose resources with, and it speaks the
-   system's language rather than the one chosen inside the app. Keep hu.lproj, ro.lproj, de.lproj, and
-   es.lproj in step. */
+   system's language rather than the one chosen inside the app. Keep hu.lproj, ro.lproj, de.lproj,
+   es.lproj, and fr.lproj in step. */
 "share_saving" = "Saving to Campfire…";
 "share_saved" = "Saved to Campfire";
 "share_saved_detail" = "Open Campfire to add it to your library.";

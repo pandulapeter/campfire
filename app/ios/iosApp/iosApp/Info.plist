@@ -26,6 +26,7 @@
 		<string>ro</string>
 		<string>de</string>
 		<string>es</string>
+		<string>fr</string>
 	</array>
 	<!-- The App Group whose container holds the share extension's inbox (IosShareInbox.kt). -->
 	<key>CampfireAppGroup</key>

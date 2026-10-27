@@ -511,9 +511,17 @@
                 alreadyOpen: 'Campfire ya está abierto en otra pestaña. Cierra primero esa pestaña o continúa allí.',
                 sentToOtherTab: 'Enviado a Campfire en tu otra pestaña.',
                 retry: 'Reintentar'
+            },
+            fr: {
+                loadFailed: 'Impossible de charger Campfire. Vérifie ta connexion et réessaie.',
+                loadFailedFirstVisit: 'Impossible de charger Campfire. Une connexion est nécessaire la première fois qu’il s’ouvre dans ce navigateur, alors vérifie ta connexion et réessaie.',
+                unsupported: 'Ce navigateur ne peut pas exécuter Campfire. Il faut Chrome ou Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) ou une version plus récente.',
+                alreadyOpen: 'Campfire est déjà ouvert dans un autre onglet. Ferme d’abord cet onglet ou continue là-bas.',
+                sentToOtherTab: 'Envoyé à Campfire dans ton autre onglet.',
+                retry: 'Réessayer'
             }
         };
-        var language = (/^(hu|ro|de|es)\b/i.exec(navigator.language || '') || [])[1];
+        var language = (/^(hu|ro|de|es|fr)\b/i.exec(navigator.language || '') || [])[1];
         var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
         if (language) {
             document.documentElement.lang = language.toLowerCase();

@@ -96,12 +96,11 @@ them. If a change has no effect a user could notice, it is not in the notes.
    `<platform>Main` source set usually needs one.
 
 7. **Always update the in-app message.** Follow `.claude/skills/code-style/SKILL.md` before editing resources.
-   Set `whats_new_message` in all five:
-   - `presentation/src/commonMain/composeResources/values/strings.xml` (English);
-   - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian);
-   - `presentation/src/commonMain/composeResources/values-ro/strings.xml` (Romanian);
-   - `presentation/src/commonMain/composeResources/values-de/strings.xml` (German);
-   - `presentation/src/commonMain/composeResources/values-es/strings.xml` (Spanish).
+   Set `whats_new_message` in every supported language's `strings.xml`: English in `values/`, and one more for each
+   `values-*` folder beside it. List them rather than assuming which exist, since languages are added over time:
+   ```bash
+   ls -d presentation/src/commonMain/composeResources/values*/strings.xml
+   ```
 
    Write the bullets by **Writing the changelog** below: at most six, each a bold headline and a one-sentence
    description, sorted by importance. Before writing, take the cluster table from step 3, rank it by **Writing the
@@ -114,11 +113,11 @@ them. If a change has no effect a user could notice, it is not in the notes.
    headline bold on its own line with the description under it, as spaced rows in a scrollable area with fades at
    the top and bottom; its title and **Get started** button stay visible. No other Markdown,
    links, emoji, introductory paragraph or version number in the body.
-   Translate the same bullets into natural Hungarian, Romanian, German, and Spanish, and escape XML correctly. Keep
+   Translate the same bullets naturally into each of those languages, and escape XML correctly. Keep
    `whats_new_title` as the localized title with its `%1$s` version placeholder. Replace the previous message rather than
    appending history.
    **Empty notes are valid:** when the user wants no notes for a very small release, or there is no user-facing
-   change to announce, explicitly set `<string name="whats_new_message"></string>` in **all three** files. Never leave
+   change to announce, explicitly set `<string name="whats_new_message"></string>` in **every one** of those files. Never leave
    the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
    the version as handled. The first installed version is always skipped, whatever its message contains.
 

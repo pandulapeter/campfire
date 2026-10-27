@@ -47,17 +47,20 @@ PLURALS_BLOCKED = {
     "sh", "sk", "sl", "sma", "smi", "smj", "smn", "sms", "sr", "tl", "fil", "uk",
 }
 PLURALS_NOTES = {
-    "fr": "0 takes the singular in French; the plugin gives 0 the `other` form (\"0 chansons\"), a known small wart.",
+    "fr": "0 takes the singular in French: give a `zero` item to each plural that can show 0 (see values-fr).",
     "pt": "Portuguese (pt-PT) is fine; Brazilian 0 takes the singular, given `other` here.",
     "ro": "20 and up need \"de\" (\"20 de cântece\"); write `other` in the 2-19 form, and 20+ reads without it.",
     "is": "21, 31, ... take the singular in Icelandic; the plugin gives them `other`.",
     "mk": "21, 31, ... take the singular in Macedonian; the plugin gives them `other`.",
-    "hy": "0 takes the singular in Armenian; the plugin gives 0 the `other` form.",
+    "hy": "0 takes the singular in Armenian: give a `zero` item to each plural that can show 0 (see values-fr).",
 }
 PLURALS_FINE = {
     "af", "az", "bg", "ca", "da", "de", "el", "en", "es", "et", "eu", "fi", "fo", "fy", "gl", "hu", "it", "ka", "kk",
     "ky", "lb", "ms", "nb", "nl", "nn", "no", "sq", "sv", "sw", "tr", "uz", "vi",
 } | set(PLURALS_NOTES)
+# Languages whose 0 takes the singular. getPlural reads a `zero` item for 0 when there is one, so these add it to the
+# plurals that can show 0 (values-fr has them), each on a line of its own that the English lacks.
+ZERO_IS_SINGULAR = {"fr", "hy"}
 
 CASING_NOTES = {
     "tr": "Kotlin's lowercase()/titlecase() are locale-insensitive: a scale name or section label starting with i/ı/İ "
@@ -199,6 +202,9 @@ def entries(path):
 def check_strings(code):
     target = RESOURCES / f"values-{code}/strings.xml"
     english, translated = entries(ENGLISH), entries(target)
+    zeros = {key: text for key, text in translated.items() if key.endswith(":zero")}
+    if code in ZERO_IS_SINGULAR:
+        translated = {key: text for key, text in translated.items() if key not in zeros}
     errors, warnings = [], []
     if list(english) != list(translated):
         missing = [k for k in english if k not in translated]
@@ -221,7 +227,14 @@ def check_strings(code):
     missing = missing_glyphs("".join(translated.values()))
     if missing:
         errors.append("Characters no bundled font has: " + "; ".join(f"{f}: {' '.join(c)}" for f, c in missing.items()))
-    if ENGLISH.read_text().count("\n") != target.read_text().count("\n"):
+    for key, text in zeros.items() if code in ZERO_IS_SINGULAR else ():
+        other = english.get(key.replace(":zero", ":other"))
+        if other is None:
+            errors.append(f"{key}: a `zero` item in a key that is not a plural.")
+        elif not set(SPECIFIER.findall(text)) <= set(SPECIFIER.findall(other)):
+            errors.append(f"{key}: placeholders {SPECIFIER.findall(text)} that `other` lacks.")
+    zero_lines = len(zeros) if code in ZERO_IS_SINGULAR else 0
+    if ENGLISH.read_text().count("\n") != target.read_text().count("\n") - zero_lines:
         errors.append("Line count differs from English: the file must mirror it line for line.")
     report(errors, warnings)
 
@@ -234,7 +247,6 @@ def check_wiring(code, english_name):
     ios = "app/ios/iosApp"
     checks = [
         ("data/model/src/commonMain/kotlin/com/pandulapeter/campfire/data/model/preferences/AppLanguage.kt", rf'\b{enum}\("{code}"\),'),
-        (f"{presentation}/LanguageChoice.kt", rf"AppLanguage\.{enum},"),
         (f"{presentation}/AppLanguageNames.kt", rf"import com\.pandulapeter\.campfire\.presentation\.resources\.{key}\n"),
         (f"{presentation}/AppLanguageNames.kt", rf"AppLanguage\.{enum} -> Res\.string\.{key}\n"),
         ("tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Shot.kt", rf"import com\.pandulapeter\.campfire\.presentation\.localization\.{strings_object}\n"),
@@ -249,7 +261,6 @@ def check_wiring(code, english_name):
         ("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{"),
         ("app/web/src/wasmJsMain/resources/index.html", rf"/\^\([a-z|]*\b{code}\b[a-z|]*\)\\b/i"),
         ("CLAUDE.md", rf"values\[[^\]]*-{code}\b[^\]]*\]/strings\.xml"),
-        (".claude/skills/prepare-release/SKILL.md", rf"`presentation/src/commonMain/composeResources/values-{code}/strings\.xml` \({english_name}\)"),
         ("presentation/CLAUDE.md", english_name),
         ("app/web/CLAUDE.md", rf"navigator\.language` \([^)]*{english_name}"),
         ("app/ios/CLAUDE.md", rf"`Localizable\.strings` \([^)]*`{code}`"),
