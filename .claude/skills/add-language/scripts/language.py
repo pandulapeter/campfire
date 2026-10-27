@@ -94,9 +94,9 @@ def font_map(path):
     return points
 
 
-def missing_glyphs(text, allowed=frozenset()):
+def missing_glyphs(text):
     """Characters of [text] some bundled font cannot draw, by font. The app never falls back to a system font."""
-    characters = {c for c in text if not c.isspace() and unicodedata.category(c)[0] != "C" and c not in allowed}
+    characters = {c for c in text if not c.isspace() and unicodedata.category(c)[0] != "C"}
     return {path.name: sorted(c for c in characters if ord(c) not in font_map(path)) for path in FONTS if any(ord(c) not in font_map(path) for c in characters)}
 
 
@@ -218,8 +218,7 @@ def check_strings(code):
             warnings.append(f"{key}: identical to English ({source[:50]!r}); fine only for names and symbols.")
         if right_to_left(text):
             errors.append(f"{key}: right-to-left characters.")
-    # A character English uses too (the ⌘ of a shortcut) is drawn however the English build draws it.
-    missing = missing_glyphs("".join(translated.values()), allowed=set("".join(english.values())))
+    missing = missing_glyphs("".join(translated.values()))
     if missing:
         errors.append("Characters no bundled font has: " + "; ".join(f"{f}: {' '.join(c)}" for f, c in missing.items()))
     if ENGLISH.read_text().count("\n") != target.read_text().count("\n"):
