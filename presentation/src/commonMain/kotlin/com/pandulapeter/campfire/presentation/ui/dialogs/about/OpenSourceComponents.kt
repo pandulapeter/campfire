@@ -97,7 +97,6 @@ internal val openSourceComponents = listOf(
         licenseUrl = "https://www.gnu.org/licenses/lgpl-3.0.html",
         // Its author's permission to ship it through Apple's stores, which the LGPL alone leaves in doubt there.
         noticeFile = "$LICENSES/abc2svg_notice.txt",
-        builds = JVM,
     ),
     OpenSourceComponent(
         name = "abc2svg music font",

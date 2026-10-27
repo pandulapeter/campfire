@@ -33,5 +33,13 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
 - Android and desktop (`jvmSharedMain`): `io.github.dokar3:quickjs-kt`, one engine for the process, started by the
   first render (~150 ms on the desktop, then ~5 ms a render), on a daemon thread of its own: a QuickJS context is used
   by one thread at a time. Rhino is the tested fallback should quickjs-kt stall (see the plan).
-- iOS (JavaScriptCore) and the web (the browser's engine) are not wired up yet: their engine fails every render.
-- Tests run the real engine on the desktop (`desktopTest`).
+- iOS: the system's JavaScriptCore (the engine adds nothing to the app; the scripts are ~330 KB), one context on a
+  thread of its own (a context's virtual machine locks itself to one thread). Web: the page's own engine, scripts
+  evaluated in the global scope on the main thread (a render takes a few milliseconds; reading abc2svg is the one longer
+  pause, on the first tune). Both are handed the tune and the modules as values (`AbcScriptGlobals`), never Kotlin
+  functions; the web catches every script error on the script's side, since one thrown into Kotlin/Wasm is no
+  `Exception`.
+- Neither has resources, so the build generates the scripts' text as Kotlin (the generateAbcScripts tasks in
+  `build.gradle.kts`, from the very files in `jvmSharedMain/resources`), one copy per target.
+- The tests (`commonTest`) run the real engine of each platform: desktopTest (QuickJS), iosSimulatorArm64Test
+  (JavaScriptCore), and wasmJsBrowserTest (headless Chrome); CI runs the desktop's.

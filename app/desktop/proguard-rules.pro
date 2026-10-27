@@ -52,3 +52,13 @@
 -keep class * implements coil3.util.DecoderServiceLoaderTarget { *; }
 -keep class * implements coil3.util.FetcherServiceLoaderTarget { *; }
 -dontwarn coil3.PlatformContext
+
+# quickjs-kt's native library (the engine ABC tunes are engraved in) finds these classes and their members by name from
+# C, as the rules it ships for R8 inside its Android library say; its desktop jar carries none, and a renamed or removed
+# one would fail the first tune with a JNI error, which leaves every tune as its text.
+-keep,allowoptimization class com.dokar.quickjs.QuickJs { *; }
+-keep,allowoptimization class com.dokar.quickjs.QuickJsException { *; }
+-keep,allowoptimization class com.dokar.quickjs.binding.JsProperty { *; }
+-keep,allowoptimization class com.dokar.quickjs.binding.JsFunction { *; }
+-keep,allowoptimization class com.dokar.quickjs.binding.JsObject { *; }
+-keep,allowoptimization class kotlin.UByteArray

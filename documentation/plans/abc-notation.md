@@ -12,7 +12,9 @@
 **Status:** both spikes passed 2026-10-27 and the engines are chosen (see "Spike results"); abc2svg's author granted the
 App Store exception on 2026-10-27. Steps 2 and 3 landed on the desktop on 2026-10-27, with the viewer drawing `abc` runs
 (see "First slice"), and most of step 4 the same day (see "Step 4 so far"); the demo song Home on the Range carries a
-tune. Still to come: iOS, the web, Android's check, the PDF, and the rest of step 6.
+tune. The iOS (JavaScriptCore) and web engines landed the same day, their tests passing on the simulator and in
+headless Chrome; the desktop release keeps quickjs-kt's JNI classes, and the Android build packages the script and
+its libraries. Still to come: running it in the Android, iOS, and web apps, the PDF, and the rest of step 6.
 
 Reading ABC landed on 2026-10-26 (8d9da5565..95d8540cb): an `abc` block is a run of `ChordProLine.Verbatim` lines drawn
 as monospace text, and `.abc` files and pasted tunes import as ChordPro songs with a chord grid, verses, and the tune

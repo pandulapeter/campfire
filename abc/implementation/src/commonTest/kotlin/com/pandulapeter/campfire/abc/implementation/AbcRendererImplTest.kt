@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-/** abc2svg in the real engine of the desktop, which is the one Android shares. */
+/** abc2svg in the real engine of each platform the tests run on: QuickJS on the desktop (as on Android), JavaScriptCore on the iOS simulator. */
 class AbcRendererImplTest {
 
     private val renderer = AbcRendererImpl()
