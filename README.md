@@ -50,6 +50,11 @@ Everything the app owns is a plain file: songs are `.cho` files and setlists are
 Syncing is a pure planning step over file hashes and a remote listing, run against a provider interface that Dropbox implements through OAuth with PKCE, which is why no backend of Campfire's own is needed.
 Real-time sync between devices is achieved by lifecycle-aware HTTP long polling.
 
+## Roadmap
+
+What's planned next, from Google Drive sync to an audience screen for projectors, is in
+[documentation/ROADMAP.md](documentation/ROADMAP.md).
+
 ## License
 
 Copyright (c) Péter Pandula 2017-2026. This software is licensed under the
