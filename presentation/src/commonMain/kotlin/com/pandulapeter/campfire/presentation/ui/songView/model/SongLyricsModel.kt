@@ -123,8 +123,9 @@ internal fun prepareSongLyrics(
     }
     val isSongbook = standardSong.blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
     val degreesShown = showsDegrees && collected.isNotEmpty() && !notation.isNumbering
-    // One walk answers both the Scales section and the degrees, so that a page with both on pays for it once.
-    val analysis = if (shouldShowChords && !isSongbook && (suggestsScales || degreesShown)) songScaleAnalysisOf(standardSong, labels) else null
+    // One walk answers the Scales section, the keys the chords are grouped by, and the degrees, so that a page pays for it
+    // once; the grouping needs it whether or not degrees are shown, since a song naming no key has no home without it.
+    val analysis = if (shouldShowChords && !isSongbook && (suggestsScales || collected.isNotEmpty())) songScaleAnalysisOf(standardSong, labels) else null
     val keys = if (collected.isNotEmpty()) chordKeysOf(standardSong, analysis, isSongbook) else null
     val grouped = collected.groupedByKey(keys, notation)
     val chords = if (degreesShown) grouped.withDegrees(keys, notation) else grouped

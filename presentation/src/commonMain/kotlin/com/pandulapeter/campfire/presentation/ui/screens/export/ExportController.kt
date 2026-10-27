@@ -202,8 +202,8 @@ internal class ExportController(
             val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }?.let { rendered ->
                 inferredKey?.takeIf { rendered.metadata.key.isNullOrBlank() }?.let { rendered.copy(metadata = rendered.metadata.copy(key = it)) } ?: rendered
             }
-            // One walk answers both the scales and the degrees, as on the screen.
-            val analysis = if (transposed != null && (suggestsScales || (chordTuning != null && showsDegrees))) {
+            // One walk answers the scales, the keys the chords are grouped by, and the degrees, as on the screen.
+            val analysis = if (transposed != null && (suggestsScales || chordTuning != null)) {
                 withContext(Dispatchers.Default) { printScaleAnalysisOf(transposed, sectionLabels) }
             } else {
                 null
