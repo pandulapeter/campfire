@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_col
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -65,6 +66,33 @@ internal class AutoScrollTest {
         }
     }
 
+    @Test
+    fun `two quick presses of the pedal nudge a scrolling song twice as far as one`() = runAppTest(
+        window = TestWindow.PHONE,
+        songs = listOf(LONG_SONG_FILE),
+        songLayout = SongLayout.CONTINUOUS,
+    ) {
+        openSong(LONG_SONG_TITLE)
+        val line = topmostLine().let { it.keys[it.index] }
+        val start = lineTop(line)
+        onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        waitForIdle()
+        val nudged = lineTop(line)
+        val one = start - nudged
+        mainClock.autoAdvance = false
+        try {
+            onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+            mainClock.advanceTimeBy(SECOND_PRESS_MILLIS)
+            onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        } finally {
+            mainClock.autoAdvance = true
+        }
+        waitForIdle()
+        val two = nudged - lineTop(line)
+        assertTrue(one > 0f, "A press of the pedal did not nudge the song.")
+        assertTrue(abs(two - 2 * one) <= 1f, "Two quick presses nudged the song $two, not twice the $one of one press.")
+    }
+
     /** The pieces of the song in the order they are read, and which of them is the topmost one wholly on screen. */
     private class TopmostLine(val keys: List<Pair<String, Int>>, val index: Int)
 
@@ -78,6 +106,9 @@ internal class AutoScrollTest {
             index = pieces.indexOfFirst { it.bounds.top >= scroll && it.bounds.bottom <= scroll + bounds.height },
         )
     }
+
+    /** Where the piece of the song [key] names is on screen. */
+    private fun AppTestScope.lineTop(key: Pair<String, Int>) = songPieces(checkNotNull(songViewport()), 0f).single { it.key == key }.bounds.top
 
     /** Folds a section whose heading is on screen below the reading line, which is a third of the way down the song. */
     private fun AppTestScope.foldSectionBelowReadingLine() {
@@ -97,6 +128,9 @@ private const val LONG_SONG_TITLE = "The Long Road North"
 
 /** About five lines of the song at its 112 BPM, two bars a line. */
 private const val PLAYED_MILLIS = 20_000L
+
+/** Well inside the first nudge's quarter of a second, so that the second press lands while it still moves. */
+private const val SECOND_PRESS_MILLIS = 100L
 
 /** The wait for a new layout to settle, the section's spring, and the glide back, with time to spare. */
 private const val FOLDED_MILLIS = 2_000L

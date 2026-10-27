@@ -50,8 +50,9 @@ columns the bottom of one and the top of the next share a height, so any motion 
   skipping frames anything else moves it in. A drag, a fling, a tap, or a pedal only moves the reader; playing goes on.
   A relayout while playing (a fold, a pinch, a transposition, a resize) holds the song until the reader is back in
   place, then plays on from there.
-- Up, Down, Page Up, Page Down, the tap halves, and the step actions nudge two chorded lines (smoothly, playing or not),
-  and past either end go on to the setlist's song beside it as a step does. Space plays and stops.
+- Up, Down, Page Up, Page Down, the tap halves, and the step actions nudge two chorded lines (smoothly, playing or not);
+  a press while one moves nudges on from where it is headed, so two quick presses are two nudges. Past either end they
+  go on to the setlist's song beside it as a step does. Space plays and stops.
 - It stops only when asked, at the end of the song, on another page, with the layout back to pages, under anything
   drawn over the screen (a sheet, a dialog, another screen), or on `ON_STOP` (another app, a minimised window, a hidden
   tab); it never starts by itself, nor again once what covered it has gone.

@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Ro
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,19 +49,33 @@ internal class SongAutoScroller(
         )
     }
 
-    /** Whether there is anything left to scroll to in [direction] (-1 up, 1 down). */
-    fun canNudge(direction: Int) = if (direction < 0) scrollState.canScrollBackward else scrollState.canScrollForward
+    /**
+     * Where the nudge being animated is headed, which the next one is counted from: two quick presses of a pedal are two
+     * nudges from where the song was, not one and a bit from wherever the first had got to. State, since whether there
+     * is anything left to nudge to is read from it.
+     */
+    private var nudgeTarget by mutableStateOf<Int?>(null)
+
+    private val nudgeOrigin get() = nudgeTarget ?: scrollState.value
+
+    /** Whether there is anything left to scroll to in [direction] (-1 up, 1 down), counted from where a nudge still moving is headed. */
+    fun canNudge(direction: Int) = if (direction < 0) nudgeOrigin > 0 else nudgeOrigin < scrollState.maxValue
 
     /**
      * Moves the song [NUDGE_LINES] lines in [direction], the way a pedal does: whatever is playing goes on from there. A
-     * line is a chorded one, a line of chords over a line of lyrics, which is what the reading window's overlap is.
+     * line is a chorded one, a line of chords over a line of lyrics, which is what the reading window's overlap is. A
+     * press while a nudge moves counts from where it is headed.
      */
     suspend fun nudge(direction: Int) {
         val distance = flingBehavior.readingWindow.overlap.coerceAtLeast(MIN_NUDGE_PX) * NUDGE_LINES
-        scrollState.animateScrollBy(
-            value = (distance * direction).toFloat(),
-            animationSpec = tween(durationMillis = NUDGE_DURATION, easing = FastOutSlowInEasing),
-        )
+        val target = (nudgeOrigin + distance * direction).coerceIn(0, scrollState.maxValue)
+        // Set before the animation below cancels the one still moving, so that its finally leaves this target alone.
+        nudgeTarget = target
+        try {
+            scrollState.animateScrollTo(target, tween(durationMillis = NUDGE_DURATION, easing = FastOutSlowInEasing))
+        } finally {
+            if (nudgeTarget == target) nudgeTarget = null
+        }
     }
 
     /** Whether there is anything left to play: the song laid out, with more of it to scroll to. */
