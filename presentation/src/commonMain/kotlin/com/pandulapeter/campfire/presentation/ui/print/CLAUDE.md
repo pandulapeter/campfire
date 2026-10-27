@@ -29,8 +29,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 
 - `layoutPrintDocument` is **pure**: PDF points, measured by a function it is handed, so tests measure with arithmetic.
   Rows are the unit never split; a heading stays with the first segment that prints anything, a lyric line with its
-  chords, a tab system whole, a grid run aligned into columns as the viewer does. A verbatim run (ABC, LilyPond, SVG)
-  prints preformatted like a tab without a staff, only with `showChords`, and never `isSelectable` (read back, ABC's
+  chords, a tab system whole, a grid run aligned into columns as the viewer does. A verbatim run (LilyPond, SVG, an ABC
+  tune that did not render) prints preformatted like a tab without a staff, only with `showChords`, and never `isSelectable` (read back, ABC's
   `"G"` and `[CEG]` would be chords).
 - An `abc` run prints engraved where `printNotationsOf` rendered it (`PrintNotation`, a row per staff system): the
   export screen renders every song's tunes in its own transposition and notation (`PrintSong.notationChords`) for the
