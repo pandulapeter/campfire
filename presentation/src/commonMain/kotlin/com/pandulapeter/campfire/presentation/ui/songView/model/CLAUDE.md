@@ -57,8 +57,8 @@ Product side in `ui/metronome/CLAUDE.md`.
 
 - Built off the main thread except the first page on screen and those before it (`buildsModelInPlace`), so a page
   never opens empty.
-- **One scale walk a model** (`songScaleAnalysisOf`): the Scales section and the Chords section's degrees share it,
-  either switch alone enough to run it; never for a songbook. It is in the in-place first model too, so the degrees are
+- **One scale walk a model** (`songScaleAnalysisOf`): the Scales section and the Chords section's key groups and
+  degrees share it, run whenever either section is shown; never for a songbook. It is in the in-place first model too, so the degrees are
   right on its first frame. Without a home the degrees count from `SongKeys.ofChords` (the capo chart rule).
 - **The scales read the sounding song with the file's capo** (`standardSong`, before `withCapo`): the capo only says how
   a capo chart's `{key}` is meant, so the Scales section names the sounding key whatever capo is put on, and its sheet
