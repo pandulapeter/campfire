@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
+import com.pandulapeter.campfire.presentation.ui.chords.groupedByKey
 import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
@@ -100,7 +101,7 @@ internal class SongLyricsModel(
  * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections) or a song playing over `SongScaleGroups.MAX_PLAYED_CHORDS` chords (the
  * `:chordpro` side's gate), where it grows past what the main thread can spare.
  * @param showsDegrees Whether each chord of the Chords section is labelled with the step of the key it stands on
- * ([withDegrees]), counted against [degreeKeyOf]'s key, the home the same walk finds first.
+ * ([withDegrees]), counted against [chordKeysOf]'s keys, the home the same walk finds first.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -124,7 +125,9 @@ internal fun prepareSongLyrics(
     val degreesShown = showsDegrees && collected.isNotEmpty() && !notation.isNumbering
     // One walk answers both the Scales section and the degrees, so that a page with both on pays for it once.
     val analysis = if (shouldShowChords && !isSongbook && (suggestsScales || degreesShown)) songScaleAnalysisOf(standardSong, labels) else null
-    val chords = if (degreesShown) collected.withDegrees(degreeKeyOf(standardSong, analysis, isSongbook), notation) else collected
+    val keys = if (collected.isNotEmpty()) chordKeysOf(standardSong, analysis, isSongbook) else null
+    val grouped = collected.groupedByKey(keys, notation)
+    val chords = if (degreesShown) grouped.withDegrees(keys, notation) else grouped
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),

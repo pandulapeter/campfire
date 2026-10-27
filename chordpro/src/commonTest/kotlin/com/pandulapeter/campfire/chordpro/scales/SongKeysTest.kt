@@ -53,4 +53,16 @@ class SongKeysTest {
         val unchanged = song(key = "D", capo = 2)
         assertSame(unchanged, SongKeys.withKeyOfChords(unchanged))
     }
+
+    @Test
+    fun `a chord first played after a key change is counted from the key it moved to`() {
+        val verse = "{start_of_verse}\n[F]la [Bb]la [Bbm]la [C]la [F]la\n{end_of_verse}"
+        val written = ChordProParser.parse("{key: F}\n$verse\n${verse.replace("[F]", "[Ab]").replace("[Bb]", "[Db]").replace("[Bbm]", "[Dbm]").replace("[C]", "[Eb]")}")
+        assertEquals(mapOf("Ab" to "Ab", "Db" to "Ab", "Dbm" to "Ab", "Eb" to "Ab"), SongKeys.keysOfChords(written, home = null, homeKey = "F"))
+        assertEquals(mapOf("F" to "F", "Bb" to "F", "Bbm" to "F", "C" to "F"), SongKeys.keysOfChords(written, home = written.blocks.last(), homeKey = "Ab"))
+        val directed = ChordProTransposer.transpose(ChordProParser.parse("{key: F}\n$verse\n{transpose: 2}\n$verse"), 0)
+        assertEquals(mapOf("G" to "G", "Cm" to "G", "D" to "G"), SongKeys.keysOfChords(directed, home = null, homeKey = "F"))
+        val minor = ChordProTransposer.transpose(ChordProParser.parse("{key: Bm}\n[Bm]la [Em]la\n{transpose: 2}\n[Bm]la [Em]la"), 0)
+        assertEquals(mapOf("C#m" to "C#m", "F#m" to "C#m"), SongKeys.keysOfChords(minor, home = null, homeKey = "Bm"))
+    }
 }

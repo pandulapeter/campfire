@@ -59,8 +59,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
+import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.instrument.tunings
@@ -310,8 +312,10 @@ internal fun SongLyrics(
         )
     }
     val chordsSection = sections.firstNotNullOfOrNull { it as? RenderSection.Chords }
-    val chordLayouts = remember(chordsSection?.cells, chordStyle, textMeasurer, density, fontScale) {
-        chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, textMeasurer, density, fontScale) }
+    // The template rather than a sentence per key, which the layouts fill in only for the keys the cells are in.
+    val keyHeading = textResource(Res.string.song_details_key_change)
+    val chordLayouts = remember(chordsSection?.cells, chordStyle, keyHeading, textMeasurer, density, fontScale) {
+        chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, keyHeading, textMeasurer, density, fontScale) }
     }
     // Only where a fold can be toggled, which the editor's preview cannot.
     val centeringHold = if (onFoldToggled == null && chordDiagrams?.onFoldToggled == null) {

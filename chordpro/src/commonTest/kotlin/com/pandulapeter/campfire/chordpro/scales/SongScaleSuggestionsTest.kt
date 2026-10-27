@@ -194,6 +194,22 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
+    fun `a verse written out a minor third up is shown in its key, ahead of the home's chords played more often`() {
+        val verse = "F Fmaj7 F7 Bb Bbm F G/F Gm/F F"
+        val chorus = "Gm7 C Am Dm7 Gm7 C F D"
+        val song = suggestions(
+            "Verse" to verse,
+            "Verse" to verse,
+            "Chorus" to chorus,
+            "Verse" to "Ab Abmaj7 Ab7 Db Dbm Ab Bb/Ab Bbm/Ab Ab",
+            "Chorus" to chorus,
+            key = "F",
+        )
+        assertEquals(listOf("F" to true, "Ab" to false), song.map { it.rootName to it.isHome })
+        assertEquals("major", song[1].scales.first().id)
+    }
+
+    @Test
     fun `a part both in another key and on a centre of its own is one moment, on its centre`() {
         val verse = "E E E E E C#m B E C#m B E C#m A B E C#m B E C#m A B"
         val chorus = "E G# F#m C#m B E G# F#m C#m B"

@@ -35,6 +35,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  * @property spelling The chord the notes are spelled from, in the standard notation.
  * @property degree The step of the song's key the chord stands on, in Roman numerals, which the cell names after it where
  *   the page names chords by their letters (see [withDegrees]); null where it names none.
+ * @property keyName The key the chord is first played in, as the page names it (`A♭`), where that is another than the
+ *   song's home key, which the Chords section heads the chord's group with (see [groupedByKey]); null at home.
  * @property defaultShape The shape [shapeChord] is shown with where nothing else says how it is played, or null while
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
@@ -53,6 +55,7 @@ internal data class SongChord(
     val letterName: String? = null,
     val spelling: String? = null,
     val degree: String? = null,
+    val keyName: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
     val undrawnDefinition: ChordDefinition? = null,
@@ -162,18 +165,33 @@ internal fun Chord.movedBy(semitones: Int) = if (semitones.mod(12) == 0) {
 }
 
 /**
- * [this] with each chord's [SongChord.degree] counted against [key], a key in the standard notation in the frame the
- * chords are in, the way [ChordNotation.ROMAN] writes it (`V7`, `♭VII`, `V/7`): every chord against the one key, a
- * chord off the key's scale by its chromatic step rather than as an applied chord, since the label says where a chord
- * stands, not what it leads to. None where [key] is null or no note, and none in a numbering, whose cells already name
- * the step first.
+ * [this] with each chord's [SongChord.degree] counted against the key it is in ([keys]), keys in the standard notation
+ * in the frame the chords are in, the way [ChordNotation.ROMAN] writes it (`V7`, `♭VII`, `V/7`): every chord against the
+ * key in force where it is first played (the home's, or the one a key change moved to), a chord off that key's scale by
+ * its chromatic step rather than as an applied chord, since the label says where a chord stands, not what it leads to.
+ * None where [keys] is null or no note, and none in a numbering, whose cells already name the step first.
  */
-internal fun List<SongChord>.withDegrees(key: String?, notation: ChordNotation): List<SongChord> {
-    if (key == null || notation.isNumbering) return this
+internal fun List<SongChord>.withDegrees(keys: ChordKeys?, notation: ChordNotation): List<SongChord> {
+    if (keys == null || notation.isNumbering) return this
     return map { chord ->
-        val degree = chord.spelling?.let { ChordProNotation.romanNumeral(it, key) } ?: return@map chord
+        val degree = chord.spelling?.let { ChordProNotation.romanNumeral(it, keys.of(it)) } ?: return@map chord
         chord.copy(degree = ChordProNotation.withAccidentalSigns(degree))
     }
+}
+
+/**
+ * [this] grouped by the key each chord is first played in ([keys]): the home key's first, then each other key in the
+ * order the song reaches it, each chord of another key named by it ([SongChord.keyName], in [notation]), so that the
+ * Chords section heads every group but the home's with its key. Within a group the chords keep the order they are first
+ * played in. Unchanged where the song has no key change.
+ */
+internal fun List<SongChord>.groupedByKey(keys: ChordKeys?, notation: ChordNotation): List<SongChord> {
+    if (keys == null || keys.moved.isEmpty()) return this
+    val named = map { chord ->
+        val key = chord.spelling?.let(keys.moved::get) ?: return@map chord
+        chord.copy(keyName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(key, notation)))
+    }
+    return named.filter { it.keyName == null } + named.filter { it.keyName != null }.groupBy { it.keyName }.values.flatten()
 }
 
 /**

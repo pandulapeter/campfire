@@ -14,11 +14,17 @@ import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 /**
  * Where each row of a Chords section's diagrams starts when the section is [width] wide, as the index of its first
  * cell: the cells in their order, [gap] apart, as few rows as the width allows and a cell wider than [width] a row of
- * its own, the cells shared out between those rows as evenly as their order lets them (see [balancedRowStarts]).
- * Worked out without composing anything, so that the section can be cut between its rows (see [chordSlotCount]).
+ * its own, the cells shared out between those rows as evenly as their order lets them (see [balancedRowStarts]). Each
+ * group starting at one of [groupStarts] (the chords of one key, see `SongChord.keyName`) starts a row and is balanced
+ * on its own, so that no row holds two keys. Worked out without composing anything, so that the section can be cut
+ * between its rows (see [chordSlotCount]).
  */
-internal fun chordRowStarts(cellWidths: IntArray, gap: Int, width: Int): IntArray =
-    balancedRowStarts(FloatArray(cellWidths.size) { cellWidths[it].toFloat() }, gap.toFloat(), width.toFloat())
+internal fun chordRowStarts(cellWidths: IntArray, groupStarts: IntArray, gap: Int, width: Int): IntArray =
+    groupStarts.indices.flatMap { group ->
+        val start = groupStarts[group]
+        val end = groupStarts.getOrNull(group + 1) ?: cellWidths.size
+        balancedRowStarts(FloatArray(end - start) { cellWidths[start + it].toFloat() }, gap.toFloat(), width.toFloat()).map { start + it }
+    }.toIntArray()
 
 /**
  * Where each row of [cellWidths] starts, [gap] apart within [width]: as many rows as filling each one before starting
@@ -98,7 +104,8 @@ internal fun slotRows(rowCount: Int, firstSlot: Int, lastSlot: Int, isLastSlot: 
 
 /**
  * Which cell is under [x], [y] in a chunk of a Chords section [width] wide that draws [rows] of the rows starting at
- * [starts]: the rows stacked from the chunk's top [gap] apart, each as tall as its tallest cell, the cells of a row [gap]
+ * [starts]: the rows stacked from the chunk's top [gap] apart, each under its key's heading where it has one (as tall as
+ * [headingHeights] says by row, its gap counted in) and as tall as its tallest cell, the cells of a row [gap]
  * apart from its start edge, a cell wider than [width] held to it, and the row mirrored where [isRightToLeft]. A cell is
  * hit across the whole height of its row, so a short name over a short diagram is as easy to tap as its neighbours; the
  * gaps hit nothing. -1 where no cell is there.
@@ -111,11 +118,13 @@ internal fun chordCellAt(
     rows: IntRange,
     cellWidths: IntArray,
     cellHeights: IntArray,
+    headingHeights: IntArray,
     gap: Int,
     isRightToLeft: Boolean,
 ): Int {
     var top = 0
     for (row in rows) {
+        top += headingHeights[row]
         val cells = starts[row] until (starts.getOrNull(row + 1) ?: cellWidths.size)
         val height = cells.maxOf { cellHeights[it] }
         if (y >= top && y < top + height) {

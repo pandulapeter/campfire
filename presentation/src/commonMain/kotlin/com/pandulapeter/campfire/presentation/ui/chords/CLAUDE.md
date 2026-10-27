@@ -66,6 +66,9 @@ Definitions:
 
 ## The Chords section
 
+- **Grouped by key** (`groupedByKey`, tested): the home key's chords first, then each key a key change reaches, in
+  the order reached, each group starting a row of its own under a "Key: A♭" line (`ChordCellLayouts.headings`, part
+  of its row's slot; the PDF's too). On with or without degrees, never in a songbook.
 - `songChordsOf` (tested): every chord once however spelled, in first-played order, read from the song *before* notation
   is applied (a numbering's step means nothing without its stretch's key), named as the page names it
   (`ChordProNotation.shownNames`). **More than 48 chords (`MAX_SONG_CHORDS`) is a songbook and gets no section.**
@@ -77,9 +80,10 @@ Definitions:
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
 - **Each cell names its chord's degree** after it, as a numbering's letters follow its step (`SongChord.degree`,
   `withDegrees`, tested), in Roman notation's numerals (`ChordProNotation.romanNumeral`: `V7`, `♭VII`), counted against
-  `degreeKeyOf`: the scale suggestions' home key, else the sounding `{key}` read by the one capo chart rule
-  (`SongKeys.ofChords`), else none. One key a song, a chromatic chord by its step
-  (`II7`, never `V/V`); none in a numbering. Either second name stands on a line over the name, as the scale sheet's
+  `chordKeysOf`: the scale suggestions' home key, else the sounding `{key}` read by the one capo chart rule
+  (`SongKeys.ofChords`), else none. A chord first played after a key change, directed or written out (a verse played
+  again a minor third up), is counted from the key it moved to (`ChordKeys`, `SongKeys.keysOfChords`), as a numbering
+  names it; a chromatic chord by its step (`II7`, never `V/V`); none in a numbering. Either second name stands on a line over the name, as the scale sheet's
   numerals do (three quarters of its size, normal weight), a line every cell keeps where any has one. Only this
   section and the PDF's diagrams: lyrics and the chord sheet keep their names. Chord
   degrees (on by default) takes it.

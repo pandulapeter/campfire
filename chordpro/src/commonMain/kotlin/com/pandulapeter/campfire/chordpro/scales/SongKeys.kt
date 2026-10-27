@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.scales
 
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 
@@ -52,6 +54,42 @@ public object SongKeys {
             metadata = song.metadata.copy(key = key),
             blocks = song.blocks.map { block -> if (block is ChordProBlock.Transpose && block.key != null) block.copy(key = key) else block },
         )
+    }
+
+    /**
+     * The key each chord of [song], in the standard notation, is counted from where it is first played after a key change,
+     * by the chord's name as written: [homeKey] (a key name, `F`, `Am`) moved as far as the key in force there sits from
+     * the one at [home], a block of [song] (its first chord when null), its root spelled as a chord played in that key
+     * spells it, else with [homeKey]'s accidental. A chord first played in the key at [home] is left out. A key change is
+     * one the song directs with a `{transpose}` or one it writes out ([WrittenModulations]), as the Scales section reads
+     * them, so a verse played again a minor third up counts its chords from its own key. A chord played on both sides of
+     * a key change is counted where it is first played, as a numbering names it. Empty where [homeKey] names no note.
+     */
+    public fun keysOfChords(song: ChordProSong, home: ChordProBlock?, homeKey: String): Map<String, String> {
+        val tonic = ChordProChords.pitchClass(rootNameOf(homeKey) ?: return emptyMap()) ?: return emptyMap()
+        val blocks = WrittenModulations.of(song.blocks, key = null)
+        val firstOffsets = LinkedHashMap<String, Int>()
+        ChordProChords.forEachName(song.copy(blocks = blocks)) { name, offset -> firstOffsets.getOrPut(name) { offset } }
+        val homeOffset = home?.let { block -> offsetAt(blocks, blocks.indexOfFirst { it === block }) } ?: firstOffsets.values.firstOrNull() ?: 0
+        val shifts = firstOffsets.mapValues { (_, offset) -> (offset - homeOffset).mod(12) }.filterValues { it != 0 }
+        val suffix = if (homeKey.trim().endsWith('m')) "m" else ""
+        val keyNames = shifts.values.distinct().associateWith { shift ->
+            val root = (tonic + shift).mod(12)
+            val spelled = shifts.filterValues { it == shift }.keys.firstNotNullOfOrNull { name -> rootNameOf(name)?.takeIf { ChordProChords.pitchClass(it) == root } }
+            (spelled ?: ChordProChords.noteNames(Chord(root, listOf(0)), preferFlats = 'b' in rootNameOf(homeKey).orEmpty()).first()) + suffix
+        }
+        return shifts.mapValues { (_, shift) -> keyNames.getValue(shift) }
+    }
+
+    /** The semitones the last `{transpose}` before the block at [index] of [blocks] moves by, 0 before any. */
+    private fun offsetAt(blocks: List<ChordProBlock>, index: Int) =
+        blocks.take(index.coerceAtLeast(0)).filterIsInstance<ChordProBlock.Transpose>().lastOrNull()?.semitones ?: 0
+
+    /** The note a chord or key name starts with, as written (`Ab` for `Abm7`), null where it starts with none. */
+    private fun rootNameOf(name: String): String? {
+        val trimmed = name.trim()
+        val letter = trimmed.firstOrNull()?.takeIf { it in 'A'..'G' } ?: return null
+        return letter + trimmed.getOrNull(1)?.takeIf { it == '#' || it == 'b' }?.toString().orEmpty()
     }
 
     private val SongKey.name get() = root.name + if (isMinor) "m" else ""

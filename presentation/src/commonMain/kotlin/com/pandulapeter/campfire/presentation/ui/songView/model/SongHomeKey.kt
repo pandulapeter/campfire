@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.chordpro.scales.SongScaleSuggestions
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.chords.ChordKeys
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 
 /**
@@ -37,14 +38,21 @@ internal fun homeKeyOf(groups: List<ScaleGroup>): String? {
 internal fun writtenKeyOf(song: ChordProSong) = song.metadata.key?.takeIf { it.isNotBlank() }
 
 /**
- * The key the Chords section's degrees of [song], in the standard notation as the page plays it, are counted against,
- * on the screen and in the PDF alike: the home its [analysis] finds ([homeKeyOf]), else the key its `{key}` and its capo
- * say the chords are in (`SongKeys.ofChords`, the one reading of a capo chart's key). The written key is weighed against the shapes only where the
- * walk found no home, and never in a songbook ([isSongbook], which is never walked), too long to weigh: that one is
- * counted against its key as written.
+ * The keys the Chords section's cells of [song], in the standard notation as the page plays it, are in, on the screen
+ * and in the PDF alike: at home, the home its [analysis] finds ([homeKeyOf]), else the key its `{key}` and its capo say
+ * the chords are in (`SongKeys.ofChords`, the one reading of a capo chart's key). The written key is weighed against the
+ * shapes only where the walk found no home, and never in a songbook ([isSongbook], which is never walked), too long to
+ * weigh: that one is counted against its key as written, with no key changes. Elsewhere a chord first played after a
+ * key change, directed or written out, is in the key it moved to ([ChordKeys.moved]), counted from the home's stretch.
  */
-internal fun degreeKeyOf(song: ChordProSong, analysis: SongScaleAnalysis?, isSongbook: Boolean) =
-    analysis?.let { homeKeyOf(it.groups) } ?: if (isSongbook) writtenKeyOf(song) else SongKeys.ofChords(song)
+internal fun chordKeysOf(song: ChordProSong, analysis: SongScaleAnalysis?, isSongbook: Boolean): ChordKeys? {
+    if (isSongbook) return writtenKeyOf(song)?.let { ChordKeys(it, emptyMap()) }
+    val homeGroup = analysis?.groups?.firstOrNull { it.isHome }
+    val home = analysis?.let { homeKeyOf(it.groups) } ?: SongKeys.ofChords(song) ?: return null
+    // The analysis's groups hold its numbered copies of the blocks, so the home's stretch is found among those.
+    val walked = if (homeGroup != null && analysis != null) song.copy(blocks = analysis.numbered) else song
+    return ChordKeys(home, SongKeys.keysOfChords(walked, homeGroup?.blocks?.firstOrNull(), home))
+}
 
 /**
  * The key [song], in the standard notation with its own `{transpose}` applied, is played in where its file names none:

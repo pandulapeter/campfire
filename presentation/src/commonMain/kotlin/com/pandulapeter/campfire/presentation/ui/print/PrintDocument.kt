@@ -19,12 +19,13 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
+import com.pandulapeter.campfire.presentation.ui.chords.groupedByKey
 import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleAnalysis
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
-import com.pandulapeter.campfire.presentation.ui.songView.model.degreeKeyOf
+import com.pandulapeter.campfire.presentation.ui.songView.model.chordKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleAnalysisOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleGroupsOf
 
@@ -90,22 +91,25 @@ internal data class PrintScaleRow(
 
 /**
  * One chord diagram of a [PrintSong]: the chord as the page names it, its letters where the page counts it
- * ([SongChord.letterName]), else its step of the key ([SongChord.degree]), and its shape.
+ * ([SongChord.letterName]), else its step of the key ([SongChord.degree]), its shape, and the key its group is headed
+ * with where it is first played in another key than the home's ([SongChord.keyName]).
  */
 internal data class PrintChord(
     val name: String,
     val letterName: String? = null,
     val degree: String? = null,
     val geometry: ChordDiagramGeometry,
+    val keyName: String? = null,
 )
 
 /**
  * The chords of [song], transposed as it is printed and still in the standard notation, named in [notation] and drawn
  * the way the song details screen's Chords section draws them
  * in [tuning]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
- * frame for a chord with none, so that the page and the screen finger every chord alike. With [showsDegrees], each is
- * labelled with its step of the key the screen counts it against ([degreeKeyOf], from [analysis]). Under a [capo] each is
- * the shape fingered above it, drawn where it is played with the capo across it, as on the screen.
+ * frame for a chord with none, so that the page and the screen finger every chord alike, and grouped by the key they
+ * are first played in as the screen groups them ([groupedByKey], [chordKeysOf], from [analysis]). With [showsDegrees],
+ * each is labelled with its step of that key. Under a [capo] each is the shape fingered above it, drawn where it is
+ * played with the capo across it, as on the screen.
  */
 internal fun printChordsOf(
     song: ChordProSong,
@@ -116,7 +120,8 @@ internal fun printChordsOf(
     analysis: SongScaleAnalysis? = null,
     capo: Int = 0,
 ): List<PrintChord> = songChordsOf(song, notation, tuning, capo = capo).let { chords ->
-    if (showsDegrees && chords.isNotEmpty()) chords.withDegrees(degreeKeyOf(song, analysis, song.isSongbook), notation) else chords
+    val keys = if (chords.isNotEmpty()) chordKeysOf(song, analysis, song.isSongbook) else null
+    chords.groupedByKey(keys, notation).let { grouped -> if (showsDegrees) grouped.withDegrees(keys, notation) else grouped }
 }.map { chord ->
     PrintChord(
         name = chord.name,
@@ -124,6 +129,7 @@ internal fun printChordsOf(
         degree = chord.degree,
         geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root, chord.capo) }
             ?: emptyChordDiagramGeometryOf(tuning.instrument),
+        keyName = chord.keyName,
     )
 }
 

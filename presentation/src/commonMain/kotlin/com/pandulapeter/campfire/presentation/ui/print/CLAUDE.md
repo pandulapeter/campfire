@@ -20,7 +20,7 @@ The PDF pipeline behind the export screen (`ui/screens/export`, which has the fo
 viewer shows it (transposition, chord spelling); a missing/unreadable file is a `PrintSong` with no song, keeping its
 slot. `PrintSong.chords` (`printChordsOf`, the reader's instrument) is collected whether or not diagrams are asked for,
 so toggling them re-lays out rather than re-reads; none while chords or diagrams are off in the app (which also hides
-the option). Each carries the screen's degree (`degreeKeyOf`, with the Chord degrees switch, no option of its own),
+the option). Each carries the screen's degree and key group (`chordKeysOf`, the degree with the Chord degrees switch, no option of its own),
 printed as a numbering's letters are, in the detail style on a line over the name, as on screen; one scale walk
 (`printScaleAnalysisOf`) serves the degrees and the scales. `PrintSong.scaleGroups` (`printScaleGroupsOf`, the song details screen's Scales section) likewise, put in
 words by the screen (`rememberPrintScales`) only while printed, since the layout cannot read resources. The setlist date uses the date picker's formatter in the app's language (`calendarLocale`).

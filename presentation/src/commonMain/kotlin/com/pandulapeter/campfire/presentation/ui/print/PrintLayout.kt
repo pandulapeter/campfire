@@ -262,7 +262,8 @@ private class PrintLayouter(
      * chord's name, under its second name where it has one, over its diagram, sized by the text so that they grow with
      * it, a row being one unit [place] keeps together, under the line naming the instrument and the tuning
      * ([PrintLabels.chordTuning]), which is not selectable for the reason the names are not: the importer would read it
-     * back as a line of the song.
+     * back as a line of the song. As on the screen, another key's chords ([PrintChord.keyName]) start a row of their own
+     * under a line naming the key, part of that row so that it is never left at the foot of a column.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChordDiagrams || chords.isEmpty()) return emptyList()
@@ -279,16 +280,28 @@ private class PrintLayouter(
         // As on the screen, every name stands under the room the section keeps for the second names over them, so that a
         // row's names share a line whichever chords the key counts.
         val secondHeight = cells.maxOf { cell -> cell.secondLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
-        val starts = balancedRowStarts(FloatArray(cells.size) { cells[it].width }, gap, columnWidth)
+        val groupStarts = cells.indices.filter { it == 0 || cells[it].chord.keyName != cells[it - 1].chord.keyName }
+        val starts = groupStarts.flatMapIndexed { group, start ->
+            val end = groupStarts.getOrNull(group + 1) ?: cells.size
+            balancedRowStarts(FloatArray(end - start) { cells[start + it].width }, gap, columnWidth).map { start + it }
+        }
         val rows = starts.mapIndexed { index, start -> cells.subList(start, starts.getOrNull(index + 1) ?: cells.size) }
         return rows.mapIndexed { index, row ->
             var x = 0f
             val parts = mutableListOf<Part>()
             val diagrams = mutableListOf<PrintDiagram>()
+            var headingHeight = 0f
+            row.first().chord.keyName?.takeIf { starts[index] in groupStarts }?.let { key ->
+                wrappedNameLines("${labels.key}: $key", printRows.chordStyle).forEach { line ->
+                    line.forEach { run -> parts += Part(run.text, x = 0f, y = headingHeight, style = run.style, isSelectable = false) }
+                    headingHeight += line.lineHeight()
+                }
+                headingHeight += gap
+            }
             // The diagrams of a row stand on one line, under the name of the cell that takes the most lines.
-            val rowNameHeight = secondHeight + row.maxOf { cell -> cell.nameLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
+            val rowNameHeight = headingHeight + secondHeight + row.maxOf { cell -> cell.nameLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
             row.forEach { cell ->
-                var lineTop = secondHeight - cell.secondLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat()
+                var lineTop = headingHeight + secondHeight - cell.secondLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat()
                 (cell.secondLines + cell.nameLines).forEach { line ->
                     line.forEach { run ->
                         val runX = (cell.width - printRows.measure(run.text, run.style)).coerceAtLeast(0f) / 2

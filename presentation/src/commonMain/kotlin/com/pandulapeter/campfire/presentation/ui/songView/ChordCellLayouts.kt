@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.withTexts
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
@@ -29,13 +30,16 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
  * height, and the rows they wrap into at the last few widths the layout asked about ([MAX_CHORD_ROW_WIDTHS], as
  * `TabRows` keeps them), shared by every slot of the section so that a width is broken into rows once. Everything is
  * measured as the composed cell was: the name in [chordStyle] under its second name, set smaller in the normal weight
- * on a line of its own, over a diagram growing with [fontScale], the cells [CELL_GAP] apart.
+ * on a line of its own, over a diagram growing with [fontScale], the cells [CELL_GAP] apart. The chords of a key other
+ * than the home's (`ChordCell.keyName`) start a row of their own under a heading naming it, [keyHeading] (a template
+ * taking the key as its `%1$s`) in [chordStyle], as the song's own key changes are set.
  *
  * None of this is state: it is filled in by whoever asks first, and the answers never change.
  */
 internal class ChordCellLayouts(
     val cells: List<ChordCell>,
     chordStyle: TextStyle,
+    keyHeading: String,
     textMeasurer: TextMeasurer,
     density: Density,
     fontScale: Float,
@@ -50,6 +54,17 @@ internal class ChordCellLayouts(
         val secondNameStyle = chordStyle.copy(fontSize = chordStyle.fontSize * SECOND_NAME_SIZE, fontWeight = FontWeight.Normal)
         cells.map { cell ->
             (cell.letterName ?: cell.degree)?.let { textMeasurer.measure(AnnotatedString(it), secondNameStyle, maxLines = 1, softWrap = false) }
+        }
+    }
+    /** Where each key's chords start, the home key's (or the only key's) at 0, see [chordRowStarts]. */
+    private val groupStarts = cells.indices.filter { it == 0 || cells[it].keyName != cells[it - 1].keyName }.toIntArray()
+
+    /** The heading over each cell starting another key's chords, null over every other cell. */
+    val headings by lazy(LazyThreadSafetyMode.NONE) {
+        cells.mapIndexed { index, cell ->
+            cell.keyName?.takeIf { index in groupStarts }?.let { key ->
+                textMeasurer.measure(AnnotatedString(keyHeading.withTexts(key)), chordStyle, maxLines = 1, softWrap = false)
+            }
         }
     }
     private val secondLineGap = with(density) { (SECOND_LINE_GAP * fontScale).roundToPx() }
@@ -81,9 +96,14 @@ internal class ChordCellLayouts(
     val cellWidths by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> maxOf(diagramSizes[cell].width, nameRowWidths[cell]) } }
     val cellHeights by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> nameRowHeights[cell] + diagramSizes[cell].height } }
 
-    /** Every cell on one line, which is what a slot answers for the widest it would be. */
-    val lineWidth by lazy(LazyThreadSafetyMode.NONE) { cellWidths.sum() + gap * (cells.size - 1).coerceAtLeast(0) }
-    val widestCell by lazy(LazyThreadSafetyMode.NONE) { cellWidths.maxOrNull() ?: 0 }
+    /** Every key's cells on one line, which is what a slot answers for the widest it would be. */
+    val lineWidth by lazy(LazyThreadSafetyMode.NONE) {
+        groupStarts.indices.maxOfOrNull { group ->
+            val cellsOfGroup = groupStarts[group] until (groupStarts.getOrNull(group + 1) ?: cells.size)
+            maxOf(cellsOfGroup.sumOf { cellWidths[it] } + gap * (cellsOfGroup.count() - 1), headings[groupStarts[group]]?.size?.width ?: 0)
+        } ?: 0
+    }
+    val widestCell by lazy(LazyThreadSafetyMode.NONE) { maxOf(cellWidths.maxOrNull() ?: 0, headings.maxOf { it?.size?.width ?: 0 }) }
     val geometries by lazy(LazyThreadSafetyMode.NONE) {
         cells.map { cell ->
             cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.tuning, cell.root, cell.capo) } ?: emptyChordDiagramGeometryOf(cell.tuning.instrument)
@@ -97,8 +117,11 @@ internal class ChordCellLayouts(
         recentWidths.remove(width)
         recentWidths.addLast(width)
         if (recentWidths.size > MAX_CHORD_ROW_WIDTHS) rowStartsByWidth.remove(recentWidths.removeFirst())
-        return rowStartsByWidth.getOrPut(width) { chordRowStarts(cellWidths, gap, width) }
+        return rowStartsByWidth.getOrPut(width) { chordRowStarts(cellWidths, groupStarts, gap, width) }
     }
+
+    /** How much row [row] is moved down by the heading over it, its gap counted in; 0 for a row under none. */
+    fun headingHeight(starts: IntArray, row: Int) = headings[starts[row]]?.let { it.size.height + gap } ?: 0
 
     /** The cells of row [row] when the rows start at [starts]. */
     fun cellsOfRow(starts: IntArray, row: Int) = starts[row] until (starts.getOrNull(row + 1) ?: cells.size)
@@ -115,14 +138,14 @@ internal class ChordCellLayouts(
         val starts = rowStartsAt(width)
         val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
         if (rows.isEmpty()) return 0
-        return rows.sumOf { rowHeight(starts, it) } + gap * (rows.last - rows.first) + if (rows.last < starts.size - 1) gap else 0
+        return rows.sumOf { headingHeight(starts, it) + rowHeight(starts, it) } + gap * (rows.last - rows.first) + if (rows.last < starts.size - 1) gap else 0
     }
 
     /** The cell under [x], [y] in the slots from [firstSlot] to [lastSlot] at [width] (see [chordCellAt]), -1 where none. */
     fun cellAt(x: Float, y: Float, width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean, isRightToLeft: Boolean): Int {
         val starts = rowStartsAt(width)
         val rows = slotRows(starts.size, firstSlot, lastSlot, isLastSlot)
-        return chordCellAt(x, y, width, starts, rows, cellWidths, cellHeights, gap, isRightToLeft)
+        return chordCellAt(x, y, width, starts, rows, cellWidths, cellHeights, IntArray(starts.size) { headingHeight(starts, it) }, gap, isRightToLeft)
     }
 
     /** The cells the slots from [firstSlot] to [lastSlot] show at [width], which a screen reader is told about. */

@@ -144,7 +144,9 @@ internal fun SongChordsSection(
  * the cells wrap into there. Each cell is drawn as it was composed: its names centred over its diagram, or its diagram
  * under a wider pair of names, the second name after the first and level with its bottom, top-aligned in its row and
  * mirrored in a right-to-left layout (the diagram itself never is: a guitar's low string stays on the left). A cell wider
- * than the block is held to it, its names clipped at its edge, as a composed cell was held to its row.
+ * than the block is held to it, its names clipped at its edge, as a composed cell was held to its row. A row starting
+ * another key's chords is drawn under its heading (`ChordCellLayouts.headings`), in the names' colour, part of that
+ * row's slot so that a cut never leaves it at the foot of a page.
  *
  * A cell whose chord is drawn with another shape than it was crossfades from the old diagram to the new one (see
  * [rememberChordShapeCrossfade]). Where [isAnimated], a cell a new width sends to another row, or a neighbour grown
@@ -275,6 +277,13 @@ private fun ChordRowsBlock(
                     motion.retain((starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: layouts.cells.size)).toSet())
                 }
                 for (row in rows) {
+                    layouts.headings[starts[row]]?.let { heading ->
+                        val headingWidth = minOf(heading.size.width, width)
+                        clipRect(right = width.toFloat(), bottom = y + heading.size.height.toFloat()) {
+                            drawText(textLayoutResult = heading, color = paint.nameColor, topLeft = Offset(if (isRightToLeft) (width - headingWidth).toFloat() else 0f, y.toFloat()))
+                        }
+                    }
+                    y += layouts.headingHeight(starts, row)
                     var x = 0
                     val rowHeight = layouts.rowHeight(starts, row)
                     for (cell in layouts.cellsOfRow(starts, row)) {

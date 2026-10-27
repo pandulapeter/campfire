@@ -23,7 +23,7 @@ class ChordRowsTest {
         val widths = intArrayOf(50, 50, 50)
         val heights = intArrayOf(80, 60, 70)
         fun at(x: Float, y: Float, isRightToLeft: Boolean = false) =
-            chordCellAt(x, y, width = 120, starts = intArrayOf(0, 2), rows = 0..1, cellWidths = widths, cellHeights = heights, gap = 10, isRightToLeft = isRightToLeft)
+            chordCellAt(x, y, width = 120, starts = intArrayOf(0, 2), rows = 0..1, cellWidths = widths, cellHeights = heights, headingHeights = IntArray(2), gap = 10, isRightToLeft = isRightToLeft)
         assertEquals(0, at(10f, 10f))
         assertEquals(1, at(70f, 75f))
         assertEquals(2, at(10f, 95f))
@@ -37,32 +37,48 @@ class ChordRowsTest {
     }
 
     @Test
+    fun `a row under a key's heading is hit below it`() {
+        fun at(y: Float) = chordCellAt(
+            10f, y, width = 120, starts = intArrayOf(0, 2), rows = 0..1, cellWidths = intArrayOf(50, 50, 50), cellHeights = intArrayOf(80, 60, 70),
+            headingHeights = intArrayOf(0, 30), gap = 10, isRightToLeft = false,
+        )
+        assertEquals(-1, at(100f))
+        assertEquals(2, at(125f))
+    }
+
+    @Test
+    fun `each key's chords start a row of their own and are balanced alone`() {
+        assertContentEquals(intArrayOf(0, 2, 4), chordRowStarts(IntArray(5) { 56 }, groupStarts = intArrayOf(0, 2), gap = 6, width = 2 * 56 + 6))
+        assertContentEquals(intArrayOf(0, 3), chordRowStarts(IntArray(5) { 56 }, groupStarts = intArrayOf(0, 3), gap = 6, width = Int.MAX_VALUE))
+    }
+
+    @Test
     fun `a chunk is hit from its own first row`() {
         assertEquals(
             2,
-            chordCellAt(10f, 5f, width = 120, starts = intArrayOf(0, 2), rows = 1..1, cellWidths = intArrayOf(50, 50, 50), cellHeights = intArrayOf(80, 60, 70), gap = 10, isRightToLeft = false),
+            chordCellAt(10f, 5f, width = 120, starts = intArrayOf(0, 2), rows = 1..1, cellWidths = intArrayOf(50, 50, 50), cellHeights = intArrayOf(80, 60, 70), headingHeights = IntArray(2), gap = 10, isRightToLeft = false),
         )
     }
 
     @Test
     fun `cells flow into rows at the width`() {
-        assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 118))
-        assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 117))
-        assertContentEquals(intArrayOf(0), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = Int.MAX_VALUE))
+        assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(56, 56, 56), groupStarts = intArrayOf(0), gap = 6, width = 118))
+        assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 56, 56), groupStarts = intArrayOf(0), gap = 6, width = 117))
+        assertContentEquals(intArrayOf(0), chordRowStarts(intArrayOf(56, 56, 56), groupStarts = intArrayOf(0), gap = 6, width = Int.MAX_VALUE))
     }
 
     @Test
     fun `the cells are shared out evenly between as few rows as the width allows`() {
         // Six of nine fit on a line: two rows still, but five over four rather than six over three.
-        assertContentEquals(intArrayOf(0, 5), chordRowStarts(IntArray(9) { 56 }, gap = 6, width = 6 * 56 + 5 * 6))
-        assertContentEquals(intArrayOf(0, 4, 7), chordRowStarts(IntArray(10) { 56 }, gap = 6, width = 4 * 56 + 3 * 6))
-        assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(100, 56, 56, 56), gap = 6, width = 250))
+        assertContentEquals(intArrayOf(0, 5), chordRowStarts(IntArray(9) { 56 }, groupStarts = intArrayOf(0), gap = 6, width = 6 * 56 + 5 * 6))
+        assertContentEquals(intArrayOf(0, 4, 7), chordRowStarts(IntArray(10) { 56 }, groupStarts = intArrayOf(0), gap = 6, width = 4 * 56 + 3 * 6))
+        assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(100, 56, 56, 56), groupStarts = intArrayOf(0), gap = 6, width = 250))
     }
 
     @Test
     fun `a cell wider than the width is a row of its own`() {
-        assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 200, 56), gap = 6, width = 120))
-        assertEquals(0, chordRowStarts(IntArray(0), gap = 6, width = 120).size)
+        assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 200, 56), groupStarts = intArrayOf(0), gap = 6, width = 120))
+        assertEquals(0, chordRowStarts(IntArray(0), groupStarts = intArrayOf(0), gap = 6, width = 120).size)
     }
 
     @Test

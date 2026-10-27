@@ -31,9 +31,11 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  *   scale was chosen for, so it is never one, and a rock riff's triads keep the minor pentatonic throughout by design.
  *
  * A section is one moment, and so is a chord wherever it is played, together with the chords whose scales are the same
- * notes (a V and its V7; a ii–V of another key, named by that key). Moments are ranked by how much of the song they last ([Moment]),
- * a key or a chord outside the scales weighing double a centre or a dominant the scales hold, and nothing is suggested
- * to fill the budget.
+ * notes (a V and its V7; a ii–V of another key, named by that key). A part in another key comes first, said on its key
+ * or on its centre, since while it lasts every note of the home is in question, not one chord's: a verse written out a
+ * minor third up is never left under the home for the home's own secondary dominants. The rest are ranked by how much
+ * of the song they last ([Moment]), a chord outside the scales weighing double a centre or a dominant the scales hold,
+ * and nothing is suggested to fill the budget.
  */
 public object SongScaleSuggestions {
 
@@ -50,9 +52,10 @@ public object SongScaleSuggestions {
         if (groups.isEmpty()) return emptyList()
         val totals = Totals(groups)
         val home = groups.maxBy { it.chords.size }.takeIf { it.chords.size * 2 >= totals.chords }
+        // Weighed by its share of the chords, a key played once would lose to any exception coming back in two plays.
         val candidates = (home?.let { sectionMomentsOf(groups, it) }.orEmpty() + chordMomentsOf(groups, totals))
             .filter { it.countsIn(totals) }
-            .sortedWith(compareByDescending<Moment> { it.weight * it.shareOf(totals) }.thenByDescending { it.count })
+            .sortedWith(compareByDescending<Moment> { it is SectionMoment && it.weight == KEY_WEIGHT }.thenByDescending { it.weight * it.shareOf(totals) }.thenByDescending { it.count })
         return rowsOf(song, groups, home, chosenOf(candidates, home, totals.parts))
     }
 
@@ -216,9 +219,8 @@ public object SongScaleSuggestions {
      * The best of [candidates], ranked, at most [MAX_MOMENTS] of them, a section never twice (a part both in another
      * key and on a centre of its own is said once). A chord is played over the scales of the row each part playing it is
      * shown in, a key's or a centre's, else [home]'s, so it is a moment only where one of those leaves it out; the slot
-     * one that is not held goes to the next candidate that is, a section included (a modulated solo's own exceptions
-     * outrank it by their plays across the song, which the home holds). With no home, every group is shown, so that holds
-     * of all.
+     * one that is not held goes to the next candidate that is, a section included (a modulated solo's own exceptions,
+     * played all song, are held at home). With no home, every group is shown, so that holds of all.
      */
     private fun chosenOf(candidates: List<Moment>, home: PlayedGroup?, parts: List<PlayedPart>): List<Moment> {
         val chosen = mutableListOf<Moment>()

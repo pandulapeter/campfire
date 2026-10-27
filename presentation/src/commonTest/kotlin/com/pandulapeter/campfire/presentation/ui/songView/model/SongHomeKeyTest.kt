@@ -119,6 +119,28 @@ class SongHomeKeyTest {
     }
 
     @Test
+    fun `a chord first played in a verse written out in another key is counted from that key`() {
+        val verse = "{start_of_verse}\n[F]la [Bb]la [Bbm]la [G/F]la [C7]la [F]la\n{end_of_verse}"
+        val chorus = "{start_of_chorus}\n[Gm]la [C]la [Am]la [Dm]la [Gm]la [C]la [F]la\n{end_of_chorus}"
+        val raised = "{start_of_verse}\n[Ab]la [Db]la [Dbm]la [Bb/Ab]la [Eb7]la [Ab]la\n{end_of_verse}"
+        val song = model("{key: F}\n$verse\n$chorus\n$verse\n$chorus\n$raised\n$chorus")
+        assertEquals(
+            listOf("I", "IV", "iv", "II/1", "V7", "ii", "V", "iii", "vi", "I", "IV", "iv", "II/1", "V7"),
+            song.chords.map { it.degree },
+        )
+        assertEquals(List(9) { null } + List(5) { "A♭" }, song.chords.map { it.keyName })
+    }
+
+    @Test
+    fun `chords first played in another key follow the home key's, even those played after the key returns`() {
+        val home = "{start_of_verse}\n[C]la [F]la [G]la [Am]la [C]la\n{end_of_verse}"
+        val raised = "{start_of_verse}\n[D]la [G]la [A]la [Bm]la [D]la\n{end_of_verse}"
+        val song = model("{key: C}\n$home\n$home\n$raised\n$home\n{start_of_outro}\n[F]la [Dm]la [G]la [C]la\n{end_of_outro}", showsDegrees = false)
+        assertEquals(listOf("C", "F", "G", "Am", "Dm", "D", "A", "Bm"), song.chords.map { it.name })
+        assertEquals(List(5) { null } + List(3) { "D" }, song.chords.map { it.keyName })
+    }
+
+    @Test
     fun `a numbering names no degree, nor does a switched off label`() {
         val text = "{key: C}\n[C]la [F]la [G]la [C]la"
         assertEquals(listOf(null, null, null), model(text, notation = ChordNotation.ROMAN).chords.map { it.degree })

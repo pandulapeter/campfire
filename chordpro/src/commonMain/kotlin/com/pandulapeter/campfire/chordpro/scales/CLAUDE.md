@@ -79,10 +79,11 @@
   chords whose scales are one set of notes are one (a V and its V7; a ii–V of another key, named by that key's major,
   or by the home's own scale where one of them is on the home root or the notes are the home root's major, natural
   minor, Dorian, or Mixolydian); a chord counts only where the row it is played under leaves it out, its slot going to
-  the next candidate, a section too (a modulated solo's own exceptions, played all song, outrank it but are held at
-  home). A section is weighed by its share of the chords, a chord by its share of the plays (it may be held),
-  and it must be one chord in 32 or come back in two plays; a key or an exception counts double. Nothing fills an
-  unused slot. With no home, every group is shown.
+  the next candidate, a section too (a modulated solo's own exceptions, played all song, are held at home). A part in
+  another key (a key, or a centre in one) comes first, a verse written out a minor third up never left under the home
+  for its secondary dominants; then a section is weighed by its share of the chords, a chord by its share of the plays
+  (it may be held), and it must be one chord in 32 or come back in two plays; an exception or a centre in another key
+  counts double. Nothing fills an unused slot. With no home, every group is shown.
 - **What is suggested is `PlayableScales`**, not bare containment: the seven-note home scale holding the chords, the
   pentatonic sharing its third (the major and the minor; the minor 6 and dominant pentatonics are offered only where
   they hold the chords, as any other scale) and the blues (a group's row is built on the group's home, every other holder of its
@@ -98,6 +99,7 @@
 - **`SongKeys` is the one reading of `{key}`** everything naming a song's key goes through (header, lists, Transposition
   control, degrees, scales): a capo chart's written key is its chords' own unless it holds nothing of the song whole and
   the capo's shapes' key does (`SongScaleGroups.keyOfChordsIn`, the rule above). Shift-invariant, so the sounding song
-  reads as the file does; `withKeyOfChords` renames the key before a transposition.
+  reads as the file does; `withKeyOfChords` renames the key before a transposition. `keysOfChords` is the key each
+  chord's first play is in after a key change, directed or written out, which the degrees count from.
 - A chord sheet puts its quality's textbook scales first (`ChordScaleChoices`), and an altered dominant (♭9, ♭5, ♯5) is
   never a blues.
