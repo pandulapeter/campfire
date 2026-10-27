@@ -35,8 +35,10 @@ internal class AbcRendererImpl : AbcRenderer {
         }
     } catch (exception: CancellationException) {
         throw exception
-    } catch (exception: Exception) {
-        AbcRendering.Failed(exception.message ?: exception.toString())
+    } catch (throwable: Throwable) {
+        // A native library that cannot be loaded (a noexec temporary folder, an install missing its ABI) is an Error, not
+        // an Exception, and the contract is that the tune is then shown as its text rather than the app going down.
+        AbcRendering.Failed(throwable.message ?: throwable.toString())
     }
 
     // Chord symbols, annotations, and lyrics are set at the size of the page's own chords and lyrics rather than
