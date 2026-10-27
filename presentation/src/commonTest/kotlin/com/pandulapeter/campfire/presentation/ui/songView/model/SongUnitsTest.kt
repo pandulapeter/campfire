@@ -45,6 +45,12 @@ class SongUnitsTest {
     }
 
     @Test
+    fun `a folded section plays none of its lines`() {
+        assertContentEquals(intArrayOf(5), SongUnits.of(listOf(verseWithStanzas())) { false }.playedLineCount)
+        assertContentEquals(intArrayOf(0), SongUnits.of(listOf(verseWithStanzas()), isFolded = { true }) { false }.playedLineCount)
+    }
+
+    @Test
     fun `the metadata and the rows of chord diagrams are no lines`() {
         val chords = RenderSection.Chords(cells = List(3) { cell }, isFolded = false)
         val units = SongUnits.of(listOf(RenderSection.Metadata(ChordProMetadata()), chords)) { true }

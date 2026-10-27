@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
@@ -40,7 +41,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
@@ -66,8 +69,8 @@ import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
  * @param pageKey What the pager keys a song's page by, see [rememberPageKeys].
  * @param pageScrollStates The scroll of every page that is composed, by page, which a step back from the top of a song
  *   puts at the end of the one before it.
- * @param onCurrentPage Handed the scroll and the stepper of the page being read, which the keys and the step buttons
- *   drive.
+ * @param onCurrentPage Handed the scroll, the stepper, and the scroller of the page being read, which the keys, the
+ *   step buttons, and the controls of a song that scrolls by itself drive.
  */
 @Composable
 internal fun SongPages(
@@ -92,7 +95,7 @@ internal fun SongPages(
     pageContentPadding: PaddingValues,
     chordDiagrams: ChordDiagrams?,
     isViewportSettled: () -> Boolean,
-    onCurrentPage: (ScrollState, SongStepper) -> Unit,
+    onCurrentPage: (ScrollState, SongStepper, SongAutoScroller) -> Unit,
 ) {
     val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
     val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
@@ -106,6 +109,7 @@ internal fun SongPages(
     val tabs = rememberTabReading(userPreferences)
     val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled != false
     val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
+    val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
         // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
@@ -130,10 +134,12 @@ internal fun SongPages(
         }
         val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
         val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
+        val autoScroller = remember(scrollState, flingBehavior) { SongAutoScroller(scrollState, flingBehavior) }
+        SideEffect { flingBehavior.isCapped = !isContinuous }
         DisposableEffect(song.fileName) {
             onDispose { songTimings.remove(song.fileName) }
         }
-        if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper) }
+        if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper, autoScroller) }
         // Only the song being read follows a pinch, and the viewport's height, frame by frame; the pages beside it are
         // composed and laid out too, and take the scale once it has settled, or as soon as the pager starts moving, and
         // the height the viewport last rested at. A swipe makes its page the target, which follows at once.
@@ -172,6 +178,13 @@ internal fun SongPages(
         val shapeCapo = playback.shapeCapoFor(userPreferences)
         val tempo = playback.tempo
         val capo = playback.capo
+        SideEffect {
+            autoScroller.pace = SongAutoScroller.OwnPace(
+                duration = song.duration,
+                bpm = tempo.bpm,
+                beatsPerBar = (song.time?.let(TimeSignature::parse) ?: TimeSignature.COMMON_TIME).beats,
+            )
+        }
         SongDetailsPage(
             // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
             // draws past its end off the page of the next song. The page's own padding holds the cards'
@@ -270,6 +283,7 @@ internal fun SongPages(
             },
             tabs = tabs,
             showsDegrees = showsDegrees,
+            isContinuous = isContinuous,
             scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,

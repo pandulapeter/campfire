@@ -59,9 +59,13 @@ import kotlinx.coroutines.launch
  * without detectable auto-repeat), a held key still steps per repeat. A scroll keeps taking every repeat, which is
  * what makes a held arrow scroll continuously.
  *
+ * Space plays and stops a song that scrolls by itself ([onToggleAutoScroll]), once a press, as a step key steps once.
+ *
  * Ctrl / Cmd + E opens the editor, the way the overflow menu's Edit does, so not in performance mode, where there is none.
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
  *
+ * @param onToggleAutoScroll Plays or stops the song scrolling by itself, null where it is laid out in pages; Space is
+ *   then left alone.
  * @param onEdit Opens the editor on the song being read, or null where it cannot be edited; the key is then left alone.
  * @param onSave Ctrl / Cmd + S, for a preview of songs an import has not written yet to press its button with, as the
  *   import sheets' and the editor's Save are pressed; null where there is nothing to press, which leaves the key alone.
@@ -88,6 +92,7 @@ internal fun Modifier.songKeyboardShortcuts(
     onStepBack: (() -> Unit)?,
     onStepForward: (() -> Unit)?,
     isUncovered: Boolean,
+    onToggleAutoScroll: (() -> Unit)?,
     onEdit: (() -> Unit)?,
     onSave: (() -> Unit)?,
 ): Modifier {
@@ -142,6 +147,7 @@ internal fun Modifier.songKeyboardShortcuts(
             val step = when (keyEvent.key) {
                 Key.DirectionUp, Key.PageUp -> onStepBack
                 Key.DirectionDown, Key.PageDown -> onStepForward
+                Key.Spacebar -> onToggleAutoScroll
                 else -> null
             }
             if (step != null) {

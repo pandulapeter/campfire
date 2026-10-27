@@ -146,6 +146,9 @@ sealed interface DialogType {
      */
     data object SongDisplay : DialogType
 
+    /** Pages or one column that scrolls by itself, asked over the first song opened, see `AskForSongLayoutOnce`. */
+    data object SongLayout : DialogType
+
     /** The tuner over the song being read, opened from the song's tuner button (or its overflow menu); it listens while it is up. */
     data object Tuner : DialogType
     /**

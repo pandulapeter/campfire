@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songDisplay
 
 import androidx.compose.runtime.Composable
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -24,13 +25,21 @@ import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions_description
+import com.pandulapeter.campfire.presentation.resources.settings_song_layout
+import com.pandulapeter.campfire.presentation.resources.settings_song_layout_description
+import com.pandulapeter.campfire.presentation.resources.song_layout_continuous
+import com.pandulapeter.campfire.presentation.resources.song_layout_pages
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
- * What a song's page shows besides its words, in the Preferences tab and in the song display sheet: whether a reader
- * sees the chords at all, and what the app adds to them and to the song's sections. Each only hides, and each is
+ * How a song's page is read, in the Preferences tab and in the song display sheet: first its layout, pages or one column
+ * that scrolls by itself, the one choice here that changes how the page is used rather than what is on it, and so a
+ * segmented control rather than one more switch; then whether a reader sees the chords at all, and what the app adds to
+ * them and to the song's sections. Each only hides, and each is
  * disabled rather than hidden while another takes what it adds, since what it is set to is still what the songs will
  * open with once that is back.
  */
@@ -39,6 +48,19 @@ internal fun SongPageSection(
     userPreferences: UserPreferences?,
     preferencesController: PreferencesController,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_song_page)) {
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_song_layout),
+        description = stringResource(Res.string.settings_song_layout_description),
+    ) {
+        SegmentedChoice(
+            options = listOf(
+                SongLayout.PAGES to stringResource(Res.string.song_layout_pages),
+                SongLayout.CONTINUOUS to stringResource(Res.string.song_layout_continuous),
+            ),
+            selected = userPreferences?.songLayout,
+            onSelected = preferencesController::setSongLayout,
+        )
+    }
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     val areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false
     SwitchListItem(

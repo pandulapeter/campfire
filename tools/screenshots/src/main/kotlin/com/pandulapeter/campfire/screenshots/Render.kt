@@ -178,6 +178,7 @@ private fun prepareLibrary(
             "uiMode" to JsonPrimitive(shot.uiMode.id),
             "language" to JsonPrimitive(shot.language.id),
             "seenWhatsNewVersions" to JsonArray((seenVersions + versionName).distinct().map(::JsonPrimitive)),
+            "isSongLayoutChosen" to JsonPrimitive(true),
         ),
     )
     File(target, "preferences").mkdirs()

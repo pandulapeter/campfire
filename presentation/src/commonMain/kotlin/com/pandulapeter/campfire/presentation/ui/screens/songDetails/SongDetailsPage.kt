@@ -125,6 +125,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param chordDiagrams What the song's Chords section is drawn with, null where it has none.
  * @param tabs Who the song's tabs are chosen for and moved to, null until the preferences are read.
  * @param showsDegrees Whether the Chords section labels each diagram with the step of the key its chord stands on.
+ * @param isContinuous Whether the song is laid out in one column that scrolls by itself (`SongLayout.CONTINUOUS`) rather
+ *   than in pages: neither measured against the screen nor padded to it, and cut into a piece a line, so that its rows
+ *   say where every line is, which is what it is timed by (see `autoScroll.AutoScrollTrack`).
  */
 @Composable
 internal fun SongDetailsPage(
@@ -165,6 +168,7 @@ internal fun SongDetailsPage(
     scaleSuggestions: ScaleSuggestions?,
     tabs: TabReading?,
     showsDegrees: Boolean,
+    isContinuous: Boolean,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -350,7 +354,7 @@ internal fun SongDetailsPage(
                             bottom = bottomPadding,
                         ),
                     model = model,
-                    availableHeight = settled.height - topPadding - bottomPadding,
+                    availableHeight = if (isContinuous) Dp.Unspecified else settled.height - topPadding - bottomPadding,
                     // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                     extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                     sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
@@ -373,14 +377,16 @@ internal fun SongDetailsPage(
                             viewport = latestViewport,
                         )
                     },
-                    rowViewportHeight = { liveViewportHeight },
+                    rowViewportHeight = if (isContinuous) NO_ROW_VIEWPORT else { { liveViewportHeight } },
                     rowViewportTopPadding = topPadding,
                     rowViewportBottomPadding = bottomPadding,
                     // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                     // them their own width and a gap.
                     stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-                    keepsStepButtonInset = keepsStepButtonInset,
+                    // The controls of the scroll are in the step buttons' column whatever the song.
+                    keepsStepButtonInset = keepsStepButtonInset || isContinuous,
                     canCutSections = true,
+                    isSingleColumn = isContinuous,
                     chordDiagrams = frame.chordDiagrams,
                     scaleSuggestions = frame.scaleSuggestions,
                 )
@@ -433,6 +439,9 @@ private class ContinuousChangeTracker {
 }
 
 private val PAGE_BOTTOM_PADDING = 16.dp
+
+/** What a song in one column pads its rows to: nothing, since it is not read a row at a time. */
+private val NO_ROW_VIEWPORT = { Dp.Unspecified }
 
 private const val CONTINUOUS_CHANGE_MILLIS = 200L
 

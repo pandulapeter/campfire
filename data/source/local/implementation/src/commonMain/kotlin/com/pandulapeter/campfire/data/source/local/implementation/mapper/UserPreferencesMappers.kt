@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
@@ -40,6 +41,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     isCoverArtEnabled = isCoverArtEnabled,
     isSongDetailsLookupEnabled = isSongDetailsLookupEnabled,
     shouldNumberSections = shouldNumberSections,
+    songLayout = SongLayout.entries.firstOrNull { it.id == songLayout } ?: SongLayout.PAGES,
+    isSongLayoutChosen = isSongLayoutChosen,
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
@@ -69,6 +72,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     transpositions = transpositions,
     tempos = tempos.filterValues { it in MetronomeSettings.TEMPO_RANGE },
     capos = capos.filterValues { it in Song.CAPO_RANGE },
+    autoScrollSpeeds = autoScrollSpeeds.filterValues { it in SongLayout.AUTO_SCROLL_SPEED_RANGE },
     beatLevels = beatLevels.mapValues { (_, bySignature) -> bySignature.filterValues { it.isNotEmpty() } }.filterValues { it.isNotEmpty() },
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toSet() }.filterValues { it.isNotEmpty() },
     tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
@@ -103,6 +107,8 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isCoverArtEnabled = isCoverArtEnabled,
     isSongDetailsLookupEnabled = isSongDetailsLookupEnabled,
     shouldNumberSections = shouldNumberSections,
+    songLayout = songLayout.id,
+    isSongLayoutChosen = isSongLayoutChosen,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
     notation = chordSpelling.notation.id,
@@ -125,6 +131,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     transpositions = transpositions,
     tempos = tempos,
     capos = capos,
+    autoScrollSpeeds = autoScrollSpeeds,
     beatLevels = beatLevels,
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toList() },
     tagMatchMode = tagMatchMode.id,

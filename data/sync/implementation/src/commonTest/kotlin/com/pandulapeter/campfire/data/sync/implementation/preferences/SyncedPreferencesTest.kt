@@ -236,6 +236,15 @@ class SyncedPreferencesTest {
     }
 
     @Test
+    fun `a song's scroll speed is read and written beside its other values, one out of range left out`() {
+        val preferences = SyncedPreferences(capos = mapOf("a.cho" to 2), autoScrollSpeeds = mapOf("a.cho" to 130))
+        val document = document("""{"a.cho":{"capo":2,"autoScrollSpeed":130}}""")
+        assertEquals(document, SyncedPreferencesDocument.localDocument(base = null, preferences = preferences))
+        assertEquals(preferences, SyncedPreferencesDocument.preferencesOf(document))
+        assertEquals(emptyMap(), SyncedPreferencesDocument.preferencesOf(document("""{"a.cho":{"autoScrollSpeed":4000}}""")).autoScrollSpeeds)
+    }
+
+    @Test
     fun `a song's accents holding a signature this version cannot read pass through whole`() {
         val base = document("""{"a.cho":{"beatLevels":{"3/4":["accent","normal","normal"],"5/4":[1,2,3,4,5]}}}""")
         assertEquals(SyncedPreferences(), SyncedPreferencesDocument.preferencesOf(base))

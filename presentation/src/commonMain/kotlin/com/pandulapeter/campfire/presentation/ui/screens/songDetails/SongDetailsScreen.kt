@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -48,6 +49,7 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
@@ -131,6 +133,7 @@ internal fun SongDetailsScreen(
         if (!isImportPreview && resolvedSongs?.isEmpty() == true && viewModel.navigator.backStack.lastOrNull() == destination) onBack()
     }
     CloseImportPreviewWithoutReview(viewModel = viewModel, destination = destination, importPreview = importPreview, onBack = onBack)
+    if (!isImportPreview) AskForSongLayoutOnce(viewModel = viewModel, userPreferences = userPreferences)
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
     val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
@@ -199,12 +202,21 @@ internal fun SongDetailsScreen(
     // pager bar's buttons. Both are decided again at the time of the press.
     val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
     val hasNextSongToStepTo = canPage && pagerState.targetPage < songs.lastIndex
-    val canStepBackInSong = currentPageStepper?.canStepBack == true
-    val canStepForwardInSong = currentPageStepper?.canStepForward == true
+    // A song in one column scrolls by itself, and the step buttons, their keys, and a tap only nudge it there.
+    val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
+    val autoScrolling = rememberSongAutoScrolling(
+        isContinuous = isContinuous,
+        currentPage = pagerState.currentPage,
+        songFileName = currentSong?.fileName,
+        storedSpeed = currentSong?.let { userPreferences?.autoScrollSpeeds?.get(it.fileName) } ?: SongLayout.DEFAULT_AUTO_SCROLL_SPEED,
+    )
+    val canStepBackInSong = if (isContinuous) autoScrolling.scroller?.canNudge(-1) == true else currentPageStepper?.canStepBack == true
+    val canStepForwardInSong = if (isContinuous) autoScrolling.scroller?.canNudge(1) == true else currentPageStepper?.canStepForward == true
     // A tap the song was dragged under steps from where the drag began (from), the rest from where the song is.
     fun stepBack(from: Int? = null) {
         val stepper = currentPageStepper
-        if (stepper?.canStep(-1, from) == true) {
+        if (isContinuous && autoScrolling.nudge(-1)) return
+        if (!isContinuous && stepper?.canStep(-1, from) == true) {
             coroutineScope.launch { stepper.step(-1, from) }
         } else if (pagerState.targetPage > 0) {
             // Going back from the top of a song is going back to the last lines of the one before it, and landing on its
@@ -216,7 +228,12 @@ internal fun SongDetailsScreen(
     }
     fun stepForward(from: Int? = null) {
         val stepper = currentPageStepper
-        if (stepper?.canStep(1, from) == true) coroutineScope.launch { stepper.step(1, from) } else if (pagerState.targetPage < songs.lastIndex) pageStepper.step(1)
+        if (isContinuous && autoScrolling.nudge(1)) return
+        if (!isContinuous && stepper?.canStep(1, from) == true) {
+            coroutineScope.launch { stepper.step(1, from) }
+        } else if (pagerState.targetPage < songs.lastIndex) {
+            pageStepper.step(1)
+        }
     }
     val stepBackAction: (from: Int?) -> Unit = ::stepBack
     val stepForwardAction: (from: Int?) -> Unit = ::stepForward
@@ -250,6 +267,7 @@ internal fun SongDetailsScreen(
                 isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
+                onToggleAutoScroll = autoScrolling::togglePlaying.takeIf { isContinuous },
                 onEdit = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
                 onSave = importPreview?.let { preview ->
                     // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
@@ -343,9 +361,17 @@ internal fun SongDetailsScreen(
                 hasNextSongToStepTo = hasNextSongToStepTo,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
-                onCurrentPage = { scrollState, stepper ->
+                isContinuous = isContinuous,
+                autoScrolling = autoScrolling,
+                // Read only mode changes nothing about how a song is read, and a preview writes no override.
+                showsAutoScrollSpeed = !isReadOnly,
+                onAutoScrollSpeedChosen = {
+                    autoScrolling.speedToWrite()?.let { (fileName, speed) -> viewModel.preferencesController.setAutoScrollSpeed(fileName, speed) }
+                },
+                onCurrentPage = { scrollState, stepper, autoScroller ->
                     currentPageScrollState = scrollState
                     currentPageStepper = stepper
+                    autoScrolling.scroller = autoScroller
                 },
             )
         }
@@ -413,6 +439,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
     isUncovered: Boolean,
     stepBack: (from: Int?) -> Unit,
     stepForward: (from: Int?) -> Unit,
+    onToggleAutoScroll: (() -> Unit)?,
     onEdit: (() -> Unit)?,
     onSave: (() -> Unit)?,
 ) = songKeyboardShortcuts(
@@ -429,6 +456,7 @@ private fun Modifier.songDetailsKeyboardShortcuts(
         null
     },
     isUncovered = isUncovered,
+    onToggleAutoScroll = onToggleAutoScroll,
     onEdit = onEdit,
     onSave = onSave,
     onPreviousSong = if (hasPreviousSong) {

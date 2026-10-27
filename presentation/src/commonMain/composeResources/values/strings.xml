@@ -448,6 +448,8 @@
     <string name="settings_group_legal">Legal</string>
     <string name="settings_number_sections">Number sections</string>
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
+    <string name="settings_song_layout">Layout</string>
+    <string name="settings_song_layout_description">Pages fit the most of a song on the screen at once. Continuous is one column that can scroll by itself at the song\'s pace.</string>
     <string name="settings_song_cards">Song cards</string>
     <string name="settings_song_cards_description">What each song shows under its artist in the lists.</string>
     <string name="card_detail_key">Key</string>
@@ -942,6 +944,15 @@
     <string name="song_details_step_progress_section">Section %1$d of %2$d</string>
     <string name="song_details_scroll_up">Scroll up</string>
     <string name="song_details_scroll_down">Scroll down</string>
+    <string name="song_details_auto_scroll_play">Start scrolling</string>
+    <string name="song_details_auto_scroll_pause">Stop scrolling</string>
+    <string name="song_details_auto_scroll_speed">Scroll speed</string>
+    <string name="song_layout_title">How do you read songs?</string>
+    <string name="song_layout_message">You can change this any time in a song\'s Preferences.</string>
+    <string name="song_layout_pages">Pages</string>
+    <string name="song_layout_pages_description">The most of the song on the screen at once, in columns turned a page at a time</string>
+    <string name="song_layout_continuous">Continuous</string>
+    <string name="song_layout_continuous_description">One column that scrolls by itself at the song\'s pace, at a speed you set for each song</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transpose up</string>
@@ -1170,6 +1181,7 @@
     <string name="onboarding_instrument_strings">The tuner will listen for %1$s</string>
     <string name="onboarding_notation_title">How do you write chords?</string>
     <string name="onboarding_notation_message">Pick how chords are shown. Songs are always saved the standard way, so they read the same in every app.</string>
+    <string name="onboarding_song_layout_message">Turn the pages yourself, or let the song scroll at its own pace while you play.</string>
     <string name="onboarding_feature_chords_description">Chords above the lyrics, in any key, with diagrams drawn for your instrument. Only singing? Untick it for lyrics only.</string>
     <string name="onboarding_feature_metronome_description">Keeps the beat at each song\'s tempo, in songs and on a screen of its own</string>
     <string name="onboarding_feature_tuner_description">Tunes your instrument through the microphone, in songs and on a screen of its own</string>

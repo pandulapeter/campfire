@@ -357,6 +357,18 @@ private fun OnboardingStepPage(
             onSelected = viewModel.preferencesController::setNotation,
         )
 
+        OnboardingStep.SONG_LAYOUT -> {
+            // Seen is answered: the pages are what is shown as picked, and Next takes them.
+            val isCurrent = viewModel.navigator.onboardingStep == step
+            LaunchedEffect(isCurrent) { if (isCurrent) viewModel.preferencesController.markSongLayoutChosen() }
+            SongLayoutStep(
+                markModifier = markModifier,
+                selected = userPreferences?.songLayout,
+                isCompact = isCompact,
+                onSelected = viewModel.preferencesController::setSongLayout,
+            )
+        }
+
         OnboardingStep.SYNC -> {
             val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
             SyncStep(

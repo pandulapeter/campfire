@@ -10,7 +10,7 @@
 # data/sync/preferences
 
 `preferences.json` sits at the top of the cloud folder, never listed by the engine: the per-song overrides
-(transposition, tempo, capo, `beatLevels`), chord shapes (`chords`), and tag colors (`tags`); `chords` and `tags` are
+(transposition, tempo, capo, `autoScrollSpeed`, `beatLevels`), chord shapes (`chords`), and tag colors (`tags`); `chords` and `tags` are
 written only once non-empty, so older documents keep their bytes.
 
 - Settled by `SyncedPreferencesSync` only after a run the engine completed: a three-way merge, value by value, of this

@@ -271,7 +271,10 @@ internal fun SongLyrics(
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
     // row of diagrams or chips. A folded section is one, since what is left of it is its header.
     val units = remember(sections, foldedSections, canCutSections) {
-        SongUnits.of(sections) { section ->
+        SongUnits.of(
+            sections = sections,
+            isFolded = { section -> section is RenderSection.Lines && section.foldKey in foldedSections },
+        ) { section ->
             when (section) {
                 is RenderSection.Lines -> canCutSections && section.foldKey !in foldedSections
                 // Folded, it is one item - its pill - whatever this says.

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
@@ -216,6 +217,18 @@ internal class PreferencesController(
     fun setSetlistCardDetails(value: UserPreferences.CardDetails) = changeUserPreferences { copy(setlistCardDetails = value) }
 
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
+
+    /** Picking a layout also answers the question the first song opened asks about it. */
+    fun setSongLayout(value: SongLayout) = changeUserPreferences { copy(songLayout = value, isSongLayoutChosen = true) }
+
+    /** The question about the layout has been put, in the onboarding or over a song, and is not asked again. */
+    fun markSongLayoutChosen() = changeUserPreferences { if (isSongLayoutChosen) this else copy(isSongLayoutChosen = true) }
+
+    /** The song's own pace is no entry, so that a song dragged back to it is as if it had never been changed. */
+    fun setAutoScrollSpeed(songFileName: String, speed: Int) = changeUserPreferences {
+        val clamped = speed.coerceIn(SongLayout.AUTO_SCROLL_SPEED_RANGE)
+        copy(autoScrollSpeeds = if (clamped == SongLayout.DEFAULT_AUTO_SCROLL_SPEED) autoScrollSpeeds - songFileName else autoScrollSpeeds + (songFileName to clamped))
+    }
 
     fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }
 

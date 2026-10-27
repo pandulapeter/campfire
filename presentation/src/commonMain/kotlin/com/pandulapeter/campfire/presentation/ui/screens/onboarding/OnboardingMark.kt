@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
+import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_palette
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
@@ -121,6 +122,7 @@ private val OnboardingStep.markIcon
         OnboardingStep.INSTRUMENT -> Res.drawable.ic_tuner
         OnboardingStep.FEATURES -> Res.drawable.ic_tune
         OnboardingStep.NOTATION -> Res.drawable.ic_songs
+        OnboardingStep.SONG_LAYOUT -> Res.drawable.ic_move_down
         OnboardingStep.SYNC -> Res.drawable.ic_cloud
     }
 

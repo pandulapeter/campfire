@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.preferences
 
 import com.pandulapeter.campfire.data.model.JsonBounds
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -26,7 +27,7 @@ import kotlinx.serialization.json.intOrNull
  * The document is kept as a JSON tree rather than decoded into a class, so that it can grow without an older version
  * losing what a newer one wrote: a song's entry may gain a field, and settings that have nothing to do with the songs
  * may join [SONGS] at the top level, and a version that does not know them passes them through untouched. This
- * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO], [CAPO] and [BEAT_LEVELS] under each song of [SONGS], the
+ * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO], [CAPO], [AUTO_SCROLL_SPEED] and [BEAT_LEVELS] under each song of [SONGS], the
  * shape of each chord under its instrument in [CHORDS] and the color of each tag in [TAGS]), and of those only the values it can read; everything else in
  * the document is carried over from the last synced one ([localDocument]), so to the merge it is simply unchanged here.
  *
@@ -62,12 +63,13 @@ internal object SyncedPreferencesDocument {
     private const val TRANSPOSITION = "transposition"
     private const val TEMPO = "tempo"
     private const val CAPO = "capo"
+    private const val AUTO_SCROLL_SPEED = "autoScrollSpeed"
     private const val BEAT_LEVELS = "beatLevels"
     private const val CHORDS = "chords"
     private const val TAGS = "tags"
 
     /** The fields this version owns ([localDocument] replaces them), as written into the index beside the base. */
-    val OWNED_FIELDS = setOf(TRANSPOSITION, TEMPO, CAPO, BEAT_LEVELS, CHORDS, TAGS)
+    val OWNED_FIELDS = setOf(TRANSPOSITION, TEMPO, CAPO, AUTO_SCROLL_SPEED, BEAT_LEVELS, CHORDS, TAGS)
 
     /** What 4.7.0, the first version that synced this document, owned: an index with no list was written by it. */
     val OWNED_FIELDS_OF_4_7_0 = setOf(TRANSPOSITION, TEMPO, CAPO, CHORDS)
@@ -128,18 +130,20 @@ internal object SyncedPreferencesDocument {
         val baseSongs = base?.get(SONGS) as? JsonObject
         val readable = base?.let(::preferencesOf) ?: SyncedPreferences()
         val names = baseSongs?.keys.orEmpty() + preferences.transpositions.keys + preferences.tempos.keys + preferences.capos.keys +
-            preferences.beatLevels.keys
+            preferences.autoScrollSpeeds.keys + preferences.beatLevels.keys
         val songs = names.mapNotNull { name ->
             val understood = listOfNotNull(
                 TRANSPOSITION.takeIf { name in readable.transpositions },
                 TEMPO.takeIf { name in readable.tempos },
                 CAPO.takeIf { name in readable.capos },
+                AUTO_SCROLL_SPEED.takeIf { name in readable.autoScrollSpeeds },
                 BEAT_LEVELS.takeIf { name in readable.beatLevels },
             )
             val fields = (baseSongs?.get(name) as? JsonObject).orEmpty() - understood.toSet() + listOfNotNull(
                 preferences.transpositions[name]?.let { TRANSPOSITION to JsonPrimitive(it) },
                 preferences.tempos[name]?.let { TEMPO to JsonPrimitive(it) },
                 preferences.capos[name]?.let { CAPO to JsonPrimitive(it) },
+                preferences.autoScrollSpeeds[name]?.let { AUTO_SCROLL_SPEED to JsonPrimitive(it) },
                 preferences.beatLevels[name]?.let { bySignature ->
                     BEAT_LEVELS to JsonObject(bySignature.mapValues { (_, levels) -> JsonArray(levels.map(::JsonPrimitive)) })
                 },
@@ -173,7 +177,7 @@ internal object SyncedPreferencesDocument {
      * device set. A song's entry left empty is dropped, as [localDocument] never writes one.
      */
     fun withoutFieldsNotOwnedBy(base: JsonObject, ownedByWriter: Set<String>): JsonObject {
-        val songFields = setOf(TRANSPOSITION, TEMPO, CAPO, BEAT_LEVELS) - ownedByWriter
+        val songFields = setOf(TRANSPOSITION, TEMPO, CAPO, AUTO_SCROLL_SPEED, BEAT_LEVELS) - ownedByWriter
         val topLevelFields = setOf(CHORDS, TAGS) - ownedByWriter
         val songs = base[SONGS] as? JsonObject
         val strippedSongs = songs?.takeIf { songFields.isNotEmpty() }?.mapNotNull { (name, entry) ->
@@ -207,6 +211,7 @@ internal object SyncedPreferencesDocument {
             transpositions = field(TRANSPOSITION, TRANSPOSITION_RANGE).filterValues { it != 0 },
             tempos = field(TEMPO, MetronomeSettings.TEMPO_RANGE),
             capos = field(CAPO, Song.CAPO_RANGE),
+            autoScrollSpeeds = field(AUTO_SCROLL_SPEED, SongLayout.AUTO_SCROLL_SPEED_RANGE),
             beatLevels = songs.mapNotNull { (song, entry) ->
                 ((entry as? JsonObject)?.get(BEAT_LEVELS) as? JsonObject)
                     ?.takeIf { bySignature -> bySignature.isNotEmpty() && bySignature.values.all { it is JsonArray && it.isReadableBeatLevels } }

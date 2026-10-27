@@ -151,6 +151,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Setlists show every song they name regardless of filters; archive, description, date, countdown live in the file:
   `ui/screens/setlists`.
 - List screens are searched from a button; a matching setlist is shown whole: `ui/screens`.
+- A song is read in pages turned by hand or pedal, or (Preferences' Layout, asked once) in one column
+  scrolling at its own pace, a speed per song; pedals and taps only nudge it: `ui/screens/songDetails/autoScroll`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.

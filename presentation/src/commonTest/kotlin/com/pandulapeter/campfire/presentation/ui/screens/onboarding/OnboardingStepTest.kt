@@ -36,7 +36,14 @@ class OnboardingStepTest {
     @Test
     fun `the instrument is asked before the features, and without the chords the notation is not asked`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.LOOK, OnboardingStep.INSTRUMENT, OnboardingStep.FEATURES, OnboardingStep.SYNC),
+            listOf(
+                OnboardingStep.WELCOME,
+                OnboardingStep.LOOK,
+                OnboardingStep.INSTRUMENT,
+                OnboardingStep.FEATURES,
+                OnboardingStep.SONG_LAYOUT,
+                OnboardingStep.SYNC,
+            ),
             steps(areChordsEnabled = false),
         )
     }
@@ -44,8 +51,8 @@ class OnboardingStepTest {
     @Test
     fun `the next and the previous step skip the ones that are not shown`() {
         val steps = steps(areChordsEnabled = false)
-        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.FEATURES, steps))
-        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.SYNC, steps))
+        assertEquals(OnboardingStep.SONG_LAYOUT, nextOnboardingStep(OnboardingStep.FEATURES, steps))
+        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.SONG_LAYOUT, steps))
         assertNull(nextOnboardingStep(OnboardingStep.SYNC, steps))
         assertNull(previousOnboardingStep(OnboardingStep.WELCOME, steps))
     }
@@ -53,7 +60,7 @@ class OnboardingStepTest {
     @Test
     fun `a step that is no longer shown still leads on and back`() {
         val steps = steps(areChordsEnabled = false)
-        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.NOTATION, steps))
+        assertEquals(OnboardingStep.SONG_LAYOUT, nextOnboardingStep(OnboardingStep.NOTATION, steps))
         assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.NOTATION, steps))
     }
 }

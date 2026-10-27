@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSh
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongDisplaySheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongLayoutSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TunerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TuningSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchSheet
@@ -212,6 +213,7 @@ private fun CampfireDialog(
         DialogType.Tuning -> TuningSheet(viewModel = viewModel, dialog = DialogType.Tuning)
         DialogType.Notation -> NotationSheet(viewModel = viewModel)
         DialogType.SongDisplay -> SongDisplaySheet(viewModel = viewModel)
+        DialogType.SongLayout -> SongLayoutSheet(viewModel = viewModel)
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)

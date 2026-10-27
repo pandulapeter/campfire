@@ -60,7 +60,8 @@ internal data class UnitContent(
  * of tablature or grid lines (which [RenderSection.Lines.itemKinds] tells apart as [SectionItemKind.RUN]), a row of
  * chord diagrams, the song's metadata and everything else between two sections are none, since a piece of a section
  * left with only one of those is no stranded line of the song. A section that is not cut is one chunk of all of its
- * lines. [isStanzaBreakBefore] says of a chunk whether a cut in front of it falls where the song's writer already
+ * lines. [playedLineCount] is how many lines a chunk is that take a moment to play, a piece of a run of tablature or
+ * grid lines among them, which is what a song that scrolls by itself spends its time on: none in a section folded away. [isStanzaBreakBefore] says of a chunk whether a cut in front of it falls where the song's writer already
  * marked a boundary - after an empty line, or in front of a comment - which is never true of a section's first chunk,
  * since that is no cut of the section at all.
  *
@@ -79,6 +80,7 @@ internal class SongUnits(
     val itemRanges: List<IntRange>,
     val isCuttableBefore: BooleanArray,
     val lineCount: IntArray,
+    val playedLineCount: IntArray = lineCount,
     val isStanzaBreakBefore: BooleanArray,
     val cardStarts: IntArray,
     val cardCount: Int,
@@ -106,6 +108,7 @@ internal class SongUnits(
             itemRanges = itemRanges.subList(unitFrom, unitUntil),
             isCuttableBefore = isCuttableBefore.copyOfRange(unitFrom, unitUntil),
             lineCount = lineCount.copyOfRange(unitFrom, unitUntil),
+            playedLineCount = playedLineCount.copyOfRange(unitFrom, unitUntil),
             isStanzaBreakBefore = isStanzaBreakBefore.copyOfRange(unitFrom, unitUntil),
             cardStarts = cardStarts.copyOfRange(from, until),
             cardCount = cardCount,
@@ -116,14 +119,19 @@ internal class SongUnits(
 
         /**
          * The chunks of [sections], where each section [isCuttable] says so is composed line by line, or a Chords or Scales
-         * section row by row.
+         * section row by row. A section [isFolded] says so of plays none of its lines.
          */
-        fun of(sections: List<RenderSection>, isCuttable: (RenderSection) -> Boolean): SongUnits {
+        fun of(
+            sections: List<RenderSection>,
+            isFolded: (RenderSection) -> Boolean = { false },
+            isCuttable: (RenderSection) -> Boolean,
+        ): SongUnits {
             val sectionStarts = IntArray(sections.size + 1)
             val unitSections = mutableListOf<Int>()
             val itemRanges = mutableListOf<IntRange>()
             val isCuttableBefore = mutableListOf<Boolean>()
             val lineCount = mutableListOf<Int>()
+            val playedLineCount = mutableListOf<Int>()
             val isStanzaBreakBefore = mutableListOf<Boolean>()
             val cardStarts = IntArray(sections.size) { -1 }
             var cardCount = 0
@@ -142,11 +150,13 @@ internal class SongUnits(
                     else -> null
                 }
                 val kinds = (section as? RenderSection.Lines)?.itemKinds
+                val isSectionFolded = isFolded(section)
                 ranges.forEach { range ->
                     unitSections += index
                     itemRanges += range
                     isCuttableBefore += range.first > 0 && cutStarts?.contains(range.first) == true
                     lineCount += kinds?.let { range.count { item -> it[item] == SectionItemKind.CONTENT } } ?: 0
+                    playedLineCount += kinds?.takeUnless { isSectionFolded }?.let { range.count { item -> it[item] == SectionItemKind.CONTENT || it[item] == SectionItemKind.RUN } } ?: 0
                     isStanzaBreakBefore += kinds != null && range.first > 0 &&
                         (kinds[range.first - 1] == SectionItemKind.BLANK || kinds[range.first] == SectionItemKind.COMMENT)
                 }
@@ -163,6 +173,7 @@ internal class SongUnits(
                 itemRanges = itemRanges,
                 isCuttableBefore = isCuttableBefore.toBooleanArray(),
                 lineCount = lineCount.toIntArray(),
+                playedLineCount = playedLineCount.toIntArray(),
                 isStanzaBreakBefore = isStanzaBreakBefore.toBooleanArray(),
                 cardStarts = cardStarts,
                 cardCount = cardCount,

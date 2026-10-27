@@ -29,7 +29,8 @@ import kotlinx.coroutines.flow.first
  * cut into, which start between two of its lines (see [sectionChunkStarts]) - so that a step that pages through what
  * does not fit the screen can bring a line to the top of it rather than half of one. [lineBottoms] are where each of
  * those pieces ends and [lineSections] the section each belongs to, which together name a line in terms another layout
- * of the song still has (see `stepping.LineAnchor`).
+ * of the song still has (see `stepping.LineAnchor`). [playedLines] are how many lines each of them takes a moment to play
+ * (see `SongUnits.playedLineCount`), which is what a song that scrolls by itself is timed by (see `autoScroll.AutoScrollTrack`).
  *
  * [timingSections] are the sections that change the tempo or the time signature the song is played in from there on,
  * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see `stepping.timingIndexAt`). A change
@@ -44,6 +45,7 @@ internal data class SongRows(
     val lineTops: List<Int> = emptyList(),
     val lineBottoms: List<Int> = emptyList(),
     val lineSections: List<Int> = emptyList(),
+    val playedLines: List<Int> = emptyList(),
     val timingSections: List<Int> = emptyList(),
 ) {
     /**

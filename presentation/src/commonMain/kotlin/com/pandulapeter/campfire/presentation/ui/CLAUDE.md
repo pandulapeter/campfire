@@ -177,6 +177,9 @@ The view model facade, the composition root, and the product rules every screen 
     tabs); takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion
     is read off the chords; takes the song's Scales section and the chord sheets' scales.
+  - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
+    at the song's pace, asked once by the onboarding or over the first song (`screens/songDetails/autoScroll`). The one
+    choice here that rearranges rather than hides.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
   neither named nor reset.
 - A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored

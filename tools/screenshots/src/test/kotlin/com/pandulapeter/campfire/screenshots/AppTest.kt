@@ -276,6 +276,7 @@ private fun writeLibrary(
         put("isCoverArtEnabled", isCoverArtEnabled)
         put("fontScale", fontScale)
         putJsonArray("seenWhatsNewVersions") { add(JsonPrimitive(System.getProperty("campfire.screenshots.versionName"))) }
+        put("isSongLayoutChosen", true)
     }
     File(dataDirectory, "preferences").mkdirs()
     File(dataDirectory, "preferences/preferences.json").writeText(preferences.toString())

@@ -89,6 +89,10 @@ data class UserPreferences(
      * [isCoverArtEnabled]'s.
      */
     val isSongDetailsLookupEnabled: Boolean = true,
+    /** How the song details screen lays a song out. Never exported or synced: it is how one reader reads. */
+    val songLayout: SongLayout = SongLayout.PAGES,
+    /** Whether a [songLayout] was picked, in the onboarding or in the question the first song opened asks. */
+    val isSongLayoutChosen: Boolean = false,
     /**
      * Whether the sections a song gives no name of their own are numbered by their kind where it has several of one
      * ("Verse 1", "Verse 2"), the way the files of a library were once written by hand. Off, they are headed by the
@@ -183,6 +187,11 @@ data class UserPreferences(
      */
     val capos: Map<String, Int> = emptyMap(),
     /**
+     * Song file name to how fast it scrolls by itself, in percent of its own pace ([SongLayout.AUTO_SCROLL_SPEED_RANGE]),
+     * no entry being 100. One per song wherever it is opened from; never exported, but synced, like [tempos].
+     */
+    val autoScrollSpeeds: Map<String, Int> = emptyMap(),
+    /**
      * Song file name to the accents tapped on its metronome panel, by time signature as written ("7/8") and then one
      * `BeatLevel` id per beat, so that a song whose bar is 3+3+2 keeps it while every other song in 8/8 is clicked as
      * [MetronomeSettings.beatLevels] says. A signature a song has none for, or a list whose length is not its number of
@@ -260,6 +269,7 @@ data class UserPreferences(
         transpositions = transpositions.movedTo(fileName, newFileName),
         tempos = tempos.movedTo(fileName, newFileName),
         capos = capos.movedTo(fileName, newFileName),
+        autoScrollSpeeds = autoScrollSpeeds.movedTo(fileName, newFileName),
         beatLevels = beatLevels.movedTo(fileName, newFileName),
         foldedSections = foldedSections.movedTo(fileName, newFileName),
     )
@@ -269,6 +279,7 @@ data class UserPreferences(
         transpositions = emptyMap(),
         tempos = emptyMap(),
         capos = emptyMap(),
+        autoScrollSpeeds = emptyMap(),
         beatLevels = emptyMap(),
         foldedSections = emptyMap(),
     )

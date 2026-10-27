@@ -66,6 +66,12 @@ internal class RowSnapFlingBehavior(
     var flingTarget by mutableStateOf<Int?>(null)
         private set
 
+    /**
+     * Whether a fling goes no further than a step would, see the class. Off for a song that scrolls by itself, whose
+     * reader is not stepped through it and has no stop to be held at.
+     */
+    var isCapped = true
+
     /** What of the viewport the song is read through, which the page writes whenever its insets or text size change. */
     var readingWindow by mutableStateOf(ReadingWindow())
 
@@ -104,7 +110,7 @@ internal class RowSnapFlingBehavior(
         val start = scrollState.value.toFloat()
         val decayTarget = start + decay.calculateTargetValue(0f, initialVelocity)
         val currentRows = rows
-        val cappedTarget = oneStepCappedTarget(
+        val cappedTarget = if (!isCapped) decayTarget else oneStepCappedTarget(
             start = start,
             target = decayTarget,
             rows = currentRows,

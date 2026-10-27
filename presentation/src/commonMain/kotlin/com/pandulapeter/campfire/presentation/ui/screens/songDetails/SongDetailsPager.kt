@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.AutoScrollControls
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.StepProgressIndicator
@@ -73,6 +76,10 @@ import org.jetbrains.compose.resources.painterResource
  * than over each page, so there is one pair of them that stays where it is while the songs slide past under it. A
  * composable of its own for the same reason as [SongDetailsAppBar]; the current page's scroll and stepper are read
  * through lambdas, since the screen keeps them in state that only the reads here and in its keys should follow.
+ *
+ * A song laid out in one column that scrolls by itself ([isContinuous]) has no step buttons and no dots: their column
+ * holds the controls of the scroll instead ([AutoScrollControls]), the speed among them only where it may be changed
+ * ([showsAutoScrollSpeed]), written once a drag of it ends ([onAutoScrollSpeedChosen]).
  */
 @Composable
 internal fun SongDetailsPager(
@@ -108,7 +115,11 @@ internal fun SongDetailsPager(
     hasNextSongToStepTo: Boolean,
     stepBack: (from: Int?) -> Unit,
     stepForward: (from: Int?) -> Unit,
-    onCurrentPage: (ScrollState, SongStepper) -> Unit,
+    isContinuous: Boolean,
+    autoScrolling: SongAutoScrolling,
+    showsAutoScrollSpeed: Boolean,
+    onAutoScrollSpeedChosen: () -> Unit,
+    onCurrentPage: (ScrollState, SongStepper, SongAutoScroller) -> Unit,
 ) = if (songs.isEmpty()) {
     // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen, or a preview's import
     // is being written under an activity created again), so there is nothing to page through; a pager with no pages
@@ -159,46 +170,35 @@ internal fun SongDetailsPager(
     )
     // The top button starts where the song's first row does, as the bottom one ends as far above the bottom
     // edge as the end ones are from the end of the screen.
-    val stepButtonsTop = PAGE_TOP_PADDING
-    val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
-    val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
-    // The dots take the room between the two buttons whether or not the buttons are there, so that neither
-    // arriving nor leaving moves them. That column is the one the song leaves the buttons, so no dot is ever
-    // drawn over a line of it.
-    StepProgressIndicator(
-        modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(
-                top = stepButtonsTop + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-                end = stepButtonsEnd,
-                bottom = stepButtonsBottom + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-            )
-            .width(STEP_BUTTON_SIZE)
-            .fillMaxHeight(),
-        stepper = currentPageStepper(),
+    val controlsPadding = PaddingValues(
+        top = PAGE_TOP_PADDING,
+        end = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+        bottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN,
     )
-    StepButtons(
-        isSteppedByRow = currentPageStepper()?.isSteppedByRow == true,
-        isPagingBack = currentPageStepper()?.isPagingBack == true,
-        isPagingForward = currentPageStepper()?.isPagingForward == true,
+    StepControls(
+        isNudging = isContinuous,
+        stepper = currentPageStepper(),
         canStepBackInSong = canStepBackInSong,
         canStepForwardInSong = canStepForwardInSong,
         hasPreviousSong = hasPreviousSongToStepTo,
         hasNextSong = hasNextSongToStepTo,
-        contentPadding = PaddingValues(
-            top = stepButtonsTop,
-            end = stepButtonsEnd,
-            bottom = stepButtonsBottom,
-        ),
+        contentPadding = controlsPadding,
         onStepBack = { stepBack(null) },
         onStepForward = { stepForward(null) },
+    )
+    AutoScrollControls(
+        isVisible = isContinuous,
+        autoScrolling = autoScrolling,
+        showsSpeed = showsAutoScrollSpeed,
+        contentPadding = controlsPadding,
+        onSpeedChangeFinished = onAutoScrollSpeedChosen,
     )
 }
 
 /**
  * The two buttons that step through the song being read: between its rows where it is read across the columns and
  * scrolls, however few of them there are, and between its sections everywhere else,
- * paging through a row or a section taller than the screen on the way ([isPagingBack], [isPagingForward], which only
+ * paging through a row or a section taller than the screen on the way (`SongStepper.isPagingBack` and `isPagingForward`, which only
  * change what they are called). The previous one is at the top of the end edge, the next one at its bottom, each there
  * only for as long as there is something of the song to step to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
  * direction ([hasPreviousSong], [hasNextSong]), and turn to point the way the pager goes to say so; they only leave at
@@ -206,13 +206,16 @@ internal fun SongDetailsPager(
  * on every page sliding past with it.
  *
  * They are drawn over the song, which leaves them that edge of the screen wherever it has to be scrolled
- * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it.
+ * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it. The dots of the [stepper]'s stops take the room
+ * between them whether or not the buttons are there, so that neither arriving nor leaving moves them.
+ *
+ * A song that scrolls by itself ([isNudging]) keeps the buttons, which nudge it there and still go on to the songs beside
+ * it, but not the dots, whose room the controls of the scroll take (`AutoScrollControls`).
  */
 @Composable
-private fun BoxScope.StepButtons(
-    isSteppedByRow: Boolean,
-    isPagingBack: Boolean,
-    isPagingForward: Boolean,
+private fun BoxScope.StepControls(
+    isNudging: Boolean,
+    stepper: SongStepper?,
     canStepBackInSong: Boolean,
     canStepForwardInSong: Boolean,
     hasPreviousSong: Boolean,
@@ -222,6 +225,21 @@ private fun BoxScope.StepButtons(
     onStepForward: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
+    StepProgressIndicator(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(
+                top = contentPadding.calculateTopPadding() + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                end = contentPadding.calculateEndPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding() + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+            )
+            .width(STEP_BUTTON_SIZE)
+            .fillMaxHeight(),
+        stepper = stepper?.takeUnless { isNudging },
+    )
+    val isSteppedByRow = stepper?.isSteppedByRow == true
+    val isPagingBack = isNudging || stepper?.isPagingBack == true
+    val isPagingForward = isNudging || stepper?.isPagingForward == true
     // A quarter turn one way makes the arrow pointing down point to where the next song is, and the arrow pointing up to
     // where the previous one is, whichever way the layout reads.
     val pagingRotation = if (layoutDirection == LayoutDirection.Ltr) -90f else 90f

@@ -23,6 +23,8 @@ Welcome carries the one note that everything can be changed in Settings; no late
   list short. No roles (singer / player) are asked: the page asks about features, not people.
 - **Notation**: only with chords on. The preview (Amazing Grace) is in E so German turns B into H and a C#m shows the
   accidentals; accidentals aren't asked, but the preview uses Settings' (`onboardingPreviewChordNames`).
+- **Song layout**: pages or one column that scrolls by itself (`SongLayoutChoices`, the cards the first song opened
+  asks with where this page was never reached); being shown answers it (`markSongLayoutChosen`).
 - **Sync**: only where the build can connect Dropbox.
 - Song card details are not asked; their defaults follow the features.
 - Whichever page is last carries the first run's iOS clipboard link card (`OnboardingClipboardLinkCard`, see

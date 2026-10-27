@@ -11,8 +11,8 @@
 # :presentation — ui/screens/songDetails
 
 The song details screen. The song itself is drawn and laid out by `ui/songView/`; the pedal stepping is in
-`stepping/`. What the first section holds and read only mode are in `ui/CLAUDE.md`; chord diagrams in `ui/chords/`;
-the click in `ui/metronome/`.
+`stepping/`, the one column that scrolls by itself in `autoScroll/`. What the first section holds and read only mode
+are in `ui/CLAUDE.md`; chord diagrams in `ui/chords/`; the click in `ui/metronome/`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.
@@ -107,6 +107,8 @@ only), and nothing on the desktop.
 - Left and Right are unconsumed at the setlist's ends and for a single song; all four with Alt, Meta, or Ctrl (Alt + Left
   is the web's Back, Cmd + Left / Right a Mac's Back and Forward).
 - Ctrl/Cmd + E opens the editor, as the menu's Edit does: not in performance mode, which has no Edit.
+- In a song in one column (`autoScroll/`) the step buttons and the four step keys nudge it, and Space plays and
+  stops it.
 
 ### The metronome button
 

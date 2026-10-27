@@ -17,7 +17,7 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
 - **A fling rests the top of the screen exactly below a row's divider** (`RowSnapping.kt`, rows from `SongRows`); a row
   taller than the screen is landed on at its top and then scrolls freely. Rows are measured by content, never trailing
   space. The top fade is the scroll past the current row's top (`SongRows.scrolledIntoRow`), so a rested row is unfaded.
-- **Step buttons** (`StepButtons`, one pair over the pager): stops are rows or pages, or sections in an unpaged single
+- **Step buttons** (`StepControls`, one pair over the pager): stops are rows or pages, or sections in an unpaged single
   column, each stop `EDGE_FADE_SIZE` above its section.
 - Inside a stop taller than the screen a step pages (`nextStepTarget`, `previousStepTarget`, `ReadingWindow`): the
   screen less the top fade, the bars, and two lines (at most a third), starting at a line (`lineTops`); it moves on
@@ -36,7 +36,8 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
   long press, a right or middle click, a fling-stopping press, or one the system cancelled. A drag under 250 ms and a
   tenth of the height is still a tap (a strumming hand slides), stepping from where the song was at finger-down and
   replacing the fling.
-- **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere.
+- **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere. Not in one column that
+  scrolls by itself (`isCapped`, see `autoScroll/`).
 - Focus: the buttons take none; the screen retakes lost focus while uncovered, or the next arrow is spent on a focus
   search.
 - **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain pages.

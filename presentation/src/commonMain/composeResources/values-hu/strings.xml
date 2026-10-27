@@ -448,6 +448,8 @@
     <string name="settings_group_legal">Jogi információk</string>
     <string name="settings_number_sections">Szakaszok számozása</string>
     <string name="settings_number_sections_description">A saját név nélküli, ismétlődő szakaszok sorszámot kapnak, például Versszak 1 és Versszak 2</string>
+    <string name="settings_song_layout">Elrendezés</string>
+    <string name="settings_song_layout_description">Az oldalak egyszerre a legtöbbet mutatják a dalból. A folyamatos nézet egy hasáb, amely magától is görgethető a dal tempójában.</string>
     <string name="settings_song_cards">Dalkártyák</string>
     <string name="settings_song_cards_description">Mi jelenjen meg az előadó alatt az egyes dalokon a listákban.</string>
     <string name="card_detail_key">Hangnem</string>
@@ -941,6 +943,15 @@
     <string name="song_details_step_progress_section">%1$d. szakasz (%2$d közül)</string>
     <string name="song_details_scroll_up">Görgetés felfelé</string>
     <string name="song_details_scroll_down">Görgetés lefelé</string>
+    <string name="song_details_auto_scroll_play">Görgetés indítása</string>
+    <string name="song_details_auto_scroll_pause">Görgetés leállítása</string>
+    <string name="song_details_auto_scroll_speed">Görgetési sebesség</string>
+    <string name="song_layout_title">Hogyan olvasod a dalokat?</string>
+    <string name="song_layout_message">Ezt bármikor módosíthatod egy dal Preferenciáiban.</string>
+    <string name="song_layout_pages">Oldalak</string>
+    <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
+    <string name="song_layout_continuous">Folyamatos</string>
+    <string name="song_layout_continuous_description">Egy hasáb, amely magától görög a dal tempójában, dalonként beállítható sebességgel</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
@@ -1169,6 +1180,7 @@
     <string name="onboarding_instrument_strings">A hangoló ezekre a húrokra figyel: %1$s</string>
     <string name="onboarding_notation_title">Hogyan írod az akkordokat?</string>
     <string name="onboarding_notation_message">Válaszd ki, hogyan jelenjenek meg az akkordok. A dalok mindig a szabványos módon kerülnek mentésre, így minden alkalmazásban ugyanúgy olvashatók.</string>
+    <string name="onboarding_song_layout_message">Lapozz magad, vagy hagyd, hogy a dal a saját tempójában görögjön, amíg játszol.</string>
     <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, bármelyik hangnemben, a hangszeredre rajzolt fogásokkal. Csak énekelsz? Vedd ki a pipát, és csak a dalszöveg marad.</string>
     <string name="onboarding_feature_metronome_description">Tartja az ütemet a dal tempójában, a dalokban és egy saját képernyőn</string>
     <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül, a dalokban és egy saját képernyőn</string>

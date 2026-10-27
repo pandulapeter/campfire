@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
@@ -226,6 +227,18 @@ internal class UserPreferencesMappersTest {
         val chosen = defaults.copy(tagColors = mapOf("christmas" to "red", "folk" to "ultraviolet"))
         assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
         assertEquals(emptyMap(), UserPreferencesDocument(tagColors = mapOf("christmas" to " ")).toModel().tagColors)
+    }
+
+    @Test
+    fun `the song layout and the scroll speeds survive a round trip, a speed out of range and an unknown layout dropped`() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(SongLayout.PAGES, defaults.songLayout)
+        assertFalse(defaults.isSongLayoutChosen)
+        val chosen = defaults.copy(songLayout = SongLayout.CONTINUOUS, isSongLayoutChosen = true, autoScrollSpeeds = mapOf("a.cho" to 150))
+        assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
+        val unreadable = UserPreferencesDocument(songLayout = "sideways", autoScrollSpeeds = mapOf("a.cho" to 0, "b.cho" to 80)).toModel()
+        assertEquals(SongLayout.PAGES, unreadable.songLayout)
+        assertEquals(mapOf("b.cho" to 80), unreadable.autoScrollSpeeds)
     }
 
     @Test
