@@ -445,6 +445,17 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun `ToUnicode ranges of entries that are not UTF-16 hit the document budget`() = runTest {
+        val font = "/Type /Font /Subtype /Type0 /BaseFont /FreeSerif /Encoding /Identity-H /DescendantFonts [6 0 R] /ToUnicode 7 0 R"
+        val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td <0001> Tj ET", font, extra = { writer ->
+            writer.add("<< /Type /Font /Subtype /CIDFontType2 >>")
+            writer.stream("1 begincodespacerange <0000> <FFFF> endcodespacerange 100 beginbfrange " + "<0000> <FFFF> <41> ".repeat(100) + "endbfrange")
+        })
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
+        assertTrue(elapsed < 5.seconds, "Took $elapsed")
+    }
+
+    @Test
     fun `supports WinAnsi MacRoman standard and glyph name differences`() = runTest {
         val encodings = listOf(
             "/WinAnsiEncoding" to ("<E9>" to "\u00e9"),
