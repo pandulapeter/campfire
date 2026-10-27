@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.export
+package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -30,8 +30,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * A control floating over the screen with a shadow (a floating action button, the page buttons' pill), faded and grown in
- * while [isVisible] and faded and shrunk away again. Not `fadeIn` and `scaleIn`, whose fade draws the control into an
+ * A control floating over the screen with a shadow (a floating action button, the export screen's page pill), faded and
+ * grown in while [isVisible] and faded and shrunk away again. Every such control that comes and goes does so through this,
+ * so that none of them shows its shadow late. Not `fadeIn` and `scaleIn`, whose fade draws the control into an
  * offscreen buffer the size of its layer until it is opaque, cutting off the shadow around it, the further the lower on
  * the screen the control is, since the light that casts it is above the window. Here the shadow is drawn around
  * [content] by a layer of its own, in [shape] and at [elevation], its colors faded with the control, so that it never
@@ -43,15 +44,16 @@ import androidx.compose.ui.unit.dp
  * buffer, while the control takes up only its own size in the layout.
  *
  * Where [isFirstShownAtOnce], its first appearance is not animated: a control the screen opened with is part of the
- * screen, and the pages it waits for are data arriving, not something the user did.
+ * screen, and what it waits for (the export's pages, a song's layout) is data arriving, not something the user did.
+ * Hidden, [content] leaves the composition once it has shrunk away, so a control arriving again is composed afresh.
  */
 @Composable
 internal fun FloatingControlVisibility(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     isVisible: Boolean,
-    isFirstShownAtOnce: Boolean,
+    isFirstShownAtOnce: Boolean = false,
     shape: Shape,
-    elevation: Dp,
+    elevation: Dp = FLOATING_CONTROL_ELEVATION,
     content: @Composable () -> Unit,
 ) {
     val progress = remember { Animatable(0f) }
@@ -95,6 +97,9 @@ internal fun FloatingControlVisibility(
         }
     }
 }
+
+/** A floating action button's elevation at rest, which the controls draw none of themselves. */
+internal val FLOATING_CONTROL_ELEVATION = 6.dp
 
 /** How far past a floating control its shadow is drawn, which the layer fading it has to hold. */
 private val SHADOW_ROOM = 16.dp

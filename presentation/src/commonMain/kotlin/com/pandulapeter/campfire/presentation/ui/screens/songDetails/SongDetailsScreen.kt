@@ -204,11 +204,12 @@ internal fun SongDetailsScreen(
     val hasNextSongToStepTo = canPage && pagerState.targetPage < songs.lastIndex
     // A song in one column scrolls by itself, and the step buttons, their keys, and a tap only nudge it there.
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
+    val isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails
     val autoScrolling = rememberSongAutoScrolling(
-        isContinuous = isContinuous,
+        userPreferences = userPreferences,
+        isUncovered = isUncovered,
         currentPage = pagerState.currentPage,
         songFileName = currentSong?.fileName,
-        storedSpeed = currentSong?.let { userPreferences?.autoScrollSpeeds?.get(it.fileName) } ?: SongLayout.DEFAULT_AUTO_SCROLL_SPEED,
     )
     val canStepBackInSong = if (isContinuous) autoScrolling.scroller?.canNudge(-1) == true else currentPageStepper?.canStepBack == true
     val canStepForwardInSong = if (isContinuous) autoScrolling.scroller?.canNudge(1) == true else currentPageStepper?.canStepForward == true
@@ -264,7 +265,7 @@ internal fun SongDetailsScreen(
                 canStepForward = canStepForwardInSong || hasNextSongToStepTo,
                 hasPreviousSong = canPage && pagerState.targetPage > 0,
                 hasNextSong = canPage && pagerState.targetPage < songs.lastIndex,
-                isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongDetails,
+                isUncovered = isUncovered,
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
                 onToggleAutoScroll = autoScrolling::togglePlaying.takeIf { isContinuous },

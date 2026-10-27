@@ -63,3 +63,10 @@ it (the Link format's "Creating link…") comes and goes with it.
   a layer's clip: on Android it can keep the layer's first size while the content grows. The vertical form draws its own top fade while
   pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
   `OverscrollPull` instead.
+
+### Floating controls
+
+- **Every floating control that comes and goes does so through `FloatingControlVisibility`** (the song page's step
+  and play buttons, the list screens' Done buttons, the import and export buttons, the export's page pill), which draws
+  the shadow itself and fades it with the control; the control's own elevation is zero. Never `AnimatedVisibility` with
+  `fadeIn` and `scaleIn` around one: the fade draws into a buffer that cuts the shadow off until it ends.

@@ -10,11 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -24,11 +23,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -39,6 +42,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.import_retry
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
 import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
+import kotlin.reflect.KClass
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -50,6 +55,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param isImportEnabled False while files are being added to the review, whose count is not final yet.
  * @param isKeyboardVisible Hides the button while the keyboard is up: that is when the rows it would cover are being
  *   searched, and in a window that leaves little height it sits over the tick boxes and the conflict buttons at their ends.
+ *
+ * It comes and goes through [FloatingControlVisibility], which draws its shadow, and a change of stage crossfades the
+ * buttons inside it, so the shadow never leaves with one and comes back late with the next.
  *
  * Each button is described by its own label, since Material's extended floating button clears the semantics of the
  * text it draws, and would otherwise be read as a button with no name.
@@ -64,12 +72,43 @@ internal fun ImportReportButton(
     onImport: () -> Unit,
     onRetry: () -> Unit,
     onDone: () -> Unit,
-) = AnimatedContent(
-    modifier = modifier,
-    targetState = if (isKeyboardVisible || (report is ImportReport.Review && importCount == null)) null else report::class,
-    transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
-    contentAlignment = Alignment.BottomEnd,
-) { stage ->
+) {
+    val stage = if (isKeyboardVisible || (report is ImportReport.Review && importCount == null)) null else report::class
+    // The last stage is kept while the button leaves, rather than an empty one shrinking away.
+    var shownStage by remember { mutableStateOf(stage) }
+    if (stage != null) shownStage = stage
+    FloatingControlVisibility(
+        modifier = modifier,
+        isVisible = stage != null,
+        shape = FloatingActionButtonDefaults.extendedFabShape,
+    ) {
+        AnimatedContent(
+            targetState = shownStage,
+            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+            contentAlignment = Alignment.BottomEnd,
+        ) { shown ->
+            ImportReportStageButton(
+                stage = shown,
+                importCount = importCount,
+                isImportEnabled = isImportEnabled,
+                onImport = onImport,
+                onRetry = onRetry,
+                onDone = onDone,
+            )
+        }
+    }
+}
+
+/** The button of one stage of the import, drawing no shadow of its own (see [ImportReportButton]). */
+@Composable
+private fun ImportReportStageButton(
+    stage: KClass<out ImportReport>?,
+    importCount: Int?,
+    isImportEnabled: Boolean,
+    onImport: () -> Unit,
+    onRetry: () -> Unit,
+    onDone: () -> Unit,
+) {
     when (stage) {
         ImportReport.Review::class -> {
             val count = importCount ?: 0
@@ -83,6 +122,7 @@ internal fun ImportReportButton(
             )
             // A floating button has no disabled state of its own, so it is drawn and announced as one and ignores taps.
             ExtendedFloatingActionButton(
+                elevation = NO_ELEVATION,
                 modifier = Modifier.semantics {
                     contentDescription = label
                     if (!isEnabled) disabled()
@@ -99,6 +139,7 @@ internal fun ImportReportButton(
         ImportReport.Failed::class -> {
             val label = stringResource(Res.string.import_retry)
             ExtendedFloatingActionButton(
+                elevation = NO_ELEVATION,
                 modifier = Modifier.semantics { contentDescription = label },
                 onClick = onRetry,
                 icon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
@@ -109,6 +150,7 @@ internal fun ImportReportButton(
         ImportReport.Finished::class -> {
             val label = stringResource(Res.string.done)
             ExtendedFloatingActionButton(
+                elevation = NO_ELEVATION,
                 modifier = Modifier.semantics { contentDescription = label },
                 onClick = onDone,
                 icon = { Icon(painter = painterResource(Res.drawable.ic_check), contentDescription = null) },
@@ -119,3 +161,7 @@ internal fun ImportReportButton(
         else -> Box(Modifier)
     }
 }
+
+/** The shadow is drawn around the buttons by FloatingControlVisibility, which fades it with them. */
+private val NO_ELEVATION
+    @Composable get() = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)

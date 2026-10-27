@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll
 
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,21 +78,25 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 }
 
 /**
- * The [SongAutoScrolling] of a song details screen, playing [songFileName]'s page while [isContinuous]. The page being
- * changed ([currentPage]) and the app leaving the screen (`ON_STOP`, which a window minimised or a tab hidden also is)
- * stop it, as the song being laid out in pages again does.
+ * The [SongAutoScrolling] of a song details screen, playing [songFileName]'s page at its stored speed while the songs
+ * are laid out in one column. The page being changed ([currentPage]), anything drawn over the screen ([isUncovered]
+ * false: a sheet, a dialog, another screen), and the app leaving it (`ON_STOP`, which a window minimised or a tab hidden
+ * also is) stop it, as the song being laid out in pages again does: nobody reads a song moving under something else.
  */
 @Composable
 internal fun rememberSongAutoScrolling(
-    isContinuous: Boolean,
+    userPreferences: UserPreferences?,
+    isUncovered: Boolean,
     currentPage: Int,
     songFileName: String?,
-    storedSpeed: Int,
 ): SongAutoScrolling {
+    val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
+    val storedSpeed = songFileName?.let { userPreferences?.autoScrollSpeeds?.get(it) } ?: SongLayout.DEFAULT_AUTO_SCROLL_SPEED
     val coroutineScope = rememberCoroutineScope()
     val autoScrolling = remember(coroutineScope) { SongAutoScrolling(coroutineScope) }
     autoScrolling.song = songFileName?.let { it to storedSpeed }
     LaunchedEffect(currentPage, isContinuous) { autoScrolling.pause() }
+    LaunchedEffect(isUncovered) { if (!isUncovered) autoScrolling.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { autoScrolling.pause() }
     LaunchedEffect(songFileName, storedSpeed) { autoScrolling.settleDraggedSpeed() }
     val scroller = autoScrolling.scroller

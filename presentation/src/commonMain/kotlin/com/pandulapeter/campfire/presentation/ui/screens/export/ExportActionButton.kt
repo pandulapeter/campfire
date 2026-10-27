@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.share_create
 import com.pandulapeter.campfire.presentation.resources.share_try_again
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 
 /**
  * What the screen's one floating button offers: a PDF's or the files' Save, Cancel while a PDF's pages are drawn (their
@@ -92,7 +93,6 @@ internal fun ExportActionButton(
         isVisible = action != null,
         isFirstShownAtOnce = isFirstShownAtOnce,
         shape = FloatingActionButtonDefaults.extendedFabShape,
-        elevation = FLOATING_BUTTON_ELEVATION,
     ) {
         val current = shown ?: return@FloatingControlVisibility
         val label = stringResource(current.label)
@@ -176,6 +176,3 @@ private val ExportButtonAction.icon
             LinkAction.COPY -> Res.drawable.ic_duplicate
         }
     }
-
-/** Material's resting elevation of a floating action button. */
-private val FLOATING_BUTTON_ELEVATION = 6.dp

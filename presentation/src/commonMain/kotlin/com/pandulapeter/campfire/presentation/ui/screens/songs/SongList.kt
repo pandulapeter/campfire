@@ -13,12 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemTrailingKeylineAdjustment
 import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -80,6 +75,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextR
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.launch
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
+import androidx.compose.material3.FloatingActionButtonDefaults
 
 @Composable
 internal fun SongList(
@@ -377,13 +374,12 @@ internal fun SongList(
                 selectionCount = selection.size,
                 appBarOverlap = appBarOverlap,
             )
-            AnimatedVisibility(
-                visible = isSelecting,
+            FloatingControlVisibility(
+                isVisible = isSelecting,
                 modifier = Modifier.align(Alignment.BottomEnd)
                     .padding(contentPadding.only(end = true, bottom = true))
                     .padding(DONE_BUTTON_MARGIN),
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
+                shape = FloatingActionButtonDefaults.extendedFabShape,
             ) {
                 SongSelectionDoneButton(
                     count = selection.size,

@@ -18,13 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.St
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.stepOnTap
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -35,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
@@ -67,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
@@ -287,19 +283,17 @@ private fun StepButton(
     iconRotation: Float,
     contentDescription: String,
     onClick: () -> Unit,
-) = AnimatedVisibility(
+) = FloatingControlVisibility(
     modifier = modifier,
-    visible = isVisible,
-    enter = scaleIn() + fadeIn(),
-    exit = scaleOut() + fadeOut(),
+    isVisible = isVisible,
+    shape = FloatingActionButtonDefaults.smallShape,
 ) {
     // The arrow only turns on a button that stays: at the end of a song or a setlist the direction changes in the very
     // frame the button starts leaving, and it would otherwise spin as it scales away. One arriving is composed afresh
     // and comes already pointing where it has to.
     val rotation = remember { Animatable(iconRotation) }
-    val isStaying = transition.targetState == EnterExitState.Visible
-    LaunchedEffect(iconRotation, isStaying) {
-        if (isStaying) rotation.animateTo(iconRotation)
+    LaunchedEffect(iconRotation, isVisible) {
+        if (isVisible) rotation.animateTo(iconRotation)
     }
     SmallFloatingActionButton(
         // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
@@ -309,6 +303,8 @@ private fun StepButton(
             .size(STEP_BUTTON_SIZE)
             .focusProperties { canFocus = false },
         onClick = onClick,
+        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
     ) {
         Icon(
             modifier = Modifier.graphicsLayer { rotationZ = rotation.value },

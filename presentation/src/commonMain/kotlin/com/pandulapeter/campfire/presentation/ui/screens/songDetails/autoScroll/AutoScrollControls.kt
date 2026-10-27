@@ -15,8 +15,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +28,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SliderState
 import androidx.compose.material3.SmallFloatingActionButton
@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -55,16 +56,19 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_auto_scroll_pause
 import com.pandulapeter.campfire.presentation.resources.song_details_auto_scroll_play
 import com.pandulapeter.campfire.presentation.resources.song_details_auto_scroll_speed
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import kotlin.math.ceil
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * The controls of a song laid out in one column that scrolls by itself ([isVisible]), in the column the song leaves the
- * step buttons (`SongLyrics`' `stepButtonInset`), centred between them, so that none of them covers a line: the button
- * that plays and stops it, there only while there is anything left to play, and under it how long the song has left
- * from where it is and the slider of its speed, faster downwards, the way the song moves, so that both are set and read
- * before playing as well as during it. The group stays centred as the button comes and goes. The speed is left out where it cannot be changed ([showsSpeed] false: read only mode).
+ * step buttons (`SongLyrics`' `stepButtonInset`), so that none of them covers a line: the button that plays and stops
+ * it just above the next button, one cluster with it, there only while there is anything left to play, and only while
+ * it plays, growing up out of that button, how long the song has left and above that the slider of its speed, faster
+ * downwards, the way the song moves. Paused, nothing but the button is in the column: a countdown standing still and a
+ * slider by the edge would only be read as a scrollbar. The speed is left out where it cannot be changed ([showsSpeed]
+ * false: read only mode).
  *
  * @param contentPadding Where the step buttons are: their top, their end, and their bottom.
  */
@@ -85,7 +89,7 @@ internal fun BoxScope.AutoScrollControls(
     val isPlaying = isVisible && autoScrolling.isPlaying
     Column(
         modifier = Modifier
-            .align(Alignment.TopEnd)
+            .align(Alignment.BottomEnd)
             .padding(
                 top = contentPadding.calculateTopPadding() + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
@@ -93,27 +97,20 @@ internal fun BoxScope.AutoScrollControls(
             )
             .width(STEP_BUTTON_SIZE)
             .fillMaxHeight(),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PlayButton(
-            // A song that fits the screen, or one already at its end, has nothing to play.
-            isVisible = isVisible && (isPlaying || scroller?.canPlay == true),
-            isPlaying = isPlaying,
-            onClick = autoScrolling::togglePlaying,
-        )
         AnimatedVisibility(
             // Whatever room the buttons leave, up to the slider's own most, so that a short window still fits the button.
             modifier = Modifier.weight(1f, fill = false),
-            visible = isVisible,
-            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            visible = isPlaying,
+            enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
         ) {
             Column(
-                modifier = Modifier.padding(top = STEP_BUTTON_GAP),
+                modifier = Modifier.padding(bottom = STEP_BUTTON_GAP),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Countdown(remainingSeconds = { remainingSeconds.value })
                 if (showsSpeed) {
                     SpeedSlider(
                         modifier = Modifier
@@ -125,14 +122,21 @@ internal fun BoxScope.AutoScrollControls(
                         onSpeedChangeFinished = onSpeedChangeFinished,
                     )
                 }
+                Countdown(remainingSeconds = { remainingSeconds.value })
             }
         }
+        PlayButton(
+            // A song that fits the screen, or one already at its end, has nothing to play.
+            isVisible = isVisible && (isPlaying || scroller?.canPlay == true),
+            isPlaying = isPlaying,
+            onClick = autoScrolling::togglePlaying,
+        )
     }
 }
 
 /**
- * Plays and stops the song, scaling in and out as the step buttons do, in a place of its own size whether it is there or
- * not, so that neither its leaving nor its arriving moves the countdown and the slider under it.
+ * Plays and stops the song, coming and going as the step buttons do, in a place of its own size whether it is there or
+ * not, so that neither its leaving nor its arriving moves the countdown and the slider above it.
  */
 @Composable
 private fun PlayButton(
@@ -151,12 +155,13 @@ private fun PlayButtonContent(
     isVisible: Boolean,
     isPlaying: Boolean,
     onClick: () -> Unit,
-) = AnimatedVisibility(
-    visible = isVisible,
-    enter = scaleIn() + fadeIn(),
-    exit = scaleOut() + fadeOut(),
+) = FloatingControlVisibility(
+    isVisible = isVisible,
+    shape = FloatingActionButtonDefaults.smallShape,
 ) {
     val description = stringResource(if (isPlaying) Res.string.song_details_auto_scroll_pause else Res.string.song_details_auto_scroll_play)
+    // Filled as the metronome's play button is, so that it reads as something that plays rather than as one more step.
+    val colors = IconButtonDefaults.filledIconButtonColors()
     SmallFloatingActionButton(
         // Pressed by Space too, which the screen hears wherever the focus is, so the button takes none, as the step
         // buttons take none.
@@ -165,8 +170,18 @@ private fun PlayButtonContent(
             .focusProperties { canFocus = false }
             .semantics { contentDescription = description },
         onClick = onClick,
+        containerColor = colors.containerColor,
+        contentColor = colors.contentColor,
+        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
     ) {
-        PlayStopMark(isPlaying = isPlaying, size = PLAY_MARK_SIZE)
+        // The triangle points down, the way playing moves the song, which also tells the button apart from the
+        // metronome's, the same mark pointing the way it reads.
+        PlayStopMark(
+            modifier = Modifier.graphicsLayer { rotationZ = PLAY_MARK_ROTATION },
+            isPlaying = isPlaying,
+            size = PLAY_MARK_SIZE,
+        )
     }
 }
 
@@ -214,6 +229,8 @@ private fun SpeedSlider(
 }
 
 private val PLAY_MARK_SIZE = 20.dp
+
+private const val PLAY_MARK_ROTATION = 90f
 
 /** A slider any taller only spreads the same speeds further apart. */
 private val SPEED_SLIDER_MAX_HEIGHT = 280.dp

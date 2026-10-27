@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.resources.print_previous
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 
 /**
  * The page buttons and the count between them, on a pill floating below the toolbar, coming and going with the preview
@@ -59,7 +60,6 @@ internal fun PageButtons(
     isVisible = isVisible,
     isFirstShownAtOnce = isFirstShownAtOnce,
     shape = CircleShape,
-    elevation = 6.dp,
 ) {
     PageButtonsPill(
         modifier = Modifier,

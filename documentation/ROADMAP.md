@@ -23,7 +23,6 @@ What's planned for Campfire, grouped by area. Nothing here has a date; items wit
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
 - **ABC notation rendering**: ABC tunes drawn as staff notation instead of monospace text.
   Plan: [abc-notation.md](plans/abc-notation.md)
-- **A fast scroller on the song details screen**
 
 ## Editing
 

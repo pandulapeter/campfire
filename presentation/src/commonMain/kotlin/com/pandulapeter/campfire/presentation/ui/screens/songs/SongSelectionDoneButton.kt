@@ -72,6 +72,8 @@ internal fun SongSelectionDoneButton(
         modifier = modifier.semantics { contentDescription = description },
         containerColor = containerColor,
         onClick = onClick,
+        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
         icon = { Icon(painterResource(Res.drawable.ic_check), contentDescription = null) },
         text = {
             Row(

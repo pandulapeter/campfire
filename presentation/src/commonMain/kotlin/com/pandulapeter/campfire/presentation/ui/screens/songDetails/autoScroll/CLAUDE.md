@@ -20,9 +20,11 @@ columns the bottom of one and the top of the next share a height, so any motion 
   `availableHeight`, no row viewport) still cut into a chunk a line (`canCutSections`), so `SongRows` reports every
   line's top and how many lines each chunk plays (`playedLines`: lyrics and tab or grid lines).
 - The step buttons stay (nudging, and going on to the setlist's songs at either end, named Scroll up / down); the dots
-  leave, and their room holds `AutoScrollControls`, centred between them: play / stop, only while there is anything
-  left to play (not for a song that fits the screen, nor at the end), its place kept when it is not, and under it, playing or not, a countdown and the
-  speed slider, faster downwards as the song moves (not in read only mode).
+  leave. `AutoScrollControls` adds play / stop just above the next button (filled as the metronome's play button is,
+  its triangle pointing down, unlike the metronome's), only while there is anything left to play (not for a song that
+  fits the screen, nor at the end), its place kept when it is not; and only while playing, growing up out of it, the
+  countdown and above that the speed slider, faster downwards as the song moves (not in read only mode). Paused, the
+  column holds nothing else: a still countdown and a slider by the edge read as a scrollbar.
 - **The countdown** is the time until the scroll can go no further, which is when playing stops (the last screen at
   rest), not until the last line passes the reading line; it follows every drag, fling, nudge, fold, and speed change.
 - A fling is not capped to a step there (`RowSnapFlingBehavior.isCapped`).
@@ -45,8 +47,9 @@ columns the bottom of one and the top of the next share a height, so any motion 
   skipping frames anything else moves it in. A drag, a fling, a tap, or a pedal only moves the reader; playing goes on.
 - Up, Down, Page Up, Page Down, the tap halves, and the step actions nudge two chorded lines (smoothly, playing or not),
   and past either end go on to the setlist's song beside it as a step does. Space plays and stops.
-- It stops only when asked, at the end of the song, on another page, with the layout back to pages, or on `ON_STOP`
-  (another app, a minimised window, a hidden tab); it never starts by itself.
+- It stops only when asked, at the end of the song, on another page, with the layout back to pages, under anything
+  drawn over the screen (a sheet, a dialog, another screen), or on `ON_STOP` (another app, a minimised window, a hidden
+  tab); it never starts by itself, nor again once what covered it has gone.
 
 ### Asking once
 

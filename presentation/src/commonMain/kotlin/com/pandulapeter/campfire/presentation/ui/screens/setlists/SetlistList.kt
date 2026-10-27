@@ -14,10 +14,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.listItemTrailin
 import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTrailingKeylineAdjustment
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -93,6 +89,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
+import androidx.compose.material3.FloatingActionButtonDefaults
 
 @Composable
 internal fun SetlistList(
@@ -387,13 +385,12 @@ internal fun SetlistList(
                 reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },
                 appBarOverlap = appBarOverlap,
             )
-            AnimatedVisibility(
-                visible = isReordering,
+            FloatingControlVisibility(
+                isVisible = isReordering,
                 modifier = Modifier.align(Alignment.BottomEnd)
                     .padding(contentPadding.only(end = true, bottom = true))
                     .padding(DONE_BUTTON_MARGIN),
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
+                shape = FloatingActionButtonDefaults.extendedFabShape,
             ) {
                 DoneReorderingButton(onClick = { onReorderingSetlistChanged(null) })
             }
@@ -414,6 +411,8 @@ private fun DoneReorderingButton(onClick: () -> Unit) {
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = Modifier.semantics { contentDescription = label },
+        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
         icon = { Icon(painterResource(Res.drawable.ic_reorder_songs_done), contentDescription = null) },
         text = { Text(label) },
     )
