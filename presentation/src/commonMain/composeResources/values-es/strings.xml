@@ -1170,7 +1170,7 @@
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Omitir</string>
     <string name="onboarding_next">Siguiente</string>
-    <string name="onboarding_start_playing">Empezar a tocar</string>
+    <string name="onboarding_start_playing">¡A tocar!</string>
     <string name="onboarding_welcome_title">¡Te damos la bienvenida a Campfire!</string>
     <string name="onboarding_welcome_message">Unas preguntas rápidas para adaptar la aplicación a ti.\nPrimero, asegúrate de leerlas en tu idioma.</string>
     <string name="onboarding_language">Idioma: %1$s</string>

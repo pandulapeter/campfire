@@ -87,7 +87,8 @@ internal data class TestAppearance(
  * `Fakes.kt`'s.
  *
  * With [isFirstRun] the data directory starts empty instead, as a fresh install's does: no preferences, so the
- * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to English.
+ * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to
+ * [appearance]'s language.
  */
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class, InternalTestApi::class)
 internal fun runAppTest(
@@ -114,7 +115,7 @@ internal fun runAppTest(
     }
     // Without a preferences document the app speaks the system's language, which the test JVM leaves to the machine.
     val systemLocale = Locale.getDefault()
-    if (isFirstRun) Locale.setDefault(Locale.ENGLISH)
+    if (isFirstRun) Locale.setDefault(Locale.forLanguageTag(appearance.language.id))
     try {
         runApp(
             window = window,

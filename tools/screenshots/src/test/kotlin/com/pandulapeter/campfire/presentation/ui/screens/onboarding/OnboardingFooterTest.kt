@@ -9,20 +9,26 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
-import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.text.TextLayoutResult
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
+import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_progress
+import com.pandulapeter.campfire.presentation.resources.onboarding_skip
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
+import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
+import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.isWhole
 import com.pandulapeter.campfire.screenshots.openOnboardingLastPage
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.textLayout
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,22 +37,38 @@ import kotlin.test.assertTrue
 internal class OnboardingFooterTest {
 
     @Test
-    fun `Start playing stays on one line beside the dots on the smallest phone`() = runAppTest(isFirstRun = true) {
-        openOnboardingLastPage()
-        val startPlaying = string(Res.string.onboarding_start_playing)
-        // The footer also measures each label it can show without placing it, so the one read is the button's own.
-        val label = onNode(hasText(startPlaying) and hasAnyAncestor(hasClickAction()), useUnmergedTree = true).fetchSemanticsNode()
-        val layout = mutableListOf<TextLayoutResult>().also { label.config[SemanticsActions.GetTextLayoutResult].action?.invoke(it) }.single()
-        assertEquals(1, layout.lineCount, "Start playing is broken onto ${layout.lineCount} lines.")
-        val button = onNode(hasText(startPlaying) and hasClickAction()).fetchSemanticsNode().boundsInRoot
-        val back = onNode(hasText(string(Res.string.back)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
-        // The last page reads out as "Step N of N", however many pages the build shows.
-        val dots = (1..MAX_PAGES).map { hasContentDescription(string(Res.string.onboarding_progress, it, it)) }
+    fun `the footer's labels stay whole and on one line in every language at the default and a large text size`() {
+        APP_LANGUAGES.forEach { language ->
+            listOf(1f, 1.3f).forEach { textScale ->
+                runAppTest(isFirstRun = true, appearance = TestAppearance(language = language, textScale = textScale)) {
+                    val case = "${language.id} at $textScale"
+                    assertFooter(case, string(Res.string.onboarding_skip), string(Res.string.onboarding_next))
+                    openOnboardingLastPage()
+                    val startPlaying = assertFooter(case, string(Res.string.back), string(Res.string.onboarding_start_playing))
+                    assertTrue(startPlaying.right <= TestWindow.PHONE.width.value, "$case: Start playing ($startPlaying) runs off the window.")
+                }
+            }
+        }
+    }
+
+    /** Checks the footer's two buttons, labelled [startLabel] and [endLabel], and the dots between them; returns the end button's bounds. */
+    private fun AppTestScope.assertFooter(case: String, startLabel: String, endLabel: String): Rect {
+        listOf(startLabel, endLabel).forEach { label ->
+            // The footer also measures each label it can show without placing it, so the one read is the button's own.
+            val layout = textLayout(hasText(label) and hasAnyAncestor(hasClickAction()))
+            assertEquals(1, layout.lineCount, "$case: \"$label\" is broken onto ${layout.lineCount} lines.")
+            assertTrue(layout.isWhole, "$case: \"$label\" is cut short.")
+        }
+        val start = onNode(hasText(startLabel) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val end = onNode(hasText(endLabel) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        // A page reads out as "Step N of M", however many pages the build shows.
+        val dots = (1..MAX_PAGES).flatMap { step -> (step..MAX_PAGES).map { hasContentDescription(string(Res.string.onboarding_progress, step, it)) } }
             .single { onAllNodes(it).fetchSemanticsNodes().isNotEmpty() }
             .let { onNode(it).fetchSemanticsNode().boundsInRoot }
-        assertTrue(back.right <= dots.left, "Back ($back) reaches into the dots ($dots).")
-        assertTrue(dots.right <= button.left, "The dots ($dots) reach into Start playing ($button).")
-        assertTrue(button.right <= TestWindow.PHONE.width.value, "Start playing ($button) runs off the window.")
+        val isBeside = start.right <= dots.left && dots.right <= end.left
+        val isAbove = dots.bottom <= start.top && dots.bottom <= end.top
+        assertTrue(isBeside || isAbove, "$case: the dots ($dots) overlap the buttons ($start, $end).")
+        return end
     }
 }
 

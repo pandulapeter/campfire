@@ -1170,7 +1170,7 @@
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Omite</string>
     <string name="onboarding_next">Înainte</string>
-    <string name="onboarding_start_playing">Hai să cântăm</string>
+    <string name="onboarding_start_playing">Să cântăm!</string>
     <string name="onboarding_welcome_title">Bine ai venit în Campfire!</string>
     <string name="onboarding_welcome_message">Câteva întrebări rapide ca aplicația să fie a ta.\nMai întâi, asigură-te că le citești în limba ta.</string>
     <string name="onboarding_language">Limbă: %1$s</string>

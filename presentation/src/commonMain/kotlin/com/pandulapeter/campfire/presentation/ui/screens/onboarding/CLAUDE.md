@@ -50,7 +50,9 @@ kept: drop D stays drop D).
   onboarding away (`onboardingFinishTransition`) under rising embers (`OnboardingCelebration`); other ways out slide.
 - The way out (Skip on a first run, Close from Settings) is only in the first page's footer, in Back's slot. Back and the
   way out share a slot so the dots and Next never move. Slots are as wide as their widest label on any page; dots are
-  shifted toward the narrower slot (`onboardingDotsStart`) so Start playing stays on one line on a 360dp phone.
+  shifted toward the narrower slot (`onboardingDotsStart`); where the slots and the widest dots cannot share the line
+  (large text, longer languages), the dots travel to a line of their own above the buttons (`onboardingFooterIsStacked`),
+  so a label is never broken.
 
 ## One screen, one pager
 

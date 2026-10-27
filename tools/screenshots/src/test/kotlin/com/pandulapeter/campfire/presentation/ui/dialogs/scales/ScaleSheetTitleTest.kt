@@ -28,11 +28,12 @@ import com.pandulapeter.campfire.presentation.ui.components.PINNED_SEARCH_INDEX
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.isWhole
 import com.pandulapeter.campfire.screenshots.openScales
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
-import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 internal class ScaleSheetTitleTest {
@@ -59,7 +60,7 @@ internal class ScaleSheetTitleTest {
         tap(hasContentDescription(string(Res.string.scales_diagram, title, ""), substring = true))
         val heading = onNode(hasText(title) and isHeading()).fetchSemanticsNode()
         val layout = mutableListOf<TextLayoutResult>().also { heading.config[SemanticsActions.GetTextLayoutResult].action?.invoke(it) }.single()
-        assertFalse(layout.isLineEllipsized(layout.lineCount - 1), "The sheet cuts \"$title\" short.")
+        assertTrue(layout.isWhole, "The sheet cuts \"$title\" short.")
         onNode(hasContentDescription(string(Res.string.scales_labels_show_notes))).assertExists()
     }
 }

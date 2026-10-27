@@ -1170,7 +1170,7 @@
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Salta</string>
     <string name="onboarding_next">Avanti</string>
-    <string name="onboarding_start_playing">Inizia a suonare</string>
+    <string name="onboarding_start_playing">Suoniamo!</string>
     <string name="onboarding_welcome_title">Benvenuto in Campfire!</string>
     <string name="onboarding_welcome_message">Qualche domanda veloce per rendere l\'app tua.\nPer prima cosa, assicurati di leggerle nella tua lingua.</string>
     <string name="onboarding_language">Lingua: %1$s</string>

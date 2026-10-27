@@ -69,7 +69,7 @@ internal fun OnboardingPageIndicator(
                 // The gap is the dot's own padding rather than the row's spacing, so that it leaves with the dot.
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
+                        .padding(horizontal = DOT_PADDING)
                         .layout { measurable, _ ->
                             val width = (DOT_SIZE + (PILL_WIDTH - DOT_SIZE) * selection()).roundToPx()
                             val placeable = measurable.measure(Constraints.fixed(width, DOT_SIZE.roundToPx()))
@@ -87,6 +87,14 @@ internal fun OnboardingPageIndicator(
     }
 }
 
+/**
+ * The widest the dots of [count] steps can be: every dot shown and one of them the pill, each with its padding. What
+ * the footer decides its arrangement from, since the dots' own width changes while a dot grows in or shrinks out.
+ */
+internal fun onboardingDotsMaxWidth(count: Int) = (DOT_SIZE + DOT_PADDING * 2) * (count - 1) + PILL_WIDTH + DOT_PADDING * 2
+
 private val DOT_SIZE = 8.dp
+
+private val DOT_PADDING = 4.dp
 
 private val PILL_WIDTH = 24.dp

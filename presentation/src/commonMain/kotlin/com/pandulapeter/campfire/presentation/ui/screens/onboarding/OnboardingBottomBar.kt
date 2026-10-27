@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,15 +24,19 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
@@ -38,6 +45,8 @@ import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_skip
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Back, where there is a page to go back to, how far along the pages are, and the way on: Next, and on the last page
@@ -53,8 +62,10 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
  *
  * Each slot is as wide as the widest of the buttons it can hold on any page, measured from all of them rather than from
  * the one on screen, so that the dots do not move as one label crossfades into another. The dots are centered between
- * the slots where both fit, and moved toward the narrower one where they do not ([onboardingDotsStart]), which is what
- * keeps Start playing on one line on a 360dp phone with every page shown.
+ * the slots where both fit, and moved toward the narrower one where they do not ([onboardingDotsStart]). Where the slots
+ * and the widest the dots can be cannot share the line at all (large text, a longer language), the dots go to a line of
+ * their own above the buttons ([onboardingFooterIsStacked]), so that no label is ever broken, and travel between the
+ * two when the window or the text size changes across the threshold.
  */
 @Composable
 internal fun OnboardingBottomBar(
@@ -80,6 +91,9 @@ internal fun OnboardingBottomBar(
             else -> Res.string.onboarding_start_playing
         },
     )
+    val motion = remember { FooterMotion() }
+    val scope = rememberCoroutineScope()
+    val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     SubcomposeLayout(
         modifier = modifier
             .padding(horizontal = sideMargin)
@@ -100,6 +114,17 @@ internal fun OnboardingBottomBar(
         // Measured on every pass, since the dots animate: the pill stretching, and a dot growing in or shrinking out.
         val dots = subcompose(FooterSlot.DOTS) { OnboardingPageIndicator(steps = steps, currentStep = currentStep, position = pagerPosition) }.single().measure(looseConstraints)
         val width = constraints.maxWidth
+        val gap = FOOTER_DOTS_GAP.roundToPx()
+        val isStacked = onboardingFooterIsStacked(
+            width = width,
+            startSlotWidth = startSlotWidth,
+            dotsMaxWidth = onboardingDotsMaxWidth(OnboardingStep.entries.size).roundToPx(),
+            endSlotWidth = endSlotWidth,
+            gap = gap,
+        )
+        val target = if (isStacked) 1f else 0f
+        // The lookahead lays the footer out where it is headed, as PlacementAnimation does.
+        val progress = if (isLookingAhead) target else motion.progressTowards(target, scope, spec)
         // On top of the dots' own 4dp padding, so that the last dot does not touch the button beside it, and shrunk
         // evenly on both sides where a phone has less room than that.
         val dotsStart = onboardingDotsStart(
@@ -107,7 +132,7 @@ internal fun OnboardingBottomBar(
             dotsWidth = dots.width,
             startSlotWidth = startSlotWidth,
             endSlotWidth = endSlotWidth,
-            gap = FOOTER_DOTS_GAP.roundToPx(),
+            gap = gap,
         )
         val start = subcompose(FooterSlot.START) {
             AnimatedContent(
@@ -121,7 +146,7 @@ internal fun OnboardingBottomBar(
                     FilledTonalButton(onClick = onClose, contentPadding = FOOTER_BUTTON_PADDING) { Text(closeLabel) }
                 }
             }
-        }.single().measure(looseConstraints.copy(maxWidth = dotsStart.coerceAtLeast(0)))
+        }.single().measure(looseConstraints)
         val end = subcompose(FooterSlot.END) {
             Button(onClick = onNext, contentPadding = FOOTER_BUTTON_PADDING) {
                 // Keyed on the label rather than on the page, so that an import arriving or settling on the last page
@@ -134,13 +159,33 @@ internal fun OnboardingBottomBar(
                     Text(label)
                 }
             }
-        }.single().measure(looseConstraints.copy(maxWidth = (width - dotsStart - dots.width).coerceAtLeast(0)))
-        val height = maxOf(start.height, dots.height, end.height)
+        }.single().measure(looseConstraints)
+        val lineHeight = maxOf(start.height, dots.height, end.height)
+        val stackedHeight = dots.height + gap + maxOf(start.height, end.height)
+        val height = lerp(lineHeight, stackedHeight, progress)
+        // The buttons keep their x and sink by what the footer gains; only the dots travel.
+        val buttonsTop = height - lineHeight
         layout(width, height) {
-            start.placeRelative(0, (height - start.height) / 2)
-            dots.placeRelative(dotsStart, (height - dots.height) / 2)
-            end.placeRelative(width - end.width, (height - end.height) / 2)
+            start.placeRelative(0, buttonsTop + (lineHeight - start.height) / 2)
+            dots.placeRelative(lerp(dotsStart, (width - dots.width) / 2, progress), lerp((lineHeight - dots.height) / 2, 0, progress))
+            end.placeRelative(width - end.width, buttonsTop + (lineHeight - end.height) / 2)
         }
+    }
+}
+
+/**
+ * How far the footer is on its way to the stacked arrangement. Not a state: only the [Animatable] is read, created at
+ * the first measure's target so that opening the onboarding moves nothing.
+ */
+private class FooterMotion {
+    private var progress: Animatable<Float, AnimationVector1D>? = null
+
+    fun progressTowards(target: Float, scope: CoroutineScope, spec: FiniteAnimationSpec<Float>): Float {
+        val animatable = progress ?: Animatable(target).also { progress = it }
+        if (animatable.targetValue != target) {
+            scope.launch { animatable.animateTo(target, spec) }
+        }
+        return animatable.value
     }
 }
 
@@ -152,7 +197,10 @@ private enum class FooterSlot {
     END,
 }
 
-/** The room the footer keeps between the dots and each button where it has it, see [onboardingDotsStart]. */
+/**
+ * The room the footer keeps between the dots and each button where it has it (see [onboardingDotsStart]), and between
+ * the dots and the buttons under them where they are stacked.
+ */
 private val FOOTER_DOTS_GAP = 8.dp
 
 /** Material's small button padding: the default's 24dp sides would leave Start playing no room on a 360dp phone. */

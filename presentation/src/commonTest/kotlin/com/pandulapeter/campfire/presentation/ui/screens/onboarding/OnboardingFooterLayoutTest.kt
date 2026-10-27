@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class OnboardingFooterLayoutTest {
@@ -55,6 +56,17 @@ class OnboardingFooterLayoutTest {
         val start = onboardingDotsStart(width = 328, dotsWidth = 112, startSlotWidth = 90, endSlotWidth = 113, gap = 8)
         assertTrue(start - 90 >= 6)
         assertTrue(328 - 113 - (start + 112) >= 6)
+    }
+
+    @Test
+    fun `slots and dots that fit beside each other share the line`() {
+        assertFalse(onboardingFooterIsStacked(width = 328, startSlotWidth = 64, dotsMaxWidth = 128, endSlotWidth = 113, gap = 8))
+    }
+
+    @Test
+    fun `a pixel more than the line stacks the dots`() {
+        assertFalse(onboardingFooterIsStacked(width = 328, startSlotWidth = 90, dotsMaxWidth = 128, endSlotWidth = 94, gap = 8))
+        assertTrue(onboardingFooterIsStacked(width = 328, startSlotWidth = 90, dotsMaxWidth = 128, endSlotWidth = 95, gap = 8))
     }
 
     @Test
