@@ -15,9 +15,9 @@ checked, not only those Android runs, since an escaped brace means the same ever
 sets.
 
 A pattern is what the string literals inside a `Regex(` or `Pattern.compile(` call spell, joined (`"(a|" + "b)"`), or a
-literal `.toRegex(` is called on. A template or any other code between them (`${OTHER.pattern}`, a `joinToString`) is
-read as one plain character: a pattern it names is a literal checked on its own. A pattern built anywhere else, in a
-`val` passed to the call, is not seen.
+literal `.toRegex(` or `.toPattern(` is called on, after any calls without arguments (`.trimIndent()`). A template or
+any other code between them (`${OTHER.pattern}`, a `joinToString`) is read as one plain character: a pattern it names
+is a literal checked on its own. A pattern built anywhere else, in a `val` passed to the call, is not seen.
 
 With paths it checks those files, without them every tracked Kotlin file; exits 1 on any finding.
 """
@@ -28,7 +28,7 @@ import sys
 
 COUNT = re.compile(r"\{\d+(?:,\d*)?\}")
 CALL = re.compile(r"\b(?:Regex|Pattern\.compile)\(")
-AFTER = re.compile(r"\s*\.toRegex\(")
+AFTER = re.compile(r"\s*(?:\.\w+\(\)\s*)*\.(?:toRegex|toPattern)\(")
 PLACEHOLDER = "X"
 ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "b": "\b", "\\": "\\", '"': '"', "'": "'", "$": "$"}
 

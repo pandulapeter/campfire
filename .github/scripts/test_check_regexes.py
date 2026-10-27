@@ -33,6 +33,8 @@ class FindingsTest(unittest.TestCase):
 
     def test_a_literal_with_to_regex_is_checked(self):
         self.assertEqual([1], lines('val c = """a}""".toRegex()'))
+        self.assertEqual([1], lines('val c = """\n    a}\n""".trimIndent().toRegex()'))
+        self.assertEqual([1], lines('val c = "a}".toPattern()'))
 
     def test_every_literal_of_a_concatenated_pattern_is_checked(self):
         self.assertEqual([3], lines('\n\nval d = Regex(\n    "^(a|b)" +\n        "c}$",\n    RegexOption.IGNORE_CASE,\n)'))
