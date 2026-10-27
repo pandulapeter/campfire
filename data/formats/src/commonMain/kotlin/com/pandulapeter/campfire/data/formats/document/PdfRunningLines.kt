@@ -23,17 +23,21 @@ internal object PdfRunningLines {
     fun runningLines(pages: List<Page>): Set<String> {
         if (pages.size < 2) return emptySet()
         val counts = mutableMapOf<String, Int>()
-        for (page in pages) page.lines.filter { it.y < page.height * 0.08 || it.y > page.height * 0.92 }
+        for (page in pages) page.edges.filter { it.text.isNotBlank() }
             .map { signature(it, page.height) }.toSet().forEach { counts[it] = (counts[it] ?: 0) + 1 }
         return counts.filterValues { it >= 2 && it * 2 >= pages.size }.keys
     }
 
+    /** Whether a line at [y] is in the top or the bottom margin, where a running line is printed. */
+    fun isEdge(y: Double, height: Double) = y < height * 0.08 || y > height * 0.92
+
     /**
-     * A footer like `2 / 3` is only taken for a page number when both numbers are this page's own: a chord sheet's first
-     * line near the top of the page is often a bare time signature (`3/4`, `6/8`), which a looser match would drop.
+     * A footer like `2 / 3` or `Page 2 of 3` is only taken for a page number when both numbers are this page's own: a
+     * chord sheet's first line near the top of the page is often a bare time signature (`3/4`, `6/8`), which a looser
+     * match would drop.
      */
     fun isPageCount(text: String, page: Int, pageCount: Int) =
         pageCountPattern.matchEntire(text)?.destructured?.let { (number, total) -> number == "$page" && total == "$pageCount" } ?: false
 
-    private val pageCountPattern = Regex("([0-9]+)\\s*/\\s*([0-9]+)")
+    private val pageCountPattern = Regex("(?:page\\s+)?([0-9]+)(?:\\s*/\\s*|\\s+of\\s+)([0-9]+)", RegexOption.IGNORE_CASE)
 }

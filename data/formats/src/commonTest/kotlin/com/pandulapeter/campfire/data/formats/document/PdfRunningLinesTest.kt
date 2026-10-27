@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.data.formats.document
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class PdfRunningLinesTest {
 
@@ -34,6 +36,27 @@ class PdfRunningLinesTest {
         }
 
         assertEquals((1..4).map { listOf("Verse $it") }, pages)
+    }
+
+    @Test
+    fun `a header and a footer printed at both margins are dropped from a short last page read as columns`() = runTest {
+        val pages = extract(3) { page ->
+            val body = if (page < 3) (0 until 30).joinToString(" ") { "1 0 0 1 50 ${700 - it * 20} Tm (Line $page $it of a song sung across the whole width of its page) Tj" }
+            else "1 0 0 1 50 700 Tm (The end) Tj 1 0 0 1 50 680 Tm (Fade out) Tj"
+            "1 0 0 1 0 780 Tm (Song by Someone) Tj 1 0 0 1 380 780 Tm (https://example.com/song?id=12) Tj " +
+                "1 0 0 1 0 20 Tm ($page of 3) Tj 1 0 0 1 480 20 Tm (26/10/2026, 14:25) Tj $body"
+        }
+
+        assertEquals(listOf("The end", "Fade out"), pages.last())
+        assertEquals(30, pages.first().size)
+    }
+
+    @Test
+    fun `a page count written out is this page's own only`() {
+        assertTrue(PdfRunningLines.isPageCount("2 of 3", page = 2, pageCount = 3))
+        assertTrue(PdfRunningLines.isPageCount("Page 2 of 3", page = 2, pageCount = 3))
+        assertFalse(PdfRunningLines.isPageCount("2 of 3", page = 1, pageCount = 3))
+        assertFalse(PdfRunningLines.isPageCount("One of 3", page = 1, pageCount = 3))
     }
 
     /** The lines of a document of [count] pages in 10-point Courier, each page's content made by [content]. */

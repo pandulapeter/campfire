@@ -27,32 +27,7 @@ internal object PdfLineLayout {
         val size = glyphs.map { it.span.size }.sorted().let { it[it.size / 2] }
         val band = size * GUTTER_WIDTH
         val gutter = gutter(glyphs, band)
-        fun column(items: List<Positioned>): List<Line> {
-            val groups = mutableListOf<MutableList<Positioned>>()
-            for (glyph in items.sortedBy { it.y }) {
-                val group = groups.lastOrNull()
-                if (group == null || abs(group.first().y - glyph.y) > minOf(group.first().span.size, glyph.span.size) * 0.22) groups += mutableListOf(glyph)
-                else group += glyph
-            }
-            return groups.map { group ->
-                val spans = mutableListOf<ExtractedDocument.Span>()
-                for (glyph in group.sortedBy { it.span.start }) {
-                    val previous = spans.lastOrNull()
-                    val span = glyph.span
-                    // Some producers paint a shadow/duplicate over the same glyph.
-                    if (previous != null && previous.text == span.text && abs(previous.start - span.start) < 0.1) continue
-                    val gap = if (previous == null) 0.0 else span.start - previous.end
-                    if (gap > span.size * 0.25 && previous?.text?.endsWith(' ') != true && !span.text.startsWith(' ')) {
-                        val count = if (span.isMonospace) (gap / (span.size * 0.6)).roundToInt().coerceIn(1, 1000) else 1
-                        charge(count)
-                        spans += ExtractedDocument.Span(" ".repeat(count), previous!!.end, span.start, span.size, isMonospace = span.isMonospace)
-                    }
-                    spans += span
-                }
-                Line(spans, group.first().y)
-            }
-        }
-        if (gutter == null) return column(glyphs)
+        if (gutter == null) return rows(glyphs, charge)
         val spanning = glyphs.filter { it.span.end > gutter - band && it.span.start < gutter }
             .map { it.y }.distinct().sorted()
         val result = mutableListOf<Line>()
@@ -60,7 +35,7 @@ internal object PdfLineLayout {
         // its gutters first and still holds the others on either side of it.
         fun columns(items: List<Positioned>): List<Line> {
             val (first, second) = items.partition { it.span.start < gutter }
-            return if (first.isEmpty() || second.isEmpty()) column(items) else buildLines(first, charge) + buildLines(second, charge)
+            return if (first.isEmpty() || second.isEmpty()) rows(items, charge) else buildLines(first, charge) + buildLines(second, charge)
         }
         // The rows are cut out of one sorted pass rather than by filtering every glyph again for each of them, which is the
         // same partition, since both thresholds grow with the row.
@@ -71,11 +46,41 @@ internal object PdfLineLayout {
             val start = maxOf(from, heights.countBelow(y - size * 0.22))
             val end = maxOf(start, heights.countAtMost(y + size * 0.22))
             result += columns(sorted.subList(from, start))
-            result += column(sorted.subList(start, end))
+            result += rows(sorted.subList(start, end), charge)
             from = end
         }
         result += columns(sorted.subList(from, sorted.size))
         return result
+    }
+
+    /**
+     * [items] set into lines by their baselines alone, with no column searched for: how a header or a footer reads, its
+     * parts at both margins on one line.
+     */
+    fun rows(items: List<Positioned>, charge: (Int) -> Unit): List<Line> {
+        val groups = mutableListOf<MutableList<Positioned>>()
+        for (glyph in items.sortedBy { it.y }) {
+            val group = groups.lastOrNull()
+            if (group == null || abs(group.first().y - glyph.y) > minOf(group.first().span.size, glyph.span.size) * 0.22) groups += mutableListOf(glyph)
+            else group += glyph
+        }
+        return groups.map { group ->
+            val spans = mutableListOf<ExtractedDocument.Span>()
+            for (glyph in group.sortedBy { it.span.start }) {
+                val previous = spans.lastOrNull()
+                val span = glyph.span
+                // Some producers paint a shadow/duplicate over the same glyph.
+                if (previous != null && previous.text == span.text && abs(previous.start - span.start) < 0.1) continue
+                val gap = if (previous == null) 0.0 else span.start - previous.end
+                if (gap > span.size * 0.25 && previous?.text?.endsWith(' ') != true && !span.text.startsWith(' ')) {
+                    val count = if (span.isMonospace) (gap / (span.size * 0.6)).roundToInt().coerceIn(1, 1000) else 1
+                    charge(count)
+                    spans += ExtractedDocument.Span(" ".repeat(count), previous!!.end, span.start, span.size, isMonospace = span.isMonospace)
+                }
+                spans += span
+            }
+            Line(spans, group.first().y)
+        }
     }
 
     /**

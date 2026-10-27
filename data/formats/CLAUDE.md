@@ -35,6 +35,9 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, **found at every half point,
   not sampled**, since Campfire's own export leaves only 18 points between 20-point text. Each side is searched again
   (three and four columns).
+- Running lines (`PdfRunningLines`) are judged on each page's margins laid out across the whole width, never by the
+  columns found below them: a short last page can read as columns, which would cut its header into parts no other
+  page's header matches. A dropped margin line takes every line on its baseline with it.
 - An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
   logical order. One spanning several baselines (a hyphenated word) is ignored.
 - Page, operator, and work yields keep the web build responsive.

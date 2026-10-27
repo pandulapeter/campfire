@@ -60,6 +60,16 @@ class ChordProParserRowMarksTest {
     }
 
     @Test
+    fun `a repeat opened and closed at a double bar line is a mark`() {
+        val line = line("||: [Am] | [F] :||")
+
+        assertTrue(line.text.isBlank())
+        assertEquals(listOf("||:", "Am", "|", "F", ":||"), line.chords.map { it.name })
+        assertTrue(line.chords.filter { it.name != "Am" && it.name != "F" }.all { it.isMark })
+        assertRoundTrip("||: [Am] | [F] :||")
+    }
+
+    @Test
     fun `beat dots are marks between the chords`() {
         val dotted = line("[G] . . . | [C] . . . x2")
 

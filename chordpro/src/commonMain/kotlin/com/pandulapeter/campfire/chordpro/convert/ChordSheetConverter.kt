@@ -236,7 +236,7 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
@@ -296,7 +296,7 @@ public object ChordSheetConverter {
         return content.isNotEmpty() && !chord(content) && !isChordLine(content) && content.split(' ').count { it.isNotEmpty() } <= 6
     }
     /**
-     * A label with a colon is metadata whatever follows it. Without one only a value of the field's own shape is
+     * A label with a colon (or the semicolon some sites print instead) is metadata whatever follows it. Without one only a value of the field's own shape is
      * (`Capo 2`, `Key G`, `Time 4/4`), since a lyric may well start with one of these words: "By the rivers of
      * Babylon" and "Time after time" are sung, not credited. A value that cannot be read comes back blank, and its line
      * then stays a line of text rather than vanishing ([classify]).
@@ -314,13 +314,14 @@ public object ChordSheetConverter {
             }
         }
         if (match != null) {
-            val label = match.groupValues[1].lowercase()
+            val label = match.groupValues[1].lowercase().replace(" & ", " and ")
             val name = when (label) {
                 in keyLabels -> "key"
                 in capoLabels -> "capo"
                 "temp\u00f3", "bpm" -> "tempo"
                 "\u00fctemmutat\u00f3" -> "time"
                 "el\u0151ad\u00f3", "by", "words and music by" -> "artist"
+                "song" -> "title"
                 else -> label
             }
             val value = match.groupValues[2].trim()
@@ -450,8 +451,18 @@ public object ChordSheetConverter {
         val omitted = mutableSetOf<Int>()
         val changes = extractHeader(lines, kinds, header, omitted)
         if (guessesTitle) extractTitle(lines, kinds, header, omitted)
+        val definitions = ChordSheetDefinitions.definitions(
+            lines = lines.map { it.text },
+            // A shape in parentheses after its chord reads as a chord row with a note, `D7 (x-x-0-2-1-2)`.
+            candidates = kinds.indices.filter { (kinds[it] == Kind.LYRIC || kinds[it] == Kind.CHORD) && it !in omitted },
+            chordName = { name -> ascii(name).takeIf(::isChordOrLatinName) },
+        )
+        header += definitions.values
+        omitted += definitions.keys
         val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
-        return collapse(header + if (header.isEmpty()) output else listOf("") + output)
+        // A credit printed both under the title and as a labelled line names the song once.
+        val distinct = header.distinct()
+        return collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output)
     }
 
     /**
@@ -556,6 +567,10 @@ public object ChordSheetConverter {
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
+                    name == "artist" && creditYear.matches(value) -> creditYear.matchEntire(value)!!.destructured.let { (artist, year) ->
+                        header += "{artist: ${headerValue(artist)}}"
+                        header += "{year: $year}"
+                    }
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
             }
@@ -838,7 +853,17 @@ public object ChordSheetConverter {
             previous = at
             insertions.getOrPut(at) { mutableListOf() } += if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
         }
-        val escaped = ChordProLiteralText.escape(lyrics.text)
+        var escaped = ChordProLiteralText.escape(lyrics.text)
+        // A lyric printed a few columns in from the chord over it starts where that chord does, which is all its indent
+        // says; written as it is, it would be sung after a pause of spaces. Two chords or more in the indent are played
+        // before the words, so it is kept where they would otherwise run together.
+        val indent = escaped.indexOfFirst { !it.isWhitespace() }
+        if (indent > 0 && insertions.keys.count { it < indent } <= 1) {
+            val moved = insertions.entries.sortedBy { it.key }.groupBy({ (it.key - indent).coerceAtLeast(0) }, { it.value })
+            insertions.clear()
+            moved.forEach { (at, values) -> insertions[at] = values.flatten().toMutableList() }
+            escaped = escaped.substring(indent)
+        }
         val merged = buildString {
             var carried: List<String> = emptyList()
             for (index in 0..escaped.length) {
@@ -880,7 +905,8 @@ public object ChordSheetConverter {
         return result.joinToString("\n").trim() + "\n"
     }
 
-    private val token = Regex("\\|:?|:\\||[^\\s|]+")
+    /** A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). */
+    private val token = Regex("\\|\\|:?|:\\|:|:\\|\\|?|\\|:?|[^\\s|]+")
     private val embed = Regex("^[0-9]*Embed$")
 
     /** A share count glued to a lyric's last letter or punctuation; a sung "we embed" keeps its space. */
@@ -893,13 +919,14 @@ public object ChordSheetConverter {
     private val capoLabels = setOf("capo", "capotraste", "cejilla", "kapodaster", "capodastre", "kapo")
     private val metadata = Regex(
         "^(Capo|Capotraste|Cejilla|Kapodaster|Capodastre|Kapo|Key|Hangnem|Tom|Tono|Tonalidad|Tonart|Tonalit\u00e9|Tonalit\u00e0|Tonacja|Toonsoort|" +
-            "Tempo|Temp\u00f3|BPM|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$",
+            "Tempo|Temp\u00f3|BPM|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|Song|Title|Album|Year|Composer|Lyricist|words (?:and|&) music by|by)" +
+            "\\s*[:;]\\s*(.+)$",
         RegexOption.IGNORE_CASE,
     )
     private val transposition = Regex("^(Transposition|Transzpon\u00e1l\u00e1s)\\s*:\\s*([+-]?[0-9]+)$", RegexOption.IGNORE_CASE)
     private val unlabelledMetadata = Regex(
         "^(Capo|Capotraste|Cejilla|Kapodaster|Capodastre|Kapo|Key of|Key|Hangnem|Tonalidad|Tonart|Tonalit\u00e9|Tonalit\u00e0|Tonacja|Toonsoort|" +
-            "Tempo|Time|words and music by)\\s+(.+)$",
+            "Tempo|Time|words (?:and|&) music by)\\s+(.+)$",
         RegexOption.IGNORE_CASE,
     )
     private val capoPreposition = Regex("^(?:on|at)\\s+", RegexOption.IGNORE_CASE)
@@ -910,7 +937,9 @@ public object ChordSheetConverter {
     private val timingNames = setOf("tempo", "time")
     private val labelGap = Regex("\\s{2,}")
     private val pageWords = setOf("chords", "tab", "lyrics")
-    private val credit = Regex("^(?:words and music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
+    private val credit = Regex("^(?:words (?:and|&) music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
+    /** A credit ending in the year of the song, `Words & music by David Bowie 1972`. */
+    private val creditYear = Regex("^(.+?),?\\s+((?:1[5-9]|20)[0-9]{2})$")
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
 

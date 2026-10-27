@@ -27,7 +27,7 @@ internal object ChordProRowMarks {
     /** One repeat count, `x2`, `(2x)` or `×2`, as a mark of a chord row and after a heading the converter reads. */
     val repeatCount = Regex("\\(?(?:[0-9]+[x\u00d7]|[x\u00d7][0-9]+)\\)?", RegexOption.IGNORE_CASE)
 
-    private val signs = setOf("|", "||", "|:", ":|", ":|:", "%", "%%", "/", "-", "N.C.", "NC", ".", "...", "\u2026")
+    private val signs = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "%", "%%", "/", "-", "N.C.", "NC", ".", "...", "\u2026")
 
     fun isMark(word: String) = word in signs || repeatCount.matches(word)
 

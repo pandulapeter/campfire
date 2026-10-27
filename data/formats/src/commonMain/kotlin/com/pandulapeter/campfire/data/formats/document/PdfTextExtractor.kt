@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.formats.document.PdfContentInterpreter.Poi
 import com.pandulapeter.campfire.data.formats.document.PdfContentInterpreter.State
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.Line
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.buildLines
+import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.rows
+import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isEdge
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isPageCount
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.runningLines
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.signature
@@ -38,7 +40,12 @@ object PdfTextExtractor {
      * forms and for contents shared between pages before the document is taken for a hostile one.
      */
     internal const val MAX_INTERPRETED_BYTES = 4L * ImportLimits.MAX_IMPORT_SIZE
-    internal data class Page(val lines: List<Line>, val height: Double)
+    /**
+     * [edges] are the lines of the page's top and bottom margins laid out across the whole width, as a header or a footer
+     * is printed: a page short of text can be read as columns, which would cut a running line into parts that no other
+     * page's running line matches.
+     */
+    internal data class Page(val lines: List<Line>, val height: Double, val edges: List<Line> = emptyList())
 
     suspend fun extract(bytes: ByteArray): ExtractedDocument {
         val file = PdfFile(bytes)
@@ -89,7 +96,9 @@ object PdfTextExtractor {
             var at = 0
             for (stream in streams) { stream.copyInto(data, at); at += stream.size; data[at++] = 10 }
             interpreter.interpret(data, resources, State())
-            return Page(buildLines(interpreter.glyphs, budget::chargeText), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
+            val height = if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0
+            val edges = rows(interpreter.glyphs.filter { isEdge(it.y, height) }, budget::chargeText)
+            return Page(buildLines(interpreter.glyphs, budget::chargeText), height, edges)
         }
 
         // A malformed page costs only itself: its slot stays, empty, so that page numbers and the running lines still
@@ -126,10 +135,12 @@ object PdfTextExtractor {
         require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
         val repeated = runningLines(pages)
         return ExtractedDocument(pages.mapIndexed { index, page ->
+            fun isRunning(line: Line) = line.text.trim().let { text ->
+                text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
+            }
+            val running = page.edges.filter { it.text.isNotBlank() && isRunning(it) }
             val lines = page.lines.filterNot { line ->
-                val edge = line.y < page.height * 0.08 || line.y > page.height * 0.92
-                val text = line.text.trim()
-                edge && (text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated)
+                isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 })
             }
             val paragraphs = mutableListOf<ExtractedDocument.Line>()
             lines.forEachIndexed { index, line ->

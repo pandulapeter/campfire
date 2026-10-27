@@ -135,6 +135,49 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a header labelled with semicolons names the song, its album, and the year its credit ends in, each once`() {
+        assertEquals(
+            "{artist: Someone}\n{title: Hello}\n{album: Best of}\n{year: 1972}\n\n[Am]Hello [C]world\n",
+            convert("Artist; Someone\nSong; Hello\nAlbum; Best of\nWords & music by Someone 1972\n\nAm     C\nHello world"),
+        )
+        assertTrue(convert("Title: Hello\nBy: Someone\nAm     C\nHello world").startsWith("{title: Hello}\n{artist: Someone}\n\n"))
+    }
+
+    @Test
+    fun `a repeat sign glued to a chord is a mark of its own and a double bar line stays one`() {
+        val intro = convert("Intro\n\n||:Am |    | C    :||\n\nVerse 1\nAm   C\nHello world")
+        assertTrue("\n||: [Am] | | [C] :||\n" in intro, intro)
+        val outro = convert("Verse 1\nAm   C\nHello world\n\nOutro\n\nAm | F ||")
+        assertTrue("\n[Am] | [F] ||\n" in outro, outro)
+    }
+
+    @Test
+    fun `a lyric indented under its first chord starts at that chord`() {
+        assertEquals("[Am]Hello [C]world\n", convert("Am     C\n  Hello world"))
+        assertEquals("[Am]\"Let the [C]children\n", convert("Am         C\n   \"Let the children"))
+        // Laid out in glyphs, the indent has positions of its own, and two chords played before the words keep it.
+        fun glyphs(text: String) = ChordSheet.Line(text.mapIndexed { index, character -> span(character.toString(), index * 6.0, index * 6.0 + 6.0) })
+        val sheet = ChordSheet(listOf(ChordSheet.Page(listOf(glyphs("Am    C"), glyphs("          Hello world")))))
+        assertEquals("[Am]      [C]    Hello world\n", ChordSheetConverter.convert(sheet).single())
+    }
+
+    @Test
+    fun `chord shapes listed one a line become definitions, a chord listed with and without a star neither`() {
+        val result = convert(
+            "Am C\nHello world\n\nBb(#11)/A = x03330\nC: x32010\nD7 (x-x-0-2-1-2)\nF 2 0 1 0\nBb  = 688766\nBb* = 013331\nDm 2010\nLove 202000",
+        )
+        assertTrue(
+            result.startsWith(
+                "{define: Bb(#11)/A base-fret 1 frets x 0 3 3 3 0}\n{define: C base-fret 1 frets x 3 2 0 1 0}\n" +
+                    "{define: D7 base-fret 1 frets x x 0 2 1 2}\n{define: F base-fret 1 frets 2 0 1 0}\n\n",
+            ),
+            result,
+        )
+        assertTrue(result.endsWith("Bb  = 688766\nBb* = 013331\nDm 2010\nLove 202000\n"), result)
+        assertTrue(convert("Am C\nHello world\n\nEm* = 022000").startsWith("{define: Em base-fret 1 frets 0 2 2 0 0 0}\n"))
+    }
+
+    @Test
     fun `ChordPro with few chords or only recalls is still ChordPro`() {
         val sparse = "Verse one\nno chords here\n[G]Only this line\nhas a chord\nand that is all\n"
         assertEquals(sparse, convert(sparse))

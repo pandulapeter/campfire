@@ -19,6 +19,12 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   the document's first one (a bold title of the body's size not followed by more bold lyrics, which is a chorus), and
   a page repeating the current song's title continues it, the repetition left out where it is marked (`(cont.)`, a
   page number) or set in the title's type.
+- Chord shapes listed one a line (`Bb(#11)/A = x03330`) become `{define}` lines in the header
+  (`ChordSheetDefinitions`), except a chord listed both plain and starred (`Bb`, `Bb*`): the star is dropped where the
+  chord is played, so one definition would stand for both.
+- A lyric indented under its first chord starts at that chord; two chords or more in the indent keep it.
+- A header labelled with a colon or a semicolon names title (`Song;`), album, and year; a credit ending in a year
+  gives both, and a credit printed twice is written once.
 - `convertFragment` converts what is pasted into the editor: the body as `convert` writes it (chords set, headings as
   sections, prose escaped), but no title or credit guessed and metadata lines kept as text, since the song it goes into
   has its own header. Only a paste with a chord row or a bracketed heading
