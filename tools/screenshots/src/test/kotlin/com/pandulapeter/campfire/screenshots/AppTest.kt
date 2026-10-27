@@ -31,6 +31,7 @@ import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
@@ -74,7 +75,7 @@ internal data class TestAppearance(
  * Runs [test] against the whole app - its real view model, use cases, repositories and files - started in [window]
  * over a library that holds the demo songs, the [songs] of the test resources' `songs` folder, and the [setlists] of its
  * `setlists` folder, with the launch
- * screen gone and the song details screen's text at [fontScale]. The file picker hands over [pickedFiles] whenever the
+ * screen gone and the song details screen's text at [fontScale], its songs laid out as [songLayout]. The file picker hands over [pickedFiles] whenever the
  * app asks for files.
  *
  * Only the network is kept out: sync is `Fakes.kt`'s, the cover search finds nothing (`OfflineCoverArtRepository`),
@@ -94,6 +95,7 @@ internal fun runAppTest(
     songs: List<String> = emptyList(),
     setlists: List<String> = emptyList(),
     fontScale: Float = UserPreferences.DEFAULT_FONT_SCALE,
+    songLayout: SongLayout = SongLayout.PAGES,
     pickedFiles: List<ImportedFile> = emptyList(),
     appearance: TestAppearance = TestAppearance(),
     isCoverArtEnabled: Boolean = false,
@@ -105,7 +107,7 @@ internal fun runAppTest(
     if (isFirstRun) {
         require(
             songs.isEmpty() && setlists.isEmpty() && preferenceFiles.isEmpty() && !isCoverArtEnabled &&
-                fontScale == UserPreferences.DEFAULT_FONT_SCALE,
+                fontScale == UserPreferences.DEFAULT_FONT_SCALE && songLayout == SongLayout.PAGES,
         ) {
             "A first run starts from an empty data directory, which has no songs, setlists, or preferences to set."
         }
@@ -120,7 +122,7 @@ internal fun runAppTest(
             appearance = appearance,
             fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
             writeData = { dataDirectory ->
-                if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled)
+                if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, songLayout, appearance, isCoverArtEnabled)
                 preferenceFiles.forEach { (name, text) -> File(dataDirectory, "preferences/" + name).writeText(text) }
             },
             test = test,
@@ -263,6 +265,7 @@ private fun writeLibrary(
     songs: List<String>,
     setlists: List<String>,
     fontScale: Float,
+    songLayout: SongLayout,
     appearance: TestAppearance,
     isCoverArtEnabled: Boolean,
 ) {
@@ -277,6 +280,7 @@ private fun writeLibrary(
         put("isCoverArtEnabled", isCoverArtEnabled)
         put("fontScale", fontScale)
         putJsonArray("seenWhatsNewVersions") { add(JsonPrimitive(System.getProperty("campfire.screenshots.versionName"))) }
+        put("songLayout", songLayout.id)
         put("isSongLayoutChosen", true)
     }
     File(dataDirectory, "preferences").mkdirs()

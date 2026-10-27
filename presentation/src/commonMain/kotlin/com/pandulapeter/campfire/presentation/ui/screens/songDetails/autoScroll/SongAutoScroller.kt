@@ -71,7 +71,9 @@ internal class SongAutoScroller(
     /**
      * Scrolls the song at [speedPercent] of its own pace, frame by frame, for as long as it is not cancelled, returning
      * once it has reached the end. A frame in which anything else moves the song - a finger, a fling, a nudge - is left
-     * to that, and so is one longer than [MAX_FRAME_SECONDS], so that a stall is never made up for with a jump.
+     * to that, and so is one longer than [MAX_FRAME_SECONDS], so that a stall is never made up for with a jump. A frame
+     * in which a new layout is still to be followed is skipped too, since the reader is put back on their place in it
+     * first ([RowSnapFlingBehavior.isFollowingLayout]).
      */
     suspend fun play(speedPercent: () -> Int) {
         var lastFrame = withFrameNanos { it }
@@ -81,9 +83,10 @@ internal class SongAutoScroller(
             lastFrame = frame
             val currentTrack = track ?: continue
             if (!scrollState.canScrollForward) return
-            if (scrollState.isScrollInProgress) continue
+            if (scrollState.isScrollInProgress || flingBehavior.isFollowingLayout) continue
             val speed = currentTrack.speedAt(readingLineAt(scrollState.value).toFloat(), secondsPerLineAt(pace.secondsPerLine(currentTrack.lineCount), speedPercent()))
             scrollState.dispatchRawDelta(speed * seconds)
+            flingBehavior.noteReaderMoved()
         }
     }
 

@@ -48,6 +48,8 @@ columns the bottom of one and the top of the next share a height, so any motion 
 
 - **The clock is the scroll position**: each frame moves the song by the speed where it is (`SongAutoScroller.play`),
   skipping frames anything else moves it in. A drag, a fling, a tap, or a pedal only moves the reader; playing goes on.
+  A relayout while playing (a fold, a pinch, a transposition, a resize) holds the song until the reader is back in
+  place, then plays on from there.
 - Up, Down, Page Up, Page Down, the tap halves, and the step actions nudge two chorded lines (smoothly, playing or not),
   and past either end go on to the setlist's song beside it as a step does. Space plays and stops.
 - It stops only when asked, at the end of the song, on another page, with the layout back to pages, under anything

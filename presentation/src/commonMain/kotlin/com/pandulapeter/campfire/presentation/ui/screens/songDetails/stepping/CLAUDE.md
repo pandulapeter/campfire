@@ -48,7 +48,8 @@ The song details screen's pedal stepping and snapping, over the `SongRows` the l
 - The scroll keeps pixels across a resize, pinch, fold, or transposition, so `RowSnapFlingBehavior.keepReaderInPlace`
   records at rest a `ReadingAnchor` (the stop's first section and the offset past it) and, inside a tall stop, a
   `LineAnchor` (section, chunk, fraction). Once a new layout has held still for 250 ms it scrolls there, snapped by
-  `settledScrollTarget`. Anchors are taken only at rest and never from its own moves, so a pinch through many layouts
-  returns to the starting row.
+  `settledScrollTarget`. Anchors are taken at rest, and after each frame a song scrolling by itself moves
+  (`noteReaderMoved`), never from its own moves nor while a new layout waits to be followed (`isFollowingLayout`), so a
+  pinch through many layouts returns to the starting row.
 - A height-only change (metronome panel, title row collapse) only changes row trailing padding, so it is followed in the
   same layout pass (`onRowsPlaced`), before the scroll places the song: the divider never slides into view.

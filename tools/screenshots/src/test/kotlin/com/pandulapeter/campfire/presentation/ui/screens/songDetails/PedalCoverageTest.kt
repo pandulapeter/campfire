@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.Key
@@ -21,20 +20,11 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasScrollToNodeAction
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -102,13 +92,6 @@ internal class PedalCoverageTest {
         }
     }
 
-    private fun AppTestScope.openSong(title: String) {
-        onNode(hasScrollToNodeAction()).performScrollToNode(hasText(title))
-        onNode(hasText(title) and hasClickAction()).performClick()
-        waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { songViewport() != null }
-        waitForIdle()
-    }
-
     /** Presses [key] until a press moves the song no further, keeping what was on screen at every rest, the first one included. */
     private fun AppTestScope.walk(key: Key, case: String): List<Rest> {
         val rests = mutableListOf(rest())
@@ -153,11 +136,6 @@ internal class PedalCoverageTest {
             },
         )
     }
-}
-
-/** A line of text, or a block drawn rather than written (tablature, chord diagrams), where it is in the song. */
-private data class Piece(val text: String, val occurrence: Int, val bounds: Rect) {
-    val key get() = text to occurrence
 }
 
 /**
@@ -365,59 +343,6 @@ private fun AppTestScope.isStepButton() = listOf(
 /** The step buttons and the dots between them. */
 private fun AppTestScope.isStepControl() = isStepButton() or SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo)
 
-private val isSongViewport = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
-
-private fun AppTestScope.songViewport() = onAllNodes(isSongViewport, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull { node ->
-    node.children.isNotEmpty() && songPieces(node, 0f).isNotEmpty()
-}
-
-private fun SemanticsNode.scroll() = config[SemanticsProperties.VerticalScrollAxisRange].value()
-
-/**
- * The pieces of the song in [viewport], [songTop] being where the top of the song is on screen, in the order they are
- * read: every line of every text, and every block drawn rather than written. A card drawn behind a chorus has a shape
- * and nothing to read, and an icon has a role. A line reaches from its top, where chords are drawn over it, to as far
- * as its letters can reach below it, not over the leading its line height adds, where a row's divider may be drawn.
- */
-private fun songPieces(viewport: SemanticsNode, songTop: Float): List<Piece> {
-    val pieces = mutableListOf<Pair<String, Rect>>()
-    fun visit(node: SemanticsNode) {
-        val bounds = node.unclippedBounds().translate(0f, -songTop)
-        val layout = node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.let { action ->
-            mutableListOf<TextLayoutResult>().also { action(it) }.firstOrNull()
-        }
-        when {
-            layout != null -> {
-                val descent = layout.descent()
-                (0 until layout.lineCount).forEach { line ->
-                    pieces += layout.layoutInput.text.text.substring(layout.getLineStart(line), layout.getLineEnd(line)) to Rect(
-                        left = bounds.left,
-                        top = bounds.top + layout.getLineTop(line).coerceAtLeast(0f),
-                        right = bounds.right,
-                        bottom = bounds.top + minOf(layout.getLineBottom(line), layout.getLineBaseline(line) + descent, bounds.height),
-                    )
-                }
-            }
-            node.children.isEmpty() && bounds.height > 0f && node.config.getOrNull(SemanticsProperties.Role) == null &&
-                node.config.getOrNull(SemanticsProperties.Shape) == null ->
-                pieces += node.config.getOrNull(SemanticsProperties.ContentDescription)?.joinToString().orEmpty() to bounds
-            else -> node.children.forEach(::visit)
-        }
-    }
-    viewport.children.forEach(::visit)
-    val occurrences = mutableMapOf<String, Int>()
-    return pieces.map { (text, bounds) -> Piece(text = text, occurrence = occurrences.merge(text, 1, Int::plus)!!, bounds = bounds) }
-}
-
-/** How far the letters of this text's style can reach below their baseline, without the leading its line height adds. */
-private fun TextLayoutResult.descent() = descents.getOrPut(layoutInput.style) {
-    TextMeasurer(layoutInput.fontFamilyResolver, layoutInput.density, layoutInput.layoutDirection)
-        .measure(DESCENT_SAMPLE, layoutInput.style.copy(lineHeight = TextUnit.Unspecified))
-        .let { it.size.height - it.firstBaseline }
-}
-
-private val descents = mutableMapOf<TextStyle, Float>()
-
 /**
  * What a step control covers: a button's icon is described, but the button around it is drawn over the song too, and
  * its shadow around that, which read as part of a line would make the line reach under the button.
@@ -429,8 +354,6 @@ private fun SemanticsNode.drawnBounds() = unclippedBounds().let { bounds ->
         Rect(center = bounds.center, radius = STEP_BUTTON_SIZE.value / 2 + STEP_BUTTON_SHADOW.value)
     }
 }
-
-private fun SemanticsNode.unclippedBounds() = Rect(offset = positionInRoot, size = Size(size.width.toFloat(), size.height.toFloat()))
 
 private fun Color.isCloseTo(other: Color, tolerance: Float) = abs(red - other.red) <= tolerance && abs(green - other.green) <= tolerance && abs(blue - other.blue) <= tolerance
 
@@ -445,9 +368,7 @@ private const val MAX_STEPS = 500
 private const val MAX_SCROLL_ATTEMPTS = 10
 private const val MAX_LOOK_ATTEMPTS = 3
 
-private const val OPEN_TIMEOUT_MILLIS = 10_000L
 private const val TOLERANCE = 0.5f
-private const val DESCENT_SAMPLE = "gjpqy"
 
 /** How far a pixel of the edge may be from the same pixel unfaded: further than antialiasing moves it, much less than a fade. */
 private const val FADED_DIFFERENCE = 0.2f

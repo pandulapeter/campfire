@@ -75,8 +75,18 @@ internal class RowSnapFlingBehavior(
     /** What of the viewport the song is read through, which the page writes whenever its insets or text size change. */
     var readingWindow by mutableStateOf(ReadingWindow())
 
+    /**
+     * Whether a new layout has been placed that the reader has not been put back into yet, so the scroll's pixels say
+     * nothing about where they are: they are still the previous layout's, somewhere else entirely in this one.
+     */
+    var isFollowingLayout by mutableStateOf(false)
+        private set
+
     /** Where the reader is in the song, see [keepReaderInPlace]. */
     private var anchor: ReadingAnchor? = null
+
+    /** The scroll position [anchor] was taken at, -1 where it was not taken from one, which [noteReaderMoved] skips. */
+    private var anchoredValue = -1
 
     /** The viewport the last [rows] were placed in. */
     private var placedViewport: IntSize? = null
@@ -96,13 +106,19 @@ internal class RowSnapFlingBehavior(
         if (placedRows == rows) return
         val currentAnchor = anchor
         val isOnlyHeightChanged = previousViewport != null && previousViewport.width == viewport.width && previousViewport.height != viewport.height
+        var isReplaced = false
         if (currentAnchor != null && isOnlyHeightChanged && !scrollState.isScrollInProgress) {
             anchoredScrollOffset(currentAnchor, placedRows, viewport.height, Int.MAX_VALUE, readingWindow.top)?.let { target ->
                 // Clamped to the extent of the previous layout, which only a reader near the end of the song can be past;
                 // the rest of the way is then left to keepReaderInPlace.
                 scrollState.dispatchRawDelta((target - scrollState.value).toFloat())
+                isReplaced = scrollState.value == target
             }
         }
+        // Set in the layout pass that writes the rows rather than once keepReaderInPlace sees them, so that no frame of a
+        // song scrolling by itself moves it in between. A move clamped short of its target is not the reader's place,
+        // and an anchor taken from where it stopped would be kept instead of theirs.
+        if (currentAnchor != null && !isReplaced) isFollowingLayout = true
         rows = placedRows
     }
 
@@ -170,7 +186,8 @@ internal class RowSnapFlingBehavior(
      * text pinched or stepped to another size, a section folded, the song rewritten by a transposition - since the
      * scroll keeps its position in pixels, which is somewhere else entirely in the new layout: on the row, or the
      * section, they were reading. Where the reader is ([ReadingAnchor]) is taken whenever the scroll comes to rest,
-     * from the stops it came to rest among, never from a position a new layout has already clamped, and never from
+     * and, while the song scrolls by itself, after each frame it moves ([noteReaderMoved]), never while a new layout
+     * waits to be followed ([isFollowingLayout]), from the stops it came to rest among, never from a position a new layout has already clamped, and never from
      * where a move of this function's own left it, so a pinch through a hundred layouts returns to the row it started
      * in rather than to one it passed on the way.
      *
@@ -188,36 +205,57 @@ internal class RowSnapFlingBehavior(
         launch {
             snapshotFlow { scrollState.isScrollInProgress }.collect { isScrolling ->
                 if (isScrolling || isMoving) return@collect
-                if (scrollState.value != movedTo) anchor = readingAnchorOf(scrollState.value, rows, readingWindow.top)
+                if (scrollState.value != movedTo) {
+                    anchor = readingAnchorOf(scrollState.value, rows, readingWindow.top)
+                    anchoredValue = scrollState.value
+                }
                 movedTo = null
             }
         }
         snapshotFlow { rows }.collectLatest { currentRows ->
             if (anchor == null) {
                 anchor = readingAnchorOf(scrollState.value, currentRows, readingWindow.top)
+                anchoredValue = scrollState.value
+                isFollowingLayout = false
                 return@collectLatest
             }
-            delay(LAYOUT_SETTLE_MILLIS)
-            // Read after the wait, since a scroll the reader made during it came to rest on this layout.
-            val currentAnchor = anchor ?: return@collectLatest
-            if (scrollState.isScrollInProgress) return@collectLatest
-            val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE, readingWindow.top) ?: return@collectLatest
-            withTimeoutOrNull(LAYOUT_SETTLE_MILLIS * 4) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
-            // Snapped as a fling is, since the place kept can fall between two rows of the new layout - a reader deep in
-            // a row taller than a smaller window held, or the end of a scroll that has not caught up with the new layout -
-            // and nothing else moves the song once it is there, leaving the divider in the middle of the screen.
-            val maxValue = scrollState.maxValue
-            val reachableTarget = settledScrollTarget(target.coerceAtMost(maxValue), currentRows, scrollState.viewportSize, maxValue)
-            if (reachableTarget == scrollState.value) return@collectLatest
-            isMoving = true
+            // Cleared on every way out, a move cut short by a drag included, but left set where a newer layout has
+            // cancelled this one, which is still to be followed.
             try {
-                scrollState.animateScrollTo(reachableTarget)
+                delay(LAYOUT_SETTLE_MILLIS)
+                // Read after the wait, since a scroll the reader made during it came to rest on this layout.
+                val currentAnchor = anchor ?: return@collectLatest
+                if (scrollState.isScrollInProgress) return@collectLatest
+                val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE, readingWindow.top) ?: return@collectLatest
+                withTimeoutOrNull(LAYOUT_SETTLE_MILLIS * 4) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
+                // Snapped as a fling is, since the place kept can fall between two rows of the new layout - a reader deep
+                // in a row taller than a smaller window held, or the end of a scroll that has not caught up with the new
+                // layout - and nothing else moves the song once it is there, leaving the divider in the middle of the screen.
+                val maxValue = scrollState.maxValue
+                val reachableTarget = settledScrollTarget(target.coerceAtMost(maxValue), currentRows, scrollState.viewportSize, maxValue)
+                if (reachableTarget == scrollState.value) return@collectLatest
+                isMoving = true
+                try {
+                    scrollState.animateScrollTo(reachableTarget)
+                } finally {
+                    isMoving = false
+                    movedTo = scrollState.value
+                }
             } finally {
-                isMoving = false
-                movedTo = scrollState.value
+                if (rows == currentRows) isFollowingLayout = false
             }
         }
         awaitCancellation()
+    }
+
+    /** Takes where the reader is from where the song was moved to by something that is not a scroll gesture: the song playing by itself. */
+    fun noteReaderMoved() {
+        if (isFollowingLayout) return
+        val value = scrollState.value
+        // Most frames of a slow pace move the song by a fraction of a pixel, which leaves the place where it was.
+        if (value == anchoredValue) return
+        anchoredValue = value
+        anchor = readingAnchorOf(value, rows, readingWindow.top)
     }
 }
 
