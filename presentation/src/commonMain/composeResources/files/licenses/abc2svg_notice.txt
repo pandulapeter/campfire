@@ -1,0 +1,8 @@
+abc2svg is distributed with Campfire unmodified, under the GNU Lesser General Public License, version 3 or later, whose
+text Campfire shows beside this notice together with that of the GNU General Public License it incorporates. Its source
+is at https://chiselapp.com/user/moinejf/repository/abc2svg; the copy Campfire bundles is the v1.23.6 release, built
+from that repository's sources.
+
+On 2026-10-27 its author, Jean-François Moine, granted by email:
+
+    "I allow abc2svg to be distributed as part of Campfire through Apple's app stores."

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ import kotlinx.coroutines.withContext
  * say where there was no tuning to collect them for (an instrument without shapes): the instrument and tuning pill still
  * heads the song's first section then ([RenderSection.Metadata.instrumentPill]), since it is what brings the diagrams
  * back.
+ * @param notationChords How the chords over the lyrics are named, which an engraved ABC tune's chord symbols follow.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
@@ -57,6 +59,7 @@ internal class SongLyricsModel(
     val chordTuning: ChordTuning? = null,
     val hasChords: Boolean = chords.isNotEmpty(),
     val scaleGroups: List<SongScaleGroup> = emptyList(),
+    val notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -76,6 +79,7 @@ internal class SongLyricsModel(
         chordTuning = chordTuning,
         hasChords = hasChords,
         scaleGroups = scaleGroups,
+        notationChords = notationChords,
     )
 }
 
@@ -115,6 +119,7 @@ internal fun prepareSongLyrics(
     suggestsScales: Boolean = false,
     showsDegrees: Boolean = false,
     shapeCapo: Int = 0,
+    notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo)
@@ -142,6 +147,7 @@ internal fun prepareSongLyrics(
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
         scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis) else emptyList(),
+        notationChords = notationChords,
     )
 }
 

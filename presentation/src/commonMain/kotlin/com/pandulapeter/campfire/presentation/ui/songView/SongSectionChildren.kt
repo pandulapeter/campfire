@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
@@ -67,6 +68,7 @@ internal fun SongSectionChildren(
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
+    notations: SongNotations,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
@@ -115,6 +117,7 @@ internal fun SongSectionChildren(
                 lyricsStyle = lyricsStyle,
                 chordStyle = chordStyle,
                 textMeasurements = textMeasurements,
+                notations = notations,
                 foldedRuns = foldedRuns,
                 defaultLabels = defaultLabels,
                 fontScale = fontScale,

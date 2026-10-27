@@ -37,6 +37,7 @@ kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.12.0" # https://github.com/Kotlin/kotlinx.serialization/releases
 ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
 ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
+quickjs = "1.0.15" # https://github.com/dokar3/quickjs-kt/releases
 #noinspection NewerVersionAvailable
 skiko = "0.150.2" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 spotless = "8.10.4" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
@@ -89,6 +90,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+quickjs = { module = "io.github.dokar3:quickjs-kt", version.ref = "quickjs" }
 skiko-angle-windows-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-angle-windows-x64", version.ref = "skiko" }
 spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }

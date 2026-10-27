@@ -57,9 +57,11 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
         data:model                    domain models
   metronome:api / :implementation     the click engine; depends on nothing of the app's
   tuner:api / :implementation         pitch detection, tones, mic input; depends on nothing of the app's
+  abc:api / :implementation           ABC tunes engraved by abc2svg in an embedded engine; depends on nothing of the app's
   tools:screenshots                   store screenshots rendered offscreen from the desktop build
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
-  tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them
+  tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
+                                      extracts abc2svg's music glyphs for the notation drawing
   chordpro                            dependency-free ChordPro parser, serializer, transposer, chords, tabs
 ```
 
@@ -95,7 +97,8 @@ campfire.log / campfire.log.1          desktop only, here: the process log (Andr
   multiplatform.
 - Shared code is JVM-free (the `code-style` skill lists the replacements).
 - Implementation classes are `internal`, named `<Interface>Impl`; use cases are `operator fun invoke`. Layers are
-  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, and `:tuner:api` use `explicitApi()`.
+  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, `:tuner:api`, and `:abc:api` use
+  `explicitApi()`.
 - Formatting is checked: `.editorconfig` + Spotless/ktlint (`./gradlew spotlessApply`), and
   `.github/scripts/check_license_headers.py` requires the MPL-2.0 header in every source file, script, workflow, XML
   resource, and `CLAUDE.md`. The rest of the style is the `code-style` skill's.
@@ -201,6 +204,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup (or a `<span>` saying the same), drawn on screen and in
   the PDF, toggled in the editor by its buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the
   file: `chordpro`, `ui/songView`, `ui/print`, `ui/screens/songEditor/toolbar`.
+- An `abc` block is drawn as staff notation (abc2svg, bundled, run locally; the desktop so far), its text until
+  the rendering arrives or where it fails: `abc`, `ui/notation`, `ui/songView`.
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.

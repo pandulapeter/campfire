@@ -54,7 +54,10 @@ import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncNotifications
 import com.pandulapeter.campfire.presentation.ui.launch.LaunchScreenGate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.pandulapeter.campfire.abc.api.AbcRenderer
+import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
 
 /**
  * The root of the shared Compose UI: theme, adaptive navigation chrome, the Navigation 3 display and the dialogs.
@@ -135,6 +138,7 @@ fun CampfireApp(
         LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
+        LocalAbcRenderer provides koinInject<AbcRenderer>(),
     ) {
         CampfireTheme(
             uiMode = userPreferences?.uiMode,

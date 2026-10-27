@@ -16,6 +16,8 @@ of the source set of the builds that ship them.
 
 | Component | Copyright | License | Builds |
 |---|---|---|---|
+| [abc2svg](https://chiselapp.com/user/moinejf/repository/abc2svg) v1.23.6 | Jean-François Moine | [LGPL 3.0 or later, with the GPL 3.0 it incorporates](../presentation/src/commonMain/composeResources/files/licenses/lgpl_3.0.txt), and its author's permission, granted by email on 2026-10-27: "I allow abc2svg to be distributed as part of Campfire through Apple's app stores." ([notice](../presentation/src/commonMain/composeResources/files/licenses/abc2svg_notice.txt)) | Android, desktop |
+| [abc2svg music font](https://chiselapp.com/user/moinejf/repository/abc2svg), its glyph outlines | Jean-François Moine | [SIL Open Font License 1.1](../presentation/src/commonMain/composeResources/files/licenses/abc2svg_font_ofl.txt) | All |
 | [Accompanist](https://github.com/google/accompanist) Drawable Painter | Google | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
 | [AndroidX](https://developer.android.com/jetpack/androidx) libraries (Activity, AppCompat, Browser, Core, Fragment, ProfileInstaller, and what they need) | The Android Open Source Project | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
 | AndroidX [multiplatform](https://github.com/JetBrains/compose-multiplatform-core) libraries (Annotation, Collection, Graphics Shapes, Lifecycle, Navigation 3, NavigationEvent, SavedState) | The Android Open Source Project, JetBrains | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
@@ -49,6 +51,8 @@ of the source set of the builds that ship them.
 | [Okio](https://github.com/square/okio) | Square | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [piex](https://github.com/google/piex), inside Skia | Google | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | iOS, macOS, Linux |
 | [Public Suffix List](https://publicsuffix.org), inside OkHttp | Mozilla Foundation | [MPL 2.0](../presentation/src/commonMain/composeResources/files/licenses/mpl_2.0.txt) | Android |
+| [QuickJS](https://bellard.org/quickjs), with [c-vector](https://github.com/eteran/c-vector), inside quickjs-kt | Fabrice Bellard, Charlie Gordon; Evan Teran | [MIT](../presentation/src/commonMain/composeResources/files/licenses/quickjs_mit.txt) | Android, desktop |
+| [quickjs-kt](https://github.com/dokar3/quickjs-kt) | Dokar | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android, desktop |
 | [Reorderable](https://github.com/Calvin-LL/Reorderable) | Calvin Liang | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [Skia](https://skia.org) | Google | [BSD 3-Clause](../presentation/src/commonMain/composeResources/files/licenses/skia_bsd_3.txt) | Desktop, iOS, web |
 | [Skiko](https://github.com/JetBrains/skiko) | JetBrains | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) ([NOTICE](../presentation/src/commonMain/composeResources/files/licenses/skiko_notice.txt)) | Desktop, iOS, web |

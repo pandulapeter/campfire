@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -60,6 +61,7 @@ internal fun SongSectionItem(
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
+    notations: SongNotations,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
@@ -141,6 +143,7 @@ internal fun SongSectionItem(
         lyricsStyle = lyricsStyle,
         chordStyle = chordStyle,
         textMeasurements = textMeasurements,
+        notations = notations,
         foldedRuns = foldedRuns,
         defaultLabels = defaultLabels,
         fontScale = fontScale,
@@ -158,6 +161,7 @@ private fun LinesSectionItem(
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
+    notations: SongNotations,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
@@ -185,6 +189,7 @@ private fun LinesSectionItem(
             lyricsStyle = lyricsStyle,
             chordStyle = chordStyle,
             textMeasurements = textMeasurements,
+            notations = notations,
             foldedRuns = foldedRuns,
             defaultLabels = defaultLabels,
             notation = notation,
@@ -203,6 +208,7 @@ private fun LinesSectionItem(
         lyricsStyle = lyricsStyle,
         chordStyle = chordStyle,
         textMeasurements = textMeasurements,
+        notations = notations,
         foldedRuns = foldedRuns,
         defaultLabels = defaultLabels,
         notation = notation,

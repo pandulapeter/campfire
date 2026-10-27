@@ -46,6 +46,8 @@ kotlin {
                 // The composables render the ChordPro model directly; parsing and transposing go through use cases.
                 implementation(project(":chordpro"))
                 // The click is the app's rather than a screen's, and is handed a complete pattern by the view model.
+                // ABC tunes are engraved as staff notation by abc2svg, behind its own module like the click.
+                implementation(project(":abc:api"))
                 implementation(project(":metronome:api"))
                 implementation(project(":tuner:api"))
                 implementation(libs.androidx.lifecycle.runtime.compose)

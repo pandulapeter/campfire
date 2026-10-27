@@ -88,6 +88,25 @@ internal val openSourceComponents = listOf(
         licenseFile = MPL_2_FILE,
         licenseUrl = MPL_2_URL,
     ),
+    OpenSourceComponent(
+        name = "abc2svg",
+        holder = "Jean-François Moine",
+        url = "https://chiselapp.com/user/moinejf/repository/abc2svg",
+        licenseName = "GNU Lesser General Public License 3.0 or later",
+        licenseFile = "$LICENSES/lgpl_3.0.txt",
+        licenseUrl = "https://www.gnu.org/licenses/lgpl-3.0.html",
+        // Its author's permission to ship it through Apple's stores, which the LGPL alone leaves in doubt there.
+        noticeFile = "$LICENSES/abc2svg_notice.txt",
+        builds = JVM,
+    ),
+    OpenSourceComponent(
+        name = "abc2svg music font",
+        holder = "Jean-François Moine",
+        url = "https://chiselapp.com/user/moinejf/repository/abc2svg",
+        licenseName = OFL,
+        licenseFile = "$LICENSES/abc2svg_font_ofl.txt",
+        licenseUrl = OFL_URL,
+    ),
     apache("Accompanist Drawable Painter", "Google LLC", "https://github.com/google/accompanist", ANDROID),
     apache(
         name = "AndroidX libraries (Activity, AppCompat, Browser, Core, Fragment, ProfileInstaller, and what they need)",
@@ -277,6 +296,16 @@ internal val openSourceComponents = listOf(
         licenseUrl = MPL_2_URL,
         builds = ANDROID,
     ),
+    OpenSourceComponent(
+        name = "QuickJS",
+        holder = "Fabrice Bellard, Charlie Gordon; c-vector: Evan Teran",
+        url = "https://bellard.org/quickjs",
+        licenseName = MIT,
+        licenseFile = "$LICENSES/quickjs_mit.txt",
+        licenseUrl = MIT_URL,
+        builds = JVM,
+    ),
+    apache("quickjs-kt", "Dokar", "https://github.com/dokar3/quickjs-kt", JVM),
     apache("Reorderable", "Calvin Liang", "https://github.com/Calvin-LL/Reorderable"),
     OpenSourceComponent(
         name = "Skia",

@@ -36,6 +36,8 @@ ALLOWED = (
     "gradle/wrapper/*",
     "*/src/main/generated/baselineProfiles/*",
     "*/src/desktopTest/resources/document/*",
+    # abc2svg, bundled unmodified under its own license (LGPL-3.0-or-later), which a header of ours would change.
+    "abc/implementation/src/*/resources/abc2svg/*",
 )
 
 

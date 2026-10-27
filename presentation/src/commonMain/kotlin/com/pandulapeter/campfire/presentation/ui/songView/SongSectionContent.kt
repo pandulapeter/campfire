@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEAD
 import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
+import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 
 /**
@@ -87,6 +88,7 @@ internal fun SongSectionContent(
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
+    notations: SongNotations,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     notation: ChordNotation,
@@ -247,6 +249,7 @@ internal fun SongSectionContent(
                         monospaceLyricsStyle = monospaceLyricsStyle,
                         monospaceChordStyle = monospaceChordStyle,
                         textMeasurements = textMeasurements,
+                        notations = notations,
                     )
                     item = lastSlotItem
                 }
@@ -275,6 +278,7 @@ private fun SectionRun(
     monospaceLyricsStyle: TextStyle,
     monospaceChordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
+    notations: SongNotations,
 ) {
     val runModifier = if (!hasToggle || foldedRuns == null) {
         Modifier
@@ -289,10 +293,25 @@ private fun SectionRun(
         if (foldedRuns.isCollapsed(runFoldKey)) return
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
     }
-    when (kind) {
+    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run) else null
+    when {
+        // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
+        notationRun != null -> {
+            val text = remember(run) { run.joinToString(separator = "\n") { it.monospaceText.orEmpty() } }
+            shownSlots.forEach { slot ->
+                SongNotationBlock(
+                    modifier = runModifier.fillMaxWidth(),
+                    run = notationRun,
+                    text = text,
+                    slot = slot,
+                    isLastSlot = slot == slotCount - 1,
+                )
+            }
+        }
+
         // Another program's notation is always preformatted text: a tied ABC line full of dashes could pass for a string
         // of a staff, and be drawn with strokes through it.
-        FoldableKind.TAB, FoldableKind.VERBATIM -> {
+        kind == FoldableKind.TAB || kind == FoldableKind.VERBATIM -> {
             val lines = remember(run) { run.map { it.monospaceText.orEmpty() } }
             val rows = remember(lines, monospaceLyricsStyle, textMeasurements, kind) {
                 textMeasurements.tabRows(lines, monospaceLyricsStyle, isPreformatted = kind == FoldableKind.VERBATIM)
@@ -308,7 +327,7 @@ private fun SectionRun(
             }
         }
 
-        FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
+        else -> Column(modifier = runModifier.fillMaxWidth()) {
             val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
             shownSlots.forEach { slot ->
                 alignedLines.getOrNull(slot)?.let { bars ->

@@ -15,6 +15,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":abc:implementation"))
             implementation(project(":data:repository:implementation"))
             implementation(project(":data:source:local:implementation"))
             implementation(project(":data:source:remote:implementation"))

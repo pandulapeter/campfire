@@ -10,7 +10,9 @@
 # Plan: draw ABC blocks as staff notation
 
 **Status:** both spikes passed 2026-10-27 and the engines are chosen (see "Spike results"); abc2svg's author granted the
-App Store exception on 2026-10-27; steps 2–6 not started.
+App Store exception on 2026-10-27. Steps 2 and 3 landed on the desktop on 2026-10-27, with the viewer drawing `abc` runs
+(see "First slice"), and most of step 4 the same day (see "Step 4 so far"); the demo song Home on the Range carries a
+tune. Still to come: iOS, the web, Android's check, the PDF, and the rest of step 6.
 
 Reading ABC landed on 2026-10-26 (8d9da5565..95d8540cb): an `abc` block is a run of `ChordProLine.Verbatim` lines drawn
 as monospace text, and `.abc` files and pasted tunes import as ChordPro songs with a chord grid, verses, and the tune
@@ -199,6 +201,45 @@ build. The follow-up asks whether engines the platforms or Mozilla maintain can 
   Rhino, about the same download (~0.4 MB compressed per ABI split against Rhino's ~0.35 MB), and on the JVM and Android
   it ships plain bytecode plus optimized JNI libraries, so the Kotlin/Native upgrade risk left with iOS. Rhino is the
   tested replacement should quickjs-kt stall.
+
+## First slice (2026-10-27)
+
+`:abc:api` / `:abc:implementation` (quickjs-kt in `jvmSharedMain`; iOS and web engines fail every render for now),
+abc2svg v1.23.6 rebuilt from the tag's sources with its own jsmin, `ui/notation` (XML reader, CSS, parser, glyphs from
+`tools/fonts/abc_music_glyphs.py`, painter), and `SongNotationBlock` in the viewer's `VERBATIM` branch, keeping the
+text's slots (slot *n* = system *n*). Credits for abc2svg (with the permission), its font, QuickJS (with c-vector,
+compiled into quickjs-kt's libraries), and quickjs-kt. Built for Android, not yet run there.
+
+- **Inter in abc2svg's space: it does not quite fit.** abc2svg's default lyrics font is bold 13 px serif, measured with
+  its own tables; Inter Bold at that size ran words together ("throughthemountains", "andrainandsunshine"). The slice
+  asks abc2svg to measure lyrics as sans-serif regular (`%%vocalfont sans-serif 13`) and draws them in Inter Regular,
+  which fixed most of it; long syllables on eighth notes still touch ("throughthe", "sunshinecominghome"), since Inter
+  is wider than abc2svg's sans-serif table. Chord symbols (sans-serif 12) fit. Options for step 4: measure at a
+  slightly larger size than drawn (`%%vocalfont sans-serif 14` drawn at 13), draw lyrics a little smaller, or condense
+  a word that would overrun its neighbour.
+- Rendered once, at the first known width (the song's width capped at the widest column, less the card padding, one
+  SVG unit = 1 dp); other widths scale the systems down, never up, and the text size (pinch) does not reach the
+  notation. Re-rendering at a new width and following the text size belong to step 4.
+- The tune's own title and composer are drawn (abc2svg's header); `%%writefields TC 0` hides them (checked: the header
+  system then draws nothing and is dropped), a step 4 decision.
+
+## Step 4 so far (2026-10-27)
+
+- **Transposition, capo, and notation:** abc2svg's `%%transpose` moves notes and key signatures by the semitones the
+  lyrics' chords move by (the file's `{transpose}` plus the reader's sounding transposition, the capo counted in). Its
+  chord names are then replaced in the drawing by `:chordpro`'s names for the same symbols, so staff and grid name
+  every chord alike in every notation; abc2svg can't be left to do it (it transposes the first A–G letter it finds in
+  any symbol, "Do" becoming "Eo", and a prefix doesn't stop it), and annotations, which it leaves alone, sit at a height
+  per note. The replacement checks, chord by chord in order, that abc2svg's name is the symbol moved by the semitones,
+  and keeps abc2svg's names otherwise. A mid-song `{transpose}` is not followed yet.
+- **Lyric fit:** lyrics are measured at 1.1 × 13 px sans-serif and drawn at 13 px in Inter Regular
+  (`AbcSystem.LYRICS_ROOM`); the stress tune's long syllables on eighth notes now keep a gap.
+- **Width and text size:** rendered for the widest column at 1 dp × text size per unit, again when either changes
+  (after 300 ms of quiet), the systems scaled meanwhile; a re-rendering fades in.
+- **Pedal reading:** each system is a slot, as a tab row is, so Up/Down steps a system at a time by construction; not
+  yet checked on a long tune.
+- **Titles:** a tune whose first `T:` is the song's title leaves its title and composer to the page (`%%writefields
+  TC 0` in that tune's header, which abc2svg applies to it alone); the tunes of a medley keep their names.
 
 Open, for step 2 onwards: a real low-end Android phone and a real iPhone; abc2svg measures text with its own width
 tables, so lyrics and chords drawn in Inter may differ slightly (check long lyric lines for overlaps); hiding the title

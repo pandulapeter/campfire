@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
+import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.ReadingWindow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
@@ -232,6 +234,11 @@ internal fun SongDetailsPage(
                 searchesShapes = searchesShapes,
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
+                notationChords = NotationChordSpelling(
+                    semitones = transposed.metadata.transpose + inputs.transposition,
+                    preferFlats = inputs.spelling.accidentals.toPreferFlats(),
+                    notation = inputs.spelling.notation.toChordNotation(),
+                ),
             )
         }
         if (built == null) {

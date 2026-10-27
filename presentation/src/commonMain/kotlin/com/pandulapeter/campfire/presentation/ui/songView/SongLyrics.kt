@@ -49,6 +49,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableIntStateOf
+import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
+import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItem
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -264,11 +270,31 @@ internal fun SongLyrics(
     val chordStyle = remember(lyricsStyle) { lyricsStyle.copy(fontWeight = FontWeight.Bold) }
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
     val annotationStyle = remember(lyricsStyle) { lyricsStyle.copy(fontStyle = FontStyle.Italic) }
+    // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
+    // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
+    val textMeasurer = rememberTextMeasurer(cacheSize = 0)
+    // The staff notation of the song's ABC tunes, which replaces their text once it has been rendered: for a page as wide
+    // as the widest column the song can have here, each SVG unit as large as the text size makes it. Its words are laid
+    // out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
+    var songWidth by remember { mutableIntStateOf(0) }
+    val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
+    val notationPainter = remember(textMeasurer, density, notationTextStyle) {
+        NotationPainter(textMeasurer = textMeasurer, density = density, textStyle = notationTextStyle)
+    }
+    val notationUnit = NOTATION_UNIT * fontScale
+    val notations = rememberSongNotations(
+        runs = remember(sections) { sections.verbatimRuns() },
+        width = if (songWidth == 0) null else with(density) { ((minOf(songWidth.toDp(), MAX_COLUMN_WIDTH * fontScale) - CARD_PADDING * 2) / notationUnit).toInt() },
+        unitSize = with(density) { notationUnit.toPx() },
+        chords = model.notationChords,
+        songTitle = model.song.metadata.title,
+        painter = notationPainter,
+    )
     // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
     // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the
     // sections it changed. The folds are not one of its keys but part of each chunk's content (UnitContent.foldedKeys),
-    // so a fold only measures its own section again.
-    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
+    // so a fold only measures its own section again. The notation arriving measures everything again, once.
+    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels, notations) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
     // row of diagrams or chips. A folded section is one, since what is left of it is its header.
@@ -300,9 +326,6 @@ internal fun SongLyrics(
     val sectionKeys = remember(sections) { sectionKeysOf(sections) }
     val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }
     val cardKeys = remember(units, sectionKeys) { cardKeysOf(units, sectionKeys) }
-    // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
-    // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
-    val textMeasurer = rememberTextMeasurer(cacheSize = 0)
     val textMeasurements = remember(textMeasurer, lyricsStyle, chordStyle, annotationStyle) {
         SongTextMeasurements(
             textMeasurer = textMeasurer,
@@ -325,7 +348,7 @@ internal fun SongLyrics(
     }
     // A boolean rather than the width itself, which changes on every frame of a navigation rail animating.
     val isResizing = extraWidth > 0.dp
-    Box(modifier = modifier) {
+    Box(modifier = modifier.onSizeChanged { songWidth = it.width }) {
         LookaheadScope {
             SongSectionsLayout(
                 modifier = Modifier.semantics { isTraversalGroup = true },
@@ -380,6 +403,7 @@ internal fun SongLyrics(
                     lyricsStyle = lyricsStyle,
                     chordStyle = chordStyle,
                     textMeasurements = textMeasurements,
+                    notations = notations,
                     foldedRuns = foldedRuns,
                     defaultLabels = defaultLabels,
                     fontScale = fontScale,
@@ -420,6 +444,14 @@ private val MIN_COLUMN_WIDTH = 384.dp
 private val NARROW_COLUMN_WIDTH = 288.dp
 
 private val MAX_COLUMN_WIDTH = 560.dp
+
+/** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */
+private val NOTATION_UNIT = 1.dp
+
+/** Every run of verbatim lines in [this], each as the lines it holds, which is what an ABC tune is looked up by. */
+private fun List<RenderSection>.verbatimRuns() = filterIsInstance<RenderSection.Lines>().flatMap { section ->
+    section.sectionItems.mapNotNull { item -> (item as? SectionItem.RunSlot)?.takeIf { it.slot == 0 && it.kind == FoldableKind.VERBATIM }?.run }
+}
 private val COLUMN_GAP = 16.dp
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp

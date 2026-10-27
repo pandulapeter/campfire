@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.di
 
+import com.pandulapeter.campfire.abc.implementation.AbcModule
 import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
@@ -34,6 +35,7 @@ import org.koin.plugin.module.dsl.startKoin
  */
 @KoinApplication(
     modules = [
+        AbcModule::class,
         DataLocalSourceModule::class,
         DataRemoteSourceModule::class,
         DataRepositoryModule::class,

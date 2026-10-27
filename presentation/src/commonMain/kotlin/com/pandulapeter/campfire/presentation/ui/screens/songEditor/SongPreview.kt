@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
+import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -95,12 +97,19 @@ internal fun SongPreview(
         labels = labels,
         tabs = tabs,
     )
-    fun prepare(inputs: SongLyricsInputs) = prepareSongLyrics(
-        song = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation, tabs = inputs.tabs),
-        shouldShowChords = inputs.shouldShowChords,
-        labels = inputs.labels,
-        notation = inputs.spelling.notation.toChordNotation(),
-    )
+    fun prepare(inputs: SongLyricsInputs) = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation, tabs = inputs.tabs).let { song ->
+        prepareSongLyrics(
+            song = song,
+            shouldShowChords = inputs.shouldShowChords,
+            labels = inputs.labels,
+            notation = inputs.spelling.notation.toChordNotation(),
+            notationChords = NotationChordSpelling(
+                semitones = song.metadata.transpose + inputs.transposition,
+                preferFlats = inputs.spelling.accidentals.toPreferFlats(),
+                notation = inputs.spelling.notation.toChordNotation(),
+            ),
+        )
+    }
     // The first rendering is built right here, so the preview never opens on an empty frame. Every later one is built
     // away from the main thread once the typing pauses, which is exactly when the next key is likely to come, and
     // the one before it stays on screen until it is ready.
