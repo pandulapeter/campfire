@@ -174,6 +174,7 @@ internal fun PrintPages(
     }
     // Around the pinch's centroid, which is in the pane's coordinates, so the part of the page between the fingers stays
     // between them, as a touchpad's pinch keeps the part under the pointer.
+    val edgeScroll = rememberPageEdgeScroll()
     val transformableState = rememberTransformableState { centroid, zoomChange, panChange, _ ->
         zoomBy(zoomChange, centroid)
         val view = pageView()
@@ -182,6 +183,9 @@ internal fun PrintPages(
             val zoomedSize = fittedPageSize(area.size, aspectRatio) * view.zoom
             val pan = clampPan(view.panOf(zoomedSize), area, zoomedSize, viewportSize)
             onPageViewChanged(pageViewOf(view.zoom, pan + panChange, area, zoomedSize, viewportSize))
+            if (areOptionsBelow) {
+                edgeScroll.handOver(panChange - (clampPan(pan + panChange, area, zoomedSize, viewportSize) - pan))
+            }
         }
     }
     // Around the pointer, where it is over the page, as the scroll wheel zooms; a pinch on a touchpad says nowhere.
@@ -191,6 +195,7 @@ internal fun PrintPages(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .then(if (areOptionsBelow) edgeScroll.modifier else Modifier)
             .focusRequester(focusRequester)
             .focusable()
             .onKeyEvent { event ->

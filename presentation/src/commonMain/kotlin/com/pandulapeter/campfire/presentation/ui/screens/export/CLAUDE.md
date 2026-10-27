@@ -145,6 +145,8 @@ pipeline is in `ui/print/CLAUDE.md`.
 - **Zoom grows the whole sheet**, edges included, past the pane (content growing in a fixed page read as larger text in
   the file). The zoom is stored as the page point at the pane's center (`PageView`), not a pixel pan, so resizing keeps
   the view; turning the page opens the next one whole.
+- Stacked on a phone, a one-finger drag of a zoomed page that its top or bottom edge stops goes on scrolling the
+  options list, and its release flings it (`PageEdgeScroll`); a pinch never scrolls the list.
 - Ctrl / Cmd plus wheel zooms only in the desktop app (`isCtrlWheelZoomOwnedByApp`), since in a browser that is the
   page's zoom.
 - A page is described to screen readers by its number.

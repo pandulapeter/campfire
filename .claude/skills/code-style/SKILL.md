@@ -171,9 +171,14 @@ wrong or undo it".
   dialog and notification text all come from `composeResources/values/strings.xml`.
 - Read them with `com.pandulapeter.campfire.presentation.localization.stringResource(Res.string.x)`.
   **Never** the `org.jetbrains.compose.resources` overload: it ignores the in-app language.
-- **Add every new key to `values/strings.xml`, `values-hu/strings.xml`, and `values-ro/strings.xml`**, in the
-  same commented group in each file, and translate the Hungarian and the Romanian properly. A missing key
-  is a build-time hole that shows up as "???".
+- **Every new or changed user-facing string is translated into every supported language in the same change.**
+  The supported languages are the `values-*` folders beside `values/` in `composeResources` (list them, never
+  assume): add a new key to each one's `strings.xml`, in the same commented group in each file, and when the
+  English wording of an existing key changes, rewrite every translation to match it rather than leaving it
+  stale. Translate properly, never copy the English in. A missing key is a build-time hole that shows up
+  as "???". Strings outside `composeResources` follow the same rule: the iOS share extension's and
+  microphone prompt's text in every `*.lproj` folder, and the web loading screen's in every language of
+  `TEXTS` in `app/web/src/wasmJsMain/resources/index.html`.
 - Formatted strings are always called with their arguments (`%1$s`, `%1$d`); never concatenate a literal
   with a value. A sentence that takes text somebody else wrote — a title, a tag, a header value, a file
   or account name — is read with `textResource(Res.string.x, text)` (`:presentation`'s
