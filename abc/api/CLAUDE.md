@@ -10,7 +10,7 @@
 # :abc:api
 
 The contract of the staff notation engraver, and nothing else: depends on nothing, so no app type leaks in. Explicit
-API mode. The plan and the measured facts behind it are in `documentation/plans/abc-notation.md`.
+API mode.
 
 - `AbcRenderer.render(tune, width, transposition)` **never throws** (cancellation aside): anything that goes wrong is
   `AbcRendering.Failed`, and the caller keeps the ABC text on screen.

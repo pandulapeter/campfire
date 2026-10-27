@@ -13,10 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Increment short navigation rail padding
-- **ABC notation rendering**: ABC tunes drawn as staff notation instead of monospace text. Both spikes passed and
-  the engines are chosen; building it is next. Plan: [abc-notation.md](plans/abc-notation.md)
-- **More languages**: Hebrew (RTL + font)
+- **Support more languages**: Hebrew (RTL + font + editor)
 
 ## Short-term
 
