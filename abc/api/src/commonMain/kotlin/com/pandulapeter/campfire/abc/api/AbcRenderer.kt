@@ -14,8 +14,7 @@ package com.pandulapeter.campfire.abc.api
  * and nothing rendered is kept beyond what the caller keeps.
  *
  * Calls may come from any thread and are run one at a time, on a thread of the renderer's own. **A call never throws**
- * (cancellation aside): a tune the renderer cannot read, a platform that has no renderer yet, or a renderer that could
- * not start returns [AbcRendering.Failed], and the caller keeps showing the ABC text as it is.
+ * (cancellation aside): a tune the renderer cannot read or a renderer that could not start returns [AbcRendering.Failed], and the caller keeps showing the ABC text as it is.
  */
 public interface AbcRenderer {
 
