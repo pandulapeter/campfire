@@ -54,11 +54,15 @@ internal fun renderInParallel(options: Map<String, String>, output: File, shard:
             process.inputStream.bufferedReader().forEachLine { line -> println("(${part + 1}/$processes) $line") }
         }
     }
+    // A run stopped from Gradle or the IDE ends only this process; its parts would go on writing into the next run's folder.
+    val stopParts = thread(start = false) { parts.forEach { (process, _) -> process.descendants().forEach(ProcessHandle::destroy); process.destroy() } }
+    Runtime.getRuntime().addShutdownHook(stopParts)
     val failed = parts.count { (process, printer) ->
         val exitCode = process.waitFor()
         printer.join()
         exitCode != 0
     }
+    Runtime.getRuntime().removeShutdownHook(stopParts)
     println(if (failed == 0) "Every part of the run finished." else "$failed of $processes parts of the run had a failed screenshot.")
     return if (failed == 0) 0 else 1
 }
