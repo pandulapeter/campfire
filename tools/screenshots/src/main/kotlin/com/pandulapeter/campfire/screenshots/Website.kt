@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.screenshots
 
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -23,8 +24,11 @@ import org.koin.mp.KoinPlatform
 
 /**
  * The screenshots of campfire-songbook.com (`assets/screenshots` in the website's repository), each in the light and
- * the dark theme the page switches between, named as the page names them. They are written at the device's own size,
- * and scaled down to the page's sizes as they are copied there (the store-screenshots skill's `website_screenshots.py`).
+ * the dark theme the page switches between, named as the page names them, and in every language of the app: English
+ * at the top of the folder, the others in a folder named after the language (`hu/phone-songs-dark`), as the website
+ * keeps them for its pages in that language. The library's songs are the same in all of them; only the app around
+ * them is translated. They are written at the device's own size, and scaled down to the page's sizes as they are
+ * copied there (the store-screenshots skill's `website_screenshots.py`).
  */
 internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
     listOf(
@@ -188,8 +192,11 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             Triple(name, Device.LAPTOP, song(name, ILL_BE_THERE_FOR_YOU, fontScale = fontScale))
         },
     ).flatMap { (name, device, shot) ->
-        listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
-            Triple("$name-${uiMode.id}", device, shot.inTheme(uiMode))
+        AppLanguage.entries.filter { it != AppLanguage.SYSTEM_DEFAULT }.flatMap { language ->
+            val folder = if (language == AppLanguage.ENGLISH) "" else "${language.id}/"
+            listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
+                Triple("$folder$name-${uiMode.id}", device, shot.inTheme(uiMode, language))
+            }
         }
     }
 }

@@ -14,6 +14,10 @@ and, when one is given, the link preview Screenshot Bro exported as `assets/og-i
 replaces. The renders of a playing click's beats (`<name>-beat-<n>-<theme>.png`) are not copied as screenshots: what each
 changes of `<name>-<theme>.png`, the lit beat and the metronome mark's pulse, goes side by side into one transparent
 `<name>-beats-<theme>.webp`, a layer per beat at the screenshot's size, which the page fades over it in turn.
+The renders of the app's other languages, in a folder per language (`hu/<name>.png`), go to the same folder under
+`assets/screenshots` (`hu/<name>.webp`), where the site's pages in that language find them; one that comes out the
+same as the English one (nothing in it is translated) is left out, and an earlier copy of it removed, so those pages
+show the English file, which the visitor's browser may already have.
 The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
 is (CampfireWebsite) or as a plain clone is (campfire-website). Where none is there, the files go to the fallback folder
 instead, and it says so. A file the site no longer links stays where it is: remove it there.
@@ -58,7 +62,7 @@ def scaled(path, size):
     return Image.open(path).convert("RGB").resize(size, Image.Resampling.LANCZOS)
 
 
-def save_beats(renders, screenshots, name, theme):
+def beat_layers(renders, name, theme):
     """The beats of the shot called name in theme, as a layer each, transparent wherever the beat changes nothing."""
     size = SIZES[name.split("-")[0]]
     still = scaled(renders / f"{name}-{theme}.png", size)
@@ -68,10 +72,38 @@ def save_beats(renders, screenshots, name, theme):
         beat = scaled(path, size)
         changed = ImageChops.difference(still, beat).convert("L").point(lambda value: 255 if value > BEAT_THRESHOLD else 0)
         layers.paste(beat, (size[0] * index, 0), changed.filter(ImageFilter.MaxFilter(BEAT_MARGIN)))
-    output = screenshots / f"{name}-beats-{theme}.webp"
-    # Lossless, since what is drawn is a few flat blocks and the rest is empty: smaller than lossy, and without a seam.
-    layers.save(output, "WEBP", lossless=True, method=6)
-    print(f"{output} {len(beats)} × {size} {output.stat().st_size // 1024} KB")
+    return layers
+
+
+def same(image, english):
+    """Whether image is the English one, so that a language's pages can show the English file instead."""
+    return english is not None and image.mode == english.mode and image.size == english.size and ImageChops.difference(image, english).getbbox() is None
+
+
+def write(image, output, english, **options):
+    """Saves image as output, unless it is the same as the English image, in which case any earlier copy is removed."""
+    if same(image, english):
+        if output.exists():
+            output.unlink()
+        print(f"{output} left out: the same as the English one")
+        return
+    output.parent.mkdir(parents=True, exist_ok=True)
+    image.save(output, "WEBP", method=6, **options)
+    print(f"{output} {image.size} {output.stat().st_size // 1024} KB")
+
+
+def copy_screenshots(renders, screenshots, english_renders=None):
+    """Every render in the folder renders as a screenshot in screenshots, compared with the English renders if given."""
+    for name, theme in sorted({(match["name"], match["theme"]) for match in map(BEAT.fullmatch, (source.stem for source in renders.glob("*.png"))) if match}):
+        # Lossless, since what is drawn is a few flat blocks and the rest is empty: smaller than lossy, and without a seam.
+        english = beat_layers(english_renders, name, theme) if english_renders else None
+        write(beat_layers(renders, name, theme), screenshots / f"{name}-beats-{theme}.webp", english, lossless=True)
+    for source in sorted(renders.glob("*.png")):
+        if BEAT.fullmatch(source.stem):
+            continue
+        size = SIZES[source.stem.split("-")[0]]
+        english = scaled(english_renders / source.name, size) if english_renders and (english_renders / source.name).exists() else None
+        write(scaled(source, size), screenshots / f"{source.stem}.webp", english, quality=QUALITY)
 
 
 def main():
@@ -81,24 +113,16 @@ def main():
     parser.add_argument("--link-preview", type=pathlib.Path)
     parser.add_argument("--website", type=pathlib.Path)
     arguments = parser.parse_args()
-    renders = sorted(arguments.renders.glob("*.png"))
-    if not renders:
+    if not any(arguments.renders.glob("*.png")):
         sys.exit(f"There are no renders in {arguments.renders}: render the website set first (--only website).")
     target = website_assets(arguments.website)
     if target is None:
         target = arguments.fallback
         print(f"The website's repository is not next to this one ({' or '.join(SIBLINGS)}), so the files go to {target}.")
     screenshots = target / "screenshots"
-    screenshots.mkdir(parents=True, exist_ok=True)
-    for name, theme in sorted({(match["name"], match["theme"]) for match in map(BEAT.fullmatch, (source.stem for source in renders)) if match}):
-        save_beats(arguments.renders, screenshots, name, theme)
-    for source in renders:
-        if BEAT.fullmatch(source.stem):
-            continue
-        output = screenshots / f"{source.stem}.webp"
-        size = SIZES[source.stem.split("-")[0]]
-        Image.open(source).convert("RGB").resize(size, Image.Resampling.LANCZOS).save(output, "WEBP", quality=QUALITY, method=6)
-        print(f"{output} {size} {output.stat().st_size // 1024} KB")
+    copy_screenshots(arguments.renders, screenshots)
+    for language in sorted(path for path in arguments.renders.iterdir() if path.is_dir()):
+        copy_screenshots(language, screenshots / language.name, english_renders=arguments.renders)
     if arguments.link_preview is None:
         print("No link preview given (it is framed in Screenshot Bro), so og-image.jpg is left as it was.")
         return

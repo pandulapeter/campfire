@@ -68,8 +68,11 @@ internal class Shot(
     val beat: Int? = null,
 ) {
 
-    /** The same shot in [uiMode] instead, for a place that needs it in the other theme (the README's banners). */
-    fun inTheme(uiMode: UserPreferences.UiMode) = Shot(
+    /**
+     * The same shot in [uiMode] and [language] instead, for a place that needs it in the other theme (the README's
+     * banners) or in every language (the website).
+     */
+    fun inTheme(uiMode: UserPreferences.UiMode, language: AppLanguage = this.language) = Shot(
         id = id,
         uiMode = uiMode,
         language = language,
