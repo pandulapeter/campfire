@@ -74,8 +74,7 @@ import org.jetbrains.compose.resources.painterResource
  * through lambdas, since the screen keeps them in state that only the reads here and in its keys should follow.
  *
  * A song laid out in one column that scrolls by itself ([isContinuous]) has no step buttons and no dots: their column
- * holds the controls of the scroll instead ([AutoScrollControls]), the speed among them only where it may be changed
- * ([showsAutoScrollSpeed]), written once a drag of it ends ([onAutoScrollSpeedChosen]).
+ * holds the controls of the scroll instead ([AutoScrollControls]).
  */
 @Composable
 internal fun SongDetailsPager(
@@ -113,8 +112,6 @@ internal fun SongDetailsPager(
     stepForward: (from: Int?) -> Unit,
     isContinuous: Boolean,
     autoScrolling: SongAutoScrolling,
-    showsAutoScrollSpeed: Boolean,
-    onAutoScrollSpeedChosen: () -> Unit,
     onCurrentPage: (ScrollState, SongStepper, SongAutoScroller) -> Unit,
 ) = if (songs.isEmpty()) {
     // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen, or a preview's import
@@ -185,9 +182,7 @@ internal fun SongDetailsPager(
     AutoScrollControls(
         isVisible = isContinuous,
         autoScrolling = autoScrolling,
-        showsSpeed = showsAutoScrollSpeed,
         contentPadding = controlsPadding,
-        onSpeedChangeFinished = onAutoScrollSpeedChosen,
     )
 }
 

@@ -23,8 +23,8 @@ columns the bottom of one and the top of the next share a height, so any motion 
   leave. `AutoScrollControls` adds play / stop just above the next button (filled as the metronome's play button is,
   its triangle pointing down, unlike the metronome's), only while there is anything left to play (not for a song that
   fits the screen, nor at the end), its place kept when it is not; and only while playing, growing up out of it, the
-  countdown and above that the speed slider, faster downwards as the song moves (not in read only mode). Paused, the
-  column holds nothing else: a still countdown and a slider by the edge read as a scrollbar.
+  countdown and above that the speed slider, faster downwards as the song moves. Paused, the column holds nothing else:
+  a still countdown and a slider by the edge read as a scrollbar.
 - **The countdown** is the time until the scroll can go no further, which is when playing stops (the last screen at
   rest), not until the last line passes the reading line; it follows every drag, fling, nudge, fold, and speed change.
 - A fling is not capped to a step there (`RowSnapFlingBehavior.isCapped`).
@@ -39,7 +39,10 @@ columns the bottom of one and the top of the next share a height, so any motion 
   tempo (overrides included) and the file's time signature, four seconds with neither.
 - **The speed is a share of that pace**, per song (`UserPreferences.autoScrollSpeeds`, percent, 25–400, synced, none at
   100), on a logarithmic slider faster downwards, its middle the song's own pace (`AutoScrollSpeedScale.kt`). Written once
-  a drag ends; the dragged value plays meanwhile and holds until the store says the same.
+  a drag ends; the dragged value plays meanwhile and holds until the store says the same. Read only mode writes it too
+  (a device preference, not the library); an import preview's page never does, its dragged value lasting as long as
+  it, except that a preview of one song, rewritten in place into its song once imported, hands it to that song and
+  writes it (`SongAutoScrolling.followImportedPreview`).
 
 ### What moves and what stops it
 

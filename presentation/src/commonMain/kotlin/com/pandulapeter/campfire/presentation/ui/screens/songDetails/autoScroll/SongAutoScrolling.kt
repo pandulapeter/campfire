@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.pandulapeter.campfire.presentation.ui.state.importing.isImportPreviewFileName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -28,6 +29,8 @@ import kotlinx.coroutines.launch
  * is playing, and the speed it plays at, the one stored for the song (`UserPreferences.autoScrollSpeeds`) or the one the
  * slider is being dragged to. It plays only once asked, and stops only when asked, at the end of the song, on another
  * song, with the app out of sight, or with the song laid out in pages again: a drag or a pedal only moves the reader.
+ * A speed dragged to is written once the drag ends, except on an import preview's page, which is no song of the library
+ * yet: there it holds for as long as the page is read, and becomes the song's once the preview is imported as it.
  */
 internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 
@@ -39,6 +42,9 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 
     /** The file name of the song on screen and its stored speed, written by [rememberSongAutoScrolling]. */
     internal var song by mutableStateOf<Pair<String, Int>?>(null)
+
+    /** Stores a song's speed, by its file name, written by [rememberSongAutoScrolling]. */
+    internal var writeSpeed: (songFileName: String, speed: Int) -> Unit = { _, _ -> }
 
     /** The speed the slider is being dragged to, by the file name of the song it was dragged on. */
     private var draggedSpeed by mutableStateOf<Pair<String, Int>?>(null)
@@ -68,8 +74,22 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
         draggedSpeed = fileName to speed
     }
 
-    /** The speed the slider was dragged to on the song on screen, by its file name, to be written once the drag ends. */
-    fun speedToWrite() = draggedSpeed?.takeIf { it.first == song?.first }
+    /** Writes the speed the slider was dragged to on the song on screen, unless that is a preview's page. */
+    fun writeDraggedSpeed() {
+        val (fileName, speed) = draggedSpeed?.takeIf { it.first == song?.first } ?: return
+        if (!isImportPreviewFileName(fileName)) writeSpeed(fileName, speed)
+    }
+
+    /**
+     * Hands the speed dragged on the preview's page on screen over to [fileName], the song that page is now the screen of:
+     * a preview of one song is rewritten in place into the screen of the song it was imported as
+     * (`ImportReportState.followImportedSong`).
+     */
+    internal fun followImportedPreview(fileName: String?) {
+        val (draggedOn, speed) = draggedSpeed ?: return
+        if (fileName == null || song?.first != draggedOn || !isImportPreviewFileName(draggedOn) || isImportPreviewFileName(fileName)) return
+        draggedSpeed = fileName to speed
+    }
 
     internal fun settleDraggedSpeed() {
         val (fileName, stored) = song ?: return
@@ -82,6 +102,7 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
  * are laid out in one column. The page being changed ([currentPage]), anything drawn over the screen ([isUncovered]
  * false: a sheet, a dialog, another screen), and the app leaving it (`ON_STOP`, which a window minimised or a tab hidden
  * also is) stop it, as the song being laid out in pages again does: nobody reads a song moving under something else.
+ * [writeSpeed] stores a song's speed once a drag of the slider ends.
  */
 @Composable
 internal fun rememberSongAutoScrolling(
@@ -89,12 +110,18 @@ internal fun rememberSongAutoScrolling(
     isUncovered: Boolean,
     currentPage: Int,
     songFileName: String?,
+    writeSpeed: (songFileName: String, speed: Int) -> Unit,
 ): SongAutoScrolling {
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     val storedSpeed = songFileName?.let { userPreferences?.autoScrollSpeeds?.get(it) } ?: SongLayout.DEFAULT_AUTO_SCROLL_SPEED
     val coroutineScope = rememberCoroutineScope()
     val autoScrolling = remember(coroutineScope) { SongAutoScrolling(coroutineScope) }
+    autoScrolling.writeSpeed = writeSpeed
+    // Handed over while composing, so that the frame the preview becomes its song in already plays, and shows, that speed.
+    autoScrolling.followImportedPreview(songFileName)
     autoScrolling.song = songFileName?.let { it to storedSpeed }
+    // Only a speed handed over from a preview is still unwritten as another song comes on screen.
+    LaunchedEffect(songFileName) { autoScrolling.writeDraggedSpeed() }
     LaunchedEffect(currentPage, isContinuous) { autoScrolling.pause() }
     LaunchedEffect(isUncovered) { if (!isUncovered) autoScrolling.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { autoScrolling.pause() }

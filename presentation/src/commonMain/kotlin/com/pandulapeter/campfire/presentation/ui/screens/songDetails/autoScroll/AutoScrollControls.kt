@@ -67,8 +67,7 @@ import kotlin.time.Duration.Companion.seconds
  * it just above the next button, one cluster with it, there only while there is anything left to play, and only while
  * it plays, growing up out of that button, how long the song has left and above that the slider of its speed, faster
  * downwards, the way the song moves. Paused, nothing but the button is in the column: a countdown standing still and a
- * slider by the edge would only be read as a scrollbar. The speed is left out where it cannot be changed ([showsSpeed]
- * false: read only mode).
+ * slider by the edge would only be read as a scrollbar.
  *
  * @param contentPadding Where the step buttons are: their top, their end, and their bottom.
  */
@@ -76,9 +75,7 @@ import kotlin.time.Duration.Companion.seconds
 internal fun BoxScope.AutoScrollControls(
     isVisible: Boolean,
     autoScrolling: SongAutoScrolling,
-    showsSpeed: Boolean,
     contentPadding: PaddingValues,
-    onSpeedChangeFinished: () -> Unit,
 ) {
     val scroller = autoScrolling.scroller
     // Worked out from the scroll on every frame, but only a new whole second recomposes what shows it: a drag, a fling,
@@ -111,17 +108,15 @@ internal fun BoxScope.AutoScrollControls(
                 modifier = Modifier.padding(bottom = STEP_BUTTON_GAP),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (showsSpeed) {
-                    SpeedSlider(
-                        modifier = Modifier
-                            .weight(1f, fill = false)
-                            .heightIn(max = SPEED_SLIDER_MAX_HEIGHT)
-                            .fillMaxHeight(),
-                        speed = autoScrolling.speed,
-                        onSpeedChange = autoScrolling::dragSpeed,
-                        onSpeedChangeFinished = onSpeedChangeFinished,
-                    )
-                }
+                SpeedSlider(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(max = SPEED_SLIDER_MAX_HEIGHT)
+                        .fillMaxHeight(),
+                    speed = autoScrolling.speed,
+                    onSpeedChange = autoScrolling::dragSpeed,
+                    onSpeedChangeFinished = autoScrolling::writeDraggedSpeed,
+                )
                 Countdown(remainingSeconds = { remainingSeconds.value })
             }
         }

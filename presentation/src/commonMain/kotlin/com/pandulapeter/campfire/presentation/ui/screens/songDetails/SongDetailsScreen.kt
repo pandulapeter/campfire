@@ -210,6 +210,7 @@ internal fun SongDetailsScreen(
         isUncovered = isUncovered,
         currentPage = pagerState.currentPage,
         songFileName = currentSong?.fileName,
+        writeSpeed = viewModel.preferencesController::setAutoScrollSpeed,
     )
     val canStepBackInSong = if (isContinuous) autoScrolling.scroller?.canNudge(-1) == true else currentPageStepper?.canStepBack == true
     val canStepForwardInSong = if (isContinuous) autoScrolling.scroller?.canNudge(1) == true else currentPageStepper?.canStepForward == true
@@ -364,11 +365,6 @@ internal fun SongDetailsScreen(
                 stepForward = stepForwardAction,
                 isContinuous = isContinuous,
                 autoScrolling = autoScrolling,
-                // Read only mode changes nothing about how a song is read, and a preview writes no override.
-                showsAutoScrollSpeed = !isReadOnly,
-                onAutoScrollSpeedChosen = {
-                    autoScrolling.speedToWrite()?.let { (fileName, speed) -> viewModel.preferencesController.setAutoScrollSpeed(fileName, speed) }
-                },
                 onCurrentPage = { scrollState, stepper, autoScroller ->
                     currentPageScrollState = scrollState
                     currentPageStepper = stepper
