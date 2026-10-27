@@ -83,7 +83,8 @@ internal fun parseSvgNumbers(value: String): List<Float>? = value.split(',', ' '
     parseSvgLength(it) ?: return null
 }
 
-private val SINGLE_CLASS_RULE = Regex("""\.([\w-]+)\s*\{([^}]*)}""")
+/** The closing brace is escaped because Android's ICU engine, unlike the JVM's, rejects a bare `}` outside a class. */
+private val SINGLE_CLASS_RULE = Regex("""\.([\w-]+)\s*\{([^}]*)\}""")
 private const val MUSIC_FAMILY = "music"
 
 /** CSS semibold, the lightest weight drawn bold. */
