@@ -52,7 +52,7 @@ class NotationDrawingParserTest {
         val lyric = texts.single { (it.runs.single() as NotationTextRun.Words).text == "la" }
         assertEquals(NotationTextRole.CHORD, (chord.runs.single() as NotationTextRun.Words).role)
         assertEquals(NotationTextRole.LYRIC, (lyric.runs.single() as NotationTextRun.Words).role)
-        assertEquals(NotationFont(size = 12f, isBold = false, isItalic = false, isMusic = false), (chord.runs.single() as NotationTextRun.Words).font)
+        assertEquals(NotationFont(size = 16f, isBold = true, isItalic = false, isMusic = false), (chord.runs.single() as NotationTextRun.Words).font)
         assertEquals(61.6f - 39.1f, chord.y, 0.001f)
         assertEquals(NotationAnchor.MIDDLE, lyric.anchor)
         assertEquals(NotationFont(size = 13f, isBold = true, isItalic = false, isMusic = false), (lyric.runs.single() as NotationTextRun.Words).font)
@@ -145,7 +145,7 @@ class NotationDrawingParserTest {
         val SYSTEM = system(
             """
             <style>
-            .f3{font:12.0px text,sans-serif}
+            .f3{font:700 16.0px text,sans-serif}
             .f5{font:bold 13.0px text,serif}
             </style>
             <defs>

@@ -26,9 +26,10 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   abc2svg's own names.
 - `AbcRendererImpl` puts format lines in front of the tune: the page (`%%pagewidth`, no margins), chord symbols,
   annotations, and lyrics at the page's text size (16 units, as a unit is drawn 1 dp times the reader's text size;
-  abc2svg's 12 and 13 read as small print beside the lyrics), chord symbols tagged `gch`, lyrics tagged `lyr` and
-  measured as sans-serif regular at `LYRICS_ROOM` times their size (abc2svg's bold serif ran Inter's words together;
-  regular sans-serif at their own size still let long syllables touch), and `%%transpose`, which moves notes, key signatures, and chord symbols (the app renames the chords afterwards).
+  abc2svg's 12 and 13 read as small print beside the lyrics), chord symbols in bold like the page's and tagged `gch`,
+  lyrics tagged `lyr` and measured as sans-serif regular at `LYRICS_ROOM` times their size (abc2svg's bold serif ran
+  Inter's words together; regular sans-serif at their own size still let long syllables touch), and `%%transpose`,
+  which moves notes, key signatures, and chord symbols (the app renames the chords afterwards).
 
 ### Engines (`AbcScriptEngine`, `createAbcScriptEngine`)
 

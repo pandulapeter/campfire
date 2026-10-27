@@ -40,14 +40,14 @@ internal class AbcRendererImpl : AbcRenderer {
     }
 
     // Chord symbols, annotations, and lyrics are set at the size of the page's own chords and lyrics rather than
-    // abc2svg's 12 and 13, which read as small print beside them. Lyrics are measured as sans-serif rather than abc2svg's
-    // bold serif, and larger than they are drawn (see AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which
-    // its width tables measure narrower than it is.
+    // abc2svg's 12 and 13, which read as small print beside them, and chord symbols in bold, as the page's chords are.
+    // Lyrics are measured as sans-serif rather than abc2svg's bold serif, and larger than they are drawn (see
+    // AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which its width tables measure narrower than it is.
     private fun headerOf(width: Int, transposition: Int) = """
         %%pagewidth ${width}px
         %%leftmargin 0
         %%rightmargin 0
-        %%gchordfont sans-serif ${TEXT_SIZE.roundToInt()} class=${AbcSystem.CHORD_SYMBOL_CLASS}
+        %%gchordfont sans-serif-Bold ${TEXT_SIZE.roundToInt()} class=${AbcSystem.CHORD_SYMBOL_CLASS}
         %%annotationfont sans-serif ${TEXT_SIZE.roundToInt()}
         %%vocalfont sans-serif ${(TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition

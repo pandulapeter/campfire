@@ -57,7 +57,10 @@ internal fun parseTextAnchor(value: String) = when (value.trim()) {
 /** `75%` as 0.75; any other value (an absolute size) is not a proportion and reads as null. */
 private fun parsePercentage(value: String) = value.trim().takeIf { it.endsWith('%') }?.removeSuffix("%")?.toFloatOrNull()?.div(100f)
 
-/** `font: [bold] [italic] 13.0px family[,fallback]`, as abc2svg writes it. */
+/**
+ * `font: [weight] [italic] 13.0px family[,fallback]`, as abc2svg writes it: the weight a word (`bold`) or a number (`700`, for
+ * a font named `-Bold`), read as bold from semibold up.
+ */
 private fun parseFontShorthand(value: String): NotationFont? {
     val words = value.split(' ').filter { it.isNotEmpty() }
     val sizeIndex = words.indexOfFirst { it.endsWith("px") }.takeIf { it >= 0 } ?: return null
@@ -66,7 +69,7 @@ private fun parseFontShorthand(value: String): NotationFont? {
     val family = words.drop(sizeIndex + 1).joinToString(" ")
     return NotationFont(
         size = size,
-        isBold = "bold" in styles,
+        isBold = styles.any { it == "bold" || (it.toIntOrNull() ?: 0) >= BOLD_WEIGHT },
         isItalic = "italic" in styles || "oblique" in styles,
         isMusic = family.substringBefore(',').trim() == MUSIC_FAMILY,
     )
@@ -82,3 +85,6 @@ internal fun parseSvgNumbers(value: String): List<Float>? = value.split(',', ' '
 
 private val SINGLE_CLASS_RULE = Regex("""\.([\w-]+)\s*\{([^}]*)}""")
 private const val MUSIC_FAMILY = "music"
+
+/** CSS semibold, the lightest weight drawn bold. */
+private const val BOLD_WEIGHT = 600
