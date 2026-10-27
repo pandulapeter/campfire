@@ -302,6 +302,6 @@ Commands:
   `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`
   then `xcrun simctl install/launch`
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun`; `:app:web:wasmJsBrowserDistribution` for the deployable site
-- `./gradlew :tools:screenshots:run` (driven by the `store-screenshots` skill)
+- `./gradlew :tools:screenshots:run` (driven by the `store-screenshots` and `website-screenshots` skills)
 - `tools/promo-video/regenerate.sh` (driven by the `promo-video` skill), into `~/Desktop/Campfire Promo Video`
 - Publishing and CI secrets: `.github/CLAUDE.md`.

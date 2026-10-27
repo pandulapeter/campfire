@@ -1,6 +1,6 @@
 ---
 name: store-screenshots
-description: Retake Campfire's promotional images for every platform and form factor — the store listings (Play Store, App Store, Mac App Store, Microsoft Store), the Play Store feature graphic, Apple's product page header and search results images, the README banners and campfire-songbook.com's screenshots and link preview. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, frames them in the Screenshot Bro project and exports the store images to a new folder on the Desktop, the README banners to documentation/screenshots and the website's images to the sibling CampfireWebsite repository. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh or update the store screenshots / store images / listing screenshots / README or website screenshots, or to add, change or reorder one of them. Not for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
+description: Retake Campfire's store images for every platform and form factor — the store listings (Play Store, App Store, Mac App Store, Microsoft Store), the Play Store feature graphic, and Apple's product page header and search results images. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, frames them in the Screenshot Bro project, and exports them to a new folder on the Desktop. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh, or update the store screenshots / store images / listing screenshots, or to add, change, or reorder one of them. Not for the README banners or campfire-songbook.com's screenshots and link preview (that is website-screenshots), nor for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
 ---
 
 <!--
@@ -13,7 +13,7 @@ description: Retake Campfire's promotional images for every platform and form fa
  https://mozilla.org/MPL/2.0/.
 -->
 
-# Campfire promotional images
+# Campfire store images
 
 Every image is made from the desktop build drawn offscreen as each platform (the platforms share every line of the
 interface and its bundled fonts), with that platform's scale and system bars, at the exact pixels of the Screenshot Bro device frame
@@ -37,8 +37,7 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
   project that is there, moving it to `project-backups/` in the app's folder. Without Screenshot Bro (no
   `screenshot-bro` tools), say so and make what can be made without framing: steps 1 and 2, then copy
   `tools/screenshots/renders/` to a new `~/Desktop/Campfire screenshots <date>/` (every shot unframed, at its device's
-  pixels, no headlines) and run step 7 without `--link-preview`. The store images, the README banners, and the link
-  preview need the project; skip them.
+  pixels, no headlines).
 - **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
 - The display does not matter: nothing is drawn on screen.
 
@@ -46,22 +45,20 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
 
 | What | Made from | Ends up in |
 |---|---|---|
-| Store listings (9 rows × 8 shots), Play Store banner, link preview, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
-| README banners (GitHub - Banner 1 / 2) | `Banners.kt` → Screenshot Bro | `documentation/screenshots/01–06.webp`, 1200×900 |
-| Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` (or `../campfire-website/`) at each file's own size, the other languages in `assets/screenshots/<language>/` |
-| Website link preview | the exported `Website - Link preview` row | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
-| The Screenshot Bro project | the app's container, by step 8 | `tools/screenshots/project/`: `project.json` without the frames' screenshots, and the logos |
+| Store listings (9 rows × 8 shots), Play Store banner, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
+| The Screenshot Bro project | the app's container, by step 7 | `tools/screenshots/project/`: `project.json` without the frames' screenshots, and the logos |
 
-Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on every run. Nothing is committed, in either
-repository; the user reviews and commits.
+The same project also frames the README banners and the website's link preview, which the `website-screenshots` skill
+makes: leave their rows alone here. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on every
+run. Nothing is committed; the user reviews and commits.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run` (in the background; one app start per image, a few seconds each)
-   writes every shot of `Shot.kt` on every listing `Device`, the multi-device rows of `Banners.kt` and the website set of
-   `Website.kt` into `tools/screenshots/renders/<row label>/`, in up to four processes side by side (`--parallel <n>`
-   sets how many). `--args="--only IPHONE,03-metronome-tuner,banners"` renders
-   part of it (device enum names, shot ids, or `listing`, `banners`, `website`, `promo`). A failed render is reported and the
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` (in the background; one app start
+   per image, a few seconds each) writes every shot of `Shot.kt` on every listing `Device` and the multi-device rows of
+   `Banners.kt` into `tools/screenshots/renders/<row label>/`, in up to four processes side by side (`--parallel <n>`
+   sets how many). `--only` also takes device enum names and shot ids (`IPHONE,03-metronome-tuner`) to render part of
+   it; without it, the run renders the website's set too. A failed render is reported and the
    run goes on. Never rebuild the tool while a render is running.
 2. **Check every image before importing anything**: a contact sheet per shot (PIL), then any device that looks off at
    full size — the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting. Fix the
@@ -75,8 +72,7 @@ repository; the user reviews and commits.
    so after every import put each frame's `x`, `width` and `height` back. Extra images append columns: never pass more
    than the row has.
    - The nine listing rows (one frame per column): import the row's eight images in order.
-   - Rows with several frames in a column (the README banners, the Play Store banner, the link preview, Apple's header
-     and search results): give each extra frame a temporary column (`add_template`, `delete_shape` the default device
+   - Rows with several frames in a column (the Play Store banner, Apple's header and search results): give each extra frame a temporary column (`add_template`, `delete_shape` the default device
      it drops in, move the frame's `x` there), import, move it back, `remove_template`. Sending a frame to the back
      with `z_order` does not change which frame of a column an import fills; only a column of its own does. Then restore the stacking with
      `z_order: front` in back-to-front order, keeping every MacBook's black camera-housing strip above its frame.
@@ -92,10 +88,7 @@ repository; the user reviews and commits.
    | App Store - iPad | `5B53E8FA-F8D5-4D72-B0A6-58D1F847CB0E` |
    | Mac App Store - Mac | `09A157EA-A360-4800-B9F6-72E4ED90178F` |
    | Microsoft Store - Windows | `C369F36A-B693-46C7-A53C-E8AA13CC6D53` |
-   | GitHub - Banner 1 | `D14A5619-01BE-4E2D-A654-187E8467999A` |
-   | GitHub - Banner 2 | `9B2BA297-3919-4691-A358-C90C3C2AAF95` |
    | Play Store - Banner | `7EAB3190-9E8C-478D-B18A-3AD15B16DDA1` |
-   | Website - Link preview | `EB3026C2-34AF-48BA-A338-DAD16A8014B9` |
    | App Store - Header (21:9, 3840×1646, iOS 27+) | `AACF099E-6929-47B0-8F4E-DF44DFEEC7B2` |
    | App Store - Search results (3:2, 3840×2560, iOS 27+) | `D93A0DED-074D-4C47-B097-5CAC6DEC5DCA` |
 
@@ -104,23 +97,12 @@ repository; the user reviews and commits.
 5. **Look at every row** with `render_preview`, a column at full size where anything is in doubt: the status bar's
    time and the navigation labels uncut, the image filling its frame, nothing upside down or stretched.
 6. **Export** with `export_project` (into the app's temp folder; a non-empty `unrenderable` means holes — report it).
-   Copy every row's folder **except the two GitHub banners** to a new `~/Desktop/Campfire store images <date>/`. The
-   banners go to the README: `python3 -I .claude/skills/store-screenshots/scripts/readme_banners.py <repo root>`
-   followed by banner 1's three exported images and then banner 2's.
-7. **The website**: `python3 -I .claude/skills/store-screenshots/scripts/website_screenshots.py
-   tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "<Desktop folder>/Website -
-   Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size the site
-   draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a playing
-   metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page fades in. Every shot is rendered in every language of the app, and
-   each language's renders (`renders/Website/<language>/`) go to `assets/screenshots/<language>/`, where the site's pages
-   in that language pick them up; one identical to the English render is left out, so those pages fall back to the
-   English file. It finds the website's repository as a sibling folder
-   named `CampfireWebsite` (the owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where
-   there is none it writes to the Desktop folder and says so. Without `--link-preview`, `og-image.jpg` is left alone.
-8. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies
+   Copy every row's folder **except the two GitHub banners and the website's link preview** to a new
+   `~/Desktop/Campfire store images <date>/`.
+7. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies
    its layout back to `tools/screenshots/project/`, so headlines and frames moved by hand, here or in the app, show
    up in the diff. A diff that is not the run's own changes is the user's work in the app: keep it.
-9. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
+8. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
    rendered and anything that looked off.
 
 ## The shots and their rules
@@ -144,25 +126,14 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 | 7 | Chords for guitar, ukulele, and more | Chords tab on a ukulele in standard tuning, the chords of C |
 | 8 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
 
-The README banners are shots 1, 3, 2, 4, 5 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
-banner 1, light and in reverse order in banner 2. The Play Store banner is the Android phone's shots 1 and 2; the link
-preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2 and the iPhone's 1, and its search
-results image the iPad's 2 and the iPhone's 3, all dark.
-
-The website's tablet songs are set at the text size where page one ends exactly where a section ends, never inside one:
-Still Alive 110% (page one ends after Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the
-tuner sheet too; I'm Gonna Be (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets. A song
-longer than a page is cut wherever a column ends, so these were found by rendering every size from 80% to 130% and
-reading where page one ends; if a song, a device or the layout changes, try again the same way. The laptop's text size
-demo is I'll Be There for You at every 10% from 100% to 230%, the app's own steps, wherever page one ends. The laptop's
-editor is scrolled past Thinking Out Loud's directives. **Never fold the
-Chords section (or anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
-a 14" MacBook Pro (`Device.LAPTOP`).
+The Play Store banner is the Android phone's shots 1 and 2; Apple's header the iPad's 4, the Mac's 2, and the
+iPhone's 1, and its search results image the iPad's 2 and the iPhone's 3, all dark. The README banners and the link
+preview show these shots too (the `website-screenshots` skill), so a changed shot changes them: say so, and that it
+takes a run of that skill.
 
 ## Changing a shot
 
-The listing is `shots` in `Shot.kt`, in store order; the website's are in `Website.kt` and the multi-device rows in
-`Banners.kt`. A shot sets the preferences it needs (`preferences`, per device), prepares state a screen only reads as
+The listing is `shots` in `Shot.kt`, in store order, and the multi-device rows are in `Banners.kt`. A shot sets the preferences it needs (`preferences`, per device), prepares state a screen only reads as
 it is first composed (`prepare`, e.g. a list's scroll position), then drives `CampfireViewModel` or taps what is
 labelled with a string resource (`drive`, `tap`, `tapIfPresent`) — so it works in every language — and can catch a
 metronome beat (`beat`). Keep each shot's rules in its comment and in the table above. A store takes at most eight shots, so a

@@ -28,7 +28,7 @@ import org.koin.mp.KoinPlatform
  * at the top of the folder, the others in a folder named after the language (`hu/phone-songs-dark`), as the website
  * keeps them for its pages in that language. The library's songs are the same in all of them; only the app around
  * them is translated. They are written at the device's own size, and scaled down to the page's sizes as they are
- * copied there (the store-screenshots skill's `website_screenshots.py`).
+ * copied there (the website-screenshots skill's `website_screenshots.py`).
  */
 internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
     listOf(

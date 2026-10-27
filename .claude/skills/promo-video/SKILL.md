@@ -1,6 +1,6 @@
 ---
 name: promo-video
-description: Regenerate Campfire's promotional video (three formats, over the owner's recorded soundtrack) from the app's current UI with tools/promo-video, check the result, and leave it in ~/Desktop/Campfire Promo Video. Invoke this skill WHENEVER the user asks to regenerate, re-render, refresh, or update the promo video, its soundtrack, or to change one of its scenes, clips, chips, or timings. Not for the store screenshots (that is store-screenshots).
+description: Regenerate Campfire's promotional video (three formats, over the owner's recorded soundtrack) from the app's current UI with tools/promo-video, check the result, and leave it in ~/Desktop/Campfire Promo Video. Invoke this skill WHENEVER the user asks to regenerate, re-render, refresh, or update the promo video, its soundtrack, or to change one of its scenes, clips, chips, or timings. Not for the store screenshots (that is store-screenshots) or the website and README images (that is website-screenshots).
 ---
 
 <!--

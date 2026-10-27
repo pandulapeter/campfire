@@ -10,9 +10,10 @@
 
 # :tools:screenshots
 
-The store screenshots, rendered rather than taken: a plain JVM module that draws the desktop build offscreen
-(`ImageComposeScene`) as each platform's listing shows it, at the exact pixels of its Screenshot Bro device frame.
-Nothing depends on it; the `store-screenshots` skill drives it, and its test source set holds the app's UI tests.
+The store and website screenshots, rendered rather than taken: a plain JVM module that draws the desktop build
+offscreen (`ImageComposeScene`) as each platform's listing shows it, at the exact pixels of its Screenshot Bro device
+frame. Nothing depends on it; the `store-screenshots` and `website-screenshots` skills drive it, and its test source
+set holds the app's UI tests.
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
   `--args="--out <folder> --only <names>"`. `Website.kt` adds the website's shots, in every language of the app; `Banners.kt` the
@@ -45,7 +46,7 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
   writes nothing. Covers come from the copied cache.
 - **The Screenshot Bro project** that frames the renders is kept in `project/`: `project.json` as the app writes it,
   less what every run changes (each frame's screenshot, the modification time), and the images its logos show. The
-  skill's `screenshot_bro_project.py` saves it from the app's container and restores it into one.
+  `store-screenshots` skill's `screenshot_bro_project.py` saves it from the app's container and restores it into one.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
   the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
   belong to the Screenshot Bro project, not the images.
