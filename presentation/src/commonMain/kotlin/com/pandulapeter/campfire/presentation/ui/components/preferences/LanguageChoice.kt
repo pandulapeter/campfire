@@ -33,14 +33,8 @@ internal fun LanguageChoice(
     selected: AppLanguage?,
     onSelected: (AppLanguage) -> Unit,
 ) = Column(modifier = modifier.selectableGroup()) {
-    listOf(
-        AppLanguage.SYSTEM_DEFAULT,
-        AppLanguage.ENGLISH,
-        AppLanguage.HUNGARIAN,
-        AppLanguage.ROMANIAN,
-        AppLanguage.GERMAN,
-        AppLanguage.SPANISH,
-    ).forEach { language ->
+    // The system's language leads, and the rest follow their codes, so the rows never move when the language is switched.
+    AppLanguage.entries.sortedWith(compareBy({ it != AppLanguage.SYSTEM_DEFAULT }, { it.id })).forEach { language ->
         val isSelected = selected == language
         val localName = appLanguageName(language)
         val ownName = if (language == AppLanguage.SYSTEM_DEFAULT) {

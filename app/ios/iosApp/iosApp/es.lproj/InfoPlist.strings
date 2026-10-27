@@ -1,0 +1,12 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The question the system asks before the tuner first listens. Keep it in step with NSMicrophoneUsageDescription in Info.plist. */
+"NSMicrophoneUsageDescription" = "Campfire escucha tu instrumento a través del micrófono mientras el afinador está abierto. El sonido se analiza en este dispositivo y nunca se graba ni se envía a ningún sitio.";

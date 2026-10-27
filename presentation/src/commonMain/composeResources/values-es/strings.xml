@@ -1,0 +1,1327 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Shared -->
+    <string name="back">Atrás</string>
+    <string name="close">Cerrar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="done">Listo</string>
+    <string name="delete">Eliminar</string>
+    <string name="create">Crear</string>
+    <string name="duplicate">Duplicar</string>
+    <string name="share_or_export">Compartir o exportar</string>
+    <string name="save">Guardar</string>
+    <string name="select_all">Seleccionar todo</string>
+    <string name="deselect_all">Deseleccionar todo</string>
+    <string name="retry">Reintentar</string>
+    <string name="add_demo_library">Añadir la biblioteca de ejemplo</string>
+    <string name="confirm_exit_title">¿Cerrar Campfire?</string>
+    <string name="confirm_exit_message">¿Seguro que quieres salir de la app?</string>
+
+    <!-- Import and export -->
+    <string name="import_progress_title">Importando archivos</string>
+    <string name="import_progress_unpacking">Abriendo los archivos y los archivos comprimidos seleccionados</string>
+    <string name="import_progress_reading">Leyendo y convirtiendo canciones</string>
+    <string name="import_progress_comparing">Buscando duplicados y conflictos</string>
+    <string name="import_progress_importing">Añadiendo archivos a tu biblioteca</string>
+    <string name="import_progress_finishing">Actualizando tu biblioteca</string>
+    <string name="import_progress_count">%1$d de %2$d procesados</string>
+    <string name="import_progress_wait">Mantén Campfire abierto hasta que termine la importación.</string>
+    <string name="import_status_title">Importación completada</string>
+    <string name="import_status_stopped">Importación detenida</string>
+    <string name="import_status_partial">La importación se detuvo tras un error. Los archivos ya importados están en tu biblioteca; el resto no se procesó.</string>
+    <string name="import_status_unknown_failure">La importación no pudo terminar. Revisa tu biblioteca antes de volver a intentarlo.</string>
+    <plurals name="import_status_songs">
+        <item quantity="one">%1$d canción importada</item>
+        <item quantity="other">%1$d canciones importadas</item>
+    </plurals>
+    <plurals name="import_status_setlists">
+        <item quantity="one">%1$d repertorio importado</item>
+        <item quantity="other">%1$d repertorios importados</item>
+    </plurals>
+    <plurals name="import_status_duplicates">
+        <item quantity="one">%1$d archivo ya estaba en la biblioteca</item>
+        <item quantity="other">%1$d archivos ya estaban en la biblioteca</item>
+    </plurals>
+    <plurals name="import_status_left_out">
+        <item quantity="one">%1$d archivo excluido por decisión tuya</item>
+        <item quantity="other">%1$d archivos excluidos por decisión tuya</item>
+    </plurals>
+    <plurals name="import_status_skipped">
+        <item quantity="one">%1$d archivo no compatible o no válido</item>
+        <item quantity="other">%1$d archivos no compatibles o no válidos</item>
+    </plurals>
+    <plurals name="import_status_oversized">
+        <item quantity="one">%1$d archivo supera el límite de tamaño de importación</item>
+        <item quantity="other">%1$d archivos superan el límite de tamaño de importación</item>
+    </plurals>
+    <plurals name="import_status_unreadable">
+        <item quantity="one">%1$d documento sin texto legible</item>
+        <item quantity="other">%1$d documentos sin texto legible</item>
+    </plurals>
+    <plurals name="import_status_failed">
+        <item quantity="one">%1$d archivo no se pudo importar</item>
+        <item quantity="other">%1$d archivos no se pudieron importar</item>
+    </plurals>
+    <plurals name="import_status_unprocessed">
+        <item quantity="one">%1$d archivo sin procesar</item>
+        <item quantity="other">%1$d archivos sin procesar</item>
+    </plurals>
+    <string name="import_report_search">Buscar archivos</string>
+    <string name="import_files_empty">No hay archivos que coincidan</string>
+    <string name="import_report_clean">No se excluyó nada.</string>
+    <string name="import_report_left_out">Algunos archivos no se importaron. Cada uno aparece abajo, bajo su motivo.</string>
+    <string name="import_report_converted">Convertidas, conviene revisarlas en el editor</string>
+    <string name="import_report_edit">Abrir en el editor</string>
+    <string name="import_details">Detalles</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">¿Reemplazar %1$d archivo?</item>
+        <item quantity="other">¿Reemplazar %1$d archivos?</item>
+    </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">Se sobrescribirá el archivo de tu biblioteca. Esta acción no se puede deshacer.</item>
+        <item quantity="other">Se sobrescribirán los archivos de tu biblioteca. Esta acción no se puede deshacer.</item>
+    </plurals>
+    <string name="import_files">Importar archivos</string>
+    <plurals name="import_result_songs">
+        <item quantity="one">%1$d canción importada</item>
+        <item quantity="other">%1$d canciones importadas</item>
+    </plurals>
+    <plurals name="import_result_setlists">
+        <item quantity="one">%1$d repertorio importado</item>
+        <item quantity="other">%1$d repertorios importados</item>
+    </plurals>
+    <plurals name="import_result_already_there">
+        <item quantity="one">%1$d ya estaba en tu biblioteca</item>
+        <item quantity="other">%1$d ya estaban en tu biblioteca</item>
+    </plurals>
+    <plurals name="import_result_skipped">
+        <item quantity="one">%1$d omitido</item>
+        <item quantity="other">%1$d omitidos</item>
+    </plurals>
+    <string name="import_result_nothing">No se importó nada</string>
+    <string name="import_converted">Convertidas: %1$d. Conviene revisarlas en el editor.</string>
+    <plurals name="import_unreadable_documents">
+        <item quantity="one">Un documento no tiene texto que Campfire pueda leer (un escaneo, un PDF protegido o un formato antiguo de Word).</item>
+        <item quantity="other">%1$d documentos no tienen texto que Campfire pueda leer (escaneos, PDF protegidos o un formato antiguo de Word).</item>
+    </plurals>
+    <string name="import_failed">Error al importar</string>
+    <string name="import_interrupted">La importación se interrumpió. Vuelve a abrir los archivos para importarlos.</string>
+    <string name="export_failed">No se pudo guardar ni compartir</string>
+    <string name="export_pdf_saved">PDF guardado</string>
+    <string name="export_song_saved">Canción guardada</string>
+    <string name="export_setlist_saved">Repertorio guardado</string>
+    <string name="export_songs_saved">Canciones guardadas</string>
+    <string name="export_library_saved">Biblioteca exportada</string>
+    <string name="export_log_saved">Registro guardado</string>
+    <string name="export_too_large_to_import">Este archivo comprimido supera los 24 MB que Campfire puede importar de una vez. Es una copia completa de tu biblioteca; para recuperarla, descomprímelo e importa las canciones en tandas de unos pocos miles.</string>
+    <plurals name="export_skipped_files">
+        <item quantity="one">No se pudo leer un archivo y no está en el archivo comprimido: %2$s</item>
+        <item quantity="other">No se pudieron leer %1$d archivos y no están en el archivo comprimido. Entre ellos: %2$s</item>
+    </plurals>
+    <plurals name="import_review_skipped">
+        <item quantity="one">Un archivo no es ni una canción ni un repertorio y no se puede importar.</item>
+        <item quantity="other">%1$d archivos no son ni canciones ni repertorios y no se pueden importar.</item>
+    </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">Un archivo es demasiado grande y no se puede importar.</item>
+        <item quantity="other">%1$d archivos son demasiado grandes y no se pueden importar.</item>
+    </plurals>
+    <string name="import_conflicts_keep_both">Conservar ambos</string>
+    <string name="import_conflicts_keep_both_description">Importarlos junto a los archivos con los que coinciden, numerados «_2»</string>
+    <string name="import_conflicts_replace">Reemplazar</string>
+    <string name="import_conflicts_replace_description">Sobrescribir lo que hay en tu biblioteca. Los archivos reemplazados se perderán.</string>
+    <string name="import_conflicts_mixed">Mixto</string>
+    <string name="import_loading_title">Leyendo los archivos</string>
+    <string name="import_progress_downloading">Descargando el archivo</string>
+    <string name="import_failed_unreachable">No se pudo conectar con %1$s. Comprueba la conexión a internet y vuelve a intentarlo.</string>
+    <string name="import_failed_not_found">No hay nada que descargar en esa dirección. Puede que el enlace haya caducado o se haya eliminado.</string>
+    <string name="import_failed_too_large">Este archivo supera los 24 MB que Campfire puede importar de una vez.</string>
+    <string name="import_failed_unreadable">No se pudieron leer los archivos. No se importó nada.</string>
+    <string name="import_failed_link_gone">Este enlace ya no funciona. Puede que quien lo compartió haya dejado de compartirlo.</string>
+    <string name="import_failed_link_unreachable">No se pudo descargar «%1$s». Comprueba la conexión a internet y vuelve a intentarlo.</string>
+    <string name="import_failed_link_unreachable_untitled">No se pudo descargar lo que comparte el enlace. Comprueba la conexión a internet y vuelve a intentarlo.</string>
+    <string name="import_retry">Reintentar</string>
+    <string name="import_review_title">Revisar la importación</string>
+    <string name="import_review_title_empty">Nada que importar</string>
+    <plurals name="import_review_from_files">
+        <item quantity="one">De %1$d archivo</item>
+        <item quantity="other">De %1$d archivos</item>
+    </plurals>
+    <string name="import_review_from">De %1$s</string>
+    <string name="import_warning_songs_off">Las canciones están desactivadas en Ajustes, así que nada de lo que importes aquí se mostrará hasta que vuelvas a activarlas.</string>
+    <string name="import_warning_setlists_off">Los repertorios están desactivados en Ajustes, así que los repertorios importados aquí no se mostrarán hasta que vuelvas a activarlos.</string>
+    <string name="import_review_demo_library">Biblioteca de ejemplo</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">Un archivo que ya importaste de este enlace se actualizará a la versión compartida. Elige «Conservar ambos» para mantener tus cambios.</item>
+        <item quantity="other">%1$d archivos que ya importaste de este enlace se actualizarán a la versión compartida. Elige «Conservar ambos» para mantener tus cambios.</item>
+    </plurals>
+    <plurals name="import_review_confirm">
+        <item quantity="one">Importar %1$d archivo</item>
+        <item quantity="other">Importar %1$d archivos</item>
+    </plurals>
+    <string name="import_review_summary_counts">Canciones para importar: %1$d · Repertorios: %2$d</string>
+    <string name="import_review_name_taken_counts">Nombres en uso: Reemplazar %1$d · Conservar ambos %2$d</string>
+    <plurals name="import_review_already_there">
+        <item quantity="one">Uno ya está en tu biblioteca y no se toca</item>
+        <item quantity="other">%1$d ya están en tu biblioteca y no se tocan</item>
+    </plurals>
+    <string name="import_review_left_out_count">Excluidos por ti: %1$d</string>
+    <string name="import_review_tags">Etiquetas para las canciones importadas</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">Se añaden a la única canción que escribe esta importación</item>
+        <item quantity="other">Se añaden a las %1$d canciones que escribe esta importación</item>
+    </plurals>
+    <plurals name="import_review_conflicts">
+        <item quantity="one">%1$d nombre ya en uso</item>
+        <item quantity="other">%1$d nombres ya en uso</item>
+    </plurals>
+    <plurals name="import_review_songs">
+        <item quantity="one">%1$d canción</item>
+        <item quantity="other">%1$d canciones</item>
+    </plurals>
+    <plurals name="import_review_setlists">
+        <item quantity="one">%1$d repertorio</item>
+        <item quantity="other">%1$d repertorios</item>
+    </plurals>
+    <string name="import_review_will_be_numbered">Se numerará junto a la que ya tienes</string>
+    <string name="import_review_will_replace">Reemplazará la que ya tienes: %1$s</string>
+    <string name="import_review_show_library_song">Ver la que ya tienes</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">Una canción</item>
+        <item quantity="other">%1$d canciones</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">%1$d de ellas en esta importación</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">Aparece una vez en los archivos</item>
+        <item quantity="other">Aparece %1$d veces en los archivos</item>
+    </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">Vista previa: aún no está en tu biblioteca</string>
+    <string name="import_preview_name_taken">Ya hay otra canción con este nombre en tu biblioteca.</string>
+    <string name="import_preview_shared_update">Ya importaste esta canción compartida. «Reemplazar» la actualiza a esta versión.</string>
+    <string name="import_preview_include">Importar esta canción</string>
+    <string name="import_preview_choices">Opciones para esta canción</string>
+    <string name="import_preview_name_taken_choice">Nombre en uso: %1$s</string>
+    <string name="import_preview_left_out">Excluida de la importación</string>
+    <string name="import_preview_already_there">Ya está en tu biblioteca, nada que importar</string>
+    <string name="import_preview_import">Importar</string>
+    <string name="import_preview_import_as_copy">Importar como copia</string>
+    <string name="import_preview_importing">Importando la canción</string>
+    <string name="import_preview_imported">Añadida a tu biblioteca</string>
+    <string name="import_preview_open">Leer la canción</string>
+
+    <!-- Errors -->
+    <string name="error_no_data">No se pudo cargar nada</string>
+    <string name="error_no_data_hint">No se pudo leer la biblioteca.</string>
+    <string name="error_operation_failed">Algo salió mal</string>
+    <string name="error_link_not_opened">No se pudo abrir %1$s</string>
+
+    <!-- Songs screen -->
+    <string name="songs">Canciones</string>
+    <string name="songs_search">Buscar en canciones</string>
+    <string name="songs_clear">Borrar</string>
+    <string name="songs_sort">Ordenar canciones</string>
+    <string name="songs_filter">Filtrar canciones</string>
+    <string name="songs_filter_active">Filtrar canciones, hay filtros activos</string>
+    <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_unknown_artist">Artista desconocido</string>
+    <string name="songs_sorting_mode_by_artist">Artista</string>
+    <string name="songs_sorting_mode_by_title">Título</string>
+    <string name="songs_empty_title">Tu biblioteca está vacía</string>
+    <string name="songs_empty_hint">Crea una canción, pega una desde el portapapeles, importa canciones, documentos PDF o Word y archivos zip, o añade la biblioteca de ejemplo.</string>
+    <string name="songs_create_song">Crear una canción</string>
+    <string name="songs_paste_from_clipboard">Pegar del portapapeles</string>
+    <string name="add_songs_hint_title">Añade tus propias canciones</string>
+    <string name="add_songs_tip_paste_title">Copia una canción de cualquier web</string>
+    <string name="add_songs_tip_paste_hint">Copia la letra y los acordes de una canción de cualquier página web, por desordenados que estén, y pégalos aquí. Campfire los ordena en una canción que puedes guardar.</string>
+    <string name="add_songs_tip_import_title">Trae tus canciones de otra app</string>
+    <string name="add_songs_tip_import_hint">Exporta tus canciones desde otra app de cancionero, idealmente como archivo zip o copia de seguridad, e impórtalas aquí. También sirven archivos ChordPro, PDF, Word y de texto.</string>
+    <string name="songs_paste_converted">Convertida a partir de acordes escritos sobre la letra. Revisa el título y el artista, y guárdala.</string>
+    <string name="songs_paste_chordpro">Se mantiene en el ChordPro en que está escrita. Revisa el título y el artista, y guárdala.</string>
+    <string name="songs_paste_no_chords">No se encontraron acordes, así que es una canción solo con letra. Revisa el título y el artista, y guárdala.</string>
+    <string name="songs_paste_notation_without_chords">No se encontraron acordes, así que la notación se mantiene tal como está escrita. Revisa el título y el artista, y guárdala.</string>
+    <string name="new_song_placeholder_title">Nueva canción</string>
+    <string name="new_song_placeholder_artist">Artista desconocido</string>
+    <string name="paste_clipboard_empty">No hay texto en el portapapeles para pegar.</string>
+    <string name="paste_only_links">Un enlace no es una canción, y Campfire no abre páginas. Copia los acordes y la letra en sí.</string>
+    <string name="paste_too_large">El texto supera los 8 MB que admite una importación.</string>
+    <string name="shared_link_not_imported">Campfire no abre páginas web. Selecciona el texto de la hoja de acordes y comparte eso.</string>
+    <string name="shared_link_from_newer_version">Este enlace se creó con una versión más reciente de Campfire. Actualiza Campfire para abrirlo.</string>
+    <string name="clipboard_not_campfire_link">Eso no es un enlace de Campfire.</string>
+    <string name="paste_refused_ios">Campfire no tiene permiso para pegar. Lo decide la opción «Pegar desde otras apps», en Campfire dentro de la app Ajustes.</string>
+    <string name="paste_refused_web">El navegador no dejó que Campfire leyera el portapapeles. Usa Ctrl+V (Cmd+V en un Mac) en la lista de canciones.</string>
+    <string name="songs_new_song">Nueva canción</string>
+    <string name="optional_field_label">%1$s (opcional)</string>
+    <string name="songs_new_song_title">Título</string>
+    <string name="songs_new_song_artist">Artista</string>
+    <string name="songs_artist_and_title">%1$s - %2$s</string>
+    <string name="songs_actions">Acciones de la canción</string>
+    <string name="songs_edit_song">Editar el archivo</string>
+    <string name="songs_choose_setlists">Elegir repertorios</string>
+    <string name="songs_update_file_name">Actualizar nombre de archivo</string>
+    <string name="songs_duplicate_song">Duplicar canción</string>
+    <string name="songs_update_file_name_partly">Se cambió el nombre del archivo, pero un repertorio o la transposición guardada aún apuntan al nombre anterior</string>
+    <string name="songs_delete_song_partly">Se eliminó la canción, pero un repertorio o la transposición guardada aún la mencionan</string>
+    <string name="songs_delete_song">Eliminar canción</string>
+    <string name="songs_share_song">Compartir canción</string>
+    <string name="songs_delete_song_confirmation">¿Eliminar «%1$s»? El archivo se quitará de la biblioteca y de todos los repertorios.</string>
+    <string name="songs_delete_song_confirmation_shared">¿Eliminar «%1$s»? El archivo se quitará de la biblioteca y de todos los repertorios, y su enlace compartido dejará de funcionar.</string>
+    <string name="songs_select_multiple">Seleccionar varias</string>
+    <string name="songs_selection_actions">Acciones de la selección</string>
+    <string name="songs_share_songs">Compartir canciones</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">Listo, %1$d canción seleccionada</item>
+        <item quantity="other">Listo, %1$d canciones seleccionadas</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">%1$d canción</item>
+        <item quantity="other">%1$d canciones</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">%1$d canción actualizada</item>
+        <item quantity="other">%1$d canciones actualizadas</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">No se pudo actualizar %1$d canción</item>
+        <item quantity="other">No se pudieron actualizar %1$d canciones</item>
+    </plurals>
+    <string name="songs_all_hidden">Todas las canciones están ocultas</string>
+    <string name="songs_all_hidden_hint">Los filtros ocultan toda tu biblioteca.</string>
+    <string name="songs_no_search_results">No hay canciones que coincidan</string>
+    <string name="songs_no_search_results_hint">Nada de tu biblioteca coincide con esta búsqueda.</string>
+    <string name="songs_lyrics_only">Solo letra</string>
+    <string name="songs_key">Tonalidad: %1$s</string>
+    <!-- A song card's tempo and the time signature it is counted in, which the metronome mark in front of them stands for. -->
+    <string name="songs_tempo_and_time">%1$s BPM %2$s</string>
+    <string name="songs_tags">Etiquetas</string>
+    <string name="songs_filters_show_all">Mostrar las %1$d</string>
+    <string name="songs_filters_show_less">Mostrar menos</string>
+    <string name="songs_tags_search">Buscar una etiqueta</string>
+    <string name="songs_tags_no_search_results">Ninguna etiqueta coincide con esta búsqueda.</string>
+    <string name="songs_tags_clear">Borrar selección</string>
+    <string name="songs_tags_match_mode">Una canción debe tener</string>
+    <string name="songs_tags_match_mode_any">Alguna etiqueta</string>
+    <string name="songs_tags_match_mode_all">Todas las etiquetas</string>
+    <string name="songs_languages">Idiomas</string>
+    <string name="songs_languages_unknown">Desconocido</string>
+    <string name="songs_languages_search">Buscar un idioma</string>
+    <string name="songs_languages_no_search_results">Ningún idioma coincide con esta búsqueda.</string>
+    <string name="songs_languages_clear">Borrar selección</string>
+    <string name="songs_languages_match_mode">Una canción debe estar en</string>
+    <string name="songs_languages_match_mode_any">Algún idioma</string>
+    <string name="songs_languages_match_mode_all">Todos los idiomas</string>
+    <string name="songs_labels_sorted_by_usage">Ordenadas por uso</string>
+    <string name="songs_labels_sorted_alphabetically">Ordenadas alfabéticamente</string>
+    <string name="songs_filters_reset">Restablecer</string>
+
+    <!-- Setlists screen -->
+    <string name="setlists">Repertorios</string>
+    <string name="setlists_no_data">Aún no hay repertorios</string>
+    <string name="setlists_no_data_hint">Crea un repertorio y elige las canciones que lo forman, o importa repertorios desde archivos.</string>
+    <string name="setlists_create_setlist">Crear un repertorio</string>
+    <string name="setlists_new_setlist">Nuevo repertorio</string>
+    <string name="setlists_new_setlist_title">Título del repertorio</string>
+    <string name="setlists_remove_song">Quitar del repertorio</string>
+    <string name="setlists_remove_song_confirmation">¿Quitar «%1$s» de este repertorio? La canción sigue en tu biblioteca y en los demás repertorios.</string>
+    <string name="setlists_reorder">Reordenar canciones</string>
+    <string name="setlists_done_reordering">Terminar de reordenar</string>
+    <string name="setlists_move_up">Subir</string>
+    <string name="setlists_move_down">Bajar</string>
+    <string name="setlists_actions">Acciones del repertorio</string>
+    <string name="setlists_edit_details">Editar repertorio</string>
+    <string name="setlists_choose_songs">Elegir canciones</string>
+    <string name="checklist_selected">Selección: %1$d</string>
+    <string name="setlists_description">Descripción (opcional)</string>
+    <string name="setlists_date">Fecha</string>
+    <string name="setlists_date_value">%3$s/%2$s/%1$s</string>
+    <string name="setlists_pick_date">Elegir una fecha</string>
+    <string name="setlists_countdown">Cuenta atrás</string>
+    <string name="setlists_countdown_today">Hoy</string>
+    <string name="setlists_countdown_tomorrow">Mañana</string>
+    <string name="setlists_countdown_yesterday">Ayer</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">Dentro de %1$d día</item>
+        <item quantity="other">Dentro de %1$d días</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">Hace %1$d día</item>
+        <item quantity="other">Hace %1$d días</item>
+    </plurals>
+    <!-- A setlist's total duration, as a show's length is named: how long its songs take to play. -->
+    <string name="setlists_total_duration">%1$s de duración</string>
+    <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
+    <string name="setlists_total_duration_minimum">%1$s+</string>
+    <string name="setlists_duplicate_setlist">Duplicar repertorio</string>
+    <string name="setlists_duplicate_title">%1$s (copia)</string>
+    <string name="setlists_archive">Archivar repertorio</string>
+    <string name="setlists_unarchive">Desarchivar repertorio</string>
+    <string name="setlists_archived">Archivado</string>
+    <string name="setlists_share">Compartir repertorio</string>
+    <string name="setlists_missing_song">Archivo no encontrado</string>
+    <string name="setlists_delete_setlist">Eliminar repertorio</string>
+    <string name="setlists_delete_setlist_confirmation">¿Eliminar el repertorio «%1$s»? Las canciones siguen en tu biblioteca.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">¿Eliminar el repertorio «%1$s»? Las canciones siguen en tu biblioteca. Su enlace compartido dejará de funcionar.</string>
+    <string name="setlists_search">Buscar en repertorios</string>
+    <string name="setlists_no_search_results">No hay repertorios que coincidan</string>
+    <string name="setlists_no_search_results_hint">Ningún repertorio coincide con esta búsqueda, ni por su nombre ni por las canciones que contiene.</string>
+    <string name="setlists_sort">Ordenar repertorios</string>
+    <string name="setlists_sorting_mode_by_date">Fecha</string>
+    <string name="setlists_sorting_mode_by_title">Título</string>
+    <string name="setlists_show_archived">Mostrar repertorios archivados</string>
+    <string name="setlists_all_hidden">Todos los repertorios están archivados</string>
+    <string name="setlists_all_hidden_hint">Activa «Mostrar repertorios archivados» para verlos.</string>
+
+    <!-- Settings screen -->
+    <string name="settings">Ajustes</string>
+    <string name="settings_library">Biblioteca</string>
+    <string name="settings_library_summary">Canciones: %1$d · Repertorios: %2$d</string>
+    <string name="settings_library_size">%1$s en disco</string>
+    <string name="settings_library_size_bytes">%1$s B</string>
+    <string name="settings_library_size_kilobytes">%1$s KB</string>
+    <string name="settings_library_size_megabytes">%1$s MB</string>
+    <string name="settings_library_size_gigabytes">%1$s GB</string>
+    <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_cover_art_cache">Caché de portadas</string>
+    <string name="settings_library_cover_art_cache_clear">Vaciar caché de portadas</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">Se eliminarán las portadas guardadas en este dispositivo. Cada una se volverá a descargar la próxima vez que se muestre.</string>
+    <string name="settings_library_cover_art_cache_clear_action">Vaciar</string>
+    <string name="settings_library_delete">Eliminar biblioteca</string>
+    <string name="settings_library_delete_confirmation">Se eliminarán todas las canciones y todos los repertorios de este dispositivo. Esta acción no se puede deshacer.</string>
+    <string name="settings_library_delete_confirmation_shared">Todos los enlaces compartidos dejarán de funcionar.</string>
+    <string name="settings_library_delete_confirmation_sync">La sincronización con Dropbox empezará en cuanto se eliminen, y también los eliminará de tu carpeta de Dropbox y de todos los dispositivos sincronizados con ella.</string>
+    <string name="settings_library_delete_prompt">Escribe %1$s para confirmar</string>
+    <string name="settings_library_storage">Almacenamiento</string>
+    <string name="settings_library_storage_granted">Tu navegador se ha comprometido a conservar la biblioteca hasta que borres los datos de este sitio.</string>
+    <string name="settings_library_storage_best_effort">Tu navegador guarda la biblioteca, pero aún no se ha comprometido a conservarla si el dispositivo se queda sin espacio. Añadir esta página a marcadores o usarla con frecuencia suele bastar para conseguirlo; mientras tanto, una exportación o la sincronización guardan una copia en otro lugar.</string>
+    <string name="settings_library_storage_offline_granted">Campfire se abre en este navegador sin conexión. Tu navegador se ha comprometido a conservarlo junto con la biblioteca hasta que borres los datos de este sitio.</string>
+    <string name="settings_library_storage_offline_best_effort">Campfire se abre en este navegador sin conexión. Tu navegador guarda la app y la biblioteca, pero aún no se ha comprometido a conservarlas si el dispositivo se queda sin espacio. Añadir esta página a marcadores o usarla con frecuencia suele bastar para conseguirlo; mientras tanto, una exportación o la sincronización guardan una copia de la biblioteca en otro lugar.</string>
+    <string name="settings_library_storage_online_only">No se pudo guardar Campfire en este navegador, así que necesita conexión para abrirse.</string>
+    <string name="settings_import">Importar canciones, documentos o archivos zip…</string>
+    <string name="settings_export_all">Exportar biblioteca como zip</string>
+    <string name="settings_preferences">Preferencias</string>
+    <string name="settings_features">Funciones</string>
+    <string name="settings_group_performance">En el escenario</string>
+    <string name="settings_read_only_mode">Solo lectura</string>
+    <string name="settings_read_only_mode_description">Bloquea la app mientras tocas: se ocultan las opciones de editar, eliminar, reordenar y transponer, para que nada cambie por accidente</string>
+    <string name="settings_read_only_mode_description_without_setlists">Bloquea la app mientras tocas: se ocultan las opciones de editar, eliminar y transponer, para que nada cambie por accidente</string>
+    <string name="settings_songs_description">Las pestañas Canciones y Repertorios. Desactívalas para usar Campfire solo como metrónomo, afinador y referencia de acordes y escalas: tus canciones solo se ocultan, no se elimina ninguna.</string>
+    <string name="settings_songs_description_without_setlists">La pestaña Canciones. Desactívala para usar Campfire solo como metrónomo, afinador y referencia de acordes y escalas: tus canciones solo se ocultan, no se elimina ninguna.</string>
+    <string name="settings_everything_off">Todo está desactivado, así que Campfire es ahora una app para cambiar los ajustes de Campfire. Vuelve a activar algo para que vuelva a ser útil.</string>
+    <string name="settings_chords">Acordes</string>
+    <string name="settings_chords_description">Muestra los acordes junto a la letra, además de la tonalidad, la transposición y el capo. Si se desactiva, todas las canciones muestran solo la letra.</string>
+    <string name="settings_chord_diagrams">Diagramas de acordes</string>
+    <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de una canción, al principio de la canción.</string>
+    <string name="settings_chord_degrees">Grados de los acordes</string>
+    <string name="settings_chord_degrees_description">Indica el grado de la tonalidad de la canción sobre el que está cada diagrama de acorde, como V7 junto a G7.</string>
+    <string name="settings_metronome_description">La pestaña Metrónomo y el clic en la pantalla de una canción, además del tempo y el compás de cada canción</string>
+    <string name="settings_tuner_description">La pestaña Afinador y el micrófono con el que escucha</string>
+    <string name="settings_scales_description">La pestaña Escalas: todas las escalas y modos que conoce la app, dibujados en tu instrumento</string>
+    <string name="settings_chord_library_description">La pestaña Acordes: todos los acordes que conoce la app, dibujados en tu instrumento</string>
+    <string name="settings_scale_suggestions">Sugerencias de escalas</string>
+    <string name="settings_scale_suggestions_description">Muestra, tras los acordes de una canción, las escalas sobre las que se puede tocar cada parte, y las escalas de un acorde en su hoja.</string>
+    <string name="settings_setlists_description">La pestaña Repertorios y la opción de añadir canciones a repertorios. Si se desactiva, solo se ocultan: no se elimina ningún repertorio.</string>
+    <string name="settings_song_details_lookup">Detalles de canciones en línea</string>
+    <string name="settings_song_details_lookup_description">Ofrece buscar en MusicBrainz e iTunes el artista, el álbum, el año y los compositores de una canción mientras se editan sus detalles</string>
+    <string name="settings_cover_art">Portadas</string>
+    <string name="settings_cover_art_description">Muestra junto a cada canción la portada del álbum que indica, descargándola una vez y guardando una copia en este dispositivo</string>
+    <string name="settings_group_song_page">Página de la canción</string>
+    <string name="settings_group_lists">Listas</string>
+    <string name="settings_group_chords">Acordes</string>
+    <string name="settings_group_setup">Configuración</string>
+    <string name="settings_group_appearance">Apariencia</string>
+    <string name="settings_group_playing">Para tocar</string>
+    <string name="settings_group_online">En línea</string>
+    <string name="settings_group_sync">Sincronización</string>
+    <string name="settings_group_import_export">Importar y exportar</string>
+    <string name="settings_group_on_this_device">En este dispositivo</string>
+    <string name="settings_group_campfire">Campfire</string>
+    <string name="settings_group_help">Ayuda</string>
+    <string name="settings_group_legal">Legal</string>
+    <string name="settings_number_sections">Numerar secciones</string>
+    <string name="settings_number_sections_description">Distingue las secciones repetidas que no tienen nombre propio, como Estrofa 1 y Estrofa 2</string>
+    <string name="settings_song_layout">Disposición</string>
+    <string name="settings_song_layout_description">«Páginas» muestra a la vez la mayor parte posible de la canción. «Continua» es una sola columna que puede desplazarse sola al ritmo de la canción.</string>
+    <string name="settings_song_cards">Tarjetas de canciones</string>
+    <string name="settings_song_cards_description">Lo que muestra cada canción bajo su artista en las listas.</string>
+    <string name="card_detail_key">Tonalidad</string>
+    <string name="card_detail_tempo">Tempo</string>
+    <string name="card_detail_duration">Duración</string>
+    <string name="settings_notation">Notación de acordes</string>
+    <string name="settings_notation_description">Cómo se escriben los acordes mientras lees y editas canciones. Las canciones se guardan siempre en notación estándar, para que se lean igual en cualquier app.</string>
+    <string name="settings_notation_choose">Elegir notación</string>
+    <string name="settings_notation_standard">Estándar</string>
+    <string name="settings_notation_standard_description">C D E F G A B</string>
+    <string name="settings_notation_german">Alemana</string>
+    <string name="settings_notation_german_description">H en lugar de B, y B en lugar de B bemol, como en las partituras de acordes de Europa Central y Escandinavia</string>
+    <string name="settings_notation_latin">Latina</string>
+    <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, como en las partituras de acordes del sur de Europa y Latinoamérica</string>
+    <string name="settings_notation_nashville">Números de Nashville</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, contados desde la tonalidad de la canción; una canción menor, desde su propia tónica. Una canción sin tonalidad conserva sus letras, y el editor siempre usa letras.</string>
+    <string name="settings_notation_roman">Números romanos</string>
+    <string name="settings_notation_roman_description">I IV V vi, contados desde la tonalidad de la canción: mayúsculas para los acordes mayores y minúsculas para los menores. Una canción sin tonalidad conserva sus letras, y el editor siempre usa letras.</string>
+    <string name="settings_accidentals">Alteraciones</string>
+    <string name="settings_accidentals_description">Si un acorde sobre una tecla negra se escribe como bemol (%1$s) o como sostenido (%2$s). Si se deja como está escrito, Campfire elige lo que mejor encaje con la tonalidad de la canción.</string>
+    <string name="settings_accidentals_original">Como está escrito</string>
+    <string name="settings_accidentals_flats">Bemoles (♭)</string>
+    <string name="settings_accidentals_sharps">Sostenidos (♯)</string>
+    <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
+    <string name="instrument_choose">Elegir instrumento</string>
+    <string name="instrument_tuning_standard">Estándar</string>
+    <string name="instrument_tuning_choose">Elegir afinación</string>
+    <string name="instrument_guitar">Guitarra</string>
+    <string name="instrument_guitar_strings">Guitarra de %1$d cuerdas</string>
+    <string name="instrument_bass">Bajo</string>
+    <string name="instrument_bass_strings">Bajo de %1$d cuerdas</string>
+    <string name="instrument_ukulele">Ukelele</string>
+    <string name="instrument_banjo">Banjo</string>
+    <string name="instrument_mandolin">Mandolina</string>
+    <string name="instrument_violin">Violín</string>
+    <string name="instrument_keyboard">Teclado</string>
+    <string name="instrument_other">Otro</string>
+    <string name="instrument_strings_four">Cuatro cuerdas</string>
+    <string name="instrument_strings_five">Cinco cuerdas</string>
+    <string name="instrument_strings_banjo">Cinco cuerdas, una de ellas corta</string>
+    <string name="instrument_strings_six">Seis cuerdas</string>
+    <string name="instrument_strings_seven">Siete cuerdas</string>
+    <string name="instrument_strings_eight">Ocho cuerdas</string>
+    <string name="instrument_strings_pairs">Cuatro pares de cuerdas</string>
+    <string name="instrument_strings_six_pairs">Seis pares de cuerdas</string>
+    <string name="instrument_no_chord_diagrams">%1$s · Sin diagramas de acordes</string>
+    <string name="instrument_keyboard_description">Las notas de cada acorde, con el capo incluido en la transposición</string>
+    <string name="instrument_other_description">Sin cuerdas ni diagramas de acordes</string>
+    <string name="settings_general">General</string>
+    <string name="settings_onboarding">Configurar Campfire de nuevo</string>
+    <string name="settings_onboarding_description">Vuelve a elegir tu apariencia, tu instrumento y tus funciones paso a paso</string>
+    <string name="settings_user_interface_theme">Tema</string>
+    <string name="settings_user_interface_theme_system_default">Sistema</string>
+    <string name="settings_user_interface_theme_dark">Oscuro</string>
+    <string name="settings_user_interface_theme_light">Claro</string>
+    <string name="settings_user_interface_theme_color">Color</string>
+    <string name="settings_background_warmth">Sepia</string>
+    <string name="settings_background_warmth_description">Acerca el fondo al tono cálido del papel antiguo, que puede resultar más agradable para la vista. El contraste es el mismo en cada nivel.</string>
+    <string name="settings_app_icon_launcher">Colorear el icono del launcher</string>
+    <string name="settings_app_icon_launcher_description">El icono de la pantalla de inicio toma el color de arriba. El primer cambio se aplica al salir de Campfire, y algunos launchers quitan el icono de la pantalla de inicio cuando cambia.</string>
+    <string name="settings_app_icon_home_screen">Colorear el icono de la app</string>
+    <string name="settings_app_icon_home_screen_description">El icono de la pantalla de inicio toma el color de arriba. iOS confirma cada cambio con un mensaje.</string>
+    <string name="settings_app_icon_window">Colorear el icono de la ventana</string>
+    <string name="settings_app_icon_window_description">El icono de la ventana toma el color de arriba mientras Campfire está abierto</string>
+    <string name="settings_app_icon_browser_tab">Colorear el icono de la pestaña</string>
+    <string name="settings_app_icon_browser_tab_description">El icono de la pestaña del navegador toma el color de arriba</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">Gris</string>
+    <string name="settings_user_interface_theme_color_system">Sistema</string>
+    <string name="settings_user_interface_theme_color_red">Rojo</string>
+    <string name="settings_user_interface_theme_color_orange">Naranja</string>
+    <string name="settings_user_interface_theme_color_yellow">Amarillo</string>
+    <string name="settings_user_interface_theme_color_green">Verde</string>
+    <string name="settings_user_interface_theme_color_teal">Verde azulado</string>
+    <string name="settings_user_interface_theme_color_blue">Azul</string>
+    <string name="settings_user_interface_theme_color_purple">Morado</string>
+    <string name="settings_user_interface_theme_color_pink">Rosa</string>
+    <string name="settings_user_interface_language">Idioma</string>
+    <string name="settings_user_interface_language_system_default">Sistema</string>
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
+    <string name="settings_user_interface_language_english">Inglés</string>
+    <string name="settings_user_interface_language_hungarian">Húngaro</string>
+    <string name="settings_user_interface_language_romanian">Rumano</string>
+    <string name="settings_user_interface_language_german">Alemán</string>
+    <string name="settings_user_interface_language_spanish">Español</string>
+    <string name="settings_user_interface_language_more_coming">Pronto habrá más idiomas</string>
+    <string name="settings_distributions_all">Todas las versiones de Campfire</string>
+    <string name="settings_distributions_all_description">En campfire-songbook.com</string>
+    <string name="settings_distribution_play_store">Google Play</string>
+    <string name="settings_distribution_app_store">App Store</string>
+    <string name="settings_distribution_mac_app_store">Mac App Store</string>
+    <string name="settings_distribution_microsoft_store">Microsoft Store</string>
+    <string name="settings_rate">Valorar Campfire</string>
+    <string name="settings_rate_description">Deja una reseña en %1$s</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_git_hub">Campfire en GitHub</string>
+    <string name="settings_git_hub_description">Código fuente y registro de incidencias</string>
+    <string name="settings_log_email">Enviar el registro por correo</string>
+    <string name="settings_log_share">Compartir el registro</string>
+    <string name="settings_log_save">Guardar el registro</string>
+    <string name="settings_log_description">Ayuda al desarrollador a averiguar qué falló</string>
+    <string name="log_dialog_text">El registro muestra lo que Campfire ha hecho últimamente: las pantallas que abriste, los nombres de tus canciones y los errores. No contiene nada más sobre ti, y solo puede leerlo la persona a la que se lo envíes.</string>
+    <string name="log_dialog_send_to">Envíalo a %1$s.</string>
+    <string name="log_dialog_email">Correo</string>
+    <string name="log_dialog_share">Compartir</string>
+    <string name="log_dialog_copy_address">Copiar dirección</string>
+    <string name="log_dialog_address_copied">Dirección copiada</string>
+    <string name="crash_report_title">Campfire se cerró inesperadamente</string>
+    <string name="crash_report_text">Campfire dejó de funcionar la última vez que lo usaste. Enviar su registro al desarrollador ayuda a solucionarlo.</string>
+    <string name="crash_report_not_now">Ahora no</string>
+    <string name="settings_help">Ayuda y soporte</string>
+    <string name="settings_help_description">Preguntas frecuentes y cómo informar de un problema</string>
+    <string name="settings_privacy_policy">Política de privacidad</string>
+    <string name="settings_privacy_policy_description">Qué hace la app con tus datos</string>
+    <string name="settings_open_source_licenses">Licencias de código abierto</string>
+    <string name="settings_open_source_licenses_description">Las bibliotecas, fuentes y formas de acordes con las que está hecho Campfire, y sus licencias</string>
+    <string name="open_source_licenses_intro">Campfire es de código abierto y está hecho con el trabajo de otras personas. Selecciona una entrada para leer su licencia.</string>
+    <string name="open_source_licenses_show">Mostrar la licencia</string>
+    <string name="open_source_licenses_hide">Ocultar la licencia</string>
+    <string name="open_source_licenses_project">Página del proyecto</string>
+    <string name="open_source_licenses_license">Licencia</string>
+    <string name="settings_support">Invítame a un café</string>
+    <string name="settings_support_description">Apoya el desarrollo de la app</string>
+    <string name="settings_version">Versión %1$s</string>
+    <string name="settings_created_by">Creado por Péter Pandula</string>
+
+    <!-- Metronome screen -->
+    <string name="metronome">Metrónomo</string>
+    <string name="metronome_start">Iniciar</string>
+    <string name="metronome_stop">Detener</string>
+    <string name="metronome_tempo_slider">Tempo en pulsos por minuto</string>
+    <string name="metronome_tap_description">Marca el tempo tocando</string>
+    <string name="metronome_group_rhythm">Ritmo</string>
+    <string name="metronome_group_playback">Reproducción</string>
+    <string name="metronome_time_signature">Compás</string>
+    <string name="metronome_accent_hint">Selecciona un pulso del compás de arriba para acentuarlo o silenciarlo.</string>
+    <string name="metronome_beats_decrease">Menos pulsos</string>
+    <string name="metronome_beats_increase">Más pulsos</string>
+    <string name="metronome_beat_unit_decrease">Nota más larga</string>
+    <string name="metronome_beat_unit_increase">Nota más corta</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">Pulso %1$d</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">Cambiar el acento</string>
+    <string name="metronome_level_accent">acentuado</string>
+    <string name="metronome_level_normal">normal</string>
+    <string name="metronome_level_muted">silenciado</string>
+    <string name="metronome_subdivision">Subdivisión</string>
+    <string name="metronome_subdivision_description">Clics por pulso</string>
+    <string name="metronome_sound">Sonido</string>
+    <string name="metronome_sound_click">Clic</string>
+    <string name="metronome_sound_woodblock">Caja china</string>
+    <string name="metronome_sound_beep">Pitido</string>
+    <string name="metronome_sound_hi_hat">Charles</string>
+    <string name="metronome_sound_cowbell">Cencerro</string>
+    <string name="metronome_volume">Volumen</string>
+    <string name="metronome_animate">Animar con el pulso</string>
+    <string name="metronome_vibrate">Vibrar con el pulso</string>
+    <string name="metronome_audio_unavailable">No hay salida de sonido, así que el pulso solo se muestra.</string>
+    <string name="metronome_audio_waiting">Selecciona cualquier cosa de la página o pulsa una tecla para que el navegador pueda reproducir el sonido.</string>
+    <string name="metronome_stopped_refused">El metrónomo no ha podido reproducir sonido ahora, quizá por una llamada.</string>
+    <string name="metronome_stopped_interrupted">El metrónomo se ha detenido por una llamada u otra app.</string>
+    <string name="metronome_stopped_disconnected">El metrónomo se ha detenido porque se desconectó el dispositivo de audio.</string>
+    <string name="metronome_stopped_failed">El metrónomo se ha detenido porque falló la salida de sonido.</string>
+    <string name="metronome_stopped_silent">El metrónomo se detuvo al dejar Campfire de estar a la vista, ya que con el volumen a cero o todos los pulsos silenciados no había nada que oír.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">Metrónomo</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">Afinador</string>
+    <string name="tuner_play_a_note">Toca una nota</string>
+    <string name="tuner_reference_tone">Tono de referencia</string>
+    <!-- The display as a screen reader reads it while a reference tone sounds, e.g. "Reference tone, A4". -->
+    <string name="tuner_reading_tone">Tono de referencia, %1$s</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">Objetivo: %1$s Hz</string>
+    <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
+    <plurals name="tuner_cents">
+        <item quantity="one">%1$s cent</item>
+        <item quantity="other">%1$s cents</item>
+    </plurals>
+    <string name="tuner_in_tune">Afinado</string>
+    <string name="tuner_flat">Bajo</string>
+    <string name="tuner_sharp">Alto</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, %2$d cent por debajo</item>
+        <item quantity="other">%1$s, %2$d cents por debajo</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, %2$d cent por encima</item>
+        <item quantity="other">%1$s, %2$d cents por encima</item>
+    </plurals>
+    <string name="tuner_reading_in_tune">%1$s, afinado</string>
+    <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
+    <string name="tuner_reading_far_flat">%1$s, muy bajo</string>
+    <string name="tuner_reading_coarse_flat">%1$s, bajo</string>
+    <string name="tuner_reading_coarse_sharp">%1$s, alto</string>
+    <string name="tuner_reading_far_sharp">%1$s, muy alto</string>
+    <string name="tuner_tuning_standard">Estándar</string>
+    <string name="tuner_tuning_half_step_down">Medio tono abajo</string>
+    <string name="tuner_tuning_full_step_down">Un tono abajo</string>
+    <string name="tuner_tuning_baritone">Barítono</string>
+    <string name="tuner_tuning_drop">Drop %1$s</string>
+    <string name="tuner_tuning_double_drop">Doble drop %1$s</string>
+    <string name="tuner_tuning_open">Abierta en %1$s</string>
+    <string name="tuner_tuning_high">%1$s agudo</string>
+    <string name="tuner_tuning_low">%1$s grave</string>
+    <string name="tuner_tuning_double">Doble %1$s</string>
+    <string name="tuner_tuning_key">Afinación en %1$s</string>
+    <string name="tuner_tuning_modal">%1$s modal</string>
+    <string name="tuner_strings">Cuerdas</string>
+    <string name="tuner_mode_chromatic">Cromático</string>
+    <string name="tuner_strings_description">Selecciona una cuerda para oír su nota, y otra vez para detenerla.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">Cuerda %1$d, %2$s</string>
+    <string name="tuner_string_pair">Par de cuerdas %1$d, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$s sostenido</string>
+    <string name="tuner_note_sharp_syllable">%1$s sostenido</string>
+    <!-- How a screen reader reads the unlabeled reference pitch pill, e.g. "Reference pitch (A4), 440 Hz". -->
+    <string name="tuner_reference_pitch">Tono de referencia (%1$s), %2$d Hz</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">Bajar el tono de referencia</string>
+    <string name="tuner_reference_pitch_increase">Subir el tono de referencia</string>
+    <string name="tuner_reference_pitch_reset">Restablecer el tono de referencia a 440 Hz</string>
+    <string name="tuner_play_reference">Reproducir el %1$s de referencia</string>
+    <string name="tuner_notice_not_asked">Campfire escucha a través del micrófono para oír el instrumento. El sonido se analiza en este dispositivo y nunca se graba ni se envía a ningún sitio.</string>
+    <string name="tuner_notice_refused">El micrófono está desactivado para Campfire. Los tonos de abajo se pueden seguir reproduciendo.</string>
+    <string name="tuner_notice_refused_web">El micrófono está desactivado para Campfire. Puedes permitirlo en la configuración del sitio del navegador, junto a la dirección. Los tonos de abajo se pueden seguir reproduciendo.</string>
+    <string name="tuner_notice_refused_no_strings">El micrófono está desactivado para Campfire.</string>
+    <string name="tuner_notice_refused_web_no_strings">El micrófono está desactivado para Campfire. Puedes permitirlo en la configuración del sitio del navegador, junto a la dirección.</string>
+    <string name="tuner_notice_no_microphone">No se ha encontrado ningún micrófono.</string>
+    <string name="tuner_notice_busy">El micrófono está en uso por una llamada u otra app.</string>
+    <string name="tuner_notice_not_supported">Este navegador no permite que una página use el micrófono.</string>
+    <string name="tuner_notice_failed">No se ha podido abrir el micrófono.</string>
+    <string name="tuner_notice_silent">Aún no se oye nada. Si está sonando una cuerda, comprueba que el micrófono no esté silenciado ni con el volumen al mínimo, y que Campfire pueda usarlo.</string>
+    <string name="tuner_notice_waiting">Selecciona cualquier cosa de la página o pulsa una tecla para que el navegador pueda escuchar.</string>
+    <string name="tuner_use_microphone">Usar el micrófono</string>
+    <string name="tuner_notice_silent_enhancements">Comprueba que el micrófono no esté silenciado y que Campfire pueda usarlo. Windows también puede eliminar una nota sostenida como si fuera ruido: desactiva las mejoras de audio de este micrófono en la configuración de sonido.</string>
+    <string name="tuner_open_settings">Abrir ajustes</string>
+    <string name="tuner_open_sound_settings">Abrir ajustes de sonido</string>
+    <string name="tuner_ask_again">Volver a preguntar</string>
+    <string name="tuner_try_again">Reintentar</string>
+
+    <!-- Chords screen, and the Tools item of a navigation bar with no room for every screen, which holds it with the
+         Metronome and the Tuner -->
+    <string name="chords">Acordes</string>
+    <string name="tools">Herramientas</string>
+    <!-- The two buttons of the pill beside the search stepping the key the chords and scales are listed in. -->
+    <string name="library_key_down">Bajar la tonalidad un semitono</string>
+    <string name="library_key_up">Subir la tonalidad un semitono</string>
+    <string name="chords_search">Buscar cualquier acorde</string>
+    <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
+    <string name="chords_common">Acordes habituales en %1$s</string>
+    <!-- Over the chords of the picked key a search found, e.g. "Chords matching “m7” in C". -->
+    <string name="chords_search_heading">Acordes que coinciden con «%1$s» en %2$s</string>
+    <string name="chords_instrument_other">Elige un instrumento para ver cómo se tocan sus acordes.</string>
+    <string name="chords_instrument_without_diagrams">%1$s: sin diagramas de acordes. Elige otro instrumento para ver cómo se tocan sus acordes.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">Ningún acorde de esta tonalidad coincide con «%1$s».</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">Escalas</string>
+    <string name="scales_instrument_other">Se muestran en un teclado. Elige un instrumento para ver las escalas en sus cuerdas.</string>
+    <string name="scales_search">Buscar una escala o un modo</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">Escalas que coinciden con «%1$s» en %2$s</string>
+    <string name="scales_search_no_scale">Ninguna escala coincide con «%1$s».</string>
+    <string name="scale_family_common">Habituales</string>
+    <string name="scale_family_major_modes">Modos de la escala mayor</string>
+    <string name="scale_family_harmonic_minor_modes">Modos de la menor armónica</string>
+    <string name="scale_family_melodic_minor_modes">Modos de la menor melódica</string>
+    <string name="scale_family_minor_and_harmonic">Otras armónicas</string>
+    <string name="scale_family_pentatonic">Pentatónicas</string>
+    <string name="scale_family_blues_and_hexatonic">Blues y hexatónicas</string>
+    <string name="scale_family_symmetric">Simétricas</string>
+    <string name="scale_family_bebop">Bebop</string>
+    <string name="scale_family_world">Del mundo</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">Grados</string>
+    <string name="scales_labels_notes">Notas</string>
+    <string name="scales_labels_show_notes">Mostrar nombres de notas</string>
+    <string name="scales_labels_show_degrees">Mostrar grados</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
+    <string name="scales_steps_whole">T</string>
+    <string name="scales_steps_half">S</string>
+    <string name="scales_steps_augmented">3</string>
+    <string name="scales_play">Reproducir la escala</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
+    <string name="scales_mode_of">Modo %1$s de %2$s</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">También llamada %1$s</string>
+    <string name="scales_relative_minor">Relativa menor: %1$s</string>
+    <string name="scales_chords">Acordes de esta escala</string>
+    <string name="scales_sevenths">Acordes de séptima</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">Escalas para este acorde</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">El resto de la canción</string>
+    <!-- Over the scales of the parts of a song without a heading, where several such groups are told apart by the first words they sing. -->
+    <string name="song_details_scales_from">Desde «%1$s»</string>
+    <!-- Over the scales of one named part of a song that also hold its parts without a heading, e.g. "Chorus and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed">%1$s y las partes sin título</string>
+    <!-- The same over a list of several named parts, e.g. "Verse, Chorus, and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed_several">%1$s y las partes sin título</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">Sobre %1$s</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">Sobre %1$s y %2$s</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">Sobre %1$s y %2$s</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">Ninguna escala de arriba contiene estos acordes</string>
+    <string name="scale_major">mayor</string>
+    <string name="scale_dorian">dórico</string>
+    <string name="scale_phrygian">frigio</string>
+    <string name="scale_lydian">lidio</string>
+    <string name="scale_mixolydian">mixolidio</string>
+    <string name="scale_natural_minor">menor natural</string>
+    <string name="scale_locrian">locrio</string>
+    <string name="scale_harmonic_minor">menor armónica</string>
+    <string name="scale_locrian_natural_6">locrio ♮6</string>
+    <string name="scale_ionian_sharp_5">jónico ♯5</string>
+    <string name="scale_dorian_sharp_4">dórico ♯4</string>
+    <string name="scale_phrygian_dominant">frigio dominante</string>
+    <string name="scale_lydian_sharp_2">lidio ♯2</string>
+    <string name="scale_ultralocrian">ultralocrio</string>
+    <string name="scale_melodic_minor">menor melódica</string>
+    <string name="scale_dorian_flat_2">dórico ♭2</string>
+    <string name="scale_lydian_augmented">lidio aumentado</string>
+    <string name="scale_lydian_dominant">lidio dominante</string>
+    <string name="scale_mixolydian_flat_6">mixolidio ♭6</string>
+    <string name="scale_locrian_natural_2">locrio ♮2</string>
+    <string name="scale_altered">alterada</string>
+    <string name="scale_harmonic_major">mayor armónica</string>
+    <string name="scale_double_harmonic">doble armónica</string>
+    <string name="scale_hungarian_minor">húngara menor</string>
+    <string name="scale_hungarian_major">húngara mayor</string>
+    <string name="scale_neapolitan_major">napolitana mayor</string>
+    <string name="scale_neapolitan_minor">napolitana menor</string>
+    <string name="scale_major_pentatonic">pentatónica mayor</string>
+    <string name="scale_minor_pentatonic">pentatónica menor</string>
+    <string name="scale_minor_6_pentatonic">pentatónica menor 6</string>
+    <string name="scale_dominant_pentatonic">pentatónica dominante</string>
+    <string name="scale_egyptian">egipcia</string>
+    <string name="scale_man_gong">Man Gong</string>
+    <string name="scale_ritusen">Ritusen</string>
+    <string name="scale_hirajoshi">Hirajoshi</string>
+    <string name="scale_in">In</string>
+    <string name="scale_insen">Insen</string>
+    <string name="scale_iwato">Iwato</string>
+    <string name="scale_kumoi">Kumoi</string>
+    <string name="scale_chinese">china</string>
+    <string name="scale_blues">blues</string>
+    <string name="scale_major_blues">blues mayor</string>
+    <string name="scale_major_hexatonic">hexatónica mayor</string>
+    <string name="scale_minor_hexatonic">hexatónica menor</string>
+    <string name="scale_prometheus">Prometeo</string>
+    <string name="scale_tritone">de tritonos</string>
+    <string name="scale_whole_tone">de tonos enteros</string>
+    <string name="scale_augmented">aumentada</string>
+    <string name="scale_diminished">disminuida (tono–semitono)</string>
+    <string name="scale_dominant_diminished">disminuida dominante (semitono–tono)</string>
+    <string name="scale_chromatic">cromática</string>
+    <string name="scale_bebop_dominant">bebop dominante</string>
+    <string name="scale_bebop_major">bebop mayor</string>
+    <string name="scale_bebop_dorian">bebop dórica</string>
+    <string name="scale_bebop_melodic_minor">bebop menor melódica</string>
+    <string name="scale_bebop_harmonic_minor">bebop menor armónica</string>
+    <string name="scale_persian">persa</string>
+    <string name="scale_enigmatic">enigmática</string>
+    <string name="scale_oriental">oriental</string>
+    <string name="scale_major_locrian">locria mayor</string>
+    <string name="scale_lydian_minor">lidia menor</string>
+    <string name="scale_leading_whole_tone">de tonos enteros con sensible</string>
+    <string name="scale_flamenco">flamenca</string>
+    <string name="scale_spanish_eight_tone">española de ocho notas</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">Jónico</string>
+    <string name="scale_aliases_mixolydian">Escala dominante</string>
+    <string name="scale_aliases_natural_minor">Eólico</string>
+    <string name="scale_aliases_ionian_sharp_5">Mayor aumentada</string>
+    <string name="scale_aliases_dorian_sharp_4">Menor rumana, Dórico ucraniano</string>
+    <string name="scale_aliases_phrygian_dominant">Frigio español, Frigio mayor, Hijaz, Freygish, Ahava Rabbah</string>
+    <string name="scale_aliases_ultralocrian">Superlocrio ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">Menor de jazz</string>
+    <string name="scale_aliases_dorian_flat_2">Frigio ♮6</string>
+    <string name="scale_aliases_lydian_dominant">Acústica, De armónicos, Lidio ♭7, Mixolidio ♯4</string>
+    <string name="scale_aliases_mixolydian_flat_6">Eólico dominante, Hindú</string>
+    <string name="scale_aliases_locrian_natural_2">Semidisminuida</string>
+    <string name="scale_aliases_altered">Superlocrio, Tonos enteros disminuida</string>
+    <string name="scale_aliases_double_harmonic">Bizantina, Hijaz Kar, Árabe, Gitana mayor</string>
+    <string name="scale_aliases_hungarian_minor">Gitana menor, Doble armónica menor</string>
+    <string name="scale_aliases_egyptian">Pentatónica suspendida</string>
+    <string name="scale_aliases_man_gong">Pentatónica menor de blues</string>
+    <string name="scale_aliases_minor_6_pentatonic">Pentatónica menor sexta, Pentatónica dórica</string>
+    <string name="scale_aliases_dominant_pentatonic">Pentatónica mixolidia, Pentatónica de séptima dominante</string>
+    <string name="scale_aliases_ritusen">Yo, Pentatónica mayor de blues</string>
+    <string name="scale_aliases_in">Sakura</string>
+    <string name="scale_aliases_blues">Blues menor</string>
+    <string name="scale_aliases_prometheus">Mística</string>
+    <string name="scale_aliases_tritone">Petrushka</string>
+    <string name="scale_aliases_augmented">Hexatónica</string>
+    <string name="scale_aliases_diminished">Octatónica</string>
+
+    <!-- Song editor screen -->
+    <string name="song_editor_edit">Editar</string>
+    <string name="song_editor_preview">Vista previa</string>
+    <string name="song_editor_split">Dividido</string>
+    <string name="song_editor_undo">Deshacer</string>
+    <string name="song_editor_redo">Rehacer</string>
+    <string name="song_editor_shortcuts">Atajos</string>
+    <string name="song_editor_show_shortcuts">Mostrar atajos</string>
+    <string name="song_editor_hide_shortcuts">Ocultar atajos</string>
+    <string name="song_editor_insert_chord">Acorde</string>
+    <string name="song_editor_insert_annotation">Anotación</string>
+    <string name="song_editor_format_bold">Negrita</string>
+    <string name="song_editor_format_italic">Cursiva</string>
+    <string name="song_editor_format_underline">Subrayado</string>
+    <string name="song_editor_section_intro">Intro</string>
+    <string name="song_editor_section_verse">Estrofa</string>
+    <string name="song_editor_section_pre_chorus">Preestribillo</string>
+    <string name="song_editor_section_chorus">Estribillo</string>
+    <string name="song_editor_section_bridge">Puente</string>
+    <string name="song_editor_section_solo">Solo</string>
+    <string name="song_editor_section_outro">Outro</string>
+    <string name="song_editor_section_tab">Tablatura</string>
+    <string name="song_editor_tab_any_instrument">Cualquier instrumento</string>
+    <string name="song_editor_section_grid">Cuadrícula</string>
+    <string name="song_editor_insert_chorus_recall">Repetir estribillo</string>
+    <string name="song_editor_insert_comment">Comentario</string>
+    <string name="song_editor_insert_comment_italic">Comentario en cursiva</string>
+    <string name="song_editor_insert_comment_box">Comentario enmarcado</string>
+    <string name="song_editor_insert_key_change">Cambio de tonalidad</string>
+    <string name="song_editor_insert_title">Título</string>
+    <string name="song_editor_insert_subtitle">Subtítulo</string>
+    <string name="song_editor_insert_artist">Artista</string>
+    <string name="song_editor_insert_composer">Compositor</string>
+    <string name="song_editor_insert_lyricist">Letrista</string>
+    <string name="song_editor_insert_more_details">Más detalles</string>
+    <string name="song_editor_insert_album">Álbum</string>
+    <string name="song_editor_insert_cover_art">Portada</string>
+    <string name="song_editor_insert_year">Año</string>
+    <string name="song_editor_insert_key">Tonalidad</string>
+    <string name="song_editor_insert_capo">Capo</string>
+    <string name="song_editor_insert_tempo">Tempo</string>
+    <string name="song_editor_insert_time">Compás</string>
+    <string name="song_editor_insert_duration">Duración</string>
+    <string name="song_editor_insert_tag">Etiqueta</string>
+    <string name="song_editor_insert_language">Idioma</string>
+    <string name="song_editor_insert_link">Enlace</string>
+    <string name="song_editor_insert_chord_shape">Forma de acorde</string>
+    <string name="song_editor_transpose_text_up">Transponer el texto hacia arriba</string>
+    <string name="song_editor_transpose_text_down">Transponer el texto hacia abajo</string>
+    <string name="song_editor_prettify">Ordenar el ChordPro</string>
+    <string name="song_editor_revert">Deshacer todos los cambios</string>
+    <string name="song_editor_chordpro_reference">Referencia de ChordPro</string>
+    <string name="song_editor_find">Buscar</string>
+    <string name="song_editor_find_and_replace">Buscar y reemplazar</string>
+    <string name="song_editor_find_query">Texto que buscar</string>
+    <string name="song_editor_find_replacement">Reemplazar por</string>
+    <string name="song_editor_find_match_count">%1$d de %2$d</string>
+    <string name="song_editor_find_no_matches">Sin coincidencias</string>
+    <string name="song_editor_find_match_case">Distinguir mayúsculas</string>
+    <string name="song_editor_find_previous">Coincidencia anterior</string>
+    <string name="song_editor_find_next">Coincidencia siguiente</string>
+    <string name="song_editor_replace">Reemplazar</string>
+    <string name="song_editor_replace_all">Reemplazar todo</string>
+    <string name="song_editor_revert_confirmation">¿Quieres volver a la última versión guardada de esta canción? Se perderá todo lo que hayas escrito desde entonces.</string>
+    <string name="song_editor_unsaved_changes">Cambios sin guardar</string>
+    <string name="song_editor_unsaved_changes_confirmation">¿Quieres guardar lo que has escrito antes de salir del editor?</string>
+    <string name="song_editor_discard">Descartar</string>
+    <string name="song_editor_save_failed">No se pudo guardar la canción</string>
+    <string name="song_editor_draft_lost">No se pudieron recuperar los cambios sin guardar</string>
+    <string name="song_editor_draft_restored">Se recuperaron los cambios sin guardar</string>
+    <string name="song_editor_file_gone">El archivo de esta canción ya no está en la biblioteca. Guárdala para volver a ponerlo.</string>
+    <string name="song_editor_untitled">Ponle un título a la canción para guardarla</string>
+
+    <!-- Song details screen -->
+    <string name="song_details_previous_song">Canción anterior</string>
+    <string name="song_details_next_song">Canción siguiente</string>
+    <string name="song_details_previous_page">Página anterior</string>
+    <string name="song_details_next_page">Página siguiente</string>
+    <string name="song_details_previous_section">Sección anterior</string>
+    <string name="song_details_next_section">Sección siguiente</string>
+    <string name="song_details_step_progress_page">Página %1$d de %2$d</string>
+    <string name="song_details_step_progress_section">Sección %1$d de %2$d</string>
+    <string name="song_details_scroll_up">Desplazar hacia arriba</string>
+    <string name="song_details_scroll_down">Desplazar hacia abajo</string>
+    <string name="song_details_auto_scroll_play">Iniciar desplazamiento</string>
+    <string name="song_details_auto_scroll_pause">Detener desplazamiento</string>
+    <string name="song_details_auto_scroll_speed">Velocidad de desplazamiento</string>
+    <string name="song_layout_title">¿Cómo lees las canciones?</string>
+    <string name="song_layout_message">Puedes cambiarlo cuando quieras en las Preferencias de una canción.</string>
+    <string name="song_layout_pages">Páginas</string>
+    <string name="song_layout_pages_description">La mayor parte posible de la canción en pantalla a la vez, en columnas que se pasan página a página</string>
+    <string name="song_layout_continuous">Continua</string>
+    <string name="song_layout_continuous_description">Una sola columna que se desplaza sola al ritmo de la canción, a la velocidad que elijas para cada una</string>
+    <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_transposition">Transposición</string>
+    <string name="song_details_transpose_up">Transponer hacia arriba</string>
+    <string name="song_details_transpose_down">Transponer hacia abajo</string>
+    <string name="song_details_transpose_reset">Restablecer la transposición</string>
+    <string name="song_details_tempo_decrease">Más lento</string>
+    <string name="song_details_tempo_increase">Más rápido</string>
+    <string name="song_details_tempo_reset">Restablecer el tempo</string>
+    <string name="song_details_capo_decrease">Bajar el capo</string>
+    <string name="song_details_capo_increase">Subir el capo</string>
+    <string name="song_details_capo_reset">Restablecer el capo</string>
+    <string name="song_details_playing_edit">Editar los valores de la canción</string>
+    <string name="song_details_playing_description_setlist">Guardados en el archivo de la canción, son los valores con los que la canción empieza en todas partes. Los controles de la canción los ajustan solo para este repertorio, sin cambiar el archivo. Deja un campo vacío para usar el valor predeterminado.</string>
+    <string name="song_details_playing_description_library">Guardados en el archivo de la canción, son los valores con los que la canción empieza en todas partes. Los controles de la canción los ajustan cuando se abre desde la biblioteca, sin cambiar el archivo ni ningún repertorio. Deja un campo vacío para usar el valor predeterminado.</string>
+    <string name="song_details_playing_override_setlist">Ajustado para este repertorio</string>
+    <string name="song_details_playing_override_library">Ajustado en la biblioteca</string>
+    <string name="song_details_playing_override_transposition">Transposición %1$s</string>
+    <string name="song_details_playing_override_reset">Restablecer</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">La tonalidad en la que están escritos los acordes. El archivo los mueve %1$s semitono al mostrar la canción.</item>
+        <item quantity="other">La tonalidad en la que están escritos los acordes. El archivo los mueve %1$s semitonos al mostrar la canción.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">Tempo (BPM)</string>
+    <string name="song_details_playing_range">De %1$d a %2$d</string>
+    <string name="song_details_metronome_show">Mostrar metrónomo</string>
+    <string name="song_details_metronome_hide">Ocultar metrónomo</string>
+    <string name="song_details_scroll_to_top">Volver al principio</string>
+    <string name="song_details_text_size_increase">Aumentar el tamaño del texto</string>
+    <string name="song_details_text_size_decrease">Reducir el tamaño del texto</string>
+    <string name="song_details_text_size_reset">Restablecer el tamaño del texto</string>
+    <string name="song_details_text_size">Tamaño del texto</string>
+    <string name="song_details_section_chorus">Estribillo</string>
+    <string name="song_details_section_bridge">Puente</string>
+    <string name="song_details_section_tab">Tablatura</string>
+    <string name="song_details_section_grid">Cuadrícula</string>
+    <string name="song_details_section_abc">Notación ABC</string>
+    <string name="song_details_section_lilypond">LilyPond</string>
+    <string name="song_details_section_svg">SVG</string>
+    <string name="song_details_tab_expand">Mostrar la tablatura</string>
+    <string name="song_details_tab_collapse">Ocultar la tablatura</string>
+    <string name="song_details_grid_expand">Mostrar la cuadrícula</string>
+    <string name="song_details_grid_collapse">Ocultar la cuadrícula</string>
+    <string name="song_details_section_expand">Mostrar la sección</string>
+    <string name="song_details_section_collapse">Ocultar la sección</string>
+    <string name="song_details_section_expand_starting">Mostrar la sección que empieza por «%1$s»</string>
+    <string name="song_details_section_collapse_starting">Ocultar la sección que empieza por «%1$s»</string>
+    <string name="song_details_tags_manage">Gestionar etiquetas</string>
+    <string name="song_details_tags_add">Añadir etiquetas</string>
+    <string name="song_details_tags_search">Busca o crea una etiqueta</string>
+    <string name="song_details_tag_create">Crear la etiqueta «%1$s»</string>
+    <string name="song_details_tag_color">Color de la etiqueta «%1$s»</string>
+    <string name="song_details_tag_color_none">Sin color</string>
+    <string name="song_details_tag_color_lime">Lima</string>
+    <string name="song_details_tag_color_cyan">Cian</string>
+    <string name="song_details_tag_color_indigo">Índigo</string>
+    <string name="song_details_tag_color_brown">Marrón</string>
+    <string name="song_details_tag_color_black">Negro</string>
+    <string name="song_details_metadata_edit">Editar los detalles de la canción</string>
+    <string name="song_details_song_info">Sobre la canción</string>
+    <string name="song_details_info_tags">Etiquetas</string>
+    <string name="song_details_info_languages">Idiomas</string>
+    <string name="song_details_info_links">Enlaces</string>
+    <string name="song_details_links_edit">Gestionar enlaces</string>
+    <string name="song_details_links_add">Añadir enlaces</string>
+    <string name="song_details_link_name">Nombre (opcional)</string>
+    <string name="song_details_link_duplicate">Esta dirección ya está en la lista</string>
+    <string name="song_details_languages_edit">Gestionar idiomas</string>
+    <string name="song_details_languages_add">Añadir idiomas</string>
+    <string name="song_details_remove_cover_art_confirmation">¿Quitar la portada de %1$s?</string>
+    <string name="song_details_link_add">Añadir enlace</string>
+    <string name="song_details_link_remove">Quitar el enlace a %1$s</string>
+    <string name="song_details_link_move_up">Subir el enlace a %1$s</string>
+    <string name="song_details_link_move_down">Bajar el enlace a %1$s</string>
+    <string name="song_details_link_address">Dirección web</string>
+    <string name="song_details_link_address_hint">Un vídeo, una grabación, una tablatura o cualquier otra página sobre la canción</string>
+    <string name="song_details_language_search">Buscar un idioma</string>
+    <string name="song_details_language_no_search_results">Ningún idioma coincide con esta búsqueda. Su código de dos o tres letras lo encuentra incluso cuando no tiene nombre.</string>
+    <string name="song_details_set_cover_art">Añadir portada</string>
+    <string name="song_details_change_cover_art">Cambiar portada</string>
+    <string name="cover_art_search">Buscar</string>
+    <string name="cover_art_search_hint">Escribe el nombre del álbum, o solo el de la canción, para encontrar los discos en los que salió</string>
+    <string name="cover_art_search_loading">Buscando en MusicBrainz e iTunes…</string>
+    <string name="cover_art_search_busy">MusicBrainz está ocupado; se volverá a intentar en un momento…</string>
+    <string name="cover_art_search_no_results">No se encontró ningún disco con portada. Prueba con el nombre del álbum o con menos palabras.</string>
+    <string name="cover_art_search_failed">No se pudo completar la búsqueda.</string>
+    <string name="cover_art_search_remove">Quitar portada</string>
+    <string name="cover_art_search_attribution">Discos de MusicBrainz e iTunes, portadas de Cover Art Archive y Apple</string>
+    <string name="cover_art_address_mode">Dirección web</string>
+    <string name="cover_art_address">Dirección de la imagen</string>
+    <string name="cover_art_address_hint">Pega la dirección de una imagen de la web</string>
+    <string name="cover_art_address_failed">No se pudo cargar ninguna imagen desde esta dirección</string>
+    <string name="song_details_lookup">Buscar detalles en línea</string>
+    <string name="song_details_lookup_fill_in">Rellenar</string>
+    <string name="song_details_lookup_hint">Escribe el nombre de la canción, y su artista si lo sabes, para encontrar las grabaciones que coinciden</string>
+    <string name="song_details_lookup_no_results">No se encontró ninguna grabación de esta canción. Prueba con menos palabras o sin el álbum.</string>
+    <string name="song_details_lookup_now">Ahora: %1$s</string>
+    <string name="song_details_lookup_credits_loading">Consultando a MusicBrainz los autores…</string>
+    <string name="song_details_lookup_credits_none">MusicBrainz no indica autores para esta grabación</string>
+    <string name="song_details_lookup_credits_failed">No se pudieron consultar los autores</string>
+    <string name="song_details_lookup_nothing_new">Esta grabación no aporta nada que el formulario no diga ya</string>
+    <string name="song_details_lookup_attribution">Datos de MusicBrainz e iTunes.</string>
+    <string name="song_details_capo">Capo %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_time_signature">Compás: %1$s</string>
+    <string name="song_details_key_change">Tonalidad: %1$s</string>
+    <string name="tab_notice_octave_up">Subida una octava para que quepa en el mástil</string>
+    <string name="tab_notice_octave_down">Bajada una octava para que quepa en el mástil</string>
+    <string name="tab_notice_other_instrument">Tablatura de %1$s, pasada a tu instrumento</string>
+    <string name="tab_notice_not_moved">Se muestra tal como está escrita: no se puede pasar a tu afinación</string>
+    <string name="tab_notice_not_moved_instrument">Tablatura de %1$s, tal como está escrita: no se puede pasar a tu instrumento</string>
+    <string name="tab_notice_hidden">Tablatura oculta</string>
+    <string name="tab_notice_hidden_instrument">Tablatura de %1$s oculta</string>
+    <string name="song_details_chords">Acordes</string>
+    <string name="song_details_chord_tuning">Afinación: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">Definido en esta canción para la afinación estándar</string>
+    <string name="song_details_chord_defined_standard_tuning_show">Mostrar la forma de la canción</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">Mostrar las formas para tu afinación</string>
+    <string name="song_details_chord_diagram">%1$s: %2$s</string>
+    <string name="song_details_chord_diagram_none">%1$s: sin diagrama</string>
+    <string name="song_details_chord_letters">%1$s, es decir, %2$s</string>
+    <string name="song_details_chord_degree">%1$s, grado %2$s</string>
+    <string name="song_details_chord_shape_choose">Elegir forma de acorde - %1$s</string>
+    <string name="song_details_chord_shape_capo">Forma de %1$s, capo %2$s</string>
+    <string name="song_details_chord_defined">Definido en esta canción</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">Definido en esta canción, movido %1$d traste</item>
+        <item quantity="other">Definido en esta canción, movido %1$d trastes</item>
+    </plurals>
+    <string name="song_details_timing">Desde aquí: %1$s</string>
+    <string name="song_details_composer">Compositor</string>
+    <string name="song_details_lyricist">Letrista</string>
+    <string name="song_details_album">Álbum</string>
+    <string name="song_details_year">Año</string>
+    <string name="song_details_duration">Duración</string>
+    <string name="song_details_empty">Este archivo aún no tiene contenido.</string>
+    <string name="song_details_cut">Esta canción es demasiado larga para mostrarla entera aquí, así que se corta en este punto. El archivo está completo y el editor la muestra entera.</string>
+    <string name="song_details_no_data">No se pudo cargar esta canción</string>
+    <string name="song_details_no_data_hint">No se pudo leer el archivo.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync_unavailable">Esta versión de Campfire se compiló sin credenciales de sincronización, así que no hay nada a lo que conectarse.</string>
+    <string name="settings_sync_description">Mantén la misma biblioteca en todos tus dispositivos mediante una carpeta en la nube que es tuya, junto con la transposición, el capo y la forma de tocar cada canción. Campfire no tiene servidor: los archivos van directamente entre tus dispositivos y tu propio almacenamiento.</string>
+    <string name="settings_sync_connect_dropbox">Conectar Dropbox</string>
+    <string name="settings_sync_connecting">Conectando…</string>
+    <string name="settings_sync_connection_failed_network">No se pudo acceder al servicio. Comprueba la conexión a internet y vuelve a intentarlo.</string>
+    <string name="settings_sync_connection_failed_authorization">Dropbox rechazó la conexión.</string>
+    <string name="settings_sync_connection_failed_unknown">No se pudo establecer la conexión.</string>
+    <string name="settings_sync_connection_failed_storage">Campfire no pudo leer ni guardar la conexión en este dispositivo. Lo volverá a intentar la próxima vez que se inicie.</string>
+    <string name="settings_sync_connected_as">Conectado como %1$s</string>
+    <string name="settings_sync_disconnect">Desconectar</string>
+    <string name="settings_sync_disconnect_confirmation">¿Desconectar %1$s? Campfire olvidará la cuenta y dejará de sincronizar. No se eliminará nada de la biblioteca ni de la carpeta en la nube.</string>
+    <string name="settings_sync_now">Sincronizar ahora</string>
+    <string name="settings_sync_never">Aún no se ha sincronizado</string>
+    <string name="settings_sync_last_synced_moments_ago">Última sincronización correcta hace unos instantes</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">Última sincronización correcta hace un minuto</item>
+        <item quantity="other">Última sincronización correcta hace %1$d minutos</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">Última sincronización correcta hace una hora</item>
+        <item quantity="other">Última sincronización correcta hace %1$d horas</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">Última sincronización correcta ayer</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">Última sincronización correcta hace %1$d día</item>
+        <item quantity="other">Última sincronización correcta hace %1$d días</item>
+    </plurals>
+    <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
+    <string name="settings_sync_failed_network">No se pudo acceder al servicio. Campfire lo volverá a intentar la próxima vez.</string>
+    <string name="settings_sync_failed_authorization">Se rechazó la conexión. Vuelve a conectar la cuenta.</string>
+    <string name="settings_sync_failed_storage">No se pudo leer ni escribir la biblioteca.</string>
+    <string name="settings_sync_failed_unknown">La sincronización no terminó.</string>
+    <string name="settings_sync_failed_remote_full">La carpeta en la nube está llena, así que no se puede subir nada más. Libera algo de espacio allí y vuelve a sincronizar.</string>
+    <plurals name="settings_sync_files_failed">
+        <item quantity="one">No se pudo sincronizar un archivo: %2$s</item>
+        <item quantity="other">No se pudieron sincronizar %1$d archivos. Entre ellos: %2$s</item>
+    </plurals>
+    <string name="settings_sync_preferences_failed">No se pudieron sincronizar los ajustes de las canciones (transposición, capo y tempo). Campfire lo volverá a intentar la próxima vez.</string>
+    <plurals name="settings_sync_conflicts">
+        <item quantity="one">Se conservaron las dos versiones de un archivo que cambió en dos sitios: %2$s</item>
+        <item quantity="other">Se conservaron las dos versiones de %1$d archivos que cambiaron en dos sitios. Entre ellos: %2$s</item>
+    </plurals>
+
+    <string name="settings_sync_cancel">Detener la sincronización</string>
+    <string name="settings_sync_progress">Sincronizando {completed} de {total}…</string>
+    <string name="settings_sync_preparing">Buscando cambios…</string>
+    <string name="settings_sync_interrupted">La última sincronización se detuvo antes de terminar. Se conservó todo lo que ya se había transferido.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">El archivo que habías sincronizado ya no está en la carpeta en la nube. ¿Eliminarlo también aquí, o conservarlo y volver a subirlo?</item>
+        <item quantity="other">%1$d de tus %2$d archivos sincronizados ya no están en la carpeta en la nube. ¿Eliminarlos también aquí, o conservarlos y volver a subirlos?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">Eliminarlos también aquí</string>
+    <string name="settings_sync_keep_and_upload">Conservarlos y subirlos</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">El archivo que habías sincronizado ya no está en este dispositivo. ¿Eliminarlo también de la carpeta en la nube, o conservarlo y volver a descargarlo?</item>
+        <item quantity="other">%1$d de tus %2$d archivos sincronizados ya no están en este dispositivo. ¿Eliminarlos también de la carpeta en la nube, o conservarlos y volver a descargarlos?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">Eliminarlos también de la nube</string>
+    <string name="settings_sync_keep_and_download">Conservarlos y descargarlos</string>
+    <string name="settings_sync_notification_channel">Sincronización</string>
+    <string name="settings_sync_notification_title">Sincronizando la biblioteca</string>
+    <string name="settings_sync_redirect_page_title">Volver a Campfire</string>
+    <string name="settings_sync_redirect_page_message">Puedes cerrar esta pestaña y volver a la aplicación.</string>
+
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">Novedades de Campfire %1$s</string>
+    <string name="whats_new_message">• **Acordes nombrados como suenan** Con el capo incluido, los acordes, las tonalidades, las escalas y las tablaturas se nombran como suenan, y cada diagrama muestra la forma que se digita y su grado.\n• **Vista previa de las canciones antes de importarlas** Lee cada canción que trae una importación antes de que se guarde nada, desde su vista previa o su fila en la revisión, y etiqueta todas las canciones importadas a la vez.\n• **Tablaturas y cuadrículas de acordes renovadas** Las tablaturas se dibujan con cuerdas continuas y siguen alineadas al transponer, y las cuadrículas de acordes muestran repeticiones como x4 junto a los acordes.\n• **Negrita, cursiva y subrayado** La letra y los comentarios pueden tener palabras en negrita, cursiva y subrayadas, desde los botones del editor o con Ctrl / Cmd + B, I y U.\n• **Más control sobre el PDF** La exportación a PDF puede omitir las tablaturas, imprime el capo y el tempo que elegiste y puede limitar el PDF de un repertorio a su orden de canciones.\n• **Importa melodías ABC** Los archivos ABC y el texto ABC pegado se convierten en canciones con una cuadrícula de acordes; la melodía se conserva como texto, ya que la partitura aún no se dibuja.</string>
+
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_start_playing">Empezar a tocar</string>
+    <string name="onboarding_welcome_title">¡Te damos la bienvenida a Campfire!</string>
+    <string name="onboarding_welcome_message">Unas preguntas rápidas para adaptar la aplicación a ti.\nPrimero, asegúrate de leerlas en tu idioma.</string>
+    <string name="onboarding_language">Idioma: %1$s</string>
+    <string name="onboarding_settings_note">Todo lo que elijas en estos pasos se puede cambiar después en Ajustes.</string>
+    <string name="onboarding_look_title">Elige un aspecto</string>
+    <string name="onboarding_look_message">Un tema oscuro no te deslumbrará en un escenario con poca luz, y una página más cálida cansa menos la vista durante un concierto largo.</string>
+    <string name="onboarding_features_title">¿Qué necesitas?</string>
+    <string name="onboarding_features_message">Quédate solo con lo que vayas a usar, para que la aplicación esté despejada y se adapte a tu forma de tocar.</string>
+    <string name="onboarding_chord_diagram_description">Cómo tocar %1$s</string>
+    <string name="onboarding_progress">Paso %1$d de %2$d</string>
+    <string name="onboarding_instrument_title">¿Qué tocas?</string>
+    <string name="onboarding_instrument_message">Los diagramas de acordes y el afinador se adaptan a lo que elijas.</string>
+    <string name="onboarding_instrument_strings">El afinador escuchará %1$s</string>
+    <string name="onboarding_notation_title">¿Cómo escribes los acordes?</string>
+    <string name="onboarding_notation_message">Elige cómo se muestran los acordes. Las canciones siempre se guardan en la notación estándar, para que se lean igual en cualquier aplicación.</string>
+    <string name="onboarding_song_layout_message">Pasa las páginas tú mismo o deja que la canción se desplace a su ritmo mientras tocas.</string>
+    <string name="onboarding_feature_chords_description">Acordes sobre la letra, en cualquier tonalidad, con diagramas dibujados para tu instrumento. ¿Solo cantas? Desmárcalo para ver solo la letra.</string>
+    <string name="onboarding_feature_metronome_description">Marca el pulso al tempo de cada canción, en las canciones y en su propia pantalla</string>
+    <string name="onboarding_feature_tuner_description">Afina tu instrumento con el micrófono, en las canciones y en su propia pantalla</string>
+    <string name="onboarding_feature_scales_description">Todas las escalas y modos dibujados para tu instrumento, y los que encajan con cada canción</string>
+    <string name="onboarding_sync_title">Tus canciones, en todas partes</string>
+    <string name="onboarding_sync_message">Conecta Dropbox para tener la misma biblioteca en todos tus dispositivos. No hay ningún servidor de por medio: tus archivos van directamente a tu propio almacenamiento.</string>
+    <string name="onboarding_clipboard_link_question">¿Alguien te envió una canción o un repertorio?</string>
+    <string name="onboarding_clipboard_link_open">Abrir</string>
+    <string name="welcome_get_started">Empezar</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">Actualización disponible</string>
+    <string name="app_update_available_hint">Hay una nueva versión de Campfire lista para descargar. Se descarga en segundo plano, así que puedes seguir usando la aplicación mientras tanto.</string>
+    <string name="app_update_update">Actualizar</string>
+    <string name="app_update_continue_offline">Continuar sin conexión</string>
+    <string name="app_update_later">Más tarde</string>
+    <string name="app_update_downloaded">Actualización descargada</string>
+    <string name="app_update_downloaded_hint">Campfire tiene que reiniciarse para terminar de instalarla.</string>
+    <string name="app_update_restart">Reiniciar</string>
+    <string name="app_update_required">Actualización obligatoria</string>
+    <string name="app_update_required_hint">Esta versión de Campfire ya no se puede usar. Tu biblioteca se queda exactamente donde está. Para actualizar se necesita conexión a internet.</string>
+
+    <!-- Export -->
+    <string name="print_save">Guardar</string>
+    <string name="print_share">Compartir</string>
+    <string name="print_format">Compartir como</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">Zip</string>
+    <string name="print_format_pdf_description">Ideal para imprimir y para quien no tiene una aplicación de cancioneros</string>
+    <string name="print_format_chordpro_description">Formato de archivo estándar compatible con la mayoría de las aplicaciones de cancioneros</string>
+    <string name="print_format_zip_description">Archivos ChordPro en un solo archivo comprimido, para la mayoría de las aplicaciones de cancioneros</string>
+    <string name="print_files_song_description">Letra y acordes como texto sin formato que se puede editar y transponer, para cualquier aplicación que lea ChordPro, incluida Campfire.</string>
+    <plurals name="print_files_setlist_description">
+        <item quantity="one">%1$d canción del repertorio como archivo ChordPro para cualquier aplicación de cancioneros, con el orden de canciones que Campfire vuelve a leer como repertorio.</item>
+        <item quantity="other">%1$d canciones del repertorio como archivos ChordPro para cualquier aplicación de cancioneros, con el orden de canciones que Campfire vuelve a leer como repertorio.</item>
+    </plurals>
+    <plurals name="print_files_songs_description">
+        <item quantity="one">%1$d canción como archivo ChordPro, para cualquier aplicación que lea ChordPro, incluida Campfire.</item>
+        <item quantity="other">%1$d canciones como archivos ChordPro, para cualquier aplicación que lea ChordPro, incluida Campfire.</item>
+    </plurals>
+    <plurals name="print_files_missing">
+        <item quantity="one">Falta %1$d canción o no se puede leer, así que se omite.</item>
+        <item quantity="other">Faltan %1$d canciones o no se pueden leer, así que se omiten.</item>
+    </plurals>
+    <string name="print_section_page">Página</string>
+    <string name="print_a4">A4</string>
+    <string name="print_letter">Carta</string>
+    <string name="print_portrait">Vertical</string>
+    <string name="print_landscape">Horizontal</string>
+    <string name="print_font_size">%1$d pt</string>
+    <string name="print_margins">Márgenes</string>
+    <string name="print_margin">%1$d mm</string>
+    <string name="print_margin_decrease">Reducir márgenes</string>
+    <string name="print_margin_increase">Aumentar márgenes</string>
+    <string name="print_columns">Columnas</string>
+    <string name="print_columns_decrease">Menos columnas</string>
+    <string name="print_columns_increase">Más columnas</string>
+    <string name="print_chords">Acordes y cuadrículas</string>
+    <string name="print_tabs">Tablaturas</string>
+    <string name="print_comments">Comentarios</string>
+    <string name="print_key">Tonalidad, transposición y capo</string>
+    <string name="print_tempo">Tempo y compás</string>
+    <string name="print_metadata">Artista</string>
+    <string name="print_page_numbers">Números de página</string>
+    <string name="print_overview">Incluir orden de canciones</string>
+    <string name="print_overview_details">Fecha, descripción y artistas</string>
+    <string name="print_running_order">Orden de canciones</string>
+    <string name="print_song_sheets">Hojas de canciones</string>
+    <string name="print_song_sheets_include">Incluir hojas de canciones</string>
+    <string name="print_song_sheet">Hoja de la canción</string>
+    <string name="print_new_page">Empezar cada canción en una página nueva</string>
+    <string name="print_missing">Falta el archivo de la canción o no se puede leer</string>
+    <string name="print_load_failed">No se pudo preparar el PDF.</string>
+    <string name="print_setlist_empty">Este repertorio aún no tiene canciones.</string>
+    <string name="print_page">Página %1$d de %2$d</string>
+    <string name="print_previous">Anterior</string>
+    <string name="print_next">Siguiente</string>
+    <string name="print_time">Compás</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">Enlace</string>
+    <string name="print_format_link_description">Recomendado para usuarios actuales y futuros de Campfire</string>
+    <string name="share_not_connected">Comparte un enlace que se abre directamente en Campfire, o en un navegador sin instalar nada. Los enlaces se crean en tu propio Dropbox, así que conéctalo primero; así también mantendrás toda tu biblioteca sincronizada en todos tus dispositivos.</string>
+    <string name="share_connect_again">Volver a conectar</string>
+    <string name="share_create">Crear enlace</string>
+    <string name="share_try_again">Reintentar</string>
+    <string name="share_copy">Copiar enlace</string>
+    <string name="share_send">Enviar enlace</string>
+    <string name="share_not_shared_song">Cualquiera con el enlace puede abrir esta canción directamente en Campfire, o en un navegador sin instalar nada. El enlace sigue tus cambios: al volver a abrirlo se obtiene la última versión, mientras que las copias ya importadas se quedan como están.</string>
+    <string name="share_not_shared_setlist">Cualquiera con el enlace puede abrir este repertorio y sus canciones directamente en Campfire, o en un navegador sin instalar nada. El enlace sigue tus cambios: al volver a abrirlo se obtiene la última versión, mientras que las copias ya importadas se quedan como están.</string>
+    <string name="share_shared_on">Compartido el %1$s</string>
+    <string name="share_too_large_to_update">La última versión es demasiado grande para compartirla; el enlace ofrece la última que cabía.</string>
+    <string name="share_scope_missing">Vuelve a conectar Dropbox para permitir que Campfire cree enlaces.</string>
+    <string name="share_authorization">Dropbox ya no acepta la conexión. Vuelve a conectarlo para crear enlaces.</string>
+    <string name="share_too_large">Demasiado grande para compartirlo como enlace (más de %1$d MB).</string>
+    <string name="share_not_public">Tu cuenta de Dropbox no permite enlaces públicos.</string>
+    <string name="share_network">No se pudo acceder a Dropbox. Comprueba la conexión y vuelve a intentarlo.</string>
+    <string name="share_remote_full">Tu Dropbox está lleno.</string>
+    <string name="share_newer_version">Una versión más reciente de Campfire modificó por última vez los enlaces de esta cuenta de Dropbox. Actualiza Campfire para compartir desde aquí.</string>
+    <string name="share_missing">Esto ya no está en tu biblioteca.</string>
+    <string name="share_copy_missing">Este enlace ya no funciona: su copia se eliminó de tu Dropbox. Crea un enlace nuevo para volver a compartirlo.</string>
+    <string name="share_failed">No se pudo crear el enlace. Vuelve a intentarlo en un momento.</string>
+    <string name="share_qr_code">Código QR del enlace</string>
+    <string name="share_save_qr_code">Guardar código QR</string>
+    <string name="share_stop">Dejar de compartir</string>
+    <string name="share_stop_confirmation">¿Dejar de compartir «%1$s»? El enlace dejará de funcionar para todos. Las copias que otros ya importaron siguen siendo suyas.</string>
+    <string name="share_link_copied">Enlace copiado</string>
+    <string name="share_qr_code_saved">Código QR guardado</string>
+    <string name="share_stop_failed">No se pudo dejar de compartir. El enlace sigue funcionando.</string>
+    <string name="share_stop_failed_network">Para dejar de compartir se necesita conexión con Dropbox. El enlace sigue funcionando.</string>
+
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">Creando enlace…</string>
+    <string name="share_stopping">Dejando de compartir…</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">Compartir</string>
+    <string name="settings_group_shared_links">Enlaces compartidos</string>
+    <string name="settings_group_all_links">Todos los enlaces</string>
+    <string name="settings_sharing_description">Comparte una canción o un repertorio como un enlace que cualquiera puede abrir, creado desde tu Dropbox. Al conectar Dropbox, además, toda tu biblioteca se mantiene sincronizada con él en todos tus dispositivos.</string>
+    <string name="settings_sharing_nothing_shared">Aún no has compartido nada. Elige Enlace al compartir una canción o un repertorio.</string>
+    <string name="settings_sharing_stale">No se pudieron leer los enlaces de Dropbox. Esta lista es lo último que vio este dispositivo.</string>
+    <string name="settings_sharing_orphaned">Ya no está en tu biblioteca</string>
+    <string name="settings_sharing_copy_missing">El enlace ya no funciona</string>
+    <string name="settings_sharing_too_large">Demasiado grande para actualizar</string>
+    <string name="settings_sharing_actions">Acciones de compartir</string>
+    <string name="settings_sharing_show_qr_code">Mostrar código QR</string>
+    <string name="settings_sharing_stop_all">Dejar de compartir todo</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">¿Dejar de compartir %1$d elemento? Su enlace dejará de funcionar para todos, igual que los enlaces que hayan quedado de intentos de compartir fallidos. Las copias que otros ya importaron siguen siendo suyas.</item>
+        <item quantity="other">¿Dejar de compartir los %1$d elementos? Sus enlaces dejarán de funcionar para todos, igual que los enlaces que hayan quedado de intentos de compartir fallidos. Las copias que otros ya importaron siguen siendo suyas.</item>
+    </plurals>
+    <string name="share_stop_all_failed">No se pudo dejar de compartir todo. Los enlaces que siguen en la lista siguen funcionando.</string>
+    <string name="share_stop_all_failed_network">Para dejar de compartir se necesita conexión con Dropbox. Los enlaces que siguen en la lista siguen funcionando.</string>
+    <string name="settings_sync_disconnect_shared_links">Los enlaces compartidos seguirán funcionando. Vuelve a conectar la misma cuenta para gestionarlos.</string>
+    <string name="settings_sync_disconnect_pending_stops">Algunas canciones o repertorios eliminados en este dispositivo aún no se han sincronizado. Si alguno está compartido, su enlace seguirá funcionando a menos que sincronices antes de desconectar.</string>
+    <!-- Settings screen: sync, a reconnect that did not go through -->
+    <string name="settings_sync_reconnect_failed">No se pudo volver a conectar Dropbox. La conexión que tenías sigue funcionando.</string>
+</resources>
