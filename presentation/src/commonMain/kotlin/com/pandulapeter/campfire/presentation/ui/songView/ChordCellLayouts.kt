@@ -30,9 +30,10 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.slotRows
  * height, and the rows they wrap into at the last few widths the layout asked about ([MAX_CHORD_ROW_WIDTHS], as
  * `TabRows` keeps them), shared by every slot of the section so that a width is broken into rows once. Everything is
  * measured as the composed cell was: the name in [chordStyle] under its second name, set smaller in the normal weight
- * on a line of its own, over a diagram growing with [fontScale], the cells [CELL_GAP] apart. The chords of a key other
- * than the home's (`ChordCell.keyName`) start a row of their own under a heading naming it, [keyHeading] (a template
- * taking the key as its `%1$s`) in [chordStyle], as the song's own key changes are set.
+ * on a line of its own, over a diagram growing with [fontScale], the cells [CELL_GAP] apart. Where the chords are in
+ * more than one key, each key's chords (`ChordCell.keyName`) start a row of their own under a heading naming it,
+ * [keyHeading] (a template taking the key as its `%1$s`) in the second names' weight, so that it reads as a label
+ * rather than as one more chord.
  *
  * None of this is state: it is filled in by whoever asks first, and the answers never change.
  */
@@ -59,11 +60,12 @@ internal class ChordCellLayouts(
     /** Where each key's chords start, the home key's (or the only key's) at 0, see [chordRowStarts]. */
     private val groupStarts = cells.indices.filter { it == 0 || cells[it].keyName != cells[it - 1].keyName }.toIntArray()
 
-    /** The heading over each cell starting another key's chords, null over every other cell. */
+    /** The heading over each cell starting a key's chords, null over every other cell and where there is one key. */
     val headings by lazy(LazyThreadSafetyMode.NONE) {
+        val headingStyle = chordStyle.copy(fontWeight = FontWeight.Normal)
         cells.mapIndexed { index, cell ->
             cell.keyName?.takeIf { index in groupStarts }?.let { key ->
-                textMeasurer.measure(AnnotatedString(keyHeading.withTexts(key)), chordStyle, maxLines = 1, softWrap = false)
+                textMeasurer.measure(AnnotatedString(keyHeading.withTexts(key)), headingStyle, maxLines = 1, softWrap = false)
             }
         }
     }

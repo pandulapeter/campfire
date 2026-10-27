@@ -262,8 +262,9 @@ private class PrintLayouter(
      * chord's name, under its second name where it has one, over its diagram, sized by the text so that they grow with
      * it, a row being one unit [place] keeps together, under the line naming the instrument and the tuning
      * ([PrintLabels.chordTuning]), which is not selectable for the reason the names are not: the importer would read it
-     * back as a line of the song. As on the screen, another key's chords ([PrintChord.keyName]) start a row of their own
-     * under a line naming the key, part of that row so that it is never left at the foot of a column.
+     * back as a line of the song. As on the screen, where the chords are in more than one key, each key's chords
+     * ([PrintChord.keyName]) start a row of their own under a line naming the key, set as a label rather than as a chord,
+     * part of that row so that it is never left at the foot of a column.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChordDiagrams || chords.isEmpty()) return emptyList()
@@ -292,7 +293,7 @@ private class PrintLayouter(
             val diagrams = mutableListOf<PrintDiagram>()
             var headingHeight = 0f
             row.first().chord.keyName?.takeIf { starts[index] in groupStarts }?.let { key ->
-                wrappedNameLines("${labels.key}: $key", printRows.chordStyle).forEach { line ->
+                wrappedNameLines("${labels.key}: $key", printRows.labelStyle).forEach { line ->
                     line.forEach { run -> parts += Part(run.text, x = 0f, y = headingHeight, style = run.style, isSelectable = false) }
                     headingHeight += line.lineHeight()
                 }

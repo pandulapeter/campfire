@@ -128,7 +128,7 @@ class SongHomeKeyTest {
             listOf("I", "IV", "iv", "II/1", "V7", "ii", "V", "iii", "vi", "I", "IV", "iv", "II/1", "V7"),
             song.chords.map { it.degree },
         )
-        assertEquals(List(9) { null } + List(5) { "A♭" }, song.chords.map { it.keyName })
+        assertEquals(List(9) { "F" } + List(5) { "A♭" }, song.chords.map { it.keyName })
     }
 
     @Test
@@ -137,7 +137,7 @@ class SongHomeKeyTest {
         val raised = "{start_of_verse}\n[D]la [G]la [A]la [Bm]la [D]la\n{end_of_verse}"
         val song = model("{key: C}\n$home\n$home\n$raised\n$home\n{start_of_outro}\n[F]la [Dm]la [G]la [C]la\n{end_of_outro}", showsDegrees = false)
         assertEquals(listOf("C", "F", "G", "Am", "Dm", "D", "A", "Bm"), song.chords.map { it.name })
-        assertEquals(List(5) { null } + List(3) { "D" }, song.chords.map { it.keyName })
+        assertEquals(List(5) { "C" } + List(3) { "D" }, song.chords.map { it.keyName })
     }
 
     @Test

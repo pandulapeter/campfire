@@ -869,14 +869,16 @@ internal class PrintLayoutTest {
         assertTrue(printChordsOf(song, ChordNotation.ROMAN, tuning, emptyMap(), showsDegrees = true).all { it.degree == null })
     }
 
-    @Test fun `another key's chords start a row under a line naming the key`() = runTest {
-        val chords = listOf(guitarChord("F"), guitarChord("Bb"), guitarChord("Ab").copy(keyName = "A♭"), guitarChord("Db").copy(keyName = "A♭"))
+    @Test fun `each key's chords start a row under a line naming the key`() = runTest {
+        val home = listOf(guitarChord("F"), guitarChord("Bb")).map { it.copy(keyName = "F") }
+        val chords = home + listOf(guitarChord("Ab"), guitarChord("Db")).map { it.copy(keyName = "A♭") }
         val page = layout(source(song(lyrics(1)).copy(chords = chords)), PrintSettings(showChordDiagrams = true)).pages.single()
+        val homeHeading = page.texts.single { it.text == "${labels.key}: F" }
         val heading = page.texts.single { it.text == "${labels.key}: A♭" }
         val (f, bb, ab, db) = listOf("F", "Bb", "Ab", "Db").map { name -> page.texts.single { it.text == name } }
         assertEquals(f.y, bb.y)
         assertEquals(ab.y, db.y)
-        assertTrue(f.y < heading.y && heading.y < ab.y)
+        assertTrue(homeHeading.y < f.y && f.y < heading.y && heading.y < ab.y)
         assertFalse(heading.isSelectable)
     }
 
@@ -886,7 +888,7 @@ internal class PrintLayoutTest {
         val song = ChordProParser.parse("{key: F}\n$verse\n$verse\n$raised")
         val tuning = ChordTuning.standard(ChordInstrument.GUITAR)
         val chords = printChordsOf(song, ChordNotation.STANDARD, tuning, emptyMap(), showsDegrees = true, analysis = printScaleAnalysisOf(song, labels.sections))
-        assertEquals(List(4) { null } + List(4) { "A♭" }, chords.map { it.keyName })
+        assertEquals(List(4) { "F" } + List(4) { "A♭" }, chords.map { it.keyName })
         assertEquals(listOf("I", "IV", "V", "vi", "I", "IV", "V", "vi"), chords.map { it.degree })
     }
 

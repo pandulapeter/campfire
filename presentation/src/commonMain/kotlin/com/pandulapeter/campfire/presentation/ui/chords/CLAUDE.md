@@ -66,9 +66,9 @@ Definitions:
 
 ## The Chords section
 
-- **Grouped by key** (`groupedByKey`, tested): the home key's chords first, then each key a key change reaches, in
-  the order reached, each group starting a row of its own under a "Key: A♭" line (`ChordCellLayouts.headings`, part
-  of its row's slot; the PDF's too). On with or without degrees, never in a songbook.
+- **Grouped by key** (`groupedByKey`, tested): where the chords are in more than one key, the home key's first, then
+  each key a key change reaches, in the order reached, every group (the home's too) starting a row of its own under a
+  "Key: A♭" line set as a label, not as a chord (`ChordCellLayouts.headings`, part of its row's slot; the PDF's too). On with or without degrees, never in a songbook.
 - `songChordsOf` (tested): every chord once however spelled, in first-played order, read from the song *before* notation
   is applied (a numbering's step means nothing without its stretch's key), named as the page names it
   (`ChordProNotation.shownNames`). **More than 48 chords (`MAX_SONG_CHORDS`) is a songbook and gets no section.**

@@ -92,7 +92,7 @@ internal data class PrintScaleRow(
 /**
  * One chord diagram of a [PrintSong]: the chord as the page names it, its letters where the page counts it
  * ([SongChord.letterName]), else its step of the key ([SongChord.degree]), its shape, and the key its group is headed
- * with where it is first played in another key than the home's ([SongChord.keyName]).
+ * with where the song's chords are in more than one key ([SongChord.keyName]).
  */
 internal data class PrintChord(
     val name: String,

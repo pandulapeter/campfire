@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 internal class ChordCellPaint(
     val nameColor: Color,
     val secondNameColor: Color,
+    val headingColor: Color,
     val lineColor: Color,
     val mutedColor: Color,
     val backgroundColor: Color,
@@ -32,6 +33,7 @@ internal class ChordCellPaint(
 internal fun chordCellPaint() = ChordCellPaint(
     nameColor = LocalSecondAccentColor.current,
     secondNameColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    headingColor = MaterialTheme.colorScheme.onSurfaceVariant,
     lineColor = MaterialTheme.colorScheme.onSurface,
     mutedColor = MaterialTheme.colorScheme.onSurfaceVariant,
     backgroundColor = MaterialTheme.colorScheme.surface,

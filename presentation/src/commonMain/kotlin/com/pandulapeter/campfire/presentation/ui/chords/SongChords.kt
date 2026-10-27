@@ -35,8 +35,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  * @property spelling The chord the notes are spelled from, in the standard notation.
  * @property degree The step of the song's key the chord stands on, in Roman numerals, which the cell names after it where
  *   the page names chords by their letters (see [withDegrees]); null where it names none.
- * @property keyName The key the chord is first played in, as the page names it (`A♭`), where that is another than the
- *   song's home key, which the Chords section heads the chord's group with (see [groupedByKey]); null at home.
+ * @property keyName The key the chord is first played in, as the page names it (`A♭`), which the Chords section heads the
+ *   chord's group with where the song's chords are in more than one key (see [groupedByKey]); null where they are not.
  * @property defaultShape The shape [shapeChord] is shown with where nothing else says how it is played, or null while
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
@@ -181,17 +181,19 @@ internal fun List<SongChord>.withDegrees(keys: ChordKeys?, notation: ChordNotati
 
 /**
  * [this] grouped by the key each chord is first played in ([keys]): the home key's first, then each other key in the
- * order the song reaches it, each chord of another key named by it ([SongChord.keyName], in [notation]), so that the
- * Chords section heads every group but the home's with its key. Within a group the chords keep the order they are first
- * played in. Unchanged where the song has no key change.
+ * order the song reaches it, every chord named by its key ([SongChord.keyName], in [notation]), so that the Chords
+ * section heads every group with its key, the home's too. Within a group the chords keep the order they are first played
+ * in. Unchanged where the chords are all in one key, which needs no heading.
  */
 internal fun List<SongChord>.groupedByKey(keys: ChordKeys?, notation: ChordNotation): List<SongChord> {
-    if (keys == null || keys.moved.isEmpty()) return this
-    val named = map { chord ->
-        val key = chord.spelling?.let(keys.moved::get) ?: return@map chord
-        chord.copy(keyName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(key, notation)))
+    if (keys == null) return this
+    val keyOfChord = map { chord -> chord.spelling?.let(keys::of) ?: keys.home }
+    if (keyOfChord.distinct().size < 2) return this
+    val named = mapIndexed { index, chord ->
+        chord.copy(keyName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(keyOfChord[index], notation)))
     }
-    return named.filter { it.keyName == null } + named.filter { it.keyName != null }.groupBy { it.keyName }.values.flatten()
+    val homeName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(keys.home, notation))
+    return named.filter { it.keyName == homeName } + named.filter { it.keyName != homeName }.groupBy { it.keyName }.values.flatten()
 }
 
 /**
