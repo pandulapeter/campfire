@@ -49,8 +49,8 @@ Product side in `ui/metronome/CLAUDE.md`.
   `UserPreferences.shouldNumberSections`). Only unlabelled sections and those labelled with the kind's own name are
   numbered. The number is `Section.number`, not part of the label, so saved folds do not move with the setting. An
   unnamed `{chorus}` recall takes the repeated chorus's number.
-- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid" / the verbatim block's kind ("ABC
-  notation"); two back-to-back environments with different labels fold apart; a section that is only one run folds as
+- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid" / the verbatim block's kind ("Sheet
+  music" for ABC, "LilyPond", "SVG"); two back-to-back environments with different labels fold apart; a section that is only one run folds as
   the section, no second toggle, which is always so for a verbatim run (a delegated environment is its own section).
 
 ### Building the model, and the budget
