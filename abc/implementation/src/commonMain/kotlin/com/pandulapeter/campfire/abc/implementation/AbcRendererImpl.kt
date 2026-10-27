@@ -39,14 +39,17 @@ internal class AbcRendererImpl : AbcRenderer {
         AbcRendering.Failed(exception.message ?: exception.toString())
     }
 
-    // Lyrics are measured as sans-serif rather than abc2svg's bold serif, and larger than they are drawn (see
-    // AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which its width tables measure narrower than it is.
+    // Chord symbols, annotations, and lyrics are set at the size of the page's own chords and lyrics rather than
+    // abc2svg's 12 and 13, which read as small print beside them. Lyrics are measured as sans-serif rather than abc2svg's
+    // bold serif, and larger than they are drawn (see AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which
+    // its width tables measure narrower than it is.
     private fun headerOf(width: Int, transposition: Int) = """
         %%pagewidth ${width}px
         %%leftmargin 0
         %%rightmargin 0
-        %%gchordfont sans-serif 12 class=${AbcSystem.CHORD_SYMBOL_CLASS}
-        %%vocalfont sans-serif ${(LYRICS_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
+        %%gchordfont sans-serif ${TEXT_SIZE.roundToInt()} class=${AbcSystem.CHORD_SYMBOL_CLASS}
+        %%annotationfont sans-serif ${TEXT_SIZE.roundToInt()}
+        %%vocalfont sans-serif ${(TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition
 
     """.trimIndent()
@@ -58,8 +61,11 @@ internal class AbcRendererImpl : AbcRenderer {
         /** What `campfire-abc-host.js` joins the systems with, and puts in front of the messages when there are none. */
         const val SEPARATOR = '\u0000'
 
-        /** The size lyrics are meant to be drawn at, which is abc2svg's own. */
-        const val LYRICS_SIZE = 13f
+        /**
+         * The size chord symbols, annotations, and lyrics are meant to be drawn at: the page's text size (bodyLarge), as
+         * the app draws one SVG unit as 1 dp times the reader's text size.
+         */
+        const val TEXT_SIZE = 16f
         val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
     }
 }
