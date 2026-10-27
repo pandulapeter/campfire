@@ -993,7 +993,7 @@
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Grid</string>
-    <string name="song_details_section_abc">ABC notation</string>
+    <string name="song_details_section_abc">Melody</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Show the tab</string>

@@ -998,7 +998,7 @@
     <string name="song_details_section_bridge">Pont</string>
     <string name="song_details_section_tab">Tablature</string>
     <string name="song_details_section_grid">Grille</string>
-    <string name="song_details_section_abc">Notation ABC</string>
+    <string name="song_details_section_abc">Mélodie</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Afficher la tablature</string>

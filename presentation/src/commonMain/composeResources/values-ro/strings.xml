@@ -993,7 +993,7 @@
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tabulatură</string>
     <string name="song_details_section_grid">Grilă</string>
-    <string name="song_details_section_abc">Notație ABC</string>
+    <string name="song_details_section_abc">Melodie</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Arată tabulatura</string>

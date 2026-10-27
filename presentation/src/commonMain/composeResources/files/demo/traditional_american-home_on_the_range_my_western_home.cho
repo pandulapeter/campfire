@@ -20,6 +20,22 @@
 
 {comment_italic: Written as a poem in Kansas and set to music soon after, it was sung around cattle drive campfires long before anyone knew who wrote it.}
 
+# The melody in ABC notation, which the song details draw as a staff under the same chords as the lyrics, and head as Melody.
+{start_of_abc}
+X:1
+M:3/4
+L:1/4
+K:G
+D|"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
+w:Oh, give me a home where the buf-fa-lo roam, where the deer and the an-te-lope play, _ Where
+"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2||
+w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
+"D7"d3|"G"cB>A|"C"B3-|B z B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
+w:Home, home on the range, _ where the deer and the an-te-lope play, _ Where
+"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2|]
+w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
+{end_of_abc}
+
 {start_of_verse: Verse 1}
 Oh, [G]give me a [G7]home where the [C]buffalo [Cm]roam
 Where the [G/B]deer and the [Em]antelope [A7]play [D7]
@@ -51,19 +67,3 @@ For [G]all of the [D7]cities so [G]bright
 {end_of_verse}
 
 {chorus: Last chorus, slowing down}
-
-# The melody in ABC notation, which the song details draw as a staff, under the same chords as the lyrics.
-{start_of_abc}
-X:1
-M:3/4
-L:1/4
-K:G
-D|"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
-w:Oh, give me a home where the buf-fa-lo roam, where the deer and the an-te-lope play, _ Where
-"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2||
-w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
-"D7"d3|"G"cB>A|"C"B3-|B z B/c/|"G/B"d>GG|"Em"GFG|"A7"A3-|"D7"A z D|
-w:Home, home on the range, _ where the deer and the an-te-lope play, _ Where
-"G"DGA|"G7"B2G/F/|"C"Ecc|"Cm"c2c/c/|"G"B>AG|"D7"FGA|"G"G3-|G z2|]
-w:sel-dom is heard a dis-cour-ag-ing word, and the skies are not cloud-y all day. _
-{end_of_abc}

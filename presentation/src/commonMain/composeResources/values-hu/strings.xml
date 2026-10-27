@@ -992,7 +992,7 @@
     <string name="song_details_section_bridge">Átkötés</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Rács</string>
-    <string name="song_details_section_abc">ABC-kotta</string>
+    <string name="song_details_section_abc">Dallam</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Tab megjelenítése</string>

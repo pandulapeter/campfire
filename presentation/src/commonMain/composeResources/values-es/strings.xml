@@ -993,7 +993,7 @@
     <string name="song_details_section_bridge">Puente</string>
     <string name="song_details_section_tab">Tablatura</string>
     <string name="song_details_section_grid">Cuadrícula</string>
-    <string name="song_details_section_abc">Notación ABC</string>
+    <string name="song_details_section_abc">Melodía</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Mostrar la tablatura</string>
