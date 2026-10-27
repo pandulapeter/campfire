@@ -27,6 +27,10 @@ class FindingsTest(unittest.TestCase):
         self.assertEqual([], lines('val a = Regex("""\\{([^}]*)\\}[0-9]{1,2}x{3}y{2,}[{}]""")'))
         self.assertEqual([], lines('val b = Regex("[\\\\r\\\\n{}]+")'))
 
+    def test_braces_of_a_property_name_or_code_point_escape_are_accepted(self):
+        self.assertEqual([], lines('val p = Regex("""\\p{L}+\\P{Lu}\\N{SPACE}\\x{1F600}""")'))
+        self.assertEqual([], lines('val q = Regex("\\\\p{Alpha}")'))
+
     def test_a_literal_with_to_regex_is_checked(self):
         self.assertEqual([1], lines('val c = """a}""".toRegex()'))
 

@@ -158,6 +158,10 @@ def bare_braces(pattern):
             if pattern.startswith("Q", index + 1):
                 end = pattern.find("\\E", index + 2)
                 index = len(pattern) if end < 0 else end + 2
+            elif pattern[index + 1:index + 2] in ("p", "P", "N", "x") and pattern.startswith("{", index + 2):
+                # A property, a name or a code point in braces (`\p{L}`, `\N{SPACE}`, `\x{1F600}`) is one escape.
+                end = pattern.find("}", index + 2)
+                index = len(pattern) if end < 0 else end + 1
             else:
                 index += 2
             continue
