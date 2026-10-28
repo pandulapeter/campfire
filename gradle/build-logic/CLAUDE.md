@@ -24,7 +24,10 @@ registered in `build-logic/build.gradle.kts`; a new convention plugin is a class
   `apply false` so the extension type comes from one classloader.
 - `campfire-style` (`StylePlugin`): ktlint via Spotless for `src/**/*.kt` and the module's `*.gradle.kts`. The library
   plugins apply it; plain `:app:*` modules and `:tools:screenshots` name it in their own `plugins {}` — never a root
-  `subprojects {}` (cross-project configuration). Rules are toggled in the root `.editorconfig`.
+  `subprojects {}` (cross-project configuration). Rules are toggled in the root `.editorconfig`. It also makes every
+  Kotlin compilation's warnings errors (matched by task type, so every module and target): with most compilations
+  restored from the build cache, a warning is printed once and never again. Fix the warning; a `@Suppress` only where
+  the code cannot avoid it, saying why.
 
 ## Shared configuration (`extensions/KotlinMultiplatform.kt`)
 

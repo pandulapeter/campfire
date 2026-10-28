@@ -46,7 +46,7 @@ class SongChordsTest {
         val chord = songChordsOf(sounding, ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2).single()
         assertEquals("A", chord.name)
         assertEquals(listOf<Int?>(3, 2, 0, 0, 0, 3), (chord.definition?.voicing as ChordVoicing.Fretted).frets)
-        assertEquals(0, chord.definition?.movedBy)
+        assertEquals(0, chord.definition.movedBy)
     }
 
     @Test

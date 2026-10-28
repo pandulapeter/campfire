@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.abc.implementation
 
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
@@ -29,7 +30,7 @@ internal actual fun createAbcScriptEngine(): AbcScriptEngine = JavaScriptCoreAbc
  * object lives on in the engine's heap; the system runs scripts there with the JIT off, as on every iPhone app, which
  * still renders a tune in a few milliseconds.
  */
-@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+@OptIn(BetaInteropApi::class, DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 private class JavaScriptCoreAbcScriptEngine : AbcScriptEngine {
 
     private val dispatcher = newSingleThreadContext("abc2svg")
