@@ -169,7 +169,8 @@ def write_release_notes(submission, notes):
     listings = submission.get("listings", {})
     if not listings:
         fail("The submission has no Store listing to write the release notes into.")
-    # The listing is in English only; any other listing it gains gets the same text rather than the last release's.
+    # The release notes are written in English only, so every language's listing gets the same text rather than keeping
+    # the last release's.
     for language, listing in listings.items():
         listing.setdefault("baseListing", {})["releaseNotes"] = notes
         print(f"Wrote the release notes for {language}.")

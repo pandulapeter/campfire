@@ -51,7 +51,8 @@ switch for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`f
   lines that fit).
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown, then "Bug fixes and improvements.", or (hand dispatch with
-  nothing given) the commit log since the previous tag. Store listings are English only.
+  nothing given) the commit log since the previous tag. The notes are English, written into every language's listing;
+  the listings themselves are pasted by hand from `documentation/store-listings`, a translation per language.
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
 
 ## The workflows
@@ -80,9 +81,9 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
   mode included) kept.
 - **A draft started in Partner Center stops the run**, untouched: the API cannot change a submission it did not create.
   Finish it there with the run's `.msix` artifact, or delete it.
-- **New screenshots: dispatch by hand with `submit` off.** The run writes the notes into its own draft without touching
+- **New screenshots or a newly declared language: dispatch by hand with `submit` off.** The run writes the notes into its own draft without touching
   the package (Partner Center only takes an API-uploaded package when the API commits). Then, in Partner Center, replace
-  the package with the run's artifact, add screenshots, and submit; the run ends green with a warning saying so.
+  the package with the run's artifact, add the screenshots or the new language's listing, and submit; the run ends green with a warning saying so.
 - A committed submission with this version is left alone (reruns succeed); one with another version stops the run (one
   in progress per product).
 - Auth: Microsoft Entra application with the Manager role (`MICROSOFT_STORE_TENANT_ID`, `_CLIENT_ID`) and **no secret** —
