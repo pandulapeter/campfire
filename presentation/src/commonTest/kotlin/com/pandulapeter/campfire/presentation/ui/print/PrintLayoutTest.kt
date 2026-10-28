@@ -332,6 +332,26 @@ internal class PrintLayoutTest {
         assertTrue(hidden.pages.all { it.notations.isEmpty() })
     }
 
+    @Test fun `sheet music that fits a page but not what is left of one starts where it is and flows onto the next`() = runTest {
+        val lyrics = ChordProBlock.Section(SectionType.Verse, null, List(30) { ChordProLine.Lyrics("Line $it", emptyList()) })
+        val abc = ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(ChordProLine.Verbatim("GAB|", "abc")))
+        val settings = PrintSettings(showTabs = false)
+        val scale = minOf(printNotationUnit(settings), printColumnWidth(settings) / 400f)
+        val system = NotationSystem(width = 400f, height = 40f / scale, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)
+        val drawing = NotationDrawing(List(12) { system })
+        val document = layoutPrintDocument(
+            source(song(emptyList(), listOf(lyrics, abc))),
+            settings,
+            labels,
+            measureText = ::measure,
+            notations = mapOf("song.cho" to mapOf(AbcTune("GAB|", 0) to drawing)),
+        )
+        assertEquals(2, document.pages.size)
+        assertTrue(document.pages[0].notations.isNotEmpty())
+        assertTrue(document.pages[1].notations.isNotEmpty())
+        assertEquals((0 until 12).toList(), document.pages.flatMap { page -> page.notations.map { it.system } })
+    }
+
     @Test fun `a tune printed twice around a key change prints each copy in its own key`() = runTest {
         val tune = "X:1\nK:G\nGAB|"
         fun drawing(width: Float) = NotationDrawing(listOf(NotationSystem(width = width, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)))

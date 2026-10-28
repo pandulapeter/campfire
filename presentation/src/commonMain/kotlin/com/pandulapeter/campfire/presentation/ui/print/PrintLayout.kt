@@ -157,12 +157,13 @@ private class PrintLayouter(
 
     /**
      * Puts [rows] under the cursor: [keepWhole] rows that fit a column start a new one rather than being split, and
-     * otherwise at least their first two rows go together.
+     * otherwise at least their first two rows go together. Rows holding sheet music always flow on from where the cursor
+     * is, a staff system to a row: a tune runs to many systems, and moving it whole would leave most of a page blank.
      */
     private fun place(rows: List<Row>, keepWhole: Boolean = true) {
         val total = rows.height()
         val firstRows = rows.take(2).height()
-        val fitsWhole = keepWhole && total <= capacity
+        val fitsWhole = keepWhole && !rows.holdsSheetMusic() && total <= capacity
         if ((fitsWhole && y + total > bottom) || (!fitsWhole && firstRows <= capacity && y + firstRows > bottom)) nextColumn()
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
@@ -240,7 +241,7 @@ private class PrintLayouter(
         }
         val firstRows = chordRows.ifEmpty { firstBlockRows }
         val headingHeight = heading.height()
-        val keepFirstWhole = headingHeight + headingGap + firstRows.height() <= capacity
+        val keepFirstWhole = !firstRows.holdsSheetMusic() && headingHeight + headingGap + firstRows.height() <= capacity
         val together = headingHeight + headingGap + if (keepFirstWhole) firstRows.height() else firstRows.take(2).height()
         if (firstRows.isNotEmpty() && together <= capacity && y + together > bottom) nextColumn()
         place(heading)
@@ -438,6 +439,8 @@ private class PageContent {
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+private fun List<Row>.holdsSheetMusic() = any { it.notations.isNotEmpty() }
 
 /** Whether a group of `joinCutSections` is a break of its own, which the layout makes rather than prints. */
 private fun List<ChordProBlock>.isBreak() = singleOrNull() == ChordProBlock.Break
