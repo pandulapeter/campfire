@@ -51,10 +51,14 @@ internal fun ListingChips(
         val onEdge = chips.indices.filter { chips[it].corner.isTop == isTop && !isBeside[it] }
         when (onEdge.size) {
             1 -> widths[onEdge[0]] = (edge * ALONE_SHARE).roundToInt()
-            2 -> sharedWidths(onEdge = onEdge, measurables = measurables, available = edge - (edge * CHIP_GAP).roundToInt(), widths = widths)
+            2 -> sharedWidths(chips = chips, onEdge = onEdge, measurables = measurables, available = edge - (edge * CHIP_GAP).roundToInt(), widths = widths)
         }
     }
-    val placeables = measurables.mapIndexed { index, measurable -> measurable.measure(Constraints(maxWidth = balancedWidth(measurable, widths[index]))) }
+    // A chip is never narrower than its longest word, even where that takes it past its share of an edge.
+    val placeables = measurables.mapIndexed { index, measurable ->
+        val width = maxOf(widths[index], measurable.minIntrinsicWidth(Int.MAX_VALUE))
+        measurable.measure(Constraints(maxWidth = balancedWidth(measurable, width)))
+    }
     layout(constraints.maxWidth, constraints.maxHeight) {
         placeables.forEachIndexed { index, placeable ->
             val corner = chips[index].corner
@@ -78,22 +82,34 @@ internal fun ListingChips(
     }
 }
 
-/** Splits [available] between the two chips [onEdge], the shorter keeping its natural width up to half of it. */
-private fun sharedWidths(onEdge: List<Int>, measurables: List<Measurable>, available: Int, widths: IntArray) {
+/**
+ * Splits [available] between the two of [chips] whose indices are [onEdge]: the shorter keeps its natural width up to
+ * half of it and the longer wraps in the rest, but neither is narrower than its longest word, so a chip of one long word
+ * takes the room it needs and its neighbour wraps instead.
+ */
+private fun sharedWidths(chips: List<ListingChip>, onEdge: List<Int>, measurables: List<Measurable>, available: Int, widths: IntArray) {
     val (short, long) = onEdge.sortedBy { measurables[it].maxIntrinsicWidth(Int.MAX_VALUE) }
-    widths[short] = minOf(measurables[short].maxIntrinsicWidth(Int.MAX_VALUE), available / 2)
-    widths[long] = available - widths[short]
+    val longest = { index: Int -> measurables[index].minIntrinsicWidth(Int.MAX_VALUE) }
+    widths[short] = minOf(measurables[short].maxIntrinsicWidth(Int.MAX_VALUE), maxOf(available / 2, longest(short)))
+    // Where the longer one's longest word does not fit beside it, the shorter one wraps too, down to its own longest word.
+    if (widths[short] + longest(long) > available) widths[short] = maxOf(longest(short), available - longest(long))
+    widths[long] = maxOf(available - widths[short], longest(long))
+    if (widths[short] + widths[long] > available) {
+        // The two cannot help overlapping: a word of one of them is too long to share the edge, which only shorter words fix.
+        println("warning: \"${chips[short].text}\" and \"${chips[long].text}\" overlap, a word of theirs being too long for the edge")
+    }
 }
 
 /**
- * The narrowest width up to [width] at which [measurable] is as short as at [width] itself, found by halving: where its
- * text wraps, that evens out its lines ("Counts / down to / the gig" rather than "Counts / down to the / gig"), since
- * Compose's balanced line breaking does nothing on the desktop.
+ * The narrowest width up to [width], but no narrower than its longest word, at which [measurable] is as short as at
+ * [width] itself, found by halving: where its text wraps, that evens out its lines ("Counts / down to / the gig" rather
+ * than "Counts / down to the / gig"), since Compose's balanced line breaking does nothing on the desktop.
  */
 private fun balancedWidth(measurable: Measurable, width: Int): Int {
     val height = measurable.minIntrinsicHeight(width)
     var narrowest = width
-    var tooNarrow = 0
+    // Below its longest word a chip would break that word in two, so its minimum intrinsic width is as narrow as it goes.
+    var tooNarrow = (measurable.minIntrinsicWidth(Int.MAX_VALUE) - 1).coerceIn(0, width)
     while (narrowest - tooNarrow > 1) {
         val middle = (narrowest + tooNarrow) / 2
         if (measurable.minIntrinsicHeight(middle) <= height) narrowest = middle else tooNarrow = middle

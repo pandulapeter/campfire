@@ -80,6 +80,10 @@ internal fun ListingImage(
     ) {
         BasicText(
             text = headline,
+            onTextLayout = { layout ->
+                // A headline longer than its lines runs into the chips under it, which only shorter words fix.
+                if (layout.lineCount > headline.lines().size) println("warning: \"$headline\" wraps onto ${layout.lineCount} lines")
+            },
             style = TextStyle(
                 color = Color.White,
                 fontFamily = interFontFamily(),

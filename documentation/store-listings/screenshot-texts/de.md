@@ -101,7 +101,7 @@ Von jeder Website einfügen
 ```
 
 ```
-Syntaxhervorhebung
+Farbige Syntax
 ```
 
 ```

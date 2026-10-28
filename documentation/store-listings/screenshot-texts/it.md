@@ -15,7 +15,7 @@ Translated from `en.md`, whose note says how the texts are used.
 
 ```
 Il tuo canzoniere,
-sincronizzato su ogni schermo
+su ogni schermo
 ```
 
 ## 01-songs chips (3 max, 44 characters each)

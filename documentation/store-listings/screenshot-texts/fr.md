@@ -15,7 +15,7 @@ Translated from `en.md`, whose note says how the texts are used.
 
 ```
 Ton chansonnier,
-synchronisé sur chaque écran
+sur chaque écran
 ```
 
 ## 01-songs chips (3 max, 44 characters each)
@@ -52,7 +52,7 @@ Tablatures et partitions
 ## 03-metronome-tuner headline (50 characters max)
 
 ```
-Un métronome et un accordeur
+Métronome et accordeur
 dans chaque chanson
 ```
 

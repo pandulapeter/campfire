@@ -80,11 +80,11 @@ Kiszámolja a teljes hosszt
 ```
 
 ```
-Visszaszámol a fellépésig
+Napok a fellépésig
 ```
 
 ```
-Megosztás linkként
+Küldd el linkként
 ```
 
 ## 05-editor headline (50 characters max)
@@ -101,7 +101,7 @@ Beillesztés bármely weboldalról
 ```
 
 ```
-Szintaxiskiemelés
+Színes szintaxis
 ```
 
 ```
