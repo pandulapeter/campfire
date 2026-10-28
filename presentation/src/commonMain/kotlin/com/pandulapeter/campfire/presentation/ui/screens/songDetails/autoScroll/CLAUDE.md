@@ -18,7 +18,8 @@ columns the bottom of one and the top of the next share a height, so any motion 
 
 - `SongDetailsPage(isContinuous)` asks `SongLyrics` for an unmeasured single column (`isSingleColumn`, no
   `availableHeight`, no row viewport) still cut into a chunk a line (`canCutSections`), so `SongRows` reports every
-  line's top and how many lines each chunk plays (`playedLines`: lyrics and tab or grid lines).
+  line's top and how many lines each chunk plays (`playedLines`: lyrics and tab or grid lines, and an engraved staff
+  system's bars, two a line, none for a title).
 - The step buttons stay (nudging, and going on to the setlist's songs at either end, named Scroll up / down); the dots
   leave. `AutoScrollControls` adds play / stop just above the next button (filled as the metronome's play button is,
   its triangle pointing down, unlike the metronome's), only while there is anything left to play (not for a song that

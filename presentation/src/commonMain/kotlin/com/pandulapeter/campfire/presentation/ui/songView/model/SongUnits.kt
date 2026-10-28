@@ -61,7 +61,7 @@ internal data class UnitContent(
  * chord diagrams, the song's metadata and everything else between two sections are none, since a piece of a section
  * left with only one of those is no stranded line of the song. A section that is not cut is one chunk of all of its
  * lines. [playedLineCount] is how many lines a chunk is that take a moment to play, a piece of a run of tablature or
- * grid lines among them, which is what a song that scrolls by itself spends its time on: none in a section folded away. [isStanzaBreakBefore] says of a chunk whether a cut in front of it falls where the song's writer already
+ * grid lines among them (an engraved staff system as its bars, two a line, a tune's title none), which is what a song that scrolls by itself spends its time on: none in a section folded away. [isStanzaBreakBefore] says of a chunk whether a cut in front of it falls where the song's writer already
  * marked a boundary - after an empty line, or in front of a comment - which is never true of a section's first chunk,
  * since that is no cut of the section at all.
  *
@@ -119,11 +119,13 @@ internal class SongUnits(
 
         /**
          * The chunks of [sections], where each section [isCuttable] says so is composed line by line, or a Chords or Scales
-         * section row by row. A section [isFolded] says so of plays none of its lines.
+         * section row by row. A section [isFolded] says so of plays none of its lines, and a piece of a run plays the lines
+         * [runSlotLines] gives it (an engraved staff system its bars, two a line).
          */
         fun of(
             sections: List<RenderSection>,
             isFolded: (RenderSection) -> Boolean = { false },
+            runSlotLines: (SectionItem.RunSlot) -> Int = { 1 },
             isCuttable: (RenderSection) -> Boolean,
         ): SongUnits {
             val sectionStarts = IntArray(sections.size + 1)
@@ -156,7 +158,15 @@ internal class SongUnits(
                     itemRanges += range
                     isCuttableBefore += range.first > 0 && cutStarts?.contains(range.first) == true
                     lineCount += kinds?.let { range.count { item -> it[item] == SectionItemKind.CONTENT } } ?: 0
-                    playedLineCount += kinds?.takeUnless { isSectionFolded }?.let { range.count { item -> it[item] == SectionItemKind.CONTENT || it[item] == SectionItemKind.RUN } } ?: 0
+                    playedLineCount += kinds?.takeUnless { isSectionFolded }?.let {
+                        range.sumOf { item ->
+                            when (it[item]) {
+                                SectionItemKind.CONTENT -> 1
+                                SectionItemKind.RUN -> runSlotLines((section as RenderSection.Lines).sectionItems[item] as SectionItem.RunSlot)
+                                else -> 0
+                            }
+                        }
+                    } ?: 0
                     isStanzaBreakBefore += kinds != null && range.first > 0 &&
                         (kinds[range.first - 1] == SectionItemKind.BLANK || kinds[range.first] == SectionItemKind.COMMENT)
                 }

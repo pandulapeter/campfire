@@ -70,6 +70,8 @@ class NotationChordNamesTest {
     fun `each drawn chord takes the name of the symbol it is moved from, in any order`() {
         val renamed = drawingWithChords("B7", "E", "F  (capo: 2)").withChordNames(symbols = listOf("D", "A7"), names = listOf("Re", "La7"), semitones = 2)
         assertEquals(listOf("La7", "Re", "F  (capo: 2)"), renamed.chordTexts())
+        assertEquals(listOf("Re", "La7"), renamed.chordNames)
+        assertEquals(1, renamed.systems.single().bars)
     }
 
     @Test
@@ -86,7 +88,7 @@ class NotationChordNamesTest {
             anchor = NotationAnchor.START,
             runs = listOf(NotationTextRun.Words("E", FONT, NotationTextRole.CHORD, dy = 0f), NotationTextRun.Words("7", FONT.scaled(0.75f), NotationTextRole.CHORD, dy = -3f)),
         )
-        val drawing = NotationDrawing(listOf(NotationSystem(width = 100f, height = 50f, shapes = emptyList(), glyphs = emptyList(), texts = listOf(jazz))))
+        val drawing = NotationDrawing(listOf(NotationSystem(width = 100f, height = 50f, shapes = emptyList(), glyphs = emptyList(), texts = listOf(jazz), bars = 1)))
         assertEquals(listOf("Re7"), drawing.withChordNames(symbols = listOf("D7"), names = listOf("Re7"), semitones = 2).chordTexts())
         assertSame(drawing.systems.single().texts.single(), drawing.withChordNames(symbols = listOf("D7"), names = listOf("E7"), semitones = 2).systems.single().texts.single())
     }
@@ -101,6 +103,7 @@ class NotationChordNamesTest {
                 texts = names.map { name ->
                     NotationText(x = 0f, y = 0f, anchor = NotationAnchor.START, runs = listOf(NotationTextRun.Words(name, FONT, NotationTextRole.CHORD, dy = 0f)))
                 } + NotationText(x = 0f, y = 0f, anchor = NotationAnchor.START, runs = listOf(NotationTextRun.Words("la", FONT, NotationTextRole.LYRIC, dy = 0f))),
+                bars = 1,
             ),
         ),
     )

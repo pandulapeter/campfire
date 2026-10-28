@@ -116,6 +116,24 @@ class NotationDrawingParserTest {
     }
 
     @Test
+    fun `a system counts its bars once across its staves`() {
+        val grandStaff = system(
+            """
+            <style>
+            .bW{stroke:currentColor;fill:none;stroke-width:1}
+            </style>
+            <path class="bthW" d="M40.0 61.6v-24.0M40.0 121.6v-24.0"/>
+            <path class="bW" d="M44.5 61.6v-24.0M44.5 121.6v-24.0M150.0 61.6v-24.0M150.0 121.6v-24.0M300.0 61.6v-24.0M300.0 121.6v-24.0"/>
+            <path class="bthW" d="M304.0 61.6v-24.0M304.0 121.6v-24.0"/>
+            <text x="10.0,60.0,200.0" y="61.6,55.6,55.6">&#xE050;&#xE0A4;&#xE0A4;</text>
+            """.trimIndent(),
+        )
+        assertEquals(2, parseNotationDrawing(listOf(HEADER, grandStaff))!!.systems.single().bars)
+        val title = system("""<style>.f3{font:700 16.0px text,sans-serif}</style><text class="f3" x="180.0" y="20.0">A Reel</text>""")
+        assertEquals(0, parseNotationDrawing(listOf(HEADER, title))!!.systems.single().bars)
+    }
+
+    @Test
     fun `anything the drawing does not know gives no drawing`() {
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<image href="x.png"/>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="rotate(45)"><path d="M0 0h1"/></g>"""))))

@@ -71,6 +71,13 @@ class SongUnitsTest {
     }
 
     @Test
+    fun `a run's slot plays the lines it is given`() {
+        val section = lines(SectionPart.Lines(listOf(lyrics("Before"), grid(), grid())))
+        assertContentEquals(intArrayOf(1, 3, 3), SongUnits.of(listOf(section), runSlotLines = { 3 }) { true }.playedLineCount)
+        assertContentEquals(intArrayOf(7), SongUnits.of(listOf(section), runSlotLines = { 3 }) { false }.playedLineCount)
+    }
+
+    @Test
     fun `a slice keeps the lines and the stanza breaks of its units`() {
         val units = SongUnits.of(listOf(lines(SectionPart.Lines(listOf(lyrics("Intro")))), verseWithStanzas())) { true }.slice(1, 2)
         assertContentEquals(intArrayOf(1, 0, 1, 1, 0, 1, 1), units.lineCount)

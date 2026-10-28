@@ -50,11 +50,15 @@ private class NotationSystemReader {
     private var shapes = mutableListOf<NotationShape>()
     private var glyphs = mutableListOf<NotationGlyph>()
     private var texts = mutableListOf<NotationText>()
+    private var barXs = mutableListOf<Float>()
+    private var firstMusicX: Float? = null
 
     fun read(root: SvgElement): NotationSystem? = try {
         shapes = mutableListOf()
         glyphs = mutableListOf()
         texts = mutableListOf()
+        barXs = mutableListOf()
+        firstMusicX = null
         // Read first wherever they stand, since an element may come before the <style> that names its class.
         root.elements.filter { it.name == "style" }.forEach { classes += parseNotationCss(it.text) }
         root.elements.filter { it.name == "defs" }.forEach { defs ->
@@ -71,6 +75,7 @@ private class NotationSystemReader {
             shapes = shapes,
             glyphs = glyphs,
             texts = texts,
+            bars = barCountOf(barXs, firstMusicX),
         )
     } catch (_: NotationUnsupportedException) {
         null
@@ -125,8 +130,12 @@ private class NotationSystemReader {
 
     private fun classesOf(element: SvgElement) = element.classNames.mapNotNull { classes[it] }
 
-    private fun readPath(element: SvgElement, context: NotationContext) =
-        addShape(element, context, path = element.attributes["d"] ?: throw NotationUnsupportedException())
+    private fun readPath(element: SvgElement, context: NotationContext) {
+        val path = element.attributes["d"] ?: throw NotationUnsupportedException()
+        // abc2svg draws every bar line of a system as a stroke of one of these two paths, once per staff.
+        if (element.classNames.any { it == BAR_CLASS || it == THICK_BAR_CLASS }) barXs += barStrokeXsOf(path).map(context.transform::mapX)
+        addShape(element, context, path)
+    }
 
     /** A circle or an ellipse (a chord diagram's dots, a Clairnote note head) as the path of its two halves. */
     private fun readEllipse(element: SvgElement, context: NotationContext) {
@@ -179,6 +188,7 @@ private class NotationSystemReader {
                     NotationAnchor.END -> glyph.advance * font.size / AbcMusicGlyph.UNITS_PER_EM
                 }
                 glyphs += NotationGlyph(glyph = glyph, x = transform.mapX(x - offset), y = transform.mapY(y), size = font.size * transform.scale)
+                if (isMusicGlyph(codePoint)) firstMusicX = minOf(firstMusicX ?: Float.MAX_VALUE, transform.mapX(x - offset))
                 x += glyph.advance * font.size / AbcMusicGlyph.UNITS_PER_EM
             }
             return
@@ -253,6 +263,10 @@ private class NotationSystemReader {
         const val DEFAULT_STROKE_WIDTH = 1f
         val TRANSFORM = Regex("""(translate|scale|rotate|matrix|skewX|skewY)\s*\(([^)]*)\)""")
         val FONT_SIZE = Regex("""font-size:\s*([\d.]+)px""")
+
+        /** abc2svg's classes of the paths it draws a system's thin and thick bar lines with. */
+        const val BAR_CLASS = "bW"
+        const val THICK_BAR_CLASS = "bthW"
     }
 }
 

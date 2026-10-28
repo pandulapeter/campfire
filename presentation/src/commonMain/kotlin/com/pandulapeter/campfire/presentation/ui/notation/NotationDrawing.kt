@@ -17,13 +17,17 @@ package com.pandulapeter.campfire.presentation.ui.notation
  */
 internal class NotationDrawing(val systems: List<NotationSystem>, val chordNames: List<String> = emptyList())
 
-/** One staff system (or the tune's header), [width] by [height] units. */
+/**
+ * One staff system (or the tune's header), [width] by [height] units, playing [bars] bars (none for a system without
+ * music, see [barCountOf]), which is what a song that scrolls by itself spends its time on.
+ */
 internal class NotationSystem(
     val width: Float,
     val height: Float,
     val shapes: List<NotationShape>,
     val glyphs: List<NotationGlyph>,
     val texts: List<NotationText>,
+    val bars: Int,
 )
 
 /** SVG path data ([path]) in its own units, placed by [transform], filled where it has no [stroke]. */

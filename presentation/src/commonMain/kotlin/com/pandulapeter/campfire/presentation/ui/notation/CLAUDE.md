@@ -35,6 +35,8 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   (`abcTunesOf`), each copy of a tune by the key change it stands after: renderings are keyed by text and offset
   (`AbcTune`), and a run carries its offset from the model (`SectionItem.RunSlot.tuneOffset`, `groupStartOffsetsOf`,
   the walk the PDF shares; a key change inside a recalled chorus moves nothing after the recall).
+- **The parser counts each system's bars** (`NotationPlayedLines.kt`, tested) for the scroll's timing: the distinct x
+  of abc2svg's `bW` and `bthW` strokes, a bar line before any music closing none, a system without music none.
 - **The rendering carries its reading** (`NotationReading.kt`, tested), made off the main thread with it: the titles
   the tune shows (`abcOwnTitles`), the chord names the drawing was given (`NotationDrawing.chordNames`), and its words
   verse by verse, ABC's syllable marks undone; it is the staff's content description, never the ABC source.

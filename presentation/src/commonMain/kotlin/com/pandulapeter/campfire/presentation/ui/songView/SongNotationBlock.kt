@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Constraints
 import com.pandulapeter.campfire.presentation.ui.notation.NotationRun
 import com.pandulapeter.campfire.presentation.ui.notation.NotationSystemPaint
 import com.pandulapeter.campfire.presentation.ui.notation.drawNotationSystem
+import com.pandulapeter.campfire.presentation.ui.notation.inSlot
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -84,9 +85,6 @@ internal fun SongNotationBlock(
         ) {}
     }
 }
-
-/** The systems of a run that the piece at [slot] draws: that one, or every one from there on where it [isLastSlot]. */
-private fun List<NotationSystemPaint>.inSlot(slot: Int, isLastSlot: Boolean) = if (isLastSlot) drop(slot) else listOfNotNull(getOrNull(slot))
 
 private fun List<NotationSystemPaint>.pageWidth() = maxOfOrNull { it.width } ?: 0f
 

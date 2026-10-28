@@ -51,7 +51,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
+import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.notation.notationPageWidth
+import com.pandulapeter.campfire.presentation.ui.notation.notationSlotLines
 import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
@@ -308,10 +311,16 @@ internal fun SongLyrics(
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
     // row of diagrams or chips. A folded section is one, since what is left of it is its header.
-    val units = remember(sections, foldedSections, canCutSections) {
+    // An engraved tune plays its bars, two a line, rather than a line a staff system; one still drawn as text a line a row.
+    val systemLines = notations.systemLines
+    val units = remember(sections, foldedSections, canCutSections, systemLines) {
         SongUnits.of(
             sections = sections,
             isFolded = { section -> section is RenderSection.Lines && section.foldKey in foldedSections },
+            runSlotLines = { slot ->
+                slot.run.abcTune()?.let { systemLines[AbcTune(it, slot.tuneOffset)] }
+                    ?.let { notationSlotLines(it, slot.slot, isLastSlot = slot.slot == slot.slotCount - 1) } ?: 1
+            },
         ) { section ->
             when (section) {
                 is RenderSection.Lines -> canCutSections && section.foldKey !in foldedSections

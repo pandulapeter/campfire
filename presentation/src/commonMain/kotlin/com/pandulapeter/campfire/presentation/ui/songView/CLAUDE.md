@@ -87,7 +87,8 @@ builds what it draws, `grid/` places it.
 - **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just
   tapped would move and a second tap miss.
 - A song that scrolls by itself is an unmeasured single column too, but cut a chunk a line so its rows name every line
-  (`SongRows.playedLines`, see `screens/songDetails/autoScroll`).
+  (`SongRows.playedLines`, see `screens/songDetails/autoScroll`); an engraved staff system plays its bars, two a line,
+  a tune's title none (`SongUnits.of`'s `runSlotLines`, from `SongNotations.systemLines`).
 - The editor's preview and a songbook (over `MAX_CUT_SECTION_COUNT`, 200 sections) keep a plain, unmeasured single
   column, neither cut nor narrowed: the search would rerun on every pinch frame, and typing would move pieces.
   They show tempo and time changes as lines.

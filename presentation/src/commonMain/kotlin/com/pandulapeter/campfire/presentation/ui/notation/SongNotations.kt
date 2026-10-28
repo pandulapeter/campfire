@@ -49,6 +49,12 @@ internal class SongNotations(
     private val standIns: Map<AbcTune, AbcTune>,
     private val unitSize: Float,
 ) {
+    /**
+     * How many lines of the song each system of each tune plays ([playedLinesOf] its bars), in the systems the slots draw,
+     * for a song that scrolls by itself. Made once per rendering, so it is equal across the frames of a pinch.
+     */
+    val systemLines: Map<AbcTune, List<Int>> = rendered.systemLines
+
     /** What [run], standing after a key change of [tuneOffset] semitones, is drawn as, or null where it is drawn as text. */
     fun of(run: List<ChordProLine>, tuneOffset: Int): NotationRun? {
         val tune = AbcTune(run.abcTune() ?: return null, tuneOffset)
@@ -139,6 +145,9 @@ internal class RenderedNotations(
     val rerenderedTunes: Set<AbcTune>,
     val arrivingTunes: Set<AbcTune>,
 ) {
+    /** The lines each system of each tune plays (see [SongNotations.systemLines]). */
+    val systemLines: Map<AbcTune, List<Int>> = renderings.mapValues { (_, rendering) -> rendering.drawing.systems.map { playedLinesOf(it.bars) } }
+
     companion object {
         val NONE = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = emptySet(), arrivingTunes = emptySet())
     }

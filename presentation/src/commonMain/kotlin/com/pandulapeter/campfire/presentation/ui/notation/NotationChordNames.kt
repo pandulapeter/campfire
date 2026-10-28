@@ -80,6 +80,7 @@ internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<S
                 height = system.height,
                 shapes = system.shapes,
                 glyphs = system.glyphs,
+                bars = system.bars,
                 texts = system.texts.map { text ->
                     val chordRuns = text.runs.filterIsInstance<NotationTextRun.Words>().filter { it.role == NotationTextRole.CHORD }
                     val drawn = chordRuns.joinToString(separator = "") { it.text }

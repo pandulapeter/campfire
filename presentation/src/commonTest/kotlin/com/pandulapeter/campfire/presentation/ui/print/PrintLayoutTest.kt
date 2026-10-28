@@ -317,7 +317,7 @@ internal class PrintLayoutTest {
     @Test fun `an engraved abc block prints a row per staff system, at the size the column allows, under its kind`() = runTest {
         val tune = listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("K:G", "abc"), ChordProLine.Verbatim("GAB|", "abc"))
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, tune)))
-        val system = NotationSystem(width = 400f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())
+        val system = NotationSystem(width = 400f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)
         val drawing = NotationDrawing(listOf(system, system, system))
         val settings = PrintSettings(showTabs = false)
         val document = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf(AbcTune("X:1\nK:G\nGAB|", 0) to drawing)))
@@ -334,7 +334,7 @@ internal class PrintLayoutTest {
 
     @Test fun `a tune printed twice around a key change prints each copy in its own key`() = runTest {
         val tune = "X:1\nK:G\nGAB|"
-        fun drawing(width: Float) = NotationDrawing(listOf(NotationSystem(width = width, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())))
+        fun drawing(width: Float) = NotationDrawing(listOf(NotationSystem(width = width, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)))
         val notations = mapOf("song.cho" to mapOf(AbcTune(tune, 0) to drawing(100f), AbcTune(tune, 2) to drawing(120f)))
         listOf(
             "{start_of_abc}\n$tune\n{end_of_abc}\n{transpose: 2}\n{start_of_abc}\n$tune\n{end_of_abc}" to listOf(100f, 120f),
@@ -350,7 +350,7 @@ internal class PrintLayoutTest {
     @Test fun `a staff system wider than the column is printed smaller`() = runTest {
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(ChordProLine.Verbatim("GAB|", "abc")))))
         val settings = PrintSettings(columns = 2)
-        val wide = NotationDrawing(listOf(NotationSystem(width = 2000f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())))
+        val wide = NotationDrawing(listOf(NotationSystem(width = 2000f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)))
         val notation = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf(AbcTune("GAB|", 0) to wide))).pages.flatMap { it.notations }.single()
         assertEquals(printColumnWidth(settings) / 2000f, notation.scale, 0.0001f)
     }
