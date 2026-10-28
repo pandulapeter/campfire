@@ -95,17 +95,32 @@ them. If a change has no effect a user could notice, it is not in the notes.
    `commonMain` is everywhere and needs no qualifier; a change under `app/<platform>` or in a
    `<platform>Main` source set usually needs one.
 
-7. **Always update the in-app message.** Follow `.claude/skills/code-style/SKILL.md` before editing resources.
-   Set `whats_new_message` in every supported language's `strings.xml`: English in `values/`, and one more for each
-   `values-*` folder beside it. List them rather than assuming which exist, since languages are added over time:
+7. **Draft the changelog in English and have the user approve it in the conversation.** Write the bullets by
+   **Writing the changelog** below: at most six, each a bold headline and a one-sentence description, sorted by
+   importance. Before writing, take the cluster table from step 3, rank it by **Writing the changelog**'s three
+   questions, and check that the six (or fewer) that made it are the ones a user would miss most, that no two of them
+   are about the same area, and that none claims more than the app does.
+
+   First start the baseline profile recording (step 10) in the background, so it runs while the user reads. Then show
+   the user, in the reply itself (not in a file):
+   - the bullets as the dialog shows them, ranked, each `**Headline**` and its description, with its word count;
+   - the cluster table, marking which clusters made it and why the rest did not;
+   - the stores' `whats-new en-US` block (**Style — the store "what's new"**) with its character count, and which
+     bullets it dropped.
+
+   Then **stop and wait for the user's answer**. Revise by their feedback and show the whole changelog again, as
+   many rounds as it takes. Only an explicit approval ("approved", "looks good", "go ahead") ends the review; until
+   then write nothing to any `strings.xml`, translate nothing, and do not write the draft file. The approved English
+   wording is final: the translations, the GitHub notes, and the stores' block all follow it. A user who wants no
+   notes approves an empty changelog the same way.
+
+8. **Once the changelog is approved, update the in-app message.** Follow `.claude/skills/code-style/SKILL.md` before
+   editing resources. Set `whats_new_message` in every supported language's `strings.xml`: English in `values/`, and
+   one more for each `values-*` folder beside it. List them rather than assuming which exist, since languages are
+   added over time:
    ```bash
    ls -d presentation/src/commonMain/composeResources/values*/strings.xml
    ```
-
-   Write the bullets by **Writing the changelog** below: at most six, each a bold headline and a one-sentence
-   description, sorted by importance. Before writing, take the cluster table from step 3, rank it by **Writing the
-   changelog**'s three questions, and check that the six (or fewer) that made it are the ones a user would miss
-   most, that no two of them are about the same area, and that none claims more than the app does.
 
    Store each bullet on one line as `• **Headline** Description` (the literal `• `, the headline between `**`
    pairs, then a space and the description), and separate bullets with `\n` in the XML string (for example,
@@ -113,7 +128,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    headline bold on its own line with the description under it, as spaced rows in a scrollable area with fades at
    the top and bottom; its title and **Get started** button stay visible. No other Markdown,
    links, emoji, introductory paragraph or version number in the body.
-   Translate the same bullets naturally into each of those languages, and escape XML correctly. Keep
+   Translate the approved bullets naturally into each of those languages, and escape XML correctly. Keep
    `whats_new_title` as the localized title with its `%1$s` version placeholder. Replace the previous message rather than
    appending history.
    **Empty notes are valid:** when the user wants no notes for a very small release, or there is no user-facing
@@ -121,7 +136,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
    the version as handled. The first installed version is always skipped, whatever its message contains.
 
-8. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
+9. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
    one file per store (`google-play.md`, `app-store.md`, `mac-app-store.md`, `microsoft-store.md`): the source of truth
    for every field the user pastes into that store's console, one fenced block per field. Read each file whole,
    rules note first, and check every claim against the feature clusters of step 3:
@@ -148,10 +163,12 @@ them. If a change has no effect a user could notice, it is not in the notes.
    promotional text change only with a version submitted for review; the listings are pasted by hand, never by the
    pipeline.
 
-9. **Always regenerate Android baseline profiles, and only once every other source change is in place** — the
-   in-app message and any code or resource edit made while preparing the release (step 7 included), since the
-   profile is recorded from the built app and a later change would leave it stale. If anything under `presentation`,
-   `app` or the shared modules changes after a recording, record it again. Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
+10. **Always regenerate Android baseline profiles, started in step 7 so the recording runs during the changelog
+   review**, once every code change made while preparing the release is in place. The profile holds class and method
+   rules recorded from the built app, so the text of a string (the in-app message and its translations) never makes it
+   stale, but code does: if anything under `presentation`, `app` or the shared modules other than string values
+   changes after a recording (a fix the review turns up, a new string key), record it again. Run it with
+   `run_in_background` and keep reviewing; check its result when it reports back. Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
    use an English emulator (boot `Resizable_Experimental` if needed), wait for it to finish booting, and select it
    explicitly with `ANDROID_SERIAL` when several devices are connected. Uninstall `com.pandulapeter.campfire` only
    from that recording emulator if present, to start with a fresh library and avoid signing conflicts; never
@@ -166,7 +183,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    move generation into publishing CI. If recording is blocked, finish the resources and draft, report the exact
    blocker and command still needed, and do not claim the release preparation is complete.
 
-10. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
+11. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
    gitignored, so these scratch files stay untracked). The file's contents are the release body and
    nothing else — no preamble, no headings above the bullets, no "generated by", no meta commentary —
    ending in the hidden store block described below. For empty notes omit the visible bullets and leave the
@@ -185,7 +202,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
      certification (each published as soon as it passes), and attaches the Linux packages to the release
      itself — so the notes never list or link downloads.
 
-11. **Do not create the tag, the release, or commit anything.** Leave the draft, resources, listings, and generated
+12. **Do not create the tag, the release, or commit anything.** Leave the draft, resources, listings, and generated
     profiles ready for review. Their commit must be included in the version's tag before publishing.
 
 ## Writing the changelog
